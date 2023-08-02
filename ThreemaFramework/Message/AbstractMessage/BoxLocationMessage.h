@@ -20,7 +20,7 @@
 
 #import "AbstractMessage.h"
 
-@interface BoxLocationMessage : AbstractMessage <NSCoding>
+@interface BoxLocationMessage : AbstractMessage <NSSecureCoding>
 
 @property (nonatomic) double latitude;
 @property (nonatomic) double longitude;

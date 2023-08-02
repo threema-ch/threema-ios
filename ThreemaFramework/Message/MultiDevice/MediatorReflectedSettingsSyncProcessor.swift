@@ -20,6 +20,7 @@
 
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 class MediatorReflectedSettingsSyncProcessor {
 

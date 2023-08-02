@@ -25,7 +25,6 @@ import SwiftUI
 public enum LaunchModalType {
     
     // Persistent
-    case cancelledMultiDeviceWizard
     case safeForcePassword
     case notificationReminder
     case notificationTypeSelection
@@ -35,10 +34,6 @@ public enum LaunchModalType {
     /// The view controller belonging to a modal
     func viewController(delegate: LaunchModalManagerDelegate) -> UIViewController {
         switch self {
-        case .cancelledMultiDeviceWizard:
-            MultiDeviceWizardManager.shared.continueWizard()
-            return MultiDeviceWizardManager.shared.wizardViewController()
-            
         case .safeForcePassword:
             let storyBoard = AppDelegate.getMyIdentityStoryboard()
             let safeSetupNavigationController = storyBoard?

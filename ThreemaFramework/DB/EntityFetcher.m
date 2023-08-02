@@ -298,6 +298,14 @@
     return [self executeFetchRequest:fetchRequest];
 }
 
+- (BOOL)contactsContainOwnIdentity {
+    id result;
+    
+    result = [self singleEntityNamed:@"Contact" withPredicate:@"identity == %@", myIdentityStore.identity];
+    
+    return result != nil;
+}
+
 - (BOOL)hasDuplicateContactsWithDuplicateIdentities:(NSSet **)duplicateIdentities {
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Contact"];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Contact" inManagedObjectContext:self.managedObjectContext];
@@ -438,6 +446,10 @@
     return [self countEntityNamed:@"Message" withPredicate:@"isOwn == NO AND read == NO AND conversation == %@ ", conversation];
 }
 
+- (NSInteger)countMessagesForContactWithIdentity:(nonnull NSString *)identity {
+    return [self countEntityNamed:@"Message" withPredicate:@"sender.identity == %@", identity];
+}
+
 - (NSArray *)imageMessagesForConversation:(Conversation *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     return [self allEntitiesNamed:@"ImageMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@", conversation];
@@ -488,6 +500,10 @@
     
     
     return result != nil;
+}
+
+- (NSArray<Nonce *> *)allNonces {
+    return [self allEntitiesNamed:@"Nonce" sortedBy:nil withPredicate:nil];
 }
 
 - (BOOL)isNonceAlreadyInDB:(NSData *)nonce {
@@ -704,6 +720,11 @@
     NSPredicate *notArchived = [NSPredicate predicateWithFormat:@"visibility != %@", [NSNumber numberWithInt:ConversationVisibilityArchived]];
     [predicates addObject: notArchived];
     
+    // Fetch only chats where lastUpdate is not null to avoid showing chats that only contain system messages
+    // This is documented in confluence
+    NSPredicate *notNullLastUpdateDate = [NSPredicate predicateWithFormat:@"lastUpdate != nil"];
+    [predicates addObject: notNullLastUpdateDate];
+    
     // check if hide private chats is enabled
     if ([UserSettings sharedUserSettings].hidePrivateChats){
         NSPredicate *notPrivate = [NSPredicate predicateWithFormat:@"category != %@", [NSNumber numberWithInt:ConversationCategoryPrivate]];
@@ -733,6 +754,11 @@
     NSPredicate *archived = [NSPredicate predicateWithFormat:@"visibility == %@", [NSNumber numberWithInt:ConversationVisibilityArchived]];
     [predicates addObject: archived];
     
+    // Fetch only chats where lastUpdate is not null to avoid showing chats that only contain system messages
+    // This is documented in confluence
+    NSPredicate *notNullLastUpdateDate = [NSPredicate predicateWithFormat:@"lastUpdate != nil"];
+    [predicates addObject: notNullLastUpdateDate];
+    
     // check if hide private chats is enabled
     if ([UserSettings sharedUserSettings].hidePrivateChats){
         NSPredicate *notPrivate = [NSPredicate predicateWithFormat:@"category != %@", [NSNumber numberWithInt:ConversationCategoryPrivate]];
@@ -751,7 +777,7 @@
 }
 
 - (NSInteger)countArchivedConversations {
-    return [self countEntityNamed:@"Conversation" withPredicate:[NSString stringWithFormat:@"visibility == %@", [NSNumber numberWithInt:ConversationVisibilityArchived]]];
+    return [self countEntityNamed:@"Conversation" withPredicate:[NSString stringWithFormat:@"visibility == %@", [NSNumber numberWithInt:ConversationVisibilityArchived]], [NSString stringWithFormat:@"lastUpdate != nil"]];
 }
 
 - (NSFetchedResultsController *)fetchedResultsControllerForWebClientSessions {
@@ -802,6 +828,10 @@
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     NSDate *twoWeeksAgo = [[NSDate alloc] initWithTimeIntervalSinceNow:- 60 * 60 * 24 * 14];
     return [self allEntitiesNamed:@"Call" sortedBy:sortDescriptors withPredicate:@"contact.identity == %@ AND callID == %u AND date > %@", identity, callID, twoWeeksAgo];
+}
+
+- (NSArray *)allGroupCallEntities {
+    return [self allEntitiesNamed:@"GroupCallEntity" sortedBy:nil withPredicate:nil];
 }
 
 #pragma mark - private

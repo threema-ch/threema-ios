@@ -44,6 +44,7 @@ class DatabasePreparer {
         }
     }
 
+    @discardableResult
     func save<T>(_ block: () throws -> T) rethrows -> T {
         try objCnx.performAndWait {
             let result = try block()

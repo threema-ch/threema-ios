@@ -116,7 +116,7 @@ extension WCSessionManager {
                 object: nil
             )
             observerAlreadySet = true
-            WCSessionHelper.isWCSessionConnected = true
+            NavigationBarPromptHandler.isWebActive = true
         }
         DispatchQueue.main.async {
             UIApplication.shared.isIdleTimerDisabled = true
@@ -128,9 +128,10 @@ extension WCSessionManager {
         NotificationCenter.default.removeObserver(self)
         
         observerAlreadySet = false
-        WCSessionHelper.isWCSessionConnected = false
-        
-        if VoIPHelper.shared().isCallActiveInBackground || VoIPCallStateManager.shared.currentCallState() == .idle {
+        NavigationBarPromptHandler.isWebActive = false
+
+        if NavigationBarPromptHandler.isCallActiveInBackground || VoIPCallStateManager.shared
+            .currentCallState() == .idle {
             DispatchQueue.main.async {
                 UIApplication.shared.isIdleTimerDisabled = false
             }
@@ -710,7 +711,6 @@ extension WCSessionManager {
         }
         else {
             if let managedObjectContext = notification.object as? NSManagedObjectContext {
-                DDLogNotice("managedObjectContextDidChange on wrong context")
                 for managedObject in managedObjectContext.insertedObjects {
                     switch managedObject {
                     case is ContactEntity:

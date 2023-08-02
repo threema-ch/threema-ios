@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 public enum CallsignalingProtocol {
     
@@ -139,7 +140,7 @@ extension CallsignalingProtocol {
         videoQualityProfile.maxBitrateKbps = threemaVideoCallQualityProfile.bitrate
         videoQualityProfile.maxFps = threemaVideoCallQualityProfile.maxFps
         
-        var resolution = Callsignaling_Resolution()
+        var resolution = Common_Resolution()
         resolution.width = UInt32(threemaVideoCallQualityProfile.maxResolution.width)
         resolution.height = UInt32(threemaVideoCallQualityProfile.maxResolution.height)
         videoQualityProfile.maxResolution = resolution

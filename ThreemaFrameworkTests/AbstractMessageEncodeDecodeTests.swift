@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -66,16 +67,64 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         return msg
     }
     
-    private func encodeDecode<T: AbstractMessage>(message: T) -> T? {
-        let data = NSMutableData()
-        let archiver = NSKeyedArchiver(forWritingWith: data)
-        archiver.encodeRootObject(message)
+    private func encodeDecode<T: AbstractMessage>(message: T) throws -> T? {
+        let archiver = NSKeyedArchiver(requiringSecureCoding: true)
+        archiver.encode(message, forKey: "message")
         archiver.finishEncoding()
 
-        let unarchiver = NSKeyedUnarchiver(forReadingWith: Data(bytes: data.mutableBytes, count: data.count))
-        return try? unarchiver.decodeTopLevelObject() as? T
+        let unarchiver = try NSKeyedUnarchiver(forReadingFrom: archiver.encodedData)
+        return try unarchiver.decodeTopLevelObject(of: T.self, forKey: "message")
     }
     
+    func testAllAbstractMessagesWithoutOwnProperties() throws {
+        func testAbstractMessage<T: AbstractMessage>() throws -> T {
+            let msg: T = abstractMessage(
+                expectedFromIdentity,
+                expectedToIdentity,
+                expectedMessageID,
+                expectedPushFromName,
+                expectedDate,
+                expectedDeliveryDate,
+                expectedDelivered,
+                expectedUserAck,
+                expectedSendUserAck,
+                expectedNonce,
+                expectedFlags,
+                expectedReceivedAfterInitialQueueSend
+            )
+
+            let result = try XCTUnwrap(encodeDecode(message: msg))
+
+            XCTAssertEqual(expectedFromIdentity, result.fromIdentity)
+            XCTAssertEqual(expectedToIdentity, result.toIdentity)
+            XCTAssertEqual(expectedMessageID, result.messageID)
+            XCTAssertEqual(expectedPushFromName, result.pushFromName)
+            XCTAssertEqual(expectedDate, result.date)
+            XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result.delivered)
+            XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result.userAck)
+            XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result.sendUserAck)
+            XCTAssertTrue(expectedNonce.elementsEqual(result.nonce))
+            XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), result.flags)
+            XCTAssertFalse(result.receivedAfterInitialQueueSend)
+            XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+
+            return result
+        }
+
+        let _: BoxVoIPCallAnswerMessage = try testAbstractMessage()
+        let _: BoxVoIPCallHangupMessage = try testAbstractMessage()
+        let _: BoxVoIPCallIceCandidatesMessage = try testAbstractMessage()
+        let _: BoxVoIPCallOfferMessage = try testAbstractMessage()
+        let _: BoxVoIPCallRingingMessage = try testAbstractMessage()
+        let _: ContactDeletePhotoMessage = try testAbstractMessage()
+        let _: ContactRequestPhotoMessage = try testAbstractMessage()
+        let _: GroupDeletePhotoMessage = try testAbstractMessage()
+        let _: GroupLeaveMessage = try testAbstractMessage()
+        let _: GroupRequestSyncMessage = try testAbstractMessage()
+        let _: TypingIndicatorMessage = try testAbstractMessage()
+        let _: UnknownTypeMessage = try testAbstractMessage()
+    }
+
     func testBoxAudioMessage() throws {
         let expectedDuration: UInt16 = 10
         let expectedAudioBlobID: Data = BytesUtility.generateRandomBytes(length: 8)!
@@ -102,7 +151,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.audioSize = expectedAudioSize
         msg.encryptionKey = expectedEncryptionKey
         
-        let result: BoxAudioMessage? = encodeDecode(message: msg)
+        let result: BoxAudioMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -147,7 +196,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.ballotID = expectedBallotID
         msg.jsonData = expectedJsonData
         
-        let result: BoxBallotCreateMessage? = encodeDecode(message: msg)
+        let result: BoxBallotCreateMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -192,7 +241,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.ballotID = expectedBallotID
         msg.jsonChoiceData = expectedJsonChoiceData
         
-        let result: BoxBallotVoteMessage? = encodeDecode(message: msg)
+        let result: BoxBallotVoteMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
 
@@ -234,7 +283,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         
         msg.jsonData = jsonData
         
-        let result: BoxFileMessage? = encodeDecode(message: msg)
+        let result: BoxFileMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
 
@@ -278,7 +327,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.size = expectedSize
         msg.imageNonce = expectedImageNonce
         
-        let result: BoxImageMessage? = encodeDecode(message: msg)
+        let result: BoxImageMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -328,7 +377,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.poiAddress = expectedPoiAddress
         msg.poiName = expectedPoiName
         
-        let result: BoxLocationMessage? = encodeDecode(message: msg)
+        let result: BoxLocationMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -374,7 +423,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.text = expectedText
         msg.quotedMessageID = expectedQuotedMessageID
         
-        let result: BoxTextMessage? = encodeDecode(message: msg)
+        let result: BoxTextMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -425,7 +474,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.thumbnailSize = expectedThumbnailSize
         msg.encryptionKey = expectedEncryptionKey
         
-        let result: BoxVideoMessage? = encodeDecode(message: msg)
+        let result: BoxVideoMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -449,41 +498,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
         XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
-    
-    func testContactDeletePhotoMessage() throws {
-        let msg: ContactDeletePhotoMessage = abstractMessage(
-            expectedFromIdentity,
-            expectedToIdentity,
-            expectedMessageID,
-            expectedPushFromName,
-            expectedDate,
-            expectedDeliveryDate,
-            expectedDelivered,
-            expectedUserAck,
-            expectedSendUserAck,
-            expectedNonce,
-            expectedFlags,
-            expectedReceivedAfterInitialQueueSend
-        )
-        
-        let result: ContactDeletePhotoMessage? = encodeDecode(message: msg)
-        
-        XCTAssertNotNil(result)
-        
-        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
-        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
-        XCTAssertEqual(expectedMessageID, result?.messageID)
-        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
-        XCTAssertEqual(expectedDate, result?.date)
-        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
-        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
-        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
-        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
-        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
-        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
-        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
-    }
-    
+
     func testContactSetPhotoMessage() throws {
         let expectedBlobID: Data = BytesUtility.generateRandomBytes(length: 8)!
         let expectedSize: UInt32 = 200
@@ -508,7 +523,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.size = expectedSize
         msg.encryptionKey = expectedEncryptionKey
         
-        let result: ContactSetPhotoMessage? = encodeDecode(message: msg)
+        let result: ContactSetPhotoMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -531,7 +546,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
     }
     
     func testDeliveryReceiptMessage() throws {
-        let expectedReceiptType: UInt8 = 1
+        let expectedReceiptType: ReceiptType = .ack
         let expectedReceiptMessageIDs: [Data] = [
             BytesUtility.generateRandomBytes(length: 8)!,
             BytesUtility.generateRandomBytes(length: 8)!,
@@ -555,7 +570,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.receiptType = expectedReceiptType
         msg.receiptMessageIDs = expectedReceiptMessageIDs
         
-        let result: DeliveryReceiptMessage? = encodeDecode(message: msg)
+        let result: DeliveryReceiptMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -578,6 +593,53 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
+    // TODO: (IOS-3949) Test changed
+    func testForwardSecurityEnvelopeMessage() throws {
+        let expectedSessionID = BytesUtility.generateRandomBytes(length: DHSessionID.dhSessionIDLength)!
+
+        let msg = try ForwardSecurityEnvelopeMessage(
+            data: ForwardSecurityDataMessage(
+                sessionID: DHSessionID(value: expectedSessionID),
+                type: .twodh,
+                offeredVersion: .v11,
+                appliedVersion: .v11,
+                counter: 1,
+                message: BytesUtility.generateRandomBytes(length: 48)!
+            )
+        )
+        msg.fromIdentity = expectedFromIdentity
+        msg.toIdentity = expectedToIdentity
+        msg.messageID = expectedMessageID
+        msg.pushFromName = expectedPushFromName
+        msg.date = expectedDate
+        msg.deliveryDate = expectedDeliveryDate
+        msg.delivered = NSNumber(booleanLiteral: expectedDelivered)
+        msg.userAck = NSNumber(booleanLiteral: expectedUserAck)
+        msg.sendUserAck = NSNumber(booleanLiteral: expectedSendUserAck)
+        msg.nonce = expectedNonce
+        msg.flags = NSNumber(integerLiteral: expectedFlags)
+        msg.receivedAfterInitialQueueSend = expectedReceivedAfterInitialQueueSend
+
+        let result: ForwardSecurityEnvelopeMessage? = try encodeDecode(message: msg)
+
+        XCTAssertNotNil(result)
+
+        XCTAssertEqual(expectedSessionID, result?.data.sessionID.value)
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+
     func testGroupAudioMessage() throws {
         let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: 8)!
         let expectedGroupCreator = "CREATOR1"
@@ -608,7 +670,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.audioSize = expectedAudioSize
         msg.encryptionKey = expectedEncryptionKey
         
-        let result: GroupAudioMessage? = encodeDecode(message: msg)
+        let result: GroupAudioMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -659,7 +721,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.ballotID = expectedBallotID
         msg.jsonData = expectedJsonData
         
-        let result: GroupBallotCreateMessage? = encodeDecode(message: msg)
+        let result: GroupBallotCreateMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -710,7 +772,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.ballotID = expectedBallotID
         msg.jsonChoiceData = expectedJsonChoiceData
         
-        let result: GroupBallotVoteMessage? = encodeDecode(message: msg)
+        let result: GroupBallotVoteMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
 
@@ -734,6 +796,55 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
+    func testGroupCallStartMessage() throws {
+        let expectedGroupID: Data = MockData.generateGroupID()
+        let expectedGroupCreator = "CREATOR1"
+        var expectedGroupCallStartMessage = CspE2e_GroupCallStart()
+        expectedGroupCallStartMessage.gck = MockData.generatePublicKey()
+        expectedGroupCallStartMessage.protocolVersion = 1
+        expectedGroupCallStartMessage.sfuBaseURL = "https://sfu"
+
+        let msg: GroupCallStartMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+
+        msg.groupID = expectedGroupID
+        msg.groupCreator = expectedGroupCreator
+        msg.decoded = expectedGroupCallStartMessage
+
+        let result: GroupCallStartMessage? = try encodeDecode(message: msg)
+
+        XCTAssertNotNil(result)
+
+        XCTAssertTrue(expectedGroupID.elementsEqual((result?.groupID)!))
+        XCTAssertEqual(expectedGroupCreator, result?.groupCreator)
+        XCTAssertEqual(expectedGroupCallStartMessage, result?.decoded)
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+
     func testGroupCreateMessage() throws {
         let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: 8)!
         let expectedGroupCreator = "CREATOR1"
@@ -758,7 +869,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.groupCreator = expectedGroupCreator
         msg.groupMembers = expectedGroupMembers
         
-        let result: GroupCreateMessage? = encodeDecode(message: msg)
+        let result: GroupCreateMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
 
@@ -804,7 +915,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.groupCreator = expectedGroupCreator
         msg.jsonData = expectedJsonData
         
-        let result: GroupFileMessage? = encodeDecode(message: msg)
+        let result: GroupFileMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
 
@@ -854,7 +965,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.size = expectedSize
         msg.encryptionKey = expectedEncryptionKey
         
-        let result: GroupImageMessage? = encodeDecode(message: msg)
+        let result: GroupImageMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -902,7 +1013,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.groupCreator = expectedGroupCreator
         msg.name = expectedName
         
-        let result: GroupRenameMessage? = encodeDecode(message: msg)
+        let result: GroupRenameMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -956,7 +1067,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.poiAddress = expectedPoiAddress
         msg.poiName = expectedPoiName
         
-        let result: GroupLocationMessage? = encodeDecode(message: msg)
+        let result: GroupLocationMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -1010,7 +1121,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.size = expectedSize
         msg.encryptionKey = expectedEncryptionKey
         
-        let result: GroupSetPhotoMessage? = encodeDecode(message: msg)
+        let result: GroupSetPhotoMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -1034,7 +1145,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
-    func testGroupTextMessage() {
+    func testGroupTextMessage() throws {
         let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: 8)!
         let expectedGroupCreator = "CREATOR1"
         let expectedText = "Test group text"
@@ -1060,7 +1171,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.text = expectedText
         msg.quotedMessageID = expectedQuotedMessageID
         
-        let result: GroupTextMessage? = encodeDecode(message: msg)
+        let result: GroupTextMessage? = try encodeDecode(message: msg)
 
         XCTAssertNotNil(result)
         
@@ -1117,7 +1228,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.thumbnailSize = expectedThumbnailSize
         msg.encryptionKey = expectedEncryptionKey
         
-        let result: GroupVideoMessage? = encodeDecode(message: msg)
+        let result: GroupVideoMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
         
@@ -1147,7 +1258,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
     func testGroupDeliveryReceiptMessage() throws {
         let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: 8)!
         let expectedGroupCreator = "CREATOR1"
-        let expectedReceiptType: UInt8 = 1
+        let expectedReceiptType: ReceiptType = .received
         let expectedReceiptMessageIDs: [Data] = [
             BytesUtility.generateRandomBytes(length: 8)!,
             BytesUtility.generateRandomBytes(length: 8)!,
@@ -1170,16 +1281,16 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         
         msg.groupID = expectedGroupID
         msg.groupCreator = expectedGroupCreator
-        msg.receiptType = expectedReceiptType
+        msg.receiptType = expectedReceiptType.rawValue
         msg.receiptMessageIDs = expectedReceiptMessageIDs
         
-        let result: GroupDeliveryReceiptMessage? = encodeDecode(message: msg)
+        let result: GroupDeliveryReceiptMessage? = try encodeDecode(message: msg)
         
         XCTAssertNotNil(result)
               
         XCTAssertTrue(expectedGroupID.elementsEqual((result?.groupID)!))
         XCTAssertEqual(expectedGroupCreator, result?.groupCreator)
-        XCTAssertEqual(expectedReceiptType, result?.receiptType)
+        XCTAssertEqual(expectedReceiptType.rawValue, result?.receiptType)
         XCTAssertEqual(2, result?.receiptMessageIDs.count)
         XCTAssertTrue(expectedReceiptMessageIDs[0].elementsEqual(result?.receiptMessageIDs[0] as! Data))
         XCTAssertTrue(expectedReceiptMessageIDs[1].elementsEqual(result?.receiptMessageIDs[1] as! Data))

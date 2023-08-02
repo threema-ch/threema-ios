@@ -67,16 +67,8 @@ class TaskExecutionTests: XCTestCase {
         let expectedToIdentity2 = "TESTER02"
 
         dbPreparer.save {
-            dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: expectedToIdentity1,
-                verificationLevel: 0
-            )
-            dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: expectedToIdentity2,
-                verificationLevel: 0
-            )
+            dbPreparer.createContact(identity: expectedToIdentity1)
+            dbPreparer.createContact(identity: expectedToIdentity2)
         }
 
         let cnx = TaskContext()
@@ -90,8 +82,12 @@ class TaskExecutionTests: XCTestCase {
         msg2.toIdentity = expectedToIdentity2
         msg2.text = "Test message 1"
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, doOnlyReflect: false, isPersistent: false)
-        task.messageAlreadySentTo.append(expectedToIdentity1)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        task.nonces = [
+            expectedToIdentity1: MockData.generateMessageNonce(),
+            expectedToIdentity2: MockData.generateMessageNonce(),
+        ]
+        task.messageAlreadySentTo[expectedToIdentity1] = task.nonces[expectedToIdentity1]
 
         let taskExecution = TaskExecution(
             taskContext: cnx,
@@ -133,8 +129,8 @@ class TaskExecutionTests: XCTestCase {
         XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
         XCTAssertEqual(2, totalMessagesSentCount)
         XCTAssertEqual(2, task.messageAlreadySentTo.count)
-        XCTAssertTrue(task.messageAlreadySentTo.contains(expectedToIdentity1))
-        XCTAssertTrue(task.messageAlreadySentTo.contains(expectedToIdentity2))
+        XCTAssertTrue(task.messageAlreadySentTo.map(\.key).contains(expectedToIdentity1))
+        XCTAssertTrue(task.messageAlreadySentTo.map(\.key).contains(expectedToIdentity2))
     }
 
     func testSendMessageInvalidGroupContact() throws {
@@ -142,16 +138,8 @@ class TaskExecutionTests: XCTestCase {
         let expectedToIdentity2 = "TESTER02"
 
         dbPreparer.save {
-            dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: expectedToIdentity1,
-                verificationLevel: 0
-            )
-            let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: expectedToIdentity2,
-                verificationLevel: 0
-            )
+            dbPreparer.createContact(identity: expectedToIdentity1)
+            let contact = dbPreparer.createContact(identity: expectedToIdentity2)
             contact.state = NSNumber(integerLiteral: kStateInvalid)
         }
 
@@ -166,7 +154,11 @@ class TaskExecutionTests: XCTestCase {
         msg2.toIdentity = expectedToIdentity2
         msg2.text = "Test message 1"
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, doOnlyReflect: false, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        task.nonces = [
+            expectedToIdentity1: MockData.generateMessageNonce(),
+            expectedToIdentity2: MockData.generateMessageNonce(),
+        ]
 
         let taskExecution = TaskExecution(
             taskContext: cnx,
@@ -208,18 +200,14 @@ class TaskExecutionTests: XCTestCase {
         XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
         XCTAssertEqual(1, messagesSentCount)
         XCTAssertEqual(1, task.messageAlreadySentTo.count)
-        XCTAssertTrue(task.messageAlreadySentTo.contains(expectedToIdentity1))
+        XCTAssertTrue(task.messageAlreadySentTo.map(\.key).contains(expectedToIdentity1))
     }
 
     func testSendMessageContactNotFound() throws {
         let expectedToIdentity1 = "TESTER01"
 
         dbPreparer.save {
-            dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: expectedToIdentity1,
-                verificationLevel: 0
-            )
+            dbPreparer.createContact(identity: expectedToIdentity1)
         }
 
         let cnx = TaskContext()
@@ -233,7 +221,8 @@ class TaskExecutionTests: XCTestCase {
         msg2.toIdentity = "TESTER02"
         msg2.text = "Test message 2"
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, doOnlyReflect: false, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        task.nonces = [expectedToIdentity1: MockData.generateMessageNonce()]
 
         let taskExecution = TaskExecution(
             taskContext: cnx,
@@ -276,7 +265,7 @@ class TaskExecutionTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(1, serverConnectorMock.sendMessageCalls.count)
         XCTAssertGreaterThanOrEqual(1, task.messageAlreadySentTo.count)
         if !task.messageAlreadySentTo.isEmpty {
-            XCTAssertTrue(task.messageAlreadySentTo.contains(expectedToIdentity1))
+            XCTAssertTrue(task.messageAlreadySentTo.map(\.key).contains(expectedToIdentity1))
         }
     }
 }

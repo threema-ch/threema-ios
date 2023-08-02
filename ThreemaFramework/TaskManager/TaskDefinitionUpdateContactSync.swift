@@ -19,9 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 /// Reflect update of contacts to mediator server.
-class TaskDefinitionUpdateContactSync: TaskDefinition, TaskDefinitionTransactionProtocol {
+final class TaskDefinitionUpdateContactSync: TaskDefinition, TaskDefinitionTransactionProtocol {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -62,7 +63,6 @@ class TaskDefinitionUpdateContactSync: TaskDefinition, TaskDefinitionTransaction
     init(deltaSyncContacts: [DeltaSyncContact]) {
         self.deltaSyncContacts = deltaSyncContacts
         super.init(isPersistent: true)
-        self.retry = true
     }
     
     required init(from decoder: Decoder) throws {

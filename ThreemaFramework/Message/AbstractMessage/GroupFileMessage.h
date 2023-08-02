@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupFileMessage : AbstractGroupMessage <NSCoding>
+@interface GroupFileMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property NSData *jsonData;
 

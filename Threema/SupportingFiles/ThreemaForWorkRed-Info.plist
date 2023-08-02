@@ -88,8 +88,8 @@
 	<string>Your photo library is used when you pick an image from it and send it in a chat.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
-        <string>INStartAudioCallIntent</string>
-        <string>INSendMessageIntent</string>
+		<string>INStartAudioCallIntent</string>
+		<string>INSendMessageIntent</string>
 	</array>
 	<key>SentryClientDsn</key>
 	<string>https://72a141b9fa404178af9115b36618fdd1@bugs.threema.ch/12</string>
@@ -100,7 +100,7 @@
 	<key>ThreemaForwardSecurity</key>
 	<true/>
 	<key>ThreemaMaxGroupMembers</key>
-	<integer>100</integer>
+	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>
 	<string>k</string>
 	<key>ThreemaWorkVersion</key>

@@ -2,7 +2,7 @@
 //
 // ### General Information
 //
-// Encryption cipher: XSalsa20-Poly1305, unless otherwise specified.
+// **Encryption cipher:** XSalsa20-Poly1305, unless otherwise specified.
 //
 // All strings are UTF-8 encoded.
 
@@ -74,6 +74,9 @@ message TransactionScope {
 message Envelope {
   // Random amount of padding, ignored by the receiver
   bytes padding = 1;
+
+  // Sender device id
+  fixed64 device_id = 13;
 
   // The enveloped reflected message
   oneof content {
@@ -201,7 +204,7 @@ message OutgoingMessageUpdate {
 // 2. Add `nonce` to the CSP nonce storage, preventing messages from being
 //    replayed.
 message IncomingMessage {
-  reserved 4;
+  reserved 4; // Skipped by accident, available to use!
 
   // Sender's Threema ID
   string sender_identity = 1;

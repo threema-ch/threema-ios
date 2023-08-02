@@ -168,38 +168,26 @@
 
 #pragma mark - private methods
 
-+ (GroupBallotCreateMessage *)groupBallotCreateMessageFrom:(BoxBallotCreateMessage *)boxBallotMessage forConversation:(Conversation *)conversation {
++ (GroupBallotCreateMessage*)groupBallotCreateMessageFrom:(BoxBallotCreateMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity {
     GroupBallotCreateMessage *msg = [[GroupBallotCreateMessage alloc] init];
     msg.messageId = boxBallotMessage.messageId;
     msg.date = boxBallotMessage.date;
-    msg.groupId = conversation.groupId;
+    msg.groupId = groupID;
+    msg.groupCreator = groupCreatorIdentity;
     msg.jsonData = boxBallotMessage.jsonData;
     msg.ballotId = boxBallotMessage.ballotId;
-    
-    if (conversation.contact == nil) {
-        msg.groupCreator = [MyIdentityStore sharedMyIdentityStore].identity;
-    } else {
-        msg.groupCreator = conversation.contact.identity;
-    }
-    
     return msg;
 }
 
-+ (GroupBallotVoteMessage *)groupBallotVoteMessageFrom:(BoxBallotVoteMessage *)boxBallotMessage forConversation:(Conversation *)conversation {
++ (GroupBallotVoteMessage*)groupBallotVoteMessageFrom:(BoxBallotVoteMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity {
     GroupBallotVoteMessage *msg = [[GroupBallotVoteMessage alloc] init];
     msg.messageId = boxBallotMessage.messageId;
     msg.date = boxBallotMessage.date;
-    msg.groupId = conversation.groupId;
+    msg.groupId = groupID;
+    msg.groupCreator = groupCreatorIdentity;
     msg.ballotCreator = boxBallotMessage.ballotCreator;
     msg.ballotId = boxBallotMessage.ballotId;
     msg.jsonChoiceData = boxBallotMessage.jsonChoiceData;
-    
-    if (conversation.contact == nil) {
-        msg.groupCreator = [MyIdentityStore sharedMyIdentityStore].identity;
-    } else {
-        msg.groupCreator = conversation.contact.identity;
-    }
-    
     return msg;
 }
 

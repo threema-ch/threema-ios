@@ -20,7 +20,8 @@
 
 import Foundation
 
-@objc class TaskDefinitionSendAbstractMessage: TaskDefinition, TaskDefinitionSendMessageProtocol {
+@objc final class TaskDefinitionSendAbstractMessage: TaskDefinition, TaskDefinitionSendMessageNonceProtocol,
+    TaskDefinitionSendMessageProtocol {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -48,57 +49,68 @@ import Foundation
         "<\(type(of: self)) \(message.loggingDescription)>"
     }
 
-    var message: AbstractMessage!
+    let message: AbstractMessage
     private var messageData: Data?
+
+    var nonces = TaskReceiverNonce()
 
     private(set) var messageAlreadySentToQueue =
         DispatchQueue(label: "ch.threema.TaskDefinitionSendAbstractMessage.messageAlreadySentToQueue")
-    var messageAlreadySentTo = [String]()
-
-    var doOnlyReflect = false
+    var messageAlreadySentTo = TaskReceiverNonce()
 
     private enum CodingKeys: String, CodingKey {
-        case messageData, messageAlreadySentTo, doOnlyReflect
+        case message, messageData, messageAlreadySentTo
     }
 
-    @objc init(message: AbstractMessage, doOnlyReflect: Bool, isPersistent: Bool) {
-        super.init(isPersistent: isPersistent)
-        self.doOnlyReflect = doOnlyReflect
+    private enum CodingError: Error {
+        case messageDataMissing
+    }
+
+    @objc init(message: AbstractMessage, isPersistent: Bool) {
         self.message = message
+        super.init(isPersistent: isPersistent)
     }
     
     @objc convenience init(message: AbstractMessage) {
-        self.init(message: message, doOnlyReflect: false, isPersistent: true)
+        self.init(message: message, isPersistent: true)
     }
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let superdecoder = try container.superDecoder()
-        try super.init(from: superdecoder)
 
         self.messageData = try container.decode(Data.self, forKey: .messageData)
-        if let data = messageData {
-            let unarchiver = NSKeyedUnarchiver(forReadingWith: data)
-            self.message = try unarchiver.decodeTopLevelObject() as? AbstractMessage
+        guard let messageData else {
+            throw CodingError.messageDataMissing
         }
+
+        let unarchiver = try NSKeyedUnarchiver(forReadingFrom: messageData)
+        guard let decodedMessage = try unarchiver.decodeTopLevelObject(
+            of: AbstractMessage.self,
+            forKey: CodingKeys.message.rawValue
+        ) else {
+            throw CodingError.messageDataMissing
+        }
+        self.message = decodedMessage
+
+        let superDecoder = try container.superDecoder()
+        try super.init(from: superDecoder)
+
         messageAlreadySentToQueue.sync {
             do {
-                self.messageAlreadySentTo = try container.decode([String].self, forKey: .messageAlreadySentTo)
+                self.messageAlreadySentTo = try container.decode(TaskReceiverNonce.self, forKey: .messageAlreadySentTo)
             }
             catch {
-                self.messageAlreadySentTo = []
+                self.messageAlreadySentTo = TaskReceiverNonce()
             }
         }
-        self.doOnlyReflect = try container.decode(Bool.self, forKey: .doOnlyReflect)
     }
 
     override func encode(to encoder: Encoder) throws {
-        let data = NSMutableData()
-        let archiver = NSKeyedArchiver(forWritingWith: data)
-        archiver.encodeRootObject(message!)
+        let archiver = NSKeyedArchiver(requiringSecureCoding: true)
+        archiver.encode(message, forKey: CodingKeys.message.rawValue)
         archiver.finishEncoding()
 
-        messageData = Data(bytes: data.mutableBytes, count: data.count)
+        messageData = archiver.encodedData
 
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(messageData, forKey: .messageData)
@@ -110,9 +122,8 @@ import Foundation
                 // no-op
             }
         }
-        try container.encode(doOnlyReflect, forKey: .doOnlyReflect)
 
-        let superencoder = container.superEncoder()
-        try super.encode(to: superencoder)
+        let superEncoder = container.superEncoder()
+        try super.encode(to: superEncoder)
     }
 }

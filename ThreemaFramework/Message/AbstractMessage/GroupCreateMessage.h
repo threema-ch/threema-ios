@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupCreateMessage : AbstractGroupMessage <NSCoding>
+@interface GroupCreateMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property (nonatomic) NSArray *groupMembers;
 

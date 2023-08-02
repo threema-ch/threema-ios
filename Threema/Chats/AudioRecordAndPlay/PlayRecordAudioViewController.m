@@ -340,7 +340,7 @@
     
     [self adaptToProximityState];
     
-    if (![WCSessionHelper isWCSessionConnected]) {
+    if (![NavigationBarPromptHandler isWebActive]) {
         [UIApplication sharedApplication].idleTimerDisabled = NO;
     }
 }
@@ -360,7 +360,7 @@
     
     [_audioView setPaused];
     
-    if (![WCSessionHelper isWCSessionConnected]) {
+    if (![NavigationBarPromptHandler isWebActive]) {
         [UIApplication sharedApplication].idleTimerDisabled = NO;
     }
 }

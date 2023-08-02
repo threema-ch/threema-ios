@@ -110,6 +110,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
     [_entityManager performSyncBlockAndSafe:^{
         Ballot *ballot = [_entityManager.entityFetcher ballotForBallotId:ballotId];
+        NSDate *conversationLastUpdate = conversation.lastUpdate;
         if (ballot != nil) {
             [self updateExistingBallot:ballot jsonData:jsonData];
         } else {
@@ -121,6 +122,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             if (message) {
                 DDLogError(@"[Ballot] Parsing of ballot failed, message will be deleted");
                 [[_entityManager entityDestroyer] deleteObjectWithObject:message];
+                
+                // do not use the conversation function 'updateLastMessageWith', because we are already in a perform block
+                MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
+                BaseMessage *lastMessage = messageFetcher.lastMessage;
+                
+                if (lastMessage != conversation.lastMessage) {
+                    conversation.lastMessage = lastMessage;
+                }
+                
+                // Set lastUpdate to the old value
+                conversation.lastUpdate = conversationLastUpdate;
             }
             message = nil;
             return;

@@ -255,7 +255,7 @@ class CallViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
                 
-        VoIPHelper.shared()?.isCallActiveInBackground = false
+        NavigationBarPromptHandler.isCallActiveInBackground = false
         muteButton.isSelected = VoIPCallStateManager.shared.isCallMuted()
         if isTesting == false {
             if UserSettings.shared()?.disableProximityMonitoring == false {
@@ -286,7 +286,7 @@ class CallViewController: UIViewController {
                 
         wasProximityMonitoringEnabled = UIDevice.current.isProximityMonitoringEnabled
         UIDevice.current.isProximityMonitoringEnabled = false
-        if !WCSessionHelper.isWCSessionConnected {
+        if !NavigationBarPromptHandler.isWebActive {
             UIApplication.shared.isIdleTimerDisabled = false
         }
         
@@ -1656,8 +1656,8 @@ extension CallViewController {
             setupForConnectedCallTest()
         }
         else {
-            VoIPHelper.shared()?.isCallActiveInBackground = true
-            VoIPHelper.shared()?.contactName = contact?.displayName
+            NavigationBarPromptHandler.isCallActiveInBackground = true
+            NavigationBarPromptHandler.name = contact?.displayName
             wasProximityMonitoringEnabled = UIDevice.current.isProximityMonitoringEnabled
             UIDevice.current.isProximityMonitoringEnabled = false
             

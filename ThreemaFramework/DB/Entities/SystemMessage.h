@@ -23,7 +23,6 @@
 #import "BaseMessage.h"
 
 
-// Note that maximum value is 28.
 enum {
     kSystemMessageRenameGroup = 1, // The admin has renamed the group
     kSystemMessageGroupMemberLeave = 2, // Another member has left the group
@@ -48,7 +47,7 @@ enum {
     kSystemMessageCallRejectedOffHours = 15,
     kSystemMessageFsMessageWithoutForwardSecurity = 21,
     kSystemMessageFsSessionEstablished = 22,
-    kSystemMessageFsSessionEstablishedRcvd = 23,
+    kSystemMessageFsSessionEstablishedRcvd = 23, // As of version 1.1. this status is not created anymore
     kSystemMessageFsMessagesSkipped = 24,
     kSystemMessageFsSessionReset = 25,
     kSystemMessageFsOutOfOrder = 26,
@@ -57,6 +56,11 @@ enum {
     kSystemMessageFsNotSupportedAnymore = 29,
     kSystemMessageUnsupportedType = 31,
     kSystemMessageGroupAvatarChanged = 32,
+    kSystemMessageGroupCallStartedBy = 33,
+    kSystemMessageGroupCallStarted = 34,
+    kSystemMessageGroupCallEnded = 35,
+    kFsDebugMessage = 36,
+    kSystemMessageFsIllegalSessionState = 37,
 };
 
 @interface SystemMessage : BaseMessage

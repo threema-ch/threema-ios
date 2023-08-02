@@ -20,7 +20,7 @@
 
 import Foundation
 
-class TaskDefinitionSendGroupRenameMessage: TaskDefinitionSendMessage {
+final class TaskDefinitionSendGroupRenameMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

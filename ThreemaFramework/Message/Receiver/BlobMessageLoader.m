@@ -126,7 +126,7 @@
             if (msg.conversation.groupId == nil) {
                 [blobDownloader markDownloadDoneFor:blobId origin:msg.blobOrigin];
             }
-            else if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated]) {
+            else if ([[UserSettings sharedUserSettings] enableMultiDevice]) {
                 [blobDownloader markDownloadDoneFor:blobId origin:BlobOriginLocal];
             }
 

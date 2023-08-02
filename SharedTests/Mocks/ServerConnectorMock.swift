@@ -66,10 +66,6 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         "unknown"
     }
 
-    var isMultiDeviceActivated: Bool {
-        deviceGroupKeys != nil
-    }
-
     var isAppInBackground = false
 
     func connect(initiator: ConnectionInitiator) {

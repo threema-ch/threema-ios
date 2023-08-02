@@ -19,9 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import Combine
+import GroupCalls
 import OSLog
 import ThreemaFramework
 import UIKit
+import WebRTC
 
 /// The chat view!
 ///
@@ -50,6 +53,8 @@ final class ChatViewController: ThemedViewController {
     /// Part of the workaround for the passcode lock screen. See `ChatViewTableView` for additional info
     var didEnterForegroundWithNilWindow = false
     
+    private var cancellables = Set<AnyCancellable>()
+
     // MARK: - Model
     
     /// Conversation shown in this chat view
@@ -228,6 +233,15 @@ final class ChatViewController: ThemedViewController {
     private lazy var ballotBarButton = BallotWithOpenCountButton { [weak self] _ in
         self?.showBallots()
     }
+    
+    private lazy var groupCallBannerView: GroupCallBannerView = {
+        let bannerView = GroupCallBannerView(delegate: self)
+        
+        bannerView.isHidden = true
+        bannerView.translatesAutoresizingMaskIntoConstraints = false
+                
+        return bannerView
+    }()
     
     // MARK: Table view
     
@@ -530,6 +544,26 @@ final class ChatViewController: ThemedViewController {
     
     private var firstCellShown = false
     
+    // MARK: - GroupCalls
+    
+    private lazy var groupCallGroupModel: GroupCallsThreemaGroupModel? = {
+        guard let group = GroupManager().getGroup(conversation: conversation) else {
+            return nil
+        }
+        
+        let groupCreatorID: String = group.groupCreatorIdentity
+        let groupCreatorNickname: String? = group.groupCreatorNickname
+        let groupID = group.groupID
+        let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
+        
+        return GroupCallsThreemaGroupModel(
+            creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
+            groupID: groupID,
+            groupName: group.name ?? "",
+            members: Set(members)
+        )
+    }()
+    
     // MARK: - Lifecycle
     
     /// Create a new chat view
@@ -725,6 +759,35 @@ final class ChatViewController: ThemedViewController {
             name: NSNotification.Name(rawValue: kNotificationWallpaperChanged),
             object: nil
         )
+        
+        if ThreemaEnvironment.groupCalls {
+            // This will be automatically removed on deinit
+            startGroupCallObserver()
+        }
+    }
+    
+    private func startGroupCallObserver() {
+        guard ThreemaEnvironment.groupCalls else {
+            return
+        }
+        
+        Task {
+            if let groupCallGroupModel,
+               await GlobalGroupCallsManagerSingleton.shared.groupCallManager
+               .viewModel(for: groupCallGroupModel) != nil {
+                self.callCreatedByUsOrRemote()
+            }
+            
+            await GlobalGroupCallsManagerSingleton.shared.groupCallManager
+                .globalGroupCallObserver.publisher.pub
+                .debounce(for: .milliseconds(500), scheduler: DispatchQueue.global())
+                .receive(on: DispatchQueue.main)
+                .filter { [weak self] in self?.currentConversationIsEqualTo(group: $0.groupID, $0.creator.id) ?? false }
+                .sink(receiveValue: { [weak self] _ in
+                    DDLogVerbose("[GroupCall] Update Conversation Cell for Call")
+                    self?.callCreatedByUsOrRemote()
+                }).store(in: &cancellables)
+        }
     }
     
     private func enableKeyboardDismissGestureRecognizer() {
@@ -757,6 +820,7 @@ final class ChatViewController: ThemedViewController {
         view.addSubview(tableView)
         view.addSubview(chatBarCoordinator.chatBarContainerView)
         view.addSubview(scrollToBottomButton)
+        view.addSubview(groupCallBannerView)
 
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -779,6 +843,10 @@ final class ChatViewController: ThemedViewController {
             chatBarCoordinator.chatBarContainerView.trailingAnchor.constraint(equalTo: tableView.trailingAnchor),
             bottomComposeConstraint,
             topComposeConstraint,
+            
+            view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: groupCallBannerView.topAnchor, constant: -10),
+            view.leadingAnchor.constraint(equalTo: groupCallBannerView.leadingAnchor, constant: -10),
+            view.trailingAnchor.constraint(equalTo: groupCallBannerView.trailingAnchor, constant: 10),
         ])
                 
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -986,13 +1054,22 @@ extension ChatViewController {
             navigationItem.rightBarButtonItems = nil
             
             if conversation.isGroup() {
-                updateOpenBallotsButton()
+                if ThreemaEnvironment.groupCalls {
+                    // TODO: IOS-3745 This should be somewhat dynamic
+                    // TODO: IOS-3745 This should show the correct icon
+                    callBarButtonItem.accessibilityLabel = BundleUtil.localizedString(forKey: "call")
+                    callBarButtonItem.accessibilityIdentifier = "ChatViewControllerCallBarButtonItem"
+                    navigationItem.rightBarButtonItem = callBarButtonItem
+                }
+                else {
+                    updateOpenBallotsButton()
+                }
             }
             // Only show call icon if Threema calls are enabled and contact supports them
             else if UserSettings.shared()?.enableThreemaCall == true,
                     let contact = conversation.contact {
                 let contactSet = Set<ContactEntity>([contact])
-                
+
                 FeatureMask.check(Int(FEATURE_MASK_VOIP), forContacts: contactSet) { unsupportedContacts in
                     if unsupportedContacts?.isEmpty == true ||
                         ProcessInfoHelper.isRunningForScreenshots {
@@ -1050,6 +1127,7 @@ extension ChatViewController {
     /// As it is complicated to observe ballot changes we just call this function on every instance creation of the view
     /// or new (ballot) message received.
     private func updateOpenBallotsButton() {
+        
         guard conversation.isGroup(), userInterfaceMode == .default else {
             return
         }
@@ -1064,8 +1142,31 @@ extension ChatViewController {
                 navigationItem.rightBarButtonItems = ballotBarButton.rightBarButtonItems
             }
         }
-        else {
-            navigationItem.rightBarButtonItems = nil
+    }
+    
+    private func updateGroupCallBanner() {
+        guard ThreemaEnvironment.groupCalls else {
+            return
+        }
+        
+        Task.detached { [weak self] in
+            guard let self else {
+                return
+            }
+            
+            guard let groupCallGroupModel = await self.groupCallGroupModel else {
+                return
+            }
+            
+            let msToWait = 500
+            
+            if #available(iOS 16.0, *) {
+                try? await Task.sleep(for: .milliseconds(msToWait))
+            }
+            else {
+                try? await Task.sleep(nanoseconds: UInt64(msToWait) * 1000 * 1000)
+                // Fallback on earlier versions
+            }
         }
     }
     
@@ -1095,7 +1196,41 @@ extension ChatViewController {
     ///
     /// - Note: Only call this if you previously checked if `conversation.contact` supports calls
     @objc func startVoIPCall() {
-        
+        if conversation.isGroup() {
+            startGroupCall()
+        }
+        else {
+            startOneToOneCall()
+        }
+    }
+    
+    private func startGroupCall() {
+        guard ThreemaEnvironment.groupCalls else {
+            assertionFailure()
+            return
+        }
+            
+        Task { @MainActor in
+            do {
+                let viewModel = try await GlobalGroupCallsManagerSingleton.shared.startGroupCall(
+                    in: conversation,
+                    with: MyIdentityStore.shared().identity
+                )
+                await GlobalGroupCallsManagerSingleton.shared.groupCallManager.set(uiDelegate: self)
+                let groupCallViewController = GlobalGroupCallsManagerSingleton.shared
+                    .groupCallViewController(for: viewModel)
+                self.present(groupCallViewController, animated: true)
+            }
+            catch {
+                // TODO: IOS-3743 Graceful Error Handling
+                let contr = UIAlertController(title: "Call Failed", message: "F", preferredStyle: .alert)
+                contr.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(contr, animated: true)
+            }
+        }
+    }
+    
+    private func startOneToOneCall() {
         chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
         
         guard let contact = conversation.contact else {
@@ -2222,7 +2357,10 @@ extension ChatViewController: ChatViewDataSourceDelegate {
             scrollCompletion = nil
         }
         
-        updateOpenBallotsButton()
+        if conversation.isGroup() {
+            updateOpenBallotsButton()
+            updateGroupCallBanner()
+        }
     }
     
     func lastMessageChanged(messageIdentifier: NSManagedObjectID) {
@@ -2425,6 +2563,60 @@ extension ChatViewController {
         dataSource.initialSetupCompleted = true
         
         userIsAtBottomOfTableView = isAtBottomOfView
+    }
+}
+
+// MARK: - Group Call Helpers
+
+extension ChatViewController {
+    // TODO: IOS-3728 Move to conversation
+    /// Checks whether the current conversation is the group conversation with given groupID and creator
+    /// - Parameters:
+    ///   - groupID:
+    ///   - creator:
+    /// - Returns:
+    private func currentConversationIsEqualTo(group groupID: Data, _ creator: String) -> Bool {
+        
+        guard conversation.isGroup() else {
+            return false
+        }
+    
+        guard conversation.groupID == groupID else {
+            return false
+        }
+    
+        if let id = conversation.contact?.identity, id != creator {
+            return false
+        }
+    
+        if conversation.contact == nil, businessInjector.myIdentityStore.identity != creator {
+            return false
+        }
+        
+        return true
+    }
+    
+    private func callCreatedByUsOrRemote() {
+        guard ThreemaEnvironment.groupCalls else {
+            return
+        }
+        
+        guard let groupCallGroupModel else {
+            return
+        }
+        Task {
+            let viewModel = await GlobalGroupCallsManagerSingleton.shared.groupCallManager
+                .viewModel(for: groupCallGroupModel)
+            
+            if let item = await viewModel?.buttonBannerObserver.getCurrentItem() {
+                self.groupCallBannerView.updateBannerState(state: item)
+            }
+            
+            viewModel?.buttonBannerObserver.publisher.pub.sink { newState in
+                self.groupCallBannerView.updateBannerState(state: newState)
+            }
+            .store(in: &cancellables)
+        }
     }
 }
 
@@ -3067,5 +3259,38 @@ extension ChatViewController: UnreadMessagesStateManagerDelegate {
         }
         
         return true
+    }
+}
+
+// MARK: - GroupCallBannerButtonViewDelegate
+
+extension ChatViewController: GroupCallBannerButtonViewDelegate {
+    func joinCall() async {
+        guard let groupCallGroupModel else {
+            DDLogError("[GroupCall] Could not get GroupCallGroupModel")
+            return
+        }
+        
+        guard let viewModel = await GlobalGroupCallsManagerSingleton.shared.groupCallManager
+            .joinCall(in: groupCallGroupModel, intent: .join).1 else {
+            DDLogError("[GroupCall] Could not get view model")
+            return
+        }
+        
+        await GlobalGroupCallsManagerSingleton.shared.groupCallManager.set(uiDelegate: self)
+        let groupCallViewController = GlobalGroupCallsManagerSingleton.shared
+            .groupCallViewController(for: viewModel)
+        present(groupCallViewController, animated: true)
+    }
+}
+
+// MARK: - GroupCallManagerUIDelegate
+
+extension ChatViewController: GroupCallManagerUIDelegate {
+    @MainActor
+    func showViewController(for viewModel: GroupCalls.GroupCallViewModel) {
+        let groupCallViewController = GlobalGroupCallsManagerSingleton.shared
+            .groupCallViewController(for: viewModel)
+        present(groupCallViewController, animated: true)
     }
 }

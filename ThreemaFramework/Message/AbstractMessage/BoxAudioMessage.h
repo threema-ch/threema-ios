@@ -20,7 +20,7 @@
 
 #import "AbstractMessage.h"
 
-@interface BoxAudioMessage : AbstractMessage <NSCoding>
+@interface BoxAudioMessage : AbstractMessage <NSSecureCoding>
 
 @property (nonatomic, readwrite) uint16_t duration;
 @property (nonatomic, strong) NSData *audioBlobId NS_SWIFT_NAME(audioBlobID);

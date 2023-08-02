@@ -347,7 +347,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     }
     
     @objc private func navigationBarColorShouldChange() {
-        if VoIPHelper.shared().isCallActiveInBackground || WCSessionHelper.isWCSessionConnected {
+        if NavigationBarPromptHandler.shouldShowPrompt() {
             navigationBarTitleAppearanceOffset = 158
         }
         else {
@@ -614,6 +614,13 @@ extension SingleDetailsViewController: UITableViewDelegate {
             
         case .publicKey:
             publicKeyView.show()
+            
+        case .value(label: _, value: contact.identity):
+            dataSource.tapsOnThreemaID += 1
+            DDLogVerbose("dataSource.tapsOnThreemaID \(dataSource.tapsOnThreemaID)")
+            if dataSource.tapsOnThreemaID >= 10 {
+                dataSource.configureData(isInitialConfiguration: false)
+            }
             
         case .linkedContact:
             guard let cell = tableView.cellForRow(at: indexPath) else {

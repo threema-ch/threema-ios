@@ -194,6 +194,26 @@ struct AdvancedSettingsView: View {
             } header: {
                 Text(BundleUtil.localizedString(forKey: "settings_advanced_other_section_header"))
             }
+            
+            // MARK: Safe mode Settings
+            
+            if SettingsBundleHelper.safeMode {
+                Section {
+                    Button {
+                        SQLDHSessionStore.deleteSessionDB()
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text(BundleUtil.localizedString(forKey: "settings_advanced_reset_fs_db_label"))
+                            Spacer()
+                        }
+                    }
+                } header: {
+                    Text(BundleUtil.localizedString(forKey: "settings_advanced_support_settings_header"))
+                } footer: {
+                    Text(BundleUtil.localizedString(forKey: "settings_advanced_support_settings_footer_title"))
+                }
+            }
         }
         .navigationBarTitle(BundleUtil.localizedString(forKey: "settings_advanced"), displayMode: .inline)
         .tint(UIColor.primary.color)

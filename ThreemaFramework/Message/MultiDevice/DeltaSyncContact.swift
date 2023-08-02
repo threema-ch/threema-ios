@@ -18,10 +18,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
 struct DeltaSyncContact: Codable {
-    init(syncContact: Sync_Contact, syncAction: SyncAction) {
+    init(syncContact: Sync_Contact = Sync_Contact(), syncAction: SyncAction = .update) {
         self.syncContact = syncContact
         self.syncAction = syncAction
     }
@@ -35,7 +37,19 @@ struct DeltaSyncContact: Codable {
     var image: Data?
     var contactProfilePicture: DeltaUpdateType = .unchanged
     var contactImage: Data?
-    var syncAction: SyncAction
+    var contactImageBlobID: Data?
+    var contactImageEncryptionKey: Data?
+    var syncAction: SyncAction {
+        didSet {
+            if oldValue == .create, syncAction == .update {
+                DDLogNotice("Sync action was create and a downgrade to update was tried. This is invalid.")
+                syncAction = .create
+            }
+        }
+    }
+
+    /// Last update of the associated conversation if there is any
+    var lastConversationUpdate: Date?
 
     private enum CodingKeys: String, CodingKey {
         case syncContact
@@ -44,6 +58,8 @@ struct DeltaSyncContact: Codable {
         case image
         case contactProfilePicture
         case contactImage
+        case contactImageBlobID
+        case contactImageEncryptionKey
     }
 
     init(from decoder: Decoder) throws {
@@ -70,5 +86,22 @@ struct DeltaSyncContact: Codable {
         try container.encode(image, forKey: .image)
         try container.encode(contactProfilePicture, forKey: .contactProfilePicture)
         try container.encode(contactImage, forKey: .contactImage)
+        try container.encode(contactImageBlobID, forKey: .contactImageBlobID)
+        try container.encode(contactImageEncryptionKey, forKey: .contactImageEncryptionKey)
+    }
+    
+    // TODO: Starting here: implement one code path for all transformations (IOS-3869)
+    
+    mutating func with(contact: ContactEntity) {
+        updateFirstName(name: contact.firstName)
+    }
+    
+    mutating func updateFirstName(name: String?) {
+        if let name {
+            syncContact.firstName = name
+        }
+        else {
+            syncContact.clearFirstName()
+        }
     }
 }

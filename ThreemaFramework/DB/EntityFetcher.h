@@ -30,6 +30,7 @@
 #import "LastLoadedMessageIndex.h"
 #import "RequestedThumbnail.h"
 #import "MyIdentityStore.h"
+#import "Nonce.h"
 
 typedef enum : NSUInteger {
     ContactsAll,
@@ -74,6 +75,9 @@ typedef enum : NSUInteger {
 - (NSArray *)allContacts;
 
 - (NSArray *)contactsFilteredByWords:(NSArray *)searchWords forContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
+
+// Does a contact exist that contains my identity?
+- (BOOL)contactsContainOwnIdentity;
 
 /**
  Checks if there are duplicate contacts in the contact table.
@@ -136,6 +140,8 @@ typedef enum : NSUInteger {
 
 - (BOOL)isMessageAlreadyInDb:(AbstractMessage *)message;
 
+- (nullable NSArray<Nonce *> *)allNonces;
+
 - (BOOL)isNonceAlreadyInDB:(NSData *)nonce NS_SWIFT_NAME(isNonceAlreadyInDB(nonce:));
 
 - (GroupEntity *)groupEntityForGroupId:(NSData *)groupId groupCreator:(NSString *)groupCreator NS_SWIFT_NAME(groupEntity(for:with:));
@@ -177,6 +183,8 @@ typedef enum : NSUInteger {
 
 - (NSInteger)countUnreadMessagesForConversation:(Conversation *)conversation;
 
+- (NSInteger)countMessagesForContactWithIdentity:(nonnull NSString *)identity;
+
 - (NSFetchedResultsController *)fetchedResultsControllerForContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 
 - (NSFetchedResultsController *)fetchedResultsControllerForGroups;
@@ -210,4 +218,7 @@ typedef enum : NSUInteger {
 - (nullable Conversation *)legacyConversationForGroupId:(nullable NSData *)groupId NS_SWIFT_NAME(legacyConversation(for:)); DEPRECATED_MSG_ATTRIBUTE("This is deprecated and will be removed together with the web client code. DO NOT USE THIS!");
 
 - (NSInteger)countFileMessagesWithNoMIMEType;
+
+- (nonnull NSArray *)allGroupCallEntities;
+
 @end

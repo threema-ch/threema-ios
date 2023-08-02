@@ -63,6 +63,7 @@
 "copy" = "Скопировать";
 "save" = "Сохранить";
 "download" = "Скачать";
+"retry" = "Повтор";
 "share" = "Поделиться";
 "details" = "Подробно";
 "acknowledge" = "Принять";
@@ -503,8 +504,8 @@
 "forward_security_none" = "Нет";
 "forward_security_2dh" = "Односторонняя";
 "forward_security_4dh" = "Готово";
-"forward_security_clear_sessions" = "Очистить все сеансы";
-"forward_security_explainer_footer" = "Протокол Perfect Forward Secrecy (PFS) защищает записанный сеанс связи от ретроактивной расшифровки, если нарушена безопасность ключа шифрования долговременного пользования.\nЭтот параметр может быть активирован, если приложение с обеих сторон использует протокол PFS.";
+"forward_security_clear_sessions" = "Сбросить протокол Perfect Forward Secrecy для этого контакта";
+"forward_security_explainer_footer" = "Эту операцию можно выполнять только по указанию службы поддержки Threema.";
 "md_wizard_pfs_warning" = "После того как вы активируете предпросмотр на нескольких устройствах, протокол Perfect Forward Secrecy будет отключен для всех контактов.";
 "md_wizard_disable_pfs_confirm" = "Отключить Perfect Forward Secrecy";
 
@@ -763,6 +764,11 @@
 "call_threema_cellular_instead_of_wifi_title" = "Звоните через мобильную сеть";
 "call_threema_cellular_instead_of_wifi_text" = "Внимание: при звонке происходит передача данных через мобильную сеть.";
 
+// Group Calls
+"group_call_join_button_title" = "Приссоединиться";
+"group_call_open_button_title" = "Открыть";
+"group_call_participants_title" = "Участники: %@";
+
 /* Privacy Policy */
 "privacy_policy_about" = "Threema защищает вашу конфиденциальность тщательнее, чем любой другой мессенджер. Подробнее см в нашей Политика конфиденциальности.";
 "privacy_policy_about_work" = "%@ защищает вашу конфиденциальность тщательнее, чем любой другой мессенджер. Подробнее см. в нашей Политике конфиденциальности.";
@@ -966,6 +972,7 @@
 "safe_test_server_invalid_url" = "Введите действительный HTTPS-адрес.";
 "safe_restore_error" = "Не удалось восстановить данные из резервной копии Threema Safe, повторите попытку.";
 "safe_activation_failed" = "Не удалось активировать Threema Safe после восстановления данных из резервной копии.";
+"safe_activation_app_migration_failed_error_message" = "Не удалось восстановиться из резервной копии Threema Safe из-за ошибки базы данных. Повторите попытку.";
 
 "password_bad" = "Ненадежный пароль";
 "password_bad_explain" = "Выбранный для Threema Safe пароль недостаточно надежный, т.е. его легко угадать. Совет: используйте пароль из нескольких отдельных слов.";
@@ -1221,6 +1228,11 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "Если входящие сообщения не отображаются за пределами приложения как уведомления, вы можете перерегистрировать уведомления.";
 "settings_advanced_reregister_notifications_label" = "Перерегистрировать Push-уведомления";
 
+"settings_advanced_reset_fs_db_label" = "Сбросить состояние протокола Perfect Forward Secrecy";
+"settings_advanced_support_settings_header_title" = "Настройки службы поддержки";
+"settings_advanced_support_settings_footer_title" = "Эту операцию можно выполнять только по указанию службы поддержки Threema.";
+"settings_advanced_successfully_deleted_fs_sessions_label" = "Состояние протокола Forward Security сброшено успешно";
+
 // Sentry
 "sentry_crash_send_title" = "%@: неожиданный выход";
 "sentry_crash_send_description" = "Вы можете отправить анонимный отчет о сбое. Данные, объясняющие, что привело к этому сбою, помогут устранить проблему, которая стала его причиной.";
@@ -1230,7 +1242,7 @@
 
 // My profile
 "profile_share_id_text" = "Мой Threema ID";
-"my_profile_delete_cell_title" = "Удалить данные и ID";
+"my_profile_delete_cell_title" = "Удалить ID и данные";
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";
@@ -1405,12 +1417,11 @@
 
 "contactoverride_sheetMessage" = "Будет перезаписана настройка для этого конкретного контакта.";
 
-/* Multi Decvice */
+/* Multi Device */
 "multi_device_linked_devices_title" = "Предварительный просмотр на нескольких устройствах";
 "multi_device_linked_devices_desc" = "Активируйте или отключите предварительный просмотр на нескольких устройствах для этого устройства.";
 "multi_device_linked_devices_refresh" = "Нажмите, чтобы обновить";
 "multi_device_linked_devices_loading_failed" = "Не удалось загрузить устройства: %@";
-"multi_device_linked_devices_failed_to_load_title" = "Не удалось загрузить список устройств";
 "multi_device_linked_devices_failed_to_load_message" = "Не удалось загрузить привязанные устройства, проверьте соединение с Интернетом и повторите попытку.";
 "multi_device_linked_devices_this" = "Это устройство";
 "multi_device_linked_devices_others" = "Другие устройства";
@@ -1420,12 +1431,68 @@
 "multi_device_linked_devices_removed_devices_message" = "Будут удалены все подключенные устройства, а также отключен режим нескольких устройств";
 "multi_device_linked_devices_removed_devices_ok" = "Отключить";
 "multi_device_linked_duplicate_contacts_title" = "Дублирующиеся контакты";
-"multi_device_linked_duplicate_contacts_desc" = "Вы не можете привязать это устройство из-за дублирующихся контактов (%@). Обратитесь в службу поддержки.";
+"multi_device_linked_devices_failed_to_load_title" = "Не удалось загрузить список устройств";
 
 "multi_device_linked_devices_failed_remove_title" = "Не удалось удалить устройство";
 "multi_device_linked_devices_failed_remove_message" = "Не удалось удалить привязанное устройство, повторите попытку.";
 "multi_device_linked_devices_failed_remove_message_2" = "Не удалось удалить привязанное устройство, проверьте соединение с Интернетом и повторите попытку.";
-"multi_device_slot_state_mismatch_alert" = "Привязка устройства отменена. Это означает, что вы сейчас не можете отправлять или получать новые сообщения. Если это действие не было запущено вами, обратите внимание, что это могло произойти по техническим причинам на этапе технического предпросмотра. Приносим свои извинения за возможные неудобства. Сведения о том, как снова привязать устройство, см. в вопросах и ответах: https://three.ma/faq";
+
+/* New/reused multi device strings */
+"multi_device_unsupported_protocol_version_alert" = "Эта версия Threema больше не поддерживается (устаревшая версия протокола). Чтобы и далее пользоваться Threema, установите последнюю версию.";
+"multi_device_slot_state_mismatch_alert" = "Привязка устройства отменена, поэтому вы сейчас не можете отправлять или получать новые сообщения. Если это действие не было запущено вами, обратите внимание, что это могло произойти по техническим причинам на этапе бета-тестирования. Приносим свои извинения за возможные неудобства. Сведения о том, как снова привязать устройство, см. в вопросах и ответах: https://threema.ch/faq/md_reset";
+
+"multi_device_new_linked_devices_title" = "Привязанное устройство (бета-версия)";
+"multi_device_new_linked_devices_add_button" = "Добавить устройство";
+"multi_device_new_linked_devices_limitation_info" = "Примечание. В настоящее время выполнить привязку к бета-версии можно только для одного компьютера. Привязка еще одного устройства iPhone/iPad или Android не поддерживает.";
+"multi_device_new_linked_devices_failed_to_load" = "Не удалось загрузить привязанные устройства, проверьте соединение с Интернетом и потяните экран вниз, чтобы повторить попытку.";
+"multi_device_new_linked_devices_no_other_device" = "Нажмите %@, чтобы привязать устройство повторно";
+"multi_device_new_linked_device_remove_all_button" = "Удалить все привязанные устройства";
+"multi_device_new_linked_device_remove_all_title" = "Действительно удалить все привязанные устройства?";
+"multi_device_new_linked_device_remove_all_error_title" = "Не удалось удалить все привязанные устройства";
+"multi_device_new_linked_device_error_message" = "Проверьте соединение с Интернетом и повторите попытку.";
+"multi_device_new_linked_device_instructions" = "Перед тем как добавлять новое устройство, скачайте текущую бета-версию программы %@ для компьютера и откройте ее:\n\n%@";
+"multi_device_linked_duplicate_contacts_desc" = "Из-за дублирующихся контактов (%@) добавить устройство невозможно. Обратитесь в службу поддержки («Настройки > Поддержка».";
+"multi_device_new_linked_own_identity_in_contacts_title" = "Собственный Threema ID в качестве контакта";
+"multi_device_new_linked_own_identity_in_contacts_message" = "Ваш список контактов включает запись контакта с вашим Threema ID. Удалите его, чтобы добавить новое устройство.";
+"multi_device_new_linked_show_contact_button" = "Показать контакт";
+"multi_device_new_linked_device_list_no_platform_details" = "Нет информации о платформе";
+"multi_device_new_linked_device_list_last_active" = "Последняя активность: %@";
+
+"multi_device_join_perfect_forward_secrecy_info" = "Когда вы привязываете устройство, протокол Perfect Forward Secrecy отключается для всех контактов.\n\nЭто ограничение текущей бета-версии. Дополнительные сведения об ограничениях см. в [этом пункте вопросов и ответов](%@).";
+"multi_device_join_scan_qr_code_title" = "Сканировать QR-код";
+"multi_device_join_scan_qr_code_info" = "Сканируйте QR-код, отображаемый в бета-версии программы %@ на устройстве, которое вы хотите привязать";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_label" = "Вид из камеры";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_hint" = "Наведите камеру на экран, на котором открыта бета-версия %@.";
+"multi_device_join_connecting" = "Подключение...";
+"multi_device_join_unrecoverable_error_title" = "Непредвиденная ошибка";
+"multi_device_join_fatal_scanning_qr_code_error_title" = "Ошибка сканирования QR-кода";
+"multi_device_join_fatal_camera_access_error_title" = "Нет доступа к камере";
+"multi_device_join_fatal_no_internet_connection_title" = "Нет подключения к Интернету";
+"multi_device_join_failed_to_send_data_title" = "Не удалось отправить данные";
+"multi_device_join_fatal_error_message" = "Попробуйте привязать устройство еще раз. Если проблема не исчезнет,, обратитесь в службу поддержки («Настройки > Поддержка»).";
+"multi_device_join_unknown_qr_code_title" = "Неизвестный QR-код";
+"multi_device_join_unknown_qr_code_message" = "Убедитесь, что вы используете соответствующее приложение из %@.";
+"multi_device_join_incompatible_version_title" = "Несовместимая версия";
+"multi_device_join_incompatible_version_message" = "Установите на обоих устройствах последнюю версию %@.";
+"multi_device_join_new_device_not_found_title" = "Новое устройство не найдено.";
+"multi_device_join_new_device_not_found_message" = "Это может случиться, если QR-код уже сканирован. Перезапустите приложение на новом устройстве и повторите попытку.";
+"multi_device_join_trust_new_device_title" = "Доверять новому устройству";
+"multi_device_join_trust_new_device_info" = "Выберите изображения, которые показаны на новом устройстве, чтобы подтвердить, что вы ему доверяете.";
+"multi_device_join_no_match_button" = "Нет сопадений?";
+"multi_device_join_no_match_title" = "Изображения не совпадают?";
+"multi_device_join_no_match_message" = "Похоже, при подключении к устройству возникли проблемы. Перезапустите приложение на новом устройстве и повторите попытку.";
+"multi_device_join_sending_info" = "На новом устройстве будет храниться независимая копия вашего профиля %@, и сообщения будут отправляться и приходить от вашего имени.";
+"multi_device_join_sending_data" = "Отправка данных...";
+"multi_device_join_sending_continue_on_new_device" = "Продолжите на новом устройстве.";
+"multi_device_join_sending_wait" = "Ожидайте, отправка может занять несколько минут.";
+"multi_device_join_linked_successfully_title" = "Устройство привязано успешно"; // The same as `md_wizard_success_title`
+"multi_device_join_linked_successfully_info" = "Теперь вы можете использовать приложение %@ на устройстве, которое вы сейчас привязали (даже если устройство iOS выключено или не подключено к Интернету).";
+
+"multi_device_join_failed_app_closed_title" = "Ошибка при привязке нового устройства";
+"multi_device_join_failed_app_closed_message" = "Не удалось выполнить привязку, поскольку приложение %@ было закрыто. Повторите попытку.";
+
+"multi_device_linked_id_missing_title" = "Привязанные устройства";
+"multi_device_linked_id_missing_message" = "Привязанные устройства были удалены. Вы можете привязать свои устройства повторно после того, как восстановите или настроите это устройство.";
 
 "myprofile_link_email_phone_footer" = "Привязка вашего эл. адреса или номера телефона к ID позволяет другим пользователям автоматически находить вас в %@, если вы есть у них в адресной книге.";
 "myprofile_link_email_footer" = "Привязка вашего эл. адреса к ID позволяет другим пользователям автоматически находить вас в %@, если ваш адрес электронной почты есть у них в адресной книге.";
@@ -1451,6 +1518,11 @@
 
 "settings_threema_web_connected" = "Установлено подключение к ПК/веб-клиенту";
 "settings_threema_web_connectioninfo" = "Для поддержания соединения ваше устройство должно быть разблокировано с работающим не в фоновом режиме приложением %@. Во время соединения ваше устройство не будет блокироваться автоматически.";
+"settings_threema_web_linked_device_section_header" = "Несколько устройств";
+"settings_threema_web_linked_device_section_footer" = "Привязанное устройство можно использовать, даже когда %@ работает в фоновом режиме или это устройство отключено.";
+"settings_threema_web_section_header" = "Вывести список подключенных устройств";
+"settings_threema_web_multi_device_qr_code_title" = "Неправильный QR-код";
+"settings_threema_web_multi_device_qr_code_message" = "Для привязки к этому приложению для ПК нажмите «%@», а затем «%@».";
 
 "chat_text_view_placeholder" = "Новое сообщение";
 "compose_bar_camera_button_accessibility_label" = "Открыть камеру";
@@ -1542,17 +1614,23 @@
 
 "notification_reregister_notifications_successed" = "Push-уведомления перерегистрирован";
 
+"notification_audio_muted" = "Микрофон выкл.";
+"notification_audio_unmuted" = "Микрофон вкл.";
+"notification_video_muted" = "Камера выкл.";
+"notification_video_unmuted" = "Камера вкл.";
+
 // Forward security status messages
 "forward_security_message_without" = "Получено сообщение, не использующее протокол Perfect Forward Secrecy. Проверьте, что отправитель намеренно отключил Perfect Forward Secrecy.";
 "forward_security_session_established" = "Сообщения в этом чате теперь защищены протоколом Perfect Forward Secrecy.";
 "forward_security_session_established_rx" = "Сообщения, получаемые в этом чате, теперь защищаются протоколом Perfect Forward Secrecy. Активируйте Perfect Forward Secrecy на окне сведений о контакте, чтобы защитить также отправляемые сообщения.";
 "forward_security_messages_skipped_1" = "После получения последнего сообщения одно сообщение было утеряно.";
 "forward_security_messages_skipped_x" = "После получения последнего сообщения несколько сообщений (%d) были утеряны.";
-"forward_security_session_reset" = "Сеанс Perfect Forward Secrecy с этим контактом был сброшен. Это может произойти, если контакт сменил устройства или переустановил приложение.";
+"forward_security_session_reset" = "Сеанс Perfect Forward Secrecy был сброшен. Это могло произойти, если собеседник сменил устройство или переустановил приложение.";
 "forward_security_message_out_of_order" = "Сообщение получено с нарушением порядка, его не удалось расшифровать.";
 "forward_security_status_enabled_outgoing" = "Для исходящих сообщений активирован протокол Perfect Forward Secrecy.";
-"forward_security_status_disabled_outgoing" = "Для исходящих сообщений отключен протокол Perfect Forward Secrecy.";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Этот контакт начал использовать версию приложения, не поддерживающую протокол Perfect Forward Secrecy. В дальнейшем сообщения будут отправляться без применения протокола PFS.";
+"forward_security_status_disabled_outgoing" = "Для этого чата протокол Perfect Forward Secrecy отключен.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Для этой беседы протокол Perfect Forward Secrecy отключен, поскольку собеседник использует версию приложения, которая не поддерживает этот протокол.";
+"forward_security_illegal_session_state" = "Сеанс Perfect Forward Secrecy был сброшен в связи с недействительностью.";
 
 // Profile view
 "accessibility_profile_button_hint_contact" = "Открыть сведения о контакте";
@@ -1569,6 +1647,11 @@
 "accessibility_senderDescription_ownMessage" = "Ваш %@";
 "accessibility_senderDescription_otherMessage_group" = "%@ от %@";
 "accessibility_senderDescription_systemMessage" = "Информация: %@";
+"accessibility_senderDescription_typing" = "Контакт вводит текст";
+"accessibility_senderDescription_stopped_typing" = "Контакт больше не вводит текст";
+"accessibility_senderDescription_contact_typing" = "%@ вводит текст";
+"accessibility_senderDescription_contact_stopped_typing" = "%@ больше не вводит текст";
+
 
 // Message types
 "accessibility_textMessage_description" = "Сообщение";
@@ -1694,3 +1777,18 @@
 "alert_biometrics_changed_title_touch" = "Выявлено возможное изменение в TouchID detected";
 "alert_biometrics_changed_title_face" = "Выявлено возможное изменение в FaceID";
 "alert_biometrics_changed_message" = "Чтобы продолжить использование биометрической аутентификации для разблокировки Threema, один раз введите код доступа.";
+
+// Group Calls
+"group_call_started_by_contact_system_message" = "Пользователь %@ начал групповой звонок";
+"group_call_started_by_local_system_message" = "Вы начали групповой звонок";
+"group_call_ended_system_message" = "Групповой звонок завершен";
+
+"group_call_start_message_received" = "Начат групповой звонок";
+
+"group_call_navbar_state_connecting" = "Подключение...";
+"group_call_navbar_state_joining" = "Присоединение...";
+"group_call_navbar_state_connected" = "Подключено";
+
+// App Migration
+"sqldhsessionstore_cannot_downgrade_to" = "(%@)\nНельзя понизить версию приложения с %d на %d";
+"sqldhsessionstore_unknownError" = "Во время попытки переноса произошла неизвестная ошибка: %@";

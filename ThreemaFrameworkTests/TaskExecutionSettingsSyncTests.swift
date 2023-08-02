@@ -20,6 +20,7 @@
 
 import Foundation
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -27,7 +28,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     private var databaseMainCnx: DatabaseContext!
     private var databaseBackgroundCnx: DatabaseContext!
 
-    private let timeout: Double = 30
+    private let timeout: Double = 60
     
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
@@ -61,7 +62,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         waitForExpectations(timeout: 6) { error in
             XCTAssertNil(error)
             if let expectedError = try? XCTUnwrap(expecError as? TaskExecutionError) {
-                XCTAssertEqual("\(expectedError)", "\(TaskExecutionError.noDeviceGroupPathKey)")
+                XCTAssertEqual("\(expectedError)", "\(TaskExecutionError.multiDeviceNotRegistered)")
             }
             else {
                 XCTFail("Exception should be thown")
@@ -78,6 +79,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
 
@@ -208,7 +210,8 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                 if serverConnectorMock.connectionState == .loggedIn {
                     NotificationCenter.default.post(
                         name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                        object: expectedReflectID
+                        object: expectedReflectID,
+                        userInfo: [expectedReflectID: Date()]
                     )
 
                     if var lockState = expectedMediatorLockState, !lockState.0.isEmpty {
@@ -413,6 +416,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         originalIdentityStore.pushFromName = ""
         
         let originalUserDefaults = UserSettingsMock()
+        originalUserDefaults.enableMultiDevice = true
         originalUserDefaults.syncContacts = false
         originalUserDefaults.blockUnknown = false
         originalUserDefaults.sendReadReceipts = false
@@ -433,6 +437,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         newIdentityStore.pushFromName = ""
         
         let newUserDefaults = UserSettingsMock()
+        newUserDefaults.enableMultiDevice = true
         newUserDefaults.syncContacts = false
         newUserDefaults.blockUnknown = false
         newUserDefaults.sendReadReceipts = false
@@ -453,6 +458,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         goldIdentityStore.pushFromName = ""
         
         let goldUserDefaults = UserSettingsMock()
+        goldUserDefaults.enableMultiDevice = true
         goldUserDefaults.syncContacts = false
         goldUserDefaults.blockUnknown = false
         goldUserDefaults.sendReadReceipts = false
@@ -485,6 +491,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         originalIdentityStore.pushFromName = ""
         
         let originalUserDefaults = UserSettingsMock()
+        originalUserDefaults.enableMultiDevice = true
         originalUserDefaults.syncContacts = false
         originalUserDefaults.blockUnknown = false
         originalUserDefaults.sendReadReceipts = false
@@ -505,6 +512,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         newIdentityStore.pushFromName = ""
         
         let newUserDefaults = UserSettingsMock()
+        newUserDefaults.enableMultiDevice = true
         newUserDefaults.syncContacts = true
         newUserDefaults.blockUnknown = true
         newUserDefaults.sendReadReceipts = true
@@ -549,6 +557,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         originalIdentityStore.pushFromName = ""
         
         let originalUserDefaults = UserSettingsMock()
+        originalUserDefaults.enableMultiDevice = true
         originalUserDefaults.syncContacts = false
         originalUserDefaults.blockUnknown = false
         originalUserDefaults.sendReadReceipts = false
@@ -569,6 +578,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         newIdentityStore.pushFromName = ""
         
         let newUserDefaults = UserSettingsMock()
+        newUserDefaults.enableMultiDevice = true
         newUserDefaults.syncContacts = true
         newUserDefaults.blockUnknown = true
         newUserDefaults.sendReadReceipts = true

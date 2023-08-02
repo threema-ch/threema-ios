@@ -217,6 +217,7 @@ struct ChatViewCellProvider {
             case .systemMessage:
                 let cell: ChatViewSystemMessageTableViewCell = tableView.dequeueCell(for: indexPath)
                 cell.systemMessageAndNeighbors = (systemMessage, neighbors)
+                cell.chatViewTableViewCellDelegate = chatViewTableViewCellDelegate
                 return cell
                 
             case .workConsumerInfo:

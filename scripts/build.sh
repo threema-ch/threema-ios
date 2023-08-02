@@ -128,7 +128,7 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
   }
   
   reset "WebRTC.xcframework"
-  check "WebRTC.xcframework" "webrtc" "100.0.0"
+  check "WebRTC.xcframework" "webrtc" "110.0.0"
 
 fi
 

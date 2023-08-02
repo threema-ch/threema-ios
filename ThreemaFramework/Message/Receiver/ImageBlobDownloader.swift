@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 import SwiftProtobuf
+import ThreemaProtocols
 
 @available(*, deprecated, message: "Extend or port functionalities to `BlobManager` instead of using this class.")
 class ImageBlobDownloader {

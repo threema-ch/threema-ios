@@ -214,7 +214,7 @@ typedef void (^ErrorBlock)(NSError *err);
                 if (isNotGroupMessage) {
                     [downloader markDownloadDoneFor:blobID origin:blobOriginOrNil];
                 }
-                else if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated]) {
+                else if ([[UserSettings sharedUserSettings] enableMultiDevice]) {
                     [downloader markDownloadDoneFor:blobID origin:BlobOriginLocal];
                 }
             }
@@ -251,13 +251,11 @@ typedef void (^ErrorBlock)(NSError *err);
     __block FileMessageEntity *fileMessageEntity = (FileMessageEntity *)[entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil];
 
     [entityManager performSyncBlockAndSafe:^{
-        BOOL isOutgoingMessage = [_boxMessage.fromIdentity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]];
-        fileMessageEntity.isOwn = [NSNumber numberWithBool:isOutgoingMessage];
-        
         GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
         Group *group = [groupManager getGroupWithConversation:_conversation];
 
         // Blob origin for download
+        BOOL isOutgoingMessage = [_boxMessage.fromIdentity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]];
         BOOL isLocalOrigin = (group && group.isNoteGroup) || (isReflectedMessage && isOutgoingMessage);
         fileMessageEntity.blobOrigin = isLocalOrigin ? BlobOriginLocal : BlobOriginPublic;
 

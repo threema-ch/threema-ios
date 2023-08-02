@@ -82,7 +82,8 @@ enum {
 @property (nonatomic, retain, nullable) NSString * verifiedMobileNo;
 /// This only means it's a verified contact from the admin (in the same work package). To check if this contact is a work ID, use the work identities list in user settings bad naming because of the history...
 @property (nonatomic, retain) NSNumber * workContact;
-@property (nonatomic, retain) NSNumber * forwardSecurityEnabled;
+/// Set or Get the forward security state of this contact. Note that these states are only maintained for contacts with a DH session of version 1.0.
+/// TODO(ANDR-2452): Remove the forward security state when most of clients support 1.1 anyway
 @property (nonatomic, retain) NSNumber * forwardSecurityState;
 
 // DB Relationships

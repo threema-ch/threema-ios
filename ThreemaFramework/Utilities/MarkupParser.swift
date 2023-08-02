@@ -371,7 +371,7 @@ extension MarkupParser {
                 case .me:
                     parsedWithMentionNames.replaceCharacters(
                         in: range,
-                        with: "@\(BundleUtil.localizedString(forKey: "me"))"
+                        with: "@\(BusinessInjector().myIdentityStore.displayName())"
                     )
                 case .all:
                     parsedWithMentionNames.replaceCharacters(

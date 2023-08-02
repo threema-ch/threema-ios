@@ -24,7 +24,7 @@ import PromiseKit
 
 /// Reflect group leave message to mediator server is multi device enbaled
 /// and send it to group members (CSP).
-class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendGroupLeaveMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -36,7 +36,8 @@ class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProtocol {
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             // Reflect group leave message if is necessary

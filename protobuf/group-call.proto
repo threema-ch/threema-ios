@@ -33,6 +33,25 @@
 // - `PCSN`: Participant Call Sequence Number
 // - `MFSN`: Media Frame Sequence Number
 //
+// ## General Information
+//
+// **Endianness**: All integers use little-endian encoding.
+//
+// **Encryption cipher**: XSalsa20-Poly1305, unless otherwise specified.
+//
+// **Nonce format**:
+//
+// - a 16 byte cookie (PCCK), followed by
+// - a monotonically increasing sequence number (PCSN, u64-le).
+//
+// **Sequence number**: The sequence number starts with `1` and is counted
+// separately for each direction (i.e. there is one sequence number counter for
+// the sender and one for the receiver). We will use `PCSN+` in this document to
+// denote that the counter should be increased **after** the value has been
+// inserted (i.e. semantically equivalent to `x++` in many languages).
+//
+// Note: This format is equivalent to the CSP transport encryption.
+//
 // ## Key Derivation
 //
 // Note: All keys that are not derived from `GCK` directly will be derived using
@@ -48,25 +67,6 @@
 //
 //     PCMK' = BLAKE2b(key=PCMK, salt="m'", personal='3ma-call')
 //     PCMFK = BLAKE2b(key=PCMK, salt='mf', personal='3ma-call', input=GCKH)
-//
-// ## General Information
-//
-// Endianness: All integers use little-endian encoding.
-//
-// Encryption cipher: XSalsa20-Poly1305, unless otherwise specified.
-//
-// Nonce format:
-//
-// - a 16 byte cookie (PCCK), followed by
-// - a monotonically increasing sequence number (PCSN, u64-le).
-//
-// Sequence number: The sequence number starts with `1` and is counted
-// separately for each direction (i.e. there is one sequence number counter for
-// the sender and one for the receiver). We will use `PCSN+` in this document to
-// denote that the counter should be increased **after** the value has been
-// inserted (i.e. semantically equivalent to `x++` in many languages).
-//
-// Note: This format is equivalent to the CSP transport encryption.
 //
 // ## Group Call ID Derivation
 //
@@ -429,7 +429,7 @@ message CallState {
 
   // Information for a single participant.
   message Participant {
-    reserved 1;
+    reserved 1; // Redundant participant ID
 
     // A _normal_ participant, i.e. a Threema client.
     message Normal {
@@ -867,31 +867,37 @@ message ParticipantToParticipant {
     // 1. Let `inner-nonce` be a random nonce.
     // 2. Let `inner-data` be encrypted by:
     //
-    //        S = X25519HSalsa20(<sender.CK>.secret, <receiver.CK>.public)
-    //        GCNHAK = Blake2b(
-    //          key=S, salt='nha', personal='3ma-call', input=GCKH)
-    //        XSalsa20-Poly1305(
-    //          key=GCNHAK,
-    //          nonce=<inner-nonce>,
-    //          data=<AuthEnvelope(Auth)>,
-    //        )
+    // ```text
+    // S = X25519HSalsa20(<sender.CK>.secret, <receiver.CK>.public)
+    // GCNHAK = Blake2b(
+    //   key=S, salt='nha', personal='3ma-call', input=GCKH)
+    // XSalsa20-Poly1305(
+    //   key=GCNHAK,
+    //   nonce=<inner-nonce>,
+    //   data=<AuthEnvelope(Auth)>,
+    // )
+    // ```
     // 3. Let `outer-data` be encrypted by:
     //
-    //        XSalsa20-Poly1305(
-    //          key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
-    //          nonce=<sender.PCCK> || <sender.PCSN+>,
-    //          data=<inner-nonce> || <inner-data>,
-    //        )
+    // ```text
+    // XSalsa20-Poly1305(
+    //   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    //   nonce=<sender.PCCK> || <sender.PCSN+>,
+    //   data=<inner-nonce> || <inner-data>,
+    // )
+    // ```
     // 4. Return `outer-data`.
     //
     // If either side started the guest handshake, the second message is
     // encrypted by:
     //
-    //     XSalsa20-Poly1305(
-    //       key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
-    //       nonce=<sender.PCCK> || <sender.PCSN+>,
-    //       data=<AuthEnvelope(GuestAuth)>,
-    //     )
+    // ```text
+    // XSalsa20-Poly1305(
+    //   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    //   nonce=<sender.PCCK> || <sender.PCSN+>,
+    //   data=<AuthEnvelope(GuestAuth)>,
+    // )
+    // ```
     //
     // When receiving this message:
     //
@@ -1075,10 +1081,12 @@ message ParticipantToParticipant {
   // After fulfilling either the (normal) handshake or the guest handshake, all
   // following messages are encoded in `Envelope` and encrypted by:
   //
-  //     XSalsa20-Poly1305(
-  //       key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
-  //       nonce=<sender.PCCK> || <sender.PCSN+>,
-  //     )
+  // ```text
+  // XSalsa20-Poly1305(
+  //   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+  //   nonce=<sender.PCCK> || <sender.PCSN+>,
+  // )
+  // ```
   //
   // Note: Since the guest handshake is TOFU, an attacker knowing `GCK` having
   // control over the SFU may apply a MITM attack between a guest participant
@@ -1116,10 +1124,12 @@ message ParticipantToParticipant {
   message Admin {
     // Message from an administrator, encrypted by:
     //
-    //     XSalsa20-Poly1305(
-    //       key=X25519HSalsa20(GCAMK.secret, <receiver.PCK>.public),
-    //       nonce=<sender.PCCK> || <sender.PCSN+>,
-    //     )
+    // ```text
+    // XSalsa20-Poly1305(
+    //   key=X25519HSalsa20(GCAMK.secret, <receiver.PCK>.public),
+    //   nonce=<sender.PCCK> || <sender.PCSN+>,
+    // )
+    // ```
     //
     // IMPORTANT: The `ParticipantToParticipant.Envelope` that encapsulates this
     // message shall be encrypted by the same `PCSN` as used for this

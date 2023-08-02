@@ -50,7 +50,7 @@ public enum BytesUtility {
     ///
     /// - Returns: Data
     public static func paddingRandom() -> Data {
-        var paddingLength: UInt8? = NaClCrypto.shared()?.randomBytes(1)?.convert()
+        var paddingLength: UInt8? = NaClCrypto.shared()?.randomBytes(1)?.paddedLittleEndian()
         if paddingLength == nil {
             paddingLength = 1
         }
@@ -137,31 +137,6 @@ public enum BytesUtility {
 }
 
 extension Data {
-    
-    enum Endianness {
-        case BigEndian
-        case LittleEndian
-    }
-    
-    func convert<T: FixedWidthInteger>(at index: Data.Index, endianess: Endianness) -> T {
-        let end = index + MemoryLayout<T>.size > count ? count : index + MemoryLayout<T>.size
-        let number: T = subdata(in: index..<end).withUnsafeBytes { $0.pointee }
-        switch endianess {
-        case .BigEndian:
-            return number.bigEndian
-        case .LittleEndian:
-            return number.littleEndian
-        }
-    }
-    
-    func convert<T: FixedWidthInteger>(at index: Data.Index = 0) -> T {
-        let end = index + MemoryLayout<T>.size > count ? count : index + MemoryLayout<T>.size
-        let bytes: [UInt8] = Array(subdata(in: index..<end))
-        return bytes.reversed().reduce(0) { result, byte in
-            result << 8 | T(byte)
-        }
-    }
-    
     public var hexString: String {
         BytesUtility.toHexString(data: self)
     }

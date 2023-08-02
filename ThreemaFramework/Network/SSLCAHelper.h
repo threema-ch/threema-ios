@@ -25,4 +25,5 @@
 + (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace;
 + (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge;
 + (void)session:(NSURLSession *)session didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completion:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completion;
++ (BOOL)trust:(nonnull SecTrustRef)trust domain:(nonnull NSString *)domain;
 @end

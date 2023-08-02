@@ -100,6 +100,7 @@ class GroupTests: XCTestCase {
         XCTAssertNil(group.profilePicture)
         XCTAssertEqual(group.conversationCategory, .default)
         XCTAssertEqual(group.conversationVisibility, .default)
+        XCTAssertNil(group.lastUpdate)
         XCTAssertNil(group.lastMessageDate)
 
         // Change group properties in DB
@@ -119,6 +120,7 @@ class GroupTests: XCTestCase {
             conversation.groupName = "Test group 123"
             conversation.groupImage = imageData
             conversation.addMembersObject(member03)
+            conversation.lastUpdate = dateNow
             conversation.lastMessage = message
             conversation.conversationCategory = .private
             conversation.conversationVisibility = .archived
@@ -132,6 +134,7 @@ class GroupTests: XCTestCase {
         XCTAssertNotNil(group.profilePicture)
         XCTAssertEqual(group.conversationCategory, .private)
         XCTAssertEqual(group.conversationVisibility, .archived)
+        XCTAssertEqual(group.lastUpdate, dateNow)
         XCTAssertEqual(group.lastMessageDate, dateNow)
     }
 
@@ -461,7 +464,6 @@ class GroupTests: XCTestCase {
         members.append(member02)
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -554,7 +556,6 @@ class GroupTests: XCTestCase {
         members.append(member02)
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,

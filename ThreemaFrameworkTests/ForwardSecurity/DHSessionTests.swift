@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -54,6 +55,10 @@ class DHSessionTests: XCTestCase {
             peerEphemeralPublicKey: initiatorDHSession.myEphemeralPublicKey,
             peerIdentity: aliceIdentityStore.identity,
             peerPublicKey: aliceIdentityStore.publicKey,
+            version: CspE2eFs_VersionRange.with {
+                $0.min = UInt32(CspE2eFs_Version.v10.rawValue)
+                $0.max = UInt32(CspE2eFs_Version.v11.rawValue)
+            },
             identityStore: bobIdentityStore
         )
     }
@@ -77,6 +82,10 @@ class DHSessionTests: XCTestCase {
         try initiatorDHSession.processAccept(
             peerEphemeralPublicKey: responderDHSession.myEphemeralPublicKey,
             peerPublicKey: bobIdentityStore.publicKey,
+            peerSupportedVersionRange: CspE2eFs_VersionRange.with {
+                $0.min = UInt32(CspE2eFs_Version.v10.rawValue)
+                $0.max = UInt32(CspE2eFs_Version.v11.rawValue)
+            },
             identityStore: aliceIdentityStore
         )
         
@@ -131,5 +140,312 @@ class DHSessionTests: XCTestCase {
             initiatorDHSession.myRatchet4DH!.currentEncryptionKey,
             responderDHSession.peerRatchet4DH!.currentEncryptionKey
         )
+    }
+    
+    func testNegotiateMajorAndMinorWithValidUpgrade1() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        let goldValue = CspE2eFs_Version.v11
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = UInt32(CspE2eFs_Version.v10.rawValue)
+        localVersion.max = UInt32(CspE2eFs_Version.v11.rawValue)
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = UInt32(CspE2eFs_Version.v10.rawValue)
+        remoteVersion.max = UInt32(CspE2eFs_Version.v11.rawValue)
+        
+        let negotiatedVersion = try mySession.negotiateMajorAndMinorVersion(
+            from: localVersion,
+            and: remoteVersion
+        )
+        
+        XCTAssertEqual(negotiatedVersion, goldValue)
+    }
+    
+    func testNegotiateMajorAndMinorWithValidUpgrade2() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        let goldValue = CspE2eFs_Version.v11
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = UInt32(CspE2eFs_Version.v10.rawValue)
+        localVersion.max = UInt32(CspE2eFs_Version.v11.rawValue)
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = UInt32(CspE2eFs_Version.v11.rawValue)
+        remoteVersion.max = 0x0102
+        
+        let negotiatedVersion = try mySession.negotiateMajorAndMinorVersion(
+            from: localVersion,
+            and: remoteVersion
+        )
+        
+        XCTAssertEqual(negotiatedVersion, goldValue)
+    }
+    
+    func testNegotiateMajorAndMinorWithValidUpgrad3() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        let goldValue = CspE2eFs_Version.v11
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = 0x0100
+        localVersion.max = 0x0101
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = 0x0101
+        remoteVersion.max = 0x0104
+        
+        let negotiatedVersion = try mySession.negotiateMajorAndMinorVersion(
+            from: localVersion,
+            and: remoteVersion
+        )
+        
+        XCTAssertEqual(negotiatedVersion, goldValue)
+    }
+    
+    func testNegotiateMajorAndMinorWithInvalidUpgrade1() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = 0x0100
+        localVersion.max = 0x0103
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = 0x0100
+        remoteVersion.max = 0x0102
+        
+        do {
+            _ = try mySession.negotiateMajorAndMinorVersion(
+                from: localVersion,
+                and: remoteVersion
+            )
+            // If you have just upgraded protocols you might need to adjust the versions in such a way that an
+            // `.UNRECOGNIZED` value is produced
+            XCTFail()
+        }
+        catch {
+            guard let error = error as? BadMessageError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error, BadMessageError.unableToNegotiateFSSession)
+        }
+    }
+    
+    func testNegotiateMajorAndMinorWithInvalidUpgrade2() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = 0x0100
+        localVersion.max = 0x0103
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = 0x0104
+        remoteVersion.max = 0x010E
+        
+        do {
+            _ = try mySession.negotiateMajorAndMinorVersion(
+                from: localVersion,
+                and: remoteVersion
+            )
+            XCTFail()
+        }
+        catch {
+            guard let error = error as? BadMessageError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error, BadMessageError.unableToNegotiateFSSession)
+        }
+    }
+    
+    func testNegotiateMajorAndMinorWithInvalidUpgrade3() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = 0x0100
+        localVersion.max = 0x010E
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = 0x0100
+        remoteVersion.max = 0x0103
+        
+        do {
+            _ = try mySession.negotiateMajorAndMinorVersion(
+                from: localVersion,
+                and: remoteVersion
+            )
+            XCTFail()
+        }
+        catch {
+            guard let error = error as? BadMessageError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error, BadMessageError.unableToNegotiateFSSession)
+        }
+    }
+    
+    func testNegotiateMajorAndMinorWithInvalidUpgrade4() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = 0x0100
+        localVersion.max = 0x010E
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = 0x0100
+        remoteVersion.max = 0x012C
+        
+        do {
+            _ = try mySession.negotiateMajorAndMinorVersion(
+                from: localVersion,
+                and: remoteVersion
+            )
+            XCTFail()
+        }
+        catch {
+            guard let error = error as? BadMessageError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error, BadMessageError.unableToNegotiateFSSession)
+        }
+    }
+    
+    func testNegotiateMajorAndMinorWithInvalidUpgrade5() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = 0x0104
+        localVersion.max = 0x010E
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = 0x015E
+        remoteVersion.max = 0x012C
+        
+        do {
+            _ = try mySession.negotiateMajorAndMinorVersion(
+                from: localVersion,
+                and: remoteVersion
+            )
+            XCTFail()
+        }
+        catch {
+            guard let error = error as? BadMessageError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error, BadMessageError.invalidFSVersion)
+        }
+    }
+    
+    func testNegotiateMajorAndMinorWithInvalidUpgrade6() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = 0x0102
+        localVersion.max = 0x0103
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = 0x0100
+        remoteVersion.max = 0x0101
+        
+        do {
+            _ = try mySession.negotiateMajorAndMinorVersion(
+                from: localVersion,
+                and: remoteVersion
+            )
+            XCTFail()
+        }
+        catch {
+            guard let error = error as? BadMessageError else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(error, BadMessageError.unableToNegotiateFSSession)
+        }
+    }
+    
+    func testImplementation() {
+        var i = 0
+        for offeredVersion in [CspE2eFs_Version.v10, CspE2eFs_Version.v11, CspE2eFs_Version.UNRECOGNIZED(258)] {
+            for rawAppliedVersion in [
+                CspE2eFs_Version.v10,
+                CspE2eFs_Version.v11,
+                CspE2eFs_Version.UNRECOGNIZED(258),
+            ] {
+                for local in [CspE2eFs_Version.v10, CspE2eFs_Version.v11, CspE2eFs_Version.UNRECOGNIZED(258)] {
+                    for remote in [CspE2eFs_Version.v10, CspE2eFs_Version.v11, CspE2eFs_Version.UNRECOGNIZED(258)] {
+                        i += 1
+                        let current4DHVersions = DHVersions(local: local, remote: remote)
+                        innerTestImplementation(
+                            offeredVersion: offeredVersion,
+                            rawAppliedVersion: rawAppliedVersion,
+                            current4DHVersions: current4DHVersions
+                        )
+                    }
+                }
+            }
+        }
+    }
+        
+    func innerTestImplementation(
+        offeredVersion: CspE2eFs_Version,
+        rawAppliedVersion: CspE2eFs_Version,
+        current4DHVersions: DHVersions
+    ) {
+        let guard1 = (offeredVersion.rawValue & 0xFF00) == (current4DHVersions.local.rawValue & 0xFF00) &&
+            (offeredVersion.rawValue & 0x00FF) >= (current4DHVersions.local.rawValue & 0x00FF)
+
+        let guard2 = (rawAppliedVersion.rawValue & 0xFF00) == (current4DHVersions.remote.rawValue & 0xFF00) &&
+            (rawAppliedVersion.rawValue & 0x00FF) >= (current4DHVersions.remote.rawValue & 0x00FF)
+            
+        let if1 = (offeredVersion.rawValue & 0xFF00) != (current4DHVersions.local.rawValue & 0xFF00) ||
+            (offeredVersion.rawValue & 0x00FF) < (current4DHVersions.local.rawValue & 0x00FF)
+            
+        let if2 = (rawAppliedVersion.rawValue & 0xFF00) != (current4DHVersions.remote.rawValue & 0xFF00) ||
+            (rawAppliedVersion.rawValue & 0x00FF) < (current4DHVersions.remote.rawValue & 0x00FF)
+        
+        XCTAssertEqual(guard1, !if1)
+        XCTAssertEqual(guard2, !if2)
     }
 }

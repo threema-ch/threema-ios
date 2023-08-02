@@ -22,7 +22,7 @@ import Foundation
 
 extension Conversation {
     
-    public func updateLastMessage(with entityManager: EntityManager) {
+    @objc public func updateLastMessage(with entityManager: EntityManager) {
         entityManager.performSyncBlockAndSafe {
 
             let fetcher = MessageFetcher(for: self, with: entityManager)

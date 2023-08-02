@@ -19,8 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
-class TaskDefinitionProfileSync: TaskDefinition, TaskDefinitionTransactionProtocol {
+final class TaskDefinitionProfileSync: TaskDefinition, TaskDefinitionTransactionProtocol {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

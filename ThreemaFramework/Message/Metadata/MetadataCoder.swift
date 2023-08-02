@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 enum MetadataCoderError: Error {
     case missingPrivateKey
@@ -43,7 +44,7 @@ enum MetadataCoderError: Error {
             pbMetadata.nickname = nickname
         }
         if let messageID = metadata.messageID {
-            pbMetadata.messageID = messageID.convert()
+            pbMetadata.messageID = messageID.paddedLittleEndian()
         }
         if let createdAt = metadata.createdAt {
             pbMetadata.createdAt = UInt64(createdAt.timeIntervalSince1970 * 1000)
@@ -70,7 +71,7 @@ enum MetadataCoderError: Error {
             nickname = pbMetadata.nickname
         }
         if pbMetadata.messageID != 0 {
-            messageID = NSData.convertBytes(pbMetadata.messageID)
+            messageID = pbMetadata.messageID.littleEndianData
         }
         if pbMetadata.createdAt != 0 {
             createdAt = Date(timeIntervalSince1970: Double(pbMetadata.createdAt) / 1000)

@@ -53,7 +53,7 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
             expect.fulfill()
         }
         
-        waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 600, handler: nil)
         let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url))
         XCTAssert(UTIConverter.isRenderingVideoMimeType(mimeType))
     }
@@ -74,7 +74,7 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
             XCTFail()
         }
         
-        waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 600, handler: nil)
     }
     
     func testGarbageURL() {

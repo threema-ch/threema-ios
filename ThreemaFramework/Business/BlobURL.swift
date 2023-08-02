@@ -183,7 +183,7 @@ import Foundation
     }
     
     private func substituteOrigin(url: String, with origin: BlobOrigin) -> String {
-        serverConnector.isMultiDeviceActivated ? url.replacingOccurrences(
+        userSettings.enableMultiDevice ? url.replacingOccurrences(
             of: "{origin}",
             with: origin.originString
         ) : url

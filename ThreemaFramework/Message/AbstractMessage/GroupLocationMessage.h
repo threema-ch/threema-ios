@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupLocationMessage : AbstractGroupMessage <NSCoding>
+@interface GroupLocationMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property (nonatomic) double latitude;
 @property (nonatomic) double longitude;

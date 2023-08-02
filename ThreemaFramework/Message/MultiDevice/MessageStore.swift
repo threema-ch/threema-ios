@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 class MessageStore: MessageStoreProtocol {
 
@@ -39,8 +40,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         audioMessage: BoxAudioMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date
+        createdAt: Date,
+        reflectedAt: Date
     ) throws {
         messageProcessorDelegate.incomingMessageStarted(audioMessage)
 
@@ -56,9 +57,9 @@ class MessageStore: MessageStoreProtocol {
                 .messageNotProcessed(message: "Could not find/create audio message in DB")
         }
         
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: false)
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            msg.date = createdAt
+            msg.remoteSentDate = createdAt
         }
 
         messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
@@ -68,8 +69,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         fileMessage: BoxFileMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void> {
@@ -88,9 +89,10 @@ class MessageStore: MessageStoreProtocol {
                 timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
                 entityManager: self.frameworkInjector.backgroundEntityManager,
                 onCompletion: { msg in
-                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                    self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                         msg?.id = fileMessage.messageID
-                        msg?.date = timestamp
+                        msg?.date = createdAt
+                        msg?.remoteSentDate = isOutgoing ? reflectedAt : createdAt
                     }
 
                     if !isOutgoing {
@@ -102,6 +104,12 @@ class MessageStore: MessageStoreProtocol {
                         }
 
                         self.messageProcessorDelegate.incomingMessageFinished(fileMessage, isPendingGroup: false)
+                    }
+                    else {
+                        self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+                        if let msg {
+                            self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                        }
                     }
 
                     seal.fulfill_()
@@ -119,8 +127,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         textMessage: BoxTextMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         if !isOutgoing {
@@ -138,14 +146,18 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
         }
 
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            msg.date = createdAt
+            msg.remoteSentDate = isOutgoing ? reflectedAt : createdAt
         }
 
         if !isOutgoing {
             messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
             messageProcessorDelegate.incomingMessageFinished(textMessage, isPendingGroup: false)
+        }
+        else {
+            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+            messageProcessorDelegate.changedManagedObjectID(msg.objectID)
         }
     }
 
@@ -163,16 +175,18 @@ class MessageStore: MessageStoreProtocol {
         )
         .then { (data: Data?) -> Promise<Void> in
             guard let data else {
-                throw MediatorReflectedProcessorError.downloadFailed(message: "Blob download failed, no data.")
+                return Promise()
             }
 
-            self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            self.frameworkInjector.backgroundEntityManager.performAndWait {
                 let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
                     .contact(for: contactSetPhotoMessage.fromIdentity)
                 self.frameworkInjector.contactStore.updateProfilePicture(
                     contact?.identity,
                     imageData: data,
                     shouldReflect: false,
+                    blobID: nil,
+                    encryptionKey: nil,
                     didFailWithError: nil
                 )
             }
@@ -184,15 +198,14 @@ class MessageStore: MessageStoreProtocol {
 
     func save(
         deliveryReceiptMessage: DeliveryReceiptMessage,
-        createdAt: UInt64,
+        createdAt: Date,
         isOutgoing: Bool
     ) throws {
         var messageReadConversations = Set<Conversation>()
 
         for id in deliveryReceiptMessage.receiptMessageIDs {
             if let messageID = id as? Data {
-                var error: Error?
-                frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                try frameworkInjector.backgroundEntityManager.performAndWait {
                     if let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
                         forMessage: deliveryReceiptMessage
                     ),
@@ -200,16 +213,18 @@ class MessageStore: MessageStoreProtocol {
                             with: messageID,
                             conversation: conversation
                         ) {
-                        if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGRECEIVED {
-                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        if deliveryReceiptMessage.receiptType == .received {
+                            DDLogNotice("Message ID \(msg.id.hexString) has been received by recipient")
+                            self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                                 msg.delivered = true
-                                msg.deliveryDate = deliveryReceiptMessage.date
+                                msg.deliveryDate = createdAt
                             }
                         }
-                        else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGREAD {
-                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        else if deliveryReceiptMessage.receiptType == .read {
+                            DDLogNotice("Message ID \(msg.id.hexString) has been read by recipient")
+                            self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                                 msg.read = true
-                                msg.readDate = deliveryReceiptMessage.date
+                                msg.readDate = createdAt
 
                                 messageReadConversations.insert(msg.conversation)
                             }
@@ -229,16 +244,18 @@ class MessageStore: MessageStoreProtocol {
                                 }
                             }
                         }
-                        else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERACK {
-                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        else if deliveryReceiptMessage.receiptType == .ack {
+                            DDLogNotice("Message ID \(msg.id.hexString) has been user acknowledged by recipient")
+                            self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                                 msg.userack = true
-                                msg.userackDate = deliveryReceiptMessage.date
+                                msg.userackDate = createdAt
                             }
                         }
-                        else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERDECLINE {
-                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        else if deliveryReceiptMessage.receiptType == .decline {
+                            DDLogNotice("Message ID \(msg.id.hexString) has been user declined by recipient")
+                            self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                                 msg.userack = false
-                                msg.userackDate = deliveryReceiptMessage.date
+                                msg.userackDate = createdAt
                             }
                         }
                         else {
@@ -246,15 +263,13 @@ class MessageStore: MessageStoreProtocol {
                                 "Unknown delivery receipt type \(deliveryReceiptMessage.receiptType) with message ID \(messageID.hexString)"
                             )
                         }
+                        self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
                         self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                     }
                     else {
-                        error = MediatorReflectedProcessorError
+                        throw MediatorReflectedProcessorError
                             .messageNotProcessed(message: deliveryReceiptMessage.loggingDescription)
                     }
-                }
-                if let error {
-                    throw error
                 }
             }
         }
@@ -272,8 +287,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         groupAudioMessage: GroupAudioMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date
+        createdAt: Date,
+        reflectedAt: Date
     ) throws {
         messageProcessorDelegate.incomingMessageStarted(groupAudioMessage)
 
@@ -293,9 +308,9 @@ class MessageStore: MessageStoreProtocol {
                 .messageNotProcessed(message: "Could not find/create group audio message in DB")
         }
 
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: false)
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            msg.date = createdAt
+            msg.remoteSentDate = createdAt
         }
 
         messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
@@ -305,7 +320,7 @@ class MessageStore: MessageStoreProtocol {
     func save(groupCreateMessage amsg: GroupCreateMessage) -> Promise<Void> {
         // Validate members, all members must be known contacts, otherwise device is not in sync
         var internalError: Error?
-        frameworkInjector.entityManager.performBlockAndWait {
+        frameworkInjector.entityManager.performAndWait {
             for identity in (amsg.groupMembers as! [String])
                 .filter({ $0 != self.frameworkInjector.myIdentityStore.identity }) {
                 guard self.frameworkInjector.entityManager.entityFetcher.contact(for: identity) != nil else {
@@ -378,8 +393,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         groupFileMessage: GroupFileMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void> {
@@ -402,9 +417,16 @@ class MessageStore: MessageStoreProtocol {
                 timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
                 entityManager: self.frameworkInjector.backgroundEntityManager,
                 onCompletion: { msg in
-                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                    self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                         msg?.id = groupFileMessage.messageID
-                        msg?.date = timestamp
+                        msg?.date = createdAt
+                        if !isOutgoing {
+                            msg?.deliveryDate = reflectedAt
+                            msg?.remoteSentDate = createdAt
+                        }
+                        else {
+                            msg?.remoteSentDate = reflectedAt
+                        }
                     }
 
                     if !isOutgoing {
@@ -416,6 +438,12 @@ class MessageStore: MessageStoreProtocol {
                             groupFileMessage,
                             isPendingGroup: false
                         )
+                    }
+                    else {
+                        self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+                        if let msg {
+                            self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                        }
                     }
 
                     seal.fulfill_()
@@ -438,8 +466,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         imageMessage: AbstractMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int
     ) throws -> Promise<Void> {
         assert(imageMessage is BoxImageMessage || imageMessage is GroupImageMessage)
@@ -481,9 +509,9 @@ class MessageStore: MessageStoreProtocol {
             var encryptionKey: Data!
             var nonce: Data!
 
-            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                msg.date = timestamp
-                msg.isOwn = NSNumber(booleanLiteral: false)
+            frameworkInjector.backgroundEntityManager.performAndWaitSave {
+                msg.date = createdAt
+                msg.remoteSentDate = createdAt
 
                 senderPublicKey = sender.publicKey
                 messageID = msg.id
@@ -505,7 +533,6 @@ class MessageStore: MessageStoreProtocol {
                     userSettings: self.frameworkInjector.userSettings,
                     queue: DispatchQueue.global(qos: .userInitiated)
                 ), queue: downloadQueue),
-                serverConnector: self.frameworkInjector.serverConnector,
                 myIdentityStore: self.frameworkInjector.myIdentityStore,
                 userSettings: self.frameworkInjector.userSettings,
                 entityManager: self.frameworkInjector.backgroundEntityManager
@@ -539,8 +566,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         groupLocationMessage: GroupLocationMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         if !isOutgoing {
@@ -563,9 +590,15 @@ class MessageStore: MessageStoreProtocol {
                 .messageNotProcessed(message: "Could not find/create group location message in DB")
         }
 
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: false)
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            msg.date = createdAt
+            if !isOutgoing {
+                msg.deliveryDate = reflectedAt
+                msg.remoteSentDate = createdAt
+            }
+            else {
+                msg.remoteSentDate = reflectedAt
+            }
         }
 
         // Caution this is async
@@ -574,6 +607,10 @@ class MessageStore: MessageStoreProtocol {
                 if !isOutgoing {
                     self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
                     self.messageProcessorDelegate.incomingMessageFinished(groupLocationMessage, isPendingGroup: false)
+                }
+                else {
+                    self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+                    self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                 }
             }
             .catch { error in
@@ -584,8 +621,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         groupBallotCreateMessage: GroupBallotCreateMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         if !isOutgoing {
@@ -601,49 +638,47 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.senderNotFound(identity: groupBallotCreateMessage.fromIdentity)
         }
 
-        var msg: BallotMessage?
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+        guard let msg = frameworkInjector.backgroundEntityManager.performAndWaitSave({
             let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
-            msg = decoder?.decodeCreateBallot(
+            let msg = decoder?.decodeCreateBallot(
                 fromGroupBox: groupBallotCreateMessage,
                 sender: sender,
                 conversation: conversation
             )
 
-            guard let msg else {
-                err = MediatorReflectedProcessorError
-                    .messageNotProcessed(message: "Could not find/create ballot message in DB")
-                return
+            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
+            msg?.date = createdAt
+            if !isOutgoing {
+                msg?.deliveryDate = reflectedAt
+                msg?.remoteSentDate = createdAt
+            }
+            else {
+                msg?.remoteSentDate = reflectedAt
             }
 
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
-        }
-        if let err {
-            throw err
+            return msg
+        }) else {
+            throw MediatorReflectedProcessorError
+                .messageNotProcessed(message: "Could not find/create ballot message in DB")
         }
 
         if !isOutgoing {
-            if let msg {
-                messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-            }
-
+            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
             messageProcessorDelegate.incomingMessageFinished(groupBallotCreateMessage, isPendingGroup: false)
+        }
+        else {
+            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+            messageProcessorDelegate.changedManagedObjectID(msg.objectID)
         }
     }
 
     func save(groupBallotVoteMessage: GroupBallotVoteMessage) throws {
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+        try frameworkInjector.backgroundEntityManager.performAndWaitSave {
             if let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager),
                !decoder.decodeVote(fromGroupBox: groupBallotVoteMessage) {
-                err = MediatorReflectedProcessorError
+                throw MediatorReflectedProcessorError
                     .messageDecodeFailed(message: groupBallotVoteMessage.loggingDescription)
             }
-        }
-        if let err {
-            throw err
         }
 
         changedBallot(with: groupBallotVoteMessage.ballotID)
@@ -653,11 +688,11 @@ class MessageStore: MessageStoreProtocol {
         syncLoadBlob(blobID: amsg.blobID, encryptionKey: amsg.encryptionKey, origin: .public)
             .then { (data: Data?) -> Promise<Void> in
                 guard let data else {
-                    throw MediatorReflectedProcessorError.downloadFailed(message: "Blob download failed, no data.")
+                    return Promise()
                 }
 
                 return Promise { seal in
-                    self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                    _ = self.frameworkInjector.backgroundEntityManager.performAndWait {
                         self.frameworkInjector.backgroundGroupManager.setPhoto(
                             groupID: amsg.groupID,
                             creator: amsg.groupCreator,
@@ -678,28 +713,26 @@ class MessageStore: MessageStoreProtocol {
     
     func save(
         groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage,
-        createdAt: UInt64,
+        createdAt: Date,
         isOutgoing: Bool
     ) throws {
 
-        guard groupDeliveryReceiptMessage.receiptType == GROUPDELIVERYRECEIPT_MSGUSERACK ||
-            groupDeliveryReceiptMessage.receiptType == GROUPDELIVERYRECEIPT_MSGUSERDECLINE else {
+        guard groupDeliveryReceiptMessage.receiptType == ReceiptType.ack.rawValue ||
+            groupDeliveryReceiptMessage.receiptType == ReceiptType.decline.rawValue else {
             DDLogWarn("Unknown group delivery receipt type \(groupDeliveryReceiptMessage.receiptType)")
             return
         }
 
         let receiptType: GroupDeliveryReceipt.DeliveryReceiptType =
-            groupDeliveryReceiptMessage.receiptType == GROUPDELIVERYRECEIPT_MSGUSERACK ? .acknowledged : .declined
+            groupDeliveryReceiptMessage.receiptType == ReceiptType.ack.rawValue ? .acknowledged : .declined
 
         for id in groupDeliveryReceiptMessage.receiptMessageIDs {
             if let messageID = id as? Data {
-                var err: Error?
-
-                frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                try frameworkInjector.backgroundEntityManager.performAndWait {
                     guard let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
                         forMessage: groupDeliveryReceiptMessage
                     ) else {
-                        err = MediatorReflectedProcessorError
+                        throw MediatorReflectedProcessorError
                             .conversationNotFound(message: groupDeliveryReceiptMessage.loggingDescription)
                         return
                     }
@@ -709,24 +742,21 @@ class MessageStore: MessageStoreProtocol {
                         conversation: conversation
                     ),
                         msg.conversation.groupID == groupDeliveryReceiptMessage.groupID {
-                        self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                             let receipt = GroupDeliveryReceipt(
                                 identity: groupDeliveryReceiptMessage.fromIdentity,
                                 deliveryReceiptType: receiptType,
-                                date: groupDeliveryReceiptMessage.date
+                                date: createdAt ?? groupDeliveryReceiptMessage.date
                             )
                             msg.add(groupDeliveryReceipt: receipt)
                         }
+                        self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
                         self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                     }
                     else {
-                        err = MediatorReflectedProcessorError
+                        throw MediatorReflectedProcessorError
                             .messageNotProcessed(message: groupDeliveryReceiptMessage.loggingDescription)
                     }
-                }
-
-                if let err {
-                    throw err
                 }
             }
         }
@@ -736,8 +766,8 @@ class MessageStore: MessageStoreProtocol {
         groupTextMessage: GroupTextMessage,
         senderIdentity: String,
         messageID: Data,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         if !isOutgoing {
@@ -745,9 +775,6 @@ class MessageStore: MessageStoreProtocol {
         }
 
         let (conversation, sender) = try conversationSender(forMessage: groupTextMessage, isOutgoing: isOutgoing)
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
-            print("\(conversation.groupID?.hexString ?? "-")")
-        }
 
         guard isOutgoing || (!isOutgoing && sender != nil) else {
             throw MediatorReflectedProcessorError.senderNotFound(identity: groupTextMessage.fromIdentity)
@@ -762,14 +789,24 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
         }
 
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            msg.date = createdAt
+            if !isOutgoing {
+                msg.deliveryDate = reflectedAt
+                msg.remoteSentDate = createdAt
+            }
+            else {
+                msg.remoteSentDate = reflectedAt
+            }
         }
 
         if !isOutgoing {
             messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
             messageProcessorDelegate.incomingMessageFinished(groupTextMessage, isPendingGroup: false)
+        }
+        else {
+            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+            messageProcessorDelegate.changedManagedObjectID(msg.objectID)
         }
     }
 
@@ -781,8 +818,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         videoMessage: AbstractMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int
     ) throws -> Promise<Void> {
         assert(videoMessage is BoxVideoMessage || videoMessage is GroupVideoMessage)
@@ -825,9 +862,9 @@ class MessageStore: MessageStoreProtocol {
             var messageID: Data!
             var blobOrigin: BlobOrigin!
 
-            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                msg.date = timestamp
-                msg.isOwn = NSNumber(booleanLiteral: false)
+            frameworkInjector.backgroundEntityManager.performAndWaitSave {
+                msg.date = createdAt
+                msg.remoteSentDate = createdAt
 
                 conversationObjectID = conversation.objectID
                 messageID = msg.id
@@ -836,7 +873,7 @@ class MessageStore: MessageStoreProtocol {
 
             self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
 
-            // A VideoMessage never has a local blob because all note group cabable devices send everything as
+            // A VideoMessage never has a local blob because all note group capable devices send everything as
             // FileMessage (-> localOrigin: false)
             // Download, decrypt and save blob of thumbnail
             let downloadQueue = DispatchQueue.global(qos: .default)
@@ -846,7 +883,7 @@ class MessageStore: MessageStoreProtocol {
                     userSettings: self.frameworkInjector.userSettings,
                     queue: DispatchQueue.global(qos: .userInitiated)
                 ), queue: downloadQueue),
-                serverConnector: self.frameworkInjector.serverConnector,
+                userSettings: self.frameworkInjector.userSettings,
                 entityManager: self.frameworkInjector.backgroundEntityManager
             )
             videoProcessor.downloadVideoThumbnail(
@@ -875,8 +912,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         locationMessage: BoxLocationMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         if !isOutgoing {
@@ -894,9 +931,9 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create location message")
         }
 
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            msg.date = createdAt
+            msg.remoteSentDate = isOutgoing ? reflectedAt : createdAt
         }
 
         // Caution this is async
@@ -905,6 +942,10 @@ class MessageStore: MessageStoreProtocol {
                 if !isOutgoing {
                     self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
                     self.messageProcessorDelegate.incomingMessageFinished(locationMessage, isPendingGroup: false)
+                }
+                else {
+                    self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+                    self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                 }
             }
             .catch { error in
@@ -915,8 +956,8 @@ class MessageStore: MessageStoreProtocol {
     func save(
         ballotCreateMessage: BoxBallotCreateMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         if !isOutgoing {
@@ -929,45 +970,92 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.senderNotFound(identity: ballotCreateMessage.fromIdentity)
         }
 
-        var msg: BallotMessage!
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+        guard let msg = frameworkInjector.backgroundEntityManager.performAndWaitSave({
             let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
-            msg = decoder?.decodeCreateBallot(fromBox: ballotCreateMessage, sender: sender, conversation: conversation)
+            let msg = decoder?.decodeCreateBallot(
+                fromBox: ballotCreateMessage,
+                sender: sender,
+                conversation: conversation
+            )
 
-            guard let msg else {
-                err = MediatorReflectedProcessorError
-                    .messageNotProcessed(message: "Could not find/create ballot message")
-                return
-            }
+            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
+            msg?.date = createdAt
+            msg?.remoteSentDate = isOutgoing ? reflectedAt : createdAt
 
-            msg.date = timestamp
-            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
-        }
-        if let err {
-            throw err
+            return msg
+        }) else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create ballot message")
         }
 
         if !isOutgoing {
             messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
             messageProcessorDelegate.incomingMessageFinished(ballotCreateMessage, isPendingGroup: false)
         }
+        else {
+            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+            messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+        }
     }
 
     func save(ballotVoteMessage: BoxBallotVoteMessage) throws {
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+        try frameworkInjector.backgroundEntityManager.performAndWaitSave {
             if let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager),
                !decoder.decodeVote(fromBox: ballotVoteMessage) {
-                err = MediatorReflectedProcessorError
+                throw MediatorReflectedProcessorError
                     .messageDecodeFailed(message: ballotVoteMessage.loggingDescription)
             }
         }
-        if let err {
-            throw err
-        }
 
         changedBallot(with: ballotVoteMessage.ballotID)
+    }
+    
+    func save(
+        groupCallStartMessage: GroupCallStartMessage,
+        decodedCallStartMessage: CspE2e_GroupCallStart,
+        senderIdentity: String,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) throws -> Promise<Void> {
+        Promise { seal in
+            Task {
+                try await self.frameworkInjector.entityManager.performSave {
+                    
+                    guard let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+                        for: groupCallStartMessage.groupID,
+                        creator: groupCallStartMessage.groupCreator
+                    ) else {
+                        seal
+                            .reject(
+                                MediatorReflectedProcessorError
+                                    .messageNotProcessed(message: groupCallStartMessage.loggingDescription)
+                            )
+                        return
+                    }
+                    
+                    let fromIdentity = groupCallStartMessage.fromIdentity == self.frameworkInjector.myIdentityStore
+                        .identity ? nil : groupCallStartMessage.fromIdentity
+                    
+                    GlobalGroupCallsManagerSingleton.shared.handleMessage(
+                        rawMessage: decodedCallStartMessage,
+                        from: fromIdentity!,
+                        in: conversation,
+                        receiveDate: groupCallStartMessage.date,
+                        onCompletion: {
+                            if !isOutgoing {
+                                self.messageProcessorDelegate.incomingMessageFinished(
+                                    groupCallStartMessage,
+                                    isPendingGroup: false
+                                )
+                            }
+                            self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+
+                            seal.fulfill_()
+                        }
+                    )
+                }
+            }
+        }
     }
 
     // MARK: Misc
@@ -976,7 +1064,7 @@ class MessageStore: MessageStoreProtocol {
     /// - Parameter message:: Location message to save address
     private func setPoiAddress(message: LocationMessage?) -> Promise<Void> {
         Promise { seal in
-            self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            self.frameworkInjector.backgroundEntityManager.performAndWait {
                 if let message,
                    let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher
                    .getManagedObject(by: message.objectID) as? LocationMessage,
@@ -989,15 +1077,15 @@ class MessageStore: MessageStoreProtocol {
                         longitude: longitude,
                         accuracy: accuracy,
                         completion: { geoLabel in
-                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                            self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                                 message.poiAddress = geoLabel
                             }
                             seal.fulfill_()
                         }
                     ) { error in
-                        DDLogWarn("Reverse geocoding failed: \(error?.localizedDescription ?? "")")
+                        DDLogWarn("Reverse geocoding failed: \(error)")
 
-                        self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                             message.poiAddress = String(format: "%.5f°, %.5f°", latitude, longitude)
                         }
                         seal.fulfill_()
@@ -1010,19 +1098,45 @@ class MessageStore: MessageStoreProtocol {
         }
     }
 
-    func syncLoadBlob(blobID: Data, encryptionKey: Data, origin: BlobOrigin) -> Promise<Data?> {
+    private func syncLoadBlob(blobID: Data, encryptionKey: Data, origin: BlobOrigin) -> Promise<Data?> {
         Promise { seal in
-            let profilePictureLoader = ContactGroupPhotoLoader()
-            profilePictureLoader.start(with: blobID, encryptionKey: encryptionKey, origin: origin) { data in
-                seal.fulfill(data)
-            } error: { error in
-                seal.reject(MediatorReflectedProcessorError.downloadFailed(message: error?.localizedDescription ?? ""))
+            let downloadQueue = DispatchQueue.global(qos: .default)
+
+            let blobDownloader = BlobDownloader(
+                blobURL: BlobURL(
+                    serverConnector: self.frameworkInjector.serverConnector,
+                    userSettings: self.frameworkInjector.userSettings,
+                    queue: downloadQueue
+                ),
+                queue: downloadQueue
+            )
+            blobDownloader.download(blobID: blobID, origin: origin) { data, error in
+                if let error = error as? NSError {
+                    if error.code == 404 {
+                        seal.fulfill(nil)
+                    }
+                    else {
+                        seal.reject(MediatorReflectedProcessorError.downloadFailed(message: error.localizedDescription))
+                    }
+                    return
+                }
+
+                // Decrypt blob data
+                guard let imageData = NaClCrypto.shared()
+                    .symmetricDecryptData(data, withKey: encryptionKey, nonce: ThreemaProtocol.nonce01) else {
+                    seal.reject(MediatorReflectedProcessorError.downloadFailed(message: "Decrypt blob data failed"))
+                    return
+                }
+
+                blobDownloader.markDownloadDone(for: blobID, origin: .local)
+
+                seal.fulfill(imageData)
             }
         }
     }
 
     private func changedBallot(with ballotID: Data) {
-        frameworkInjector.entityManager.performBlockAndWait {
+        frameworkInjector.entityManager.performAndWait {
             if let ballot = self.frameworkInjector.entityManager.entityFetcher.ballot(for: ballotID) {
                 self.messageProcessorDelegate.changedManagedObjectID(ballot.objectID)
             }
@@ -1030,7 +1144,7 @@ class MessageStore: MessageStoreProtocol {
     }
 
     private func changedContact(with identity: String) {
-        frameworkInjector.entityManager.performBlockAndWait {
+        frameworkInjector.entityManager.performAndWait {
             if let contact = self.frameworkInjector.entityManager.entityFetcher.contact(for: identity) {
                 self.messageProcessorDelegate.changedManagedObjectID(contact.objectID)
             }
@@ -1038,7 +1152,7 @@ class MessageStore: MessageStoreProtocol {
     }
 
     private func changedConversationAndGroupEntity(groupID: Data, groupCreatorIdentity: String) {
-        frameworkInjector.entityManager.performBlockAndWait {
+        frameworkInjector.entityManager.performAndWait {
             if let conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(
                 for: groupID,
                 creator: groupCreatorIdentity
@@ -1062,7 +1176,7 @@ class MessageStore: MessageStoreProtocol {
             guard let sender = result.sender else {
                 throw MediatorReflectedProcessorError.senderNotFound(identity: message.fromIdentity)
             }
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            frameworkInjector.backgroundEntityManager.performAndWait {
                 conversationIdentity = sender.identity
             }
         }
@@ -1070,13 +1184,13 @@ class MessageStore: MessageStoreProtocol {
             guard let receiver = result.receiver else {
                 throw MediatorReflectedProcessorError.receiverNotFound(identity: message.toIdentity)
             }
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            frameworkInjector.backgroundEntityManager.performAndWait {
                 conversationIdentity = receiver.identity
             }
         }
 
         if let conversationIdentity, result.conversation == nil, !(message is AbstractGroupMessage) {
-            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+            frameworkInjector.backgroundEntityManager.performAndWaitSave {
                 result.conversation = self.frameworkInjector.backgroundEntityManager.conversation(
                     for: conversationIdentity,
                     createIfNotExisting: true

@@ -19,8 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
-class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
+final class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -37,7 +38,7 @@ class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
     }
     
     override var description: String {
-        "<\(type(of: self)) \(message?.loggingDescription ?? "unknown message")>"
+        "<\(type(of: self)) \(reflectedEnvelope?.loggingDescription ?? "unknown message")>"
     }
     
     override private init(isPersistent: Bool) {
@@ -46,24 +47,25 @@ class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
     
     convenience init(
         reflectID: Data,
-        message: D2d_Envelope,
-        mediatorTimestamp: Date,
+        reflectedEnvelope: D2d_Envelope,
+        reflectedAt: Date,
         receivedAfterInitialQueueSend: Bool,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) {
         self.init(isPersistent: false)
+        self.retry = false
         self.reflectID = reflectID
-        self.message = message
-        self.mediatorTimestamp = mediatorTimestamp
+        self.reflectedEnvelope = reflectedEnvelope
+        self.reflectedAt = reflectedAt
         self.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
         self.maxBytesToDecrypt = Int32(maxBytesToDecrypt)
         self.timeoutDownloadThumbnail = Int32(timeoutDownloadThumbnail)
     }
 
     var reflectID: Data!
-    var message: D2d_Envelope!
-    var mediatorTimestamp: Date!
+    var reflectedEnvelope: D2d_Envelope!
+    var reflectedAt: Date!
     var receivedAfterInitialQueueSend: Bool!
     var maxBytesToDecrypt: Int32!
     var timeoutDownloadThumbnail: Int32!

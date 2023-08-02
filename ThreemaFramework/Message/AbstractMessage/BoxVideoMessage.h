@@ -20,7 +20,7 @@
 
 #import "AbstractMessage.h"
 
-@interface BoxVideoMessage : AbstractMessage <NSCoding>
+@interface BoxVideoMessage : AbstractMessage <NSSecureCoding>
 
 @property (nonatomic, readwrite) uint16_t duration;
 @property (nonatomic, strong) NSData *videoBlobId NS_SWIFT_NAME(videoBlobID);

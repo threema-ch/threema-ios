@@ -19,22 +19,24 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
-/// Reflect DeliveryReceipts to mediator server is multi device enabled
-/// and send it to group members (CSP).
-class TaskExecutionSendDeliveryReceiptsMessage: TaskExecution, TaskExecutionProtocol {
+/// Reflect `DeliveryReceiptMessage` (or `D2d_IncomingMessageUpdate` for read sync) for 1-1 messages
+/// to mediator server is multi device enabled and send it to group members (CSP).
+final class TaskExecutionSendDeliveryReceiptsMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendDeliveryReceiptsMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<DeliveryReceiptMessage?> in
             // Check has to send read receipt to contact, all other receipt types will be send anyway
             var doSendReadReceipt = false
-            if task.receiptType == DELIVERYRECEIPT_MSGREAD {
+            if task.receiptType == .read {
                 doSendReadReceipt = self.frameworkInjector.backgroundEntityManager.performAndWait {
                     if let contactEntity = self.frameworkInjector.backgroundEntityManager.entityFetcher
                         .contact(for: task.toIdentity) {
@@ -44,29 +46,36 @@ class TaskExecutionSendDeliveryReceiptsMessage: TaskExecution, TaskExecutionProt
                 }
             }
 
-            var deliveryReceiptMessage: DeliveryReceiptMessage?
-            if doSendReadReceipt || task.receiptType != DELIVERYRECEIPT_MSGREAD {
-                deliveryReceiptMessage = self.getDeliveryReceiptMessage(
+            var deliveryReceiptMessageForReflecting: DeliveryReceiptMessage?
+            var deliveryReceiptMessageForSending: DeliveryReceiptMessage?
+            if doSendReadReceipt || task.receiptType != .read {
+                deliveryReceiptMessageForReflecting = self.getDeliveryReceiptMessage(
                     task.fromIdentity,
                     task.toIdentity,
                     task.receiptType,
                     task.receiptMessageIDs
                 )
+                deliveryReceiptMessageForSending = self.getDeliveryReceiptMessage(
+                    task.fromIdentity,
+                    task.toIdentity,
+                    task.receiptType,
+                    task.receiptMessageIDs.filter { !task.excludeFromSending.contains($0) }
+                )
             }
 
             // Reflect group delivery receipts message if is necessary
             guard doReflect else {
-                return Promise { seal in seal.fulfill(deliveryReceiptMessage) }
+                return Promise { seal in seal.fulfill(deliveryReceiptMessageForSending) }
             }
 
-            if let deliveryReceiptMessage {
+            if let deliveryReceiptMessageForReflecting {
                 try self.reflectMessage(
-                    message: deliveryReceiptMessage,
+                    message: deliveryReceiptMessageForReflecting,
                     ltReflect: self.taskContext.logReflectMessageToMediator,
                     ltAck: self.taskContext.logReceiveMessageAckFromMediator
                 )
             }
-            else if task.receiptType == DELIVERYRECEIPT_MSGREAD {
+            else if task.receiptType == .read {
                 // Reflect read receipt for incoming message
                 // swiftformat:disable:next all
                 var conversationID = D2d_ConversationId()
@@ -86,10 +95,10 @@ class TaskExecutionSendDeliveryReceiptsMessage: TaskExecution, TaskExecutionProt
                 )
             }
 
-            return Promise { seal in seal.fulfill(deliveryReceiptMessage) }
+            return Promise { seal in seal.fulfill(deliveryReceiptMessageForSending) }
         }
         .then { deliveryReceiptMessage -> Promise<Void> in
-            guard let deliveryReceiptMessage else {
+            guard let deliveryReceiptMessage, !deliveryReceiptMessage.receiptMessageIDs.isEmpty else {
                 return Promise()
             }
 
@@ -102,6 +111,12 @@ class TaskExecutionSendDeliveryReceiptsMessage: TaskExecution, TaskExecutionProt
             .then { _ in
                 Promise()
             }
+        }
+        .then {
+            DDLogNotice(
+                "Sent delivery receipts (type \(task.receiptType.description)) for message IDs: \(task.receiptMessageIDs.map(\.hexString).joined(separator: ","))"
+            )
+            return Promise()
         }
     }
 }

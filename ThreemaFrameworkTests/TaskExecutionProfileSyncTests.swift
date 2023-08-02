@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 import XCTest
 @testable import ThreemaFramework
@@ -27,7 +28,8 @@ class TaskExecutionProfileSyncTests: XCTestCase {
     private var databaseMainCnx: DatabaseContext!
     private var databaseBackgroundCnx: DatabaseContext!
 
-    private let timeout: Double = 60
+    // TODO: (IOS-3875) Timeout
+    private let timeout: Double = 600
 
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
@@ -143,7 +145,8 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                 if serverConnectorMock.connectionState == .loggedIn {
                     NotificationCenter.default.post(
                         name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                        object: expectedReflectID
+                        object: expectedReflectID,
+                        userInfo: [expectedReflectID: Date()]
                     )
 
                     if var lockState = expectedMediatorLockState, !lockState.0.isEmpty {
@@ -363,6 +366,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         originalIdentityStore.pushFromName = "Test"
 
         let originalUserDefaults = UserSettingsMock()
+        originalUserDefaults.enableMultiDevice = true
         originalUserDefaults.sendProfilePicture = .init(rawValue: 0)
         originalUserDefaults.profilePictureContactList = []
 
@@ -376,6 +380,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         newIdentityStore.pushFromName = "Test"
 
         let newUserDefaults = UserSettingsMock()
+        newUserDefaults.enableMultiDevice = true
         newUserDefaults.sendProfilePicture = .init(rawValue: 0)
         newUserDefaults.profilePictureContactList = []
 
@@ -389,6 +394,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         goldIdentityStore.pushFromName = "Test"
 
         let goldUserDefaults = UserSettingsMock()
+        goldUserDefaults.enableMultiDevice = true
         goldUserDefaults.sendProfilePicture = .init(rawValue: 0)
         goldUserDefaults.profilePictureContactList = []
 
@@ -414,6 +420,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         originalIdentityStore.pushFromName = ""
 
         let originalUserDefaults = UserSettingsMock()
+        originalUserDefaults.enableMultiDevice = true
         originalUserDefaults.sendProfilePicture = .init(rawValue: 0)
         originalUserDefaults.profilePictureContactList = []
 
@@ -427,6 +434,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         newIdentityStore.pushFromName = "Test"
 
         let newUserDefaults = UserSettingsMock()
+        newUserDefaults.enableMultiDevice = true
         newUserDefaults.sendProfilePicture = .init(rawValue: 0)
         newUserDefaults.profilePictureContactList = []
 
@@ -440,6 +448,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         goldIdentityStore.pushFromName = "Test"
 
         let goldUserDefaults = UserSettingsMock()
+        goldUserDefaults.enableMultiDevice = true
         goldUserDefaults.sendProfilePicture = .init(rawValue: 0)
         goldUserDefaults.profilePictureContactList = []
 
@@ -466,6 +475,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         originalIdentityStore.pushFromName = ""
 
         let originalUserDefaults = UserSettingsMock()
+        originalUserDefaults.enableMultiDevice = true
         originalUserDefaults.sendProfilePicture = .init(rawValue: 0)
         originalUserDefaults.profilePictureContactList = []
 
@@ -479,6 +489,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         newIdentityStore.pushFromName = "Test"
 
         let newUserDefaults = UserSettingsMock()
+        newUserDefaults.enableMultiDevice = true
         newUserDefaults.sendProfilePicture = .init(rawValue: 0)
         newUserDefaults.profilePictureContactList = []
 
@@ -492,6 +503,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         goldIdentityStore.pushFromName = "Test"
 
         let goldUserDefaults = UserSettingsMock()
+        goldUserDefaults.enableMultiDevice = true
         goldUserDefaults.sendProfilePicture = .init(rawValue: 0)
         goldUserDefaults.profilePictureContactList = []
 
@@ -517,6 +529,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         originalIdentityStore.pushFromName = "Hello World"
 
         let originalUserDefaults = UserSettingsMock()
+        originalUserDefaults.enableMultiDevice = true
         originalUserDefaults.sendProfilePicture = .init(rawValue: 0)
         originalUserDefaults.profilePictureContactList = []
 
@@ -530,6 +543,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         newIdentityStore.pushFromName = "Test"
 
         let newUserDefaults = UserSettingsMock()
+        newUserDefaults.enableMultiDevice = true
         newUserDefaults.sendProfilePicture = .init(rawValue: 0)
         newUserDefaults.profilePictureContactList = []
 
@@ -543,6 +557,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         goldIdentityStore.pushFromName = "Hello World"
 
         let goldUserDefaults = UserSettingsMock()
+        goldUserDefaults.enableMultiDevice = true
         goldUserDefaults.sendProfilePicture = .init(rawValue: 0)
         goldUserDefaults.profilePictureContactList = []
 

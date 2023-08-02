@@ -203,6 +203,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         case MSGTYPE_TYPING_INDICATOR:
             typeText = @"TYPING_INDICATOR";
             break;
+        case MSGTYPE_FORWARD_SECURITY:
+            typeText = @"FORWARD_SECURITY";
+            break;
+        case MSGTYPE_AUTH_TOKEN:
+            typeText = @"AUTH_TOKEN:";
+            break;
+        case MSGTYPE_GROUP_CALL_START:
+            typeText = @"GROUP_CALL_START:";
+            break;
         default:
             break;
     }

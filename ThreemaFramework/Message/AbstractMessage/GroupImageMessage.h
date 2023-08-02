@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupImageMessage : AbstractGroupMessage <NSCoding>
+@interface GroupImageMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property (nonatomic, strong) NSData *blobId NS_SWIFT_NAME(blobID);
 @property (nonatomic, readwrite) uint32_t size;

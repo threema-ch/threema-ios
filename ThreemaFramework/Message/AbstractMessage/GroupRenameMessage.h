@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupRenameMessage : AbstractGroupMessage <NSCoding>
+@interface GroupRenameMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property (nonatomic, strong) NSString *name;
 

@@ -41,7 +41,7 @@ static int currentPortIndex = 0;
     GCDAsyncSocket *socket;
 }
 
-- (nullable instancetype)initWithServer:(NSString * _Nonnull)server ports:(NSArray<NSNumber *> * _Nonnull)ports preferIPv6:(BOOL)preferIPv6 delegate:(id<SocketProtocolDelegate> _Nonnull)delegate queue:(dispatch_queue_t _Nullable)queue error:(NSError * _Nullable __autoreleasing * _Nullable)error {
+- (nullable instancetype)initWithServer:(NSString * _Nonnull)server ports:(NSArray<NSNumber *> * _Nonnull)ports preferIPv6:(BOOL)preferIPv6 delegate:(id<SocketProtocolDelegate> _Nonnull)delegate queue:(dispatch_queue_t _Nonnull)queue error:(NSError * _Nullable __autoreleasing * _Nullable)error {
     
     self = [super init];
     if (self) {

@@ -13,7 +13,7 @@ option java_multiple_files = true;
 
 import "common.proto";
 
-// Metadata sent within a CSP payload `message-with-meta` struct.
+// Metadata sent within a CSP payload `message-with-metadata-box` struct.
 message MessageMetadata {
   // Padding that is ignored by the receiver.
   // Recommended to be chosen such that the total length of padding + nickname
@@ -39,14 +39,19 @@ message MessageMetadata {
 
 // Announces and immediately starts a group call.
 //
-// **Flags:**
+// **Properties**:
+// - Flags:
 //   - `0x01`: Send push notification.
-//
-// **Delivery receipts:** Automatic: No. Manual: No.
-//
-// **User profile distribution:** Yes.
-//
-// **Reflect:** Incoming: Yes. Outgoing: Yes.
+// - User profile distribution: Yes
+// - Exempt from blocking: Yes
+// - Implicit _direct_ contact creation: No
+// - Protect against replay: Yes
+// - Reflect:
+//   - Incoming: Yes
+//   - Outgoing: Yes
+// - Delivery receipts:
+//   - Automatic: N/A
+//   - Manual: No
 //
 // When creating this message to start a call within the group:
 //
@@ -96,14 +101,19 @@ message GroupCallStart {
 // This message is sent to the administrator of a group. The required
 // information is provided by a `GroupInvite` URL payload.
 //
-// **Flags:**
+// **Properties**:
+// - Flags:
 //   - `0x01`: Send push notification.
-//
-// **Delivery receipts:** Automatic: No. Manual: No.
-//
-// **User profile distribution:** Yes.
-//
-// **Reflect:** Incoming: Yes. Outgoing: Yes.
+// - User profile distribution: Yes
+// - Exempt from blocking: Yes
+// - Implicit _direct_ contact creation: Yes
+// - Protect against replay: Yes
+// - Reflect:
+//   - Incoming: Yes
+//   - Outgoing: Yes
+// - Delivery receipts:
+//   - Automatic: No
+//   - Manual: No
 //
 // When receiving this message:
 //
@@ -150,13 +160,18 @@ message GroupJoinRequest {
 // Response sent by the admin of a group towards a sender of a valid group join
 // request.
 //
-// **Flags:** None.
-//
-// **Delivery receipts:** Automatic: No. Manual: No.
-//
-// **User profile distribution:** Yes.
-//
-// **Reflect:** Incoming: Yes. Outgoing: Yes.
+// **Properties**:
+// - Flags: None
+// - User profile distribution: Yes
+// - Exempt from blocking: Yes
+// - Implicit _direct_ contact creation: Yes
+// - Protect against replay: Yes
+// - Reflect:
+//   - Incoming: Yes
+//   - Outgoing: Yes
+// - Delivery receipts:
+//   - Automatic: No
+//   - Manual: No
 //
 // When receiving this message:
 //

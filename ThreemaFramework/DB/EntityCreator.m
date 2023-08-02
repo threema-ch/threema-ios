@@ -249,6 +249,14 @@
     return conversation;
 }
 
+- (Conversation *)conversation:(BOOL)setLastUpdate {
+    Conversation *conversation = [self createEntityOfType: @"Conversation"];
+    if (setLastUpdate) {
+        conversation.lastUpdate = [NSDate date];
+    }
+    return conversation;
+}
+
 - (GroupEntity *)groupEntity {
     return (GroupEntity *)[self createEntityOfType: @"Group"];
 }
@@ -376,6 +384,10 @@
 
 - (CallEntity *)callEntity {
     return (CallEntity *)[self createEntityOfType: @"Call"];
+}
+
+- (GroupCallEntity *)groupCallEntity {
+    return (GroupCallEntity *)[self createEntityOfType: @"GroupCallEntity"];
 }
 
 @end

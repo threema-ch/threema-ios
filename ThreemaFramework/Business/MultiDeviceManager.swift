@@ -25,6 +25,7 @@ public protocol MultiDeviceManagerProtocol {
     var thisDevice: DeviceInfo { get }
     func otherDevices() -> Promise<[DeviceInfo]>
     func drop(device: DeviceInfo) -> Promise<Void>
+    func disableMultiDevice() async throws
 }
 
 public enum MultiDeviceManagerError: Error {
@@ -33,25 +34,27 @@ public enum MultiDeviceManagerError: Error {
 
 public class MultiDeviceManager: MultiDeviceManagerProtocol {
     private let serverConnector: ServerConnectorProtocol
+    private let userSettings: UserSettingsProtocol
 
-    required init(serverConnector: ServerConnectorProtocol) {
+    required init(serverConnector: ServerConnectorProtocol, userSettings: UserSettingsProtocol) {
         self.serverConnector = serverConnector
+        self.userSettings = userSettings
     }
 
     public convenience init() {
-        self.init(serverConnector: ServerConnector.shared())
+        self.init(serverConnector: ServerConnector.shared(), userSettings: UserSettings.shared())
     }
 
     /// Get device info from this device.
     /// - Returns: This device info
     public var thisDevice: DeviceInfo {
         DeviceInfo(
-            deviceID: serverConnector.deviceID != nil ? NSData(data: serverConnector.deviceID!).convertUInt64() : 0,
-            label: "\(UIDevice().name) \(ThreemaUtility.appAndBuildVersionPretty)",
+            deviceID: serverConnector.deviceID != nil ? serverConnector.deviceID!.paddedLittleEndian() : 0,
+            label: "\(UIDevice().name)",
             lastLoginAt: Date(),
             badge: nil,
             platform: .ios,
-            platformDetails: UIDevice.modelName
+            platformDetails: "\(ThreemaUtility.appAndBuildVersionPretty) • \(UIDevice.modelName) "
         )
     }
 
@@ -64,6 +67,7 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
 
         let messageReceiver = MessageReceiver(
             serverConnector: serverConnector,
+            userSettings: userSettings,
             mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
         )
         return messageReceiver.requestDevicesInfo(thisDeviceID: deviceID)
@@ -78,8 +82,42 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
 
         let messageReceiver = MessageReceiver(
             serverConnector: serverConnector,
+            userSettings: userSettings,
             mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
         )
         return messageReceiver.requestDropDevice(device: device)
+    }
+    
+    private func drop(devices: [DeviceInfo]) -> Promise<Void> {
+        let drops: [Promise<Void>] = devices.map { deviceInfo in
+            self.drop(device: deviceInfo)
+        }
+
+        return when(fulfilled: drops)
+    }
+    
+    public func disableMultiDevice() async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            otherDevices()
+                .then { otherDevices -> Promise<Void> in
+                    self.drop(devices: otherDevices)
+                }
+                .then { () -> Promise<Void> in
+                    self.drop(device: self.thisDevice)
+                }
+                .then { () -> Promise<Void> in
+                    self.serverConnector.deactivateMultiDevice()
+                    
+                    FeatureMask.update()
+                                        
+                    return Promise()
+                }
+                .done {
+                    continuation.resume()
+                }
+                .catch { error in
+                    continuation.resume(throwing: error)
+                }
+        }
     }
 }

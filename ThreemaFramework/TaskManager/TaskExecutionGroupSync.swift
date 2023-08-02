@@ -20,8 +20,9 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
-class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
+final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
     var profilePictureBlob: Common_Blob?
 
     override func prepare() -> Promise<Void> {
@@ -42,7 +43,7 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
                 encryptedData = encrypted.payload
             }
             catch {
-                return Promise<Void> { $0.reject(TaskExecutionTransactionError.blobEncryptFailed) }
+                return Promise<Void> { $0.reject(error) }
             }
 
             if encryptedData.isEmpty {
@@ -52,8 +53,15 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
             return firstly {
                 uploadBlobs(blobs: [encryptedData])
             }.then { [self] blobIDs -> Promise<Void> in
-                profilePictureBlob?.id = blobIDs.first as! Data
-                return Promise()
+                Promise { seal in
+                    guard let blobID = blobIDs.first else {
+                        seal.reject(TaskExecutionTransactionError.blobIDMissing)
+                        return
+                    }
+
+                    profilePictureBlob?.id = blobID
+                    seal.fulfill_()
+                }
             }
         }
         else {
@@ -63,12 +71,12 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
     private func encrypt(data: Data) throws -> (key: Data, nonce: Data, payload: Data) {
         guard let encryptionKey = NaClCrypto.shared()?.randomBytes(kBlobKeyLen) else {
-            throw TaskExecutionTransactionError.blobEncryptFailed
+            throw TaskExecutionTransactionError.blobDataEncryptionFailed
         }
         let nonce = ThreemaProtocol.nonce01
         guard let encryptedProfileImageData = NaClCrypto.shared()?
             .symmetricEncryptData(data, withKey: encryptionKey, nonce: nonce) else {
-            throw TaskExecutionTransactionError.blobUploadFailed
+            throw TaskExecutionTransactionError.blobDataEncryptionFailed
         }
         return (encryptionKey, nonce, encryptedProfileImageData)
     }
@@ -113,8 +121,8 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
         )
 
         return [
-            Promise<Void> { try $0.fulfill(
-                reflectMessage(
+            Promise { try $0.fulfill(
+                _ = reflectMessage(
                     envelope: envelope,
                     ltReflect: self.taskContext.logReflectMessageToMediator,
                     ltAck: self.taskContext.logReceiveMessageAckFromMediator
@@ -129,7 +137,7 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
         }
 
         let groupIdentity = GroupIdentity(
-            id: NSData.convertBytes(task.syncGroup.groupIdentity.groupID),
+            id: task.syncGroup.groupIdentity.groupID.littleEndianData,
             creator: task.syncGroup.groupIdentity.creatorIdentity
         )
 

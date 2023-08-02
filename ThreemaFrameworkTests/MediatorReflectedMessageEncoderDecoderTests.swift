@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftProtobuf
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -44,8 +45,9 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = "ECHOECHO"
         expectedMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.text = "Test text message"
+        expectedMessage.nonce = MockData.generateMessageNonce()
 
-        let testEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
+        let testEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
 
         let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjectorMock)
         let result = try? decoder.decode(
@@ -59,6 +61,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         XCTAssertEqual(expectedMessage.fromIdentity, resultMessage.fromIdentity)
         XCTAssertEqual(expectedMessage.toIdentity, resultMessage.toIdentity)
         XCTAssertEqual(expectedMessage.text, resultMessage.text)
+        XCTAssertEqual(expectedMessage.nonce, resultMessage.nonce)
         XCTAssertTrue(resultMessage.receivedAfterInitialQueueSend)
     }
 
@@ -69,8 +72,9 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         expectedMessage.groupCreator = "MEMBER01"
         expectedMessage.groupMembers = ["MEMBER01", "MEMBER02"]
+        expectedMessage.nonce = MockData.generateMessageNonce()
 
-        let testEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
+        let testEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
 
         let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjectorMock)
         let result = try? decoder.decode(
@@ -91,6 +95,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
             }
             return e1 == e2
         }))
+        XCTAssertEqual(expectedMessage.nonce, resultMessage.nonce)
         XCTAssertFalse(resultMessage.receivedAfterInitialQueueSend)
     }
 
@@ -99,8 +104,9 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = "MEMBER01"
         expectedMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        expectedMessage.nonce = MockData.generateMessageNonce()
 
-        let testEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
+        let testEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
 
         let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjectorMock)
         let result = try? decoder.decode(
@@ -115,6 +121,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         XCTAssertEqual(expectedMessage.toIdentity, resultMessage.toIdentity)
         XCTAssertEqual(expectedMessage.groupID, resultMessage.groupID)
         XCTAssertEqual(frameworkInjectorMock.myIdentityStore.identity, resultMessage.groupCreator)
+        XCTAssertEqual(expectedMessage.nonce, resultMessage.nonce)
         XCTAssertTrue(resultMessage.receivedAfterInitialQueueSend)
     }
 
@@ -123,8 +130,9 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.toIdentity = "ECHOECHO"
         expectedMessage.text = "Test text message"
+        expectedMessage.nonce = MockData.generateMessageNonce()
 
-        let testEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
+        let testEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
 
         let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjectorMock)
         let result = try? decoder.decode(outgoingMessage: testEnvelope.outgoingMessage)
@@ -144,8 +152,9 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         expectedMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.groupMembers = ["MEMBER01", "MEMBER02"]
+        expectedMessage.nonce = MockData.generateMessageNonce()
 
-        let testEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
+        let testEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
 
         let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjectorMock)
         let result = try? decoder.decode(outgoingMessage: testEnvelope.outgoingMessage)
@@ -170,8 +179,9 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.toIdentity = "MEMBER01"
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        expectedMessage.nonce = MockData.generateMessageNonce()
 
-        let testEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
+        let testEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
 
         let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjectorMock)
         let result = try? decoder.decode(outgoingMessage: testEnvelope.outgoingMessage)
@@ -185,23 +195,25 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         XCTAssertEqual("MEMBER01", resultMessage.groupCreator)
     }
 
-    private func getEnvelopeForIncomingMessage(abstractMessage: AbstractMessage) -> D2d_Envelope {
-        mediatorMessageProtocol.getEnvelopeForIncomingMessage(
+    private func getEnvelopeForIncomingMessage(abstractMessage: AbstractMessage) throws -> D2d_Envelope {
+        try mediatorMessageProtocol.getEnvelopeForIncomingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),
-            messageID: abstractMessage.messageID.convert(),
+            messageID: abstractMessage.messageID.littleEndian(),
             senderIdentity: abstractMessage.fromIdentity,
-            createdAt: abstractMessage.date
+            createdAt: abstractMessage.date,
+            nonce: abstractMessage.nonce
         )
     }
 
-    private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) -> D2d_Envelope {
-        mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
+    private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) throws -> D2d_Envelope {
+        try mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),
-            messageID: abstractMessage.messageID.convert(),
+            messageID: abstractMessage.messageID.littleEndian(),
             receiverIdentity: abstractMessage.toIdentity,
-            createdAt: abstractMessage.date
+            createdAt: abstractMessage.date,
+            nonce: abstractMessage.nonce
         )
     }
 }

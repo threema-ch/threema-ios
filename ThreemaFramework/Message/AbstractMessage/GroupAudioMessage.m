@@ -59,14 +59,18 @@
     return YES;
 }
 
-#pragma mark - NSCoding
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
         self.duration = (uint16_t)[decoder decodeIntegerForKey:@"duration"];
-        self.audioBlobId = [decoder decodeObjectForKey:@"audioBlobId"];
+        self.audioBlobId = [decoder decodeObjectOfClass:[NSData class] forKey:@"audioBlobId"];
         self.audioSize = (uint32_t)[decoder decodeIntegerForKey:@"audioSize"];
-        self.encryptionKey = [decoder decodeObjectForKey:@"encryptionKey"];
+        self.encryptionKey = [decoder decodeObjectOfClass:[NSData class] forKey:@"encryptionKey"];
     }
     return self;
 }
@@ -77,6 +81,10 @@
     [encoder encodeObject:self.audioBlobId forKey:@"audioBlobId"];
     [encoder encodeInt:self.audioSize forKey:@"audioSize"];
     [encoder encodeObject:self.encryptionKey forKey:@"encryptionKey"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

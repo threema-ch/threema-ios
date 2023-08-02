@@ -117,6 +117,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define MSGTYPE_TYPING_INDICATOR 0x90
 #define MSGTYPE_FORWARD_SECURITY 0xa0
 #define MSGTYPE_AUTH_TOKEN 0xff
+#define MSGTYPE_GROUP_CALL_START 0x4f
 
 #define MESSAGE_FLAG_SEND_PUSH 0x01
 #define MESSAGE_FLAG_DONT_QUEUE 0x02
@@ -131,9 +132,6 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define DELIVERYRECEIPT_MSGUSERACK 0x03
 #define DELIVERYRECEIPT_MSGUSERDECLINE 0x04
 #define DELIVERYRECEIPT_MSGCONSUMED 0x05
-
-#define GROUPDELIVERYRECEIPT_MSGUSERACK 0x03
-#define GROUPDELIVERYRECEIPT_MSGUSERDECLINE 0x04
 
 #define PLTYPE_ECHO_REQUEST 0x00
 #define PLTYPE_ECHO_REPLY 0x80
@@ -159,9 +157,6 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PUSHTOKEN_TYPE_APPLE_SANDBOX	0x02
 #define PUSHTOKEN_TYPE_APPLE_PROD_MC    0x05
 #define PUSHTOKEN_TYPE_APPLE_SANDBOX_MC 0x06
-
-#define kCurrentFeatureMask                       0x3f
-#define kCurrentFeatureMaskWithForwardSecurity    0x7f
 
 #define FEATURE_MASK_AUDIO_MSG          0x01
 #define FEATURE_MASK_GROUP_CHAT         0x02

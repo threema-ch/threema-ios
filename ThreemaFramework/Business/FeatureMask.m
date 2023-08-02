@@ -48,10 +48,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     NSDate *lastFeatureMaskSet = [defaults objectForKey:@"LastFeatureMaskSet"];
     NSDate *lastFeatureMaskDate = [NSDate dateWithTimeIntervalSinceNow:kTimeTillNextFeatureMaskSet];
-    int currentFeatureMask = kCurrentFeatureMask;
-    if ([ThreemaUtility supportsForwardSecurity]) {
-        currentFeatureMask = kCurrentFeatureMaskWithForwardSecurity;
-    }
+    int currentFeatureMask = [[FeatureMaskBuilder current] build];
     
     if ((!lastFeatureMaskSet || [lastFeatureMaskSet laterDate:lastFeatureMaskDate] == lastFeatureMaskDate) || (myIdentityStore == nil || !myIdentityStore.lastSentFeatureMask || myIdentityStore.lastSentFeatureMask == 0 || myIdentityStore.lastSentFeatureMask != currentFeatureMask)) {
         DDLogVerbose(@"Set feature mask %d on server", currentFeatureMask);

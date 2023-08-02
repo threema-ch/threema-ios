@@ -194,7 +194,10 @@ static CFStringRef appSyncNotificationKey;
 #pragma mark - inter app communication as seen in (https://developer.apple.com/videos/wwdc/2015/?id=224)
 
 static void observerCallback() {
-    [[DatabaseManager dbManager] refreshDirtyObjects: YES];
+    // Call refresh of dirty objects with NO to not remove them from NSUserDefault.
+    // Because of different processes of the Notification Extension (adding dirty objects)
+    // and the App (refresh and remove dirty objects) it's not guaranty that en dirty object has refreshed.
+    [[DatabaseManager dbManager] refreshDirtyObjects: NO];
 };
 
 + (void)registerAppGroupSyncObserver {

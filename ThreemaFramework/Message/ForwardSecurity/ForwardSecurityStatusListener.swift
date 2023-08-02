@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 protocol ForwardSecurityStatusListener: AnyObject {
     func newSessionInitiated(session: DHSession, contact: ForwardSecurityContact)
@@ -28,14 +29,33 @@ protocol ForwardSecurityStatusListener: AnyObject {
         existingSessionPreempted: Bool
     )
     func initiatorSessionEstablished(session: DHSession, contact: ForwardSecurityContact)
-    func rejectReceived(sessionID: DHSessionID, contact: ForwardSecurityContact, rejectedMessageID: Data)
+    func rejectReceived(
+        sessionID: DHSessionID,
+        contact: ForwardSecurityContact,
+        session: DHSession?,
+        rejectedMessageID: Data,
+        rejectCause: CspE2eFs_Reject.Cause,
+        hasForwardSecuritySupport: Bool
+    )
     func sessionNotFound(sessionID: DHSessionID, contact: ForwardSecurityContact)
-    func sessionBadDhState(sessionID: DHSessionID, contact: ForwardSecurityContact)
-    func sessionTerminated(sessionID: DHSessionID, contact: ForwardSecurityContact)
+    func sessionForMessageNotFound(in sessionDescription: String, messageID: String, contact: ForwardSecurityContact)
+    func sessionTerminated(
+        sessionID: DHSessionID?,
+        contact: ForwardSecurityContact,
+        sessionUnknown: Bool,
+        hasForwardSecuritySupport: Bool
+    )
     func messagesSkipped(sessionID: DHSessionID, contact: ForwardSecurityContact, numSkipped: Int)
-    func messageOutOfOrder(sessionID: DHSessionID, contact: ForwardSecurityContact)
-    func messageDecryptionFailed(sessionID: DHSessionID, contact: ForwardSecurityContact, failedMessageID: Data)
-    func first4DhMessageReceived(sessionID: DHSessionID, contact: ForwardSecurityContact)
+    func messageOutOfOrder(sessionID: DHSessionID, contact: ForwardSecurityContact, messageID: Data)
+    func first4DhMessageReceived(session: DHSession, contact: ForwardSecurityContact)
+    func versionsUpdated(
+        in session: DHSession,
+        versionUpdatedSnapshot: UpdatedVersionsSnapshot,
+        contact: ForwardSecurityContact
+    )
+    func messageWithoutFSReceived(in session: DHSession, contactIdentity: String, message: AbstractMessage)
+    func updateFeatureMask(for contact: ForwardSecurityContact) async -> Bool
+    func illegalSessionState(identity: String, sessionID: DHSessionID)
 }
 
 extension ForwardSecurityStatusListener {
@@ -55,7 +75,14 @@ extension ForwardSecurityStatusListener {
         // empty implementation to allow this method to be optional
     }
 
-    func rejectReceived(sessionID: DHSessionID, contact: ForwardSecurityContact, rejectedMessageID: Data) {
+    func rejectReceived(
+        sessionID: DHSessionID,
+        contact: ForwardSecurityContact,
+        session: DHSession?,
+        rejectedMessageID: Data,
+        rejectCause: CspE2eFs_Reject.Cause,
+        hasForwardSecuritySupport: Bool
+    ) {
         // empty implementation to allow this method to be optional
     }
 
@@ -63,11 +90,12 @@ extension ForwardSecurityStatusListener {
         // empty implementation to allow this method to be optional
     }
 
-    func sessionBadDhState(sessionID: DHSessionID, contact: ForwardSecurityContact) {
-        // empty implementation to allow this method to be optional
-    }
-
-    func sessionTerminated(sessionID: DHSessionID, contact: ForwardSecurityContact) {
+    func sessionTerminated(
+        sessionID: DHSessionID?,
+        contact: ForwardSecurityContact,
+        sessionUnknown: Bool,
+        hasForwardSecuritySupport: Bool
+    ) {
         // empty implementation to allow this method to be optional
     }
 
@@ -78,12 +106,13 @@ extension ForwardSecurityStatusListener {
     func messageOutOfOrder(sessionID: DHSessionID, contact: ForwardSecurityContact) {
         // empty implementation to allow this method to be optional
     }
-    
-    func messageDecryptionFailed(sessionID: DHSessionID, contact: ForwardSecurityContact, failedMessageID: Data) {
+
+    func first4DhMessageReceived(session: DHSession, contact: ForwardSecurityContact) {
         // empty implementation to allow this method to be optional
     }
-
-    func first4DhMessageReceived(sessionID: DHSessionID, contact: ForwardSecurityContact) {
+    
+    func updateFeatureMask(for contact: ForwardSecurityContact) async -> Bool {
         // empty implementation to allow this method to be optional
+        true
     }
 }

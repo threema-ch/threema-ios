@@ -25,6 +25,8 @@ import Foundation
 class InMemoryDHSessionStore: DHSessionStoreProtocol {
     private var dhSessionList: [DHSession] = []
     
+    weak var errorHandler: ThreemaFramework.SQLDHSessionStoreErrorHandler?
+    
     func exactDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID?) throws -> DHSession? {
         for session in dhSessionList {
             if session.myIdentity == myIdentity,

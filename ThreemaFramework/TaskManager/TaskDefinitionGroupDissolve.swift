@@ -20,7 +20,7 @@
 
 import Foundation
 
-class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
+final class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -48,7 +48,7 @@ class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
         "<\(type(of: self))>"
     }
 
-    var toMembers = [String]()
+    var toMembers = [ThreemaIdentity]()
 
     private enum CodingKeys: String, CodingKey {
         case toMembers

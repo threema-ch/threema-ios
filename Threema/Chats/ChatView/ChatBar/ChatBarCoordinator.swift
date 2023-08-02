@@ -20,7 +20,10 @@
 
 import AudioToolbox
 import CocoaLumberjackSwift
+import GroupCalls
+import SwiftProtobuf
 import ThreemaFramework
+import ThreemaProtocols
 import UIKit
 
 protocol ChatBarCoordinatorDelegate: AnyObject {

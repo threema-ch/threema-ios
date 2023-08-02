@@ -190,12 +190,7 @@ final class ConversationStoreTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
 
         let conversationStore = ConversationStore(
-            serverConnector: ServerConnectorMock(
-                connectionState: .connected,
-                deviceID: MockData.deviceID,
-                deviceGroupKeys: MockData.deviceGroupKeys
-            ),
-            userSettings: UserSettingsMock(),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             groupManager: GroupManagerMock(),
             entityManager: entityManager,
             taskManager: taskManagerMock

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 @testable import ThreemaFramework
 
 class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
@@ -77,7 +78,7 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     
     var voIPSound = "Test Sound"
 
-    var isMultiDeviceEnabled = false
+    var isMultiDeviceRegistered = false
     
     var enableIPv6 = true
     

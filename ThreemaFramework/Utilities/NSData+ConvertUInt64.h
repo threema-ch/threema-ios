@@ -25,11 +25,13 @@
 /**
  Converts NSData/bytes to UInt64 little endian.
  */
-- (UInt64)convertUInt64;
+- (UInt64)convertUInt64
+    __deprecated_msg("Only use from Objective-C. Use `littleEndian()` or `paddedLittleEndian()` instead");
 
 /**
  Converts UInt64 to NSData/bytes little endian.
 */
-+ (NSData *)convertBytes:(UInt64)value;
++ (NSData *)convertBytes:(UInt64)value
+    __deprecated_msg("Only use from Objective-C. Use `littleEndianData` instead");
 
 @end

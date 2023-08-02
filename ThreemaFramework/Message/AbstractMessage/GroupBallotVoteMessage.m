@@ -53,13 +53,17 @@
     return NO;
 }
 
-#pragma mark - NSCoding
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
-        self.ballotCreator = [decoder decodeObjectForKey:@"ballotCreator"];
-        self.ballotId = [decoder decodeObjectForKey:@"ballotId"];
-        self.jsonChoiceData = [decoder decodeObjectForKey:@"jsonChoiceData"];
+        self.ballotCreator = [decoder decodeObjectOfClass:[NSString class] forKey:@"ballotCreator"];
+        self.ballotId = [decoder decodeObjectOfClass:[NSData class] forKey:@"ballotId"];
+        self.jsonChoiceData = [decoder decodeObjectOfClass:[NSData class] forKey:@"jsonChoiceData"];
     }
     return self;
 }
@@ -69,6 +73,10 @@
     [encoder encodeObject:self.ballotCreator forKey:@"ballotCreator"];
     [encoder encodeObject:self.ballotId forKey:@"ballotId"];
     [encoder encodeObject:self.jsonChoiceData forKey:@"jsonChoiceData"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

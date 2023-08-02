@@ -44,6 +44,46 @@ class ThreemaWebViewController: ThemedTableViewController {
         }
     }()
     
+    private lazy var sections: [Section] = {
+        
+        // This should always be in sync with `disableMultiDeviceForVersionLessThan5()`
+        
+        switch ThreemaEnvironment.env() {
+        case .appStore:
+            // Remove multi device cells
+            return Section.webOnly
+        case .testFlight:
+            // Show multi device only in consumer, work, red and work red betas
+            if ThreemaApp.current == .threema || ThreemaApp.current == .work || ThreemaApp.current == .red || ThreemaApp
+                .current == .workRed {
+                return Section.all
+            }
+            else {
+                return Section.webOnly
+            }
+        case .xcode:
+            // Always show multi device for debug builds
+            return Section.all
+        }
+    }()
+    
+    private enum Section {
+        case linkedDevice
+        case web
+        case webSessions
+        
+        static let webOnly: [Section] = [
+            .web,
+            .webSessions,
+        ]
+        
+        static let all: [Section] = [
+            .linkedDevice,
+            .web,
+            .webSessions,
+        ]
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -71,6 +111,8 @@ class ThreemaWebViewController: ThemedTableViewController {
                     self.overrideSaltyRtcPort = overrideSaltyRtcPort
                 }
             }
+        
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "linkedDeviceBetaCell")
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -223,27 +265,44 @@ class ThreemaWebViewController: ThemedTableViewController {
     // MARK: - Table view data source
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        fetchedResultsController!.sections!.count + 1
+        fetchedResultsController!.sections!.count + (sections.count - 1)
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 {
+        switch sections[section] {
+        case .linkedDevice:
             return 1
+        case .web:
+            return 1
+        case .webSessions:
+            return fetchedResultsController!.fetchedObjects!.count
         }
-        
-        return fetchedResultsController!.fetchedObjects!.count
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 1,
-           !(fetchedResultsController?.fetchedObjects?.isEmpty ?? true) {
-            return BundleUtil.localizedString(forKey: "webClientSession_sessions_header")
+        switch sections[section] {
+        case .linkedDevice:
+            return BundleUtil.localizedString(forKey: "settings_threema_web_linked_device_section_header")
+        case .web:
+            return BundleUtil.localizedString(forKey: "settings_threema_web_section_header")
+        case .webSessions:
+            if !(fetchedResultsController?.fetchedObjects?.isEmpty ?? true) {
+                return BundleUtil.localizedString(forKey: "webClientSession_sessions_header")
+            }
+            else {
+                return nil
+            }
         }
-        return nil
     }
         
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        if section == 0 {
+        switch sections[section] {
+        case .linkedDevice:
+            return String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "settings_threema_web_linked_device_section_footer"),
+                ThreemaApp.currentName
+            )
+        case .web:
             let mdmSetup = MDMSetup(setup: false)!
             if mdmSetup.existsMdmKey(MDM_KEY_DISABLE_WEB) {
                 return BundleUtil.localizedString(forKey: "disabled_by_device_policy")
@@ -255,24 +314,37 @@ class ThreemaWebViewController: ThemedTableViewController {
                     ThreemaApp.currentName
                 )
             }
+        case .webSessions:
+            return String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "webClientSession_add_footer"),
+                downloadString,
+                threemaWebServerURL
+            )
         }
-        return String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "webClientSession_add_footer"),
-            downloadString,
-            threemaWebServerURL
-        )
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.section == 0 {
+        switch sections[indexPath.section] {
+        case .linkedDevice:
+            let cell = tableView.dequeueReusableCell(withIdentifier: "linkedDeviceBetaCell", for: indexPath)
+            
+            var contentConfiguration = cell.defaultContentConfiguration()
+            contentConfiguration.text = BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_title")
+            
+            cell.contentConfiguration = contentConfiguration
+            cell.accessoryType = .disclosureIndicator
+            
+            return cell
+        
+        case .web:
             let cell = tableView.dequeueReusableCell(
                 withIdentifier: "ThreemaWebSettingCell",
                 for: indexPath
             ) as! ThreemaWebSettingCell
             cell.setupCell()
             return cell
-        }
-        else {
+        
+        default:
             let cell = tableView.dequeueReusableCell(
                 withIdentifier: "WebClientSessionCell",
                 for: indexPath
@@ -285,21 +357,35 @@ class ThreemaWebViewController: ThemedTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
-        if indexPath.section == 0, indexPath.row == 0 {
+        if sections[indexPath.section] == .web, indexPath.row == 0 {
             return nil
         }
+        
         return indexPath
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.section == 1 {
+        switch sections[indexPath.section] {
+        case .linkedDevice:
+            let hostingController = UIHostingController(
+                rootView: LinkedDevicesView(
+                    settingsStore: BusinessInjector().settingsStore as! SettingsStore
+                )
+            )
+            hostingController.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(hostingController, animated: true)
+        
+        case .web:
+            break // Do nothing
+            
+        case .webSessions:
             let webClientSession = fetchedResultsController!.fetchedObjects![indexPath.row] as! WebClientSession
             presentActionSheetForSession(webClientSession, indexPath: indexPath)
         }
     }
     
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        indexPath.section == 1
+        sections[indexPath.section] == .webSessions
     }
     
     override func tableView(
@@ -355,22 +441,35 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
         }
         
         guard let result, let qrCodeData = Data(base64Encoded: result) else {
-            ValidationLogger.shared().logString("[Threema Web] Can't read qr code")
-            let message = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_message"),
-                downloadString,
-                threemaWebServerURL
-            )
-            let alert = UIAlertController(
-                title: BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_title"),
-                message: message,
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: BundleUtil.localizedString(forKey: "ok"), style: .default))
+            DDLogWarn("[Threema Web] Can't read qr code")
+            
+            let title: String
+            let message: String
+            if sections.contains(.linkedDevice),
+               let result,
+               let resultURL = URL(string: result),
+               let parsedURL = try? URLParser.parse(url: resultURL),
+               case .deviceGroupJoinRequestOffer = parsedURL {
+                title = BundleUtil.localizedString(forKey: "settings_threema_web_multi_device_qr_code_title")
+                message = String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "settings_threema_web_multi_device_qr_code_message"),
+                    BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_title"),
+                    BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_add_button")
+                )
+            }
+            else {
+                title = BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_title")
+                message = String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_message"),
+                    downloadString,
+                    threemaWebServerURL
+                )
+            }
             
             dismiss(animated: true) {
-                self.present(alert, animated: true)
+                UIAlertTemplate.showAlert(owner: self, title: title, message: message)
             }
+            
             return
         }
         

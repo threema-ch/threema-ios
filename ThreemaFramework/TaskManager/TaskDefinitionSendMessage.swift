@@ -21,7 +21,8 @@
 import Foundation
 
 /// Task definition base class for sending messages. Group is NULL if is single chat message.
-class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageProtocol {
+class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceProtocol,
+    TaskDefinitionSendMessageProtocol {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -48,10 +49,12 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageProtoc
     var isNoteGroup: Bool?
     var sendContactProfilePicture: Bool?
 
+    var nonces = TaskReceiverNonce()
+
     private(set) var messageAlreadySentToQueue =
         DispatchQueue(label: "ch.threema.TaskDefinitionSendMessage.messageAlreadySentToQueue")
-    var messageAlreadySentTo = [String]()
-    
+    var messageAlreadySentTo = TaskReceiverNonce()
+
     private enum CodingKeys: String, CodingKey {
         case groupID
         case groupCreatorIdentity
@@ -99,18 +102,18 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageProtoc
         let superdecoder = try container.superDecoder()
         try super.init(from: superdecoder)
 
-        self.groupID = try? container.decode(Data.self, forKey: .groupID)
-        self.groupCreatorIdentity = try? container.decode(String.self, forKey: .groupCreatorIdentity)
-        self.groupName = try? container.decode(String.self, forKey: .groupName)
-        self.allGroupMembers = try? container.decode(Set<String>.self, forKey: .allGroupMembers)
-        self.isNoteGroup = try? container.decode(Bool.self, forKey: .isNoteGroup)
-        self.sendContactProfilePicture = try? container.decode(Bool.self, forKey: .sendContactProfilePicture)
+        self.groupID = try container.decode(Data?.self, forKey: .groupID)
+        self.groupCreatorIdentity = try container.decode(String?.self, forKey: .groupCreatorIdentity)
+        self.groupName = try container.decode(String?.self, forKey: .groupName)
+        self.allGroupMembers = try container.decode(Set<String>?.self, forKey: .allGroupMembers)
+        self.isNoteGroup = try container.decode(Bool?.self, forKey: .isNoteGroup)
+        self.sendContactProfilePicture = try container.decode(Bool?.self, forKey: .sendContactProfilePicture)
         messageAlreadySentToQueue.sync {
             do {
-                self.messageAlreadySentTo = try container.decode([String].self, forKey: .messageAlreadySentTo)
+                self.messageAlreadySentTo = try container.decode(TaskReceiverNonce.self, forKey: .messageAlreadySentTo)
             }
             catch {
-                self.messageAlreadySentTo = []
+                self.messageAlreadySentTo = TaskReceiverNonce()
             }
         }
     }

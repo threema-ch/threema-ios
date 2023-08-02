@@ -21,10 +21,11 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
-/// Reflect group DeliveryReceipts to mediator server is multi device enabled
-/// and send it to group members (CSP).
-class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutionProtocol {
+/// Reflect `GroupDeliveryReceiptMessage` (or `D2d_IncomingMessageUpdate` for read sync) for group messages
+/// to mediator server is multi device enabled and send it to group members (CSP).
+final class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendGroupDeliveryReceiptsMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -35,7 +36,8 @@ class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutio
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Bool> in
             // Reflect group delivery receipts message if is necessary
@@ -43,8 +45,7 @@ class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutio
                 return Promise { seal in seal.fulfill(true) }
             }
 
-            if task.receiptType == UInt8(DELIVERYRECEIPT_MSGUSERACK) || task
-                .receiptType == UInt8(DELIVERYRECEIPT_MSGUSERDECLINE) {
+            if task.receiptType == .ack || task.receiptType == .decline {
                 let msg = self.getGroupDeliveryReceiptMessage(
                     groupID,
                     groupCreatorIdentity,
@@ -60,12 +61,12 @@ class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutio
                 )
                 return Promise { seal in seal.fulfill(true) }
             }
-            else if task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) {
+            else if task.receiptType == .read {
                 // Reflect read receipt for incoming message
                 // swiftformat:disable:next all
                 var conversationID = D2d_ConversationId()
                 var groupIdentity = Common_GroupIdentity()
-                groupIdentity.groupID = groupID.convert()
+                groupIdentity.groupID = try groupID.littleEndian()
                 groupIdentity.creatorIdentity = groupCreatorIdentity
                 conversationID.group = groupIdentity
 
@@ -83,7 +84,8 @@ class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutio
                 )
                 return Promise { seal in seal.fulfill(false) }
             }
-            return Promise { seal in seal.fulfill(true) }
+
+            return Promise { seal in seal.fulfill(false) }
         }
         .then { doSend -> Promise<Void> in
             guard doSend else {
@@ -113,8 +115,15 @@ class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutio
             }
 
             return when(fulfilled: sendMessages)
-                .done { _ in
+                .then { _ in
+                    Promise()
                 }
+        }
+        .then {
+            DDLogNotice(
+                "Sent delivery receipts (type \(task.receiptType.description)) for message IDs: \(task.receiptMessageIDs.map(\.hexString).joined(separator: ","))"
+            )
+            return Promise()
         }
     }
 }

@@ -80,10 +80,7 @@ import Foundation
             return nil
         }
         
-        if UserSettings.shared().blockCommunication {
-            return .cancelledMultiDeviceWizard
-        }
-        else if checkForceMDMSafeBackup() {
+        if checkForceMDMSafeBackup() {
             return .safeForcePassword
         }
         else if await UserReminder.checkPushReminder() {
@@ -125,7 +122,7 @@ import Foundation
         }
         
         if !safeManager.isActivated, !mdmSetup.isSafeBackupForce(), !mdmSetup.isSafeBackupDisable(),
-           !mdmSetup.isManaged(), !UserSettings.shared().safeIntroShown {
+           !LicenseStore.shared().getRequiresLicenseKey(), !UserSettings.shared().safeIntroShown {
             return true
         }
         

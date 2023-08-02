@@ -94,8 +94,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
         ContactEntity *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
         
         if (contact || [identity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]] || [identity isEqualToString:@"@@@@@@@@"]) {
-            NSString *displayName = [BundleUtil localizedStringForKey:@"me"];
-                       
+            NSString *displayName = [[MyIdentityStore sharedMyIdentityStore] displayName];
             if (contact) {
                 displayName = contact.mentionName;
             } else if ([identity isEqualToString:@"@@@@@@@@"]) {
@@ -170,7 +169,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
                                                                                                 @"TTTBackgroundCornerRadius": [NSNumber numberWithFloat:0.0f],
                                                                                                 @"TTTBackgroundFillPadding": [NSNumber valueWithUIEdgeInsets:UIEdgeInsetsMake(-1, 0, -1, 0)]
                                                                                                 }];
-            NSString *displayName = [BundleUtil localizedStringForKey:@"me"];
+            NSString *displayName = [[MyIdentityStore sharedMyIdentityStore] displayName];
             UIColor *backgroundMentionMe = [Colors backgroundMentionMeWithMessageInfo:messageInfo];
             UIColor *fontMentionMe = [Colors textMentionMeWithMessageInfo:messageInfo];
             if (contact) {

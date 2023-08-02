@@ -19,12 +19,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 class ForwardSecurityDataReject: ForwardSecurityData {
     let rejectedMessageID: Data
-    let cause: CspE2eFs_ForwardSecurityEnvelope.Reject.Cause
+    let cause: CspE2eFs_Reject.Cause
     
-    init(sessionID: DHSessionID, rejectedMessageID: Data, cause: CspE2eFs_ForwardSecurityEnvelope.Reject.Cause) throws {
+    init(sessionID: DHSessionID, rejectedMessageID: Data, cause: CspE2eFs_Reject.Cause) throws {
         if rejectedMessageID.count != ThreemaProtocol.messageIDLength {
             throw ForwardSecurityError.invalidMessageIDLength
         }
@@ -34,14 +35,14 @@ class ForwardSecurityDataReject: ForwardSecurityData {
     }
     
     override func toProtobuf() throws -> Data {
-        var pb = CspE2eFs_ForwardSecurityEnvelope()
+        var pb = CspE2eFs_Envelope()
         pb.sessionID = sessionID.value
-        var pbReject = CspE2eFs_ForwardSecurityEnvelope.Reject()
-        pbReject.rejectedMessageID = rejectedMessageID.withUnsafeBytes {
+        var pbReject = CspE2eFs_Reject()
+        pbReject.rejectedEncapsulatedMessageID = rejectedMessageID.withUnsafeBytes {
             $0.load(as: UInt64.self)
         }
         pbReject.cause = cause
-        pb.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content.reject(pbReject)
+        pb.content = CspE2eFs_Envelope.OneOf_Content.reject(pbReject)
         return try pb.serializedData()
     }
 }

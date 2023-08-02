@@ -24,7 +24,7 @@ import PromiseKit
 
 /// Reflect group rename message to mediator server is multi device enbaled
 /// and send it to group members (CSP).
-class TaskExecutionSendGroupRenameMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionSendGroupRenameMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendGroupRenameMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -35,7 +35,8 @@ class TaskExecutionSendGroupRenameMessage: TaskExecution, TaskExecutionProtocol 
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             // Reflect group rename message if is necessary

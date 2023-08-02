@@ -22,11 +22,25 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
+protocol NonceGuardProtocol: NonceGuardProtocolObjc {
+    func isProcessed(nonce: Data) -> Bool
+    func processed(nonce: Data) -> Promise<Void>
+    func processed(nonces: [Data]) -> Promise<Void>
+}
+
+@objc
+protocol NonceGuardProtocolObjc {
+    func isProcessed(message: AbstractMessage) -> Bool
+    @discardableResult
+    func processed(message: AbstractMessage) throws -> AnyPromise
+    @discardableResult
+    func processed(boxedMessage: BoxedMessage) throws -> AnyPromise
+}
+
 /// A message with the same nonce should only be processed once.
 ///
-/// This should prevent processing messages that malicious several times sent
-/// or by a race condition between the App and the Notification Extension.
-class NonceGuard: NSObject {
+/// This should prevent processing messages that malicious several times sent.
+class NonceGuard: NSObject, NonceGuardProtocol {
 
     enum NonceGuardError: Int, Error {
         case messageNonceIsNil = 0
@@ -43,20 +57,26 @@ class NonceGuard: NSObject {
     /// Check if incoming message is already processed.
     ///
     /// This checks on the main thread if the message nonce is stored in DB.
-    /// Reflected messages are not yet checked, because the message nonce is missing at the moment (see IOS-3096).
     /// - Parameters:
     ///    - message: Message to check
-    ///    - isReflected: Indicates a reflected message
+    /// - Returns: True nonce is already in DB
     @objc
-    func isProcessed(message: AbstractMessage, isReflected: Bool) -> Bool {
-        if isReflected, message.nonce == nil {
-            DDLogWarn("If message nonce is nil for a reflected message always return false")
-            return false
+    func isProcessed(message: AbstractMessage) -> Bool {
+        guard let nonce = message.nonce, !nonce.isEmpty else {
+            DDLogError("Message nonce is nil or empty")
+            return true
         }
 
-        guard let nonce = message.nonce else {
-            DDLogError("Message nonce is nil")
-            return true
+        return entityManager.isMessageNonceAlreadyInDB(nonce: nonce)
+    }
+
+    /// Check if message nonce is already processed.
+    /// - Parameter nonce: Message nonce
+    /// - Returns: True nonce is already in DB
+    func isProcessed(nonce: Data) -> Bool {
+        guard !nonce.isEmpty else {
+            DDLogWarn("Message nonce is empty")
+            return false
         }
 
         return entityManager.isMessageNonceAlreadyInDB(nonce: nonce)
@@ -64,24 +84,17 @@ class NonceGuard: NSObject {
 
     /// Incoming message nonce will be stored in DB.
     ///
-    /// Throws no exception is message nonce nil for reflected message (see IOS-3096).
-    /// - Parameters:
-    ///    - message: Message to store
-    ///    - isReflected: Indicates a reflected message
-    /// - Throws: NonceGuardError.messageNonceIsNull (if `isReflected` is `false`)
+    /// - Parameter message: Store nonce of the Message
+    /// - Throws: NonceGuardError.messageNonceIsNull
     @objc
     @discardableResult
-    func processed(message: AbstractMessage, isReflected: Bool) throws -> AnyPromise {
-        if isReflected, message.nonce == nil {
-            DDLogWarn("If message nonce is nil for reflected message will not throw an error")
-            return AnyPromise(Promise(resolver: { $0.fulfill_() }))
-        }
-
+    func processed(message: AbstractMessage) throws -> AnyPromise {
         guard let nonce = message.nonce else {
             throw NonceGuardError.messageNonceIsNil
         }
 
-        guard !isProcessed(message: message, isReflected: isReflected) else {
+        guard !isProcessed(message: message) else {
+            DDLogWarn("Nonce is already stored in DB")
             return AnyPromise(Promise(resolver: { $0.fulfill_() }))
         }
 
@@ -90,8 +103,7 @@ class NonceGuard: NSObject {
 
     /// Outgoing message nonce will be stored in DB.
     ///
-    /// - Parameters:
-    ///    - message: Message to store
+    /// - Parameter message: Store nonce of the message
     /// - Throws: NonceGuardError.messageNonceIsNull
     @objc
     @discardableResult
@@ -101,17 +113,30 @@ class NonceGuard: NSObject {
         }
 
         guard !entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
+            DDLogWarn("Nonce is already stored in DB")
             return AnyPromise(Promise(resolver: { $0.fulfill_() }))
         }
 
         return AnyPromise(processed(nonce: nonce))
     }
 
-    private func processed(nonce: Data) -> Promise<Void> {
+    /// Nonce will be stored in DB.
+    /// - Parameter nonce: Message nonce
+    func processed(nonce: Data) -> Promise<Void> {
+        processed(nonces: [nonce])
+    }
+
+    /// Nonces will be stored in DB.
+    /// - Parameter nonce: Message nonces
+    func processed(nonces: [Data]) -> Promise<Void> {
         Promise { seal in
-            self.entityManager.performAsyncBlockAndSafe {
-                self.entityManager.entityCreator.nonce(with: NonceHasher.hashedNonce(nonce))
-                seal.fulfill_()
+            Task {
+                await self.entityManager.performSave {
+                    for nonce in nonces {
+                        self.entityManager.entityCreator.nonce(with: NonceHasher.hashedNonce(nonce))
+                    }
+                    seal.fulfill_()
+                }
             }
         }
     }

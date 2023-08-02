@@ -101,17 +101,19 @@ import ThreemaFramework
         AppMigrationVersion.isMigrationRequired(userSettings: userSettings)
     }
     
-    @objc static func migrateSQLDHSessionStoreIfRequired() {
-        do {
-            try SQLDHSessionStore().executeNull()
-        }
-        catch {
-            DDLogError("An error occurred when attempting to migrate SQLDHSessionStore \(error)")
-        }
-    }
-
     /// Runs all necessary migrations
-    @objc func run() {
+    /// Throws an error if and only if a migration has failed and the app is expected to not be usable without it.
+    /// Specifically `run` catches all errors but only rethrows a closely defined subset of it
+    ///
+    /// Errors thrown by `run` are always `NSErrors` i.e. they are directly usable by `ErrorHandler.abortWithError()`
+    /// function.
+    @objc func run() throws {
+        // We do not perform migrations in safe mode
+        guard !SettingsBundleHelper.safeMode else {
+            DDLogNotice("[AppMigration] safe mode enabled no migrations will be performed")
+            return
+        }
+        
         // We need to run this check to reset the latest version to the correct value if needed
         guard AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) else {
             DDLogNotice("[AppMigration] No migration needed")
@@ -132,13 +134,29 @@ import ThreemaFramework
                 migratedTo = .v5_2
             }
             if migratedTo < .v5_3_1 {
+                // This migration can throw errors of kind `SQLDHSessionStore.SQLDHSessionStoreMigrationError` which
+                // are rethrown here
                 try migrateTo5_3_1()
                 migratedTo = .v5_3_1
+            }
+            if migratedTo < .v5_4 {
+                // This migration can throw errors of kind `SQLDHSessionStore.SQLDHSessionStoreMigrationError` which
+                // are rethrown here
+                try migrateTo5_4()
+                migratedTo = .v5_4
             }
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
             DDLogError("[AppMigration] (last migrated version \(migratedTo)) failed: \(error)")
+            
+            if let error = error as? SQLDHSessionStore.SQLDHSessionStoreMigrationError {
+                switch error {
+                case let .downgradeFromUnsupportedVersion(innerError),
+                     let .unknownError(innerError):
+                    throw innerError
+                }
+            }
         }
     }
     
@@ -308,5 +326,51 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "5.3.1 migration")
         DDLogNotice("[AppMigration] App migration to version 5.3.1 successfully finished")
+    }
+    
+    /// Migrate to version 5.4:
+    /// - Update the FS session data base to include new fields required in protocol version 18
+    private func migrateTo5_4() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.4 started")
+        os_signpost(.begin, log: osPOILog, name: "5.4 migration")
+        
+        try BusinessInjector().dhSessionStore.executeNull()
+        
+        entityManager.performSyncBlockAndSafe {
+            // Set for all conversations the last update
+            let batch = NSBatchUpdateRequest(entityName: "Conversation")
+            batch.resultType = .statusOnlyResultType
+            batch
+                .predicate =
+                NSPredicate(
+                    format: "lastUpdate == nil"
+                )
+            
+            batch.propertiesToUpdate = [
+                "lastUpdate": Date(timeIntervalSince1970: 0),
+            ]
+            // if there was a error, the execute function will return nil or a result with the result 0
+            if let result = self.entityManager.entityFetcher.execute(batch) {
+                if let success = result.result as? Int,
+                   success == 0 {
+                    DDLogError(
+                        "[AppMigration] Failed to set lastUpdate for empty lastUpdate conversations"
+                    )
+                }
+                else {
+                    DDLogNotice(
+                        "[AppMigration] Succeeded to set lastUpdate for empty lastUpdate conversations"
+                    )
+                }
+            }
+            else {
+                DDLogError(
+                    "[AppMigration] Failed to set lastUpdate for empty lastUpdate conversations"
+                )
+            }
+        }
+        
+        os_signpost(.end, log: osPOILog, name: "5.4 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.4 successfully finished")
     }
 }

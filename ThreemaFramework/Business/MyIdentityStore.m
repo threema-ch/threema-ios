@@ -487,6 +487,27 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] synchronize];
 }
 
+- (NSString * _Nonnull)displayName {
+    
+    NSString *name = [ContactUtil nameFromFirstname:[self firstName] lastname:[self lastName]];
+    
+    if (name != nil && name.length > 0) {
+        return name;
+    }
+    
+    NSString *nickname = [self pushFromName];
+    if (nickname != nil && nickname.length > 0 && ![nickname isEqualToString:identity]) {
+        return nickname;
+    }
+    
+    NSString *meString = [BundleUtil localizedStringForKey:@"me"];
+    if (identity != nil && identity.length > 0) {
+        return [NSString stringWithFormat:@"%@ (%@)", identity, meString];
+    }
+    
+    return meString;
+}
+
 - (NSString *)csi {
     NSString *value = [[AppGroup userDefaults] stringForKey:@"CSI"];
     DDLogWarn(@"[MyIdentityStore] get csi %@", value);

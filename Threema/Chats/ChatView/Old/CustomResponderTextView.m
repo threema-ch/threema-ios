@@ -19,9 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "CustomResponderTextView.h"
-#import "StatusNavigationBar.h"
 #import "PortraitNavigationController.h"
 #import "BundleUtil.h"
+#import "Threema-Swift.h"
 
 @implementation CustomResponderTextView
 

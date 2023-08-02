@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -42,12 +43,7 @@ class MediatorSyncableContactsTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
 
         let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettingsMock(),
-            ServerConnectorMock(
-                connectionState: .loggedIn,
-                deviceID: MockData.deviceID,
-                deviceGroupKeys: MockData.deviceGroupKeys
-            ),
+            UserSettingsMock(enableMultiDevice: true),
             taskManagerMock,
             EntityManager(databaseContext: databaseBackgroundCnx, myIdentityStore: MyIdentityStoreMock())
         )
@@ -76,14 +72,10 @@ class MediatorSyncableContactsTests: XCTestCase {
     
     func testUpdateAllSync() {
         for contactCount in [1, 2, 5, 50, 100, 1000] {
-            let serverConnectorMock = ServerConnectorMock()
-            serverConnectorMock.deviceGroupKeys = MockData.deviceGroupKeys
-
             let taskManagerMock = TaskManagerMock()
             
             let mediatorSyncableContacts = MediatorSyncableContacts(
-                UserSettingsMock(),
-                serverConnectorMock,
+                UserSettingsMock(enableMultiDevice: true),
                 taskManagerMock,
                 EntityManager(databaseContext: databaseBackgroundCnx)
             )
@@ -118,14 +110,10 @@ class MediatorSyncableContactsTests: XCTestCase {
     }
     
     func testDeleteContact() {
-        let serverConnectorMock = ServerConnectorMock()
-        serverConnectorMock.deviceGroupKeys = MockData.deviceGroupKeys
-
         let taskManagerMock = TaskManagerMock()
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettingsMock(),
-            serverConnectorMock,
+            UserSettingsMock(enableMultiDevice: true),
             taskManagerMock,
             EntityManager(databaseContext: databaseBackgroundCnx)
         )
@@ -153,7 +141,7 @@ class MediatorSyncableContactsTests: XCTestCase {
     }
     
     func testIntegrationWithTaskExecution() {
-        let userSettingsMock = UserSettingsMock()
+        let userSettingsMock = UserSettingsMock(enableMultiDevice: true)
 
         struct TestInput {
             var contact: ContactEntity
@@ -204,14 +192,10 @@ class MediatorSyncableContactsTests: XCTestCase {
         )
         table.append(test4)
         
-        let serverConnectorMock = ServerConnectorMock()
-        serverConnectorMock.deviceGroupKeys = MockData.deviceGroupKeys
-        
         for test in table {
             let taskManagerMock = TaskManagerMock()
             let mediatorSyncableContacts = MediatorSyncableContacts(
                 userSettingsMock,
-                serverConnectorMock,
                 taskManagerMock,
                 EntityManager(databaseContext: databaseBackgroundCnx)
             )
@@ -346,7 +330,87 @@ class MediatorSyncableContactsTests: XCTestCase {
             taskManagerMock.addedTasks.removeAll()
         }
     }
+    
+    func testReadReceiptPolicyOverrideDefault() throws {
+        let expectedPolicy = Sync_Contact.ReadReceiptPolicyOverride.with {
+            $0.default = Common_Unit()
+        }
+        
+        let contactEntity = getMinimalContact()
+        contactEntity.readReceipt = .default
+        
+        let mediatorSyncableContacts = MediatorSyncableContacts(
+            UserSettingsMock(),
+            TaskManagerMock(),
+            EntityManager()
+        )
+        
+        let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
+        let deltaSyncContact = try XCTUnwrap(
+            allSyncableContacts
+                .first(where: { $0.syncContact.identity == contactEntity.identity })
+        )
+        
+        XCTAssertEqual(
+            deltaSyncContact.syncContact.readReceiptPolicyOverride,
+            expectedPolicy
+        )
+    }
+    
+    func testReadReceiptPolicyOverrideOverrideDoNotSend() throws {
+        let expectedPolicy = Sync_Contact.ReadReceiptPolicyOverride.with {
+            $0.override = .policy(.dontSendReadReceipt)
+        }
+        
+        let contactEntity = getMinimalContact()
+        contactEntity.readReceipt = .doNotSend
+        
+        let mediatorSyncableContacts = MediatorSyncableContacts(
+            UserSettingsMock(),
+            TaskManagerMock(),
+            EntityManager()
+        )
+        
+        let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
+        let deltaSyncContact = try XCTUnwrap(
+            allSyncableContacts
+                .first(where: { $0.syncContact.identity == contactEntity.identity })
+        )
+        
+        XCTAssertEqual(
+            deltaSyncContact.syncContact.readReceiptPolicyOverride,
+            expectedPolicy
+        )
+    }
+    
+    func testReadReceiptPolicyOverrideSend() throws {
+        let expectedPolicy = Sync_Contact.ReadReceiptPolicyOverride.with {
+            $0.override = .policy(.sendReadReceipt)
+        }
+        
+        let contactEntity = getMinimalContact()
+        contactEntity.readReceipt = .send
+        
+        let mediatorSyncableContacts = MediatorSyncableContacts(
+            UserSettingsMock(),
+            TaskManagerMock(),
+            EntityManager()
+        )
+        
+        let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
+        let deltaSyncContact = try XCTUnwrap(
+            allSyncableContacts
+                .first(where: { $0.syncContact.identity == contactEntity.identity })
+        )
+        
+        XCTAssertEqual(
+            deltaSyncContact.syncContact.readReceiptPolicyOverride,
+            expectedPolicy
+        )
+    }
 
+    // MARK: - Helper
+    
     // Expected result of `MediatorSyncableContacts.updateAll(...)` implementation -> makes this sense for testing???
     private func expectedDeltaSyncContact(
         from contact: ContactEntity,

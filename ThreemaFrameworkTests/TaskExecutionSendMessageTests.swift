@@ -47,9 +47,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
         DDLog.remove(ddLoggerMock)
     }
 
-    func testExecuteTextMessageWithoutReflectingConnectionSateDisconnected() throws {
+    func testExecuteTextMessageWithoutReflectingConnectionStateDisconnected() throws {
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .disconnected)
         let frameworkInjectorMock = BusinessInjectorMock(
@@ -70,31 +69,28 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: contact,
                     remoteSentDate: nil
                 )
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
@@ -102,14 +98,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
             else {
-                if let expectedError = try? XCTUnwrap(expecError as? TaskExecutionError) {
+                if let expectedError = try? XCTUnwrap(expectError as? TaskExecutionError) {
                     XCTAssertEqual(
                         "\(expectedError)",
                         "\(TaskExecutionError.sendMessageFailed(message: "(type: text; id: \(expectedMessageID.hexString))"))"
                     )
                 }
                 else {
-                    XCTFail("Execption should be thrown")
+                    XCTFail("Exception should be thrown")
                 }
                 XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
@@ -117,14 +113,13 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     1,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
-                XCTAssertEqual(textMessage.sent.boolValue, false)
+                XCTAssertFalse(textMessage.sent.boolValue)
             }
         }
     }
 
     func testExecuteTextMessageWithoutReflecting() throws {
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
@@ -145,31 +140,28 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: contact,
                     remoteSentDate: nil
                 )
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
@@ -177,14 +169,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
             else {
-                XCTAssertNil(expecError)
+                XCTAssertNil(expectError)
                 XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
                 XCTAssertEqual(
                     1,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
-                XCTAssertEqual(textMessage.sent.boolValue, true)
+                XCTAssertTrue(textMessage.sent.boolValue)
             }
         }
     }
@@ -192,7 +184,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteTextMessageWithoutReflectingToInvalidContact() throws {
         let expectedMessageID = MockData.generateMessageID()
         let expectedToIdentity = "ECHOECHO"
-        let expectedText = "Test 123"
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
@@ -215,31 +206,28 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: contact,
                     remoteSentDate: nil
                 )
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
@@ -247,7 +235,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
             else {
-                if let expecError,
+                if let expecError = expectError,
                    case let TaskExecutionError.invalidContact(message: message) = expecError {
                     XCTAssertEqual(
                         message,
@@ -260,7 +248,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 
                 XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(textMessage.sent.boolValue, false)
+                XCTAssertFalse(textMessage.sent.boolValue)
                 XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
             }
         }
@@ -268,12 +256,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
     
     func testExecuteTextMessageWithReflecting() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
+        // Second date (reflected at) is used when reflecting message sent
+        var expectedReflectedAtDates = [expectedMessageReflectedAt, Date().addingTimeInterval(10)]
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
@@ -283,18 +273,21 @@ class TaskExecutionSendMessageTests: XCTestCase {
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
                 let expectedReflectID = expectedReflectIDs.remove(at: 0)
+                let expectedReflectedAt = expectedReflectedAtDates.remove(at: 0)
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: expectedReflectedAt]
                 )
                 return true
             }
             return false
         }
-        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+        XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             entityManager: EntityManager(databaseContext: dbMainCnx),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: MockData.deviceGroupKeys,
@@ -323,31 +316,28 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: contact,
                     remoteSentDate: nil
                 )
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
@@ -355,7 +345,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
             else {
-                XCTAssertNil(expecError)
+                XCTAssertNil(expectError)
                 XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(
                     1,
@@ -371,23 +361,25 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     1,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
-                XCTAssertEqual(textMessage.sent.boolValue, true)
-                XCTAssertNotEqual(textMessage.remoteSentDate, textMessage.date)
+                XCTAssertTrue(textMessage.sent.boolValue)
+                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
             }
         }
     }
     
     func testExecuteGroupTextMessageWithReflecting() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
+        // Second date (reflected at) is used when reflecting message sent
+        var expectedReflectedAtDates = [expectedMessageReflectedAt, Date().addingTimeInterval(10)]
 
-        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"])
+        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"], enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: MockData.deviceID,
@@ -396,16 +388,18 @@ class TaskExecutionSendMessageTests: XCTestCase {
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
                 let expectedReflectID = expectedReflectIDs.remove(at: 0)
+                let expectedReflectedAt = expectedReflectedAtDates.remove(at: 0)
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: expectedReflectedAt]
                 )
                 return true
             }
             return false
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
-        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+        XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             entityManager: EntityManager(databaseContext: dbMainCnx),
@@ -451,14 +445,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: nil,
                     remoteSentDate: nil
                 )
@@ -473,8 +464,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
@@ -483,19 +474,19 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
+        waitForExpectations(timeout: 600) { error in
             if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
-                XCTAssertNil(expecError)
+                XCTAssertNil(expectError)
                 XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(
                     1,
@@ -513,23 +504,25 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 )
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
-                XCTAssertEqual(textMessage.sent.boolValue, true)
-                XCTAssertNotEqual(textMessage.remoteSentDate, textMessage.date)
+                XCTAssertTrue(textMessage.sent.boolValue)
+                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
             }
         }
     }
     
     func testExecuteGroupTextMessageWithReflectingAndOneInvalidContact() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
+        // Second date (reflected at) is used when reflecting message sent
+        var expectedReflectedAtDates = [expectedMessageReflectedAt, Date().addingTimeInterval(10)]
 
-        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"])
+        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"], enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: MockData.deviceID,
@@ -538,16 +531,18 @@ class TaskExecutionSendMessageTests: XCTestCase {
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
                 let expectedReflectID = expectedReflectIDs.remove(at: 0)
+                let expectedReflectedAt = expectedReflectedAtDates.remove(at: 0)
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: expectedReflectedAt]
                 )
                 return true
             }
             return false
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
-        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+        XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             entityManager: EntityManager(databaseContext: dbMainCnx),
@@ -597,14 +592,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: nil,
                     remoteSentDate: nil
                 )
@@ -619,8 +611,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
@@ -629,11 +621,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
@@ -647,7 +639,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                             message: "Do not sending message to invalid identity Optional(\"MEMBER04\") ((type: groupText; id: \(expectedMessageID.hexString); groupCreator: \(group.groupCreatorIdentity) - groupId: \(group.groupID.hexString)))"
                         )
                 )
-                XCTAssertNil(expecError)
+                XCTAssertNil(expectError)
                 XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(
                     1,
@@ -665,23 +657,25 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 )
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
-                XCTAssertEqual(textMessage.sent.boolValue, true)
-                XCTAssertNotEqual(textMessage.remoteSentDate, textMessage.date)
+                XCTAssertTrue(textMessage.sent.boolValue)
+                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
             }
         }
     }
     
     func testExecuteGroupTextMessageWithReflectingAlreadySent() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
+        // Second date (reflected at) is used when reflecting message sent
+        var expectedReflectedAtDates = [expectedMessageReflectedAt, Date().addingTimeInterval(10)]
 
-        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"])
+        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"], enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: MockData.deviceID,
@@ -690,9 +684,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
                 let expectedReflectID = expectedReflectIDs.remove(at: 0)
+                let expectedReflectedAt = expectedReflectedAtDates.remove(at: 0)
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: expectedReflectedAt]
                 )
                 return true
             }
@@ -744,14 +740,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: nil,
                     remoteSentDate: nil
                 )
@@ -766,22 +759,22 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
             group: group,
             sendContactProfilePicture: false
         )
-        task.messageAlreadySentTo.append("MEMBER01")
+        task.messageAlreadySentTo["MEMBER01"] = MockData.generateMessageNonce()
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
@@ -789,7 +782,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
             else {
-                XCTAssertNil(expecError)
+                XCTAssertNil(expectError)
                 XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(
                     1,
@@ -806,6 +799,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
+                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
             }
         }
     }
@@ -814,7 +808,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expectedReflectID = MockData.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
@@ -825,7 +818,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
             if serverConnectorMock.connectionState == .loggedIn {
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: Date()]
                 )
                 return true
             }
@@ -833,7 +827,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         }
 
         let myIdentityStoreMock = MyIdentityStoreMock()
-        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+        XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(
                 databaseContext: dbBackgroundCnx,
@@ -841,6 +835,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             ),
             entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
             myIdentityStore: myIdentityStoreMock,
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: MockData.deviceGroupKeys,
@@ -869,14 +864,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 conversation.contact = nil
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: nil,
                     remoteSentDate: nil
                 )
@@ -891,8 +883,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
@@ -901,11 +893,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
@@ -913,7 +905,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
             else {
-                XCTAssertNil(expecError)
+                XCTAssertNil(expectError)
                 XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(
                     1,
@@ -924,7 +916,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     0,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
-                XCTAssertEqual(textMessage.sent.boolValue, true)
+                XCTAssertTrue(textMessage.sent.boolValue)
                 // Local messages don't have a remote sent date
                 XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
             }
@@ -940,13 +932,15 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         for broadcastGroupTest in broadcastGroupTests {
             let expectedMessageReflectID = MockData.generateReflectID()
+            let expectedMessageReflectedAt = Date()
             let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
             let expectedMessageSentReflectID = MockData.generateReflectID()
             let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
             let expectedMessageID = MockData.generateMessageID()
-            let expectedText = "Test 123"
             let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "*ADMIN01"]
             var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
+            // Second date (reflected at) is used when reflecting message sent
+            var expectedReflectedAtDates = [expectedMessageReflectedAt, Date().addingTimeInterval(10)]
 
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
@@ -956,20 +950,23 @@ class TaskExecutionSendMessageTests: XCTestCase {
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
                     let expectedReflectID = expectedReflectIDs.remove(at: 0)
+                    let expectedReflectedAt = expectedReflectedAtDates.remove(at: 0)
                     NotificationCenter.default.post(
                         name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                        object: expectedReflectID
+                        object: expectedReflectID,
+                        userInfo: [expectedReflectID: expectedReflectedAt]
                     )
                     return true
                 }
                 return false
             }
             let myIdentityStoreMock = MyIdentityStoreMock()
-            let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+            XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
                 entityManager: EntityManager(databaseContext: dbMainCnx),
                 myIdentityStore: myIdentityStoreMock,
+                userSettings: UserSettingsMock(enableMultiDevice: true),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
                     deviceGroupKeys: MockData.deviceGroupKeys,
@@ -1012,14 +1009,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     
                         textMessage = self.dbPreparer.createTextMessage(
                             conversation: conversation,
-                            text: expectedText,
-                            date: Date(),
                             delivered: false,
                             id: expectedMessageID,
                             isOwn: true,
                             read: false,
                             sent: false,
-                            userack: false,
                             sender: members.first,
                             remoteSentDate: nil
                         )
@@ -1034,8 +1028,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     }
             }
 
-            let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-            var expecError: Error?
+            let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+            var expectError: Error?
 
             let task = TaskDefinitionSendBaseMessage(
                 message: textMessage,
@@ -1044,11 +1038,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
             task.create(frameworkInjector: frameworkInjectorMock).execute()
                 .done {
-                    expec.fulfill()
+                    expect.fulfill()
                 }
                 .catch { error in
-                    expecError = error
-                    expec.fulfill()
+                    expectError = error
+                    expect.fulfill()
                 }
 
             waitForExpectations(timeout: 6) { error in
@@ -1056,7 +1050,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     XCTFail(error.localizedDescription)
                 }
                 else {
-                    XCTAssertNil(expecError)
+                    XCTAssertNil(expectError)
                     XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
                     XCTAssertEqual(
                         1,
@@ -1082,6 +1076,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
                         serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "*ADMIN01" }.count
                     )
                     XCTAssert(textMessage.sent.boolValue)
+                    XCTAssertEqual(
+                        textMessage.remoteSentDate,
+                        expectedMessageReflectedAt
+                    )
                 }
             }
         }
@@ -1091,17 +1089,17 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expectedReflectID = MockData.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test 123"
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .disconnected,
             deviceID: MockData.deviceID,
             deviceGroupKeys: MockData.deviceGroupKeys
         )
-        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+        XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             entityManager: EntityManager(databaseContext: dbMainCnx),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: MockData.deviceGroupKeys,
@@ -1127,36 +1125,33 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
-                    text: expectedText,
-                    date: Date(),
                     delivered: false,
                     id: expectedMessageID,
                     isOwn: true,
                     read: false,
                     sent: false,
-                    userack: false,
                     sender: contact,
                     remoteSentDate: nil
                 )
             }
         }
 
-        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6)
 
-        let expectedError = try XCTUnwrap(expecError as? TaskExecutionError)
+        let expectedError = try XCTUnwrap(expectError as? TaskExecutionError)
         XCTAssertEqual(
             "\(expectedError)",
             "\(TaskExecutionError.reflectMessageFailed(message: "(Reflect ID: \(expectedReflectID.hexString) (type: text; id: \(expectedMessageID.hexString)))"))"

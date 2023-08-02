@@ -21,11 +21,14 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
-class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
-    var profilePictureBlobs = [Common_Blob]()
-    var contactProfilePictureBlobs = [Common_Blob]()
-    
+final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
+    private typealias BlobAndKey = (blob: Data?, blobID: Data?, encryptionKey: Data?)
+    private typealias BlobAndKeyEncrypted = (blobEncrypted: Data?, blobMessage: Common_Blob)
+
+    private var blobsEncrypted = [BlobAndKeyEncrypted]()
+
     override func prepare() -> Promise<Void> {
         guard let taskDefinition = taskDefinition as? TaskDefinitionUpdateContactSync else {
             return Promise<Void> { $0.reject(TaskExecutionError.wrongTaskDefinitionType) }
@@ -35,71 +38,107 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             taskDefinition.deltaSyncContacts = taskDefinition.deltaSyncContacts
                 .filter { self.checkPrecondition(delta: $0) }
         }
-        
-        let images = taskDefinition.deltaSyncContacts
-            .compactMap { $0.profilePicture == .updated ? $0.image : nil }
-        let contactImages = taskDefinition.deltaSyncContacts
-            .compactMap { $0.contactProfilePicture == .updated ? $0.contactImage : nil }
 
-        var encryptedData = [Data]()
-        
+        var blobs = [BlobAndKey]()
+        taskDefinition.deltaSyncContacts
+            .filter { $0.profilePicture == .updated && $0.image != nil }
+            .forEach { delta in
+                blobs.append((delta.image, nil, nil))
+            }
+        taskDefinition.deltaSyncContacts
+            .filter { $0.contactProfilePicture == .updated && $0.contactImage != nil }
+            .forEach { delta in
+                if let blobID = delta.contactImageBlobID,
+                   let encryptionKey = delta.contactImageEncryptionKey {
+                    // Blob is already uploaded
+                    blobs.append((nil, blobID, encryptionKey))
+                }
+                else if let image = delta.contactImage {
+                    blobs.append((image, nil, nil))
+                }
+            }
+
         do {
-            let imagesEncrypted = try encrypt(dataArr: images)
-            profilePictureBlobs = imagesEncrypted.blobs
-            encryptedData.append(contentsOf: imagesEncrypted.encryptedData)
-
-            let contactImagesEncrypted = try encrypt(dataArr: contactImages)
-            contactProfilePictureBlobs = contactImagesEncrypted.blobs
-            encryptedData.append(contentsOf: contactImagesEncrypted.encryptedData)
+            blobsEncrypted = try encrypt(blobs: blobs)
         }
         catch {
-            return Promise<Void> { $0.reject(TaskExecutionTransactionError.blobEncryptFailed) }
+            return Promise<Void> { $0.reject(error) }
         }
         
-        if encryptedData.isEmpty {
+        if blobsEncrypted.isEmpty {
             return Promise()
         }
         
         return firstly {
-            uploadBlobs(blobs: encryptedData)
+            let blobsForUploading = blobsEncrypted.compactMap(\.blobEncrypted)
+            if !blobsForUploading.isEmpty {
+                return uploadBlobs(blobs: blobsForUploading)
+            }
+            else {
+                return Promise { seal in seal.fulfill([Data]()) }
+            }
         }.then { [self] blobIDs -> Promise<Void> in
-            for i in 0..<images.count {
-                profilePictureBlobs[i].id = blobIDs[i] as! Data
+            guard blobIDs.count == blobsEncrypted.filter({ $0.blobEncrypted != nil }).count else {
+                throw TaskExecutionTransactionError.blobIDMismatch
             }
-            
-            for i in 0..<contactImages.count {
-                contactProfilePictureBlobs[i].id = blobIDs[images.count + i] as! Data
+
+            // Update blob ID for new uploaded blobs
+            var i = 0
+            for blobID in blobIDs {
+                var isSet = false
+                while i < blobsEncrypted.count, !isSet {
+                    if blobsEncrypted[i].blobMessage.id.isEmpty {
+                        blobsEncrypted[i].blobMessage.id = blobID
+                        isSet = true
+                    }
+                    i += 1
+                }
             }
+
             return Promise()
         }
     }
-    
-    private func encrypt(dataArr: [Data?]) throws -> (encryptedData: [Data], blobs: [Common_Blob]) {
-        var resultArr = [Data]()
-        var blobs = [Common_Blob]()
-        
-        for contactProfilePicture in dataArr {
-            guard let data = contactProfilePicture else {
-                throw TaskExecutionTransactionError.blobEncryptFailed
+
+    /// Encrypt blob data if not already uploaded (blob ID is set).
+    /// - Parameter blobs: Blobs for to encrypt and create D2D blob messages
+    /// - Returns: Encrypted blobs and its D2D blob messages
+    private func encrypt(blobs: [BlobAndKey]) throws -> [BlobAndKeyEncrypted] {
+        var encryptedBlobs = [BlobAndKeyEncrypted]()
+
+        for item in blobs {
+            if let blobID = item.blobID,
+               let encryptionKey = item.encryptionKey {
+                var blobMessage = Common_Blob()
+                blobMessage.id = blobID
+                blobMessage.key = encryptionKey
+                blobMessage.nonce = ThreemaProtocol.nonce01
+                blobMessage.uploadedAt = Date().millisecondsSince1970.littleEndian
+                encryptedBlobs.append((nil, blobMessage))
             }
-            let encrypted = try encrypt(data: data)
-            var blob = Common_Blob()
-            blob.nonce = encrypted.nonce
-            blob.key = encrypted.key
-            blobs.append(blob)
-            resultArr.append(encrypted.payload)
+            else if let data = item.blob {
+                let encryptedBlob = try encrypt(data: data)
+                var blobMessage = Common_Blob()
+                blobMessage.key = encryptedBlob.key
+                blobMessage.nonce = encryptedBlob.nonce
+                blobMessage.uploadedAt = Date().millisecondsSince1970.littleEndian
+                encryptedBlobs.append((encryptedBlob.encryptedData, blobMessage))
+            }
+            else {
+                throw TaskExecutionTransactionError.blobDataEncryptionFailed
+            }
         }
-        return (resultArr, blobs)
+
+        return encryptedBlobs
     }
     
-    private func encrypt(data: Data) throws -> (key: Data, nonce: Data, payload: Data) {
+    private func encrypt(data: Data) throws -> (key: Data, nonce: Data, encryptedData: Data) {
         guard let encryptionKey = NaClCrypto.shared()?.randomBytes(kBlobKeyLen) else {
-            throw TaskExecutionTransactionError.blobEncryptFailed
+            throw TaskExecutionTransactionError.blobDataEncryptionFailed
         }
         let nonce = ThreemaProtocol.nonce01
         guard let encryptedProfileImageData = NaClCrypto.shared()?
             .symmetricEncryptData(data, withKey: encryptionKey, nonce: nonce) else {
-            throw TaskExecutionTransactionError.blobUploadFailed
+            throw TaskExecutionTransactionError.blobDataEncryptionFailed
         }
         return (encryptionKey, nonce, encryptedProfileImageData)
     }
@@ -116,11 +155,9 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             
             switch deltaSyncContact.profilePicture {
             case .updated:
-                if deltaSyncContact.image != nil {
-                    var commonImage = Common_Image()
-                    commonImage.blob = profilePictureBlobs.removeFirst()
-                    syncContact.userDefinedProfilePicture.updated = commonImage
-                }
+                var commonImage = Common_Image()
+                commonImage.blob = blobsEncrypted.removeFirst().blobMessage
+                syncContact.userDefinedProfilePicture.updated = commonImage
             case .removed:
                 syncContact.userDefinedProfilePicture.removed = Common_Unit()
             case .unchanged:
@@ -129,11 +166,9 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
 
             switch deltaSyncContact.contactProfilePicture {
             case .updated:
-                if deltaSyncContact.contactImage != nil {
-                    var commonImage = Common_Image()
-                    commonImage.blob = contactProfilePictureBlobs.removeFirst()
-                    syncContact.contactDefinedProfilePicture.updated = commonImage
-                }
+                var commonImage = Common_Image()
+                commonImage.blob = blobsEncrypted.removeFirst().blobMessage
+                syncContact.contactDefinedProfilePicture.updated = commonImage
             case .removed:
                 syncContact.contactDefinedProfilePicture.removed = Common_Unit()
             case .unchanged:
@@ -145,7 +180,7 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
                 syncAction: deltaSyncContact.syncAction
             )
 
-            reflectResults.append(Promise<Void> { try $0.fulfill(reflectMessage(
+            reflectResults.append(Promise { try $0.fulfill(_ = reflectMessage(
                 envelope: envelope,
                 ltReflect: self.taskContext.logReflectMessageToMediator,
                 ltAck: self.taskContext.logReceiveMessageAckFromMediator

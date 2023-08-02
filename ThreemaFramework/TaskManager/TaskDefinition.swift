@@ -39,7 +39,7 @@ class TaskDefinition: NSObject, Codable, TaskDefinitionProtocol {
     init(isPersistent: Bool) {
         self.isPersistent = isPersistent
         self.state = .pending
-        self.retry = false
+        self.retry = true
         self.retryCount = 0
     }
     

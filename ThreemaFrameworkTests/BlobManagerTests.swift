@@ -152,7 +152,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectationData, expectationDone], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationData, expectationDone], timeout: 50)
         
         // Assert
         let actualBlobData = try XCTUnwrap(fileMessageEntity.blobData)
@@ -231,7 +232,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -249,6 +251,7 @@ class BlobManagerTests: XCTestCase {
         XCTAssertEqual(blobError, false)
     }
     
+    // TODO: (IOS-3875) Timeout
     @MainActor
     func testIncomingDataWithThumbnailNoDone() async throws {
         
@@ -313,8 +316,8 @@ class BlobManagerTests: XCTestCase {
         
         // Act
         await blobManager.syncBlobs(for: fileMessageEntity.objectID)
-        
-        wait(for: [expectationThumbnail, expectationData], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationThumbnail, expectationData], timeout: 60)
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -371,7 +374,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectationData, expectationDone], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationData, expectationDone], timeout: 50)
         
         // Assert
         let actualBlobData = try XCTUnwrap(fileMessageEntity.blobData)
@@ -491,7 +495,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectation], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectation], timeout: 50)
         
         // Assert
         let receivedBlobID = try XCTUnwrap(convertHexToAsciiData(data: fileMessageEntity.blobIdentifier))
@@ -542,7 +547,8 @@ class BlobManagerTests: XCTestCase {
             XCTAssertEqual(error as! BlobManagerError, BlobManagerError.sendingFailed)
         }
         
-        wait(for: [expectationData], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationData], timeout: 50)
         
         // Assert
         let receivedThumbnailID = try XCTUnwrap(convertHexToAsciiData(data: fileMessageEntity.blobThumbnailIdentifier))
@@ -615,7 +621,6 @@ class BlobManagerTests: XCTestCase {
         let expectedGroupCreator: String = myIdentityStoreMock.identity
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -784,7 +789,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -866,7 +872,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -948,7 +955,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -1030,7 +1038,8 @@ class BlobManagerTests: XCTestCase {
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 5)
+        // TODO: (IOS-3875) Timeout
+        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)

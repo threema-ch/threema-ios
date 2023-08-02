@@ -828,7 +828,27 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 
         switch fileMessage.blobDisplayState {
 
-        case .pending, .sendingError:
+        case .pending:
+            Task {
+                await BlobManager.shared.syncBlobs(for: message.objectID)
+            }
+        case .sendingError:
+            // If a message could not be sent we might only have missed the ack from the chat server
+            // If this is the case a message with the same message ID as the previously sent one will be rejected
+            // This also applied to messages that have been rejected by the receiver due to missing or incorrect session
+            // state
+            let businessInjector = BusinessInjector()
+            guard let message = businessInjector.entityManager.performAndWait({
+                let fetchedMessage = businessInjector.entityManager.entityFetcher
+                    .existingObject(with: message.objectID) as? BaseMessage
+                fetchedMessage?.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
+                return fetchedMessage
+            })
+            else {
+                DDLogError("Message to be re-sent could not be loaded.")
+                return
+            }
+            
             Task {
                 await BlobManager.shared.syncBlobs(for: message.objectID)
             }

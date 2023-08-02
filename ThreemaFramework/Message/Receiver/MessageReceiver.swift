@@ -20,6 +20,7 @@
 
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 public enum MessageReceiverError: Error {
     case reflectMessageFailed
@@ -30,12 +31,18 @@ public enum MessageReceiverError: Error {
 
 final class MessageReceiver {
     private let serverConnector: ServerConnectorProtocol
+    private let userSettings: UserSettingsProtocol
     private let mediatorMessageProtocol: MediatorMessageProtocolProtocol
 
     private let responseTimeoutInSeconds = 10
 
-    required init(serverConnector: ServerConnectorProtocol, mediatorMessageProtocol: MediatorMessageProtocolProtocol) {
+    required init(
+        serverConnector: ServerConnectorProtocol,
+        userSettings: UserSettingsProtocol,
+        mediatorMessageProtocol: MediatorMessageProtocolProtocol
+    ) {
         self.serverConnector = serverConnector
+        self.userSettings = userSettings
         self.mediatorMessageProtocol = mediatorMessageProtocol
     }
 
@@ -48,10 +55,10 @@ final class MessageReceiver {
         var messageListener: MessageListener?
 
         return firstly {
-            Guarantee { $0(serverConnector.isMultiDeviceActivated) }
+            Guarantee { $0(userSettings.enableMultiDevice) }
         }
-        .then { (isMultiDeviceActivated: Bool) -> Promise<Data?> in
-            guard isMultiDeviceActivated else {
+        .then { (isMultiDeviceRegistered: Bool) -> Promise<Data?> in
+            guard isMultiDeviceRegistered else {
                 throw MultiDeviceManagerError.multiDeviceNotActivated
             }
 
@@ -103,7 +110,7 @@ final class MessageReceiver {
             var devices: [DeviceInfo] = []
 
             for item in devicesInfo.augmentedDeviceInfo
-                .filter({ NSData.convertBytes($0.key).hexString != deviceID.hexString }) {
+                .filter({ $0.key.littleEndianData.hexString != deviceID.hexString }) {
                 var label: String!
                 var platform: Platform = .unspecified
                 var platformDetails = "Unknown"
@@ -114,9 +121,9 @@ final class MessageReceiver {
                        key: self.serverConnector.deviceGroupKeys!.dgdik
                    ),
                    let decodedDeviceInfo = self.mediatorMessageProtocol.decodeDeviceInfo(message: decryptedDeviceInfo) {
-                    label = "\(decodedDeviceInfo.label) \(decodedDeviceInfo.appVersion)"
+                    label = decodedDeviceInfo.label
                     platform = Platform(rawValue: decodedDeviceInfo.platform.rawValue) ?? .unspecified
-                    platformDetails = decodedDeviceInfo.platformDetails
+                    platformDetails = "\(decodedDeviceInfo.appVersion) • \(decodedDeviceInfo.platformDetails)"
                 }
                 else {
                     label = "Unknown"
@@ -126,7 +133,7 @@ final class MessageReceiver {
                 devices.append(DeviceInfo(
                     deviceID: item.key,
                     label: label,
-                    lastLoginAt: Date(milliseconds: item.value.lastLoginAt),
+                    lastLoginAt: Date(millisecondsSince1970: item.value.lastLoginAt),
                     badge: badge,
                     platform: platform,
                     platformDetails: platformDetails
@@ -150,10 +157,10 @@ final class MessageReceiver {
         var messageListener: MessageListener?
 
         return firstly {
-            Guarantee { $0(serverConnector.isMultiDeviceActivated) }
+            Guarantee { $0(userSettings.enableMultiDevice) }
         }
-        .then { (isMultiDeviceActivated: Bool) -> Guarantee<Data?> in
-            guard isMultiDeviceActivated else {
+        .then { (isMultiDeviceRegistered: Bool) -> Guarantee<Data?> in
+            guard isMultiDeviceRegistered else {
                 throw MultiDeviceManagerError.multiDeviceNotActivated
             }
 

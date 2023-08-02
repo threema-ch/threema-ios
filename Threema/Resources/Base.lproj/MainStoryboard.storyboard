@@ -42,7 +42,7 @@
                         </userDefinedRuntimeAttributes>
                     </tabBarItem>
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="vZ5-yv-BbA" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="vZ5-yv-BbA" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="48" width="414" height="96"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -433,7 +433,7 @@
                         </userDefinedRuntimeAttributes>
                     </tabBarItem>
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="3xP-bT-Tja" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="3xP-bT-Tja" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="48" width="414" height="96"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -572,7 +572,7 @@
                         </userDefinedRuntimeAttributes>
                     </tabBarItem>
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="5Ob-0j-Mcg" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="5Ob-0j-Mcg" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="48" width="414" height="96"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -779,7 +779,7 @@
                         </userDefinedRuntimeAttributes>
                     </tabBarItem>
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="ySu-3e-OwE" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="ySu-3e-OwE" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="48" width="414" height="96"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -849,7 +849,7 @@
             <objects>
                 <navigationController storyboardIdentifier="ContactPickerNavigationController" id="X2J-pF-E4b" customClass="ModalNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="ZlH-8V-PkV" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="ZlH-8V-PkV" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="48" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -867,7 +867,7 @@
             <objects>
                 <navigationController storyboardIdentifier="AddContactNavigationController" id="f9d-eO-Il0" customClass="ModalNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="3xB-fy-EQG" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="3xB-fy-EQG" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="48" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -1093,7 +1093,7 @@
             <objects>
                 <navigationController storyboardIdentifier="PreviewImageNav" id="DJG-Qa-Yg3" customClass="ModalNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="npS-lz-iH9" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="npS-lz-iH9" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="48" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>

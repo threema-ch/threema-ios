@@ -36,14 +36,8 @@ open class ThemedViewController: UIViewController {
             name: navigationItemPromptShouldChangeNotificationName,
             object: nil
         )
-        
-        var prompt = VoIPHelper.shared().currentPromptString(nil)
-        if prompt == nil,
-           WCSessionHelper.isWCSessionConnected {
-            prompt = WCSessionHelper.threemaWebPrompt
-        }
-        
-        navigationItem.prompt = prompt
+                
+        navigationItem.prompt = NavigationBarPromptHandler.getCurrentPrompt(duration: nil)
         
         // Call this here, because views added in code won't be in the hierarchy during `viewDidLoad()`
         updateColors()
@@ -77,15 +71,8 @@ open class ThemedViewController: UIViewController {
     // MARK: - Notifications
     
     @objc func navigationItemPromptShouldChange(_ notification: Notification) {
-        if notification.object == nil,
-           WCSessionHelper.isWCSessionConnected {
-            navigationItem.prompt = WCSessionHelper.threemaWebPrompt
-        }
-        else {
-            let time = notification.object as? NSNumber
-            navigationItem.prompt = VoIPHelper.shared()?.currentPromptString(time)
-        }
-        
+        navigationItem.prompt = NavigationBarPromptHandler.getCurrentPrompt(duration: notification.object as? NSNumber)
+
         updateColors()
         
         navigationController?.view.setNeedsLayout()

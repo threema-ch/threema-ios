@@ -20,7 +20,7 @@
 
 #import "AbstractMessage.h"
 
-@interface BoxFileMessage : AbstractMessage <NSCoding>
+@interface BoxFileMessage : AbstractMessage <NSSecureCoding>
 
 @property NSData *jsonData;
 

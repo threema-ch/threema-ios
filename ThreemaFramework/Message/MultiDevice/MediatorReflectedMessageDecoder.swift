@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 class MediatorReflectedMessageDecoder {
 
@@ -51,9 +52,10 @@ class MediatorReflectedMessageDecoder {
         ) as? T else {
             throw MediatorReflectedProcessorError.messageDecodeFailed(message: imsg.loggingDescription)
         }
-        amsg.messageID = NSData.convertBytes(imsg.messageID)
+        amsg.messageID = imsg.messageID.littleEndianData
         amsg.fromIdentity = imsg.senderIdentity
         amsg.toIdentity = frameworkInjector.myIdentityStore.identity
+        amsg.nonce = imsg.nonce
         amsg.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
 
         if amsg.flagGroupMessage() {
@@ -89,7 +91,7 @@ class MediatorReflectedMessageDecoder {
         ) as? T else {
             throw MediatorReflectedProcessorError.messageDecodeFailed(message: omsg.loggingDescription)
         }
-        amsg.messageID = NSData.convertBytes(omsg.messageID)
+        amsg.messageID = omsg.messageID.littleEndianData
         amsg.fromIdentity = frameworkInjector.myIdentityStore.identity
         if !omsg.conversation.contact.isEmpty {
             amsg.toIdentity = omsg.conversation.contact

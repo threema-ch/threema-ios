@@ -24,19 +24,25 @@ import SQLite
 
 extension SQLDHSessionStore {
     static func downgradeFromV1(_ db: Connection) {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
         assert(db.userVersion == 1)
         defer { assert(db.userVersion == 0) }
         
-        DDLogVerbose("Downgrade from \(String(describing: db.userVersion)) to 0")
+        DDLogNotice("Downgrade from \(String(describing: db.userVersion)) to 0")
         
         db.userVersion = 0
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
     }
     
     func downgradeFromV2(_ db: Connection) throws {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        
         assert(db.userVersion == 2)
+        
         defer { assert(db.userVersion == 1) }
         
-        DDLogVerbose("Downgrade from \(String(describing: db.userVersion)) to 1")
+        DDLogNotice("Downgrade from \(String(describing: db.userVersion)) to 1")
         
         let schemaChanger = SchemaChanger(connection: db)
         try schemaChanger.alter(table: "session") { tableDefinition in
@@ -44,5 +50,43 @@ extension SQLDHSessionStore {
         }
         
         db.userVersion = 1
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+    }
+    
+    func downgradeFromV3(_ db: Connection) throws {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        
+        assert(db.userVersion == 3)
+        
+        defer { assert(db.userVersion == 2) }
+        
+        DDLogNotice("Downgrade from \(String(describing: db.userVersion)) to 2")
+        
+        // Migration to V3 only ensures that V2 was completed successfully
+        // It is equivalent to assuming version 2.
+        
+        db.userVersion = 2
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+    }
+    
+    func downgradeFromV4(_ db: Connection) throws {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        
+        assert(db.userVersion == 4)
+        
+        defer { assert(db.userVersion == 3) }
+        
+        DDLogNotice("Downgrade from \(String(describing: db.userVersion)) to 3")
+        
+        let schemaChanger = SchemaChanger(connection: db)
+        try schemaChanger.alter(table: "session") { tableDefinition in
+            tableDefinition.drop(column: "peerCurrentVersion_4dh")
+        }
+        
+        db.userVersion = 3
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
     }
 }

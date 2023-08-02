@@ -19,8 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
-class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionProtocol {
+final class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionProtocol {
 
     enum SyncAction: Int, Codable {
         case create, update, delete
@@ -70,7 +71,6 @@ class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionProtocol
         self.syncGroup = syncGroup
         self.syncAction = syncAction
         super.init(isPersistent: false)
-        self.retry = true
     }
 
     required init(from decoder: Decoder) throws {

@@ -394,8 +394,8 @@
 }
 
 - (void)obtainMatchTokenForIdentity:(MyIdentityStore*)identityStore forceRefresh:(BOOL)forceRefresh onCompletion:(void(^)(NSString *matchToken))onCompletion onError:(void(^)(NSError *error))onError {
-    
-    if (identityStore.identity == nil) {
+
+    if (identityStore.identity == nil || ![identityStore isProvisioned]) {
         onCompletion(nil);
         return;
     }
@@ -707,6 +707,26 @@
 
     [self sendSignedRequest:request toApiPath:@"identity/turn_cred" forStore:identityStore onCompletion:^(id jsonObject) {
         if (jsonObject[@"turnUrls"]) {
+            onCompletion(jsonObject);
+        } else {
+            onError([ThreemaError threemaError:jsonObject[@"error"]]);
+        }
+    } onError:onError];
+}
+
+- (void)obtainSFUCredentials:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
+    
+    if (identityStore.identity == nil) {
+        onError([ThreemaError threemaError:@"No identity"]);
+        return;
+    }
+    
+    NSDictionary *request = @{
+        @"identity": identityStore.identity,
+    };
+
+    [self sendSignedRequest:request toApiPath:@"identity/sfu_cred" forStore:identityStore onCompletion:^(id jsonObject) {
+        if (jsonObject[@"sfuToken"]) {
             onCompletion(jsonObject);
         } else {
             onError([ThreemaError threemaError:jsonObject[@"error"]]);

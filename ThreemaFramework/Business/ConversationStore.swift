@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
 public protocol ConversationStoreProtocol {
     func pin(_ conversation: Conversation)
@@ -36,20 +37,17 @@ protocol ConversationStoreInternalProtocol {
 }
 
 public final class ConversationStore: NSObject, ConversationStoreInternalProtocol, ConversationStoreProtocol {
-    private let serverConnector: ServerConnectorProtocol
     private let userSettings: UserSettingsProtocol
     private let groupManager: GroupManagerProtocol
     private let entityManager: EntityManager
     private let taskManager: TaskManagerProtocol?
 
     required init(
-        serverConnector: ServerConnectorProtocol,
         userSettings: UserSettingsProtocol,
         groupManager: GroupManagerProtocol,
         entityManager: EntityManager,
         taskManager: TaskManagerProtocol?
     ) {
-        self.serverConnector = serverConnector
         self.userSettings = userSettings
         self.groupManager = groupManager
         self.entityManager = entityManager
@@ -58,7 +56,6 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
 
     @objc convenience init(entityManager: EntityManager) {
         self.init(
-            serverConnector: ServerConnector.shared(),
             userSettings: UserSettings.shared(),
             groupManager: GroupManager(entityManager: entityManager),
             entityManager: entityManager,
@@ -195,21 +192,24 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         var groupIdentity: GroupIdentity?
 
         entityManager.performSyncBlockAndSafe {
-            // Save attribute on conversation
-            if let conversationCategory = attribute as? ConversationCategory {
-                conversation.conversationCategory = conversationCategory
-            }
-            else if let conversationVisibility = attribute as? ConversationVisibility {
-                conversation.conversationVisibility = conversationVisibility
-            }
-
-            // Get identity of conversation
-            if !conversation.isGroup() {
-                contactIdentity = conversation.contact?.identity
-            }
-            else {
-                if let group = self.groupManager.getGroup(conversation: conversation) {
-                    groupIdentity = group.groupIdentity
+            if let conversation = self.entityManager.entityFetcher
+                .existingObject(with: conversation.objectID) as? Conversation {
+                // Save attribute on conversation
+                if let conversationCategory = attribute as? ConversationCategory {
+                    conversation.conversationCategory = conversationCategory
+                }
+                else if let conversationVisibility = attribute as? ConversationVisibility {
+                    conversation.conversationVisibility = conversationVisibility
+                }
+                
+                // Get identity of conversation
+                if !conversation.isGroup() {
+                    contactIdentity = conversation.contact?.identity
+                }
+                else {
+                    if let group = self.groupManager.getGroup(conversation: conversation) {
+                        groupIdentity = group.groupIdentity
+                    }
                 }
             }
         }
@@ -227,7 +227,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
 
         // Sync conversation attribute
         if let contactIdentity {
-            let syncer = MediatorSyncableContacts(userSettings, serverConnector, taskManager, entityManager)
+            let syncer = MediatorSyncableContacts(userSettings, taskManager, entityManager)
             if let conversationCategory = attribute as? ConversationCategory {
                 syncer.updateConversationCategory(identity: contactIdentity, value: conversationCategory)
             }
@@ -238,7 +238,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         }
         else if let groupIdentity {
             Task {
-                let syncer = MediatorSyncableGroup(serverConnector, taskManager, groupManager)
+                let syncer = MediatorSyncableGroup(userSettings, taskManager, groupManager)
                 if let conversationCategory = attribute as? ConversationCategory {
                     await syncer.update(identity: groupIdentity, conversationCategory: conversationCategory)
                 }

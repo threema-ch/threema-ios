@@ -28,38 +28,29 @@ import Foundation
         case uploadTempFileCouldNotBeSaved(error: NSError)
     }
     
-    func testServer(server: URL, user: String?, password: String?) -> (serverConfig: Data?, errorMessage: String?) {
-        var serverConfig: Data?
-        var errorMessage: String?
-        
-        // validate and test safe server
-        let queue = DispatchQueue.global()
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        queue.async {
-            self.getHttpClient(user: user, password: password) { client in
-                client
-                    .downloadData(
-                        url: server.appendingPathComponent("config"),
-                        contentType: .json
-                    ) { data, response, error in
-                    
-                        let result = self.processResponse(data: data, response: response, error: error)
-                        if let responseData = result.data {
-                            serverConfig = responseData
-                        }
-                        if let responseErrorMessage = result.errorMessage {
-                            errorMessage = responseErrorMessage
-                        }
-                    
-                        semaphore.signal()
+    func testServer(
+        server: URL,
+        user: String?,
+        password: String?,
+        completionHandler: @escaping (() throws -> Data) -> Void
+    ) {
+
+        getHttpClient(user: user, password: password) { client in
+            client
+                .downloadData(
+                    url: server.appendingPathComponent("config"),
+                    contentType: .json
+                ) { data, response, error in
+                
+                    let result = self.processResponse(data: data, response: response, error: error)
+                    if let responseData = result.data {
+                        completionHandler { responseData }
                     }
-            }
+                    if let responseErrorMessage = result.errorMessage {
+                        completionHandler { throw SafeApiError.requestFailed(message: responseErrorMessage) }
+                    }
+                }
         }
-        
-        semaphore.wait()
-        
-        return (serverConfig, errorMessage)
     }
     
     func delete(server: URL, user: String?, password: String?, completion: @escaping (String?) -> Void) {
@@ -94,35 +85,23 @@ import Foundation
         }
     }
     
-    func download(backup: URL, user: String?, password: String?) throws -> Data? {
-        var errorMessage: String?
-        var encryptedData: Data?
-        
-        let dispatch = DispatchGroup()
-        dispatch.enter()
-            
-        DispatchQueue.global(qos: .background).async {
-            self.getHttpClient(user: user, password: password) { client in
-                client.downloadData(url: backup, contentType: .octetStream) { data, response, error in
-                    let result = self.processResponse(data: data, response: response, error: error)
-                    if let responseData = result.data {
-                        encryptedData = responseData
-                    }
-                    if let responseErrorMessage = result.errorMessage {
-                        errorMessage = responseErrorMessage
-                    }
-                    dispatch.leave()
+    func download(
+        backup: URL,
+        user: String?,
+        password: String?,
+        completionHandler: @escaping (() throws -> Data?) -> Void
+    ) {
+        getHttpClient(user: user, password: password) { client in
+            client.downloadData(url: backup, contentType: .octetStream) { data, response, error in
+                let result = self.processResponse(data: data, response: response, error: error)
+                if let responseData = result.data {
+                    completionHandler { responseData }
+                }
+                if let responseErrorMessage = result.errorMessage {
+                    completionHandler { throw SafeApiError.requestFailed(message: responseErrorMessage) }
                 }
             }
         }
-        
-        dispatch.wait()
-        
-        if let message = errorMessage {
-            throw SafeApiError.requestFailed(message: message)
-        }
-        
-        return encryptedData
     }
     
     private func processResponse(

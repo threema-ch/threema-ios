@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import "AbstractGroupMessage.h"
 
-@interface GroupBallotVoteMessage : AbstractGroupMessage <NSCoding>
+@interface GroupBallotVoteMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property NSString *ballotCreator;
 @property NSData *ballotId NS_SWIFT_NAME(ballotID);

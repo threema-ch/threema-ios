@@ -142,7 +142,7 @@ extension ImageMessageEntity: BlobData {
             .public
         }
         set {
-            assertionFailure("AudioMessageEntity origin is always .public .")
+            assertionFailure("AudioMessageEntity origin is always .public")
             return
         }
     }

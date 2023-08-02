@@ -43,6 +43,79 @@ class MessageSenderTests: XCTestCase {
         DDLog.add(ddLoggerMock)
     }
 
+    func testSendDeliveryReceipt() throws {
+        let testMessages: [AbstractMessage] = [
+            BoxAudioMessage(),
+            BoxBallotCreateMessage(),
+            BoxBallotVoteMessage(),
+            BoxFileMessage(),
+            BoxImageMessage(),
+            BoxLocationMessage(),
+            BoxTextMessage(),
+            BoxVideoMessage(),
+            BoxVoIPCallAnswerMessage(),
+            BoxVoIPCallHangupMessage(),
+            BoxVoIPCallIceCandidatesMessage(),
+            BoxVoIPCallOfferMessage(),
+            BoxVoIPCallRingingMessage(),
+            ContactDeletePhotoMessage(),
+            ContactRequestPhotoMessage(),
+            ContactSetPhotoMessage(),
+            DeliveryReceiptMessage(),
+            GroupAudioMessage(),
+            GroupBallotCreateMessage(),
+            GroupBallotVoteMessage(),
+            GroupCreateMessage(),
+            GroupDeletePhotoMessage(),
+            GroupDeliveryReceiptMessage(),
+            GroupFileMessage(),
+            GroupImageMessage(),
+            GroupLeaveMessage(),
+            GroupLocationMessage(),
+            GroupRenameMessage(),
+            GroupRequestSyncMessage(),
+            GroupSetPhotoMessage(),
+            GroupTextMessage(),
+            GroupVideoMessage(),
+            TypingIndicatorMessage(),
+            UnknownTypeMessage(),
+            GroupCallStartMessage(),
+        ]
+
+        var expectedExcludeFromSending = [Data]()
+        for testMessage in testMessages {
+            testMessage.fromIdentity = "ECHOECHO"
+
+            var expectedExcludeFromSending = [Data]()
+            if testMessage.noDeliveryReceiptFlagSet() {
+                expectedExcludeFromSending.append(testMessage.messageID)
+            }
+
+            let taskManagerMock = TaskManagerMock()
+
+            let messageSender = MessageSender(
+                serverConnector: ServerConnectorMock(),
+                myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
+                groupManager: GroupManagerMock(),
+                taskManager: taskManagerMock,
+                entityManager: EntityManager(databaseContext: dbMainCnx)
+            )
+
+            let expect = expectation(description: "Send delivery receipt")
+
+            _ = messageSender.sendDeliveryReceipt(for: testMessage)
+                .done {
+                    expect.fulfill()
+                }
+
+            wait(for: [expect], timeout: 3)
+
+            let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendDeliveryReceiptsMessage)
+            XCTAssertEqual(task.excludeFromSending, expectedExcludeFromSending)
+        }
+    }
+
     func testSendReadReceipt() async throws {
         let expectedThreemaIdentity = "ECHOECHO"
         let expectedMessageID = MockData.generateMessageID()
@@ -82,7 +155,7 @@ class MessageSenderTests: XCTestCase {
                 guard let task = task as? TaskDefinitionSendDeliveryReceiptsMessage else {
                     return false
                 }
-                return task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) &&
+                return task.receiptType == .read &&
                     task.toIdentity == expectedThreemaIdentity &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.contains(expectedReadDate)
@@ -185,7 +258,7 @@ class MessageSenderTests: XCTestCase {
         let messageSender = MessageSender(
             serverConnector: serverConnectorMock,
             myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: EntityManager(databaseContext: dbMainCnx)
@@ -200,7 +273,7 @@ class MessageSenderTests: XCTestCase {
                 guard let task = task as? TaskDefinitionSendDeliveryReceiptsMessage else {
                     return false
                 }
-                return task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) &&
+                return task.receiptType == .read &&
                     task.toIdentity == expectedThreemaIdentity &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.contains(expectedReadDate)
@@ -278,6 +351,7 @@ class MessageSenderTests: XCTestCase {
             ))
         }
 
+        let userSettingsMock = UserSettingsMock(enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: MockData.deviceID,
@@ -286,7 +360,7 @@ class MessageSenderTests: XCTestCase {
         let groupManagerMock = GroupManagerMock()
         groupManagerMock.getGroupReturns = Group(
             myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
+            userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: message.conversation,
             lastSyncRequest: nil
@@ -296,7 +370,7 @@ class MessageSenderTests: XCTestCase {
         let messageSender = MessageSender(
             serverConnector: serverConnectorMock,
             myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
+            userSettings: userSettingsMock,
             groupManager: groupManagerMock,
             taskManager: taskManagerMock,
             entityManager: EntityManager(databaseContext: dbMainCnx)
@@ -315,7 +389,7 @@ class MessageSenderTests: XCTestCase {
                 print(task.groupCreatorIdentity == expectedGroupIdentity.creator)
                 print(task.receiptMessageIDs.contains(expectedMessageID))
 
-                return task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) &&
+                return task.receiptType == .read &&
                     task.groupID == expectedGroupIdentity.id &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.contains(expectedReadDate)

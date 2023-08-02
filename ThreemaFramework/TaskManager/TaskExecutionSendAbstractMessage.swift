@@ -24,15 +24,16 @@ import PromiseKit
 
 /// Reflect message to mediator server (if multi device is enabled) and send
 /// message to chat server is receiver identity not my identity.
-class TaskExecutionSendAbstractMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionSendAbstractMessage: TaskExecution, TaskExecutionProtocol {
 
     func execute() -> Promise<Void> {
-        guard let task = taskDefinition as? TaskDefinitionSendAbstractMessage, task.message != nil else {
+        guard let task = taskDefinition as? TaskDefinitionSendAbstractMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             // Reflect message if is necessary
@@ -50,11 +51,6 @@ class TaskExecutionSendAbstractMessage: TaskExecution, TaskExecutionProtocol {
         .then { _ -> Promise<Void> in
             // Send CSP message
             Promise { seal in
-                guard !task.doOnlyReflect else {
-                    seal.fulfill_()
-                    return
-                }
-
                 self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                     if let toIdentity = task.message.toIdentity,
                        toIdentity != self.frameworkInjector.myIdentityStore.identity,

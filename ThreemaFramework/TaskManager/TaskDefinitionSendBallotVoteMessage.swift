@@ -20,7 +20,7 @@
 
 import Foundation
 
-@objc class TaskDefinitionSendBallotVoteMessage: TaskDefinitionSendMessage {
+@objc final class TaskDefinitionSendBallotVoteMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

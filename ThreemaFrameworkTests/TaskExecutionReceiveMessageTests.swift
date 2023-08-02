@@ -55,8 +55,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             entityManager: EntityManager(databaseContext: databaseMainCnx)
         )
 
-        let expec = expectation(description: "TaskDefinitionReceiveMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionReceiveMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionReceiveMessage(
             message: expectedBoxedMessage,
@@ -66,18 +66,18 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        wait(for: [expec], timeout: 6)
+        wait(for: [expect], timeout: 6)
 
-        XCTAssertNotNil(expecError)
+        XCTAssertNotNil(expectError)
         XCTAssertEqual(
-            try XCTUnwrap(expecError?.localizedDescription),
+            try XCTUnwrap(expectError?.localizedDescription),
             TaskExecutionError.processIncomingMessageFailed(message: expectedBoxedMessage.messageID.hexString)
                 .localizedDescription
         )
@@ -115,8 +115,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             serverConnector: serverConnectorMock
         )
 
-        let expec = expectation(description: "TaskDefinitionReceiveMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionReceiveMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionReceiveMessage(
             message: expectedBoxedMessage,
@@ -126,16 +126,16 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        wait(for: [expec], timeout: 6)
+        wait(for: [expect], timeout: 6)
 
-        XCTAssertNil(expecError)
+        XCTAssertNil(expectError)
         XCTAssertEqual(1, serverConnectorMock.completedProcessingMessageCalls.count)
         XCTAssertEqual(
             1,
@@ -147,6 +147,18 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
                 .backgroundGroupManager as? GroupManagerMock
         )
         XCTAssertEqual(0, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(
+                    message: "Message would not be processed (skip reflecting message)"
+                )
+        )
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(
+                    message: "Message would not be processed (skip send delivery receipt)"
+                )
+        )
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
@@ -211,8 +223,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
         conversation.groupMyIdentity = frameworkInjectorMock.myIdentityStore.identity
 
-        let expec = expectation(description: "TaskDefinitionReceiveMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionReceiveMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionReceiveMessage(
             message: expectedBoxedMessage,
@@ -222,16 +234,16 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        wait(for: [expec], timeout: 6)
+        wait(for: [expect], timeout: 6)
 
-        XCTAssertNil(expecError)
+        XCTAssertNil(expectError)
         XCTAssertEqual(1, messageSenderMock.sendDeliveryReceiptCalls.count)
         XCTAssertEqual(
             1,
@@ -316,8 +328,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
         conversation.groupMyIdentity = frameworkInjectorMock.myIdentityStore.identity
 
-        let expec = expectation(description: "TaskDefinitionReceiveMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionReceiveMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionReceiveMessage(
             message: expectedBoxedMessage,
@@ -327,17 +339,17 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        wait(for: [expec], timeout: 6)
+        wait(for: [expect], timeout: 6)
 
-        XCTAssertNil(expecError)
-        XCTAssertTrue(messageSenderMock.sendDeliveryReceiptCalls.isEmpty)
+        XCTAssertNil(expectError)
+        XCTAssertEqual(1, messageSenderMock.sendDeliveryReceiptCalls.count)
         XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
         XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
         XCTAssertEqual(1, serverConnectorMock.completedProcessingMessageCalls.count)
@@ -383,7 +395,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             if serverConnectorMock.connectionState == .loggedIn {
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: Date()]
                 )
                 return true
             }
@@ -403,6 +416,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
             messageSender: messageSenderMock,
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             messageProcessor: messageProcessorMock
@@ -412,7 +426,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         expectedTextMessage.fromIdentity = "ECHOECHO"
         expectedTextMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedTextMessage.text = "Bla bla bla..."
-        expectedTextMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))!
+        expectedTextMessage.nonce = MockData.generateMessageNonce()
 
         messageProcessorMock.abstractMessage = expectedTextMessage
 
@@ -420,8 +434,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         expectedBoxedMessage.messageID = expectedTextMessage
             .messageID
 
-        let expec = expectation(description: "TaskDefinitionReceiveMessage")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionReceiveMessage")
+        var expectError: Error?
 
         let task = TaskDefinitionReceiveMessage(
             message: expectedBoxedMessage,
@@ -431,16 +445,16 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        wait(for: [expec], timeout: 6)
+        wait(for: [expect], timeout: 6)
 
-        XCTAssertNil(expecError)
+        XCTAssertNil(expectError)
         XCTAssertEqual(1, messageSenderMock.sendDeliveryReceiptCalls.count)
         XCTAssertEqual(
             1,
@@ -484,5 +498,110 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
                     message: "[0x33] sendIncomingMessageAckToChat (type: text; id: \(expectedBoxedMessage.messageID.hexString))"
                 )
         )
+    }
+
+    // MARK: Incomping VoIP message
+
+    func testReceivedVoIPMessage() throws {
+        AppGroup.setAppID("Threema")
+
+        let tests: [(isNotificationExtension: Bool, isSenderBlocked: Bool, ackMessage: Bool)] = [
+            (true, true, true),
+            (false, true, true),
+            (true, false, false),
+            (false, false, true),
+        ]
+
+        for test in tests {
+            AppGroup.setActive(test.isNotificationExtension, for: AppGroupTypeNotificationExtension)
+
+            let userSettingsMock = UserSettingsMock()
+            if test.isSenderBlocked {
+                userSettingsMock.blacklist = ["ECHOECHO"]
+            }
+
+            let messageSenderMock = MessageSenderMock()
+            let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
+            let messageProcessorMock = MessageProcessorMock()
+            let frameworkInjectorMock = BusinessInjectorMock(
+                backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
+                entityManager: EntityManager(databaseContext: databaseMainCnx),
+                messageSender: messageSenderMock,
+                userSettings: userSettingsMock,
+                serverConnector: serverConnectorMock,
+                mediatorMessageProtocol: MediatorMessageProtocolMock(),
+                messageProcessor: messageProcessorMock
+            )
+
+            let expectedVoIPCallOffer = BoxVoIPCallOfferMessage()
+            expectedVoIPCallOffer.fromIdentity = "ECHOECHO"
+            expectedVoIPCallOffer.toIdentity = frameworkInjectorMock.myIdentityStore.identity
+            expectedVoIPCallOffer.nonce = MockData.generateMessageNonce()
+
+            messageProcessorMock.abstractMessage = expectedVoIPCallOffer
+
+            let expectedBoxedMessage = BoxedMessage()
+            expectedBoxedMessage.messageID = expectedVoIPCallOffer
+                .messageID
+
+            let expect = expectation(description: "TaskDefinitionReceiveMessage")
+            var expectError: Error?
+
+            let task = TaskDefinitionReceiveMessage(
+                message: expectedBoxedMessage,
+                receivedAfterInitialQueueSend: true,
+                maxBytesToDecrypt: 0,
+                timeoutDownloadThumbnail: 0
+            )
+            task.create(frameworkInjector: frameworkInjectorMock).execute()
+                .done {
+                    expect.fulfill()
+                }
+                .catch { error in
+                    expectError = error
+                    expect.fulfill()
+                }
+
+            wait(for: [expect], timeout: 6)
+
+            XCTAssertNil(expectError)
+            XCTAssertEqual(1, messageSenderMock.sendDeliveryReceiptCalls.count)
+            XCTAssertEqual(
+                1,
+                messageSenderMock.sendDeliveryReceiptCalls
+                    .filter { $0.messageID.elementsEqual(expectedVoIPCallOffer.messageID) }.count
+            )
+            XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
+            XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+            let backgroundGroupManagerMock = try XCTUnwrap(
+                frameworkInjectorMock
+                    .backgroundGroupManager as? GroupManagerMock
+            )
+            XCTAssertEqual(0, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+            XCTAssertTrue(
+                ddLoggerMock
+                    .exists(
+                        message: "[0x15] receiveIncomingMessageFromChat (type: BoxedMessage; id: \(expectedBoxedMessage.messageID.hexString))"
+                    )
+            )
+
+            if test.ackMessage {
+                XCTAssertEqual(1, serverConnectorMock.completedProcessingMessageCalls.count)
+                XCTAssertEqual(
+                    1,
+                    serverConnectorMock.completedProcessingMessageCalls
+                        .filter { $0.messageID.elementsEqual(expectedBoxedMessage.messageID) }.count
+                )
+                XCTAssertTrue(
+                    ddLoggerMock
+                        .exists(
+                            message: "[0x33] sendIncomingMessageAckToChat (type: callOffer; id: \(expectedBoxedMessage.messageID.hexString))"
+                        )
+                )
+            }
+            else {
+                XCTAssertEqual(0, serverConnectorMock.completedProcessingMessageCalls.count)
+            }
+        }
     }
 }

@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "0403EECE-964D-4CCD-8435-DE43C5B49309",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "ThreemaEssentialsTests",
+        "name" : "ThreemaEssentialsTests"
+      }
+    }
+  ],
+  "version" : 1
+}

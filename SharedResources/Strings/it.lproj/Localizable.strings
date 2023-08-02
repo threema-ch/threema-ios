@@ -63,6 +63,7 @@
 "copy" = "Copia";
 "save" = "Salva";
 "download" = "Scarica";
+"retry" = "Riprova";
 "share" = "Condividi";
 "details" = "Dettagli";
 "acknowledge" = "Sono d’accordo";
@@ -503,8 +504,8 @@
 "forward_security_none" = "Nessuno";
 "forward_security_2dh" = "Unilaterale";
 "forward_security_4dh" = "Completo";
-"forward_security_clear_sessions" = "Elimina tutte le sessioni";
-"forward_security_explainer_footer" = "Il Perfect Forward Secrecy (PFS) protegge una comunicazione registrata dalla decodifica retroattiva, anche se la chiave di cifratura a lungo termine è compromessa.\nL'opzione può essere attivata de l'app supporta, da entrambi i lati, il PFS.";
+"forward_security_clear_sessions" = "Ripristina Perfect Forward Secrecy per questo contatto";
+"forward_security_explainer_footer" = "Completa questa azione solo qualora ti venga richiesta dal team di assistenza di Threema.";
 "md_wizard_pfs_warning" = "Il Perfect Forward Secrecy sarà disattivato per tutti i contatti non appena avrai attivato l'anteprima multi-dispositivo.";
 "md_wizard_disable_pfs_confirm" = "Disattiva Perfect Forward Secrecy";
 
@@ -763,6 +764,11 @@
 "call_threema_cellular_instead_of_wifi_title" = "Chiamata tramite rete di telefonia mobile";
 "call_threema_cellular_instead_of_wifi_text" = "Avviso: questa chiamata comporta un trasferimento di dati nella rete di telefonia mobile.";
 
+// Group Calls
+"group_call_join_button_title" = "Unisciti";
+"group_call_open_button_title" = "Apri";
+"group_call_participants_title" = "Partecipanti: %@";
+
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protegge la tua privacy più rigorosamente di qualsiasi altro servizio di messaggistica. Maggiori informazioni nella sezione Norme sulla Privacy.";
 "privacy_policy_about_work" = "%@ protegge la tua privacy più rigorosamente di qualsiasi altro servizio di messaggistica. Maggiori informazioni nella sezione Norme sulla Privacy.";
@@ -966,6 +972,7 @@
 "safe_test_server_invalid_url" = "Inserisci un indirizzo HTTPS valido.";
 "safe_restore_error" = "Impossibile recuperare il backup Threema Safe, riprova.";
 "safe_activation_failed" = "Threema Safe non può essere attivato dopo il ripristino del backup.";
+"safe_activation_app_migration_failed_error_message" = "Impossibile ripristinare il backup Threema Safe a causa di un errore del database. Per favore riprova.";
 
 "password_bad" = "Password debole";
 "password_bad_explain" = "La password scelta per Threema Safe non è sicura e può essere facilmente individuata dagli hacker. Scegline un’altra. Suggerimento: usa una password con parole multiple.";
@@ -1221,6 +1228,11 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "Se non ricevi le notifiche dei messaggi in entrata al di fuori dell'app puoi iscriverti di nuovo per ricevere le notifiche push.";
 "settings_advanced_reregister_notifications_label" = "Registrare ancora una volta le notifiche push";
 
+"settings_advanced_reset_fs_db_label" = "Ripristina stato di Perfect Forward Secrecy";
+"settings_advanced_support_settings_header_title" = "Impostazioni Assistenza";
+"settings_advanced_support_settings_footer_title" = "Completa questa azione solo qualora ti venga richiesta dal team di assistenza di Threema.";
+"settings_advanced_successfully_deleted_fs_sessions_label" = "Stato Forward Security ripristinato";
+
 // Sentry
 "sentry_crash_send_title" = "%@ si è chiusa inaspettatamente.";
 "sentry_crash_send_description" = "Puoi inviare un rapporto di arresto in modo totalmente anonimo. Fornendo dettagli sulla dinamica dell’arresto puoi aiutare a individuare il problema.";
@@ -1405,12 +1417,11 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 
 "contactoverride_sheetMessage" = "L'impostazione predefinita di questo contatto verrà sovrascritta.";
 
-/* Multi Decvice */
+/* Multi Device */
 "multi_device_linked_devices_title" = "Anteprima multi-dispositivo";
 "multi_device_linked_devices_desc" = "Attiva o disattiva l'anteprima multi-dispositivo per questo dispositivo.";
 "multi_device_linked_devices_refresh" = "Scorri giù per aggiornare";
 "multi_device_linked_devices_loading_failed" = "Errore durante il caricamento dei dispositivi: %@";
-"multi_device_linked_devices_failed_to_load_title" = "Impossibile caricare la lista dei dispositivi";
 "multi_device_linked_devices_failed_to_load_message" = "Impossibile caricare i dispositivi collegati. Verifica la connessione a Internet e riprova.";
 "multi_device_linked_devices_this" = "Questo dispositivo";
 "multi_device_linked_devices_others" = "Altri dispositivi";
@@ -1420,12 +1431,68 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "multi_device_linked_devices_removed_devices_message" = "In questo modo eliminerai tutti i dispositivi connessi e disattiverai il multi-dispositivo";
 "multi_device_linked_devices_removed_devices_ok" = "Disattiva";
 "multi_device_linked_duplicate_contacts_title" = "Duplica contatti";
-"multi_device_linked_duplicate_contacts_desc" = "Non puoi collegare questo dispositivo a causa dei contatti duplicati (%@). Contatta l'assistenza.";
+"multi_device_linked_devices_failed_to_load_title" = "Impossibile caricare la lista dei dispositivi";
 
 "multi_device_linked_devices_failed_remove_title" = "Impossibile eliminare il dispositivo";
 "multi_device_linked_devices_failed_remove_message" = "Impossibile eliminare il dispositivo collegato. Riprova.";
 "multi_device_linked_devices_failed_remove_message_2" = "Impossibile eliminare il dispositivo collegato. Verifica la connessione a Internet e riprova.";
-"multi_device_slot_state_mismatch_alert" = "Questo dispositivo è stato scollegato. Ciò significa che al momento non potrai inviare o ricevere nuovi messaggi. Se non è stata una tua richiesta, ricorda che potrebbe essere accaduto a causa di motivi tecnici durante la fase di Anteprima tecnica. Ci scusiamo per l'inconveniente. Per ricollegare il dispositivo, consulta le domande frequenti: https://three.ma/faq";
+
+/* New/reused multi device strings */
+"multi_device_unsupported_protocol_version_alert" = "Questa versione di Threema non è più supportata (versione protocollo obsoleta). Installa la versione più recente per continuare a usare Threema.";
+"multi_device_slot_state_mismatch_alert" = "Questo dispositivo è stato scollegato, per questo motivo al momento non potrai inviare o ricevere nuovi messaggi. Se la richiesta di scollegamento non è arrivata da te, ricorda che potrebbe essere accaduto durante la fase beta per motivi tecnici. Ci scusiamo per l'inconveniente. Per ricollegare il dispositivo, segui i passaggi spiegate a questa voce delle domande frequenti: https://three.ch/faq/md_reset";
+
+"multi_device_new_linked_devices_title" = "Dispositivo collegato (Beta)";
+"multi_device_new_linked_devices_add_button" = "Aggiungi dispositivo";
+"multi_device_new_linked_devices_limitation_info" = "Nota: al momento, con la versione beta, può essere collegato un solo computer. Il collegamento di un altro dispositivo iPhone/iPad o Android non è supportato,";
+"multi_device_new_linked_devices_failed_to_load" = "Impossibile caricare i dispositivi collegati. Controlla la connessione a Internet e scorri verso il basso per riprovare.";
+"multi_device_new_linked_devices_no_other_device" = "Tocca %@ per collegare di nuovo un dispositivo";
+"multi_device_new_linked_device_remove_all_button" = "Elimina tutti i dispositivi collegati";
+"multi_device_new_linked_device_remove_all_title" = "Eliminare tutti i dispositivi collegati?";
+"multi_device_new_linked_device_remove_all_error_title" = "Impossibile eliminare tutti i dispositivi collegati";
+"multi_device_new_linked_device_error_message" = "Controlla la connessione a Internet e riprova.";
+"multi_device_new_linked_device_instructions" = "Prima di aggiungere un nuovo dispositivo, scarica la versione beta attuale di %@ per desktop e aprila:\n\n%@";
+"multi_device_linked_duplicate_contacts_desc" = "A causa di contatti duplicati (%@), non è possibile aggiungere un dispositivo. Contatta l'assistenza (\"Impostazioni > Assistenza\").";
+"multi_device_new_linked_own_identity_in_contacts_title" = "Il tuo ID Threema ID come contatto";
+"multi_device_new_linked_own_identity_in_contacts_message" = "Il tuo elenco dei contatti comprende una voce con il tuo Threema ID. Eliminalo per aggiungere un nuovo dispositivo.";
+"multi_device_new_linked_show_contact_button" = "Mostra contatto";
+"multi_device_new_linked_device_list_no_platform_details" = "Nessun dettaglio di piattaforma";
+"multi_device_new_linked_device_list_last_active" = "Ultima attività: %@";
+
+"multi_device_join_perfect_forward_secrecy_info" = "Quando colleghi un dispositivo, Perfect Forward Secrecy verrà disattivato per tutti i contatti.\n\nQuesto è un limite dell'attuale versione beta. Per ulteriori limiti, fai riferimento a [questa Domanda frequente](%@).";
+"multi_device_join_scan_qr_code_title" = "Scansione codice QR";
+"multi_device_join_scan_qr_code_info" = "Scansiona il codice QR mostrato nella versione beta di %@ sul dispositivo che vuoi collegare";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_label" = "Visualizzazione Fotocamera";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_hint" = "Punta la tua fotocamera verso lo schermo sul quale è aperta %@ Beta.";
+"multi_device_join_connecting" = "Connessione in corso";
+"multi_device_join_unrecoverable_error_title" = "Errore inatteso";
+"multi_device_join_fatal_scanning_qr_code_error_title" = "Errore nella scansione del codice QR";
+"multi_device_join_fatal_camera_access_error_title" = "Impossibile accedere alla fotocamera";
+"multi_device_join_fatal_no_internet_connection_title" = "Connessione internet assente";
+"multi_device_join_failed_to_send_data_title" = "Impossibile inviare i dati";
+"multi_device_join_fatal_error_message" = "Riprova a collegare il dispositivo. Se il problema persiste, contatta l'assistenza (\"Impostazioni > Assistenza\").";
+"multi_device_join_unknown_qr_code_title" = "Codice QR sconosciuto";
+"multi_device_join_unknown_qr_code_message" = "Assicurati di usare l'app corrispondente di %@.";
+"multi_device_join_incompatible_version_title" = "Versione non compatibile";
+"multi_device_join_incompatible_version_message" = "Installa l'ultima versione di %@ su entrambi i dispositivi.";
+"multi_device_join_new_device_not_found_title" = "Nuovo dispositivo non trovato";
+"multi_device_join_new_device_not_found_message" = "Potrebbe succedere quando il codice QR è già stato scansionato. Riavvia l'app sul nuovo dispositivo e riprova.";
+"multi_device_join_trust_new_device_title" = "Nuovo dispositivo affidabile";
+"multi_device_join_trust_new_device_info" = "Seleziona le stesse immagini così come mostrato sul nuovo dispositivo per confermare che è affidabile.";
+"multi_device_join_no_match_button" = "Nessuna corrispondenza?";
+"multi_device_join_no_match_title" = "Le immagini non corrispondono?";
+"multi_device_join_no_match_message" = "Sembra che si sia verificato un problema di connessione con il dispositivo. Riavvia l'app sul nuovo dispositivo e riprova.";
+"multi_device_join_sending_info" = "Il nuovo dispositivo memorizzerà una copia indipendente del tuo profilo %@ e i messaggi verranno inviati e ricevuti per tuo conto.";
+"multi_device_join_sending_data" = "Invio dati in corso...";
+"multi_device_join_sending_continue_on_new_device" = "Continua sul nuovo dispositivo.";
+"multi_device_join_sending_wait" = "Attendi, l'invio potrebbe necessitare di diversi minuti.";
+"multi_device_join_linked_successfully_title" = "Dispositivo collegato"; // The same as `md_wizard_success_title`
+"multi_device_join_linked_successfully_info" = "Ora %@ può essere usato sul dispositivo che hai collegato (anche quando questo dispositivo iOS è disattivato oppure non è connesso a Internet).";
+
+"multi_device_join_failed_app_closed_title" = "Collegamento nuovo dispositivo non riuscito";
+"multi_device_join_failed_app_closed_message" = "Impossibile effettuare il collegamento perché %@ è stato chiuso. Riprova.";
+
+"multi_device_linked_id_missing_title" = "Dispositivi collegati";
+"multi_device_linked_id_missing_message" = "I dispositivi collegati sono stati rimossi. Potrai collegare nuovamente i tuoi dispositivi dopo aver ripristinato o impostato questo dispositivo.";
 
 "myprofile_link_email_phone_footer" = "Collegando il tuo indirizzo e-mail o numero di telefono al tuo ID, altre persone possono trovarti automaticamente su %@ se figuri nella loro rubrica.";
 "myprofile_link_email_footer" = "Collegando il tuo indirizzo e-mail al tuo ID, altri utenti possono trovarti automaticamente su %@, se figuri nella loro rubrica.";
@@ -1451,6 +1518,11 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 
 "settings_threema_web_connected" = "Desktop/Web collegato";
 "settings_threema_web_connectioninfo" = "Per mantenere il collegamento, il tuo dispositivo deve essere sbloccato e %@ posto in primo piano. In caso di collegamento attivo, il dispositivo non viene bloccato automaticamente.";
+"settings_threema_web_linked_device_section_header" = "Multi-dispositivo";
+"settings_threema_web_linked_device_section_footer" = "Il dispositivo collegato può essere utilizzato anche se %@ è in background o se questo dispositivo è offline.";
+"settings_threema_web_section_header" = "Dispositivi connessi direttamente";
+"settings_threema_web_multi_device_qr_code_title" = "Codice QR errato";
+"settings_threema_web_multi_device_qr_code_message" = "Tocca \"%@\" e poi \"%@\" per collegare a questa app per desktop:";
 
 "chat_text_view_placeholder" = "Nuovo messaggio";
 "compose_bar_camera_button_accessibility_label" = "Apri fotocamera";
@@ -1542,17 +1614,23 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 
 "notification_reregister_notifications_successed" = "Le notifiche push sono state nuovamente registrate";
 
+"notification_audio_muted" = "Microfono: Off";
+"notification_audio_unmuted" = "Microfono: On";
+"notification_video_muted" = "Fotocamera: Off";
+"notification_video_unmuted" = "Fotocamera: On";
+
 // Forward security status messages
 "forward_security_message_without" = "Hai ricevuto un messaggio senza Perfect Forward Secrecy. Assicurati che il mittente abbia volutamente disattivato il Perfect Forward Secrecy.";
 "forward_security_session_established" = "I messaggi in questa chat sono d'ora in poi protetti da Perfect Forward Secrecy.";
 "forward_security_session_established_rx" = "I messaggi ricevuti in questa chat sono d'ora in poi protetti da Perfect Forward Secrecy. Attiva Perfect Forward Secrecy nei dettagli contatto per proteggere anche i messaggi inviati.";
 "forward_security_messages_skipped_1" = "Dall'ultimo messaggio è andato perso un messaggio.";
 "forward_security_messages_skipped_x" = "Dall'ultimo messaggio sono andati persi %d messaggi.";
-"forward_security_session_reset" = "La sessione Perfect Forward Secrecy con questo contatto è stata reimpostata. Ciò può succedere se il contatto ha cambiato il dispositivo o reinstallato l'app.";
+"forward_security_session_reset" = "La sessione Perfect Forward Secrecy è stata ripristinata. Ciò può accadere quando il partner della chat cambia dispositivo oppure reinstalla l'app.";
 "forward_security_message_out_of_order" = "Un messaggio è stato ricevuto nell'ordine sbagliato e quindi non è potuto essere criptato.";
 "forward_security_status_enabled_outgoing" = "Il Perfect Forward Secrecy è stato abilitato per i messaggi in uscita.";
-"forward_security_status_disabled_outgoing" = "Il Perfect Forward Secrecy è stato disabilitato per i messaggi in uscita.";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Questo contatto ha cominciato a usare una versione dell'app che non supporta il Perfect Forward Secrecy. D'ora in avanti, i messaggi verranno inviati senza il PFS.";
+"forward_security_status_disabled_outgoing" = "Perfect Forward Secrecy è stato disabilitato per questa chat.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Perfect Forward Secrecy è stato disabilitato in questa conversazione perché il tuo partner della chat possiede una versione non supportata.";
+"forward_security_illegal_session_state" = "La sessione di Perfect Forward Secrecy è stata ripristinata perché non valida.";
 
 // Profile view
 "accessibility_profile_button_hint_contact" = "Apri dettagli contatto";
@@ -1569,6 +1647,11 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "accessibility_senderDescription_ownMessage" = "Il tuo %@";
 "accessibility_senderDescription_otherMessage_group" = "%@ di %@";
 "accessibility_senderDescription_systemMessage" = "Info: %@";
+"accessibility_senderDescription_typing" = "Il contatto sta digitando";
+"accessibility_senderDescription_stopped_typing" = "Il contatto ha smesso di digitare";
+"accessibility_senderDescription_contact_typing" = "%@ sta digitando";
+"accessibility_senderDescription_contact_stopped_typing" = "%@ ha smesso di digitare";
+
 
 // Message types
 "accessibility_textMessage_description" = "Messaggio";
@@ -1694,3 +1777,18 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "alert_biometrics_changed_title_touch" = "Riconosciuta possibile modifica al Touch ID";
 "alert_biometrics_changed_title_face" = "Riconosciuta possibile modifica al Face ID";
 "alert_biometrics_changed_message" = "Inserisci il codice una sola volta per consentire di nuovo l'autenticazione biometrica per Threema.";
+
+// Group Calls
+"group_call_started_by_contact_system_message" = "%@ ha iniziato una chiamata di gruppo";
+"group_call_started_by_local_system_message" = "Hai iniziato una chiamata di gruppo";
+"group_call_ended_system_message" = "Chiamata di gruppo terminata";
+
+"group_call_start_message_received" = "Ha iniziato una chiamata di gruppo";
+
+"group_call_navbar_state_connecting" = "Connessione in corso";
+"group_call_navbar_state_joining" = "Unione in corso...";
+"group_call_navbar_state_connected" = "Connesso";
+
+// App Migration
+"sqldhsessionstore_cannot_downgrade_to" = "(%@)\nImpossibile eseguire il downgrade dalla versione %d alla versione %d";
+"sqldhsessionstore_unknownError" = "Si è verificato un errore sconosciuto durante il tentativo di migrazione: %@";

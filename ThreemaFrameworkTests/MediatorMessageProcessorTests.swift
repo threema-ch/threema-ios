@@ -50,6 +50,7 @@ class MediatorMessageProcessorTests: XCTestCase {
             mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys) as AnyObject,
             userSettings: UserSettingsMock(),
             taskManager: taskManagerMock,
+            socketProtocolDelegate: self,
             messageProcessorDelegate: self
         )
     }
@@ -78,21 +79,34 @@ class MediatorMessageProcessorTests: XCTestCase {
     }
     
     func testProcessReflectAck() {
-        let reflectID = NaClCrypto.shared()?.randomBytes(4)!
+        let reflectID = MockData.generateReflectID()
+        let reflectedAt = Date().millisecondsSince1970
         
         var message = Data(
             bytes: [MediatorMessageProtocol.MediatorMessageType.reflectAck.rawValue, 0x00, 0x00, 0x00],
             count: 4
         ) // Common header
         message.append([0x00, 0x00, 0x00, 0x00], count: 4) // Reserved
-        message.append(reflectID!)
+        message.append(reflectID)
+        message.append(reflectedAt.littleEndianData)
+
+        let expec = expectation(description: "test")
+
+        NotificationCenter.default.addObserver(
+            forName: TaskManager.mediatorMessageAckObserverName(reflectID: reflectID),
+            object: nil, queue: nil
+        ) { notification in
+            XCTAssertEqual(reflectedAt.date, notification.userInfo?[reflectID] as? Date)
+
+            expec.fulfill()
+        }
 
         var type = UInt8()
         let result = mmp?.process(message: message, messageType: &type, receivedAfterInitialQueueSend: false)
-        
-        XCTAssertEqual(4, result?.count)
-        XCTAssertEqual(reflectID, result)
-        XCTAssertEqual(type, MediatorMessageProtocol.MediatorMessageType.reflectAck.rawValue)
+
+        wait(for: [expec], timeout: 3)
+
+        XCTAssertNil(result)
     }
     
     func testProcessReflected() {
@@ -115,9 +129,9 @@ class MediatorMessageProcessorTests: XCTestCase {
 
         let task = taskManagerMock.addedTasks
             .first { $0 as? TaskDefinitionReceiveReflectedMessage != nil } as! TaskDefinitionReceiveReflectedMessage
-        XCTAssertEqual(task.message.outgoingMessage.conversation.contact, "ECHOECHO")
-        XCTAssertEqual(task.message.outgoingMessage.type, .text)
-        XCTAssertEqual(String(decoding: task.message.outgoingMessage.body, as: UTF8.self), "Muttis diweiss")
+        XCTAssertEqual(task.reflectedEnvelope.outgoingMessage.conversation.contact, "ECHOECHO")
+        XCTAssertEqual(task.reflectedEnvelope.outgoingMessage.type, .text)
+        XCTAssertEqual(String(decoding: task.reflectedEnvelope.outgoingMessage.body, as: UTF8.self), "Muttis diweiss")
     }
 }
 

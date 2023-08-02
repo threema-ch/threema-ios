@@ -69,9 +69,20 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 /// Remote sent date of message. This is never `nil`.
 ///
-/// Outgoing message: Staring with with 4.9 date when message was acknowledged by server. For local messages and before 4.7 `date` is returned.
-/// Incoming message: Date set by sender.
+/// Outgoing message:
+/// - Displayed as sent
+/// - Update -> CSP: Staring with with 4.9 date when message was acknowledged by server. For local messages and before 4.7 `date` is returned. MDP: Reflected date after reflecting
+/// Incoming message:
+/// - Displayed as sent
+/// - Update -> CSP: Sent (created) date set by sender (`AbstractMessage.date`), MDP: Created date set by sender (`D2d_IncomingMessage.createdAt`)
 @property (nonatomic, retain) NSDate *remoteSentDate;
+
+/// Outgoing message:
+/// - Displayed as delivered
+/// - Update -> CSP: Sent (created) date set by sender (incoming `DeliveryReceiptMessage.date`), MDP: Created date set by sender (`D2d_IncomingMessage.createdAt`)
+/// Incoming message:
+/// - Displayed as received
+/// - Update -> CSP: Date set by receiver (`Date.now`), MDP: Reflected date set by receiver after reflecting (leader) or when processing incoming reflected message (none leader)
 @property (nullable, nonatomic, retain) NSDate *deliveryDate;
 @property (nullable, nonatomic, retain) NSDate *readDate;
 @property (nullable, nonatomic, retain) NSDate *userackDate;

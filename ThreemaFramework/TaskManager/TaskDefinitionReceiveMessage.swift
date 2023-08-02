@@ -20,7 +20,7 @@
 
 import Foundation
 
-@objc class TaskDefinitionReceiveMessage: TaskDefinition {
+@objc final class TaskDefinitionReceiveMessage: TaskDefinition {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -42,6 +42,7 @@ import Foundation
     
     @objc private init(message: BoxedMessage, isPersistent: Bool) {
         super.init(isPersistent: isPersistent)
+        self.retry = false
         self.message = message
     }
     

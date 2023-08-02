@@ -458,7 +458,7 @@
             <objects>
                 <navigationController id="rxw-EU-IYk" customClass="ModalNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="SNO-V5-kEn" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="SNO-V5-kEn" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -552,7 +552,7 @@
             <objects>
                 <navigationController id="wMs-cI-B0Y" customClass="ModalNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="W4X-ql-dIM" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="W4X-ql-dIM" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -697,7 +697,7 @@
             <objects>
                 <navigationController id="2KJ-nO-VRW" customClass="ModalNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="Tdi-uV-cV7" customClass="StatusNavigationBar">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="Tdi-uV-cV7" customClass="StatusNavigationBar" customModule="Threema" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>

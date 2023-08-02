@@ -36,7 +36,7 @@ class WebUpdateConversationRequest: WebAbstractMessage {
         }
         else {
             let idString = message.args!["id"] as? String
-            self.groupID = idString?.hexadecimal()
+            self.groupID = idString?.hexadecimal
         }
         
         if let data = message.data as? [AnyHashable: Any] {

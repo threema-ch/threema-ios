@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "Old_ThemedViewController.h"
-#import "VoIPHelper.h"
 #import "ThreemaFramework/ThreemaFramework-swift.h"
 
 @interface Old_ThemedViewController ()
@@ -39,11 +38,7 @@
     [super viewWillAppear:animated];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(navigationItemPromptShouldChange:) name:kNotificationNavigationItemPromptShouldChange object:nil];
-    NSString *callPrompt = [[VoIPHelper shared] currentPromptString:nil];
-    if (callPrompt == nil && [WCSessionHelper isWCSessionConnected]) {
-        callPrompt = WCSessionHelper.threemaWebPrompt;
-    }
-    self.navigationItem.prompt = callPrompt;
+    self.navigationItem.prompt = [NavigationBarPromptHandler getCurrentPromptWithDuration:nil];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -54,21 +49,7 @@
 
 - (void)navigationItemPromptShouldChange:(NSNotification*)notification {
     NSNumber *time = notification.object;
-    NSString *callPrompt = [[VoIPHelper shared] currentPromptString:time];
-    if (callPrompt == nil && [WCSessionHelper isWCSessionConnected]) {
-        callPrompt = WCSessionHelper.threemaWebPrompt;
-    }
-    self.navigationItem.prompt = callPrompt;
-    
-    if (self.navigationItem.prompt == nil) {
-        if ([self respondsToSelector:@selector(updateLayoutAfterCall)]) {
-            double delayInSeconds = 0.3;
-            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
-            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-                [self performSelector:@selector(updateLayoutAfterCall)];
-            });
-        }
-    }
+    self.navigationItem.prompt = [NavigationBarPromptHandler getCurrentPromptWithDuration:time];
     
     self.view.backgroundColor = [Colors backgroundViewController];
     [Colors setTextColor:Colors.text in:self.view];
@@ -80,10 +61,6 @@
 
 - (void)refresh {
     [Colors setTextColor:Colors.text in:self.view];
-}
-
-- (void)updateLayoutAfterCall {
-    // do nothing
 }
 
 @end

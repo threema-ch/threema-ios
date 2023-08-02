@@ -23,7 +23,7 @@ import Foundation
 import PromiseKit
 
 /// Reflect deletion of contacts to mediator server.
-class TaskExecutionDeleteContactSync: TaskExecutionTransaction {
+final class TaskExecutionDeleteContactSync: TaskExecutionTransaction {
     override func reflectTransactionMessages() throws -> [Promise<Void>] {
         guard let taskDefinition = taskDefinition as? TaskDefinitionDeleteContactSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
@@ -34,7 +34,7 @@ class TaskExecutionDeleteContactSync: TaskExecutionTransaction {
         for identity in taskDefinition.contacts {
             let envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForContactSyncDelete(identity: identity)
 
-            reflectResults.append(Promise { try $0.fulfill(self.reflectMessage(
+            reflectResults.append(Promise { try $0.fulfill(_ = self.reflectMessage(
                 envelope: envelope,
                 ltReflect: self.taskContext.logReflectMessageToMediator,
                 ltAck: self.taskContext.logReceiveMessageAckFromMediator

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 @objc public class ProfileStore: NSObject {
 
@@ -28,7 +29,7 @@ import PromiseKit
         public var nickname: String?
         public var profileImage: Data?
         public var sendProfilePicture: SendProfilePicture
-        public var profilePictureContactList: [String]?
+        public var profilePictureContactList: [String]
         public var mobilePhoneNo: String?
         public var isLinkMobileNoPending: Bool
         public var email: String?
@@ -72,7 +73,7 @@ import PromiseKit
             nickname: myIdentityStore.pushFromName,
             profileImage: profileImage,
             sendProfilePicture: userSettings.sendProfilePicture,
-            profilePictureContactList: userSettings.profilePictureContactList as? [String],
+            profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
             mobilePhoneNo: myIdentityStore.linkedMobileNo,
             isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
             email: myIdentityStore.linkedEmail,
@@ -84,7 +85,7 @@ import PromiseKit
     /// - Parameter profile: User profile data
     public func syncAndSave(_ profile: Profile) -> Promise<Void> {
         Promise { seal in
-            if serverConnector.isMultiDeviceActivated,
+            if userSettings.enableMultiDevice,
                let taskManager {
                 var syncUserProfile = Sync_UserProfile()
 
@@ -98,13 +99,12 @@ import PromiseKit
                 }
 
                 let actualProfilePictureContactList = userSettings.profilePictureContactList as? [String] ?? [String]()
-                let profilePictureContactList: [String] = profile.profilePictureContactList ?? [String]()
 
                 if userSettings.sendProfilePicture != profile.sendProfilePicture
-                    || actualProfilePictureContactList != profilePictureContactList {
+                    || actualProfilePictureContactList != profile.profilePictureContactList {
                     syncUserProfile.profilePictureShareWith.policy = profilePictureShareWithPolicy(
                         for: profile.sendProfilePicture,
-                        identities: profilePictureContactList
+                        identities: profile.profilePictureContactList
                     )
                 }
 
@@ -112,13 +112,15 @@ import PromiseKit
                     syncUserProfile.nickname = profile.nickname ?? ""
                 }
 
-                if myIdentityStore.linkedMobileNo != profile.mobilePhoneNo {
+                // TODO: (IOS-3874) Test if we should set `syncUserProfile.identityLinks.links` to an empty array so it is explicitly set when linked mobile number & linked email are removed or pending.
+                
+                if myIdentityStore.linkedMobileNo != profile.mobilePhoneNo, !profile.isLinkMobileNoPending {
                     var link = Sync_UserProfile.IdentityLinks.IdentityLink()
                     link.phoneNumber = profile.mobilePhoneNo ?? ""
                     syncUserProfile.identityLinks.links.append(link)
                 }
 
-                if myIdentityStore.linkedEmail != profile.email {
+                if myIdentityStore.linkedEmail != profile.email, !profile.isLinkEmailPending {
                     var link = Sync_UserProfile.IdentityLinks.IdentityLink()
                     link.email = profile.email ?? ""
                     syncUserProfile.identityLinks.links.append(link)
@@ -155,7 +157,7 @@ import PromiseKit
                     nickname: myIdentityStore.pushFromName,
                     profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
                     sendProfilePicture: userSettings.sendProfilePicture,
-                    profilePictureContactList: userSettings.profilePictureContactList as? [String],
+                    profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
                     mobilePhoneNo: myIdentityStore.linkedMobileNo,
                     isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
                     email: email,
@@ -174,7 +176,7 @@ import PromiseKit
                     nickname: myIdentityStore.pushFromName,
                     profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
                     sendProfilePicture: userSettings.sendProfilePicture,
-                    profilePictureContactList: userSettings.profilePictureContactList as? [String],
+                    profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
                     mobilePhoneNo: mobileNo,
                     isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
                     email: myIdentityStore.linkedEmail,

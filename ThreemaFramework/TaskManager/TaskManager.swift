@@ -23,12 +23,13 @@ import Foundation
 import PromiseKit
 
 enum TaskManagerError: Error {
-    case noTaskQueueFound
+    case flushedTask, noTaskQueueFound
 }
 
 typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
+typealias TaskReceiverNonce = [ThreemaIdentity: Data]
 
-@objc public class TaskManager: NSObject, TaskManagerProtocol {
+@objc public final class TaskManager: NSObject, TaskManagerProtocol {
     fileprivate let frameworkInjector: FrameworkInjectorProtocol
 
     private static var incomingQueue: TaskQueue?
@@ -200,6 +201,7 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
                         TaskDefinitionUpdateContactSync.self,
                         TaskDefinitionGroupSync.self,
                         TaskDefinitionSettingsSync.self,
+                        TaskDefinitionSendGroupCallStartMessage.self,
                     ],
                     frameworkInjector: self.frameworkInjector
                 )

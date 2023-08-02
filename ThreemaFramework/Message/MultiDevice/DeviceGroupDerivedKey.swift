@@ -44,7 +44,7 @@ class DeviceGroupDerivedKey: NSObject {
         }
 
         private func derive(dgk: Data, salt: String) throws -> Data {
-            guard dgk.count == THREEMA_KDF_KEYBYTES else {
+            guard dgk.count == ThreemaKDF.THREEMA_KDF_KEYBYTES else {
                 throw DeviceGroupKeyDeriverError.deriveKeyFailed
             }
 
@@ -76,7 +76,7 @@ class DeviceGroupDerivedKey: NSObject {
     ///
     /// - Parameter dgk: Device Group Key (32 bytes length)
     @objc required init(dgk: Data) throws {
-        guard dgk.count == THREEMA_KDF_KEYBYTES else {
+        guard dgk.count == ThreemaKDF.THREEMA_KDF_KEYBYTES else {
             throw DeviceGroupKeyDeriverError.deriveKeyFailed
         }
 

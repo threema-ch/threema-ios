@@ -66,13 +66,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)reflectDeleteContact:(nullable NSString *)identity;
 
-- (void)updateProfilePicture:(nullable NSString *)identity imageData:(NSData *)imageData shouldReflect:(BOOL)shouldReflect didFailWithError:(NSError * _Nullable * _Nullable)error;
+- (void)updateProfilePicture:(nullable NSString *)identity imageData:(NSData *)imageData shouldReflect:(BOOL)shouldReflect blobID:(nullable NSData *)blobID encryptionKey:(nullable NSData *)encryptionKey didFailWithError:(NSError * _Nullable * _Nullable)error;
 - (void)deleteProfilePicture:(nullable NSString *)identity shouldReflect:(BOOL)shouldReflect;
 - (void)removeProfilePictureFlagForIdentity:(NSString *)identity
     NS_SWIFT_NAME(removeProfilePictureFlag(for:));
 
 - (void)updateAllContactsToCNContact;
 - (void)updateAllContacts;
+
+/// Reset all custom read receipts. If multi-device is enabled this is also reflected
+- (void)resetCustomReadReceipts;
 
 /**
  Mark contact identity as work contact, adding identities to `UserSettings.workIdentities`.

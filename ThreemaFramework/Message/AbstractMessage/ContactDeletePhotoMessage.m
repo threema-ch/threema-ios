@@ -48,6 +48,10 @@
     return NO;
 }
 
+- (BOOL)canUnarchiveConversation {
+    return NO;
+}
+
 - (BOOL)needsConversation {
     return NO;
 }
@@ -57,6 +61,24 @@
 }
 
 - (BOOL)noDeliveryReceiptFlagSet {
+    return YES;
+}
+
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kV11;
+}
+
+#pragma mark - NSSecureCoding
+
+- (id)initWithCoder:(NSCoder *)decoder {
+    return [super initWithCoder:decoder];
+}
+
+- (void)encodeWithCoder:(NSCoder *)encoder {
+    [super encodeWithCoder:encoder];
+}
+
++ (BOOL)supportsSecureCoding {
     return YES;
 }
 

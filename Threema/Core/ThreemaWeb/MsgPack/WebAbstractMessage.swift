@@ -191,7 +191,7 @@ public class WebAbstractMessage: NSObject {
                 }
                 else {
                     conversation = entityManager.entityFetcher
-                        .legacyConversation(for: requestThumbnail.id.hexadecimal())
+                        .legacyConversation(for: requestThumbnail.id.hexadecimal)
                 }
                 
                 guard let conversation, let baseMessage = entityManager.entityFetcher.message(
@@ -297,7 +297,7 @@ public class WebAbstractMessage: NSObject {
                 }
                 else {
                     conversation = businessInjector.entityManager.entityFetcher
-                        .legacyConversation(for: requestAck.id.hexadecimal())
+                        .legacyConversation(for: requestAck.id.hexadecimal)
                 }
                 
                 guard let conversation, let baseMessage = businessInjector.entityManager.entityFetcher.message(
@@ -339,7 +339,7 @@ public class WebAbstractMessage: NSObject {
                     conversation = entityManager.entityFetcher.conversation(forIdentity: requestBlob.id)
                 }
                 else {
-                    conversation = entityManager.entityFetcher.legacyConversation(for: requestBlob.id.hexadecimal())
+                    conversation = entityManager.entityFetcher.legacyConversation(for: requestBlob.id.hexadecimal)
                 }
                 
                 guard let conversation, let baseMessage = entityManager.entityFetcher.message(
@@ -687,7 +687,7 @@ public class WebAbstractMessage: NSObject {
         }
         else {
             conversation = businessInjector.entityManager.entityFetcher
-                .legacyConversation(for: requestMessage.id.hexadecimal())
+                .legacyConversation(for: requestMessage.id.hexadecimal)
         }
         
         guard let conversation else {

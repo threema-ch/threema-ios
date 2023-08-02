@@ -18,8 +18,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 class MediatorReflectedOutgoingMessageUpdateProcessor {
 
@@ -29,9 +31,9 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
         self.frameworkInjector = frameworkInjector
     }
 
-    func process(outgoingMessageUpdate: D2d_OutgoingMessageUpdate) -> Promise<Void> {
+    func process(outgoingMessageUpdate: D2d_OutgoingMessageUpdate, reflectedAt: Date) -> Promise<Void> {
         Promise { seal in
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            frameworkInjector.backgroundEntityManager.performAndWait {
                 do {
                     for item in outgoingMessageUpdate.updates {
                         switch item.update {
@@ -39,14 +41,16 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
                             if item.conversation.contact != "" {
                                 try self.saveMessageSent(
                                     messageID: item.messageID,
-                                    receiverIdentity: item.conversation.contact
+                                    receiverIdentity: item.conversation.contact,
+                                    reflectedAt: reflectedAt
                                 )
                             }
                             else {
                                 try self.saveMessageSent(
                                     messageID: item.messageID,
                                     receiverGroupID: item.conversation.group.groupID,
-                                    receiverGroupCreator: item.conversation.group.creatorIdentity
+                                    receiverGroupCreator: item.conversation.group.creatorIdentity,
+                                    reflectedAt: reflectedAt
                                 )
                             }
                         case .none:
@@ -64,33 +68,44 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
 
     // MARK: Private functions
 
-    private func saveMessageSent(messageID: UInt64, receiverIdentity: String) throws {
-        if let id = NSData.convertBytes(messageID),
-           let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) {
-            guard let contact = message.conversation?.contact, contact.identity == receiverIdentity else {
-                throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
-            }
+    private func saveMessageSent(messageID: UInt64, receiverIdentity: String, reflectedAt: Date) throws {
+        let id = messageID.littleEndianData
+        guard let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) else {
+            DDLogError("Own message ID \(messageID.littleEndianData.hexString) to set as sent not found")
+            return
+        }
 
-            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                message.sent = NSNumber(booleanLiteral: true)
-                message.remoteSentDate = .now
-            }
+        guard let contact = message.conversation?.contact, contact.identity == receiverIdentity else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
+        }
+
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            message.sent = NSNumber(booleanLiteral: true)
+            message.remoteSentDate = reflectedAt
         }
     }
 
-    private func saveMessageSent(messageID: UInt64, receiverGroupID: UInt64, receiverGroupCreator: String) throws {
-        if let id = NSData.convertBytes(messageID),
-           let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) {
-            guard let group = frameworkInjector.backgroundGroupManager.getGroup(conversation: message.conversation),
-                  group.groupID.elementsEqual(NSData.convertBytes(receiverGroupID)),
-                  group.groupCreatorIdentity == receiverGroupCreator else {
-                throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
-            }
+    private func saveMessageSent(
+        messageID: UInt64,
+        receiverGroupID: UInt64,
+        receiverGroupCreator: String,
+        reflectedAt: Date
+    ) throws {
+        let id = messageID.littleEndianData
+        guard let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) else {
+            DDLogError("Own message ID \(messageID.littleEndianData.hexString) to set as sent not found")
+            return
+        }
 
-            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                message.sent = NSNumber(booleanLiteral: true)
-                message.remoteSentDate = .now
-            }
+        guard let group = frameworkInjector.backgroundGroupManager.getGroup(conversation: message.conversation),
+              group.groupID.elementsEqual(receiverGroupID.littleEndianData),
+              group.groupCreatorIdentity == receiverGroupCreator else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
+        }
+
+        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+            message.sent = NSNumber(booleanLiteral: true)
+            message.remoteSentDate = reflectedAt
         }
     }
 }

@@ -51,8 +51,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) DeviceGroupKeys *deviceGroupKeys;
 
-@property (nonatomic, readonly) BOOL isMultiDeviceActivated;
-
 /**
  Encrypted device ID for chat server (CleVer extension).
  */

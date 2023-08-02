@@ -51,7 +51,7 @@ class WebAvatarResponse: WebAbstractMessage {
             }
         }
         else if type == "group" {
-            let groupID = request.id.hexadecimal()
+            let groupID = request.id.hexadecimal
             let conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
             
             if conversation != nil {

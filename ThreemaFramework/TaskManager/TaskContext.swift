@@ -27,7 +27,7 @@ protocol TaskContextProtocol {
     var logReceiveMessageAckFromChat: LoggingTag { get }
 }
 
-class TaskContext: TaskContextProtocol {
+final class TaskContext: TaskContextProtocol {
     var logReflectMessageToMediator: LoggingTag
     var logReceiveMessageAckFromMediator: LoggingTag
     var logSendMessageToChat: LoggingTag

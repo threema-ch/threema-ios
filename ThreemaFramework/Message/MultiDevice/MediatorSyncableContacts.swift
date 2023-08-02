@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
 enum DeltaUpdateType: Int, Codable {
     case unchanged
@@ -36,18 +37,15 @@ class MediatorSyncableContacts: NSObject {
     private var deltaSyncContacts = [DeltaSyncContact]()
 
     private let userSettings: UserSettingsProtocol
-    private let serverConnector: ServerConnectorProtocol
     private var taskManager: TaskManagerProtocol
     private let entityManager: EntityManager
     
     init(
         _ userSettings: UserSettingsProtocol,
-        _ serverConnector: ServerConnectorProtocol,
         _ taskManager: TaskManagerProtocol,
         _ entityManager: EntityManager
     ) {
         self.userSettings = userSettings
-        self.serverConnector = serverConnector
         self.taskManager = taskManager
         self.entityManager = entityManager
     }
@@ -55,10 +53,45 @@ class MediatorSyncableContacts: NSObject {
     @objc override convenience init() {
         self.init(
             UserSettings.shared(),
-            ServerConnector.shared(),
             TaskManager(),
             EntityManager(withChildContextForBackgroundProcess: true)
         )
+    }
+    
+    func getAllDeltaSyncContacts() -> [DeltaSyncContact] {
+        var allDeltaContacts = [DeltaSyncContact]()
+        
+        entityManager.performBlockAndWait {
+            guard let allContacts = self.entityManager.entityFetcher.allContacts() else {
+                DDLogError("Unable to load all contacts")
+                return
+            }
+            
+            for anyContact in allContacts {
+                guard let contact = anyContact as? ContactEntity else {
+                    continue
+                }
+                
+                var newDeltaSyncContact = DeltaSyncContact()
+                self.loadAndUpdateAll(contact, delta: &newDeltaSyncContact, added: true, withoutProfileImage: false)
+                
+                // Load the pictures if they are available as they need to be directly sent during device join
+                
+                if newDeltaSyncContact.profilePicture == .updated,
+                   let imageData = contact.imageData {
+                    newDeltaSyncContact.image = imageData
+                }
+                
+                if newDeltaSyncContact.contactProfilePicture == .updated,
+                   let imageData = contact.contactImage?.data {
+                    newDeltaSyncContact.contactImage = imageData
+                }
+                
+                allDeltaContacts.append(newDeltaSyncContact)
+            }
+        }
+        
+        return allDeltaContacts
     }
 
     @objc func updateAll(identity: String, added: Bool) {
@@ -71,7 +104,7 @@ class MediatorSyncableContacts: NSObject {
     ///   - added: True contact has added otherwise has updated
     ///   - withoutProfileImage: True profile picture will not be synced
     @objc func updateAll(identity: String, added: Bool, withoutProfileImage: Bool) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -79,142 +112,156 @@ class MediatorSyncableContacts: NSObject {
             guard let contact = self.entityManager.entityFetcher.contact(for: identity) else {
                 return
             }
-
-            let conversation = self.entityManager.entityFetcher.conversation(for: contact)
-
+            
             var delta = self.getDelta(identity: contact.identity)
-
-            // Default sync action is update, is once changed to create never will change back to update
-            if delta.syncAction == .update, added {
-                delta.syncAction = .create
-            }
-
-            delta.syncContact.identity = identity
-            delta.syncContact.publicKey = contact.publicKey
-
-            if let firstName = contact.firstName {
-                delta.syncContact.firstName = firstName
-            }
-            else {
-                delta.syncContact.clearFirstName()
-            }
-
-            if let lastName = contact.lastName {
-                delta.syncContact.lastName = lastName
-            }
-            else {
-                delta.syncContact.clearLastName()
-            }
-
-            let workIdentities = self.userSettings.workIdentities ?? NSOrderedSet(array: [String]())
-            delta.syncContact.identityType = workIdentities
-                .contains(contact.identity) ? .work : .regular
-
-            if let nickname = contact.publicNickname {
-                delta.syncContact.nickname = nickname
-            }
-            else {
-                delta.syncContact.clearNickname()
-            }
-
-            if let createAt = contact.createdAt {
-                delta.syncContact.createdAt = UInt64(createAt.millisecondsSince1970)
-            }
-            else {
-                delta.syncContact.clearCreatedAt()
-            }
-
-            delta.syncContact.verificationLevel = Sync_Contact
-                .VerificationLevel(rawValue: Int(truncating: contact.verificationLevel))!
-
-            delta.syncContact.workVerificationLevel = contact.isWorkContact() ? .workSubscriptionVerified : .none
-
-            switch contact.state?.intValue {
-            case kStateActive:
-                delta.syncContact.activityState = .active
-            case kStateInactive:
-                delta.syncContact.activityState = .inactive
-            case kStateInvalid:
-                delta.syncContact.activityState = .invalid
-            default:
-                DDLogError("Contact state has an unknown value")
-            }
-
-            delta.syncContact.featureMask = contact.featureMask.uint64Value
-
-            switch contact.importedStatus {
-            case .initial:
-                delta.syncContact.syncState = .initial
-            case .imported:
-                delta.syncContact.syncState = .imported
-            case .custom:
-                delta.syncContact.syncState = .custom
-            }
-
-            if let visibility = conversation?.conversationVisibility {
-                switch visibility {
-                case .archived:
-                    delta.syncContact.conversationVisibility = .archived
-                case .pinned:
-                    delta.syncContact.conversationVisibility = .pinned
-                default:
-                    delta.syncContact.conversationVisibility = .normal
-                }
-            }
-            else {
-                delta.syncContact.conversationVisibility = .normal
-            }
-
-            if let category = conversation?.conversationCategory {
-                switch category {
-                case .private:
-                    delta.syncContact.conversationCategory = .protected
-                case .default:
-                    delta.syncContact.conversationCategory = .default
-                @unknown default:
-                    // Show an alert with a sync error
-                    DDLogError("Conversation category has a unknown value")
-                }
-            }
-            else {
-                delta.syncContact.conversationCategory = .default
-            }
-
-            // TODO: IOS-2642
-            delta.syncContact.notificationSoundPolicyOverride.default = Common_Unit()
-            delta.syncContact.notificationTriggerPolicyOverride.default = Common_Unit()
-            delta.syncContact.typingIndicatorPolicyOverride.default = Common_Unit()
-            delta.syncContact.readReceiptPolicyOverride.default = Common_Unit()
-
-            delta.syncContact.acquaintanceLevel = contact.isContactHidden ? .group : .direct
-            delta.syncContact.createdAt = UInt64(contact.createdAt?.millisecondsSince1970 ?? 0)
-
-            if !withoutProfileImage {
-                delta.profilePicture = contact.imageData != nil ? .updated : .removed
-                delta.contactProfilePicture = contact.contactImage?.data != nil ? .updated : .removed
-            }
+            
+            self.loadAndUpdateAll(contact, delta: &delta, added: added, withoutProfileImage: withoutProfileImage)
 
             self.apply(delta: delta)
         }
     }
+    
+    private func loadAndUpdateAll(
+        _ contact: ContactEntity,
+        delta: inout DeltaSyncContact,
+        added: Bool,
+        withoutProfileImage: Bool
+    ) {
+        let conversation = entityManager.entityFetcher.conversation(for: contact)
 
-    @objc func updateFirstName(identity: String, value: String?) {
-        guard serverConnector.isMultiDeviceActivated else {
-            return
+        // Default sync action is update, is once changed to create never will change back to update
+        if delta.syncAction == .update, added {
+            delta.syncAction = .create
         }
 
-        var delta = getDelta(identity: identity)
-        if let value {
-            delta.syncContact.firstName = value
+        delta.syncContact.identity = contact.identity
+        delta.syncContact.publicKey = contact.publicKey
+
+        if let firstName = contact.firstName {
+            delta.syncContact.firstName = firstName
         }
         else {
             delta.syncContact.clearFirstName()
         }
+
+        if let lastName = contact.lastName {
+            delta.syncContact.lastName = lastName
+        }
+        else {
+            delta.syncContact.clearLastName()
+        }
+
+        let workIdentities = userSettings.workIdentities ?? NSOrderedSet(array: [String]())
+        delta.syncContact.identityType = workIdentities.contains(contact.identity) ? .work : .regular
+
+        if let nickname = contact.publicNickname {
+            delta.syncContact.nickname = nickname
+        }
+        else {
+            delta.syncContact.clearNickname()
+        }
+
+        if let createAt = contact.createdAt {
+            delta.syncContact.createdAt = UInt64(createAt.millisecondsSince1970)
+        }
+        else {
+            // Required towards a new device and for a new contact.
+            delta.syncContact.createdAt = 0
+        }
+
+        delta.syncContact.verificationLevel = Sync_Contact
+            .VerificationLevel(rawValue: Int(truncating: contact.verificationLevel))!
+
+        delta.syncContact.workVerificationLevel = contact.isWorkContact() ? .workSubscriptionVerified : .none
+
+        switch contact.state?.intValue {
+        case kStateActive:
+            delta.syncContact.activityState = .active
+        case kStateInactive:
+            delta.syncContact.activityState = .inactive
+        case kStateInvalid:
+            delta.syncContact.activityState = .invalid
+        default:
+            DDLogError("Contact state has an unknown value")
+        }
+
+        delta.syncContact.featureMask = contact.featureMask.uint64Value
+
+        switch contact.importedStatus {
+        case .initial:
+            delta.syncContact.syncState = .initial
+        case .imported:
+            delta.syncContact.syncState = .imported
+        case .custom:
+            delta.syncContact.syncState = .custom
+        }
+
+        if let visibility = conversation?.conversationVisibility {
+            switch visibility {
+            case .archived:
+                delta.syncContact.conversationVisibility = .archived
+            case .pinned:
+                delta.syncContact.conversationVisibility = .pinned
+            default:
+                delta.syncContact.conversationVisibility = .normal
+            }
+        }
+        else {
+            delta.syncContact.conversationVisibility = .normal
+        }
+
+        if let category = conversation?.conversationCategory {
+            switch category {
+            case .private:
+                delta.syncContact.conversationCategory = .protected
+            case .default:
+                delta.syncContact.conversationCategory = .default
+            @unknown default:
+                // Show an alert with a sync error
+                DDLogError("Conversation category has a unknown value")
+            }
+        }
+        else {
+            delta.syncContact.conversationCategory = .default
+        }
+
+        // TODO: IOS-2642
+        delta.syncContact.notificationSoundPolicyOverride.default = Common_Unit()
+        delta.syncContact.notificationTriggerPolicyOverride.default = Common_Unit()
+        delta.syncContact.typingIndicatorPolicyOverride.default = Common_Unit()
+        
+        switch contact.readReceipt {
+        case .default:
+            delta.syncContact.readReceiptPolicyOverride.default = Common_Unit()
+        case .send:
+            delta.syncContact.readReceiptPolicyOverride.policy = .sendReadReceipt
+        case .doNotSend:
+            delta.syncContact.readReceiptPolicyOverride.policy = .dontSendReadReceipt
+        }
+        
+        delta.syncContact.acquaintanceLevel = contact.isContactHidden ? .group : .direct
+
+        if !withoutProfileImage {
+            delta.profilePicture = contact.imageData != nil ? .updated : .removed
+            delta.contactProfilePicture = contact.contactImage?.data != nil ? .updated : .removed
+        }
+        
+        delta.lastConversationUpdate = conversation?.lastUpdate
+    }
+
+    @objc func updateFirstName(identity: String, value: String?) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var delta = getDelta(identity: identity)
+        delta.updateFirstName(name: value)
+        
         apply(delta: delta)
     }
 
     @objc func updateLastName(identity: String, value: String?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -229,7 +276,7 @@ class MediatorSyncableContacts: NSObject {
     }
 
     @objc func updateNickname(identity: String, value: String?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -254,7 +301,7 @@ class MediatorSyncableContacts: NSObject {
     ///     kStateInvalid = 2
     /// };
     @objc func updateState(identity: String, value: NSNumber?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -281,7 +328,7 @@ class MediatorSyncableContacts: NSObject {
     ///     ContactAcquaintanceLevelGroup = 1
     /// };
     @objc func updateAcquaintanceLevel(identity: String, value: NSNumber?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -300,7 +347,7 @@ class MediatorSyncableContacts: NSObject {
     }
 
     func updateConversationCategory(identity: String, value: ConversationCategory?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -317,7 +364,7 @@ class MediatorSyncableContacts: NSObject {
     }
 
     func updateConversationVisibility(identity: String, value: ConversationVisibility?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -334,7 +381,7 @@ class MediatorSyncableContacts: NSObject {
     }
 
     @objc func updateFeatureMask(identity: String, value: NSNumber?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -363,7 +410,7 @@ class MediatorSyncableContacts: NSObject {
     ///     kVerificationLevelWorkFullyVerified
     /// };
     @objc func updateVerificationLevel(identity: String, value: NSNumber?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -383,7 +430,7 @@ class MediatorSyncableContacts: NSObject {
     ///    - identity: Threema-ID of the (work) contact
     ///    - value: True identity is a work identity, changes on `UserSettings.workIdentities`
     @objc func updateIdentityType(identity: String, value: NSNumber?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -407,7 +454,7 @@ class MediatorSyncableContacts: NSObject {
     ///    - value: True work contact is in the same work subscription (package) as myself, changes on
     ///             `Contact.isWork()` -> `Contact.workContact`
     @objc func updateWorkVerificationLevel(identity: String, value: NSNumber?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -426,7 +473,7 @@ class MediatorSyncableContacts: NSObject {
     ///   - identity: Contact identity
     ///   - value: DeltaUpdateType (0: unchanged, 1: removed, 2: updated)
     @objc func setProfileUpdateType(identity: String, value: Int) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
         assert(value >= 0 && value <= 2)
@@ -440,26 +487,56 @@ class MediatorSyncableContacts: NSObject {
     /// - Parameters:
     ///   - identity: Contact identity
     ///   - value: DeltaUpdateType (0: unchanged, 1: removed, 2: updated)
-    @objc func setContactProfileUpdateType(identity: String, value: Int) {
-        guard serverConnector.isMultiDeviceActivated else {
+    ///   - blobID: Blob ID of already uploaded profile picture
+    ///   - encryptionKey: Encryption key of already uploaded profile picture
+    @objc func setContactProfileUpdateType(identity: String, value: Int, blobID: Data?, encryptionKey: Data?) {
+        guard userSettings.enableMultiDevice else {
             return
         }
         assert(value >= 0 && value <= 2)
 
         var delta = getDelta(identity: identity)
         delta.contactProfilePicture = DeltaUpdateType(rawValue: value)!
+        delta.contactImageBlobID = blobID
+        delta.contactImageEncryptionKey = encryptionKey
+        apply(delta: delta)
+    }
+    
+    /// Update read receipt
+    /// - Parameters:
+    ///   - identity: Identity of contact to update value for
+    ///   - value: One of the `ReadReceipt` raw values
+    @objc func updateReadReceipt(identity: String, value: NSInteger) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var delta = getDelta(identity: identity)
+        if let readReceipt = ReadReceipt(rawValue: value) {
+            switch readReceipt {
+            case .default:
+                delta.syncContact.readReceiptPolicyOverride.default = Common_Unit()
+            case .send:
+                delta.syncContact.readReceiptPolicyOverride.policy = .sendReadReceipt
+            case .doNotSend:
+                delta.syncContact.readReceiptPolicyOverride.policy = .dontSendReadReceipt
+            }
+        }
+        else {
+            delta.syncContact.clearReadReceiptPolicyOverride()
+        }
         apply(delta: delta)
     }
 
     /// Create tasks to synchronize the contacts, load and scale profile picture if is necessary
     func sync() -> Promise<Void> {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             DDLogInfo("Do not sync because multi device is not activated")
             return Promise()
         }
 
         // Load images for profile picture
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             let identities = self.deltaSyncContacts.map(\.syncContact.identity)
 
             for identity in identities {
@@ -472,6 +549,8 @@ class MediatorSyncableContacts: NSObject {
                     }
 
                     if delta.contactProfilePicture == .updated,
+                       delta.contactImageBlobID != nil,
+                       delta.contactImageEncryptionKey != nil,
                        let imageData = contact.contactImage?.data {
                         delta.contactImage = imageData
                     }
@@ -524,7 +603,7 @@ class MediatorSyncableContacts: NSObject {
     /// - Parameter identity: The identity of the to be deleted contact
     func deleteAndSync(identity: String) -> Promise<Void> {
         Promise { seal in
-            guard serverConnector.isMultiDeviceActivated else {
+            guard userSettings.enableMultiDevice else {
                 seal.fulfill_()
                 return
             }
@@ -602,8 +681,8 @@ class MediatorSyncableContacts: NSObject {
     }
 
     /// Create task and completion handler for update contact sync.
-    /// Additional retrun a Promise for the results of completion handler.
-    /// - Parameter chunk: Contacts to sync handeld by the returned task
+    /// Additional return a Promise for the results of completion handler.
+    /// - Parameter chunk: Contacts to sync handled by the returned task
     /// - Returns: Task with its completion handler and Promise for the result
     private func taskWithTaskResult(
         for chunk: [DeltaSyncContact]

@@ -159,6 +159,7 @@ extension ArchivedConversationsViewController {
             fatalError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
         }
         cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? Conversation)
+        cell.setNavigationController(to: navigationController)
         
         return cell
     }

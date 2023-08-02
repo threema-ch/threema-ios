@@ -212,4 +212,20 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_reregister_notifications_succeeded"),
         notificationStyle: .success
     )
+    public static let audioMuted = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_audio_muted"),
+        notificationStyle: .none
+    )
+    public static let audioUnmuted = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_audio_unmuted"),
+        notificationStyle: .none
+    )
+    public static let videoMuted = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_video_muted"),
+        notificationStyle: .none
+    )
+    public static let videoUnmuted = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_video_unmuted"),
+        notificationStyle: .none
+    )
 }

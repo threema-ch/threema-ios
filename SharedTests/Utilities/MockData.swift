@@ -39,6 +39,10 @@ class MockData {
         BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
     }
 
+    static func generateMessageNonce() -> Data {
+        BytesUtility.generateRandomBytes(length: ThreemaProtocol.nonceLength)!
+    }
+
     static func generateGroupID() -> Data {
         BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
     }

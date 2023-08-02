@@ -35,6 +35,9 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         }
     }
     
+    /// Delegate used to handle cell delegates
+    weak var chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol?
+    
     // MARK: - Private properties
     
     private lazy var markupParser = MarkupParser()
@@ -307,6 +310,49 @@ extension ChatViewSystemMessageTableViewCell {
             return message.customAccessibilityTrait
         }
         
+        set {
+            // No-op
+        }
+    }
+}
+
+// MARK: - ChatViewMessageAction
+
+extension ChatViewSystemMessageTableViewCell: ChatViewMessageAction {
+    
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+
+        guard let message = systemMessageAndNeighbors.message else {
+            return nil
+        }
+
+        typealias Provider = ChatViewMessageActionProvider
+        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
+        
+        let detailAction = Provider.detailsAction {
+            self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
+        }
+        
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
+        
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
+        
+        let deleteAction = Provider.deleteAction(message: message, willDelete: willDelete, didDelete: didDelete)
+        
+        menuItems.append(contentsOf: [detailAction, deleteAction])
+        
+        return menuItems
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
         set {
             // No-op
         }

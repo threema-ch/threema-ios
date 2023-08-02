@@ -111,4 +111,12 @@
     }];
 }
 
++ (BOOL)trust:(nonnull SecTrustRef)trust domain:(nonnull NSString *)domain {
+    [SSLCAHelper initTrustKit];
+    TSKPinningValidator *pinningValidator = [[TrustKit sharedInstance] pinningValidator];
+
+    TSKTrustDecision decision = [pinningValidator evaluateTrust:trust forHostname:domain];
+    return decision == TSKTrustDecisionShouldAllowConnection;
+}
+
 @end

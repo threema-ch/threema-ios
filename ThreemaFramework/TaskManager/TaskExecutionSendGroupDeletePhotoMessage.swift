@@ -24,7 +24,7 @@ import PromiseKit
 
 /// Reflect group delete photo message to mediator server is multi device enbaled
 /// and send it to group members (CSP).
-class TaskExecutionSendGroupDeletePhotoMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionSendGroupDeletePhotoMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendGroupDeletePhotoMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -35,7 +35,8 @@ class TaskExecutionSendGroupDeletePhotoMessage: TaskExecution, TaskExecutionProt
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             // Reflect group delete photo message if is necessary

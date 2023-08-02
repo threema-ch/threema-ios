@@ -20,7 +20,6 @@ ThreemaUITests/safeIDPW
 Screenshots/
 
 ## Swift Package Manager
-.swiftpm
 .build/
 
 ## Other
@@ -30,7 +29,7 @@ Screenshots/
 *_old.storyboard
 .DS_Store
 Carthage/Checkouts
-WebRTC*
+/WebRTC*
 SaltyRTC
 fastlane/AppStore/Threema/screenshots
 fastlane/AppStore/ThreemaForWork/screenshots

@@ -66,19 +66,23 @@ final class UnreadMessagesStateManager {
     
     private var firstRoundCompleted = false
     
-    private var currentUnreadDBState: (unreadMessages: [BaseMessage], newestUnreadMessage: BaseMessage?) {
-        var unreadMessages = [BaseMessage]()
-        var newestUnreadMessage: BaseMessage?
+    private var currentUnreadDBState: (
+        unreadMessageObjectIDs: [NSManagedObjectID],
+        newestUnreadMessageObjectID: NSManagedObjectID?
+    ) {
+        var unreadMessageObjectIDs = [NSManagedObjectID]()
+        var newestUnreadMessageObjectID: NSManagedObjectID?
         
         businessInjector.entityManager.performBlockAndWait {
             let count = self.businessInjector.unreadMessages.count(for: self.conversation)
             if count > 0 {
-                unreadMessages = self.messageFetcher.unreadMessages(limit: count)
-                newestUnreadMessage = unreadMessages.last
+                // swiftformat:disable:next all
+                unreadMessageObjectIDs = self.messageFetcher.unreadMessages(limit: count).compactMap({$0.objectID})
+                newestUnreadMessageObjectID = unreadMessageObjectIDs.last
             }
         }
         
-        return (unreadMessages, newestUnreadMessage)
+        return (unreadMessageObjectIDs, newestUnreadMessageObjectID)
     }
     
     private let updateQueue = DispatchQueue(
@@ -131,8 +135,8 @@ final class UnreadMessagesStateManager {
         
         let dbState = currentUnreadDBState
         self.unreadMessagesState = UnreadMessagesState(
-            oldestConsecutiveUnreadMessage: dbState.1?.objectID,
-            numberOfUnreadMessages: dbState.0.count
+            oldestConsecutiveUnreadMessage: dbState.newestUnreadMessageObjectID,
+            numberOfUnreadMessages: dbState.unreadMessageObjectIDs.count
         )
     }
     
@@ -179,13 +183,13 @@ final class UnreadMessagesStateManager {
             updateQueue.async { [self] in
                 let shouldMarkAsRead = threadSafeDelegateShouldMarkMessagesAsRead
                 
-                let (unreadMessages, newestUnreadMessage) = currentUnreadDBState
+                let (unreadMessageObjectIDs, newestUnreadMessageObjectID) = currentUnreadDBState
                 
-                if !unreadMessages.isEmpty, newestUnreadMessage == nil {
+                if !unreadMessageObjectIDs.isEmpty, newestUnreadMessageObjectID == nil {
                     fatalError("Illegal unread message state")
                 }
-                if let firstUnreadMessage = unreadMessages.last, let newestUnreadMessage,
-                   firstUnreadMessage.objectID != newestUnreadMessage.objectID {
+                if let firstUnreadMessageObjectID = unreadMessageObjectIDs.last, let newestUnreadMessageObjectID,
+                   firstUnreadMessageObjectID != newestUnreadMessageObjectID {
                     fatalError("Illegal unread message state")
                 }
                 
@@ -198,14 +202,14 @@ final class UnreadMessagesStateManager {
                 }
                 else {
                     previousCount = 0
-                    oldestConsecutiveUnreadMessage = newestUnreadMessage?.objectID
+                    oldestConsecutiveUnreadMessage = newestUnreadMessageObjectID
                 }
                 
                 let newState: UnreadMessagesState
                 
                 let numberOfMessagesMarkedAsRead: Int
                 if shouldMarkAsRead {
-                    numberOfMessagesMarkedAsRead = markAsReadAndWait(unreadMessages)
+                    numberOfMessagesMarkedAsRead = markAsReadAndWait(unreadMessageObjectIDs)
                 }
                 else {
                     numberOfMessagesMarkedAsRead = 0
@@ -224,11 +228,11 @@ final class UnreadMessagesStateManager {
                 }
                 else if !shouldMarkAsRead {
                     DDLogVerbose(
-                        "Setting unread count to current CD unread state \(unreadMessages.count)"
+                        "Setting unread count to current CD unread state \(unreadMessageObjectIDs.count)"
                     )
                     newState = UnreadMessagesState(
                         oldestConsecutiveUnreadMessage: oldestConsecutiveUnreadMessage,
-                        numberOfUnreadMessages: unreadMessages.count
+                        numberOfUnreadMessages: unreadMessageObjectIDs.count
                     )
                 }
                 else if firstRoundCompleted {
@@ -275,7 +279,7 @@ final class UnreadMessagesStateManager {
     
     // MARK: - Private Helper Functions
 
-    private func markAsReadAndWait(_ unreadMessages: [BaseMessage]) -> Int {
+    private func markAsReadAndWait(_ unreadMessageObjectIDs: [NSManagedObjectID]) -> Int {
         DDLogVerbose("\(#function)")
         
         if Thread.isMainThread {
@@ -299,10 +303,10 @@ final class UnreadMessagesStateManager {
         dispatchGroup.enter()
         
         _ = ConversationActions(businessInjector: businessInjector)
-            .read(conversation.objectID, messages: unreadMessages)
+            .read(conversation.objectID, messageObjectIDs: unreadMessageObjectIDs)
             .done { markedAsRead in
                 DDLogNotice(
-                    "Requested mark as read for  \(unreadMessages.count) messages and marked \(markedAsRead) messages as read"
+                    "Requested mark as read for  \(unreadMessageObjectIDs.count) messages and marked \(markedAsRead) messages as read"
                 )
                 numberOfMessagesMarkedAsRead = markedAsRead
             }

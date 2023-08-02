@@ -21,13 +21,14 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 class MediatorReflectedOutgoingMessageProcessor {
 
     private let frameworkInjector: FrameworkInjectorProtocol
     private let messageStore: MessageStoreProtocol
     private let messageProcessorDelegate: MessageProcessorDelegate
-    private let timestamp: Date
+    private let reflectedAt: Date
     private let maxBytesToDecrypt: Int
     private let timeoutDownloadThumbnail: Int
 
@@ -35,14 +36,14 @@ class MediatorReflectedOutgoingMessageProcessor {
         frameworkInjector: FrameworkInjectorProtocol,
         messageStore: MessageStoreProtocol,
         messageProcessorDelegate: MessageProcessorDelegate,
-        timestamp: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) {
         self.frameworkInjector = frameworkInjector
         self.messageStore = messageStore
         self.messageProcessorDelegate = messageProcessorDelegate
-        self.timestamp = timestamp
+        self.reflectedAt = reflectedAt
         self.maxBytesToDecrypt = maxBytesToDecrypt
         self.timeoutDownloadThumbnail = timeoutDownloadThumbnail
     }
@@ -147,8 +148,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         try messageStore.save(
             ballotCreateMessage: amsg,
             conversationIdentity: getReceiverIdentity(for: omsg),
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true
         )
         return Promise()
@@ -171,8 +172,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         try messageStore.save(
             fileMessage: amsg,
             conversationIdentity: getReceiverIdentity(for: omsg),
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true,
             timeoutDownloadThumbnail: timeoutDownloadThumbnail
         )
@@ -185,8 +186,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         try messageStore.save(
             locationMessage: amsg,
             conversationIdentity: getReceiverIdentity(for: omsg),
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true
         )
         return Promise()
@@ -199,8 +200,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         try messageStore.save(
             textMessage: amsg,
             conversationIdentity: getReceiverIdentity(for: omsg),
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true
         )
         return Promise()
@@ -243,7 +244,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             deliveryReceiptMessage: amsg,
-            createdAt: omsg.createdAt,
+            createdAt: getCreatedAt(for: omsg),
             isOutgoing: true
         )
         return Promise()
@@ -294,7 +295,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             groupDeliveryReceiptMessage: amsg,
-            createdAt: omsg.createdAt,
+            createdAt: getCreatedAt(for: omsg),
             isOutgoing: true
         )
         return Promise()
@@ -309,8 +310,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         try messageStore.save(
             groupBallotCreateMessage: amsg,
             senderIdentity: frameworkInjector.myIdentityStore.identity,
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true
         )
         return Promise()
@@ -335,8 +336,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         messageStore.save(
             groupFileMessage: amsg,
             senderIdentity: frameworkInjector.myIdentityStore.identity,
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true,
             timeoutDownloadThumbnail: timeoutDownloadThumbnail
         )
@@ -349,8 +350,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         try messageStore.save(
             groupLocationMessage: amsg,
             senderIdentity: frameworkInjector.myIdentityStore.identity,
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true
         )
         return Promise()
@@ -364,9 +365,9 @@ class MediatorReflectedOutgoingMessageProcessor {
         try messageStore.save(
             groupTextMessage: amsg,
             senderIdentity: frameworkInjector.myIdentityStore.identity,
-            messageID: NSData.convertBytes(omsg.messageID),
-            createdAt: omsg.createdAt,
-            timestamp: timestamp,
+            messageID: omsg.messageID.littleEndianData,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
             isOutgoing: true
         )
         return Promise()
@@ -481,39 +482,31 @@ class MediatorReflectedOutgoingMessageProcessor {
     // MARK: Misc
 
     private func getReceiverIdentity(for omsg: D2d_OutgoingMessage) throws -> String {
-        var receiverIdentity: String?
-
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
-            if let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                .contact(for: omsg.conversation.contact) {
-                receiverIdentity = contact.identity
+        try frameworkInjector.backgroundEntityManager.performAndWait {
+            guard let receiverIdentity = self.frameworkInjector.backgroundEntityManager.entityFetcher
+                .contact(for: omsg.conversation.contact)?.identity else {
+                throw MediatorReflectedProcessorError.outgoingMessageReceiverNotFound(message: omsg.loggingDescription)
             }
+            
+            return receiverIdentity
         }
-
-        guard let receiver = receiverIdentity else {
-            throw MediatorReflectedProcessorError.outgoingMessageReceiverNotFound(message: omsg.loggingDescription)
-        }
-        return receiver
     }
 
     @discardableResult
     private func getGroup(for omsg: D2d_OutgoingMessage) throws -> (groupID: Data, groupCreatorIdentity: String) {
-        var groupID: Data?
-        var groupCreatorIdentity: String?
-
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
-            if let grp = self.frameworkInjector.backgroundGroupManager.getGroup(
-                NSData.convertBytes(omsg.conversation.group.groupID),
+        try frameworkInjector.backgroundEntityManager.performAndWait {
+            guard let group = self.frameworkInjector.backgroundGroupManager.getGroup(
+                omsg.conversation.group.groupID.littleEndianData,
                 creator: omsg.conversation.group.creatorIdentity
-            ) {
-                groupID = grp.groupID
-                groupCreatorIdentity = grp.groupCreatorIdentity
+            ) else {
+                throw MediatorReflectedProcessorError.groupNotFound(message: omsg.loggingDescription)
             }
-        }
 
-        guard let id = groupID, let creator = groupCreatorIdentity else {
-            throw MediatorReflectedProcessorError.groupNotFound(message: omsg.loggingDescription)
+            return (group.groupID, group.groupCreatorIdentity)
         }
-        return (id, creator)
+    }
+
+    private func getCreatedAt(for omsg: D2d_OutgoingMessage) -> Date {
+        omsg.createdAt.date ?? .now
     }
 }

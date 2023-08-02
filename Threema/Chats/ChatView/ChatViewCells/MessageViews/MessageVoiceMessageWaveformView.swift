@@ -308,7 +308,6 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         return Waveform.Configuration(
             size: size,
             style: .striped(.init(color: color, width: singleBarWidth, spacing: spacing)),
-            position: .middle,
             verticalScalingFactor: 0.8,
             shouldAntialias: true
         )

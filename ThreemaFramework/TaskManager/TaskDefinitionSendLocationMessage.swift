@@ -20,7 +20,7 @@
 
 import Foundation
 
-@objc class TaskDefinitionSendLocationMessage: TaskDefinitionSendBaseMessage {
+@objc final class TaskDefinitionSendLocationMessage: TaskDefinitionSendBaseMessage {
     override var description: String {
         "<\(type(of: self))>"
     }

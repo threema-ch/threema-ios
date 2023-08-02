@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import GroupCalls
 import PromiseKit
 
 // MARK: - Enums
@@ -50,7 +51,6 @@ public enum HTTPHeaderField: String {
 }
 
 public class HTTPClient: NSObject {
-    
     // MARK: - Properties
 
     fileprivate var user: String?
@@ -93,6 +93,13 @@ public class HTTPClient: NSObject {
         self.authorization = authorization
         self.authenticationMethod = NSURLAuthenticationMethodDefault
         self.urlSessionManager = sessionManager
+        super.init()
+    }
+    
+    public required init(authorization: String?) {
+        self.authorization = authorization
+        self.authenticationMethod = NSURLAuthenticationMethodDefault
+        self.urlSessionManager = .shared
         super.init()
     }
     
@@ -305,5 +312,17 @@ extension HTTPClient: URLSessionTaskDelegate {
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
         SSLCAHelper.session(session, didReceive: challenge, completion: completionHandler)
+    }
+}
+
+// MARK: - GroupCallsHTTPClientAdapterProtocol
+
+extension HTTPClient: GroupCallsHTTPClientAdapterProtocol {
+    public func sendPeek(authorization: String, url: URL, body: Data) async throws -> (Data, URLResponse) {
+        self.authorization = authorization
+        var request = urlRequest(for: url, httpMethod: .post)
+        request.httpBody = body
+        
+        return try await urlSessionManager.storedSession(for: nil, createAsBackgroundSession: true).data(for: request)
     }
 }

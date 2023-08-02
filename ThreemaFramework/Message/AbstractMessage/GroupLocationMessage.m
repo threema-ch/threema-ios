@@ -61,15 +61,19 @@
     return YES;
 }
 
-#pragma mark - NSCoding
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
         self.accuracy = [decoder decodeDoubleForKey:@"accuracy"];
         self.latitude = [decoder decodeDoubleForKey:@"latitude"];
         self.longitude = [decoder decodeDoubleForKey:@"longitude"];
-        self.poiAddress = [decoder decodeObjectForKey:@"poiAddress"];
-        self.poiName = [decoder decodeObjectForKey:@"poiName"];
+        self.poiAddress = [decoder decodeObjectOfClass:[NSString class] forKey:@"poiAddress"];
+        self.poiName = [decoder decodeObjectOfClass:[NSString class] forKey:@"poiName"];
     }
     return self;
 }
@@ -81,6 +85,10 @@
     [encoder encodeDouble:self.longitude forKey:@"longitude"];
     [encoder encodeObject:self.poiAddress forKey:@"poiAddress"];
     [encoder encodeObject:self.poiName forKey:@"poiName"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

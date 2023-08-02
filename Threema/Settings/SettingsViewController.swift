@@ -36,7 +36,6 @@ class SettingsViewController: ThemedTableViewController {
     @IBOutlet var passcodeLockCell: UITableViewCell!
     @IBOutlet var threemaCallsCell: UITableViewCell!
     @IBOutlet var threemaWebCell: UITableViewCell!
-    @IBOutlet var multiDeviceCell: UITableViewCell!
     @IBOutlet var networkStatusCell: UITableViewCell!
     @IBOutlet var versionCell: UITableViewCell!
     @IBOutlet var usernameCell: UITableViewCell!
@@ -91,8 +90,6 @@ class SettingsViewController: ThemedTableViewController {
         
         updateConnectionStatus()
         updatePasscodeLock()
-        updateThreemaWeb()
-        updateMultiDevice()
         
         registerObserver()
         
@@ -137,7 +134,6 @@ extension SettingsViewController {
     private func registerObserver() {
         if observing == false {
             ServerConnector.shared().registerConnectionStateDelegate(delegate: self)
-            WCSessionManager.shared.addObserver(self, forKeyPath: "running", options: [], context: nil)
             observing = true
         }
     }
@@ -145,7 +141,6 @@ extension SettingsViewController {
     private func unregisterObserver() {
         if observing == true {
             ServerConnector.shared().unregisterConnectionStateDelegate(delegate: self)
-            WCSessionManager.shared.removeObserver(self, forKeyPath: "running")
             observing = false
         }
     }
@@ -188,9 +183,6 @@ extension SettingsViewController {
         
         threemaWebCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_threema_web_title")
         threemaWebCell.imageView?.image = BundleUtil.imageNamed("ThreemaWeb\(suffix)")
-        
-        multiDeviceCell.textLabel?.text = BundleUtil.localizedString(forKey: "multi_device_linked_devices_title")
-        multiDeviceCell.imageView?.image = BundleUtil.imageNamed("ThreemaWeb\(suffix)")
         
         networkStatusCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_network_title")
         
@@ -248,25 +240,6 @@ extension SettingsViewController {
         }
     }
     
-    private func updateThreemaWeb() {
-        if UserSettings.shared().threemaWeb == true {
-            if WCSessionManager.shared.isRunningWCSession() == true {
-                threemaWebCell.detailTextLabel?.text = BundleUtil.localizedString(forKey: "status_loggedIn")
-            }
-            else {
-                threemaWebCell.detailTextLabel?.text = BundleUtil.localizedString(forKey: "On")
-            }
-        }
-        else {
-            threemaWebCell.detailTextLabel?.text = BundleUtil.localizedString(forKey: "Off")
-        }
-    }
-    
-    private func updateMultiDevice() {
-        multiDeviceCell.detailTextLabel?.text = BundleUtil
-            .localizedString(forKey: BusinessInjector().serverConnector.isMultiDeviceActivated ? "On" : "Off")
-    }
-    
     private func showConversation(for contact: ContactEntity) {
         let info = [
             kKeyContact: contact,
@@ -280,23 +253,6 @@ extension SettingsViewController {
                 object: nil,
                 userInfo: info
             )
-        }
-    }
-}
-
-extension SettingsViewController {
-    // MARK: DB observer
-    
-    override func observeValue(
-        forKeyPath keyPath: String?,
-        of object: Any?,
-        change: [NSKeyValueChangeKey: Any]?,
-        context: UnsafeMutableRawPointer?
-    ) {
-        if object as? ServerConnector == ServerConnector.shared(), keyPath == "running" {
-            DispatchQueue.main.async {
-                self.updateThreemaWeb()
-            }
         }
     }
 }
@@ -371,28 +327,6 @@ extension SettingsViewController {
                 // Remove dev mode cell in other versions
                 return numberOfRows - 1
             case .xcode:
-                return numberOfRows
-            }
-        }
-        else if section == 2 {
-            let numberOfRows = super.tableView(tableView, numberOfRowsInSection: section)
-
-            // This should always be in sync with `disableMultiDeviceForVersionLessThan5()`
-            
-            switch ThreemaEnvironment.env() {
-            case .appStore:
-                // Remove multi device cells
-                return numberOfRows - 1
-            case .testFlight:
-                // Show multi device only in consumer, red and work red betas
-                if ThreemaApp.current == .threema || ThreemaApp.current == .red || ThreemaApp.current == .workRed {
-                    return numberOfRows
-                }
-                else {
-                    return numberOfRows - 1
-                }
-            case .xcode:
-                // Always show multi device for debug builds
                 return numberOfRows
             }
         }

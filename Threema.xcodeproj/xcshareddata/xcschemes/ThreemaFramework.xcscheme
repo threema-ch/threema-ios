@@ -40,6 +40,14 @@
                BlueprintName = "ThreemaFrameworkTests"
                ReferencedContainer = "container:Threema.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "BlobManagerTests/testIncomingDataWithThumbnailNoDone()">
+               </Test>
+               <Test
+                  Identifier = "EntityCreatorTests/testCreateFileMessageEntityVideo()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>

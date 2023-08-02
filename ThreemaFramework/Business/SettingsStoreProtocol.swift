@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 public protocol SettingsStoreProtocol {
     
@@ -60,7 +61,7 @@ public protocol SettingsStoreProtocol {
     var voIPSound: String { get set }
 	
     // Multi Device
-    var isMultiDeviceEnabled: Bool { get set }
+    var isMultiDeviceRegistered: Bool { get set }
 
     // Advanced
     var enableIPv6: Bool { get set }

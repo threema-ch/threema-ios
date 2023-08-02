@@ -21,7 +21,7 @@
 #import "AbstractGroupMessage.h"
 #import "QuotedMessageProtocol.h"
 
-@interface GroupTextMessage : AbstractGroupMessage <NSCoding, QuotedMessageProtocol>
+@interface GroupTextMessage : AbstractGroupMessage <NSSecureCoding, QuotedMessageProtocol>
 
 @property (nonatomic, strong) NSString *text;
 

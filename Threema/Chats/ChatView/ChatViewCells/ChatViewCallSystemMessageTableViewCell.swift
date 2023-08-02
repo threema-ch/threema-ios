@@ -206,6 +206,10 @@ extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
         }
 
         typealias Provider = ChatViewMessageActionProvider
+        
+        let detailAction = Provider.detailsAction {
+            self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
+        }
             
         let editAction = Provider.editAction {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
@@ -223,7 +227,7 @@ extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
         let deleteAction = Provider.deleteAction(message: message, willDelete: willDelete, didDelete: didDelete)
         
         // Build menu
-        return [editAction, deleteAction]
+        return [detailAction, editAction, deleteAction]
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

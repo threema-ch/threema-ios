@@ -577,8 +577,12 @@ enum ChatViewConfiguration {
         static let verticalChatBarTextViewDistance: CGFloat = 7
         /// The maximum number of lines before the textInputView start to scroll
         static let maxNumberOfLinesPortrait = 7
+        /// The maximum number of lines before the textInputView start to scroll for small devices
+        static let maxNumberOfLinesPortraitSmallScreen = 5
         /// The maximum number of lines before the textInputView start to scroll
         static let maxNumberOfLinesLandscape = 3
+        /// The maximum number of lines before the textInputView start to scroll for small devices
+        static let maxNumberOfLinesLandscapeSmallScreen = 1.5
         /// The default value for the height of a single line
         static let defaultSingleLineHeight: CGFloat = 33.5
         /// The minimum spacing between the ChatBar and the top of the tableView

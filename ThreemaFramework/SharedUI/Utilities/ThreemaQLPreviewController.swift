@@ -21,8 +21,39 @@
 import Foundation
 import QuickLook
 
+private class DisableShareUINavigationItem: UINavigationItem {
+    override func setRightBarButtonItems(_ items: [UIBarButtonItem]?, animated: Bool) {
+        // forbidden to add anything to right
+    }
+}
+
 public class ThreemaQLPreviewController: QLPreviewController {
     
+    private lazy var disableShareNavigationItem = { [self] in
+        let navItem = DisableShareUINavigationItem(title: "")
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(donePressed))
+        navItem.leftBarButtonItem = doneButton
+        return navItem
+    }()
+    
+    override public var navigationItem: UINavigationItem {
+        if disableShareButton {
+            return disableShareNavigationItem
+        }
+        else {
+            var navItem: UINavigationItem?
+            if Thread.isMainThread {
+                return super.navigationItem
+            }
+            else {
+                DispatchQueue.main.sync {
+                    navItem = super.navigationItem
+                }
+                return navItem ?? disableShareNavigationItem
+            }
+        }
+    }
+        
     var observations: [NSKeyValueObservation] = []
     
     var mdmSetup: MDMSetup! = MDMSetup(setup: false)
@@ -44,17 +75,15 @@ public class ThreemaQLPreviewController: QLPreviewController {
         removeToolbarItems()
     }
     
+    @objc private func donePressed() {
+        dismiss(animated: true)
+    }
+    
     private func removeToolbarItems() {
         if mdmSetup.disableShareMedia() {
             if let navigationToolbar = navigationController?.toolbar {
                 navigationToolbar.isHidden = true
                 let observation = navigationToolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarHidden)
-                observations.append(observation)
-            }
-            
-            for toolbar in toolbarsInSubviews(forView: view) {
-                toolbar.isHidden = true
-                let observation = toolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarSubviewHidden)
                 observations.append(observation)
             }
         }
@@ -64,20 +93,5 @@ public class ThreemaQLPreviewController: QLPreviewController {
         if navigationController?.toolbar.isHidden == false {
             navigationController?.toolbar.isHidden = true
         }
-    }
-    
-    func observeNavigationToolbarSubviewHidden(changed: UIView, change: NSKeyValueObservedChange<Bool>) {
-        changed.isHidden = true
-    }
-    
-    private func toolbarsInSubviews(forView view: UIView) -> [UIView] {
-        if view is UIToolbar {
-            return [view]
-        }
-        var toolbars = [UIView]()
-        for subview in view.subviews {
-            toolbars.append(contentsOf: toolbarsInSubviews(forView: subview))
-        }
-        return toolbars
     }
 }

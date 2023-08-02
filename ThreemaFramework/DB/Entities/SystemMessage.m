@@ -147,10 +147,22 @@
             return [BundleUtil localizedStringForKey:@"forward_security_status_disabled_outgoing"];
         case kSystemMessageFsNotSupportedAnymore:
             return [BundleUtil localizedStringForKey:@"forward_security_contact_has_downgraded_to_an_incompatible_version"];
+        case kSystemMessageGroupCallStartedBy: {
+            NSString *name = [self argAsUTF8String];
+            return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"group_call_started_by_contact_system_message"], name];
+        }
+        case kSystemMessageGroupCallStarted:
+          return [BundleUtil localizedStringForKey:@"group_call_started_by_local_system_message"];
+        case kSystemMessageGroupCallEnded:
+            return [BundleUtil localizedStringForKey:@"group_call_ended_system_message"];
         case kSystemMessageUnsupportedType:
             return [BundleUtil localizedStringForKey:@"systemMessage_unsupported_type"];
         case kSystemMessageGroupAvatarChanged:
             return [BundleUtil localizedStringForKey:@"system_message_group_avatar_changed"];
+        case kFsDebugMessage:
+            return [NSString stringWithFormat:@"FS Debug: %@", [self argAsUTF8String]];
+        case kSystemMessageFsIllegalSessionState:
+            return [BundleUtil localizedStringForKey:@"forward_security_illegal_session_state"];
     }
     
     return nil;

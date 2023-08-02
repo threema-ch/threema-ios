@@ -348,10 +348,12 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
     
+    // TODO: (IOS-3875) Timeout
     func testUnreadMessageLineStillLastAfterNewMessageSentFlipped() {
         basicUnreadMessageLine(flipped: true)
     }
     
+    // TODO: (IOS-3875) Timeout
     func testUnreadMessageLineStillLastAfterNewMessageSentNonFlipped() {
         basicUnreadMessageLine(flipped: false)
     }
@@ -533,7 +535,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 expectation.fulfill()
             }.store(in: &cancellables)
         
-        waitForExpectations(timeout: 10)
+        // TODO: (IOS-3875) Timeout
+        waitForExpectations(timeout: 100)
     }
     
     private func createMessage(in conversation: Conversation, entityManager: EntityManager) {

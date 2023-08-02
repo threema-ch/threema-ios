@@ -19,10 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "AbstractMessage.h"
+#import "ReceiptType.h"
 
-@interface DeliveryReceiptMessage : AbstractMessage <NSCoding>
+@interface DeliveryReceiptMessage : AbstractMessage <NSSecureCoding>
 
-@property (nonatomic) uint8_t receiptType;
+@property (nonatomic) ReceiptType receiptType;
 @property (nonatomic, strong) NSArray *receiptMessageIds NS_SWIFT_NAME(receiptMessageIDs);
 
 @end

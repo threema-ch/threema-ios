@@ -18,6 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
+import Combine
+import GroupCalls
 import ThreemaFramework
 import UIKit
 
@@ -100,6 +103,10 @@ extension ConversationTableViewCell {
             textStyle: .body,
             scale: .medium
         )
+        
+        /// Debounce time in milliseconds when updating the cell in reaction to a group call state change
+        /// We don't expect these updates to be very frequent but lets be safe.
+        static let debounceInMilliseconds = 500
     }
 }
 
@@ -108,6 +115,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private var conversationObservers = [NSKeyValueObservation]()
     private var lastMessageObservers = [NSKeyValueObservation]()
     private var contactObservers = [NSKeyValueObservation]()
+    private var cancellables = Set<AnyCancellable>()
+    
+    private let businessInjector = BusinessInjector()
     
     private lazy var constantScaler = UIFontMetrics(forTextStyle: Configuration.dateDraftTextStyle)
 
@@ -217,10 +227,49 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         label.textColor = Colors.textLight
         label.highlightedTextColor = Colors.textLight
         label.numberOfLines = 2
-
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        
         label.adjustsFontForContentSizeCategory = true
         
         return label
+    }()
+    
+    /// Button shown when a group call is running in a group
+    /// Is used to join a group call but does not create a new call
+    private lazy var groupCallJoinButton: UIButton = {
+        let action = UIAction { [weak self] _ in
+            DDLogVerbose("[GroupCall] Group Call Join Button tapped")
+            Task {
+                guard let groupCallGroupModel = self?.groupCallGroupModel else {
+                    DDLogError("[GroupCall] Could not get GroupCallGroupModel")
+                    return
+                }
+                
+                guard let viewModel = await GlobalGroupCallsManagerSingleton.shared.groupCallManager
+                    .joinCall(in: groupCallGroupModel, intent: .join).1 else {
+                    DDLogError("[GroupCall] Could not get view model")
+                    return
+                }
+                
+                let groupCallViewController = GlobalGroupCallsManagerSingleton.shared
+                    .groupCallViewController(for: viewModel)
+                self?.navigationController?.present(groupCallViewController, animated: true)
+            }
+        }
+        
+        var buttonConfig = UIButton.Configuration.bordered()
+        let imageConfig = UIImage.SymbolConfiguration(scale: .small)
+        buttonConfig.title = BundleUtil.localizedString(forKey: "group_call_join_button_title")
+        buttonConfig.buttonSize = .small
+        buttonConfig.cornerStyle = .capsule
+
+        let button = UIButton(configuration: buttonConfig, primaryAction: action)
+        
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        
+        return button
     }()
     
     private lazy var typingIndicatorImageView: UIImageView = {
@@ -313,6 +362,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         stackView.alignment = .top
         stackView.spacing = Configuration.previewStackViewHorizontalSpacing
         stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             stackView.axis = .vertical
@@ -324,7 +374,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }()
     
     private lazy var iconsStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [dndImageView, pinImageView, typingIndicatorImageView])
+        let stackView =
+            UIStackView(arrangedSubviews: [dndImageView, pinImageView, typingIndicatorImageView, groupCallJoinButton])
         stackView.axis = .horizontal
         stackView.spacing = Configuration.iconsStackViewSpacing
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -357,15 +408,27 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
     }
     
-    // MARK: - Public functions
+    private(set) var navigationController: UINavigationController?
     
-    /// Set the conversation that is displayed in this cell
-    ///
-    /// - Parameter conversation: Conversation that is shown in this cell
-    func setConversation(to conversation: Conversation?) {
-        self.conversation = conversation
-    }
-    
+    private lazy var groupCallGroupModel: GroupCallsThreemaGroupModel? = {
+        guard let conversation, let group = GroupManager().getGroup(conversation: conversation) else {
+            assertionFailure("[Group Calls] Could not create GroupCallsThreemaGroupModel for conversation.")
+            return nil
+        }
+        
+        let groupCreatorID: String = group.groupCreatorIdentity
+        let groupCreatorNickname: String? = group.groupCreatorNickname
+        let groupID = group.groupID
+        let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
+        
+        return GroupCallsThreemaGroupModel(
+            creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
+            groupID: groupID,
+            groupName: group.name ?? "",
+            members: Set(members)
+        )
+    }()
+
     // MARK: - Configuration
     
     override func configureCell() {
@@ -374,6 +437,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         typingIndicatorImageView.isHidden = true
         dndImageView.isHidden = true
         pinImageView.isHidden = true
+        groupCallJoinButton.isHidden = true
                 
         contentView.addSubview(avatarImageView)
         contentView.addSubview(nameDateLastMessageStateStackView)
@@ -468,6 +532,20 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     // MARK: - Public functions
     
+    /// Set the conversation that is displayed in this cell
+    ///
+    /// - Parameter conversation: Conversation that is shown in this cell
+    func setConversation(to conversation: Conversation?) {
+        self.conversation = conversation
+    }
+    
+    /// UINavigationController of the TableView this cell is displayed in
+    ///
+    /// - Parameter navigationController: UINavigationController of the TableView this cell is displayed in
+    func setNavigationController(to navigationController: UINavigationController?) {
+        self.navigationController = navigationController
+    }
+    
     public func updateLastMessagePreview() {
         updateAccessibility()
         
@@ -485,30 +563,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        if let draft = MessageDraftStore.previewForDraft(
-            for: conversation,
-            textStyle: Configuration.dateDraftTextStyle,
-            tint: Colors.textLight
-        ) {
-            updateColorsForDateDraftLabel(isDraft: true)
-            dateDraftLabel.text = BundleUtil.localizedString(forKey: "draft").uppercased()
-            previewLabel.attributedText = draft
-        }
-        else {
-            updateColorsForDateDraftLabel(isDraft: false)
-            
-            guard let lastMessage = conversation.lastMessage else {
-                previewLabel.attributedText = nil
-                dateDraftLabel.text = nil
-                return
-            }
-            
-            dateDraftLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: lastMessage.displayDate)
-            if let previewableMessage = lastMessage as? PreviewableMessage {
-                previewLabel.attributedText = previewableMessage
-                    .previewAttributedText(for: PreviewableMessageConfiguration.conversationCell)
-            }
-        }
+        updateDateDraftLabel()
     }
     
     // MARK: - Updates
@@ -617,13 +672,66 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         if !conversation.isGroup(),
            let contact = conversation.contact {
-            threemaTypeImageView.isHidden = ThreemaUtility.shouldHideOtherTypeIcon(for: contact)
+            threemaTypeImageView.isHidden = !contact.showOtherThreemaTypeIcon
         }
         else {
             threemaTypeImageView.isHidden = true
         }
         
+        if conversation.isGroup(), ThreemaEnvironment.groupCalls {
+            updateGroupCallButton()
+        }
+        else {
+            updateGroupCallButton(for: .hidden)
+        }
+        
         addAllObjectObservers()
+    }
+    
+    private func updateGroupCallButton() {
+        
+        guard ThreemaEnvironment.groupCalls else {
+            updateGroupCallButton(for: .hidden)
+            assertionFailure()
+            return
+        }
+        
+        Task {
+            guard let groupCallGroupModel,
+                  let viewModel = await GlobalGroupCallsManagerSingleton.shared.viewModel(for: groupCallGroupModel)
+            else {
+                updateGroupCallButton(for: .hidden)
+                return
+            }
+            
+            if let currentItem = await viewModel.buttonBannerObserver.getCurrentItem() {
+                self.updateGroupCallButton(for: currentItem)
+            }
+            
+            viewModel.buttonBannerObserver.publisher.pub.sink { [weak self] newState in
+                Task { @MainActor in
+                    self?.updateGroupCallButton(for: newState)
+                }
+            }
+            .store(in: &self.cancellables)
+        }
+    }
+    
+    private func updateGroupCallButton(for newState: GroupCallButtonBannerState) {
+        switch newState {
+        case let .visible(stateInfo):
+            groupCallJoinButton.isHidden = false
+            let text = stateInfo.joinState == .runningLocal ? BundleUtil
+                .localizedString(forKey: "group_call_open_button_title") : BundleUtil
+                .localizedString(forKey: "group_call_join_button_title")
+            groupCallJoinButton.configuration?.title = text
+            
+        case .hidden:
+            groupCallJoinButton.isHidden = true
+            groupCallJoinButton.configuration?.title = BundleUtil
+                .localizedString(forKey: "group_call_join_button_title")
+        }
+        updateIconStackView()
     }
     
     private func updateTitleLabel() {
@@ -726,6 +834,39 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         displayStateImageView.isHidden = true
     }
     
+    private func updateDateDraftLabel() {
+        guard let conversation else {
+            dateDraftLabel.isHidden = true
+            return
+        }
+        
+        if let draft = MessageDraftStore.previewForDraft(
+            for: conversation,
+            textStyle: Configuration.dateDraftTextStyle,
+            tint: Colors.textLight
+        ) {
+            updateColorsForDateDraftLabel(isDraft: true)
+            dateDraftLabel.text = BundleUtil.localizedString(forKey: "draft").uppercased()
+            previewLabel.attributedText = draft
+        }
+        else {
+            updateColorsForDateDraftLabel(isDraft: false)
+            
+            guard let lastMessage = conversation.lastMessage else {
+                previewLabel.attributedText = nil
+                dateDraftLabel.text = nil
+                return
+            }
+            
+            dateDraftLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: lastMessage.displayDate)
+            if let previewableMessage = lastMessage as? PreviewableMessage {
+                previewLabel.attributedText = previewableMessage
+                    .previewAttributedText(for: PreviewableMessageConfiguration.conversationCell)
+            }
+        }
+        dateDraftLabel.isHidden = false
+    }
+    
     private func updateBadge() {
         guard let conversation else {
             badgeCountView.isHidden = true
@@ -792,7 +933,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
        
     private func updateIconStackView() {
-        iconsStackView.isHidden = dndImageView.isHidden && pinImageView.isHidden && typingIndicatorImageView.isHidden
+        iconsStackView.isHidden = dndImageView.isHidden && pinImageView.isHidden && typingIndicatorImageView
+            .isHidden && groupCallJoinButton.isHidden
     }
     
     private func updateAccessibility() {
@@ -1018,6 +1160,11 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         observeContact(\.contactImage, callOnCreation: false) {
             self.loadAvatar()
         }
+        
+        if ThreemaEnvironment.groupCalls {
+            // This will be automatically removed on de-init
+            startGroupCallObserver()
+        }
     }
     
     private func observeLastMessageProperties() {
@@ -1044,22 +1191,27 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         if let lastMessage = conversation?.lastMessage {
             observeLastMessage(lastMessage, keyPath: \.userack, callOnCreation: false) {
                 self.updateDisplayStateImage()
+                self.updateDateDraftLabel()
             }
 
             observeLastMessage(lastMessage, keyPath: \.read, callOnCreation: false) {
                 self.updateDisplayStateImage()
+                self.updateDateDraftLabel()
             }
 
             observeLastMessage(lastMessage, keyPath: \.delivered, callOnCreation: false) {
                 self.updateDisplayStateImage()
+                self.updateDateDraftLabel()
             }
 
             observeLastMessage(lastMessage, keyPath: \.sendFailed, callOnCreation: false) {
                 self.updateDisplayStateImage()
+                self.updateDateDraftLabel()
             }
 
             observeLastMessage(lastMessage, keyPath: \.sent, callOnCreation: false) {
                 self.updateDisplayStateImage()
+                self.updateDateDraftLabel()
             }
         }
     }
@@ -1180,6 +1332,69 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         // Remove them so we don't reference old observers
         contactObservers.removeAll()
+    }
+}
+
+// MARK: - Group Calls
+
+extension ConversationTableViewCell {
+    /// Starts observing started or ended group calls and updates the cell respectively
+    ///
+    /// Note that we don't need to remove this as they will automatically be removed on deallocation
+    private func startGroupCallObserver() {
+        guard ThreemaEnvironment.groupCalls else {
+            assertionFailure()
+            return
+        }
+        
+        guard let conversation,
+              conversation.isGroup() else {
+            return
+        }
+        
+        Task {
+            await GlobalGroupCallsManagerSingleton.shared.groupCallManager
+                .globalGroupCallObserver.publisher.pub
+                // We'd rather filter on some other queue, but the conversation is loaded on the main thread and
+                // checking on
+                // another thread will cause CD concurrency issues.
+                .receive(on: DispatchQueue.main)
+                .filter { [weak self] in self?.currentConversationIsEqualTo(group: $0.groupID, $0.creator.id) ?? false }
+                .debounce(for: .milliseconds(Configuration.debounceInMilliseconds), scheduler: DispatchQueue.main)
+                .sink(receiveValue: { [weak self] _ in
+                    DDLogVerbose("[GroupCall] Update Conversation Cell for Call")
+                    self?.updateGroupCallButton()
+                }).store(in: &cancellables)
+        }
+    }
+    
+    /// Checks whether the current conversation is the group conversation with given groupID and creator
+    /// - Parameters:
+    ///   - groupID:
+    ///   - creator:
+    /// - Returns:
+    private func currentConversationIsEqualTo(group groupID: Data, _ creator: String) -> Bool {
+        guard let conversation else {
+            return false
+        }
+        
+        guard conversation.isGroup() else {
+            return false
+        }
+        
+        guard conversation.groupID == groupID else {
+            return false
+        }
+        
+        if let id = conversation.contact?.identity, id != creator {
+            return false
+        }
+        
+        if conversation.contact == nil, businessInjector.myIdentityStore.identity != creator {
+            return false
+        }
+        
+        return true
     }
 }
 

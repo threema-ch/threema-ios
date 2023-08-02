@@ -21,8 +21,7 @@
 #import "QRCodeActivity.h"
 #import "QRCodeViewController.h"
 #import "PortraitNavigationController.h"
-#import "StatusNavigationBar.h"
-//#import "TextMessage.h"
+#import "Threema-Swift.h"
 #import "BundleUtil.h"
 
 @implementation QRCodeActivity {

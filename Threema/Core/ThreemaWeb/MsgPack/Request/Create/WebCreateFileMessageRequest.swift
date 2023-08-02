@@ -50,7 +50,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
         }
         else {
             let idString = message.args!["id"] as! String
-            self.groupID = idString.hexadecimal()
+            self.groupID = idString.hexadecimal
         }
         
         let data = message.data! as! [AnyHashable: Any?]
@@ -87,7 +87,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
         }
         else {
             let idString = message.args!["id"] as! String
-            self.groupID = idString.hexadecimal()
+            self.groupID = idString.hexadecimal
         }
         
         let data = message.data! as! [AnyHashable: Any?]

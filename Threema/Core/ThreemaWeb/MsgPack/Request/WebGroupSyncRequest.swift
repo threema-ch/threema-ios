@@ -27,7 +27,7 @@ class WebGroupSyncRequest: WebAbstractMessage {
     
     override init(message: WebAbstractMessage) {
         let idString = message.args!["id"] as! String
-        self.id = idString.hexadecimal()!
+        self.id = idString.hexadecimal!
         super.init(message: message)
     }
     

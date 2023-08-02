@@ -30,7 +30,6 @@ import Starscream
     
     fileprivate let server: String
     fileprivate let delegate: SocketProtocolDelegate
-    private let queue: DispatchQueue?
 
     fileprivate var socket: WebSocket?
     fileprivate var readLength: UInt32?
@@ -45,24 +44,29 @@ import Starscream
         false
     }
 
+    var lastError: NSError?
+
     required init(
         server: String,
         ports: [Int],
         preferIPv6: Bool,
         delegate: SocketProtocolDelegate,
-        queue: DispatchQueue?
+        queue: DispatchQueue
     ) throws {
         self.server = server
         self.delegate = delegate
-        self.queue = queue
 
         super.init()
 
         guard let serverURL = URL(string: server) else {
             throw MediatorWebSocketError.invalidServerURL
         }
-        
-        self.socket = WebSocket(url: serverURL)
+
+        self.socket = WebSocket(
+            request: URLRequest(url: serverURL),
+            certPinner: self
+        )
+        socket?.callbackQueue = queue
         socket?.delegate = self
     }
     
@@ -77,25 +81,21 @@ import Starscream
     }
     
     public func write(data: Data) {
-        guard let socket, socket.isConnected else {
+        guard let socket else {
             return
         }
         socket.write(data: data)
     }
     
     @objc func connect() -> Bool {
-        if let socket,
-           !socket.isConnected {
-            
+        if let socket {
             socket.connect()
         }
         return true
     }
     
     @objc func disconnect() {
-        if let socket,
-           socket.isConnected {
-            
+        if let socket {
             socket.disconnect()
         }
     }
@@ -104,51 +104,76 @@ import Starscream
 // MARK: - WebSocketDelegate
 
 extension MediatorWebSocket: WebSocketDelegate {
-    public func websocketDidConnect(socket: WebSocketClient) {
-        delegate.didConnect()
-    }
-    
-    public func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
-        var code = 0
-        if let error = error as? WSError {
-            code = error.code
-            DDLogError(
-                "Disconnect from mediator server with error: \(error.localizedDescription). Error code: \(error.code); Error Message: \(error.message)"
+    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocket) {
+        switch event {
+        case .connected:
+            lastError = nil
+            delegate.didConnect()
+        case let .disconnected(reason, code):
+            let error = NSError(
+                domain: "Disconnect from mediator server \(server) with reason \(reason)",
+                code: Int(code)
             )
-        }
-        else if let error {
-            DDLogError("Disconnect from mediator server with error: \(error)")
-        }
-        
-        DDLogInfo("Disconnected from \(server)")
-        delegate.didDisconnect(errorCode: code)
-    }
-    
-    public func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        DDLogVerbose("Received text message: \(text)")
-    }
+            lastError = error
+            DDLogError("\(error)")
 
-    public func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
-        guard let tag = readTag else {
-            DDLogVerbose("No tag set for received data")
+            delegate.didDisconnect(errorCode: Int(code))
+        case let .binary(data):
+            lastError = nil
+
+            guard let tag = readTag else {
+                DDLogVerbose("No tag set for received data")
+                return
+            }
+
+            if MediatorMessageProtocol.isMediatorMessage(data) {
+                // Handle mediator message
+                delegate.didRead(data, tag: 8)
+            }
+            else {
+                // Handle chat message
+                if tag == 6 { // TODO: Define tags as constant
+                    let (message, length) = MediatorMessageProtocol.extractChatMessageAndLength(data)
+                    if message != nil, length != nil {
+                        delegate.didRead(message!, tag: 7)
+                    }
+                }
+                else {
+                    delegate.didRead(MediatorMessageProtocol.extractChatMessage(data), tag: tag)
+                }
+            }
+        case let .text(text):
+            lastError = nil
+            DDLogVerbose("Received text message: \(text)")
+        case let .error(error):
+            let error = NSError(domain: "WebSocket error: \(String(describing: error))", code: 0)
+            lastError = error
+            DDLogError("\(error)")
+            delegate.didDisconnect(errorCode: 0)
+        case .cancelled:
+            DDLogWarn("cancelled")
+            delegate.didDisconnect(errorCode: lastError?.code ?? 0)
+        case .ping, .pong, .viabilityChanged, .reconnectSuggested:
+            DDLogVerbose("ping, pong, viabilityChanged or reconnectSuggested")
+            lastError = nil
+        }
+    }
+}
+
+// MARK: - CertificatePinning
+
+extension MediatorWebSocket: CertificatePinning {
+    public func evaluateTrust(trust: SecTrust, domain: String?, completion: (PinningState) -> Void) {
+        guard let domain else {
+            completion(.failed(nil))
             return
         }
 
-        if MediatorMessageProtocol.isMediatorMessage(data) {
-            // Handle mediator message
-            delegate.didRead(data, tag: 8)
+        if SSLCAHelper.trust(trust, domain: domain) {
+            completion(.success)
         }
         else {
-            // Handle chat message
-            if tag == 6 { // TODO: Define tags as constant
-                let (message, length) = MediatorMessageProtocol.extractChatMessageAndLength(data)
-                if message != nil, length != nil {
-                    delegate.didRead(message!, tag: 7)
-                }
-            }
-            else {
-                delegate.didRead(MediatorMessageProtocol.extractChatMessage(data), tag: tag)
-            }
+            completion(.failed(nil))
         }
     }
 }

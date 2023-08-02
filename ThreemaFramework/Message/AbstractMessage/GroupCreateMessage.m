@@ -64,11 +64,19 @@
     return true;
 }
 
-#pragma mark - NSCoding
+- (BOOL)canUnarchiveConversation {
+    return NO;
+}
+
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
-        self.groupMembers = [decoder decodeObjectForKey:@"groupMembers"];
+        self.groupMembers = [decoder decodeObjectOfClasses:[NSSet setWithArray:@[[NSArray class], [NSString class]]] forKey:@"groupMembers"];
     }
     return self;
 }
@@ -76,6 +84,10 @@
 - (void)encodeWithCoder:(NSCoder *)encoder {
     [super encodeWithCoder:encoder];
     [encoder encodeObject:self.groupMembers forKey:@"groupMembers"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

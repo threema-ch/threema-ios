@@ -56,11 +56,19 @@
     return true;
 }
 
-#pragma mark - NSCoding
+- (BOOL)canUnarchiveConversation {
+    return NO;
+}
+
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
-        self.name = [decoder decodeObjectForKey:@"name"];
+        self.name = [decoder decodeObjectOfClass:[NSString class] forKey:@"name"];
     }
     return self;
 }
@@ -69,4 +77,9 @@
     [super encodeWithCoder:encoder];
     [encoder encodeObject:self.name forKey:@"name"];
 }
+
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
+
 @end

@@ -181,12 +181,12 @@ class BytesUtilityTests: XCTestCase {
         XCTAssertEqual(result, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
     }
     
-    func testPaddingRandom() {
+    func testPaddingRandom() throws {
         let padding = BytesUtility.paddingRandom()
         
         XCTAssertGreaterThanOrEqual(padding.count, 1)
         XCTAssertLessThanOrEqual(padding.count, 256)
-        XCTAssertEqual(padding[0], padding.convert())
+        XCTAssertEqual(padding[0], try padding.littleEndian())
     }
     
     func testBytesToHexString() {
@@ -216,66 +216,5 @@ class BytesUtilityTests: XCTestCase {
         let result = BytesUtility.generateRandomBytes(length: 24)
         
         XCTAssertEqual(result?.count, 24)
-    }
-
-    func testDataExtensionConvertToUInt64() {
-        for run in 0..<testBytes.count {
-            let data = Data(bytes: testBytes[run], count: 8)
-            
-            XCTAssertEqual(expectedUInt8Pos7[run], data.convert(at: 7) as UInt8)
-            XCTAssertEqual(expectedUInt64LittleEndian[run], data.convert() as UInt64)
-
-            XCTAssertEqual(expectedUInt64LittleEndian[run], data.convert(at: 0, endianess: .LittleEndian) as UInt64)
-            XCTAssertEqual(expectedUInt64BigEndian[run], data.convert(at: 0, endianess: .BigEndian) as UInt64)
-        }
-    }
-    
-    func testConvertUInt64ToBytes() {
-        for run in 0..<testBytes.count {
-            let data = Data(bytes: testBytes[run], count: 8)
-            
-            let result = NSData.convertBytes(expectedUInt64LittleEndian[run])
-
-            XCTAssertEqual(data, result)
-        }
-    }
-    
-    func testConvertBytesToUInt64AndBack() {
-        for run in 0..<testBytes.count {
-            let data = NSData(bytes: testBytes[run], length: 8)
-            
-            let result = data.convertUInt64()
-            
-            XCTAssertEqual(expectedUInt64LittleEndian[run], result)
-
-            let resultData = NSData.convertBytes(result)!
-            for i in 0...7 {
-                XCTAssertEqual(testBytes[run][i], resultData[i])
-            }
-        }
-    }
-    
-    func testConvertNSDataBytesToUInt64() {
-        let idHex = "9e44815585a2331f"
-        let idData = NSData(data: Data(BytesUtility.toBytes(hexString: idHex)!))
-        
-        let idUInt64: UInt64 = NSData.convertUInt64(idData)()
-        
-        let idDataResult: Data = NSData.convertBytes(idUInt64)
-        let idHexResult: String = BytesUtility.toHexString(bytes: Array(idDataResult))
-        
-        XCTAssertEqual(idHex, idHexResult)
-    }
-
-    func testConvertDataBytesToUInt64() {
-        let idHex = "9e44815585a2331f"
-        let idData = Data(BytesUtility.toBytes(hexString: idHex)!)
-        
-        let idUInt64: UInt64 = idData.convert()
-        
-        let idDataResult: Data = NSData.convertBytes(idUInt64)
-        let idHexResult: String = BytesUtility.toHexString(bytes: Array(idDataResult))
-
-        XCTAssertEqual(idHex, idHexResult)
     }
 }

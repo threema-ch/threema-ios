@@ -736,7 +736,7 @@ public class DateFormatter: NSObject {
     private static func isDateInTodayOrYesterday(_ date: Date) -> Bool {
         Calendar.current.isDateInToday(date) || Calendar.current.isDateInYesterday(date)
     }
-    
+        
     /// Checks if `date` is in this calendar year
     ///
     /// - Parameter date: Date to check
@@ -753,13 +753,14 @@ public class DateFormatter: NSObject {
         return date > lastNewYearsEveJustBeforeMidnight
     }
     
-    /// Checks if `date` is in last six days
+    /// Checks if `date` is in last six days but not in future day
     ///
     /// i.e. if today is _Wednesday_ this function returns `true` for all dates up to and including last _Thursday_
     ///
     /// - Parameter date: Date to check
     /// - Returns: `false` if the date is in last 6 days, or not determinable in the current calendar, otherwise `true`
     private static func isDateInLastSixDays(_ date: Date) -> Bool {
+        var currentDayComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         
         guard let dayComponent = dateComponents.day else {
@@ -768,11 +769,12 @@ public class DateFormatter: NSObject {
         
         dateComponents.day = dayComponent - 6
         
-        guard let aSevenDaysAgoMidnight = Calendar.current.date(from: dateComponents) else {
+        guard let currentDay = Calendar.current.date(from: currentDayComponents),
+              let aSevenDaysAgoMidnight = Calendar.current.date(from: dateComponents) else {
             return false
         }
         
-        return date > aSevenDaysAgoMidnight
+        return date > aSevenDaysAgoMidnight && date <= currentDay
     }
     
     // MARK: - Helper for testing

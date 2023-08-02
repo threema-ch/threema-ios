@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupBallotCreateMessage : AbstractGroupMessage <NSCoding>
+@interface GroupBallotCreateMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property NSData *ballotId NS_SWIFT_NAME(ballotID);
 @property NSData *jsonData;

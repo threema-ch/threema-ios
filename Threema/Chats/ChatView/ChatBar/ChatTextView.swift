@@ -115,10 +115,19 @@ final class ChatTextView: CustomResponderTextView {
     }
     
     private var maxHeight: CGFloat {
-        if UIDevice.current.orientation.isLandscape, UIDevice.current.userInterfaceIdiom != .pad {
-            return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesLandscape)
+        guard UIDevice.current.orientation.isLandscape, UIDevice.current.userInterfaceIdiom != .pad else {
+            if UIScreen.main.bounds.height <= 568 {
+                return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesPortraitSmallScreen)
+            }
+            
+            return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesPortrait)
         }
-        return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesPortrait)
+        
+        guard UIScreen.main.bounds.height > 320 else {
+            return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesLandscapeSmallScreen)
+        }
+        
+        return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesLandscape)
     }
     
     private var prevSingleLineHeight: CGFloat = 0.0

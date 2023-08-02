@@ -20,12 +20,11 @@
 
 import CocoaLumberjackSwift
 import Foundation
-import Punycode
 import UIKit
 
 @objc class IDNSafetyHelper: NSObject {
     @objc class func safeOpen(url: URL, viewController: UIViewController) {
-        if isLegalURL(url: url) {
+        if url.isIDNSafe {
             if url.host?.lowercased() == "threema.id" {
                 URLHandler.handleThreemaDotIDURL(url, hideAppChooser: false)
             }
@@ -38,21 +37,8 @@ import UIKit
         }
     }
     
-    @objc class func isLegalURL(url: URL) -> Bool {
-        guard let legalHostnamePattern = try? NSRegularExpression(pattern: "^(([\\x00-\\x7F]*)|([^\\x00-\\x7F]*))$"),
-              let strippedHost = url.host?.idnaDecoded?.replacingOccurrences(of: ".", with: "") else {
-            DDLogWarn("Can't generate stripped host for \(url.absoluteString)")
-            return true
-        }
-        
-        return legalHostnamePattern.numberOfMatches(
-            in: strippedHost,
-            range: NSRange(location: 0, length: strippedHost.utf16.count)
-        ) > 0
-    }
-    
     class func isLegalURL(url: URL, viewController: UIViewController) -> Bool {
-        guard IDNSafetyHelper.isLegalURL(url: url) else {
+        guard url.isIDNSafe else {
             showAlert(url: url, viewController: viewController)
             return false
         }

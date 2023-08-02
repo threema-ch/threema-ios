@@ -25,7 +25,7 @@ import PromiseKit
 @objc class VideoMessageProcessor: NSObject {
     
     private let blobDownloader: BlobDownloader
-    private let serverConnector: ServerConnectorProtocol
+    private let userSettings: UserSettingsProtocol
     private let entityManager: EntityManager
     
     enum VideoMessageProcessorError: Error {
@@ -35,11 +35,11 @@ import PromiseKit
     
     @objc required init(
         blobDownloader: BlobDownloader,
-        serverConnector: ServerConnectorProtocol,
+        userSettings: UserSettingsProtocol,
         entityManager: EntityManager
     ) {
         self.blobDownloader = blobDownloader
-        self.serverConnector = serverConnector
+        self.userSettings = userSettings
         self.entityManager = entityManager
     }
 
@@ -156,7 +156,7 @@ import PromiseKit
                         if !msg.isGroupMessage {
                             self.blobDownloader.markDownloadDone(for: thumbnailBlobID, origin: msg.blobOrigin)
                         }
-                        else if self.serverConnector.isMultiDeviceActivated {
+                        else if self.userSettings.enableMultiDevice {
                             self.blobDownloader.markDownloadDone(for: thumbnailBlobID, origin: .local)
                         }
 

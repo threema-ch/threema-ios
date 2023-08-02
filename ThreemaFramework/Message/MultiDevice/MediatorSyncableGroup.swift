@@ -19,34 +19,35 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 actor MediatorSyncableGroup {
-    private let serverConnector: ServerConnectorProtocol
+    private let userSettings: UserSettingsProtocol
     private let taskManager: TaskManagerProtocol
     private let groupManager: GroupManagerProtocol
 
     private var task: TaskDefinitionGroupSync?
 
     init(
-        _ serverConnector: ServerConnectorProtocol,
+        _ userSettings: UserSettingsProtocol,
         _ taskManager: TaskManagerProtocol,
         _ groupManager: GroupManagerProtocol
     ) {
-        self.serverConnector = serverConnector
+        self.userSettings = userSettings
         self.taskManager = taskManager
         self.groupManager = groupManager
     }
 
     init() {
         self.init(
-            ServerConnector.shared(),
+            UserSettings.shared(),
             TaskManager(),
             GroupManager()
         )
     }
 
     func updateAll(identity: GroupIdentity) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -54,7 +55,7 @@ actor MediatorSyncableGroup {
             return
         }
 
-        update(identity: identity, members: group.allMemberIdentities, state: group.state)
+        update(identity: identity, members: Set(group.allActiveMemberIdentitiesWithoutCreator), state: group.state)
 
         update(identity: identity, name: group.name)
 
@@ -71,7 +72,7 @@ actor MediatorSyncableGroup {
     }
 
     func update(identity: GroupIdentity, members: Set<String>, state: GroupState) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -93,7 +94,7 @@ actor MediatorSyncableGroup {
     }
 
     func update(identity: GroupIdentity, name: String?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -108,7 +109,7 @@ actor MediatorSyncableGroup {
     }
 
     func update(identity: GroupIdentity, profilePicture: Data?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -119,7 +120,7 @@ actor MediatorSyncableGroup {
     }
 
     func update(identity: GroupIdentity, conversationCategory: ConversationCategory?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -135,7 +136,7 @@ actor MediatorSyncableGroup {
     }
 
     func update(identity: GroupIdentity, conversationVisibility: ConversationVisibility?) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -151,7 +152,7 @@ actor MediatorSyncableGroup {
     }
 
     func deleteAndSync(identity: GroupIdentity) {
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -172,16 +173,13 @@ actor MediatorSyncableGroup {
 
     private func getSyncGroup(identity: GroupIdentity) -> Sync_Group {
         if let task,
-           task.syncGroup.groupIdentity.groupID == identity.id.convert(),
+           task.syncGroup.groupIdentity.groupID == identity.id.paddedLittleEndian(),
            task.syncGroup.groupIdentity.creatorIdentity == identity.creator {
             return task.syncGroup
         }
         else {
             var sGroup = Sync_Group()
-            var sGroupIdentity = Common_GroupIdentity()
-            sGroupIdentity.groupID = identity.id.convert()
-            sGroupIdentity.creatorIdentity = identity.creator
-            sGroup.groupIdentity = sGroupIdentity
+            sGroup.groupIdentity = Common_GroupIdentity.from(identity)
             return sGroup
         }
     }

@@ -20,7 +20,7 @@
 
 #import "AbstractMessage.h"
 
-@interface BoxBallotVoteMessage : AbstractMessage <NSCoding>
+@interface BoxBallotVoteMessage : AbstractMessage <NSSecureCoding>
 
 @property NSString *ballotCreator;
 @property NSData *ballotId NS_SWIFT_NAME(ballotID);

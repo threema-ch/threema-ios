@@ -43,7 +43,7 @@ class WebMessagesResponse: WebAbstractMessage {
             conversation = entityManager.entityFetcher.conversation(forIdentity: requestMessage.id)
         }
         else {
-            conversation = entityManager.entityFetcher.legacyConversation(for: requestMessage.id.hexadecimal())
+            conversation = entityManager.entityFetcher.legacyConversation(for: requestMessage.id.hexadecimal)
         }
         
         if let conversation {

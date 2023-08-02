@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupAudioMessage : AbstractGroupMessage <NSCoding>
+@interface GroupAudioMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property (nonatomic, readwrite) uint16_t duration;
 @property (nonatomic, strong) NSData *audioBlobId NS_SWIFT_NAME(audioBlobID);

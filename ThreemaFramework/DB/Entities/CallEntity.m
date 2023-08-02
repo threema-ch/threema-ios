@@ -23,6 +23,8 @@
 @implementation CallEntity
 
 @synthesize callID;
+// TODO: Check if this needs to be @dynamic as well
+// https://stackoverflow.com/questions/1160498/synthesize-vs-dynamic-what-are-the-differences
 @synthesize contact;
 @synthesize date;
 

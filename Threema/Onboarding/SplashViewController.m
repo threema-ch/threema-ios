@@ -364,7 +364,14 @@
         _controlsView.frame = controlsTargetRect;
     } completion:^(BOOL finished) {
         UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.welcomeLabel);
-        ;//nop
+
+        // Deactivate Multi Device if is enabled
+        if ([[UserSettings sharedUserSettings] enableMultiDevice] == YES) {
+            [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_title"] message:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"] actionOk:^(UIAlertAction *action __unused)  {
+                // no-op
+            }];
+            [[ServerConnector sharedServerConnector] deactivateMultiDevice];
+       }
     }];
 }
 

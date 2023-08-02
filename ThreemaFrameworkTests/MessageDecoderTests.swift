@@ -76,7 +76,7 @@ class MessageDecoderTests: XCTestCase {
     func testDecodeDeliveryReceiptMessage() {
         let msg = DeliveryReceiptMessage()
         msg.receiptMessageIDs = [Data(BytesUtility.padding([], pad: 0xEF, length: ThreemaProtocol.messageIDLength))]
-        msg.receiptType = UInt8(DELIVERYRECEIPT_MSGREAD)
+        msg.receiptType = .read
         
         let result = MessageDecoder.decode(MSGTYPE_DELIVERY_RECEIPT, body: msg.body()) as? DeliveryReceiptMessage
         
@@ -133,6 +133,8 @@ class MessageDecoderTests: XCTestCase {
                     body: msg.body()
                 ) as? BoxBallotCreateMessage
             )
+            boxBallotCreateMessage.fromIdentity = "ECHOECHO"
+
             let ballotMessage = ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
@@ -182,6 +184,8 @@ class MessageDecoderTests: XCTestCase {
                     body: msg.body()
                 ) as? BoxBallotCreateMessage
             )
+            boxBallotCreateMessage.fromIdentity = "ECHOECHO"
+
             let ballotMessage = ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
@@ -266,6 +270,7 @@ class MessageDecoderTests: XCTestCase {
                 body: initialMessage.body()
             ) as? BoxBallotCreateMessage
         )
+        boxBallotCreateInitialMessage.fromIdentity = "ECHOECHO"
 
         let ballotInitialMessage: BallotMessage? = ballotMessageDecoder!.decodeCreateBallot(
             fromBox: boxBallotCreateInitialMessage,
@@ -296,6 +301,7 @@ class MessageDecoderTests: XCTestCase {
                 body: resultMessage.body()
             ) as? BoxBallotCreateMessage
         )
+        boxBallotCreateResultMessage.fromIdentity = "ECHOECHO"
 
         ballotMessageDecoder!.decodeCreateBallot(
             fromBox: boxBallotCreateResultMessage,
@@ -619,7 +625,7 @@ class MessageDecoderTests: XCTestCase {
         msg.groupID = Data(BytesUtility.padding([], pad: 0x13, length: ThreemaProtocol.groupIDLength))
         msg.groupCreator = "TESTID12"
         msg.receiptMessageIDs = [Data(BytesUtility.padding([], pad: 0xEF, length: ThreemaProtocol.messageIDLength))]
-        msg.receiptType = UInt8(DELIVERYRECEIPT_MSGREAD)
+        msg.receiptType = ReceiptType.read.rawValue
         
         let result = MessageDecoder.decode(
             MSGTYPE_GROUP_DELIVERY_RECEIPT,

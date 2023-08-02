@@ -44,10 +44,16 @@ public enum ThreemaApp {
         return .threema
     }
     
+    /// Returns the CFBundleName for the current process. E.g. `ThreemaShareExtension` for the share extension or
+    /// `Threema` for the app.
+    /// See `appName`
     public static var currentName: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as! String
     }
     
+    /// Returns the CFBundleName for the app to which the current process belongs. E.g. if we are running in the
+    /// ThreemaShareExtension this will return `Threema`.
+    /// See `currentName`
     public static var appName: String {
         BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleName") as! String
     }

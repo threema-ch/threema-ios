@@ -26,8 +26,12 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
         // no-op
     }
 
-    init(blacklist: [Any]) {
-        self.blacklist = NSOrderedSet(array: blacklist)
+    init(blacklist: [Any]? = nil, enableIPv6: Bool = false, enableMultiDevice: Bool = false) {
+        if let blacklist {
+            self.blacklist = NSOrderedSet(array: blacklist)
+        }
+        self.enableIPv6 = enableIPv6
+        self.enableMultiDevice = enableMultiDevice
     }
 
     var appMigratedToVersion = 0
@@ -117,4 +121,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var validationLogging = false
     
     var sentryAppDevice: String?
+    
+    var groupCallsDeveloper = false
+    
+    var groupCallsDebugMessages = false
 }

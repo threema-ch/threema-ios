@@ -20,12 +20,13 @@
 
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 @testable import ThreemaFramework
 
 class MediatorReflectedProcessorMock: MediatorReflectedProcessorProtocol {
     func process(
-        envelope: D2d_Envelope,
-        timestamp: Date,
+        reflectedEnvelope: D2d_Envelope,
+        reflectedAt: Date,
         receivedAfterInitialQueueSend: Bool,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int

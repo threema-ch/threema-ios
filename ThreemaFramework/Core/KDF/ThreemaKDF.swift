@@ -19,14 +19,19 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaBlake2b
 
+@available(*, deprecated, message: "In Swift use ThreemaBlake2b instead", renamed: "ThreemaBlake2b")
 @objc class ThreemaKDF: NSObject {
+    static let THREEMA_KDF_KEYBYTES = 32
+    
     private let personal: Data
     
     @objc init(personal: String) {
         self.personal = personal.data(using: .utf8)!
     }
     
+    @available(*, deprecated, renamed: "ThreemaBlake2b(personal:)")
     init(personal: Data) {
         self.personal = personal
     }
@@ -37,29 +42,13 @@ import Foundation
     /// - Parameter key: Key of 32..64 bytes length to derive new key from
     ///
     /// - Returns: Derived key of 32 bytes length
+    @available(*, deprecated, renamed: "driveKey(from:with:)")
     public func deriveKey(salt: Data, key: Data) -> Data? {
         guard key.count >= 32, key.count <= 64 else {
             return nil
         }
         
-        let personalBytes = BytesUtility.padding(
-            [UInt8](personal),
-            pad: 0x00,
-            length: Int(BLAKE2B_PERSONALBYTES.rawValue)
-        )
-        let saltBytes = BytesUtility.padding([UInt8](salt), pad: 0x00, length: Int(BLAKE2B_SALTBYTES.rawValue))
-
-        let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: Int(THREEMA_KDF_KEYBYTES))
-
-        defer {
-            pOut.deallocate()
-        }
-        
-        if blake2b_key_salt_personal(Array(key), Int32(key.count), saltBytes, personalBytes, pOut) != 0 {
-            return nil
-        }
-        
-        return Data(UnsafeMutableBufferPointer(start: pOut, count: Int(THREEMA_KDF_KEYBYTES)))
+        return try? ThreemaBlake2b.deriveKey(from: key, with: salt, personal: personal, derivedKeyLength: .b32)
     }
     
     @objc public func deriveKey(salt: String, key: Data) -> Data? {
@@ -72,49 +61,24 @@ import Foundation
     /// - Parameter input: Input data of arbitrary length
     ///
     /// - Returns: MAC of 32 bytes length
+    @available(
+        *,
+        deprecated,
+        message: "In Swift use ThreemaBlake2b instead",
+        renamed: "ThreemaBlake2b.mac(for:with:macLength:)"
+    )
     @objc public static func calculateMac(key: Data, input: Data) -> Data? {
-        guard key.count == THREEMA_KDF_SUBKEYBYTES else {
-            return nil
-        }
-        
-        let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: Int(THREEMA_KDF_MAC_LENGTH))
-        
-        defer {
-            pOut.deallocate()
-        }
-        
-        if blake2b_mac(Array(key), Array(input), input.count, pOut) != 0 {
-            return nil
-        }
-        
-        return Data(UnsafeMutableBufferPointer(start: pOut, count: Int(THREEMA_KDF_MAC_LENGTH)))
+        try? ThreemaBlake2b.hash(input, key: key, hashLength: .b32)
     }
     
     /// Calculates a simple hash with variable output length using BLAKE2b.
     ///
     /// - Parameter input: Input data of arbitrary length
-    /// - Parameter outputLen: Desired output length (1..64)
+    /// - Parameter outputLen: Desired output length (32 or 64 bytes)
     ///
     /// - Returns: hash of desired length
-    @objc public static func hash(input: Data, outputLen: Int) -> Data? {
-        guard outputLen > 0, outputLen <= 64 else {
-            return nil
-        }
-        
-        let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: outputLen)
-        
-        defer {
-            pOut.deallocate()
-        }
-        
-        if blake2b_hash(Array(input), input.count, pOut, outputLen) != 0 {
-            return nil
-        }
-        
-        return Data(UnsafeMutableBufferPointer(start: pOut, count: outputLen))
-    }
-
-    static func blake2bSelfTest() -> Int32 {
-        blake2b_self_test()
+    @available(*, deprecated, renamed: "ThreemaBlake2b.hash(_:hashLength:)")
+    static func hash(input: Data, outputLen: ThreemaBlake2b.DigestLength) -> Data? {
+        try? ThreemaBlake2b.hash(input, hashLength: outputLen)
     }
 }

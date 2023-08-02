@@ -86,11 +86,11 @@
 	<string>The microphone is used to record audio messages.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Your photo library is used when you pick an image from it and send it in a chat.</string>
-    <key>NSUserActivityTypes</key>
-    <array>
-        <string>INStartAudioCallIntent</string>
-        <string>INSendMessageIntent</string>
-    </array>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INStartAudioCallIntent</string>
+		<string>INSendMessageIntent</string>
+	</array>
 	<key>SentryClientDsn</key>
 	<string>https://0b46b9e72c0e4b3aae4fa83c8734da45@bugs.threema.ch/15</string>
 	<key>ThreemaAppGroupIdentifier</key>
@@ -100,7 +100,7 @@
 	<key>ThreemaForwardSecurity</key>
 	<true/>
 	<key>ThreemaMaxGroupMembers</key>
-	<integer>100</integer>
+	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>
 	<string>o</string>
 	<key>ThreemaWorkVersion</key>

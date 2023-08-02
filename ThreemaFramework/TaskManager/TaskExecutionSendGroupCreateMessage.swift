@@ -22,9 +22,9 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-/// Reflect group create message to mediator server is multi device enbaled
+/// Reflect group create message to mediator server is multi device enabled
 /// and send it to group members (CSP).
-class TaskExecutionSendGroupCreateMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionSendGroupCreateMessage: TaskExecution, TaskExecutionProtocol {
     
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendGroupCreateMessage else {
@@ -36,7 +36,8 @@ class TaskExecutionSendGroupCreateMessage: TaskExecution, TaskExecutionProtocol 
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             // Reflect group create message if is necessary

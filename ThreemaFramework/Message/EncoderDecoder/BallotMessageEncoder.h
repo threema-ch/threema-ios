@@ -34,9 +34,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(Ballot *)ballot;
 
-+ (GroupBallotCreateMessage *)groupBallotCreateMessageFrom:(BoxBallotCreateMessage *)boxBallotMessage forConversation:(Conversation *)conversation;
++ (GroupBallotCreateMessage*)groupBallotCreateMessageFrom:(BoxBallotCreateMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity;
 
-+ (GroupBallotVoteMessage *)groupBallotVoteMessageFrom:(BoxBallotVoteMessage *)boxBallotMessage forConversation:(Conversation *)conversation;
++ (GroupBallotVoteMessage*)groupBallotVoteMessageFrom:(BoxBallotVoteMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity;
 
 + (BOOL)passesSanityCheck:(nullable Ballot *) ballot;
 

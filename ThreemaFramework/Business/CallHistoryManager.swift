@@ -35,17 +35,29 @@ import Foundation
     }
     
     public func store(callID: UInt32, date: Date) async {
+        DDLogNotice(
+            "VoipCallService: [cid=\(callID)]: Start removeCallsOlderThanChatServerTimeout"
+        )
         await CallHistoryManager.removeCallsOlderThanChatServerTimeout(businessInjector: businessInjector)
+        DDLogNotice(
+            "VoipCallService: [cid=\(callID)]: End removeCallsOlderThanChatServerTimeout"
+        )
         
         return await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             businessInjector.entityManager.performBlock {
                 guard let call = self.businessInjector.entityManager.entityCreator.callEntity() else {
+                    DDLogNotice(
+                        "VoipCallService: [cid=\(callID)]: fatalError"
+                    )
                     fatalError()
                 }
                 call.callID = NSNumber(value: callID)
                 call.date = date
                 call.contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity)
                 
+                DDLogNotice(
+                    "VoipCallService: [cid=\(callID)]: Resume"
+                )
                 continuation.resume()
             }
         }

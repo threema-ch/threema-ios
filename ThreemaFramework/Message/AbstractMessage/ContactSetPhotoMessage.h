@@ -20,7 +20,7 @@
 
 #import "AbstractMessage.h"
 
-@interface ContactSetPhotoMessage : AbstractMessage <NSCoding>
+@interface ContactSetPhotoMessage : AbstractMessage <NSSecureCoding>
 
 @property (nonatomic, strong) NSData *blobId NS_SWIFT_NAME(blobID);
 @property (nonatomic, readwrite) uint32_t size;

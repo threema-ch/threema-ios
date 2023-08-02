@@ -24,16 +24,17 @@
 #import "MyIdentityStore.h"
 #import "LoggingDescriptionProtocol.h"
 #import "ProtocolDefines.h"
+#import "ObjcCspE2eFs_Version.h"
 
 @protocol MyIdentityStoreProtocol;
 
-@interface AbstractMessage : NSObject <NSCoding, LoggingDescriptionProtocol>
+@interface AbstractMessage : NSObject <NSSecureCoding, LoggingDescriptionProtocol>
 
 @property (nonatomic, strong) NSString *fromIdentity;
 @property (nonatomic, strong) NSString *toIdentity;
 @property (nonatomic, strong) NSData *messageId NS_SWIFT_NAME(messageID);
 @property (nonatomic, strong) NSString *pushFromName;
-@property (nonatomic, strong) NSDate *date;
+@property (nonatomic, strong) NSDate *date; // created at
 @property (nonatomic, strong) NSDate *deliveryDate;
 @property (nonatomic, strong) NSNumber *delivered;
 @property (nonatomic, strong) NSNumber *userAck;
@@ -50,8 +51,9 @@
 
  @param toContact: Receiver contact of the message
  @param myIdentityStore: Sender of the message, with secret key
+ @param nonce: Nonce to encrypt message
  */
-- (BoxedMessage* _Nullable)makeBox:(ContactEntity* _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore;
+- (BoxedMessage* _Nullable)makeBox:(ContactEntity* _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore nonce:(NSData* _Nonnull)nonce;
 
 + (NSData*)randomMessageId NS_SWIFT_NAME(randomMessageID());
 
@@ -63,11 +65,12 @@
 - (BOOL)flagGroupMessage;
 - (BOOL)flagImmediateDeliveryRequired;
 - (BOOL)flagIsVoIP;
-- (NSData *)body;
+- (nullable NSData *)body;
 - (BOOL)canCreateConversation;
+- (BOOL)canUnarchiveConversation;
 - (BOOL)needsConversation;
 - (BOOL)canShowUserNotification;
-- (BOOL)supportsForwardSecurity;
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion;
 
 - (BOOL)isContentValid;
 - (NSString *)pushNotificationBody;

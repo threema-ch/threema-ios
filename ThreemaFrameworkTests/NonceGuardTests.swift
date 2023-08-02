@@ -57,7 +57,7 @@ class NonceGuardTests: XCTestCase {
         expectedIncomingMessage.nonce = nonce
 
         let nonceGuard = NonceGuard(entityManager: entityManager)
-        let result = nonceGuard.isProcessed(message: expectedIncomingMessage, isReflected: false)
+        let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
     }
@@ -67,7 +67,7 @@ class NonceGuardTests: XCTestCase {
         expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
 
         let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
-        let result = nonceGuard.isProcessed(message: expectedIncomingMessage, isReflected: false)
+        let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertFalse(result)
     }
@@ -76,10 +76,10 @@ class NonceGuardTests: XCTestCase {
         let expectedIncomingMessage = BoxTextMessage()
 
         let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
-        let result = nonceGuard.isProcessed(message: expectedIncomingMessage, isReflected: false)
+        let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
-        XCTAssertTrue(ddLoggerMock.exists(message: "Message nonce is nil"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "Message nonce is nil or empty"))
     }
 
     func testIsProcessedReflected() throws {
@@ -93,7 +93,7 @@ class NonceGuardTests: XCTestCase {
         expectedIncomingMessage.nonce = nonce
 
         let nonceGuard = NonceGuard(entityManager: entityManager)
-        let result = nonceGuard.isProcessed(message: expectedIncomingMessage, isReflected: true)
+        let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
     }
@@ -103,23 +103,9 @@ class NonceGuardTests: XCTestCase {
         expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
 
         let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
-        let result = nonceGuard.isProcessed(message: expectedIncomingMessage, isReflected: true)
+        let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertFalse(result)
-    }
-
-    func testIsProcessedNonceIsNilReflected() throws {
-        let expectedIncomingMessage = BoxTextMessage()
-
-        let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
-        let result = nonceGuard.isProcessed(message: expectedIncomingMessage, isReflected: true)
-
-        XCTAssertFalse(result)
-        XCTAssertFalse(ddLoggerMock.exists(message: "Message nonce is nil"))
-        XCTAssertTrue(
-            ddLoggerMock
-                .exists(message: "If message nonce is nil for a reflected message always return false")
-        )
     }
 
     func testProcessed() throws {
@@ -131,7 +117,7 @@ class NonceGuardTests: XCTestCase {
 
         let expect = expectation(description: "nonce guard processed")
 
-        try nonceGuard.processed(message: expectedIncomingMessage, isReflected: false)
+        try nonceGuard.processed(message: expectedIncomingMessage)
             .done { _ in
                 expect.fulfill()
             }
@@ -150,7 +136,7 @@ class NonceGuardTests: XCTestCase {
         let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
 
         XCTAssertThrowsError(
-            try nonceGuard.processed(message: expectedIncomingMessage, isReflected: false),
+            try nonceGuard.processed(message: expectedIncomingMessage),
             "Message nonce is nil"
         ) { error in
             XCTAssertEqual(error as? NonceGuard.NonceGuardError, .messageNonceIsNil)
@@ -166,7 +152,7 @@ class NonceGuardTests: XCTestCase {
 
         let expect = expectation(description: "nonce guard processed")
 
-        try nonceGuard.processed(message: expectedIncomingMessage, isReflected: true)
+        try nonceGuard.processed(message: expectedIncomingMessage)
             .done { _ in
                 expect.fulfill()
             }
@@ -177,17 +163,5 @@ class NonceGuardTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
-    }
-
-    func testProcessedNonceIsNilReflected() throws {
-        let expectedIncomingMessage = BoxTextMessage()
-
-        let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
-
-        XCTAssertNoThrow(try nonceGuard.processed(message: expectedIncomingMessage, isReflected: true))
-        XCTAssertTrue(
-            ddLoggerMock
-                .exists(message: "If message nonce is nil for reflected message will not throw an error")
-        )
     }
 }

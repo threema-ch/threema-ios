@@ -20,7 +20,6 @@
 
 #import "ThemedNavigationController.h"
 #import "ThemedTableViewController.h"
-#import "VoIPHelper.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation ThemedNavigationController

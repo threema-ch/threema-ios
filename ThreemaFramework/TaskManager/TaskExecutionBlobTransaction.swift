@@ -22,46 +22,39 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-class TaskExecutionBlobTransaction: TaskExecutionTransaction, Old_BlobUploadDelegate {
-    private let (promise, seal) = Promise<[Any]>.pending()
+class TaskExecutionBlobTransaction: TaskExecutionTransaction {
 
-    func uploadShouldCancel() -> Bool {
-        false
-    }
-    
-    func uploadDidCancel() {
-        seal.reject(TaskExecutionTransactionError.blobUploadFailed)
-    }
-    
-    func uploadProgress(_ progress: NSNumber!) {
-        DDLogInfo("Upload in progress \(String(describing: progress))")
-    }
-    
-    func uploadFailed() {
-        seal.reject(TaskExecutionTransactionError.blobUploadFailed)
-    }
-    
-    func uploadSucceeded(with blobID: [Any]!) {
-        DDLogInfo("Upload succeeded with \(String(describing: blobID))")
-        seal.fulfill(blobID)
-    }
-    
-    func uploadBlobs(blobs: [Data]) -> Promise<[Any]> {
-        firstly { () -> Guarantee<BlobURL> in
-            Guarantee { seal in
-                seal(
-                    BlobURL(
-                        serverConnector: frameworkInjector.serverConnector,
-                        userSettings: frameworkInjector.userSettings
-                    )
-                )
-            }
+    func uploadBlobs(blobs: [Data]) -> Promise<[Data]> {
+        let uploadBlobItems = blobs.compactMap { data in
+            UploadBlobItem(blobUploader: frameworkInjector.blobUploader, blobData: data)
         }
-        .then { blobURL -> Promise<[Any]> in
-            let blobUploader = Old_BlobUploader(blobURL: blobURL, delegate: self)
-            blobUploader.upload(blobs: blobs, origin: .local)
 
-            return self.promise
+        return when(
+            fulfilled: uploadBlobItems.compactMap { item in
+                item.upload()
+            }
+        )
+        .then { _ -> Promise<[Data]> in
+            Promise { seal in seal.fulfill(uploadBlobItems.compactMap(\.blobID)) }
+        }
+    }
+
+    private class UploadBlobItem {
+        private let blobUploader: BlobUploaderProtocol
+        let blobData: Data
+        var blobID: Data?
+
+        init(blobUploader: BlobUploaderProtocol, blobData: Data) {
+            self.blobUploader = blobUploader
+            self.blobData = blobData
+        }
+
+        func upload() -> Promise<Void> {
+            blobUploader.upload(data: blobData, origin: .local)
+                .then { blobID in
+                    self.blobID = blobID
+                    return Promise()
+                }
         }
     }
 }

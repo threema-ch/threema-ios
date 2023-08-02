@@ -24,7 +24,7 @@ import PromiseKit
 
 /// Process and ack incoming message from chat server, is multi device
 /// enbaled the message will be reflect to mediator server.
-class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionReceiveMessage, task.message != nil else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -41,14 +41,11 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             timeoutDownloadThumbnail: task.timeoutDownloadThumbnail
         )
         .then { (abstractMessageAndPFSSession: Any?)
-            -> Promise<(AbstractMessageAndPFSSession?, TaskDefinitionSendAbstractMessage?)> in
+            -> Promise<AbstractMessageAndPFSSession?> in
             guard let abstractMessageAndPFSSession = abstractMessageAndPFSSession as? AbstractMessageAndPFSSession,
                   let processedMsg = abstractMessageAndPFSSession.message else {
-                
-                DDLogError("Could not cast message to expected format")
-                
-                // Won't processing this message, because is invalid
-                return Promise { $0.fulfill((nil, nil)) }
+                DDLogWarn("Won't processing this message, because is invalid")
+                return Promise { $0.fulfill(nil) }
             }
             
             guard processedMsg.toIdentity == self.frameworkInjector.myIdentityStore.identity else {
@@ -56,36 +53,17 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                     .reflectMessageFailed(message: "Wrong receiver identity \(processedMsg.toIdentity ?? "-")")
             }
             
-            return Promise { $0.fulfill(
-                (
-                    abstractMessageAndPFSSession,
-                    TaskDefinitionSendAbstractMessage(
-                        message: processedMsg,
-                        doOnlyReflect: true,
-                        isPersistent: false
-                    )
-                )
-            ) }
+            return Promise { $0.fulfill(abstractMessageAndPFSSession) }
         }
-        .then { (
-            abstractMessageAndPFSSession: AbstractMessageAndPFSSession?,
-            task: TaskDefinitionSendAbstractMessage?
-        ) -> Promise<AbstractMessageAndPFSSession?> in
-            guard let abstractMessageAndPFSSession,
-                  abstractMessageAndPFSSession.message != nil else {
-                // Message would not be processed (skip reflecting message)
-                return Promise { $0.fulfill(abstractMessageAndPFSSession) }
+        .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<AbstractMessageAndPFSSession?> in
+            guard let processedMsg = abstractMessageAndPFSSession?.message else {
+                DDLogWarn("Message would not be processed (skip reflecting message)")
+                return Promise { $0.fulfill(nil) }
             }
-            
-            guard let task else {
-                throw TaskExecutionError
-                    .processIncomingMessageFailed(
-                        message: "No task for reflecting message ID \(abstractMessageAndPFSSession.message?.messageID?.hexString ?? "nil")"
-                    )
-            }
-            
+
             // Reflect processed incoming chat message
             // Notice: This message will be reflected immediately, before the next task will be executed!
+            let task = TaskDefinitionReflectIncomingMessage(message: processedMsg)
             return task.create(frameworkInjector: self.frameworkInjector, taskContext: TaskContext(
                 logReflectMessageToMediator: .reflectIncomingMessageToMediator,
                 logReceiveMessageAckFromMediator: .receiveIncomingMessageAckFromMediator,
@@ -97,36 +75,23 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 }
         }
         .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<AbstractMessageAndPFSSession?> in
-            guard let processedMsg = abstractMessageAndPFSSession?.message,
-                  !processedMsg.flagDontQueue(),
-                  !((processedMsg as? AbstractGroupMessage)?.isGroupControlMessage() ?? false) else {
-                // Skip sending / updating delivery receipt (for typing indicator or group control messages)
-                return Promise { $0.fulfill(abstractMessageAndPFSSession) }
+            guard let processedMsg = abstractMessageAndPFSSession?.message else {
+                DDLogWarn("Message would not be processed (skip send delivery receipt)")
+                return Promise { $0.fulfill(nil) }
             }
 
-            // Send and update delivery receipt
-            if let delivered = processedMsg.delivered,
-               let deliveryDate = processedMsg.deliveryDate {
-                self.update(
-                    message: processedMsg,
-                    delivered: delivered.boolValue,
-                    deliveryDate: deliveryDate
-                )
-                return Promise { $0.fulfill(abstractMessageAndPFSSession) }
-            }
-            else {
-                return self.frameworkInjector.messageSender.sendDeliveryReceipt(for: processedMsg)
-                    .then { _ -> Promise<AbstractMessageAndPFSSession?> in
-                        self.update(message: processedMsg, delivered: true, deliveryDate: Date())
-                        return Promise { $0.fulfill(abstractMessageAndPFSSession) }
-                    }
-            }
+            // Send and delivery receipt
+            return self.frameworkInjector.messageSender.sendDeliveryReceipt(for: processedMsg)
+                .then { _ -> Promise<AbstractMessageAndPFSSession?> in
+                    Promise { $0.fulfill(abstractMessageAndPFSSession) }
+                }
         }
         .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<Void> in
             if AppGroup.getActiveType() == AppGroupTypeNotificationExtension,
-               abstractMessageAndPFSSession?.message?.flagIsVoIP() == true,
-               let identity = abstractMessageAndPFSSession?.message?.fromIdentity,
-               !UserSettings.shared().blacklist.contains(identity) {
+               let processedMsg = abstractMessageAndPFSSession?.message,
+               processedMsg.flagIsVoIP() == true,
+               let fromIdentity = processedMsg.fromIdentity,
+               !self.frameworkInjector.userSettings.blacklist.contains(fromIdentity) {
                 // Do not ack message if it's a VoIP message in the notification extension
             }
             else {
@@ -137,85 +102,45 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                             .loggingDescription
                     )
                 }
-                
+
                 DDLogNotice(
                     "\(LoggingTag.sendIncomingMessageAckToChat.hexString) \(LoggingTag.sendIncomingMessageAckToChat) \(abstractMessageAndPFSSession?.message?.loggingDescription ?? task.message.loggingDescription)"
                 )
-                
+
                 if ThreemaEnvironment.lateSessionSave {
                     if let session = abstractMessageAndPFSSession?.session as? DHSession {
-                        try BusinessInjector().fsmp.updateRatchetCounters(session: session)
+                        try self.frameworkInjector.fsmp.updateRatchetCounters(session: session)
                     }
-                }
-                
-                if let processedMsg = abstractMessageAndPFSSession?.message,
-                   !processedMsg.flagDontQueue() {
-                    let nonceGuard = NonceGuard(entityManager: self.frameworkInjector.backgroundEntityManager)
-                    try nonceGuard.processed(message: processedMsg, isReflected: false)
                 }
 
-                // Unarchive conversation if is archived
-                self.frameworkInjector.entityManager.performBlockAndWait {
-                    if let processedMsg = abstractMessageAndPFSSession?.message,
-                       let conversation = self.frameworkInjector.entityManager.conversation(forMessage: processedMsg),
-                       conversation.conversationVisibility == .archived {
-                        self.frameworkInjector.conversationStore.unarchive(conversation)
+                if let processedMsg = abstractMessageAndPFSSession?.message {
+                    // Message is processed, store message nonce
+                    if !processedMsg.flagDontQueue() {
+                        try self.frameworkInjector.nonceGuard.processed(message: processedMsg)
+                    }
+
+                    self.frameworkInjector.backgroundEntityManager.performAndWait {
+                        // Unarchive conversation if message type can unarchive a conversation and is archived
+                        if processedMsg.canUnarchiveConversation(),
+                           let conversation = self.frameworkInjector.backgroundEntityManager
+                           .conversation(forMessage: processedMsg),
+                           conversation.conversationVisibility == .archived {
+                            self.frameworkInjector.conversationStore.unarchive(conversation)
+                        }
+
+                        // Attempt periodic group sync
+                        if let abstractGroupMessage = processedMsg as? AbstractGroupMessage,
+                           let group = self.frameworkInjector.backgroundGroupManager.getGroup(
+                               abstractGroupMessage.groupID,
+                               creator: abstractGroupMessage.groupCreator
+                           ) {
+                            self.frameworkInjector.backgroundGroupManager.periodicSyncIfNeeded(for: group)
+                        }
                     }
                 }
             }
-            
-            self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                // Attempt periodic group sync
-                if let processedMsg = abstractMessageAndPFSSession?.message as? AbstractGroupMessage,
-                   let group = self.frameworkInjector.backgroundGroupManager.getGroup(
-                       processedMsg.groupID,
-                       creator: processedMsg.groupCreator
-                   ) {
-                    self.frameworkInjector.backgroundGroupManager.periodicSyncIfNeeded(for: group)
-                }
-            }
-            
+
             return Promise()
-        }
-    }
-
-    private func update(message: AbstractMessage, delivered: Bool, deliveryDate: Date) {
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            var conversation: Conversation?
-            
-            if message.flagGroupMessage() {
-                guard let groupMessage = message as? AbstractGroupMessage else {
-                    DDLogError("Could not update message because it is not group message")
-                    return
-                }
-                
-                conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
-                    for: groupMessage.groupID,
-                    creator: groupMessage.groupCreator
-                )
-            }
-            else {
-                conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                    .conversation(forIdentity: message.fromIdentity)
-            }
-            
-            guard let conversation else {
-                DDLogError("Could not update message because we could not find the conversation")
-                return
-            }
-            
-            guard let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
-                with: message.messageID,
-                conversation: conversation
-            ) else {
-                DDLogWarn(
-                    "Could not update message because we could not find the message ID \(message.messageID?.hexString ?? "nil")"
-                )
-                return
-            }
-            
-            msg.delivered = NSNumber(booleanLiteral: delivered)
-            msg.deliveryDate = deliveryDate
         }
     }
 }

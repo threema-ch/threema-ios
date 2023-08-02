@@ -20,8 +20,9 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
-class TaskDefinitionDeleteContactSync: TaskDefinition, TaskDefinitionTransactionProtocol {
+final class TaskDefinitionDeleteContactSync: TaskDefinition, TaskDefinitionTransactionProtocol {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -62,7 +63,6 @@ class TaskDefinitionDeleteContactSync: TaskDefinition, TaskDefinitionTransaction
     init(contacts: [String]) {
         self.contacts = contacts
         super.init(isPersistent: true)
-        self.retry = true
     }
     
     required init(from decoder: Decoder) throws {

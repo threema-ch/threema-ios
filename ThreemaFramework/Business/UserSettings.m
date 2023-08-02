@@ -146,6 +146,9 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize blockCommunication;
 @synthesize voiceMessagesShowTimeRemaining;
 
+@synthesize groupCallsDeveloper;
+@synthesize groupCallsDebugMessages;
+
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
 /// - `PushShowNickname`
@@ -265,6 +268,8 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"HidePrivateChats",
                                         [NSNumber numberWithBool:NO], @"BlockCommunication",
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
+                                        [NSNumber numberWithBool:NO], @"GroupCallsDeveloper",
+                                        [NSNumber numberWithBool:NO], @"GroupCallsDebugMessages",
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
@@ -349,6 +354,9 @@ static UserSettings *instance;
     enableMultiDevice = [defaults boolForKey:@"EnableMultiDevice"];
     deviceID = [defaults dataForKey:@"DeviceID"];
     allowSeveralLinkedDevices = [defaults boolForKey:@"AllowSeveralLinkedDevices"];
+    
+    groupCallsDeveloper = [defaults boolForKey:@"GroupCallsDeveloper"];
+    groupCallsDebugMessages = [defaults boolForKey:@"GroupCallsDebugMessages"];
 
     safeConfig = [defaults dataForKey:@"SafeConfig"];
     safeIntroShown = [defaults boolForKey:@"SafeIntroShown"];
@@ -759,6 +767,18 @@ static UserSettings *instance;
 - (void)setAllowSeveralLinkedDevices:(BOOL)newAllowSeveralLinkedDevices {
     allowSeveralLinkedDevices = newAllowSeveralLinkedDevices;
     [defaults setBool:allowSeveralLinkedDevices forKey:@"AllowSeveralLinkedDevices"];
+    [defaults synchronize];
+}
+
+- (void)setGroupCallsDeveloper:(BOOL)newGroupCallsDeveloper {
+    groupCallsDeveloper = newGroupCallsDeveloper;
+    [defaults setBool:groupCallsDeveloper forKey:@"GroupCallsDeveloper"];
+    [defaults synchronize];
+}
+
+- (void)setGroupCallsDebugMessages:(BOOL)newGroupCallsDebugMessages {
+    groupCallsDebugMessages = newGroupCallsDebugMessages;
+    [defaults setBool:groupCallsDebugMessages forKey:@"GroupCallsDebugMessages"];
     [defaults synchronize];
 }
 

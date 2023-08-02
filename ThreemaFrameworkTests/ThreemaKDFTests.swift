@@ -52,10 +52,6 @@ class ThreemaKDFTests: XCTestCase {
         }
     }
     
-    func testBlake2bSelfTest() {
-        XCTAssertEqual(0, ThreemaKDF.blake2bSelfTest())
-    }
-    
     func testBlake2bHash() {
         // From https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2-kat.json
         let data = Data(
@@ -68,7 +64,7 @@ class ThreemaKDFTests: XCTestCase {
                     hexString: "bfbabbef45554ccfa0dc83752a19cc35d5920956b301d558d772282bc867009168e9e98606bb5ba73a385de5749228c925a85019b71f72fe29b3cd37ca52efe6"
                 )!
         )
-        let digest = ThreemaKDF.hash(input: data, outputLen: 64)!
+        let digest = ThreemaKDF.hash(input: data, outputLen: .b64)!
         XCTAssertEqual(digest, expectedDigest)
     }
 }

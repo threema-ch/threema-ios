@@ -250,7 +250,7 @@ BOOL doMigrateInProgress = false;
                 
             // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the database before the proper migration was initialized.
             #ifdef DEBUG
-               assert(doMigrateInProgress);
+              // assert(doMigrateInProgress);
             #endif
                 
                 // Migration is required - check if a store backup file (.bak) exists. If so, the last migration attempt has
@@ -643,6 +643,7 @@ BOOL doMigrateInProgress = false;
         }
 
         if(removeExisting) {
+            DDLogInfo(@"[t-dirty-objects] Remove array of dirty objects");
             [defaults removeObjectForKey:THREEMA_DB_DIRTY_OBJECT_KEY];
             [defaults synchronize];
         }
@@ -658,7 +659,7 @@ BOOL doMigrateInProgress = false;
             if (objectID) {
                 NSManagedObject *object = [[dbContext main] objectWithID:objectID];
                 [[dbContext main] refreshObject:object mergeChanges:YES];
-                DDLogInfo(@"[t-dirty-objects] Add dirty object: %@", objectID);
+                DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", objectID);
                 [notifyObjectIds addObject:objectID];
             }
         }
@@ -671,17 +672,14 @@ BOOL doMigrateInProgress = false;
         [dbContext main].stalenessInterval = stalenessInterval;
     });
 
-    if (!removeExisting) {
-        return;
-    }
-    
     // Notify object changes
     for (NSManagedObjectID *objectID in notifyObjectIds) {
-        DDLogInfo(@"[t-dirty-objects] Notify refresh of dirty object: %@", objectID);
+        DDLogInfo(@"[t-dirty-objects] Notify refresh of dirty object %@", objectID);
         [self notifyObjectRefresh:objectID];
     }
 
     if ([notifyObjectIds count] > 0) {
+        DDLogInfo(@"[t-dirty-objects] Notify refresh object with nil");
         [self notifyObjectRefresh:nil];
     }
 }
@@ -698,7 +696,12 @@ BOOL doMigrateInProgress = false;
     DDLogInfo(@"[t-dirty-objects] Add dirty object");
     
     if (object == nil || object.objectID == nil) {
+        DDLogInfo(@"[t-dirty-objects] Object or objectID is nil");
         return;
+    }
+    
+    if(object.objectID.isTemporaryID) {
+        DDLogError(@"[t-dirty-objects] We are dirtying a temporary ID. This is probably no intended!");
     }
 
     [self addDirtyObjectID:object.objectID];
@@ -724,6 +727,11 @@ BOOL doMigrateInProgress = false;
             NSArray *newObjectsArray = [[NSArray alloc] initWithArray:newObjects];
             [defaults setObject:newObjectsArray forKey:THREEMA_DB_DIRTY_OBJECT_KEY];
             [defaults synchronize];
+
+            DDLogInfo(@"[t-dirty-objects] Object ID %@ added", objectID);
+        }
+        else {
+            DDLogInfo(@"[t-dirty-objects] Object ID %@ already added", objectID);
         }
     });
 

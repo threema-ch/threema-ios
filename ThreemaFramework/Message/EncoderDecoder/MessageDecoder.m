@@ -171,28 +171,6 @@
     return [MessageDecoder decode:(int)*type body:body];
 }
 
-+ (AbstractMessage*)decodeEncapsulated:(NSData*)data outer:(AbstractMessage*)outer {
-    AbstractMessage *msg = [MessageDecoder decodeRawBody:data realDataLength:(int)data.length];
-    
-    if (msg != nil) {
-        // Copy header fields from outer message
-        msg.fromIdentity = outer.fromIdentity;
-        msg.toIdentity = outer.toIdentity;
-        msg.messageId = outer.messageId;
-        msg.delivered = outer.delivered;
-        msg.date = outer.date;
-        msg.deliveryDate = outer.deliveryDate;
-        msg.userAck = outer.userAck;
-        msg.sendUserAck = outer.sendUserAck;
-        msg.nonce = outer.nonce;
-        msg.flags = outer.flags;
-        msg.receivedAfterInitialQueueSend = outer.receivedAfterInitialQueueSend;
-        msg.pushFromName = outer.pushFromName;
-    }
-    
-    return msg;
-}
-
 + (AbstractMessage *)decode:(int)type body:(NSData *)body {
     AbstractMessage *msg = nil;
     switch (type) {
@@ -747,6 +725,29 @@
             }
             ForwardSecurityEnvelopeMessage *envelopeMessage = [[ForwardSecurityEnvelopeMessage alloc] initWithData:fsData];
             msg = envelopeMessage;
+            break;
+        }
+        case MSGTYPE_GROUP_CALL_START: {
+            if ([body length] < (kIdentityLen + kGroupIdLen)) {
+                DDLogWarn(@"Wrong length %lu for group file message", (unsigned long)[body length]);
+                break;
+            }
+            
+            NSError *protobufError = nil;
+            
+            int i = 0;
+            GroupCallStartMessage *groupCallStartMessage = [[GroupCallStartMessage alloc] init];
+            groupCallStartMessage.groupCreator = [[NSString alloc] initWithData:[NSData dataWithBytes:body.bytes length:kIdentityLen] encoding:NSASCIIStringEncoding];
+            i+= kIdentityLen;
+            groupCallStartMessage.groupId = [NSData dataWithBytes:(body.bytes + i) length:kGroupIdLen];
+            i+= kGroupIdLen;
+            [groupCallStartMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:(body.bytes + i) length:[body length] - i] error:&protobufError];
+            
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode Group Call Start Message: %@", protobufError);
+                break;
+            }
+            msg = groupCallStartMessage;
             break;
         }
         default: {

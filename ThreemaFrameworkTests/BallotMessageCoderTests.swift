@@ -56,6 +56,8 @@ class BallotMessageCoderTests: XCTestCase {
         // Act:
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
+        boxBallotCreateMessage.fromIdentity = "ECHOECHO"
+
         // Decode:
         let ballotMessage = ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
@@ -83,6 +85,8 @@ class BallotMessageCoderTests: XCTestCase {
         // Act:
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
+        boxBallotCreateMessage.fromIdentity = "ECHOECHO"
+
         // Decode:
         let ballotMessage = ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
@@ -118,6 +122,7 @@ class BallotMessageCoderTests: XCTestCase {
         }
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
+        boxBallotCreateMessage.fromIdentity = "ECHOECHO"
         entityManager.entityDestroyer.deleteObject(object: ballot)
         
         // Decode:
@@ -153,6 +158,7 @@ class BallotMessageCoderTests: XCTestCase {
         )
         boxBallotCreateMessage.ballotID = "BMD_1".data(using: String.Encoding.ascii)
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
+        boxBallotCreateMessage.fromIdentity = "ECHOECHO"
         
         // Act:
         let ballotMessage = ballotDecoder?.decodeCreateBallot(
@@ -236,6 +242,7 @@ class BallotMessageCoderTests: XCTestCase {
         )
         boxBallotCreateMessage.ballotID = "BMD_1".data(using: String.Encoding.ascii)
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
+        boxBallotCreateMessage.fromIdentity = "ECHOECHO"
         
         // Act:
         let ballotMessage = ballotDecoder?.decodeCreateBallot(
@@ -275,6 +282,7 @@ class BallotMessageCoderTests: XCTestCase {
         )
         boxBallotCreateMessage.ballotID = "BMD_1".data(using: String.Encoding.ascii)
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
+        boxBallotCreateMessage.fromIdentity = "ECHOECHO"
         
         // Act:
         let ballotMessage = ballotDecoder?.decodeCreateBallot(

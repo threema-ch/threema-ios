@@ -46,7 +46,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Debug Sandbox"
       selectedDebuggerIdentifier = ""
       selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
       launchStyle = "0"
@@ -56,9 +56,14 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES"
-      launchAutomaticallySubstyle = "2">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      launchAutomaticallySubstyle = "2"
+      notificationPayloadFile = "PushNotificationPayload.apns">
+      <RemoteRunnable
+         runnableDebuggingMode = "0"
+         BundleIdentifier = "ch.threema.work.red.iapp"
+         RemotePath = "/var/containers/Bundle/Application/FBC87F5D-5B4E-41CA-B8C5-93C973D7ED61/Threema Work Red.app">
+      </RemoteRunnable>
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "2DEDB15424C9903400FC9099"
@@ -66,7 +71,7 @@
             BlueprintName = "Threema Red"
             ReferencedContainer = "container:Threema.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "AppStore"

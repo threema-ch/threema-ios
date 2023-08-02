@@ -288,44 +288,50 @@
     return YES;
 }
 
-- (BOOL)enableSafe {
+- (void)enableSafeWithCompletion:(nullable void(^)(BOOL enabled))onCompletion {
     SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
     SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager: [[GroupManager alloc] init]];
     SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
     
     // apply Threema Safe password and server config from MDM
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    NSString *customServer = nil;
+    NSString *server = nil;
     
     if ([mdmSetup isSafeBackupPasswordPreset]) {
         self.identityStore.tempSafePassword = [mdmSetup safePassword];
     }
     
     if ([mdmSetup isSafeBackupServerPreset]) {
-        [safeConfigManager setCustomServer:[mdmSetup safeServerUrl]];
-        [safeConfigManager setServer:[safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString];
+        customServer = [mdmSetup safeServerUrl];
+        server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
+        
+        // Set data to safeConfigManager in case of empty or to short password
+        [safeConfigManager setCustomServer:customServer];
+        [safeConfigManager setServer:server];
     }
-    
-    
+        
     if (self.identityStore.tempSafePassword == nil || self.identityStore.tempSafePassword.length < 8) {
         [safeManager deactivate];
-        return NO;
+        onCompletion(NO);
+        return;
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
         [self showProgress:_enableSafeView progressValue:_enableSafeValue progressText:[BundleUtil localizedStringForKey:@"safe_preparing"]];
     });
     
-    NSError *__autoreleasing  _Nullable * _Nullable error = NULL;
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [safeManager activateWithIdentity:self.identityStore.identity password:self.identityStore.tempSafePassword error:error];
+        [safeManager activateWithIdentity:self.identityStore.identity password:self.identityStore.tempSafePassword customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
+            if (error != nil) {
+                _hasErrors = YES;
+                onCompletion(NO);
+            } else {
+                onCompletion(YES);
+            }
+            return;
+        }];
     });
-    
-    if (error != nil) {
-        _hasErrors = YES;
-        return NO;
-    } else {
-        return YES;
-    }
 }
 
 - (void)signalSemaphore:(dispatch_semaphore_t)semaphore {
@@ -460,7 +466,7 @@
     [self arrangeViewsForCompletion];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-        NSInteger timout = 2000;
+        __block NSInteger timout = 2000;
         
         if ([self linkPhone]) {
             timout += 1000;
@@ -474,30 +480,32 @@
             timout += 500;
         }
         
-        if ([self enableSafe]) {
-            timout += 500;
-        }
-        
-        // do not show Threema Safe Intro after setup wizard
-        [[UserSettings sharedUserSettings] setSafeIntroShown:YES];
+        [self enableSafeWithCompletion:^(BOOL enabled) {
+            if (enabled) {
+                timout += 500;
+            }
+            
+            // do not show Threema Safe Intro after setup wizard
+            [[UserSettings sharedUserSettings] setSafeIntroShown:YES];
 
-        if (_hasErrors == NO) {
-            // no errors - continue after timeout
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timout * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
-                [_delegate completedIDSetup];
-            });
-        } else {
-            // user needs to confirm
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [_finishButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
-                _finishButton.userInteractionEnabled = YES;
-                _finishButton.alpha = 1.0;
-            });
-        }
-        
-        _identityStore.createIDPhone = nil;
-        _identityStore.createIDEmail = nil;
-        _identityStore.tempSafePassword = nil;
+            if (_hasErrors == NO) {
+                // no errors - continue after timeout
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timout * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+                    [_delegate completedIDSetup];
+                });
+            } else {
+                // user needs to confirm
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [_finishButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
+                    _finishButton.userInteractionEnabled = YES;
+                    _finishButton.alpha = 1.0;
+                });
+            }
+            
+            _identityStore.createIDPhone = nil;
+            _identityStore.createIDEmail = nil;
+            _identityStore.tempSafePassword = nil;
+        }];
     });
 }
 

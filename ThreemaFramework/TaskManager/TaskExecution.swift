@@ -21,14 +21,17 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 enum TaskExecutionError: Error {
-    case createAbsractMessageFailed
+    case createAbstractMessageFailed
     case createReflectedMessageFailed
-    case noDeviceGroupPathKey
+    case multiDeviceNotRegistered
+    case makeBoxOfMessageFailed
     case messageReceiverBlockedOrUnknown
     case missingGroupInformation
     case missingMessageInformation
+    case missingMessageNonce
     case processIncomingMessageFailed(message: String?)
     case reflectMessageFailed(message: String?)
     case reflectMessageTimeout(message: String?)
@@ -43,7 +46,7 @@ class TaskExecution: NSObject {
     var taskDefinition: TaskDefinitionProtocol
     let frameworkInjector: FrameworkInjectorProtocol
 
-    private let responseTimeoutInSeconds = 20
+    private let responseTimeoutInSeconds = 40
     
     required init(
         taskContext: TaskContextProtocol,
@@ -61,8 +64,8 @@ class TaskExecution: NSObject {
 
     // MARK: Promises
     
-    func isMultiDeviceActivated() -> Guarantee<Bool> {
-        Guarantee { $0(frameworkInjector.serverConnector.isMultiDeviceActivated) }
+    func isMultiDeviceRegistered() -> Guarantee<Bool> {
+        Guarantee { $0(frameworkInjector.userSettings.enableMultiDevice) }
     }
     
     /// Reflect message to mediator server.
@@ -70,8 +73,10 @@ class TaskExecution: NSObject {
     ///     - message: Message to reflect
     ///     - ltReflect: Logging Tag for reflect message
     ///     - ltAck: Logging Tag for ack reflect message
+    /// - Returns: Reflected at
     /// - Throws: TaskExecutionError.reflectMessageFailed
-    func reflectMessage(message: AbstractMessage, ltReflect: LoggingTag, ltAck: LoggingTag) throws {
+    @discardableResult
+    func reflectMessage(message: AbstractMessage, ltReflect: LoggingTag, ltAck: LoggingTag) throws -> Date {
         assert(ltReflect != .none && ltAck != .none)
 
         var envelope: D2d_Envelope
@@ -91,37 +96,40 @@ class TaskExecution: NSObject {
                       let groupCreator = (message as? AbstractGroupMessage)?.groupCreator else {
                     throw TaskExecutionError.reflectMessageFailed(message: message.loggingDescription)
                 }
-                
-                envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
+
+                envelope = try frameworkInjector.mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
                     type: Int32(message.type()),
                     body: body,
-                    messageID: message.messageID.convert(),
-                    groupID: groupID.convert(),
+                    messageID: message.messageID.littleEndian(),
+                    groupID: groupID.littleEndian(),
                     groupCreatorIdentity: groupCreator,
-                    createdAt: message.date
+                    createdAt: message.date,
+                    nonces: messageNonces()
                 )
             }
             else {
-                envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
+                envelope = try frameworkInjector.mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
                     type: Int32(message.type()),
                     body: body,
-                    messageID: message.messageID.convert(),
+                    messageID: message.messageID.littleEndian(),
                     receiverIdentity: message.toIdentity,
-                    createdAt: message.date
+                    createdAt: message.date,
+                    nonce: messageNonce(for: message.toIdentity)
                 )
             }
         }
         else {
-            envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForIncomingMessage(
+            envelope = try frameworkInjector.mediatorMessageProtocol.getEnvelopeForIncomingMessage(
                 type: Int32(message.type()),
                 body: body,
-                messageID: message.messageID.convert(),
+                messageID: message.messageID.littleEndian(),
                 senderIdentity: message.fromIdentity,
-                createdAt: message.date
+                createdAt: message.date,
+                nonce: messageNonce(for: message.fromIdentity)
             )
         }
         
-        try reflectMessage(envelope: envelope, ltReflect: ltReflect, ltAck: ltAck)
+        return try reflectMessage(envelope: envelope, ltReflect: ltReflect, ltAck: ltAck)
     }
 
     /// Reflect message to mediator server.
@@ -129,8 +137,10 @@ class TaskExecution: NSObject {
     ///     - envelope: Envelope message for sending to mediator
     ///     - ltReflect: Logging Tag for reflect message
     ///     - ltAck: Logging Tag for ack reflect message
+    /// - Returns: Reflected at
     /// - Throws: TaskExecutionError.createReflectedMessageFailed, TaskExecutionError.reflectMessageTimeout
-    func reflectMessage(envelope: D2d_Envelope, ltReflect: LoggingTag, ltAck: LoggingTag) throws {
+    @discardableResult
+    func reflectMessage(envelope: D2d_Envelope, ltReflect: LoggingTag, ltAck: LoggingTag) throws -> Date {
         assert(ltReflect != .none && ltAck != .none)
 
         let reflectData = frameworkInjector.mediatorMessageProtocol.encodeEnvelope(envelope: envelope)
@@ -138,6 +148,8 @@ class TaskExecution: NSObject {
         guard let reflectID = reflectData.reflectID, let reflectMessage = reflectData.reflectMessage else {
             throw TaskExecutionError.createReflectedMessageFailed
         }
+
+        var reflectedAt: Date?
 
         let loggingMsgInfo = "(Reflect ID: \(reflectID.hexString) \(envelope.loggingDescription))"
 
@@ -150,9 +162,12 @@ class TaskExecution: NSObject {
             object: nil,
             queue: OperationQueue.current
         ) { notification in
-
+            // Get reflected-ack ID and reflected-ack sent date
             if let messageAckReflectID = notification.object as? Data {
                 if messageAckReflectID.elementsEqual(reflectID) {
+
+                    reflectedAt = notification.userInfo?[reflectID] as? Date
+
                     DDLogNotice("\(ltAck.hexString) \(ltAck) \(loggingMsgInfo)")
                     notificationCenter.removeObserver(mediatorMessageAckObserver!)
 
@@ -169,6 +184,11 @@ class TaskExecution: NSObject {
                 notificationCenter.removeObserver(mediatorMessageAckObserver!)
                 throw TaskExecutionError.reflectMessageTimeout(message: loggingMsgInfo)
             }
+
+            guard let reflectedAt else {
+                throw TaskExecutionError.reflectMessageFailed(message: "Reflected at is nil for \(loggingMsgInfo)")
+            }
+            return reflectedAt
         }
         else {
             notificationCenter.removeObserver(mediatorMessageAckObserver!)
@@ -220,7 +240,7 @@ class TaskExecution: NSObject {
                    let toIdentity = message.toIdentity {
                     guard !self.isMessageAlreadySentTo(identity: toIdentity) else {
                         DDLogWarn(
-                            "Message already sent \(toIdentity)) (\(String(describing: message.loggingDescription)))"
+                            "Message already sent to \(toIdentity)) (\(String(describing: message.loggingDescription)))"
                         )
                         seal.fulfill(message)
                         return
@@ -229,28 +249,29 @@ class TaskExecution: NSObject {
 
                 var messageToSend = message
                 var auxMessage: ForwardSecurityEnvelopeMessage?
-                var sendCompletion: (() throws -> Void)?
                 var sendAuxFailure: (() -> Void)?
 
                 // Check whether the message and the destination contact support forward security
-                if ThreemaUtility.supportsForwardSecurity, message.supportsForwardSecurity(),
-                   toContact.forwardSecurityEnabled.boolValue || ThreemaEnvironment.pfsByDefault,
-                   toContact.isForwardSecurityAvailable() {
+                if ThreemaUtility.supportsForwardSecurity, toContact.isForwardSecurityAvailable() {
                     do {
                         let fsContact = ForwardSecurityContact(
                             identity: toContact.identity,
                             publicKey: toContact.publicKey
                         )
-                        (
-                            auxMessage: auxMessage,
-                            message: messageToSend,
-                            sendCompletion: sendCompletion,
-                            sendAuxFailure: sendAuxFailure
-                        ) = try self
-                            .frameworkInjector.fsmp.makeMessage(
-                                contact: fsContact,
-                                innerMessage: message
-                            )
+                        
+                        // If this is a message which we can send in this session make the fs message
+                        // Otherwise do nothing
+                        if try self.frameworkInjector.fsmp.canSend(message, to: fsContact) {
+                            (
+                                auxMessage: auxMessage,
+                                message: messageToSend,
+                                sendAuxFailure: sendAuxFailure
+                            ) = try self
+                                .frameworkInjector.fsmp.makeMessage(
+                                    contact: fsContact,
+                                    innerMessage: message
+                                )
+                        }
                     }
                     catch {
                         seal.reject(error)
@@ -261,16 +282,14 @@ class TaskExecution: NSObject {
                 // Send message in own thread, because of possible network latency
                 DispatchQueue.global().async {
                     if let auxMessage {
-                        var boxAuxMsg: BoxedMessage?
                         // We have an auxiliary (control) message to send before the actual message
-                        self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                            boxAuxMsg = auxMessage.makeBox(
+                        guard let boxAuxMsg = self.frameworkInjector.backgroundEntityManager.performAndWait({
+                            auxMessage.makeBox(
                                 toContact,
-                                myIdentityStore: self.frameworkInjector.myIdentityStore
+                                myIdentityStore: self.frameworkInjector.myIdentityStore,
+                                nonce: NaClCrypto.shared().randomBytes(Int32(kNaClCryptoNonceSize))
                             )
-                        }
-
-                        guard let boxAuxMsg else {
+                        }) else {
                             sendAuxFailure?()
                             let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
                             seal.reject(err)
@@ -301,9 +320,22 @@ class TaskExecution: NSObject {
                             forwardSecurityMode: messageToSend.forwardSecurityMode
                         )
 
+                        var nonce: Data
+                        do {
+                            nonce = try self.messageNonce(for: toContact.identity)
+                        }
+                        catch {
+                            seal.reject(
+                                TaskExecutionError
+                                    .sendMessageFailed(message: "\(error) \(message.loggingDescription)")
+                            )
+                            return
+                        }
+
                         guard let boxMsg = messageToSend.makeBox(
                             toContact,
-                            myIdentityStore: self.frameworkInjector.myIdentityStore
+                            myIdentityStore: self.frameworkInjector.myIdentityStore,
+                            nonce: nonce
                         ) else {
                             seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
                             return
@@ -311,11 +343,7 @@ class TaskExecution: NSObject {
 
                         if !message.flagDontQueue() {
                             do {
-                                let nonceGuard = NonceGuard(
-                                    entityManager: self.frameworkInjector
-                                        .backgroundEntityManager
-                                )
-                                try nonceGuard.processed(boxedMessage: boxMsg)
+                                try self.frameworkInjector.nonceGuard.processed(boxedMessage: boxMsg)
                             }
                             catch {
                                 seal.reject(error)
@@ -332,15 +360,6 @@ class TaskExecution: NSObject {
                                     ltAck: ltAck,
                                     isAuxMessage: false
                                 )
-
-                                do {
-                                    try sendCompletion?()
-                                }
-                                catch {
-                                    let msg = "An error occurred when saving PFS state: \(error)"
-                                    DDLogError(msg)
-                                    assertionFailure(msg)
-                                }
                             }
                             catch {
                                 seal.reject(error)
@@ -380,14 +399,18 @@ class TaskExecution: NSObject {
             object: nil,
             queue: operationQueue
         ) { _ in
-            DDLogNotice("\(ltAck.hexString) \(ltAck) \(abstractMessage.loggingDescription)")
+            DDLogNotice(
+                "\(ltAck.hexString) \(ltAck) \(abstractMessage.loggingDescription) from \(abstractMessage.toIdentity ?? "?")"
+            )
             notificationCenter.removeObserver(messageAckObserver!)
             chatMessageAck.leave()
         }
         
         chatMessageAck.enter()
         
-        DDLogNotice("\(ltSend.hexString) \(ltSend) \(abstractMessage.loggingDescription)")
+        DDLogNotice(
+            "\(ltSend.hexString) \(ltSend) \(abstractMessage.loggingDescription) to \(abstractMessage.toIdentity ?? "?")"
+        )
         if frameworkInjector.serverConnector.send(boxMessage) {
             if abstractMessage.flagDontAck() {
                 notificationCenter.removeObserver(messageAckObserver!)
@@ -396,7 +419,7 @@ class TaskExecution: NSObject {
                 let result = chatMessageAck.wait(timeout: .now() + .seconds(responseTimeoutInSeconds))
                 if result == .success {
                     if !isAuxMessage, let toIdentity = abstractMessage.toIdentity {
-                        messageAlreadySentTo(identity: toIdentity)
+                        try messageAlreadySentTo(identity: toIdentity, nonce: messageNonce(for: toIdentity))
                     }
                 }
                 else {
@@ -418,19 +441,147 @@ class TaskExecution: NSObject {
 
         var isMessageAlreadySentTo = false
         task.messageAlreadySentToQueue.sync {
-            isMessageAlreadySentTo = task.messageAlreadySentTo.contains(identity)
+            isMessageAlreadySentTo = task.messageAlreadySentTo.map(\.key).contains(identity)
         }
         return isMessageAlreadySentTo
     }
 
-    private func messageAlreadySentTo(identity: String) {
+    private func messageAlreadySentTo(identity: String, nonce: Data) {
         guard var task = taskDefinition as? TaskDefinitionSendMessageProtocol else {
             return
         }
 
         task.messageAlreadySentToQueue.sync {
-            task.messageAlreadySentTo.append(identity)
+            task.messageAlreadySentTo[identity] = nonce
         }
+    }
+
+    /// Generates new message nonces for the message receivers of the task.
+    ///
+    /// - Parameter task: Task must implement `TaskDefinitionSendMessageNonceProtocol`
+    /// - Throws: `TaskExecutionError.missingMessageNonce` if task doesn't support nonces
+    func generateMessageNonces(for task: TaskDefinitionProtocol) throws {
+        guard task is TaskDefinitionSendMessageNonceProtocol else {
+            throw TaskExecutionError.missingMessageNonce
+        }
+
+        // Get message receivers for this task
+        var identities: Set<ThreemaIdentity>
+        if let task = task as? TaskDefinitionSendAbstractMessage {
+            identities = Set<ThreemaIdentity>([task.message.toIdentity])
+        }
+        else if let task = task as? TaskDefinitionSendDeliveryReceiptsMessage {
+            identities = Set<ThreemaIdentity>([task.toIdentity])
+        }
+        else if let task = task as? TaskDefinitionGroupDissolve {
+            identities = Set<ThreemaIdentity>(task.toMembers)
+        }
+        else if let task = task as? TaskDefinitionSendGroupCallStartMessage {
+            identities = Set<ThreemaIdentity>(task.toMembers)
+        }
+        else if let task = task as? TaskDefinitionSendGroupCreateMessage {
+            identities = Set(task.toMembers)
+            if let removeMembers = task.removedMembers {
+                removeMembers.forEach { member in
+                    identities.insert(member)
+                }
+            }
+        }
+        else if let task = task as? TaskDefinitionSendGroupDeletePhotoMessage {
+            identities = Set<ThreemaIdentity>(task.toMembers)
+        }
+        else if let task = task as? TaskDefinitionSendGroupDeliveryReceiptsMessage {
+            identities = Set<ThreemaIdentity>(task.toMembers)
+        }
+        else if let task = task as? TaskDefinitionSendGroupLeaveMessage {
+            identities = Set<ThreemaIdentity>(task.toMembers)
+        }
+        else if let task = task as? TaskDefinitionSendGroupRenameMessage {
+            identities = Set<ThreemaIdentity>(task.toMembers)
+        }
+        else if let task = task as? TaskDefinitionSendGroupSetPhotoMessage {
+            identities = Set<ThreemaIdentity>(task.toMembers)
+        }
+        else if let task = task as? TaskDefinitionSendMessage {
+            if task.isGroupMessage {
+                guard let members = task.allGroupMembers else {
+                    throw TaskExecutionError.missingGroupInformation
+                }
+                identities = members
+            }
+            else {
+                guard let identity = frameworkInjector.backgroundEntityManager.performAndWait({
+                    self.getConversation(task)?.contact?.identity
+                }) else {
+                    throw TaskExecutionError.missingMessageInformation
+                }
+                identities = [identity]
+            }
+        }
+        else {
+            throw TaskExecutionError.missingMessageNonce
+        }
+
+        DDLogNotice("\(task) generate nonces")
+        try generateMessageNonces(for: identities)
+    }
+
+    /// Generates new message nonces to encrypt message for receivers (Threema ID). If is the message for the receiver
+    /// already sent, using stored nonce instead.
+    ///
+    /// - Parameter identities: Message nonces for receivers
+    /// - Throws: `TaskExecutionError.missingMessageNonce` if task doesn't support nonces
+    private func generateMessageNonces(for identities: Set<ThreemaIdentity>) throws {
+        guard var taskNonce = taskDefinition as? TaskDefinitionSendMessageNonceProtocol else {
+            throw TaskExecutionError.missingMessageNonce
+        }
+
+        taskNonce.nonces.removeAll()
+
+        var excludeReceivers = TaskReceiverNonce()
+        if let taskSend = taskDefinition as? TaskDefinitionSendMessageProtocol, !taskSend.messageAlreadySentTo.isEmpty {
+            DDLogVerbose(
+                "\(taskSend) message already sent to \(taskSend.messageAlreadySentTo.map(\.key).joined(separator: ","))"
+            )
+            excludeReceivers = taskSend.messageAlreadySentTo
+        }
+
+        excludeReceivers.forEach { (key: ThreemaIdentity, value: Data) in
+            taskNonce.nonces[key] = value
+        }
+
+        for identity in identities
+            .filter({
+                $0 != self.frameworkInjector.myIdentityStore.identity && !excludeReceivers.map(\.key).contains($0) }) {
+            taskNonce.nonces[identity] = NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.nonceLength))
+        }
+    }
+
+    /// Get all message nonces.
+    /// - Returns: All nonces of this task
+    /// - Throws: `TaskExecutionError.missingMessageNonce` if task doesn't support nonces
+    private func messageNonces() throws -> [Data] {
+        guard let taskNonce = taskDefinition as? TaskDefinitionSendMessageNonceProtocol else {
+            throw TaskExecutionError.missingMessageNonce
+        }
+
+        return taskNonce.nonces.map(\.value)
+    }
+
+    /// Get message nonce for receiver.
+    /// - Parameter identity: Receiver of the message
+    /// - Returns: Message nonce for a receiver
+    /// - Throws: `TaskExecutionError.missingMessageNonce` if task doesn't support nonces
+    private func messageNonce(for identity: ThreemaIdentity) throws -> Data {
+        guard let taskNonce = taskDefinition as? TaskDefinitionSendMessageNonceProtocol else {
+            throw TaskExecutionError.missingMessageNonce
+        }
+
+        guard let nonce = taskNonce.nonces[identity] else {
+            throw TaskExecutionError.missingMessageNonce
+        }
+
+        return nonce
     }
 
     /// If group creator an gateway id and receiver and store-incoming-message is not set (group name without ☁), then
@@ -449,7 +600,6 @@ class TaskExecution: NSObject {
            !(groupName?.hasPrefix("☁") ?? false), !(message is GroupLeaveMessage),
            !(message is GroupRequestSyncMessage) {
             DDLogWarn("Drop message to gateway id without store-incoming-message")
-            frameworkInjector.backgroundEntityManager.markMessageAsSent(message.messageID, isLocal: true)
 
             return false
         }
@@ -457,27 +607,32 @@ class TaskExecution: NSObject {
         return true
     }
 
-    /// Get conversation for TaskDefinitionSendBaseMessage or TaskDefinitionSendBallotVoteMessage.
+    /// Get conversation for TaskDefinitionSendBaseMessage, TaskDefinitionSendBallotVoteMessage,
+    /// TaskDefinitionReflectIncomingMessage or TaskDefinitionSendAbstractMessage.
     ///
     /// - Parameter task: Task definition
     /// - Returns: Conversation or nil
     func getConversation(_ task: TaskDefinitionProtocol) -> Conversation? {
-        var conversation: Conversation?
         if let task = task as? TaskDefinitionSendBaseMessage,
-           let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity,
-           let internalConversation = task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
-           .conversation(
-               for: task.groupID!,
-               creator: groupCreatorIdentity
-           ) : frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: task.messageID)?.conversation {
-            conversation = internalConversation
+           let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
+            return task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
+                .conversation(
+                    for: task.groupID!,
+                    creator: groupCreatorIdentity
+                ) : frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: task.messageID)?
+                .conversation
         }
-        else if let task = task as? TaskDefinitionSendBallotVoteMessage,
-                let ballot = frameworkInjector.backgroundEntityManager.entityFetcher
-                .ballot(for: task.ballotID) {
-            conversation = ballot.conversation
+        else if let task = task as? TaskDefinitionSendBallotVoteMessage {
+            return frameworkInjector.backgroundEntityManager.entityFetcher
+                .ballot(for: task.ballotID)?.conversation
         }
-        return conversation
+        else if let task = task as? TaskDefinitionReflectIncomingMessage {
+            return frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
+        }
+        else if let task = task as? TaskDefinitionSendAbstractMessage {
+            return frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
+        }
+        return nil
     }
     
     // MARK: Abstract Message Types
@@ -560,24 +715,26 @@ class TaskExecution: NSObject {
             else if let message = message as? BallotMessage {
                 let msg: BoxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: message.ballot)
                 msg.messageID = message.id
-                if let groupID = task.groupID, let groupCreatorIdentity = task.groupCreatorIdentity,
-                   let conversationEntity = frameworkInjector.backgroundGroupManager
-                   .getConversation(for: GroupIdentity(id: groupID, creator: groupCreatorIdentity)) {
-                    let groupMsg: GroupBallotCreateMessage = BallotMessageEncoder.groupBallotCreateMessage(
-                        from: msg,
-                        for: conversationEntity
-                    )
-                    groupMsg.fromIdentity = fromIdentity
-                    groupMsg.toIdentity = toIdentity
-                    groupMsg.date = message.date
-                    return groupMsg
-                }
-                else {
+
+                guard let groupID = task.groupID,
+                      let groupCreatorIdentity = task.groupCreatorIdentity,
+                      frameworkInjector.backgroundGroupManager
+                      .getConversation(for: GroupIdentity(id: groupID, creator: groupCreatorIdentity)) != nil else {
                     msg.fromIdentity = fromIdentity
                     msg.toIdentity = toIdentity
                     msg.date = message.date
                     return msg
                 }
+
+                let groupMsg: GroupBallotCreateMessage = BallotMessageEncoder.groupBallotCreateMessage(
+                    from: msg,
+                    groupID: groupID,
+                    groupCreatorIdentity: groupCreatorIdentity
+                )
+                groupMsg.fromIdentity = fromIdentity
+                groupMsg.toIdentity = toIdentity
+                groupMsg.date = message.date
+                return groupMsg
             }
             else if let message = message as? ImageMessageEntity {
                 let msg: AbstractMessage = task.isGroupMessage ? GroupImageMessage() : BoxImageMessage()
@@ -690,22 +847,23 @@ class TaskExecution: NSObject {
                 .ballot(for: task.ballotID) {
 
             let msg: BoxBallotVoteMessage = BallotMessageEncoder.encodeVoteMessage(for: ballot)
-            if let groupID = task.groupID, let groupCreatorIdentity = task.groupCreatorIdentity,
-               let conversationEntity = frameworkInjector.backgroundGroupManager
-               .getConversation(for: GroupIdentity(id: groupID, creator: groupCreatorIdentity)) {
-                let groupMsg: GroupBallotVoteMessage = BallotMessageEncoder.groupBallotVoteMessage(
-                    from: msg,
-                    for: conversationEntity
-                )
-                groupMsg.fromIdentity = fromIdentity
-                groupMsg.toIdentity = toIdentity
-                return groupMsg
-            }
-            else {
+            guard let groupID = task.groupID,
+                  let groupCreatorIdentity = task.groupCreatorIdentity,
+                  frameworkInjector.backgroundGroupManager
+                  .getConversation(for: GroupIdentity(id: groupID, creator: groupCreatorIdentity)) != nil else {
                 msg.fromIdentity = fromIdentity
                 msg.toIdentity = toIdentity
                 return msg
             }
+
+            let groupMsg: GroupBallotVoteMessage = BallotMessageEncoder.groupBallotVoteMessage(
+                from: msg,
+                groupID: groupID,
+                groupCreatorIdentity: groupCreatorIdentity
+            )
+            groupMsg.fromIdentity = fromIdentity
+            groupMsg.toIdentity = toIdentity
+            return groupMsg
         }
         
         return nil
@@ -714,13 +872,15 @@ class TaskExecution: NSObject {
     /// Create abstract message for delivery receipt.
     ///
     /// - Parameters:
-    /// - fromIdentity: Message sender identity
-    /// - toIdentity: Message receiver identity
+    ///   - fromIdentity: Message sender identity
+    ///   - toIdentity: Message receiver identity
+    ///   - receiptType: Receipt type
+    ///   - receiptMessageIDs: Receipt for message IDs
     /// - Returns: Abstract message
     func getDeliveryReceiptMessage(
-        _ fromIdentity: String,
-        _ toIdentity: String,
-        _ receiptType: UInt8,
+        _ fromIdentity: ThreemaIdentity,
+        _ toIdentity: ThreemaIdentity,
+        _ receiptType: ReceiptType,
         _ receiptMessageIDs: [Data]
     ) -> DeliveryReceiptMessage {
         let msg = DeliveryReceiptMessage()
@@ -741,15 +901,15 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupCreateMessage(
         _ groupID: Data,
-        _ groupCreator: String,
-        _ fromIdentity: String,
-        _ toIdentity: String,
-        _ groupMembers: [String]
+        _ groupCreatorIdentity: ThreemaIdentity,
+        _ fromIdentity: ThreemaIdentity,
+        _ toIdentity: ThreemaIdentity,
+        _ groupMembers: [ThreemaIdentity]
     ) -> GroupCreateMessage {
         
         let msg = GroupCreateMessage()
         msg.groupID = groupID
-        msg.groupCreator = groupCreator
+        msg.groupCreator = groupCreatorIdentity
         msg.fromIdentity = fromIdentity
         msg.toIdentity = toIdentity
         msg.groupMembers = groupMembers
@@ -765,13 +925,13 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupLeaveMessage(
         _ groupID: Data,
-        _ groupCreator: String,
-        _ fromIdentity: String,
-        _ toMember: String
+        _ groupCreatorIdentity: ThreemaIdentity,
+        _ fromIdentity: ThreemaIdentity,
+        _ toMember: ThreemaIdentity
     ) -> GroupLeaveMessage {
         let msg = GroupLeaveMessage()
         msg.groupID = groupID
-        msg.groupCreator = groupCreator
+        msg.groupCreator = groupCreatorIdentity
         msg.fromIdentity = fromIdentity
         msg.toIdentity = toMember
         return msg
@@ -787,14 +947,14 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupRenameMessage(
         _ groupID: Data,
-        _ groupCreator: String,
-        _ fromIdentity: String,
-        _ toMember: String,
+        _ groupCreatorIdentity: ThreemaIdentity,
+        _ fromIdentity: ThreemaIdentity,
+        _ toMember: ThreemaIdentity,
         _ name: String?
     ) -> GroupRenameMessage {
         let msg = GroupRenameMessage()
         msg.groupID = groupID
-        msg.groupCreator = groupCreator
+        msg.groupCreator = groupCreatorIdentity
         msg.fromIdentity = fromIdentity
         msg.toIdentity = toMember
         msg.name = name
@@ -813,16 +973,16 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupSetPhotoMessage(
         _ groupID: Data,
-        _ groupCreator: String,
-        _ fromIdentity: String,
-        _ toMember: String,
+        _ groupCreatorIdentity: ThreemaIdentity,
+        _ fromIdentity: ThreemaIdentity,
+        _ toMember: ThreemaIdentity,
         _ size: UInt32,
         _ blobID: Data?,
         _ encryptionKey: Data?
     ) -> GroupSetPhotoMessage {
         let msg = GroupSetPhotoMessage()
         msg.groupID = groupID
-        msg.groupCreator = groupCreator
+        msg.groupCreator = groupCreatorIdentity
         msg.fromIdentity = fromIdentity
         msg.toIdentity = toMember
         msg.size = size
@@ -834,19 +994,19 @@ class TaskExecution: NSObject {
     /// Create abstract message for group delete photo.
     ///
     /// - Parameter groupID: ID of the group
-    /// - Parameter groupCreator: Creator of the group
+    /// - Parameter groupCreatorIdentity: Creator of the group
     /// - Parameter fromIdentity: Message sender identity
     /// - Parameter toIdentity: Message receiver identity
     /// - Returns: Abstract message
     func getGroupDeletePhotoMessage(
         _ groupID: Data,
-        _ groupCreator: String,
-        _ fromIdentity: String,
-        _ toMember: String
+        _ groupCreatorIdentity: ThreemaIdentity,
+        _ fromIdentity: ThreemaIdentity,
+        _ toMember: ThreemaIdentity
     ) -> GroupDeletePhotoMessage {
         let msg = GroupDeletePhotoMessage()
         msg.groupID = groupID
-        msg.groupCreator = groupCreator
+        msg.groupCreator = groupCreatorIdentity
         msg.fromIdentity = fromIdentity
         msg.toIdentity = toMember
         return msg
@@ -854,27 +1014,31 @@ class TaskExecution: NSObject {
     
     /// Create abstract message for group delivery receipt.
     ///
-    /// - Parameter groupID: ID of the group
-    /// - Parameter groupCreator: Creator of the group
-    /// - Parameter fromIdentity: Message sender identity
-    /// - Parameter toIdentity: Message receiver identity
+    /// - Parameters:
+    ///   - groupID: ID of the group
+    ///   - groupCreatorIdentity: Creator of the group
+    ///   - fromIdentity: Message sender identity
+    ///   - toIdentity: Message receiver identity
+    ///   - receiptType: Receipt type for group can be read (reflect only), ack and decline
+    ///   - receiptMessageIDs: Receipt for message IDs
     /// - Returns: Abstract message
     func getGroupDeliveryReceiptMessage(
         _ groupID: Data,
-        _ groupCreator: String,
-        _ fromIdentity: String,
-        _ toMember: String,
-        _ receiptType: UInt8,
+        _ groupCreatorIdentity: ThreemaIdentity,
+        _ fromIdentity: ThreemaIdentity,
+        _ toIdentity: ThreemaIdentity,
+        _ receiptType: ReceiptType,
         _ receiptMessageIDs: [Data]
     ) -> GroupDeliveryReceiptMessage {
+        assert(receiptType == .read || receiptType == .ack || receiptType == .decline)
+
         let msg = GroupDeliveryReceiptMessage()
         msg.groupID = groupID
-        msg.groupCreator = groupCreator
+        msg.groupCreator = groupCreatorIdentity
         msg.fromIdentity = fromIdentity
-        msg.toIdentity = toMember
-        msg.receiptType = receiptType
+        msg.toIdentity = toIdentity
+        msg.receiptType = receiptType.rawValue
         msg.receiptMessageIDs = receiptMessageIDs
-        
         return msg
     }
 }

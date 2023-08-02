@@ -25,6 +25,19 @@
 // - `RIDSN`: RID's Sequence Number
 // - `RRDSN`: RRD's Sequence Number
 //
+// ### General Information
+//
+// **Sequence number:** The sequence number starts with `1` and is counted
+// separately for each direction (i.e. there is one sequence number counter for
+// the client and one for the server). We will use `RIDSN+` and `RRDSN+` in this
+// document to denote that the counter should be increased **after** the value
+// has been inserted (i.e. semantically equivalent to `x++` in many languages).
+//
+// **Framing:** An `extra.transport.frame` is being used to frame all
+// transmitted data even if the transport supports datagrams. This
+// intentionally allows to fragment a frame across multiple datagrams (e.g.
+// useful for limited APIs that cannot deliver data in a streamed fashion).
+//
 // ### Key Derivation
 //
 //     RIDAK = BLAKE2b(key=AK.secret, salt='rida', personal='3ma-rendezvous')
@@ -41,34 +54,21 @@
 //     RIDTK = BLAKE2b(key=STK.secret, salt='ridt', personal='3ma-rendezvous')
 //     RRDTK = BLAKE2b(key=STK.secret, salt='rrdt', personal='3ma-rendezvous')
 //
-// ### General Information
-//
-// Sequence number: The sequence number starts with `1` and is counted
-// separately for each direction (i.e. there is one sequence number counter for
-// the client and one for the server). We will use `RIDSN+` and `RRDSN+` in this
-// document to denote that the counter should be increased **after** the value
-// has been inserted (i.e. semantically equivalent to `x++` in many languages).
-//
-// Framing: An `extra.transport.frame` is being used to frame all transmitted
-// data even if the transport supports datagrams. This intentionally allows to
-// fragment a frame across multiple datagrams (e.g. useful for limited APIs that
-// cannot deliver data in a streamed fashion).
-//
 // ### Encryption Schemes
 //
 // RID's encryption scheme is defined in the following way:
 //
-//         ChaCha20-Poly1305(
-//           key=<RID*K.secret>,
-//           nonce=u32-le(PID) || u32-le(RIDSN+) || <4 zero bytes>,
-//         )
+//     ChaCha20-Poly1305(
+//       key=<RID*K.secret>,
+//       nonce=u32-le(PID) || u32-le(RIDSN+) || <4 zero bytes>,
+//     )
 //
 // RRD's encryption scheme is defined in the following way:
 //
-//         ChaCha20-Poly1305(
-//           key=<RRD*K.secret>,
-//           nonce=u32-le(PID) || u32-le(RRDSN+) || <4 zero bytes>,
-//         )
+//     ChaCha20-Poly1305(
+//       key=<RRD*K.secret>,
+//       nonce=u32-le(PID) || u32-le(RRDSN+) || <4 zero bytes>,
+//     )
 //
 // ### Rendezvous Path Hash Derivation
 //
@@ -85,10 +85,10 @@
 //
 // ### Path Matrix
 //
-// | Name              | Multiple Paths |
-// |-------------------|----------------|
-// | Direct TCP Server | Yes            |
-// | Relayed WebSocket | No             |
+//     | Name              | Multiple Paths |
+//     |-------------------|----------------|
+//     | Direct TCP Server | Yes            |
+//     | Relayed WebSocket | No             |
 //
 // ### Protocol Flow
 //

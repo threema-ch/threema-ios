@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -42,6 +43,7 @@ class MessageReveiverTests: XCTestCase {
 
         let messageReceiver = MessageReceiver(
             serverConnector: ServerConnectorMock(),
+            userSettings: UserSettingsMock(),
             mediatorMessageProtocol: mediatorMessageProtocol
         )
         messageReceiver.requestDevicesInfo(thisDeviceID: Data())
@@ -57,10 +59,7 @@ class MessageReveiverTests: XCTestCase {
     }
 
     func testRequestDevicesInfo() throws {
-        let expectedOtherDeviceID = NSData(
-            data: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-        )
-        .convertUInt64()
+        let expectedOtherDeviceID: UInt64 = try MockData.deviceID.littleEndian()
         let expectedDeviceLabel = "Test-Device"
         let expectedAppVersion = "0.1"
 
@@ -92,6 +91,9 @@ class MessageReveiverTests: XCTestCase {
             return true
         }
 
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.enableMultiDevice = true
+
         let expec = expectation(description: "request devices info")
 
         var resultError: Error?
@@ -99,6 +101,7 @@ class MessageReveiverTests: XCTestCase {
 
         let messageReceiver = MessageReceiver(
             serverConnector: serverConnectorMock,
+            userSettings: userSettingsMock,
             mediatorMessageProtocol: mediatorMessageProtocol
         )
         messageReceiver.requestDevicesInfo(thisDeviceID: serverConnectorMock.deviceID!)
@@ -117,7 +120,8 @@ class MessageReveiverTests: XCTestCase {
 
         let result = try XCTUnwrap(resultDevices)
         XCTAssertEqual(1, result.count)
-        XCTAssertEqual("\(expectedDeviceLabel) \(expectedAppVersion)", result.first?.label)
+        XCTAssertEqual(expectedDeviceLabel, result.first?.label)
+        XCTAssertEqual("\(expectedAppVersion) • ", result.first?.platformDetails)
         XCTAssertEqual(.unspecified, result.first?.platform)
     }
 
@@ -128,6 +132,7 @@ class MessageReveiverTests: XCTestCase {
 
         let messageReceiver = MessageReceiver(
             serverConnector: ServerConnectorMock(),
+            userSettings: UserSettingsMock(),
             mediatorMessageProtocol: mediatorMessageProtocol
         )
         messageReceiver.requestDropDevice(device: DeviceInfo(
@@ -168,6 +173,9 @@ class MessageReveiverTests: XCTestCase {
             )
             return true
         }
+        
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.enableMultiDevice = true
 
         let expec = expectation(description: "request drop device")
 
@@ -175,6 +183,7 @@ class MessageReveiverTests: XCTestCase {
 
         let messageReceiver = MessageReceiver(
             serverConnector: serverConnectorMock,
+            userSettings: userSettingsMock,
             mediatorMessageProtocol: mediatorMessageProtocol
         )
         messageReceiver.requestDropDevice(device: DeviceInfo(

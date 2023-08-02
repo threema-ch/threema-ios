@@ -429,8 +429,12 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         }
         
         snapshot.appendSections([.messageStates])
+        // Show nothing for SystemMessages
+        if message.isKind(of: SystemMessage.self) {
+            // Empty
+        }
         // Don't show delivered and read state for outgoing group messages as this is not set
-        if message.isGroupMessage && message.isOwnMessage {
+        else if message.isGroupMessage && message.isOwnMessage {
             snapshot.appendItems([
                 .messageDisplayState(.sent),
             ])

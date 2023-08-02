@@ -37,6 +37,8 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     
     // MARK: - Properties
     
+    var tapsOnThreemaID = 0
+    
     private let state: SingleDetails.State
     
     private let contact: ContactEntity
@@ -104,6 +106,9 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             )
         }
         .store(in: &cancellables)
+        
+        let cont = Contact(contactEntity: contact)
+        DDLogNotice("DH session state with contact: \(cont.forwardSecurityState?.description ?? "nil")")
     }
     
     @available(*, unavailable)
@@ -192,8 +197,9 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     
     // MARK: - Configure content
     
-    /// This only should be called once. We'll register an observer for every call
-    func configureData() {
+    /// Configures and applies the diffable data source snapshot for the current state
+    /// - Parameter isInitialConfiguration: Whether to animate the snapshot apply or not
+    func configureData(isInitialConfiguration: Bool = true) {
         var snapshot = NSDiffableDataSourceSnapshot<SingleDetails.Section, SingleDetails.Row>()
         
         if case let .conversationDetails(contact: _, conversation: conversation) = state {
@@ -204,7 +210,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         
         appendDefaultSection(to: &snapshot)
         
-        apply(snapshot, animatingDifferences: false)
+        apply(snapshot, animatingDifferences: !isInitialConfiguration)
     }
     
     // Sections are shown independent of `state`
@@ -236,7 +242,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             snapshot.appendItems(wallpaperActions)
         }
         
-        if ThreemaUtility.supportsForwardSecurity {
+        if ThreemaUtility.supportsForwardSecurity, let fsActions {
             snapshot.appendSections([.fsActions])
             snapshot.appendItems(fsActions)
         }
@@ -298,6 +304,9 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             case .wallpaper:
                 localSnapshot.appendItems(wallpaperActions, toSection: .wallpaper)
             case .fsActions:
+                guard let fsActions else {
+                    continue
+                }
                 localSnapshot.appendItems(fsActions, toSection: .fsActions)
             default:
                 fatalError("Unable to update section: \(section)")
@@ -856,6 +865,9 @@ extension SingleDetailsDataSource {
                 strongSelf.entityManager.performSyncBlockAndSafe {
                     strongSelf.contact.readReceipt = .send
                     strongSelf.refresh(sections: [.privacySettings])
+                    
+                    // TODO: Do delta update (IOS-2642)
+                    ContactStore.shared().reflect(strongSelf.contact)
                 }
             }
             
@@ -863,6 +875,9 @@ extension SingleDetailsDataSource {
                 strongSelf.entityManager.performSyncBlockAndSafe {
                     strongSelf.contact.readReceipt = .doNotSend
                     strongSelf.refresh(sections: [.privacySettings])
+                    
+                    // TODO: Do delta update (IOS-2642)
+                    ContactStore.shared().reflect(strongSelf.contact)
                 }
             }
             
@@ -1118,49 +1133,7 @@ extension SingleDetailsDataSource {
         return actions
     }
     
-    private var fsActions: [SingleDetails.Row] {
-        let forwardSecurityBooleanAction = Details.BooleanAction(
-            title: BundleUtil.localizedString(forKey: "forward_security"),
-            destructive: false,
-            disabled: !contact.isForwardSecurityAvailable() || ThreemaEnvironment.pfsByDefault,
-            boolProvider: { [weak self] in
-                ((self?.contact.forwardSecurityEnabled.boolValue ?? false) || ThreemaEnvironment.pfsByDefault) &&
-                    (self?.contact.isForwardSecurityAvailable() ?? false)
-            }, action: { [weak self] isEnabled in
-                guard let strongSelf = self else {
-                    return
-                }
-                
-                strongSelf.entityManager.performSyncBlockAndSafe {
-                    strongSelf.contact.forwardSecurityEnabled = isEnabled as NSNumber
-                    strongSelf.refresh(sections: [.fsActions])
-                    
-                    // Post a system message if possible
-                    
-                    guard case let .conversationDetails(_, conversation) = strongSelf.state else {
-                        // Only post a system message if there exists a conversation with this contact
-                        return
-                    }
-                    
-                    guard let systemMessage = strongSelf.entityManager.entityCreator.systemMessage(for: conversation)
-                    else {
-                        DDLogNotice("Unable to create system message for changing PFS state")
-                        return
-                    }
-                    
-                    if isEnabled {
-                        systemMessage.type = NSNumber(value: kSystemMessageFsEnabledOutgoing)
-                    }
-                    else {
-                        systemMessage.type = NSNumber(value: kSystemMessageFsDisabledOutgoing)
-                    }
-                    
-                    conversation.lastMessage = systemMessage
-                    conversation.lastUpdate = Date()
-                }
-            }
-        )
-        
+    private var fsActions: [SingleDetails.Row]? {
         var fsClearSessionsDisabled = true
         do {
             fsClearSessionsDisabled = try BusinessInjector().dhSessionStore
@@ -1182,10 +1155,9 @@ extension SingleDetailsDataSource {
             
             DispatchQueue.main.async {
                 do {
-                    try BusinessInjector().dhSessionStore.deleteAllDHSessions(
-                        myIdentity: MyIdentityStore.shared().identity,
-                        peerIdentity: strongSelf.contact.identity
-                    )
+                    let sessionTerminator = try ForwardSecuritySessionTerminator(businessInjector: BusinessInjector())
+                    try sessionTerminator.terminateAllSessions(with: strongSelf.contact, cause: .reset)
+                    
                     strongSelf.reload(sections: [.fsActions])
                     strongSelf.refresh(sections: [.fsActions])
                 }
@@ -1195,12 +1167,12 @@ extension SingleDetailsDataSource {
             }
         }
         
-        var actions: [SingleDetails.Row] = []
-        actions.append(.booleanAction(forwardSecurityBooleanAction))
-        if ThreemaEnvironment.env() != .appStore {
-            actions.append(.action(clearForwardSecurityAction))
+        // We only show the clear forward security action in debug mode or if manually enabled by the user
+        guard ThreemaEnvironment.env() == .xcode || tapsOnThreemaID >= 10 else {
+            return nil
         }
-        return actions
+        
+        return [.action(clearForwardSecurityAction)]
     }
 }
 

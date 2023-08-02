@@ -119,28 +119,41 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     }
     
     @objc private func done() {
-        // is already activated means is in change password mode and server validation is not necessary
-        if (!safeManager.isActivated && validateServer()) || safeManager.isActivated {
-            if let password = validatedPassword() {
-                if safeManager.isPasswordBad(password: password) {
-                    UIAlertTemplate.showConfirm(
-                        owner: self,
-                        popOverSource: passwordField,
-                        title: BundleUtil.localizedString(forKey: "password_bad"),
-                        message: BundleUtil.localizedString(forKey: "password_bad_explain"),
-                        titleOk: BundleUtil.localizedString(forKey: "continue_anyway"),
-                        actionOk: { _ in
-                            self.activate(password: password)
-                        },
-                        titleCancel: BundleUtil.localizedString(forKey: "try_again"),
-                        actionCancel: { _ in
-                            self.passwordField.becomeFirstResponder()
-                        }
-                    )
+        if safeManager.isActivated {
+            checkPasswordAndActivate()
+            return
+        }
+        
+        validateServer { success in
+            // Is already activated means is in change password mode and server validation is not necessary
+            if success, !self.safeManager.isActivated {
+                DispatchQueue.main.async {
+                    self.checkPasswordAndActivate()
                 }
-                else {
-                    activate(password: password)
-                }
+            }
+        }
+    }
+    
+    private func checkPasswordAndActivate() {
+        if let password = validatedPassword() {
+            if safeManager.isPasswordBad(password: password) {
+                UIAlertTemplate.showConfirm(
+                    owner: self,
+                    popOverSource: passwordField,
+                    title: BundleUtil.localizedString(forKey: "password_bad"),
+                    message: BundleUtil.localizedString(forKey: "password_bad_explain"),
+                    titleOk: BundleUtil.localizedString(forKey: "continue_anyway"),
+                    actionOk: { _ in
+                        self.activate(password: password)
+                    },
+                    titleCancel: BundleUtil.localizedString(forKey: "try_again"),
+                    actionCancel: { _ in
+                        self.passwordField.becomeFirstResponder()
+                    }
+                )
+            }
+            else {
+                activate(password: password)
             }
         }
     }
@@ -262,7 +275,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         return nil
     }
 
-    private func validateServer() -> Bool {
+    private func validateServer(completion: @escaping (Bool) -> Void) {
         if mdmSetup.isSafeBackupServerPreset() {
             // server is given by MDM
             let mdmSetup = MDMSetup(setup: false)
@@ -301,20 +314,25 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     safeStore: safeStore,
                     safeApiService: SafeApiService()
                 )
-                let result = safeManager.testServer(serverURL: customServerURL)
-                if let errorMessage = result.errorMessage {
-                    UIAlertTemplate.showAlert(
-                        owner: self,
-                        title: BundleUtil.localizedString(forKey: "safe_test_server"),
-                        message: errorMessage
-                    )
-                    return false
-                }
-                else {
-                    self.customServer = customServer
-                    server = customServerURL.absoluteString
-                    maxBackupBytes = result.maxBackupBytes
-                    retentionDays = result.retentionDays
+                safeManager.testServer(serverURL: customServerURL) { errorMessage, maxBackupBytes, retentionDays in
+                        
+                    if let errorMessage {
+                        DispatchQueue.main.async {
+                            UIAlertTemplate.showAlert(
+                                owner: self,
+                                title: BundleUtil.localizedString(forKey: "safe_test_server"),
+                                message: errorMessage
+                            )
+                        }
+                        completion(false)
+                        return
+                    }
+                    else {
+                        self.customServer = customServer
+                        self.server = customServerURL.absoluteString
+                        self.maxBackupBytes = maxBackupBytes
+                        self.retentionDays = retentionDays
+                    }
                 }
             }
             else {
@@ -323,10 +341,11 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     title: BundleUtil.localizedString(forKey: "safe_test_server"),
                     message: BundleUtil.localizedString(forKey: "safe_test_server_invalid_url")
                 )
-                return false
+                completion(false)
+                return
             }
         }
-        return true
+        completion(true)
     }
     
     // MARK: - Table view data source

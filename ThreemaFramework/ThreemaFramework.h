@@ -115,6 +115,7 @@
 #import <ThreemaFramework/ProtocolDefines.h>
 #import <ThreemaFramework/PushPayloadDecryptor.h>
 #import <ThreemaFramework/QuotedMessageProtocol.h>
+#import <ThreemaFramework/ReceiptType.h>
 #import <ThreemaFramework/ServerAPIConnector.h>
 #import <ThreemaFramework/UnknownTypeMessage.h>
 #import <ThreemaFramework/UploadProgressDelegate.h>
@@ -135,10 +136,8 @@
 #import <ThreemaFramework/TextStyleUtils.h>
 #import <ThreemaFramework/TMAManagedObject.h>
 #import <ThreemaFramework/TypingIndicatorMessage.h>
-#import <ThreemaFramework/threema-kdf.h>
 #import <ThreemaFramework/VideoMessageEntity.h>
 #import <ThreemaFramework/ValidationLogger.h>
-#import <ThreemaFramework/VoIPHelper.h>
 #import <ThreemaFramework/WebClientSession.h>
 #import <ThreemaFramework/FeatureMask.h>
 #import <ThreemaFramework/QuoteUtil.h>
@@ -150,7 +149,6 @@
 #import <ThreemaFramework/JKLLockScreenViewController.h>
 #import <ThreemaFramework/FLAnimatedImage.h>
 #import <ThreemaFramework/FLAnimatedImageView.h>
-#import <ThreemaFramework/ContactGroupPhotoLoader.h>
 #import <ThreemaFramework/GroupPhotoSender.h>
 #import <ThreemaFramework/UITextField+Themed.h>
 #import <ThreemaFramework/ParallaxPageViewController.h>
@@ -160,6 +158,8 @@
 #import <ThreemaFramework/MessageDraftStore.h>
 #import <ThreemaFramework/CallEntity.h>
 #import <ThreemaFramework/ThreemaError.h>
+#import <ThreemaFramework/GroupCallEntity.h>
+#import <ThreemaFramework/ObjcCspE2eFs_Version.h>
 
 //! Project version number for ThreemaFramework.
 FOUNDATION_EXPORT double ThreemaFrameworkVersionNumber;

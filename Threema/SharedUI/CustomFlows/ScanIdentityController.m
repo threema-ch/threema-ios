@@ -31,7 +31,6 @@
 #import "ServerAPIConnector.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "QRScannerViewController.h"
-#import "StatusNavigationBar.h"
 #import "PortraitNavigationController.h"
 #import "EntityFetcher.h"
 #import "BundleUtil.h"

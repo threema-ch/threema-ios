@@ -72,7 +72,7 @@ public class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtocol {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(matchQuery as CFDictionary, &result)
         guard status == errSecSuccess else {
-            DDLogError("Device Group Key not found: \(status)")
+            DDLogNotice("No Device Group Key was found in keychain: \(status)")
             return nil
         }
 

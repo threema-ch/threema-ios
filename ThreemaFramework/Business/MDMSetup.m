@@ -284,7 +284,7 @@ static NSDictionary *_mdmCacheSetup;
 // MARK: apply MDM to user settings, identity
 
 - (void)loadRenewableValues {
-    if (![self isManaged]) {
+    if (!isLicenseRequired) {
         return;
     }
 
@@ -335,7 +335,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (void)loadLicenseInfo {
-    if (![self isManaged]) {
+    if (!isLicenseRequired) {
         return;
     }
     
@@ -356,7 +356,9 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (void)loadIDCreationValues {
-    if (![self isManaged]) {
+    // We should set firstname, lastname, csi and category when mdm is empty
+    // Do nothing for consumer
+    if (!isLicenseRequired) {
         return;
     }
     
@@ -448,7 +450,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (BOOL)hasIDBackup {
-    if (![self isManaged]) {
+    if (!isLicenseRequired) {
         return NO;
     }
     
@@ -485,11 +487,6 @@ static NSDictionary *_mdmCacheSetup;
     }];
 }
 
-- (BOOL)isManaged {
-    NSDictionary *mdm = [self getMdmConfiguration];
-    return isLicenseRequired && mdm != nil && [mdm count] > 0;
-}
-
 - (NSString *)supportDescriptionString {
     NSString *supportDescriptionString;
     
@@ -514,6 +511,10 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (void)applyCompanyMDMWithCachedThreemaMDMSendForce:(BOOL)sendForce {
+    if ([AppGroup getCurrentType] != AppGroupTypeApp) {
+        return;
+    }
+        
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *workData = [NSMutableDictionary new];
     NSDictionary *threemaMdm = [self getThreemaMDM];

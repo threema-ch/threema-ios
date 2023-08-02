@@ -62,6 +62,7 @@
 #import "RequestedThumbnail.h"
 
 #import "CallEntity.h"
+#import "GroupCallEntity.h"
 
 @interface EntityCreator : NSObject
 
@@ -118,6 +119,8 @@
 
 - (Conversation *)conversation;
 
+- (Conversation *)conversation:(BOOL)setLastUpdate;
+
 - (GroupEntity *)groupEntity;
 
 - (Ballot *)ballot;
@@ -139,5 +142,7 @@
 - (RequestedThumbnail *)requestedThumbnailWithMessageId:(NSData *)messageId webClientSession:(WebClientSession*)webClientSession;
 
 - (CallEntity *)callEntity;
+
+- (GroupCallEntity *)groupCallEntity;
 
 @end

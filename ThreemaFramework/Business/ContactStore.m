@@ -268,11 +268,6 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             contact.publicKey = publicKey;
             contact.featureMask = featureMask;
             
-            if (ThreemaUtility.supportsForwardSecurity &&
-                 [contact isForwardSecurityAvailable]) {
-                contact.forwardSecurityEnabled = [NSNumber numberWithBool:YES];
-            }
-            
             if (state != nil) {
                 contact.state = state;
             }
@@ -655,7 +650,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         [mediatorSyncableContacts setProfileUpdateTypeWithIdentity:contact.identity value:contact.imageData != nil ? MediatorSyncableContacts.deltaUpdateTypeUpdated : MediatorSyncableContacts.deltaUpdateTypeRemoved];
     }
 
-    ImportedStatus importedStatus = [[ServerConnector sharedServerConnector] isMultiDeviceActivated] ? ImportedStatusImported : ImportedStatusInitial;
+    ImportedStatus importedStatus = [[UserSettings sharedUserSettings] enableMultiDevice] ? ImportedStatusImported : ImportedStatusInitial;
     if (contact.importedStatus != importedStatus) {
         contact.importedStatus = importedStatus;
     }
@@ -788,8 +783,10 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 }
 
 /**
- Delete contact if is not member in any group. If contact hidden then delete it anyway with related messages and conversations.
- If Multi Device activated the deletion will be reflected.
+ Delete contact if no 1:1-conversation exists or it is not member in group. Hidden contacts are deleted if there exists a 1:1-conversation as long as there are no
+ messages from this hidden contact (and they are not in a group).
+ 
+ If Multi Device is activated the deletion will be reflected.
 
  @param identity: Identity of the contact to delete
  @param entityManagerObject: EntityManager on which the deletion will de executed
@@ -817,6 +814,15 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             if (groups && [groups count] > 0) {
                 DDLogWarn(@"Contact %@ (hidden %d) can't be deleted because is still member of a group", contact.identity, contact.isContactHidden);
                 return;
+            }
+            
+            // Prevent deletion if hidden contact still has messages (in groups)
+            if (contact.isContactHidden) {
+                NSInteger numberOfMessages = [[em entityFetcher] countMessagesForContactWithIdentity:identity];
+                if (numberOfMessages > 0) {
+                    DDLogWarn(@"Hidden contact %@ can't be deleted because it still has %d messages", identity, numberOfMessages);
+                    return;
+                }
             }
 
             [[em entityDestroyer] deleteObjectWithObject:contact];
@@ -1134,14 +1140,14 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         }
     }];
 
-    if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated]) {
+    if ([[UserSettings sharedUserSettings] enableMultiDevice]) {
         [mediatorSyncableContacts syncAsync];
     }
 }
 
 #pragma mark - Profile Picture
 
-- (void)updateProfilePicture:(nullable NSString *)identity imageData:(NSData *)imageData shouldReflect:(BOOL)shouldReflect didFailWithError:(NSError * _Nullable * _Nullable)error {
+- (void)updateProfilePicture:(nullable NSString *)identity imageData:(NSData *)imageData shouldReflect:(BOOL)shouldReflect blobID:(nullable NSData *)blobID encryptionKey:(nullable NSData *)encryptionKey didFailWithError:(NSError * _Nullable __autoreleasing * _Nullable)error {
     UIImage *image = [UIImage imageWithData:imageData];
     if (image == nil) {
         *error = [ThreemaError threemaError:@"Image decoding failed"];
@@ -1169,9 +1175,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
     [self removeProfilePictureRequest:identity];
     
-    if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated] && shouldReflect) {
+    if ([[UserSettings sharedUserSettings] enableMultiDevice] && shouldReflect) {
         MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-        [mediatorSyncableContacts setContactProfileUpdateTypeWithIdentity:identity value:MediatorSyncableContacts.deltaUpdateTypeUpdated];
+        [mediatorSyncableContacts setContactProfileUpdateTypeWithIdentity:identity value:MediatorSyncableContacts.deltaUpdateTypeUpdated blobID:blobID encryptionKey:encryptionKey];
         [mediatorSyncableContacts syncAsync];
     }
     
@@ -1194,9 +1200,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
     [self removeProfilePictureRequest:identity];
     
-    if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated] && shouldReflect) {
+    if ([[UserSettings sharedUserSettings] enableMultiDevice] && shouldReflect) {
         MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-        [mediatorSyncableContacts setContactProfileUpdateTypeWithIdentity:contact.identity value:MediatorSyncableContacts.deltaUpdateTypeRemoved];
+        [mediatorSyncableContacts setContactProfileUpdateTypeWithIdentity:identity value:MediatorSyncableContacts.deltaUpdateTypeRemoved blobID:nil encryptionKey:nil];
         [mediatorSyncableContacts syncAsync];
     }
     
@@ -1670,10 +1676,6 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                         NSString *identityString = [identities objectAtIndex:i];
                         ContactEntity *contact = [entityManager.entityFetcher contactForId: identityString];
                         contact.featureMask = featureMask;
-                        if (ThreemaUtility.supportsForwardSecurity &&
-                            [contact isForwardSecurityAvailable]) {
-                            contact.forwardSecurityEnabled = [NSNumber numberWithBool:YES];
-                        }
                         [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
                     }
                 }
@@ -1782,10 +1784,6 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 if (![featureMask isEqual:[NSNull null]]) {
                     if (![contact.featureMask isEqualToNumber:featureMask]) {
                         contact.featureMask = featureMask;
-                        if (ThreemaUtility.supportsForwardSecurity &&
-                            [contact isForwardSecurityAvailable]) {
-                            contact.forwardSecurityEnabled = [NSNumber numberWithBool:YES];
-                        }
                         [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
                     }
                 }
@@ -2064,6 +2062,25 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     return [[CryptoUtils hmacSha256ForData:[mobileNo dataUsingEncoding:NSASCIIStringEncoding] key:mobileNoHashKeyData] base64EncodedStringWithOptions:0];
 }
 
+#pragma mark - Read receipts
+
+- (void)resetCustomReadReceipts {
+    MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
+
+    [entityManager performAsyncBlockAndSafe:^{
+        NSArray *contactsWithCustomReadReceipts = [entityManager.entityFetcher contactsWithCustomReadReceipt];
+        
+        if (contactsWithCustomReadReceipts != nil) {
+            for (ContactEntity *contact in contactsWithCustomReadReceipts) {
+                contact.readReceipt = ReadReceiptDefault;
+                [mediatorSyncableContacts updateReadReceiptWithIdentity:contact.identity value:ReadReceiptDefault];
+            }
+        }
+    }];
+    
+    [mediatorSyncableContacts syncAsync];
+}
+
 #pragma mark - Multi Device Sync
 
 - (void)reflectContact:(ContactEntity *)contact {
@@ -2073,7 +2090,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 }
 
 - (void)reflectDeleteContact:(NSString *)identity {
-    if (identity != nil && [[ServerConnector sharedServerConnector] isMultiDeviceActivated] == YES) {
+    if (identity != nil && [[UserSettings sharedUserSettings] enableMultiDevice] == YES) {
         MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
         [mediatorSyncableContacts deleteAndSyncObjcWithIdentity:identity]
             .catch(^(NSError *error) {

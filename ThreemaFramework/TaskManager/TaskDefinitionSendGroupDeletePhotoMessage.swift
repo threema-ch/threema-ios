@@ -20,7 +20,7 @@
 
 import Foundation
 
-class TaskDefinitionSendGroupDeletePhotoMessage: TaskDefinitionSendMessage {
+final class TaskDefinitionSendGroupDeletePhotoMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

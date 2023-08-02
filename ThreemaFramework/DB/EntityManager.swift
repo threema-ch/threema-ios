@@ -208,24 +208,69 @@ public class EntityManager: NSObject {
         return isProcessed
     }
 
-    /// Set sent property of own message to true and save.
+    /// Set delivered and delivery date of incoming message.
+    /// - Parameters:
+    /// - abstractMessage: Incoming message
+    /// - receivedAt: Receive date is reflected at or now if message was not reflected
+    public func markMessageAsReceived(_ abstractMessage: AbstractMessage, receivedAt: Date = .now) {
+
+        performAndWaitSave {
+            var conversation: Conversation?
+
+            if abstractMessage.flagGroupMessage() {
+                guard let groupMessage = abstractMessage as? AbstractGroupMessage else {
+                    DDLogError("Could not update message because it is not group message")
+                    return
+                }
+                conversation = self.entityFetcher.conversation(
+                    for: groupMessage.groupID,
+                    creator: groupMessage.groupCreator
+                )
+            }
+            else {
+                conversation = self.entityFetcher.conversation(forIdentity: abstractMessage.fromIdentity)
+            }
+
+            guard let conversation else {
+                DDLogError("Could not update message because we could not find the conversation")
+                return
+            }
+
+            guard let msg = self.entityFetcher.message(
+                with: abstractMessage.messageID,
+                conversation: conversation
+            ) else {
+                DDLogWarn(
+                    "Could not update message because we could not find the message ID \(abstractMessage.messageID?.hexString ?? "nil")"
+                )
+                return
+            }
+
+            msg.delivered = NSNumber(booleanLiteral: true)
+            msg.deliveryDate = receivedAt
+        }
+    }
+
+    /// Set sent and sent date of outgoing message.
     ///
-    /// - Parameter messageID: Message to set sent true
-    /// - Parameter isLocal: Is the message NOT sent to the chat server?
-    public func markMessageAsSent(_ messageID: Data, isLocal: Bool = false) {
-        performSyncBlockAndSafe {
+    /// - Parameters:
+    /// - messageID: ID of message that was sent
+    /// - sentAt: Sent date is reflected at or now if message was not reflected
+    /// - isLocal: True means message was NOT sent to the chat server
+    public func markMessageAsSent(_ messageID: Data, sentAt: Date = .now, isLocal: Bool = false) {
+        performAndWaitSave {
             if let dbMsg = self.entityFetcher.ownMessage(with: messageID), let sent = Bool(exactly: dbMsg.sent), !sent {
                 dbMsg.sent = true
                 dbMsg.sendFailed = false
-                        
+
                 // Only set remote sent date if it was actually sent to the chat server
                 if !isLocal {
-                    dbMsg.remoteSentDate = .now
+                    dbMsg.remoteSentDate = sentAt
                 }
             }
         }
     }
-    
+
     /// Set forward security mode of own message and save.
     ///
     /// - Parameter messageID: Message to set FS mode on
@@ -344,10 +389,18 @@ extension EntityManager {
         forContact contactEntity: ContactEntity,
         createIfNotExisting: Bool
     ) -> Conversation? {
+        conversation(forContact: contactEntity, createIfNotExisting: createIfNotExisting, setLastUpdate: true)
+    }
+    
+    public func conversation(
+        forContact contactEntity: ContactEntity,
+        createIfNotExisting: Bool,
+        setLastUpdate: Bool = true
+    ) -> Conversation? {
         let conversation = entityFetcher.conversation(forIdentity: contactEntity.identity)
 
         if createIfNotExisting, conversation == nil,
-           let conversation = entityCreator.conversation() {
+           let conversation = entityCreator.conversation(setLastUpdate) {
             conversation.contact = contactEntity
 
             if contactEntity.isContactHidden {
@@ -377,10 +430,18 @@ extension EntityManager {
     }
 
     @objc public func conversation(for identity: String, createIfNotExisting: Bool) -> Conversation? {
+        conversation(for: identity, createIfNotExisting: createIfNotExisting, setLastUpdate: true)
+    }
+    
+    public func conversation(
+        for identity: String,
+        createIfNotExisting: Bool,
+        setLastUpdate: Bool = true
+    ) -> Conversation? {
         guard let contact = entityFetcher.contact(for: identity) else {
             return nil
         }
-        return conversation(forContact: contact, createIfNotExisting: createIfNotExisting)
+        return conversation(forContact: contact, createIfNotExisting: createIfNotExisting, setLastUpdate: setLastUpdate)
     }
 
     func conversation(forMessage message: AbstractMessage) -> Conversation? {
@@ -546,6 +607,7 @@ extension EntityManager {
         conversation: Conversation,
         thumbnail: UIImage?
     ) -> BaseMessage? {
+        assert(abstractMessage.fromIdentity != nil, "Sender identity is needed to calculating sending direction")
 
         // Get DB objects BaseMessage from particular entity fetcher
         func getMessage(for conversation: Conversation, fetcher: EntityFetcher) -> BaseMessage? {
@@ -560,7 +622,7 @@ extension EntityManager {
             }
 
             if message == nil, !isMainDBContext {
-                DDLogWarn("Looking for the message on main DB context")
+                DDLogNotice("Looking for the message \(abstractMessage.messageID.hexString) on main DB context")
                 var messageObjectID: NSManagedObjectID?
                 dbContext.main.performAndWait {
                     messageObjectID = getMessage(
@@ -571,6 +633,7 @@ extension EntityManager {
 
                 // Apply message to current DB context
                 if let messageObjectID {
+                    DDLogNotice("Apply message \(abstractMessage.messageID.hexString) to current DB context")
                     message = dbContext.current.object(with: messageObjectID) as? BaseMessage
                 }
             }
@@ -629,7 +692,7 @@ extension EntityManager {
             }
             else {
                 // Create new message and save it to DB (without applying sender and conversation)
-                performSyncBlockAndSafe {
+                performAndWaitSave {
                     if let amsg = abstractMessage as? BoxAudioMessage {
                         message = self.entityCreator.audioMessageEntity(fromBox: amsg)
                     }
@@ -696,6 +759,9 @@ extension EntityManager {
                     }
 
                     message?.conversation = conversation
+
+                    let isOutgoingMessage = abstractMessage.fromIdentity == self.myIdentityStore.identity
+                    message?.isOwn = NSNumber(booleanLiteral: isOutgoingMessage)
 
                     conversation.lastMessage = message
                     conversation.lastUpdate = .now

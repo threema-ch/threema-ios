@@ -190,13 +190,18 @@ final class ChatViewSnapshotProvider {
     
     private func addObservers() {
         // Reload the chat on significant time changes (e.g. new day) to update section headers
+        // Use a selector, otherwise it will n
         NotificationCenter.default.addObserver(
-            forName: UIApplication.significantTimeChangeNotification,
-            object: self,
-            queue: OperationQueue.main
-        ) { [weak self] _ in
-            self?.messageProvider.refetch()
-        }
+            self,
+            selector: #selector(dayChanged),
+            name: .NSCalendarDayChanged,
+            object: nil
+        )
+    }
+    
+    /// Reload the chat to update section headers
+    @objc private func dayChanged() {
+        messageProvider.refetch()
     }
     
     private func prepareAndPublishSnapshot(messages: MessageProvider.MessagesSnapshot) {

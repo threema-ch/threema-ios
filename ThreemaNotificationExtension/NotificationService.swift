@@ -134,6 +134,10 @@ class NotificationService: UNNotificationServiceExtension {
                 
                 businessInjector.serverConnector.businessInjectorForMessageProcessing = businessInjector
                 
+                if ThreemaEnvironment.groupCalls {
+                    GlobalGroupCallsManagerSingleton.shared.processBusinessInjector = businessInjector
+                }
+                
                 // Caution: DB main context reset when start Notification Extension,
                 // because the context can become corrupt and don't save any data anymore.
                 DatabaseContext.reset()
@@ -397,11 +401,11 @@ class NotificationService: UNNotificationServiceExtension {
     ///   - reportedCall: Exit due to Threema Call was reported to the App, `NotificationService.didJustReportCall` will
     ///                   be set to `true` for 5s
     private func exitIfAllTasksProcessed(force: Bool = false, reportedCall: Bool = false) {
-        let isMultiDeviceActivated = ServerConnector.shared().isMultiDeviceActivated
+        let isMultiDeviceRegistered = businessInjector.settingsStore.isMultiDeviceRegistered
         if force ||
             (
                 isChatQueueDry &&
-                    (!isMultiDeviceActivated || (isMultiDeviceActivated && isReflectionQueueDry)) &&
+                    (!isMultiDeviceRegistered || (isMultiDeviceRegistered && isReflectionQueueDry)) &&
                     TaskManager.isEmpty(queueType: .incoming)
             ) {
             DDLogNotice(

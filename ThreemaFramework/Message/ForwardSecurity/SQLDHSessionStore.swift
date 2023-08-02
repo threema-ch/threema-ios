@@ -21,9 +21,30 @@
 import CocoaLumberjackSwift
 import Foundation
 import SQLite
+import ThreemaProtocols
+
+public protocol SQLDHSessionStoreErrorHandler: AnyObject {
+    func handleDHSessionIllegalStateError(sessionID: DHSessionID, peerIdentity: String)
+}
 
 public class SQLDHSessionStore: DHSessionStoreProtocol {
     private static let databaseName = "threema-fs.db"
+    private static let databasePath = (
+        FileUtility.appDataDirectory?
+            .appendingPathComponent(SQLDHSessionStore.databaseName).path
+    )!
+    
+    public struct SQLDHSessionStoreVersionInfo {
+        let dbVersion: Int32
+        let maximumSupportedDowngradeVersion: Int32
+    }
+    
+    public enum SQLDHSessionStoreMigrationError: Error {
+        case downgradeFromUnsupportedVersion(NSError)
+        case unknownError(NSError)
+    }
+    
+    public weak var errorHandler: SQLDHSessionStoreErrorHandler?
     
     let sessionTable = Table("session")
     
@@ -40,17 +61,34 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     let peerCounter4DHColumn = Expression<Int64?>("peerCounter_4dh")
     let myEphemeralPrivateKeyColumn = Expression<Data?>("myEphemeralPrivateKey")
     let myEphemeralPublicKeyColumn = Expression<Data>("myEphemeralPublicKey")
+    // Note: Should be named `myCurrentVersion_4dh` but it's too late now
+    let myCurrentVersion4DH = Expression<Int?>("negotiatedVersion")
+    let peerCurrentVersion4DH = Expression<Int?>("peerCurrentVersion_4dh")
     
-    fileprivate let dbVersion: Int32 = 1
+    fileprivate let versionInfo: SQLDHSessionStoreVersionInfo
+    
+    fileprivate static let defaultVersionInfo = SQLDHSessionStoreVersionInfo(
+        dbVersion: 4,
+        maximumSupportedDowngradeVersion: 4
+    )
     
     var db: Connection
     let dbQueue: DispatchQueue
     let keyWrapper: KeyWrapperProtocol
     
-    init(path: String, keyWrapper: KeyWrapperProtocol) throws {
+    init(
+        path: String,
+        keyWrapper: KeyWrapperProtocol,
+        versionInfo: SQLDHSessionStoreVersionInfo = defaultVersionInfo
+    ) throws {
         self.db = try Connection(path)
         self.dbQueue = DispatchQueue(label: "SQLDHSessionStore")
         self.keyWrapper = keyWrapper
+        self.versionInfo = versionInfo
+        
+        DDLogVerbose(
+            "[SQLDHSessionStoreMigration] [ForwardSecurity]  Initialized with version \(String(describing: db.userVersion))"
+        )
         
         try db.execute("PRAGMA journal_mode = DELETE;")
         try db.execute("PRAGMA secure_delete = true;")
@@ -59,56 +97,136 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         excludeFromBackup(path: path)
     }
     
-    public convenience init() throws {
-        try self
-            .init(
-                path: (FileUtility.appDataDirectory?.appendingPathComponent(SQLDHSessionStore.databaseName).path)!,
-                keyWrapper: KeychainKeyWrapper()
-            )
+    convenience init() throws {
+        try self.init(
+            path: SQLDHSessionStore.databasePath,
+            keyWrapper: KeychainKeyWrapper()
+        )
+    }
+    
+    public static func deleteSessionDB() {
+        #if !DEBUG
+            guard SettingsBundleHelper.safeMode else {
+                return
+            }
+        #endif
+        
+        guard let pathAsURL = URL(string: SQLDHSessionStore.databasePath) else {
+            return
+        }
+        FileUtility.delete(at: pathAsURL)
     }
     
     func upgradeIfNecessary() throws {
+        DDLogNotice(
+            "[SQLDHSessionStoreMigration] \(#function) Start with version \(String(describing: db.userVersion)) and \(versionInfo.dbVersion)"
+        )
         let currentVersion = db.userVersion ?? 0
-        if currentVersion != dbVersion {
-            try db.transaction {
-                if currentVersion < dbVersion {
-                    try onUpgrade(
-                        db: self.db,
-                        oldVersion: currentVersion,
-                        newVersion: dbVersion
-                    )
+        if currentVersion != versionInfo.dbVersion {
+            do {
+                try db.transaction {
+                    if currentVersion < versionInfo.dbVersion {
+                        try onUpgrade(
+                            db: self.db,
+                            oldVersion: currentVersion,
+                            newVersion: versionInfo.dbVersion
+                        )
+                    }
+                    else if currentVersion > versionInfo.dbVersion {
+                        try onDowngrade(
+                            db: self.db,
+                            oldVersion: currentVersion,
+                            newVersion: versionInfo.dbVersion
+                        )
+                    }
                 }
-                else if currentVersion > dbVersion {
-                    try onDowngrade(
-                        db: self.db,
-                        oldVersion: currentVersion,
-                        newVersion: dbVersion
-                    )
+            }
+            catch {
+                guard !(error is SQLDHSessionStoreMigrationError) else {
+                    throw error
                 }
+                
+                throw SQLDHSessionStore.generalError(from: error)
             }
         }
     }
     
     func onUpgrade(db: Connection, oldVersion: Int32, newVersion: Int32) throws {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Start")
         if oldVersion < 1, newVersion >= 1 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v1")
             SQLDHSessionStore.upgradeToV1(db)
         }
+        
+        if oldVersion < 2, newVersion >= 2 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v2")
+            try upgradeToV2(db)
+        }
+        
+        if oldVersion < 3, newVersion >= 3 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v3")
+            try upgradeToV3(db)
+        }
+        
+        if oldVersion < 4, newVersion >= 4 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v4")
+            try upgradeToV4(db)
+        }
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Finished")
     }
     
     func onDowngrade(db: Connection, oldVersion: Int32, newVersion: Int32) throws {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Start")
+        
+        guard oldVersion <= versionInfo.maximumSupportedDowngradeVersion else {
+            throw SQLDHSessionStore.downgradeError(
+                oldVersion: oldVersion,
+                newVersion: newVersion,
+                versionInfo: versionInfo
+            )
+        }
+        
+        if oldVersion > 3, newVersion <= 3 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v4")
+            try downgradeFromV4(db)
+        }
+        
+        if oldVersion > 2, newVersion <= 2 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v3")
+            try downgradeFromV3(db)
+        }
+        
         if oldVersion > 1, newVersion <= 1 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v2")
             try downgradeFromV2(db)
         }
         
         if oldVersion > 0, newVersion <= 0 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v1")
             SQLDHSessionStore.downgradeFromV1(db)
         }
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Finished")
     }
     
     public func executeNull() throws {
+        DDLogNotice(
+            "[SQLDHSessionStoreMigration] \(#function) Start with version \(String(describing: db.userVersion))"
+        )
         try dbQueue.sync {
+            DDLogNotice(
+                "[SQLDHSessionStoreMigration] \(#function) Entered dbQueue with version \(String(describing: db.userVersion))"
+            )
             try upgradeIfNecessary()
+            DDLogNotice(
+                "[SQLDHSessionStoreMigration] \(#function) Exit dbQueue with version \(String(describing: db.userVersion))"
+            )
         }
+        
+        DDLogNotice(
+            "[SQLDHSessionStoreMigration] \(#function) Finished with version \(String(describing: db.userVersion))"
+        )
     }
     
     public func exactDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID?) throws -> DHSession? {
@@ -153,8 +271,11 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 peerCurrentChainKey4DHColumn <- self.keyWrapper.wrap(key: session.peerRatchet4DH?.currentChainKey),
                 peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter),
                 myEphemeralPrivateKeyColumn <- self.keyWrapper.wrap(key: session.myEphemeralPrivateKey),
-                myEphemeralPublicKeyColumn <- session.myEphemeralPublicKey!
+                myEphemeralPublicKeyColumn <- session.myEphemeralPublicKey!,
+                myCurrentVersion4DH <- (session.current4DHVersions?.local ?? .v10).rawValue,
+                peerCurrentVersion4DH <- session.current4DHVersions?.remote.rawValue
             ))
+            DDLogNotice("[ForwardSecurity] Stored DH Session with id: \(session.description)")
         }
     }
     
@@ -193,7 +314,9 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         peerCounter2DHColumn <- uInt64ToInt64(value: session.peerRatchet2DH?.counter),
                         peerCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.peerRatchet4DH?.currentChainKey),
-                        peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter)
+                        peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter),
+                        myCurrentVersion4DH <- (session.current4DHVersions?.local ?? .v10).rawValue,
+                        peerCurrentVersion4DH <- session.current4DHVersions?.remote.rawValue
                     )
                 )
             }
@@ -215,11 +338,14 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         myCounter2DHColumn <- uInt64ToInt64(value: session.myRatchet2DH?.counter),
                         myCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.myRatchet4DH?.currentChainKey),
-                        myCounter4DHColumn <- uInt64ToInt64(value: session.myRatchet4DH?.counter)
+                        myCounter4DHColumn <- uInt64ToInt64(value: session.myRatchet4DH?.counter),
+                        myCurrentVersion4DH <- (session.current4DHVersions?.local ?? .v10).rawValue,
+                        peerCurrentVersion4DH <- session.current4DHVersions?.remote.rawValue
                     )
                 )
             }
         }
+        DDLogNotice("[ForwardSecurity] Updated DH Session with id: \(session.description)")
     }
     
     public func deleteDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID) throws -> Bool {
@@ -229,6 +355,9 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                     filterForSession(myIdentity: myIdentity, peerIdentity: peerIdentity, sessionID: sessionID)
                         .delete()
                 )
+            DDLogNotice(
+                "[ForwardSecurity] Tried deleting DH Session with id: \(sessionID.description) peer: \(peerIdentity), success: \(numDeleted > 0)"
+            )
             return numDeleted > 0
         }
     }
@@ -237,6 +366,10 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         try dbQueue.sync {
             let numDeleted = try db
                 .run(filterForSession(myIdentity: myIdentity, peerIdentity: peerIdentity, sessionID: nil).delete())
+            DDLogNotice(
+                "[ForwardSecurity] Tried deleting all DH Session with peer: \(peerIdentity), count deleted: \(numDeleted)"
+            )
+
             return numDeleted
         }
     }
@@ -270,14 +403,18 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         /// If the table doesn't exist, an error is thrown https://github.com/stephencelis/SQLite.swift/issues/693
         do {
             if try !(db.scalar(sessionTable.exists)) {
-                db.userVersion = dbVersion
+                DDLogNotice(
+                    "[SQLDHSessionStoreMigration] \(#function) The table exists and has zero rows."
+                )
             }
         }
         catch {
-            DDLogVerbose("DB doesn't exist yet.")
+            DDLogVerbose("[SQLDHSessionStoreMigration] DB doesn't exist yet.")
             // Ignore errors
-
-            db.userVersion = dbVersion
+            
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) The error is \(error)")
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Set DB version because the table does not yet exist")
+            db.userVersion = versionInfo.dbVersion
         }
         
         try db.run(sessionTable.create(ifNotExists: true) { t in
@@ -294,6 +431,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             t.column(peerCounter4DHColumn)
             t.column(myEphemeralPrivateKeyColumn)
             t.column(myEphemeralPublicKeyColumn)
+            t.column(myCurrentVersion4DH)
+            t.column(peerCurrentVersion4DH)
             t.primaryKey(myIdentityColumn, peerIdentityColumn, sessionIDColumn)
         })
     }
@@ -372,11 +511,13 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                     row: row,
                     keyColumn: peerCurrentChainKey4DHColumn,
                     counterColumn: peerCounter4DHColumn
-                )
+                ),
+                current4DHVersions: dhVersions(from: row)
             )
         }
         catch KeyWrappingError.decryptionFailed {
             // This is irrecoverable, and we need to delete the session
+            DDLogError("[ForwardSecurity] KeyWrapping Error in \(#function), deleting session.")
             try db
                 .run(
                     filterForSession(
@@ -386,6 +527,26 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                     )
                     .delete()
                 )
+            return nil
+        }
+        catch let DHSession.State.StateError.invalidStateError(description) {
+            // This is irrecoverable, and we need to delete the session
+            DDLogError("[ForwardSecurity] Invalid state error in \(#function), deleting session. Error: \(description)")
+            try errorHandler?.handleDHSessionIllegalStateError(
+                sessionID: DHSessionID(value: row.get(sessionIDColumn)),
+                peerIdentity: row.get(peerIdentityColumn)
+            )
+
+            try db
+                .run(
+                    filterForSession(
+                        myIdentity: row.get(myIdentityColumn),
+                        peerIdentity: row.get(peerIdentityColumn),
+                        sessionID: DHSessionID(value: row.get(sessionIDColumn))
+                    )
+                    .delete()
+                )
+            
             return nil
         }
     }
@@ -399,6 +560,19 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             return nil
         }
         return try KDFRatchet(counter: UInt64(counter), initialChainKey: keyWrapper.unwrap(key: key)!)
+    }
+    
+    private func dhVersions(
+        from row: Row
+    ) throws -> DHVersions? {
+        guard let rawMyCurrentVersion4DH = try row.get(myCurrentVersion4DH),
+              let local = CspE2eFs_Version(rawValue: rawMyCurrentVersion4DH),
+              let rawPeerCurrentVersion4DH = try row.get(peerCurrentVersion4DH),
+              let remote = CspE2eFs_Version(rawValue: rawPeerCurrentVersion4DH) else {
+            return nil
+        }
+        
+        return DHVersions(local: local, remote: remote)
     }
     
     private func excludeFromBackup(path: String) {
@@ -416,5 +590,40 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             throw ForwardSecurityError.counterOutOfRange
         }
         return Int64(value)
+    }
+    
+    // MARK: - Error Helpers
+    
+    private static func downgradeError(
+        oldVersion: Int32,
+        newVersion: Int32,
+        versionInfo: SQLDHSessionStoreVersionInfo
+    ) -> SQLDHSessionStoreMigrationError {
+        let baseString = BundleUtil.localizedString(forKey: "sqldhsessionstore_cannot_downgrade_to")
+        let localizedDescription = String.localizedStringWithFormat(
+            baseString,
+            "SQLDHSessionStore.swift",
+            oldVersion,
+            versionInfo.maximumSupportedDowngradeVersion
+        )
+
+        let dict = [NSLocalizedDescriptionKey: localizedDescription]
+        let nsError = NSError(domain: "\(type(of: self))", code: 1, userInfo: dict)
+        
+        return SQLDHSessionStoreMigrationError.downgradeFromUnsupportedVersion(nsError)
+    }
+    
+    private static func generalError(from error: Error) -> SQLDHSessionStoreMigrationError {
+        let baseString = BundleUtil.localizedString(forKey: "sqldhsessionstore_unknownError")
+        let localizedDescription = String.localizedStringWithFormat(
+            baseString,
+            error.localizedDescription
+        )
+        let dict = [NSLocalizedDescriptionKey: localizedDescription]
+        let nsError = NSError(domain: "\(type(of: self))", code: 2, userInfo: dict)
+        
+        let wrappedError = SQLDHSessionStoreMigrationError.unknownError(nsError)
+        
+        return wrappedError
     }
 }

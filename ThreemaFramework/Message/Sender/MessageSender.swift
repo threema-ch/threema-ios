@@ -23,7 +23,7 @@ import CoreLocation
 import Foundation
 import PromiseKit
 
-public class MessageSender: NSObject, MessageSenderProtocol {
+public final class MessageSender: NSObject, MessageSenderProtocol {
     private let serverConnector: ServerConnectorProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
     private let userSettings: UserSettingsProtocol
@@ -264,7 +264,6 @@ public class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
                 message: abstractMessage,
-                doOnlyReflect: false,
                 isPersistent: isPersistent
             )
         ) { _, _ in
@@ -284,27 +283,33 @@ public class MessageSender: NSObject, MessageSenderProtocol {
 
     public func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void> {
         Promise { seal in
-            let messageID = abstractMessage.messageID.hexString
-            if abstractMessage.noDeliveryReceiptFlagSet() {
-                DDLogVerbose("Do not send delivery receipt (noDeliveryReceiptFlagSet) for message ID: \(messageID)")
+            guard let messageID = abstractMessage.messageID else {
                 seal.fulfill_()
+                return
             }
-            else {
-                DDLogVerbose("Sending delivery receipt for message ID: \(messageID)")
-                let deliveryReceipt = DeliveryReceiptMessage()
-                deliveryReceipt.receiptType = UInt8(DELIVERYRECEIPT_MSGRECEIVED)
-                deliveryReceipt.receiptMessageIDs = [abstractMessage.messageID!]
-                deliveryReceipt.fromIdentity = myIdentityStore.identity
-                deliveryReceipt.toIdentity = abstractMessage.fromIdentity
 
-                let task = TaskDefinitionSendAbstractMessage(message: deliveryReceipt)
-                taskManager.add(taskDefinition: task) { _, error in
-                    if let error {
-                        seal.reject(error)
-                    }
-                    else {
-                        seal.fulfill_()
-                    }
+            var excludeFromSending = [Data]()
+            if abstractMessage.noDeliveryReceiptFlagSet() {
+                DDLogWarn(
+                    "Exclude from sending receipt (noDeliveryReceiptFlagSet) for message ID: \(messageID.hexString)"
+                )
+                excludeFromSending.append(messageID)
+            }
+
+            let task = TaskDefinitionSendDeliveryReceiptsMessage(
+                fromIdentity: myIdentityStore.identity,
+                toIdentity: abstractMessage.fromIdentity,
+                receiptType: .received,
+                receiptMessageIDs: [messageID],
+                receiptReadDates: [Date](),
+                excludeFromSending: excludeFromSending
+            )
+            taskManager.add(taskDefinition: task) { _, error in
+                if let error {
+                    seal.reject(error)
+                }
+                else {
+                    seal.fulfill_()
                 }
             }
         }
@@ -318,13 +323,13 @@ public class MessageSender: NSObject, MessageSenderProtocol {
         let doSendReadReceipt = await entityManager.perform {
             // Is multi device not activated and not sending read receipt to contact, then nothing is to do
             let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity)
-            return !(!self.doSendReadReceipt(to: contactEntity) && !self.serverConnector.isMultiDeviceActivated)
+            return !(!self.doSendReadReceipt(to: contactEntity) && !self.userSettings.enableMultiDevice)
         }
 
         if doSendReadReceipt {
             await sendReceipt(
                 for: messages,
-                receiptType: UInt8(DELIVERYRECEIPT_MSGREAD),
+                receiptType: .read,
                 toIdentity: toIdentity
             )
         }
@@ -336,7 +341,7 @@ public class MessageSender: NSObject, MessageSenderProtocol {
     ///   - toGroupIdentity: Group of the messages
     public func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: GroupIdentity) async {
         // Is multi device not activated do sending (reflect only) read receipt to group
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             return
         }
 
@@ -347,31 +352,29 @@ public class MessageSender: NSObject, MessageSenderProtocol {
 
         await sendReceipt(
             for: messages,
-            receiptType: UInt8(DELIVERYRECEIPT_MSGREAD),
+            receiptType: .read,
             toGroup: group
         )
     }
 
     public func sendUserAck(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
-        let receiptType = UInt8(DELIVERYRECEIPT_MSGUSERACK)
-        await sendReceipt(for: [message], receiptType: receiptType, toIdentity: toIdentity)
-        await updateForContact(receiptType: receiptType, in: message)
+        await updateUserReaction(on: message, with: .ack)
+        await sendReceipt(for: [message], receiptType: .ack, toIdentity: toIdentity)
     }
 
     public func sendUserAck(for message: BaseMessage, toGroup: Group) async {
-        await sendReceipt(for: [message], receiptType: UInt8(DELIVERYRECEIPT_MSGUSERACK), toGroup: toGroup)
-        await updateForGroup(receiptType: .acknowledged, in: message)
+        await updateUserReaction(on: message, with: .acknowledged)
+        await sendReceipt(for: [message], receiptType: .ack, toGroup: toGroup)
     }
 
     public func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
-        let receiptType = UInt8(DELIVERYRECEIPT_MSGUSERDECLINE)
-        await sendReceipt(for: [message], receiptType: receiptType, toIdentity: toIdentity)
-        await updateForContact(receiptType: receiptType, in: message)
+        await updateUserReaction(on: message, with: .decline)
+        await sendReceipt(for: [message], receiptType: .decline, toIdentity: toIdentity)
     }
 
     public func sendUserDecline(for message: BaseMessage, toGroup: Group) async {
-        await sendReceipt(for: [message], receiptType: UInt8(DELIVERYRECEIPT_MSGUSERDECLINE), toGroup: toGroup)
-        await updateForGroup(receiptType: .declined, in: message)
+        await updateUserReaction(on: message, with: .declined)
+        await sendReceipt(for: [message], receiptType: .decline, toGroup: toGroup)
     }
 
     @objc public func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) {
@@ -395,7 +398,6 @@ public class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
                 message: typingIndicatorMessage,
-                doOnlyReflect: false,
                 isPersistent: false
             )
         )
@@ -547,12 +549,13 @@ public class MessageSender: NSObject, MessageSenderProtocol {
 
     private func sendReceipt(
         for messages: [BaseMessage],
-        receiptType: UInt8,
+        receiptType: ReceiptType,
         toIdentity: ThreemaIdentity
     ) async {
-        // Get message ID's and receipt dates for sending
-        guard let msgIDAndReadDate = await entityManager.perform({
+        // Get message ID's and receipt dates for sending and exclude from sending if noDeliveryReceiptFlagSet
+        guard let (msgIDAndReadDate, excludeFromSending) = await entityManager.perform({
             var msgIDAndReadDate = [Data: Date?]()
+            var excludeFromSending = [Data]()
             for message in messages {
                 guard let contactEntity = message.conversation.contact else {
                     continue
@@ -561,15 +564,19 @@ public class MessageSender: NSObject, MessageSenderProtocol {
                 if toIdentity != contactEntity.identity {
                     DDLogError("Bad from identity encountered while sending receipt")
                 }
-                else if receiptType == UInt8(DELIVERYRECEIPT_MSGREAD), message.noDeliveryReceiptFlagSet() {
-                    DDLogWarn("Do not send receipt (noDeliveryReceiptFlagSet) for message ID: \(message.id.hexString)")
-                }
                 else {
-                    msgIDAndReadDate[message.id] = receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) ? message
+                    msgIDAndReadDate[message.id] = receiptType == .read ? message
                         .readDate : nil
+
+                    if message.noDeliveryReceiptFlagSet() {
+                        DDLogWarn(
+                            "Exclude from sending receipt (noDeliveryReceiptFlagSet) for message ID: \(message.id.hexString)"
+                        )
+                        excludeFromSending.append(message.id)
+                    }
                 }
             }
-            return msgIDAndReadDate
+            return (msgIDAndReadDate, excludeFromSending)
         }), !msgIDAndReadDate.isEmpty else {
             return
         }
@@ -595,16 +602,23 @@ public class MessageSender: NSObject, MessageSenderProtocol {
                         if !receiptMessageIDs.isEmpty {
                             DDLogVerbose("Sending delivery receipt for message IDs: \(receiptMessageIDs)")
 
-                            let task = TaskDefinitionSendDeliveryReceiptsMessage(
+                            let taskSendDeliveryReceipts = TaskDefinitionSendDeliveryReceiptsMessage(
                                 fromIdentity: self.myIdentityStore.identity,
                                 toIdentity: toIdentity,
                                 receiptType: receiptType,
                                 receiptMessageIDs: receiptMessageIDs,
-                                receiptReadDates: receiptReadDates
+                                receiptReadDates: receiptReadDates,
+                                excludeFromSending: excludeFromSending
                             )
-                            self.taskManager.add(taskDefinition: task) { _, error in
+
+                            self.taskManager.add(taskDefinition: taskSendDeliveryReceipts) { task, error in
                                 if let error {
-                                    DDLogError("Task to send read receipts failed: \(error)")
+                                    if case TaskManagerError.flushedTask = error {
+                                        return continuation.resume()
+                                    }
+
+                                    DDLogError("\(task) to send read receipts failed: \(error)")
+                                    return
                                 }
                                 return continuation.resume()
                             }
@@ -620,7 +634,7 @@ public class MessageSender: NSObject, MessageSenderProtocol {
 
     private func sendReceipt(
         for messages: [BaseMessage],
-        receiptType: UInt8,
+        receiptType: ReceiptType,
         toGroup: Group
     ) async {
         // Get message ID's and receipt dates for sending
@@ -630,13 +644,13 @@ public class MessageSender: NSObject, MessageSenderProtocol {
                 if toGroup.groupID != message.conversation.groupID {
                     DDLogError("Bad from group encountered while sending receipt")
                 }
-                else if receiptType != UInt8(DELIVERYRECEIPT_MSGREAD),
-                        receiptType != UInt8(DELIVERYRECEIPT_MSGUSERACK),
-                        receiptType != UInt8(DELIVERYRECEIPT_MSGUSERDECLINE) {
+                else if receiptType != .read,
+                        receiptType != .ack,
+                        receiptType != .decline {
                     DDLogWarn("Do not send receipt type \(receiptType) for message ID: \(message.id.hexString)")
                 }
                 else {
-                    msgIDAndReadDate[message.id] = receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) ? message
+                    msgIDAndReadDate[message.id] = receiptType == .read ? message
                         .readDate : nil
                 }
             }
@@ -666,7 +680,7 @@ public class MessageSender: NSObject, MessageSenderProtocol {
                         if !receiptMessageIDs.isEmpty {
                             DDLogVerbose("Sending delivery receipt for message IDs: \(receiptMessageIDs)")
 
-                            let task = TaskDefinitionSendGroupDeliveryReceiptsMessage(
+                            let taskSendDeliveryReceipts = TaskDefinitionSendGroupDeliveryReceiptsMessage(
                                 group: toGroup,
                                 from: self.myIdentityStore.identity,
                                 to: Array(toGroup.allMemberIdentities),
@@ -674,11 +688,15 @@ public class MessageSender: NSObject, MessageSenderProtocol {
                                 receiptMessageIDs: receiptMessageIDs,
                                 receiptReadDates: receiptReadDates
                             )
-                            self.taskManager.add(taskDefinition: task) { _, error in
+                            self.taskManager.add(taskDefinition: taskSendDeliveryReceipts) { task, error in
                                 if let error {
-                                    DDLogError("Task to send read receipts failed: \(error)")
-                                }
+                                    if case TaskManagerError.flushedTask = error {
+                                        return continuation.resume()
+                                    }
 
+                                    DDLogError("\(task) to send read receipts failed: \(error)")
+                                    return
+                                }
                                 return continuation.resume()
                             }
                         }
@@ -691,14 +709,13 @@ public class MessageSender: NSObject, MessageSenderProtocol {
         })
     }
 
-    private func updateForContact(receiptType: UInt8, in message: BaseMessage) async {
-        guard receiptType != UInt8(DELIVERYRECEIPT_MSGUSERACK) || receiptType != UInt8(DELIVERYRECEIPT_MSGUSERDECLINE)
-        else {
+    private func updateUserReaction(on message: BaseMessage, with receiptType: ReceiptType) async {
+        guard receiptType != .ack || receiptType != .decline else {
             return
         }
 
         await entityManager.performSave {
-            let ack = receiptType == UInt8(DELIVERYRECEIPT_MSGUSERACK)
+            let ack = receiptType == .ack
 
             message.userack = NSNumber(booleanLiteral: ack)
             message.userackDate = Date()
@@ -709,11 +726,14 @@ public class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
 
-    private func updateForGroup(receiptType: GroupDeliveryReceipt.DeliveryReceiptType, in message: BaseMessage) async {
+    private func updateUserReaction(
+        on message: BaseMessage,
+        with groupReceiptType: GroupDeliveryReceipt.DeliveryReceiptType
+    ) async {
         await entityManager.performSave {
             let groupDeliveryReceipt = GroupDeliveryReceipt(
                 identity: MyIdentityStore.shared().identity,
-                deliveryReceiptType: receiptType,
+                deliveryReceiptType: groupReceiptType,
                 date: Date()
             )
 
@@ -722,32 +742,6 @@ public class MessageSender: NSObject, MessageSenderProtocol {
             if message.id == message.conversation.lastMessage?.id {
                 message.conversation.lastMessage = message
             }
-        }
-    }
-}
-
-extension MessageSender {
-    @objc public func sendUserAckObjc(for message: BaseMessage, toIdentity: ThreemaIdentity) {
-        Task {
-            await sendUserAck(for: message, toIdentity: toIdentity)
-        }
-    }
-
-    @objc public func sendUserAckObjc(for message: BaseMessage, toGroup: Group) {
-        Task {
-            await sendUserAck(for: message, toGroup: toGroup)
-        }
-    }
-
-    @objc public func sendUserDeclineObjc(for message: BaseMessage, toIdentity: ThreemaIdentity) {
-        Task {
-            await sendUserDecline(for: message, toIdentity: toIdentity)
-        }
-    }
-
-    @objc public func sendUserDeclineObjc(for message: BaseMessage, toGroup: Group) {
-        Task {
-            await sendUserDecline(for: message, toGroup: toGroup)
         }
     }
 }

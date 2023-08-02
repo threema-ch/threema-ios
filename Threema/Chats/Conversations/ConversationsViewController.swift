@@ -25,7 +25,7 @@ import ThreemaFramework
 import UIKit
 
 class ConversationsViewController: ThemedTableViewController {
-    
+
     // MARK: - Property Declaration
 
     @IBOutlet var archivedChatsButton: UIButton!
@@ -82,9 +82,10 @@ class ConversationsViewController: ThemedTableViewController {
     }()
     
     private lazy var businessInjector = BusinessInjector()
+    private lazy var notificationManager = NotificationManager(businessInjector: businessInjector)
     private lazy var utilities = ConversationActions(
         businessInjector: businessInjector,
-        notificationManager: NotificationManager(businessInjector: businessInjector)
+        notificationManager: notificationManager
     )
 
     private lazy var searchController: UISearchController = {
@@ -108,6 +109,8 @@ class ConversationsViewController: ThemedTableViewController {
     
     private lazy var lockScreen = LockScreen(isLockScreenController: false)
     
+    private var refreshConversationsDelay: Timer?
+
     // MARK: - Lifecycle
     
     required init?(coder: NSCoder) {
@@ -209,6 +212,7 @@ extension ConversationsViewController {
             fatalError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
         }
         cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? Conversation)
+        cell.setNavigationController(to: navigationController)
         return cell
     }
         
@@ -988,15 +992,27 @@ extension ConversationsViewController {
             refreshData()
         }
     }
-    
+
     @objc private func refreshDirtyObjects(notification: NSNotification) {
         guard let objectID: NSManagedObjectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID else {
             return
         }
         if objectID.entity == Conversation.entity() {
-            DispatchQueue.main.async {
-                self.refreshData()
-            }
+            refreshConversationsDelay?.invalidate()
+            refreshConversationsDelay = Timer.scheduledTimer(
+                timeInterval: TimeInterval(0.1),
+                target: self,
+                selector: #selector(refreshConversations),
+                userInfo: nil,
+                repeats: false
+            )
+        }
+    }
+
+    @objc private func refreshConversations() {
+        DispatchQueue.main.async {
+            self.refreshData()
+            self.notificationManager.updateUnreadMessagesCount()
         }
     }
     

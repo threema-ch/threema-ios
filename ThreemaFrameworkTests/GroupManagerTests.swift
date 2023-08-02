@@ -57,7 +57,6 @@ class GroupManagerTests: XCTestCase {
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             ContactStoreMock(callOnCompletion: true),
             taskManagerMock,
@@ -116,7 +115,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -193,7 +191,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -275,7 +272,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -367,7 +363,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             ContactStoreMock(callOnCompletion: true),
             taskManagerMock,
@@ -414,7 +409,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             ContactStoreMock(callOnCompletion: true),
             taskManagerMock,
@@ -478,7 +472,6 @@ class GroupManagerTests: XCTestCase {
             let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
 
             let groupManager = GroupManager(
-                ServerConnectorMock(),
                 myIdentityStoreMock,
                 ContactStoreMock(callOnCompletion: true),
                 TaskManagerMock(),
@@ -554,7 +547,6 @@ class GroupManagerTests: XCTestCase {
         let error = NSError(domain: NSURLErrorDomain, code: 404)
             
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             ContactStoreMock(callOnCompletion: true, errorHandler: error),
             TaskManagerMock(),
@@ -639,7 +631,6 @@ class GroupManagerTests: XCTestCase {
         let error = NSError(domain: NSURLErrorDomain, code: 404)
             
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             ContactStoreMock(callOnCompletion: true, errorHandler: error),
             TaskManagerMock(),
@@ -718,7 +709,6 @@ class GroupManagerTests: XCTestCase {
         let error = NSError(domain: NSPOSIXErrorDomain, code: 8_765_432_187)
             
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             ContactStoreMock(callOnCompletion: true, errorHandler: error),
             TaskManagerMock(),
@@ -777,7 +767,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager: GroupManagerProtocol = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -847,7 +836,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -955,7 +943,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1014,7 +1001,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1084,7 +1070,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1143,7 +1128,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1218,7 +1202,6 @@ class GroupManagerTests: XCTestCase {
 
         let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1285,7 +1268,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1339,7 +1321,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1398,7 +1379,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1451,7 +1431,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1545,7 +1524,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1626,7 +1604,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1705,7 +1682,6 @@ class GroupManagerTests: XCTestCase {
 
         let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1808,7 +1784,6 @@ class GroupManagerTests: XCTestCase {
 
         let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
         let groupManagerForPreparation = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1848,7 +1823,6 @@ class GroupManagerTests: XCTestCase {
         waitForExpectations(timeout: 1)
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1908,7 +1882,6 @@ class GroupManagerTests: XCTestCase {
 
         let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -1992,7 +1965,6 @@ class GroupManagerTests: XCTestCase {
 
         let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2049,7 +2021,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2096,7 +2067,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2148,7 +2118,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2233,7 +2202,6 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator: String = myIdentityStoreMock.identity
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2282,7 +2250,6 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator: String = myIdentityStoreMock.identity
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2357,7 +2324,6 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2413,7 +2379,6 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator: String = myIdentityStoreMock.identity
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2482,11 +2447,6 @@ class GroupManagerTests: XCTestCase {
     }
 
     func testSyncNoteGroupWhenMultiDeviceIsActivated() throws {
-        let serverConnectorMock = ServerConnectorMock(
-            connectionState: .connected,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
-        )
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2495,11 +2455,10 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator: String = myIdentityStoreMock.identity
 
         let groupManager = GroupManager(
-            serverConnectorMock,
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
-            UserSettingsMock(),
+            UserSettingsMock(enableMultiDevice: true),
             EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
             groupPhotoSenderMock
         )
@@ -2548,7 +2507,6 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator: String = myIdentityStoreMock.identity
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2580,7 +2538,6 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator: String = myIdentityStoreMock.identity
         
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -2638,7 +2595,6 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,

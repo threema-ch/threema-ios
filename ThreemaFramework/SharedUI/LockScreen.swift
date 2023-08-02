@@ -20,8 +20,9 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
 
-@objc class LockScreen: NSObject, JKLLockScreenViewControllerDelegate, JKLLockScreenViewControllerDataSource {
+final class LockScreen: NSObject, JKLLockScreenViewControllerDelegate, JKLLockScreenViewControllerDataSource {
     
     // MARK: - Properties
     
@@ -38,7 +39,7 @@ import Foundation
         return lockScreenViewController
     }()
     
-    private lazy var passCodeViewController: JKLLockScreenViewController = {
+    fileprivate lazy var passCodeViewController: JKLLockScreenViewController = {
         let lockScreenViewController = JKLLockScreenViewController(
             nibName: NSStringFromClass(JKLLockScreenViewController.self),
             bundle: BundleUtil.frameworkBundle()
@@ -59,11 +60,12 @@ import Foundation
         return modalNavigationController
     }()
     
-    private var enteredCorrectly: (() -> Void)?
+    fileprivate var enteredCorrectly: (() -> Void)?
     private var enteredIncorrectly: (() -> Void)?
-    private var unlockCancelled: (() -> Void)?
+    fileprivate var unlockCancelled: (() -> Void)?
     private var didDismissAfterSuccess: (() -> Void)?
-    private var isLockScreenController: Bool
+    
+    private let isLockScreenController: Bool
     
     // MARK: - Lifecycle
     
@@ -142,5 +144,42 @@ import Foundation
     
     @objc func shouldEraseApplicationData(_ viewController: JKLLockScreenViewController!) {
         AppDelegate.shared().eraseApplicationData(viewController)
+    }
+}
+
+// MARK: - SwiftUI
+
+/// A lock screen view where the passcode can be entered (or biometrics used if enabled)
+struct LockScreenView: UIViewControllerRepresentable {
+    
+    /// Passcode was entered correctly
+    ///
+    /// A sheet will be dismissed automatically at least when another sheet is presented. Note that this most likely
+    /// works, because in SwiftUI only one sheet can be presented at the same time. So this might break if this
+    /// limitation is lifted.
+    let codeEnteredCorrectly: (() -> Void)?
+    
+    /// Lock screen view was canceled. A sheet will be dismissed automatically
+    let cancelled: (() -> Void)?
+    
+    // enteredIncorrectly doesn't seem to work at all (the delegate is not called)
+    // didDismissAfterSuccess doesn't work as expected when a biometric authentication is used
+    
+    private let lockScreen = LockScreen(isLockScreenController: false)
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        lockScreen.enteredCorrectly = codeEnteredCorrectly
+        lockScreen.unlockCancelled = cancelled
+        return lockScreen.passCodeViewController
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
+        // no-op
+    }
+}
+
+struct LockScreenView_Preview: PreviewProvider {
+    static var previews: some View {
+        LockScreenView(codeEnteredCorrectly: nil, cancelled: nil)
     }
 }

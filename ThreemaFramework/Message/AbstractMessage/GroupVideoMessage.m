@@ -63,16 +63,20 @@
     return YES;
 }
 
-#pragma mark - NSCoding
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
         self.duration = (uint16_t)[decoder decodeIntegerForKey:@"duration"];
-        self.videoBlobId = [decoder decodeObjectForKey:@"videoBlobId"];
+        self.videoBlobId = [decoder decodeObjectOfClass:[NSData class] forKey:@"videoBlobId"];
         self.videoSize = (uint32_t)[decoder decodeIntegerForKey:@"videoSize"];
-        self.thumbnailBlobId = [decoder decodeObjectForKey:@"thumbnailBlobId"];
+        self.thumbnailBlobId = [decoder decodeObjectOfClass:[NSData class] forKey:@"thumbnailBlobId"];
         self.thumbnailSize = (uint32_t)[decoder decodeIntegerForKey:@"thumbnailSize"];
-        self.encryptionKey = [decoder decodeObjectForKey:@"encryptionKey"];
+        self.encryptionKey = [decoder decodeObjectOfClass:[NSData class] forKey:@"encryptionKey"];
     }
     return self;
 }
@@ -85,6 +89,10 @@
     [encoder encodeObject:self.thumbnailBlobId forKey:@"thumbnailBlobId"];
     [encoder encodeInt:self.thumbnailSize forKey:@"thumbnailSize"];
     [encoder encodeObject:self.encryptionKey forKey:@"encryptionKey"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

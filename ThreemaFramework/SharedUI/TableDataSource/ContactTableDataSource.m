@@ -46,6 +46,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @property BOOL ignoreUpdates;
 
+@property ContactList contactList;
+
 @end
 
 @implementation ContactTableDataSource
@@ -70,6 +72,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (instancetype)initWithFetchedResultsControllerDelegate:(id<NSFetchedResultsControllerDelegate>)delegate members:(NSMutableSet *)members {
     self = [super init];
     if (self) {
+        _contactList = [ThreemaUtility isWorkFlavor] ? ContactListContactsAndWork : ContactListContacts;
+
         _entityManager = [[EntityManager alloc] init];
         if (members != nil) {
             _selectedContacts = members;
@@ -99,9 +103,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)setExcludeEchoEcho:(BOOL)excludeEchoEcho {
     _excludeEchoEcho = excludeEchoEcho;
-    
+        
     if (_excludeEchoEcho && _excludeGatewayContacts) {
-        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoGatewayNoEchoecho list:ContactListContacts members:_selectedContacts];
+        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoGatewayNoEchoecho list:_contactList members:_selectedContacts];
         fetchedResultsController.delegate = _fetchedResultsController.delegate;
         _fetchedResultsController = fetchedResultsController;
         
@@ -111,7 +115,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             [ErrorHandler abortWithError: error];
         }
     } else if (_excludeEchoEcho) {
-        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoEchoEcho list:ContactListContacts members:_selectedContacts];
+        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoEchoEcho list:_contactList members:_selectedContacts];
         fetchedResultsController.delegate = _fetchedResultsController.delegate;
         _fetchedResultsController = fetchedResultsController;
         
@@ -125,7 +129,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)loadGatewayContacts {
     if (_excludeGatewayContacts == NO) {
-        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsGatewayOnly list:ContactListContacts members:nil];
+        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsGatewayOnly list:_contactList members:nil];
         fetchedResultsController.delegate = self;
         _gatewayFetchedResultsController = fetchedResultsController;
         
@@ -142,7 +146,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)setupFetchedResultsControllerWithDelegate:(id<NSFetchedResultsControllerDelegate>)delegate {
     
-    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoGateway list:ContactListContacts members:_selectedContacts];
+    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoGateway list:_contactList members:_selectedContacts];
     fetchedResultsController.delegate = delegate;
     _fetchedResultsController = fetchedResultsController;
     
@@ -209,7 +213,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             type = ContactsNoEchoEcho;
         }
             
-        _filteredContacts = [_entityManager.entityFetcher contactsFilteredByWords:words forContactTypes:type list:ContactListContacts members:_selectedContacts];
+        _filteredContacts = [_entityManager.entityFetcher contactsFilteredByWords:words forContactTypes:type list:_contactList members:_selectedContacts];
     } else {
         _filteredContacts = nil;
     }

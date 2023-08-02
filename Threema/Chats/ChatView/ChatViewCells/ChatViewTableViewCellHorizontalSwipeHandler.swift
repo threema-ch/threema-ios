@@ -97,11 +97,6 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
     // MARK: Private functions
     
     private func addInteractions() {
-        
-        guard !(cell is ChatViewCallSystemMessageTableViewCell) else {
-            return
-        }
-        
         let newSwipeGesture = UIPanGestureRecognizer(target: self, action: #selector(swiped(_:)))
         
         newSwipeGesture.delegate = self

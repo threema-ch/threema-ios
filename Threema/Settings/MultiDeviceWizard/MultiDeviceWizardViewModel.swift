@@ -190,7 +190,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
                 return
             }
             
-            pfsEnabledContacts.append(contentsOf: allContacts.filter(\.forwardSecurityEnabled.boolValue))
+            pfsEnabledContacts.append(contentsOf: allContacts.filter { $0.isForwardSecurityAvailable() })
         }
         return pfsEnabledContacts
     }
@@ -201,7 +201,15 @@ class MultiDeviceWizardViewModel: ObservableObject {
         businessInjector.entityManager.performSyncBlockAndSafe {
             for contact in contacts {
                 // Disable PFS
-                contact.forwardSecurityEnabled = false
+                contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
+                
+                // Terminate existing session
+                do {
+                    try sessionTerminator.terminateAllSessions(with: contact, cause: .disabledByLocal)
+                }
+                catch {
+                    DDLogError("An error occurred while terminating session with \(contact.identity): \(error)")
+                }
                 
                 // Post system message
                 guard let conversation = self.businessInjector.entityManager.entityFetcher
@@ -215,16 +223,6 @@ class MultiDeviceWizardViewModel: ObservableObject {
                     continue
                 }
                 systemMessage.type = NSNumber(value: kSystemMessageFsDisabledOutgoing)
-                conversation.lastMessage = systemMessage
-                conversation.lastUpdate = Date()
-                
-                // Terminate existing session
-                do {
-                    try sessionTerminator.terminateAllSessions(with: contact)
-                }
-                catch {
-                    DDLogError("An error occurred while terminating session with \(contact.identity): \(error)")
-                }
             }
         }
     }

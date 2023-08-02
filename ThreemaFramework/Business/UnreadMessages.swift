@@ -81,7 +81,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
 
         entityManager.performSyncBlockAndSafe {
             var conversations = [Conversation]()
-            for conversation in self.entityManager.entityFetcher.notArchivedConversations() {
+            for conversation in self.entityManager.entityFetcher.allConversations() {
                 if let conversation = conversation as? Conversation {
                     conversations.append(conversation)
                 }
@@ -189,18 +189,18 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
                 )
                 // Send (reflect) read receipt
                 let unreadMessagesLocal = unreadMessages
-                Task { @MainActor in
+                Task {
                     await messageSender.sendReadReceipt(for: unreadMessagesLocal, toGroupIdentity: groupIdentity)
                 }
             }
         }
-        else if let contact = conversation.contact {
+        else if let identity = conversation.contact?.identity {
             // Send read receipt
             let unreadMessagesLocal = unreadMessages
-            Task { @MainActor in
+            Task {
                 await messageSender.sendReadReceipt(
                     for: unreadMessagesLocal,
-                    toIdentity: contact.identity
+                    toIdentity: identity
                 )
             }
         }

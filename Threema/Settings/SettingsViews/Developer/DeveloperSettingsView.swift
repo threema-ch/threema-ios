@@ -30,9 +30,14 @@ struct DeveloperSettingsView: View {
 
     // Multi-Device
     @State var allowSeveralDevices = UserSettings.shared().allowSeveralLinkedDevices
+    @State private var showDebugDeviceJoin = false
     
     // Feature Flags
     @State var newSettings = UserSettings.shared().newSettingsActive
+    
+    // Group Calls
+    @State var groupCallsDeveloper = UserSettings.shared().groupCallsDeveloper
+    @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
     
     var body: some View {
         List {
@@ -79,10 +84,20 @@ struct DeveloperSettingsView: View {
                     UserSettings.shared().allowSeveralLinkedDevices = newValue
                 }
                 
+                Button("Show Debug Device Join") {
+                    showDebugDeviceJoin = true
+                }
+                
                 NavigationLink {
                     LinkedDevicesView(settingsStore: BusinessInjector().settingsStore as! SettingsStore)
                 } label: {
                     Text("Linked Device (beta)")
+                }
+                
+                NavigationLink {
+                    MultiDeviceViewControllerRepresentable()
+                } label: {
+                    Text("Old Linking")
                 }
             }
             
@@ -94,13 +109,74 @@ struct DeveloperSettingsView: View {
                     UserSettings.shared().newSettingsActive = newValue
                     exit(1)
                 }
-                Text("GroupCalls soon? ☎️👀")
-                    .foregroundColor(.secondary)
-                    .italic()
+            }
+            
+            Section("👨‍👩‍👧‍👦☎️ Group Calls") {
+                Toggle(isOn: $groupCallsDeveloper.animation()) {
+                    Text("Group Calls Development")
+                }
+                .onChange(of: groupCallsDeveloper) { newValue in
+                    UserSettings.shared().groupCallsDeveloper = newValue
+                }
+                .disabled(!ThreemaEnvironment.groupCallsPrerequisites)
+                
+                if groupCallsDeveloper {
+                    Toggle(isOn: $groupCallsDebugMessages) {
+                        Text("Send Debug Messages for Group Calls")
+                    }
+                    .onChange(of: groupCallsDebugMessages) { newValue in
+                        UserSettings.shared().groupCallsDebugMessages = newValue
+                    }
+                    .disabled(!ThreemaEnvironment.groupCallsPrerequisites)
+                }
+            }
+            
+            Section {
+                Button("Terminate All FS Session") {
+                    let businessInjector = BusinessInjector()
+                    let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
+                    
+                    businessInjector.entityManager.performAndWait {
+                        for contact in businessInjector.entityManager.entityFetcher
+                            .allContacts() as? [ContactEntity] ?? [] {
+                            try! terminator.terminateAllSessions(with: contact, cause: .reset)
+                        }
+                    }
+                }
+                Button("🚨 Delete All FS Sessions") {
+                    let businessInjector = BusinessInjector()
+                    let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
+                    
+                    businessInjector.entityManager.performAndWait {
+                        for contact in businessInjector.entityManager.entityFetcher
+                            .allContacts() as? [ContactEntity] ?? [] {
+                            try! terminator.deleteAllSessions(with: contact)
+                        }
+                    }
+                }
+                if ThreemaEnvironment.env() == .xcode {
+                    Button("🚨 Delete Database, Settings & All Files") {
+                        // DB & Files
+                        FileUtility.removeItemsInAllDirectories()
+                        AppGroup.resetUserDefaults()
+                        DatabaseManager().eraseDB()
+                        exit(0)
+                    }
+                }
+            } header: {
+                Text("🚨🚨🚨 FS State Deletion")
+            }
+            footer: {
+                Text("This will delete data without any additional confirmation!")
+                    .bold()
+                    .foregroundColor(.red)
             }
         }
         .navigationBarTitle("Developer Settings", displayMode: .inline)
         .tint(UIColor.primary.color)
+        .sheet(isPresented: $showDebugDeviceJoin) {
+            DebugDeviceJoinView()
+        }
     }
 }
 

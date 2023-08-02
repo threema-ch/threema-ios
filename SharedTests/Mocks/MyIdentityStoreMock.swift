@@ -22,6 +22,25 @@ import Foundation
 import ThreemaFramework
 
 class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
+    var csi: String!
+    
+    var category: String!
+    
+    var firstName: String!
+    
+    var lastName: String!
+    
+    func displayName() -> String {
+        if let name = ContactUtil.name(fromFirstname: firstName, lastname: lastName) {
+            return name as String
+        }
+        
+        if let pushFromName, !pushFromName.isEmpty, pushFromName != identity {
+            return pushFromName
+        }
+
+        return "\(identity) (\(BundleUtil.localizedString(forKey: "me")))"
+    }
     
     var pushFromName: String!
     
@@ -81,4 +100,6 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     }
 
     var licenseSupportURL = ""
+    
+    var serverGroup: String!
 }

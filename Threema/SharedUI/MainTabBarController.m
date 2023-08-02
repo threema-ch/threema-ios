@@ -21,7 +21,6 @@
 #import "MainTabBarController.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
-#import "StatusNavigationBar.h"
 
 #import "ContactsViewController.h"
 
@@ -402,6 +401,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 _contactsViewController = [[_contactsNavigationController viewControllers] objectAtIndex:0];
             }
             
+            if ([[[_contactsNavigationController viewControllers] lastObject] isKindOfClass:[SingleDetailsViewController class]]) {
+                SingleDetailsViewController *currentContact = (SingleDetailsViewController *)[[_contactsNavigationController viewControllers] lastObject];
+                if ([currentContact._contact.identity isEqualToString:contact.identity]) {
+                    return;
+                }
+            }
+            
             [self setSelectedViewController:_contactsNavigationController];
             [_contactsNavigationController popToViewController:_contactsViewController animated:NO];
             [_contactsViewController showDetailsForContact:contact];
@@ -485,9 +491,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
             
             [_conversationsNavigationController popToRootViewControllerAnimated:NO];
-            _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
-            [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
-            [self setSelectedViewController:_conversationsNavigationController];
+            // There is a race condition during pop, so we need to check again.
+            if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
+                _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
+                [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
+                [self setSelectedViewController:_conversationsNavigationController];
+            }
         }
     }
 }

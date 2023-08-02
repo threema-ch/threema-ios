@@ -46,7 +46,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         case error
     }
 
-    private let serverConnector: ServerConnectorProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
     private let contactStore: ContactStoreProtocol
     private let taskManager: TaskManagerProtocol
@@ -55,7 +54,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     private let groupPhotoSender: GroupPhotoSenderProtocol
     
     init(
-        _ serverConnector: ServerConnectorProtocol,
         _ myIdentityStore: MyIdentityStoreProtocol,
         _ contactStore: ContactStoreProtocol,
         _ taskManager: TaskManagerProtocol,
@@ -63,7 +61,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         _ entityManager: EntityManager,
         _ groupPhotoSender: GroupPhotoSenderProtocol
     ) {
-        self.serverConnector = serverConnector
         self.myIdentityStore = myIdentityStore
         self.contactStore = contactStore
         self.taskManager = taskManager
@@ -74,7 +71,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     
     @objc public convenience init(entityManager: EntityManager) {
         self.init(
-            ServerConnector.shared(),
             MyIdentityStore.shared(),
             ContactStore.shared(),
             TaskManager(),
@@ -86,7 +82,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     
     override public convenience init() {
         self.init(
-            ServerConnector.shared(),
             MyIdentityStore.shared(),
             ContactStore.shared(),
             TaskManager(),
@@ -1352,7 +1347,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         withoutCreateMessage: Bool
     ) -> Promise<Void> {
         /// Sync group if `toMembers` empty to reflect note groups if multi device activated.
-        guard !(toMembers.isEmpty && !serverConnector.isMultiDeviceActivated) else {
+        guard !(toMembers.isEmpty && !userSettings.enableMultiDevice) else {
             return Promise()
         }
 
@@ -1590,7 +1585,17 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         let boxMsg = BallotMessageEncoder.encodeCreateMessage(for: ballot)
         boxMsg.messageID = AbstractMessage.randomMessageID()
         
-        let msg = BallotMessageEncoder.groupBallotCreateMessage(from: boxMsg, for: conversation)
+        guard let groupID = conversation.groupID,
+              let groupCreatorIdentity = conversation.contact?.identity ?? myIdentityStore.identity else {
+            DDLogWarn("Group not found to send ballot create messages")
+            return
+        }
+
+        let msg = BallotMessageEncoder.groupBallotCreateMessage(
+            from: boxMsg,
+            groupID: groupID,
+            groupCreatorIdentity: groupCreatorIdentity
+        )
         msg.toIdentity = toMember
         
         let task = TaskDefinitionSendAbstractMessage(message: msg)
@@ -1601,7 +1606,17 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         let boxMsg = BallotMessageEncoder.encodeVoteMessage(for: ballot)
         boxMsg.messageID = AbstractMessage.randomMessageID()
         
-        let msg = BallotMessageEncoder.groupBallotVoteMessage(from: boxMsg, for: conversation)
+        guard let groupID = conversation.groupID,
+              let groupCreatorIdentity = conversation.contact?.identity ?? myIdentityStore.identity else {
+            DDLogWarn("Group not found to send ballot vote messages")
+            return
+        }
+
+        let msg = BallotMessageEncoder.groupBallotVoteMessage(
+            from: boxMsg,
+            groupID: groupID,
+            groupCreatorIdentity: groupCreatorIdentity
+        )
         msg.toIdentity = toMember
         
         let task = TaskDefinitionSendAbstractMessage(message: msg)

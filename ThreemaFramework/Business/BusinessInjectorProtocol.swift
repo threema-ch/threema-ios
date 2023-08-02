@@ -46,6 +46,8 @@ protocol BusinessInternalInjectorProtocol {
     var conversationStoreInternal: ConversationStoreInternalProtocol { get }
     var settingsStoreInternal: SettingsStoreInternalProtocol { get }
     var userNotificationCenterManager: UserNotificationCenterManagerProtocol { get }
+    var nonceGuard: NonceGuardProtocol { get }
+    var blobUploader: BlobUploaderProtocol { get }
 }
 
 typealias FrameworkInjectorProtocol = BusinessInjectorProtocol & BusinessInternalInjectorProtocol

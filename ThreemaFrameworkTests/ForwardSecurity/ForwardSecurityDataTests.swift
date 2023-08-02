@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -27,7 +28,7 @@ private enum TestData {
         BytesUtility
             .toBytes(hexString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!
     )
-    static let testDhType = CspE2eFs_ForwardSecurityEnvelope.Message.DHType.fourdh
+    static let testDhType = CspE2eFs_Encapsulated.DHType.fourdh
     static let testCounter = UInt64(1)
     static let testMessage = Data(
         BytesUtility
@@ -38,16 +39,17 @@ private enum TestData {
             .toBytes(hexString: "0001020304050607")!
     )
     static let testMessageIDUInt64 = UInt64(0x01_0203_0405_0607).bigEndian
-    static let testCause = CspE2eFs_ForwardSecurityEnvelope.Reject.Cause.unknownSession
+    static let testCause = CspE2eFs_Reject.Cause.unknownSession
 }
 
 class ForwardSecurityDataInitTests: XCTestCase {
-    var testProtobufMessage: CspE2eFs_ForwardSecurityEnvelope {
-        CspE2eFs_ForwardSecurityEnvelope.with {
+    var testProtobufMessage: CspE2eFs_Envelope {
+        CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
-            $0.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content
-                .init_p(CspE2eFs_ForwardSecurityEnvelope.Init.with {
-                    $0.ephemeralPublicKey = TestData.testEphemeralPublicKey
+            $0.content = CspE2eFs_Envelope.OneOf_Content
+                .init_p(CspE2eFs_Init.with {
+                    $0.fssk = TestData.testEphemeralPublicKey
+                    $0.supportedVersion = ThreemaEnvironment.fsVersion
                 })
         }
     }
@@ -55,6 +57,7 @@ class ForwardSecurityDataInitTests: XCTestCase {
     func testValidData() throws {
         let data = try ForwardSecurityDataInit(
             sessionID: TestData.testSessionID,
+            versionRange: ThreemaEnvironment.fsVersion,
             ephemeralPublicKey: TestData.testEphemeralPublicKey
         )
         assertEqualsTestProperties(data: data)
@@ -69,6 +72,7 @@ class ForwardSecurityDataInitTests: XCTestCase {
     func testToProtobufMessage() throws {
         let data = try ForwardSecurityDataInit(
             sessionID: TestData.testSessionID,
+            versionRange: ThreemaEnvironment.fsVersion,
             ephemeralPublicKey: TestData.testEphemeralPublicKey
         )
         let generatedProtobufMessage = try data.toProtobuf()
@@ -82,12 +86,13 @@ class ForwardSecurityDataInitTests: XCTestCase {
 }
 
 class ForwardSecurityDataAcceptTests: XCTestCase {
-    var testProtobufMessage: CspE2eFs_ForwardSecurityEnvelope {
-        CspE2eFs_ForwardSecurityEnvelope.with {
+    var testProtobufMessage: CspE2eFs_Envelope {
+        CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
-            $0.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content
-                .accept(CspE2eFs_ForwardSecurityEnvelope.Accept.with {
-                    $0.ephemeralPublicKey = TestData.testEphemeralPublicKey
+            $0.content = CspE2eFs_Envelope.OneOf_Content
+                .accept(CspE2eFs_Accept.with {
+                    $0.fssk = TestData.testEphemeralPublicKey
+                    $0.supportedVersion = ThreemaEnvironment.fsVersion
                 })
         }
     }
@@ -95,6 +100,7 @@ class ForwardSecurityDataAcceptTests: XCTestCase {
     func testValidData() throws {
         let data = try ForwardSecurityDataAccept(
             sessionID: TestData.testSessionID,
+            version: ThreemaEnvironment.fsVersion,
             ephemeralPublicKey: TestData.testEphemeralPublicKey
         )
         assertEqualsTestProperties(data: data)
@@ -109,6 +115,7 @@ class ForwardSecurityDataAcceptTests: XCTestCase {
     func testToProtobufMessage() throws {
         let data = try ForwardSecurityDataAccept(
             sessionID: TestData.testSessionID,
+            version: ThreemaEnvironment.fsVersion,
             ephemeralPublicKey: TestData.testEphemeralPublicKey
         )
         let generatedProtobufMessage = try data.toProtobuf()
@@ -122,14 +129,16 @@ class ForwardSecurityDataAcceptTests: XCTestCase {
 }
 
 class ForwardSecurityDataMessageTests: XCTestCase {
-    var testProtobufMessage: CspE2eFs_ForwardSecurityEnvelope {
-        CspE2eFs_ForwardSecurityEnvelope.with {
+    var testProtobufMessage: CspE2eFs_Envelope {
+        CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
-            $0.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content
-                .message(CspE2eFs_ForwardSecurityEnvelope.Message.with {
+            $0.content = CspE2eFs_Envelope.OneOf_Content
+                .encapsulated(CspE2eFs_Encapsulated.with {
                     $0.dhType = TestData.testDhType
                     $0.counter = TestData.testCounter
-                    $0.message = TestData.testMessage
+                    $0.encryptedInner = TestData.testMessage
+                    $0.appliedVersion = UInt32(CspE2eFs_Version.v11.rawValue)
+                    $0.offeredVersion = UInt32(CspE2eFs_Version.v11.rawValue)
                 })
         }
     }
@@ -138,6 +147,8 @@ class ForwardSecurityDataMessageTests: XCTestCase {
         let data = ForwardSecurityDataMessage(
             sessionID: TestData.testSessionID,
             type: TestData.testDhType,
+            offeredVersion: .v11,
+            appliedVersion: .v11,
             counter: TestData.testCounter,
             message: TestData.testMessage
         )
@@ -154,6 +165,8 @@ class ForwardSecurityDataMessageTests: XCTestCase {
         let data = ForwardSecurityDataMessage(
             sessionID: TestData.testSessionID,
             type: TestData.testDhType,
+            offeredVersion: .v11,
+            appliedVersion: .v11,
             counter: TestData.testCounter,
             message: TestData.testMessage
         )
@@ -170,12 +183,12 @@ class ForwardSecurityDataMessageTests: XCTestCase {
 }
 
 class ForwardSecurityDataRejectTests: XCTestCase {
-    var testProtobufMessage: CspE2eFs_ForwardSecurityEnvelope {
-        CspE2eFs_ForwardSecurityEnvelope.with {
+    var testProtobufMessage: CspE2eFs_Envelope {
+        CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
-            $0.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content
-                .reject(CspE2eFs_ForwardSecurityEnvelope.Reject.with {
-                    $0.rejectedMessageID = TestData.testMessageIDUInt64
+            $0.content = CspE2eFs_Envelope.OneOf_Content
+                .reject(CspE2eFs_Reject.with {
+                    $0.rejectedEncapsulatedMessageID = TestData.testMessageIDUInt64
                     $0.cause = TestData.testCause
                 })
         }
@@ -215,16 +228,16 @@ class ForwardSecurityDataRejectTests: XCTestCase {
 }
 
 class ForwardSecurityDataTerminateTests: XCTestCase {
-    var testProtobufMessage: CspE2eFs_ForwardSecurityEnvelope {
-        CspE2eFs_ForwardSecurityEnvelope.with {
+    var testProtobufMessage: CspE2eFs_Envelope {
+        CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
-            $0.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content
-                .terminate(CspE2eFs_ForwardSecurityEnvelope.Terminate())
+            $0.content = CspE2eFs_Envelope.OneOf_Content
+                .terminate(CspE2eFs_Terminate())
         }
     }
     
     func testValidData() {
-        let data = ForwardSecurityDataTerminate(sessionID: TestData.testSessionID)
+        let data = ForwardSecurityDataTerminate(sessionID: TestData.testSessionID, cause: .unknownSession)
         assertEqualsTestProperties(data: data)
     }
     
@@ -236,7 +249,8 @@ class ForwardSecurityDataTerminateTests: XCTestCase {
     
     func testToProtobufMessage() throws {
         let data = ForwardSecurityDataTerminate(
-            sessionID: TestData.testSessionID
+            sessionID: TestData.testSessionID,
+            cause: .unknownSession
         )
         let generatedProtobufMessage = try data.toProtobuf()
         XCTAssertEqual(generatedProtobufMessage, try testProtobufMessage.serializedData())

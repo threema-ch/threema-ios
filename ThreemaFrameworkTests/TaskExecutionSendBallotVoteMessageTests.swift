@@ -64,17 +64,21 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             if serverConnectorMock.connectionState == .loggedIn {
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: Date()]
                 )
                 return true
             }
             return false
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
+        let groupManagerMock = GroupManagerMock()
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: dbMainCnx),
             myIdentityStore: myIdentityStoreMock,
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -93,15 +97,15 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         
         dbPreparer.save {
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,
+                groupID: MockData.generateGroupID(),
                 groupCreator: nil
             )
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
-                
+
                 ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
-                ballot.id = NaClCrypto.shared().randomBytes(8)
+                ballot.id = MockData.generateBallotID()
                 ballot.createDate = Date()
                 ballot.creatorID = myIdentityStoreMock.identity
                 ballot.conversation = conversation
@@ -113,6 +117,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                     conversation: conversation,
                     lastSyncRequest: nil
                 )
+
+                groupManagerMock.getConversationReturns = conversation
             }
         }
 
@@ -163,7 +169,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 let expectedReflectID = expectedReflectIDs.remove(at: 0)
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: Date()]
                 )
                 return true
             }
@@ -173,6 +180,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             entityManager: EntityManager(databaseContext: dbMainCnx),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -250,7 +258,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
 
-        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"])
+        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"], enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: MockData.deviceID,
@@ -261,15 +269,18 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 let expectedReflectID = expectedReflectIDs.remove(at: 0)
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: Date()]
                 )
                 return true
             }
             return false
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
+        let groupManagerMock = GroupManagerMock()
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: dbMainCnx),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
@@ -324,6 +335,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                     conversation: conversation,
                     lastSyncRequest: nil
                 )
+
+                groupManagerMock.getConversationReturns = conversation
             }
         }
 

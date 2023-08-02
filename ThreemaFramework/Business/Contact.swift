@@ -33,7 +33,7 @@ public class Contact: NSObject {
     /// Note: Contact properties will be only refreshed if it's ContactEntity object already saved in Core Data.
     ///
     /// - Parameter contactEntity: Core Data object
-    @objc init(contactEntity: ContactEntity) {
+    @objc public init(contactEntity: ContactEntity) {
         self.identity = contactEntity.identity
         self.publicKey = contactEntity.publicKey
         self.publicNickname = contactEntity.publicNickname
@@ -42,6 +42,7 @@ public class Contact: NSObject {
         self.verificationLevel = contactEntity.verificationLevel.intValue
         self.state = contactEntity.state?.intValue ?? kStateInactive
         self.isWorkContact = contactEntity.isWorkContact()
+        self.isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable()
 
         super.init()
 
@@ -164,6 +165,8 @@ public class Contact: NSObject {
     // bad naming because of the history...
     private(set) var isWorkContact: Bool
 
+    private(set) var isForwardSecurityAvailable: Bool
+    
     private var workAdjustedVerificationLevel: Int {
         var myVerificationLevel = verificationLevel
         if isWorkContact {
@@ -215,6 +218,40 @@ public class Contact: NSObject {
     /// Localized string of verification level usable for accessibility
     var verificationLevelAccessibilityLabel: String {
         BundleUtil.localizedString(forKey: "level\(workAdjustedVerificationLevel)_title")
+    }
+    
+    public var forwardSecurityState: ForwardSecrecyState? {
+        guard isForwardSecurityAvailable else {
+            return .unsupportedByRemote
+        }
+        
+        do {
+            let businessInjector = BusinessInjector()
+            guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
+                myIdentity: MyIdentityStore.shared().identity,
+                peerIdentity: identity
+            ) else {
+                return .noSession
+            }
+            
+            let state = try dhSession.state
+            let current4DHVersions = dhSession.current4DHVersions
+            
+            switch state {
+            case .L20:
+                return .L20(current4DHVersions)
+            case .RL44:
+                return .RL44(current4DHVersions)
+            case .R20:
+                return .R20(current4DHVersions)
+            case .R24:
+                return .R24(current4DHVersions)
+            }
+        }
+        catch {
+            DDLogError("Could not get ForwardSecurityState for contact with identity: \(identity).")
+            return nil
+        }
     }
 
     // MARK: Comparing function

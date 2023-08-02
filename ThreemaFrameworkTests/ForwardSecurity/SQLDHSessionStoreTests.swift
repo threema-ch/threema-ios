@@ -35,8 +35,6 @@ class SQLDHSessionStoreTests: XCTestCase {
         continueAfterFailure = false
         storePath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".db").path
         store = try SQLDHSessionStore(path: storePath!, keyWrapper: DummyKeyWrapper())
-        
-        try store?.executeNull()
     }
     
     override func tearDownWithError() throws {
@@ -48,7 +46,7 @@ class SQLDHSessionStoreTests: XCTestCase {
         let mySession = makeRandomDHSession(
             myIdentity: SQLDHSessionStoreTests.aliceIdentity,
             peerIdentity: SQLDHSessionStoreTests.bobIdentity,
-            fourDh: true
+            fourDh: false
         )
         
         try store!.storeDHSession(session: mySession)
@@ -186,8 +184,8 @@ class SQLDHSessionStoreTests: XCTestCase {
         else {
             peerRatchet4DH = nil
         }
-        
-        return DHSession(
+
+        return try! DHSession(
             id: session.id,
             myIdentity: SQLDHSessionStoreTests.aliceIdentity,
             peerIdentity: SQLDHSessionStoreTests.bobIdentity,
@@ -196,7 +194,8 @@ class SQLDHSessionStoreTests: XCTestCase {
             myRatchet2DH: myRatchet2DH,
             myRatchet4DH: myRatchet4DH,
             peerRatchet2DH: peerRatchet2DH,
-            peerRatchet4DH: peerRatchet4DH
+            peerRatchet4DH: peerRatchet4DH,
+            current4DHVersions: DHVersions(local: .v11, remote: .v11)
         )
     }
     
@@ -353,13 +352,46 @@ class SQLDHSessionStoreTests: XCTestCase {
     }
     
     private func makeRandomDHSession(myIdentity: String, peerIdentity: String, fourDh: Bool) -> DHSession {
+        if fourDh {
+            return makeRandomDHSession(myIdentity: myIdentity, peerIdentity: peerIdentity, state: .RL44)
+        }
+        else {
+            return makeRandomDHSession(myIdentity: myIdentity, peerIdentity: peerIdentity, state: .L20)
+        }
+    }
+
+    private func makeRandomDHSession(myIdentity: String, peerIdentity: String, state: DHSession.State) -> DHSession {
         let myEphemeralPrivateKey = randomKey()
         let myEphemeralPublicKey = randomKey()
-        let myRatchet2DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
-        let myRatchet4DH = fourDh ? KDFRatchet(counter: 1, initialChainKey: randomKey()) : nil
-        let peerRatchet2DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
-        let peerRatchet4DH = fourDh ? KDFRatchet(counter: 1, initialChainKey: randomKey()) : nil
-        return DHSession(
+        let myRatchet2DH: KDFRatchet?
+        let myRatchet4DH: KDFRatchet?
+        let peerRatchet2DH: KDFRatchet?
+        let peerRatchet4DH: KDFRatchet?
+        
+        switch state {
+        case .L20:
+            myRatchet2DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+            myRatchet4DH = nil
+            peerRatchet2DH = nil
+            peerRatchet4DH = nil
+        case .RL44:
+            myRatchet2DH = nil
+            myRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+            peerRatchet2DH = nil
+            peerRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+        case .R20:
+            myRatchet2DH = nil
+            myRatchet4DH = nil
+            peerRatchet2DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+            peerRatchet4DH = nil
+        case .R24:
+            myRatchet2DH = nil
+            myRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+            peerRatchet2DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+            peerRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+        }
+        
+        return try! DHSession(
             id: DHSessionID(),
             myIdentity: myIdentity,
             peerIdentity: peerIdentity,
@@ -368,7 +400,8 @@ class SQLDHSessionStoreTests: XCTestCase {
             myRatchet2DH: myRatchet2DH,
             myRatchet4DH: myRatchet4DH,
             peerRatchet2DH: peerRatchet2DH,
-            peerRatchet4DH: peerRatchet4DH
+            peerRatchet4DH: peerRatchet4DH,
+            current4DHVersions: DHVersions(local: .v11, remote: .v11)
         )
     }
     

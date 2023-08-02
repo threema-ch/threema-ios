@@ -145,7 +145,8 @@ class GroupMessageProcessorTests: XCTestCase {
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
                 groupManager: groupManagerMock as! NSObject,
-                entityManager: EntityManager(databaseContext: databaseCnx)
+                entityManager: EntityManager(databaseContext: databaseCnx),
+                nonceGuard: NonceGuardMock()
             )
 
             let expec = expectation(description: "Group message processed")
@@ -290,7 +291,6 @@ class GroupMessageProcessorTests: XCTestCase {
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
 
             let groupManager = GroupManager(
-                ServerConnectorMock(),
                 myIdentityStoreMock,
                 ContactStoreMock(callOnCompletion: true),
                 taskManagerMock,
@@ -328,7 +328,8 @@ class GroupMessageProcessorTests: XCTestCase {
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
                 groupManager: groupManager,
-                entityManager: entityManager
+                entityManager: entityManager,
+                nonceGuard: NonceGuardMock()
             )
 
             let expec = expectation(description: "Group message processed")
@@ -514,7 +515,6 @@ class GroupMessageProcessorTests: XCTestCase {
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
 
             let groupManager = GroupManager(
-                ServerConnectorMock(),
                 myIdentityStoreMock,
                 ContactStoreMock(callOnCompletion: true),
                 taskManagerMock,
@@ -546,7 +546,8 @@ class GroupMessageProcessorTests: XCTestCase {
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
                 groupManager: groupManager,
-                entityManager: entityManager
+                entityManager: entityManager,
+                nonceGuard: NonceGuardMock()
             )
 
             let expec = expectation(description: "Group message processed")
@@ -653,7 +654,6 @@ class GroupMessageProcessorTests: XCTestCase {
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
 
             let groupManager = GroupManager(
-                ServerConnectorMock(),
                 myIdentityStoreMock,
                 ContactStoreMock(callOnCompletion: true),
                 taskManagerMock,
@@ -695,7 +695,8 @@ class GroupMessageProcessorTests: XCTestCase {
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
                 groupManager: groupManager,
-                entityManager: entityManager
+                entityManager: entityManager,
+                nonceGuard: NonceGuardMock()
             )
 
             let expec = expectation(description: "Group message processed")

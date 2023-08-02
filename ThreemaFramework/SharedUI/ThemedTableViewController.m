@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ThemedTableViewController.h"
-#import "VoIPHelper.h"
 #import "ThreemaFramework/ThreemaFramework-swift.h"
 
 @interface ThemedTableViewController ()
@@ -53,11 +52,7 @@
     self.tableView.estimatedRowHeight = UITableViewAutomaticDimension;
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     
-    NSString *callPrompt = [[VoIPHelper shared] currentPromptString:nil];
-    if (callPrompt == nil && [WCSessionHelper isWCSessionConnected]) {
-        callPrompt = WCSessionHelper.threemaWebPrompt;
-    }
-    self.navigationItem.prompt = callPrompt;
+    self.navigationItem.prompt = [NavigationBarPromptHandler getCurrentPromptWithDuration:nil];
 }
 
 - (void)dealloc {
@@ -100,29 +95,12 @@
 
 - (void)navigationItemPromptShouldChange:(NSNotification*)notification {
     NSNumber *time = notification.object;
-    NSString *callPrompt = [[VoIPHelper shared] currentPromptString:time];
-    if (callPrompt == nil && [WCSessionHelper isWCSessionConnected]) {
-        callPrompt = WCSessionHelper.threemaWebPrompt;
-    }
-    self.navigationItem.prompt = callPrompt;
+    self.navigationItem.prompt = [NavigationBarPromptHandler getCurrentPromptWithDuration:time];
     
-    if (self.navigationItem.prompt == nil) {
-        if ([self respondsToSelector:@selector(updateLayoutAfterCall)]) {
-            double delayInSeconds = 0.3;
-            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
-            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-                [self performSelector:@selector(updateLayoutAfterCall)];
-            });
-        }
-    }
     [self updateColors];
     [self.navigationController.view setNeedsLayout];
     [self.navigationController.view layoutIfNeeded];
     [self.navigationController.view setNeedsDisplay];
-}
-
-- (void)updateLayoutAfterCall {
-    // do nothing
 }
 
 @end

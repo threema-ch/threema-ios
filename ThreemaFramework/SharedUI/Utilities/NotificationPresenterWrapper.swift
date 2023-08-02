@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import GroupCalls
 import JDStatusBarNotification
 import SwiftUI
 
@@ -186,5 +187,22 @@ import SwiftUI
     
     private func applyDefaultImageParameters(to style: inout StatusBarNotificationLeftViewStyle) {
         style.alignment = .left
+    }
+}
+
+// MARK: - NotificationPresenterWrapperProtocol
+
+extension NotificationPresenterWrapper: NotificationPresenterWrapperProtocol {
+    public func presentGroupCallNotification(type: GroupCalls.GroupCallNotificationType) {
+        switch type {
+        case .audioMuted:
+            present(type: NotificationPresenterType.audioMuted)
+        case .audioUnmuted:
+            present(type: NotificationPresenterType.audioUnmuted)
+        case .videoMuted:
+            present(type: NotificationPresenterType.videoMuted)
+        case .videoUnmuted:
+            present(type: NotificationPresenterType.videoUnmuted)
+        }
     }
 }

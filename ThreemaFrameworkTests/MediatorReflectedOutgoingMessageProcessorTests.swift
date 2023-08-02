@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftProtobuf
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -48,13 +49,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = BoxAudioMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -71,13 +73,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupAudioMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -94,13 +97,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = BoxImageMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -117,13 +121,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupImageMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -141,13 +146,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = BoxVideoMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -164,13 +170,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupVideoMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -188,13 +195,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -220,13 +228,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -268,13 +277,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "MEMBER02"
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -326,13 +336,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "MEMBER02"
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -369,14 +380,15 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         )
     }
 
-    private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) -> D2d_Envelope {
+    private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) throws -> D2d_Envelope {
         let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
-        return mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
+        return try mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),
-            messageID: abstractMessage.messageID.convert(),
+            messageID: abstractMessage.messageID.littleEndian(),
             receiverIdentity: abstractMessage.toIdentity,
-            createdAt: abstractMessage.date
+            createdAt: abstractMessage.date,
+            nonce: abstractMessage.nonce
         )
     }
 

@@ -123,7 +123,7 @@ struct WebClientInfoCapabilities {
             "groupReactions": groupReactions,
         ]
         
-        if MDMSetup(setup: false).isManaged() {
+        if LicenseStore.shared().getRequiresLicenseKey() {
             objectDict.updateValue(mdm.objectDict(), forKey: "mdm")
         }
         

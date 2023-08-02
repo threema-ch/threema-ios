@@ -207,15 +207,18 @@ public actor BlobManager: BlobManagerProtocol {
         // We check if the message is of the right type, and if it is incoming since we do not want to automatically
         // send failed messages again
         let em = entityManager
-        var messageID: String?
-        
+        var blobID: String?
+        var blobThumbnailID: String?
+
         em.performSyncBlockAndSafe {
             guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageProvider,
                   !message.blobIsOutgoing else {
                 return
             }
-            messageID = message.blobIdentifier?.hexString
             
+            blobID = message.blobIdentifier?.hexString
+            blobThumbnailID = message.blobThumbnailIdentifier?.hexString
+
             switch message.fileMessageType {
             case .image, .sticker, .animatedImage, .animatedSticker, .voice:
                 shouldSync = true
@@ -233,7 +236,9 @@ public actor BlobManager: BlobManagerProtocol {
             try await syncBlobsThrows(for: objectID)
         }
         catch {
-            DDLogNotice("[BlobManager] Auto sync for message with id \(messageID ?? "nil") failed, reason: \(error)")
+            DDLogError(
+                "[BlobManager] Auto sync for message with blobID: \(blobID ?? "nil"), and thumbnailID: \(blobThumbnailID ?? "nil") failed, reason: \(error)"
+            )
         }
     }
     
@@ -247,15 +252,21 @@ public actor BlobManager: BlobManagerProtocol {
         catch {
             let em = entityManager
             var messageID: String?
+            var blobID: String?
+            var blobThumbnailID: String?
             
             em.performSyncBlockAndSafe {
                 guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessage else {
                     return
                 }
                 messageID = message.id.hexString
+                blobID = message.blobIdentifier?.hexString
+                blobThumbnailID = message.blobThumbnailIdentifier?.hexString
             }
             
-            DDLogNotice("[BlobManager] Auto sync for message with id \(messageID ?? "nil") failed, reason: \(error)")
+            DDLogError(
+                "[BlobManager] Sync for message with messageID: \(messageID ?? "nil"), blobID: \(blobID ?? "nil"), and thumbnailID: \(blobThumbnailID ?? "nil") failed, reason: \(error)"
+            )
         }
     }
     
@@ -296,7 +307,6 @@ public actor BlobManager: BlobManagerProtocol {
             
             let processor = ImageMessageProcessor(
                 blobDownloader: blobDownloader,
-                serverConnector: serverConnector,
                 myIdentityStore: identityStore,
                 userSettings: userSettings,
                 entityManager: em
@@ -1015,7 +1025,7 @@ public actor BlobManager: BlobManagerProtocol {
     private func isForNoteGroup(objectID: NSManagedObjectID) -> Bool {
         
         // We upload anyways if MD is activated
-        if serverConnector.isMultiDeviceActivated {
+        if userSettings.enableMultiDevice {
             return false
         }
         

@@ -141,7 +141,7 @@ final class DetailsHeaderView: UIStackView {
     }
     
     @objc private func updateContentPadding() {
-        if VoIPHelper.shared().isCallActiveInBackground || WCSessionHelper.isWCSessionConnected {
+        if NavigationBarPromptHandler.shouldShowPrompt() {
             directionalLayoutMargins.top = configuration.bottomMargin
         }
         else {

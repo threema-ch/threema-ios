@@ -1056,7 +1056,9 @@ struct pktExtension {
 #pragma mark - Multi Device
 
 - (BOOL)isMultiDeviceActivated {
-    return deviceGroupKeys != nil;
+    @synchronized (deviceGroupKeys) {
+        return deviceGroupKeys != nil && deviceID != nil;
+    }
 }
 
 - (void)deactivateMultiDevice {
@@ -1064,6 +1066,8 @@ struct pktExtension {
         DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
         [deviceGroupKeyManager destroy];
         [UserSettings sharedUserSettings].enableMultiDevice = NO;
+        // Ensure that the change is observed by SettingStores
+        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationSettingStoreSynchronization object:nil];
         deviceGroupKeys = nil;
         deviceID = nil;
     };
@@ -1317,15 +1321,17 @@ struct pktExtension {
         keepalive_timer = nil;
     }
 
-    if (code != 4115) {
-        [self reconnectAfterDelay];
+    if (code == ServerConnectionCloseCodeUnsupportedProtocolVersion) {
+        [self displayServerAlert:[BundleUtil localizedStringForKey:@"multi_device_unsupported_protocol_version_alert"]];
     }
-    else {
-        // Device slot state mismatch -> this device must relink
+    else if (code == ServerConnectionCloseCodeDeviceSlotStateMismatch) {
         [self displayServerAlert:[BundleUtil localizedStringForKey:@"multi_device_slot_state_mismatch_alert"]];
 
-        // Deactivate multi device -> relinking device
+        // Device slot state mismatch -> this device must relink
         [self deactivateMultiDevice];
+    }
+    else {
+        [self reconnectAfterDelay];
     }
 }
 
@@ -1533,6 +1539,7 @@ struct pktExtension {
                                                    mediatorMessageProtocol:[[MediatorMessageProtocol alloc] initWithDeviceGroupKeys:deviceGroupKeys]
                                                    userSettings:[UserSettings sharedUserSettings]
                                                    taskManager:taskManager
+                                                   socketProtocolDelegate:self
                                                    messageProcessorDelegate:self];
 
             uint8_t type;

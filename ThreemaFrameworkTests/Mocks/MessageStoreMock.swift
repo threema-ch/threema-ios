@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import PromiseKit
+import ThreemaProtocols
 @testable import ThreemaFramework
 
 class MessageStoreMock: MessageStoreProtocol {
@@ -27,8 +27,8 @@ class MessageStoreMock: MessageStoreProtocol {
         let groupTextMessage: GroupTextMessage
         let senderIdentity: String
         let messageID: Data
-        let createdAt: UInt64
-        let timestamp: Date
+        let createdAt: Date
+        let reflectedAt: Date
         let isOutgoing: Bool
     }
 
@@ -37,22 +37,27 @@ class MessageStoreMock: MessageStoreProtocol {
     struct SaveTextMessageParam {
         let textMessage: BoxTextMessage
         let conversationIdentity: String
-        let createdAt: UInt64
-        let timestamp: Date
+        let createdAt: Date
+        let reflectedAt: Date
         let isOutgoing: Bool
     }
 
     var saveTextMessageCalls = [SaveTextMessageParam]()
 
-    func save(audioMessage: BoxAudioMessage, conversationIdentity: String, createdAt: UInt64, timestamp: Date) throws {
+    func save(
+        audioMessage: BoxAudioMessage,
+        conversationIdentity: String,
+        createdAt: Date,
+        reflectedAt: Date
+    ) throws {
         // no-op
     }
 
     func save(
         fileMessage: BoxFileMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void> {
@@ -62,8 +67,8 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(
         textMessage: BoxTextMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         saveTextMessageCalls.append(
@@ -71,7 +76,7 @@ class MessageStoreMock: MessageStoreProtocol {
                 textMessage: textMessage,
                 conversationIdentity: conversationIdentity,
                 createdAt: createdAt,
-                timestamp: timestamp,
+                reflectedAt: reflectedAt,
                 isOutgoing: isOutgoing
             )
         )
@@ -85,11 +90,16 @@ class MessageStoreMock: MessageStoreProtocol {
         Promise()
     }
 
-    func save(deliveryReceiptMessage: DeliveryReceiptMessage, createdAt: UInt64, isOutgoing: Bool) throws {
+    func save(deliveryReceiptMessage: DeliveryReceiptMessage, createdAt: Date, isOutgoing: Bool) throws {
         // no-op
     }
 
-    func save(groupAudioMessage: GroupAudioMessage, senderIdentity: String, createdAt: UInt64, timestamp: Date) throws {
+    func save(
+        groupAudioMessage: GroupAudioMessage,
+        senderIdentity: String,
+        createdAt: Date,
+        reflectedAt: Date
+    ) throws {
         // no-op
     }
 
@@ -109,15 +119,15 @@ class MessageStoreMock: MessageStoreProtocol {
         Promise()
     }
     
-    func save(groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage, createdAt: UInt64, isOutgoing: Bool) throws {
+    func save(groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage, createdAt: Date, isOutgoing: Bool) throws {
         // no-op
     }
 
     func save(
         groupFileMessage: GroupFileMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void> {
@@ -127,8 +137,8 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(
         imageMessage: AbstractMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int
     ) throws -> Promise<Void> {
         Promise()
@@ -137,8 +147,8 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(
         groupLocationMessage: GroupLocationMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         // no-op
@@ -147,8 +157,8 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(
         groupBallotCreateMessage: GroupBallotCreateMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         // no-op
@@ -166,8 +176,8 @@ class MessageStoreMock: MessageStoreProtocol {
         groupTextMessage: GroupTextMessage,
         senderIdentity: String,
         messageID: Data,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         saveGroupTextMessageCalls.append(
@@ -176,7 +186,7 @@ class MessageStoreMock: MessageStoreProtocol {
                 senderIdentity: senderIdentity,
                 messageID: messageID,
                 createdAt: createdAt,
-                timestamp: timestamp,
+                reflectedAt: reflectedAt,
                 isOutgoing: isOutgoing
             )
         )
@@ -185,8 +195,8 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(
         videoMessage: AbstractMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int
     ) throws -> Promise<Void> {
         Promise()
@@ -195,8 +205,8 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(
         locationMessage: BoxLocationMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         // no-op
@@ -205,8 +215,8 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(
         ballotCreateMessage: BoxBallotCreateMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws {
         // no-op
@@ -214,5 +224,16 @@ class MessageStoreMock: MessageStoreProtocol {
 
     func save(ballotVoteMessage: BoxBallotVoteMessage) throws {
         // no-op
+    }
+    
+    func save(
+        groupCallStartMessage: GroupCallStartMessage,
+        decodedCallStartMessage: CspE2e_GroupCallStart,
+        senderIdentity: String,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) throws -> Promise<Void> {
+        Promise()
     }
 }

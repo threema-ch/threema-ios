@@ -20,7 +20,7 @@
 
 import Foundation
 
-protocol ChatViewMessageAction: ChatViewBaseTableViewCell {
+protocol ChatViewMessageAction: ThemedCodeTableViewCell {
     
     /// Creates an array of ChatViewMessageActionProvider.MessageAction used to create context menus and accessibility
     /// custom actions

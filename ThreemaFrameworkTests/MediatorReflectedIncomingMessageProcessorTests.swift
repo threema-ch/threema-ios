@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftProtobuf
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -47,13 +48,14 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedIncomingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -79,13 +81,14 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = "ECHOECHO"
         expectedAbstractMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedIncomingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -127,13 +130,14 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = "MEMBER02"
         expectedAbstractMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedIncomingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -185,13 +189,14 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = "MEMBER02"
         expectedAbstractMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedIncomingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -248,13 +253,14 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = "MEMBER02"
         expectedAbstractMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.text = "Test text message"
-        let expectedEnvelope = getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
+        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        let expectedEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedIncomingMessageProcessor(
             frameworkInjector: frameworkInjectorMock,
             messageStore: messageStoreMock,
             messageProcessorDelegate: MessageProcessorDelegateMock(),
-            timestamp: Date(),
+            reflectedAt: Date(),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0
         )
@@ -291,14 +297,15 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         )
     }
 
-    private func getEnvelopeForIncomingMessage(abstractMessage: AbstractMessage) -> D2d_Envelope {
+    private func getEnvelopeForIncomingMessage(abstractMessage: AbstractMessage) throws -> D2d_Envelope {
         let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
-        return mediatorMessageProtocol.getEnvelopeForIncomingMessage(
+        return try mediatorMessageProtocol.getEnvelopeForIncomingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),
-            messageID: abstractMessage.messageID.convert(),
+            messageID: abstractMessage.messageID.littleEndian(),
             senderIdentity: abstractMessage.fromIdentity,
-            createdAt: abstractMessage.date
+            createdAt: abstractMessage.date,
+            nonce: abstractMessage.nonce
         )
     }
 

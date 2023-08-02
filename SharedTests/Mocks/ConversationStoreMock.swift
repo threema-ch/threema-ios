@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 @testable import ThreemaFramework
 
 class ConversationStoreMock: NSObject, ConversationStoreProtocol, ConversationStoreInternalProtocol {
@@ -50,11 +51,11 @@ class ConversationStoreMock: NSObject, ConversationStoreProtocol, ConversationSt
 
     // MARK: ConversationStoreInternalProtocol
 
-    func updateConversation(withContact syncContact: ThreemaFramework.Sync_Contact) {
+    func updateConversation(withContact syncContact: ThreemaProtocols.Sync_Contact) {
         // no-op
     }
 
-    func updateConversation(withGroup syncGroup: ThreemaFramework.Sync_Group) {
+    func updateConversation(withGroup syncGroup: ThreemaProtocols.Sync_Group) {
         // no-op
     }
 }

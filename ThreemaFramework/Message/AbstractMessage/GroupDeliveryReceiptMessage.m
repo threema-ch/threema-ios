@@ -68,6 +68,10 @@
     return NO;
 }
 
+- (BOOL)canUnarchiveConversation {
+    return NO;
+}
+
 - (BOOL)canShowUserNotification {
     return NO;
 }
@@ -76,12 +80,16 @@
     return YES;
 }
 
-#pragma mark - NSCoding
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
         self.receiptType = (uint8_t)[decoder decodeIntegerForKey:@"receiptType"];
-        self.receiptMessageIds = [decoder decodeObjectForKey:@"receiptMessageIds"];
+        self.receiptMessageIds = [decoder decodeObjectOfClasses:[NSSet setWithArray:@[[NSArray class], [NSData class]]] forKey:@"receiptMessageIds"];
     }
     return self;
 }
@@ -90,6 +98,10 @@
     [super encodeWithCoder:encoder];
     [encoder encodeInt:self.receiptType forKey:@"receiptType"];
     [encoder encodeObject:self.receiptMessageIds forKey:@"receiptMessageIds"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

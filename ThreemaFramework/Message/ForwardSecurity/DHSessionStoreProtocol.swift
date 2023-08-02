@@ -20,7 +20,9 @@
 
 import Foundation
 
-public protocol DHSessionStoreProtocol {
+public protocol DHSessionStoreProtocol: AnyObject {
+    var errorHandler: SQLDHSessionStoreErrorHandler? { get set }
+    
     func exactDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID?) throws -> DHSession?
     func bestDHSession(myIdentity: String, peerIdentity: String) throws -> DHSession?
     func storeDHSession(session: DHSession) throws
@@ -34,5 +36,6 @@ public protocol DHSessionStoreProtocol {
         excludeSessionID: DHSessionID,
         fourDhOnly: Bool
     ) throws -> Int
+    
     func executeNull() throws
 }

@@ -62,15 +62,8 @@ public class DeleteRevokeIdentityManager: NSObject {
             // Delete the license when we delete the ID, to give the user a chance to use a new license.
             // The license may have been supplied by MDM, so we load it again.
             LicenseStore.shared().deleteLicense()
-            let mdmSetup = MDMSetup()
-            mdmSetup.loadLicenseInfo()
-            if LicenseStore.shared().licenseUsername == nil || LicenseStore.shared().licensePassword == nil {
-                NotificationCenter.default.post(
-                    name: NSNotification.Name(rawValue: kNotificationLicenseMissing),
-                    object: nil
-                )
-            }
-            mdmSetup.deleteThreemaMdm()
+            let mdmSetup = MDMSetup(setup: false)
+            mdmSetup?.deleteThreemaMdm()
         }
     }
     

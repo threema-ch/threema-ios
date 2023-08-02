@@ -19,32 +19,41 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 class ForwardSecurityDataMessage: ForwardSecurityData {
-    let type: CspE2eFs_ForwardSecurityEnvelope.Message.DHType
+    let type: CspE2eFs_Encapsulated.DHType
     let counter: UInt64
     let message: Data
+    let offeredVersion: CspE2eFs_Version
+    let appliedVersion: CspE2eFs_Version
     
     init(
         sessionID: DHSessionID,
-        type: CspE2eFs_ForwardSecurityEnvelope.Message.DHType,
+        type: CspE2eFs_Encapsulated.DHType,
+        offeredVersion: CspE2eFs_Version,
+        appliedVersion: CspE2eFs_Version,
         counter: UInt64,
         message: Data
     ) {
         self.type = type
+        self.offeredVersion = offeredVersion
+        self.appliedVersion = appliedVersion
         self.counter = counter
         self.message = message
         super.init(sessionID: sessionID)
     }
     
     override func toProtobuf() throws -> Data {
-        var pb = CspE2eFs_ForwardSecurityEnvelope()
+        var pb = CspE2eFs_Envelope()
         pb.sessionID = sessionID.value
-        var pbMessage = CspE2eFs_ForwardSecurityEnvelope.Message()
+        var pbMessage = CspE2eFs_Encapsulated()
         pbMessage.dhType = type
+        pbMessage.offeredVersion = UInt32(offeredVersion.rawValue)
+        pbMessage.appliedVersion = UInt32(appliedVersion.rawValue)
         pbMessage.counter = counter
-        pbMessage.message = message
-        pb.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content.message(pbMessage)
+        pbMessage.encryptedInner = message
+        pb.content = CspE2eFs_Envelope.OneOf_Content.encapsulated(pbMessage)
         return try pb.serializedData()
     }
 }

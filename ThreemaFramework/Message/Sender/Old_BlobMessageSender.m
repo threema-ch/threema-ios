@@ -137,7 +137,7 @@ static dispatch_queue_t backgroundQueue;
             
             // Check if this is a note group
             if (group != nil && [group isNoteGroup]) {
-                if (ServerConnector.sharedServerConnector.isMultiDeviceActivated == NO) {
+                if (UserSettings.sharedUserSettings.enableMultiDevice == NO) {
                     DDLogWarn(@"BlobMessageSender: note group, no message to send");
                     [self noUploadNoteGroup];
                     return;

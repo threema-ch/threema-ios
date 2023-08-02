@@ -20,21 +20,22 @@
 
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 protocol MessageStoreProtocol {
 
     func save(
         audioMessage: BoxAudioMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date
+        createdAt: Date,
+        reflectedAt: Date
     ) throws
 
     func save(
         fileMessage: BoxFileMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void>
@@ -42,8 +43,8 @@ protocol MessageStoreProtocol {
     func save(
         textMessage: BoxTextMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws
 
@@ -53,15 +54,15 @@ protocol MessageStoreProtocol {
 
     func save(
         deliveryReceiptMessage: DeliveryReceiptMessage,
-        createdAt: UInt64,
+        createdAt: Date,
         isOutgoing: Bool
     ) throws
 
     func save(
         groupAudioMessage: GroupAudioMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date
+        createdAt: Date,
+        reflectedAt: Date
     ) throws
 
     func save(groupCreateMessage amsg: GroupCreateMessage) -> Promise<Void>
@@ -75,8 +76,8 @@ protocol MessageStoreProtocol {
     func save(
         groupFileMessage: GroupFileMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void>
@@ -84,24 +85,24 @@ protocol MessageStoreProtocol {
     func save(
         imageMessage: AbstractMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int
     ) throws -> Promise<Void>
 
     func save(
         groupLocationMessage: GroupLocationMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws
 
     func save(
         groupBallotCreateMessage: GroupBallotCreateMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws
 
@@ -111,7 +112,7 @@ protocol MessageStoreProtocol {
     
     func save(
         groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage,
-        createdAt: UInt64,
+        createdAt: Date,
         isOutgoing: Bool
     ) throws
 
@@ -119,34 +120,43 @@ protocol MessageStoreProtocol {
         groupTextMessage: GroupTextMessage,
         senderIdentity: String,
         messageID: Data,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws
 
     func save(
         videoMessage: AbstractMessage,
         senderIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int
     ) throws -> Promise<Void>
 
     func save(
         locationMessage: BoxLocationMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws
 
     func save(
         ballotCreateMessage: BoxBallotCreateMessage,
         conversationIdentity: String,
-        createdAt: UInt64,
-        timestamp: Date,
+        createdAt: Date,
+        reflectedAt: Date,
         isOutgoing: Bool
     ) throws
 
     func save(ballotVoteMessage: BoxBallotVoteMessage) throws
+    
+    func save(
+        groupCallStartMessage: GroupCallStartMessage,
+        decodedCallStartMessage: CspE2e_GroupCallStart,
+        senderIdentity: String,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) throws -> Promise<Void>
 }

@@ -20,7 +20,7 @@
 
 #import "AbstractGroupMessage.h"
 
-@interface GroupVideoMessage : AbstractGroupMessage <NSCoding>
+@interface GroupVideoMessage : AbstractGroupMessage <NSSecureCoding>
 
 @property (nonatomic, readwrite) uint16_t duration;
 @property (nonatomic, strong) NSData *videoBlobId NS_SWIFT_NAME(videoBlobID);

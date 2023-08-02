@@ -27,4 +27,5 @@ enum ForwardSecurityError: Error {
     case invalidMode
     case counterOutOfRange
     case noDHModeNegotiated
+    case messageTypeNotSupported
 }

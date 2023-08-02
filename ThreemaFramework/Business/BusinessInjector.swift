@@ -21,6 +21,9 @@
 import CocoaLumberjackSwift
 import Foundation
 
+/// If your code is run in the notification extension (`NotificationService`) you should in general use already created
+/// instance of business injector.
+/// Otherwise inconsistencies might occur in the database.
 public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
     // MARK: BusinessInjectorProtocol
@@ -28,7 +31,6 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     @objc public lazy var backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
 
     public lazy var backgroundGroupManager: GroupManagerProtocol = GroupManager(
-        serverConnector,
         myIdentityStore,
         contactStore,
         TaskManager(frameworkInjector: self),
@@ -44,7 +46,6 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     public lazy var contactStore: ContactStoreProtocol = ContactStore.shared()
 
     public lazy var conversationStore: any ConversationStoreProtocol = ConversationStore(
-        serverConnector: serverConnector,
         userSettings: userSettings,
         groupManager: groupManager,
         entityManager: entityManager,
@@ -54,7 +55,6 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     public lazy var entityManager = EntityManager()
 
     public lazy var groupManager: GroupManagerProtocol = GroupManager(
-        serverConnector,
         myIdentityStore,
         contactStore,
         TaskManager(frameworkInjector: self),
@@ -75,7 +75,7 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     )
 
     public lazy var multiDeviceManager: MultiDeviceManagerProtocol =
-        MultiDeviceManager(serverConnector: serverConnector)
+        MultiDeviceManager(serverConnector: serverConnector, userSettings: userSettings)
 
     public lazy var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
 
@@ -114,13 +114,14 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             messageProcessorInstance = MessageProcessor(
                 serverConnector,
                 entityManager: backgroundEntityManager,
-                fsmp: fsmp
+                fsmp: fsmp,
+                nonceGuard: nonceGuard as? NSObject
             )
         }
         return messageProcessorInstance!
     }
     
-    var fsmp: ForwardSecurityMessageProcessor {
+    @objc var fsmp: ForwardSecurityMessageProcessor {
         if fsmpInstance == nil {
             fsmpInstance = ForwardSecurityMessageProcessor(
                 dhSessionStore: dhSessionStore,
@@ -144,6 +145,11 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     lazy var settingsStoreInternal: SettingsStoreInternalProtocol = settingsStore as! SettingsStoreInternalProtocol
 
     lazy var userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManager()
+
+    lazy var nonceGuard: NonceGuardProtocol = NonceGuard(entityManager: backgroundEntityManager)
+
+    lazy var blobUploader: BlobUploaderProtocol =
+        BlobUploader(blobURL: BlobURL(serverConnector: self.serverConnector, userSettings: self.userSettings))
 
     class MessageSenderAdapter: ForwardSecurityMessageSenderProtocol {
         private let businessInjector: BusinessInjector

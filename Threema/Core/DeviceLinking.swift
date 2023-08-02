@@ -23,6 +23,11 @@ import Foundation
 import PromiseKit
 import ThreemaFramework
 
+@available(
+    *,
+    deprecated,
+    message: "Only use for old linking wizard. If not available move functionality to `MultiDeviceManger`"
+)
 class DeviceLinking: NSObject {
     private let businessInjector: BusinessInjectorProtocol
 
@@ -214,11 +219,11 @@ class DeviceLinking: NSObject {
                 if AppInfo.version.major < 5 {
                     autoDisableMultiDevice()
                 }
-            case .work, .onPrem:
-                // Always disable it for work and onprem
+            case .onPrem:
+                // Always disable it for onprem
                 autoDisableMultiDevice()
-            case .red, .workRed:
-                // Never disable it for red & work red
+            case .work, .red, .workRed:
+                // Never disable it for work, red & work red
                 break
             }
         case .xcode:

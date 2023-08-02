@@ -27,7 +27,7 @@ enum ProtocolVersion {
 // Type: n/a
 // Direction: Client -> Server
 message ClientUrlInfo {
-  reserved 2;
+  reserved 2; // Deprecated numeric server group
 
   // 32 byte device group id (`DGPK.public`)
   bytes device_group_id = 1;
@@ -86,10 +86,12 @@ message ClientHello {
   // The response is created by encrypting the server's challenge in the
   // following way:
   //
-  //     XSalsa20-Poly1305(
-  //       key=X25519HSalsa20(DGPK.secret, ESK.public),
-  //       nonce=<random>,
-  //     )
+  // ```text
+  // XSalsa20-Poly1305(
+  //   key=X25519HSalsa20(DGPK.secret, ESK.public),
+  //   nonce=<random>,
+  // )
+  // ```
   //
   // The nonce is then prefixed to the encrypted challenge.
   bytes response = 2;
@@ -144,6 +146,14 @@ message ServerInfo {
   // Device data shared among devices (`SharedDeviceData`), encrypted by
   // `DGSDDK.secret` and prefixed with a random nonce.
   bytes encrypted_shared_device_data = 3;
+
+  // Amount of messages in the reflection queue that will now be sent to the
+  // device. If the client is up-to-date, the value will be 0.
+  //
+  // Note: The amount of messages in the reflection queue may increase at any
+  // time, so there is no guarantee that `ReflectionQueueDry` will be received
+  // after having received `reflection_queue_length` reflected messages.
+  uint32 reflection_queue_length = 5;
 }
 
 

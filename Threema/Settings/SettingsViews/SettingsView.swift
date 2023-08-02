@@ -142,20 +142,6 @@ struct SettingsView: View {
                             imageSystemName: "desktopcomputer"
                         )
                     }
-                    
-                    NavigationLink {
-                        MultiDeviceViewControllerRepresentable()
-                            .ignoresSafeArea(.all)
-                            .navigationBarTitle(
-                                BundleUtil.localizedString(forKey: "multi_device_linked_devices_title"),
-                                displayMode: .inline
-                            )
-                    } label: {
-                        SettingsListView(
-                            cellTitle: BundleUtil.localizedString(forKey: "multi_device_linked_devices_title"),
-                            imageSystemName: "laptopcomputer.and.iphone"
-                        )
-                    }
                 }
                 
                 Section {

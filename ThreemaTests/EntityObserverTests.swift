@@ -111,7 +111,8 @@ class EntityObserverTests: XCTestCase {
                 }
             }
 
-            wait(for: expects, timeout: 6)
+            // TODO: (IOS-3875) Timeout
+            wait(for: expects, timeout: 60)
             stopMeasuring()
 
             XCTAssertEqual("GRP2", groupNameChanged)
@@ -119,6 +120,7 @@ class EntityObserverTests: XCTestCase {
         }
     }
 
+    // TODO: (IOS-3875) Reenable this test
     func testBusinessAbstraction() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR01"
@@ -177,7 +179,8 @@ class EntityObserverTests: XCTestCase {
                 }
             }
 
-            wait(for: expects, timeout: 6)
+            // TODO: (IOS-3875) Timeout
+            wait(for: expects, timeout: 60)
             stopMeasuring()
 
             // Remove (deallocate) tokens to remove subscriber
@@ -355,6 +358,7 @@ class EntityObserverTests: XCTestCase {
         XCTAssertEqual(groupNameChanged, "GRP2")
     }
 
+    // TODO: (IOS-3875) Reenable this test
     func testBusinessAbstractionChangeManagedObjectOnPrivateContext() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR01"

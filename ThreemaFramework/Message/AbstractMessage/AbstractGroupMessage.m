@@ -113,18 +113,22 @@
     return YES;
 }
 
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
 #pragma mark - LoggingDescriptionProtocol
 
 - (NSString * _Nonnull)loggingDescription {
     return [NSString stringWithFormat:@"(type: %@; id: %@; groupCreator: %@ - groupId: %@)", [MediatorMessageProtocol getTypeDescriptionWithType:self.type], [NSString stringWithHexData:self.messageId], groupCreator, [NSString stringWithHexData:groupId]];
 }
 
-#pragma mark - NSCoding
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
-        self.groupCreator = [decoder decodeObjectForKey:@"groupCreator"];
-        self.groupId = [decoder decodeObjectForKey:@"groupId"];
+        self.groupCreator = [decoder decodeObjectOfClass:[NSString class] forKey:@"groupCreator"];
+        self.groupId = [decoder decodeObjectOfClass:[NSData class] forKey:@"groupId"];
     }
     return self;
 }

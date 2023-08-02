@@ -81,7 +81,12 @@ extension SystemMessage {
         case fsEnabledOutgoing
         case fsDisabledOutgoing
         case fsNotSupportedAnymore
+        case systemMessageGroupCallStartedBy(name: String)
+        case systemMessageGroupCallStarted
+        case systemMessageGroupCallEnded
         case systemMessageUnsupportedType
+        case fsDebugMessage(message: String)
+        case fsIllegalSessionState
         
         /// Localized Message to display
         public var localizedMessage: String {
@@ -191,8 +196,21 @@ extension SystemMessage {
             case .fsNotSupportedAnymore:
                 return BundleUtil
                     .localizedString(forKey: "forward_security_contact_has_downgraded_to_an_incompatible_version")
+            case let .systemMessageGroupCallStartedBy(name: name):
+                return String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "group_call_started_by_contact_system_message"),
+                    name
+                )
+            case .systemMessageGroupCallStarted:
+                return BundleUtil.localizedString(forKey: "group_call_started_by_local_system_message")
+            case .systemMessageGroupCallEnded:
+                return BundleUtil.localizedString(forKey: "group_call_ended_system_message")
             case .systemMessageUnsupportedType:
                 return BundleUtil.localizedString(forKey: "systemMessage_unsupported_type")
+            case let .fsDebugMessage(message):
+                return "kFsDebugMessage: \(message)"
+            case .fsIllegalSessionState:
+                return BundleUtil.localizedString(forKey: "forward_security_illegal_session_state")
             }
         }
     }
@@ -508,6 +526,16 @@ extension SystemMessage {
             return .systemMessage(type: .vote(info: voteInfo))
         case 32:
             return .systemMessage(type: .groupAvatarChanged)
+        case 33:
+            return .systemMessage(type: .systemMessageGroupCallStartedBy(name: argAsUTF8String()))
+        case 34:
+            return .systemMessage(type: .systemMessageGroupCallStarted)
+        case 35:
+            return .systemMessage(type: .systemMessageGroupCallEnded)
+        case 36:
+            return .systemMessage(type: .fsDebugMessage(message: argAsUTF8String()))
+        case 37:
+            return .systemMessage(type: .fsIllegalSessionState)
         default:
             DDLogError("Unsupported system message type with value")
             return .systemMessage(type: .systemMessageUnsupportedType)

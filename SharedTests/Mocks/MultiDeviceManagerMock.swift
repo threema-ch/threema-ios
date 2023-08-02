@@ -41,4 +41,8 @@ class MultiDeviceManagerMock: MultiDeviceManagerProtocol {
     func drop(device: DeviceInfo) -> Promise<Void> {
         Promise()
     }
+    
+    func disableMultiDevice() async throws {
+        // no-op
+    }
 }

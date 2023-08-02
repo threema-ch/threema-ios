@@ -85,6 +85,10 @@ typedef enum : NSUInteger {
         [[UserSettings sharedUserSettings] addObserver:self forKeyPath:@"hideStaleContacts" options:0 context:nil];
         
         _entityManager = [[EntityManager alloc] init];
+        
+        if ([LicenseStore requiresLicenseKey]) {
+            _companyDirectoryCellView = [[CompanyDirectoryCellView alloc] init];
+        }
     }
     return self;
 }
@@ -106,18 +110,6 @@ typedef enum : NSUInteger {
     [self.segmentedControl setTitle:@"groups" forSegmentAtIndex:ModeGroups];
     if ([LicenseStore requiresLicenseKey]) {
         [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
-        if ([[self workContactsDataSource] numberOfSectionsInTableView:self.tableView] > 0) {
-            // No regular contacts, so show Work contacts by default
-            _mode = ModeWorkContacts;
-            [self.segmentedControl setSelectedSegmentIndex:ModeWorkContacts];
-            self.navigationItem.title = NSLocalizedString(@"segmentcontrol_work_contacts", nil);
-            _currentDataSource = [self workContactsDataSource];
-            _companyDirectoryCellView = [[CompanyDirectoryCellView alloc] init];
-            self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCellView : nil;
-            if (self.tableView.tableHeaderView != nil) {
-                [[_companyDirectoryCellView.widthAnchor constraintEqualToAnchor:self.tableView.widthAnchor] setActive:true];
-            }
-        }
     }
     
     for (int i = 0; i < self.segmentedControl.numberOfSegments; i++) {

@@ -42,7 +42,13 @@
         NSString *reason = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"to_unlock_passcode"], [ThreemaAppObjc currentName]];
         [context evaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics localizedReason:reason reply:^(BOOL success, NSError *error) {
             DDLogWarn(@"[Passcode] Biometrics have possibly changed. Passcode needed.");
-
+            
+            // If we encounter an error, we directly return it.
+            if (error != nil) {
+                callback(success,error, nil);
+                return;
+            }
+            
             // We safe the policy the first time
             if ([AppGroup getActiveType] == AppGroupTypeApp && [[UserSettings sharedUserSettings] evaluatedPolicyDomainStateApp] == nil) {
                 [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:context.evaluatedPolicyDomainState];

@@ -228,18 +228,7 @@ message Begin {}
 //    2. If the user wants to request conversation history data from ED, leave
 //       the connection running and start the History Exchange Protocol.
 message EssentialData {
-  // Mediator server public key and address
-  message MediatorServer {
-    // Public key of the server
-    bytes public_key = 1;
-
-    // Server address
-    oneof address {
-      // Hostname of the WebSocket server
-      string web_socket_hostname = 2;
-    }
-  }
-  MediatorServer mediator_server = 1;
+  reserved 1; // Reserved for mediator server
 
   // User's identity data
   message IdentityData {

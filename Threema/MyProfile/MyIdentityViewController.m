@@ -588,7 +588,7 @@
 }
 
 - (BOOL)shouldPerformSegueWithIdentifier:(NSString *)identifier sender:(id)sender {
-    bool multiDeviceAndNotOnline = ([[ServerConnector sharedServerConnector] isMultiDeviceActivated] == YES) && ([[ServerConnector sharedServerConnector] connectionState] != ConnectionStateLoggedIn);
+    bool multiDeviceAndNotOnline = ([[UserSettings sharedUserSettings] enableMultiDevice] == YES) && ([[ServerConnector sharedServerConnector] connectionState] != ConnectionStateLoggedIn);
     if ([identifier isEqualToString:SEGUE_NICKNAME] && multiDeviceAndNotOnline) {
         NSString *title = [BundleUtil localizedStringForKey:@"not_connected_for_edit_profile_title"];
         NSString *message = [BundleUtil localizedStringForKey:@"not_connected_for_edit_profile_message"];

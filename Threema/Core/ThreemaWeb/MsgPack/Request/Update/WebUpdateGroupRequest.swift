@@ -36,7 +36,7 @@ class WebUpdateGroupRequest: WebAbstractMessage {
     
     override init(message: WebAbstractMessage) {
         let idString = message.args!["id"] as! String
-        self.id = idString.hexadecimal()!
+        self.id = idString.hexadecimal!
         
         let data = message.data as! [AnyHashable: Any?]
         self.members = data["members"] as! [String]

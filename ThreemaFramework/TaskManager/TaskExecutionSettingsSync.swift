@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-class TaskExecutionSettingsSync: TaskExecutionTransaction {
+final class TaskExecutionSettingsSync: TaskExecutionTransaction {
     
     override func reflectTransactionMessages() throws -> [Promise<Void>] {
         guard let task = taskDefinition as? TaskDefinitionSettingsSync else {
@@ -32,7 +32,7 @@ class TaskExecutionSettingsSync: TaskExecutionTransaction {
         let envelope = frameworkInjector.mediatorMessageProtocol
             .getEnvelopeForSettingsUpdate(settings: task.syncSettings)
         
-        return [Promise { try $0.fulfill(reflectMessage(
+        return [Promise { try $0.fulfill(_ = reflectMessage(
             envelope: envelope,
             ltReflect: self.taskContext.logReflectMessageToMediator,
             ltAck: self.taskContext.logReceiveMessageAckFromMediator

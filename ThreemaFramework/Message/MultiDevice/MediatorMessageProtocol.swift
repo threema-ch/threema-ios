@@ -20,12 +20,20 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
 enum MediatorMessageProtocolError: Error {
     case noAbstractMessageType(for: Common_CspE2eMessageType)
 }
 
 @objc class MediatorMessageProtocol: NSObject, MediatorMessageProtocolProtocol {
+
+    struct D2mProtocolVersion {
+        let max: UInt32 = 0
+        let min: UInt32 = 0
+    }
+
+    static let d2mProtocolVersion = D2mProtocolVersion()
 
     private static let MEDIATOR_COMMON_HEADER_LENGTH = 4
     private static let MEDIATOR_PAYLOAD_HEADER_LENGTH = 4
@@ -162,7 +170,7 @@ enum MediatorMessageProtocolError: Error {
     
     static func extractChatMessageAndLength(_ message: Data) -> (chatMessage: Data?, length: Int?) {
         let chatMessageWithLength = extractChatMessage(message)
-        let chatMessageLength: UInt16 = chatMessageWithLength.convert()
+        let chatMessageLength: UInt16 = chatMessageWithLength.paddedLittleEndian()
         let chatMessage = chatMessageWithLength.subdata(in: CHAT_TYPE_LENGTH..<chatMessageWithLength.count)
 
         assert(chatMessageLength == chatMessage.count, "Message length mismatch")
@@ -354,28 +362,36 @@ enum MediatorMessageProtocolError: Error {
     /// Decode mediator message type reflect ack.
     ///
     /// - Parameter message: Mediator message
-    /// - Returns: Reflect ID of reflected message
-    static func decodeReflectAck(_ message: Data) -> Data {
-        message.subdata(in: MEDIATOR_COMMON_HEADER_LENGTH..<message.count)[4..<8]
+    /// - Returns: Reflect ID of reflected message and `reflectedAckAt` mediator timestamp
+    static func decodeReflectAck(_ message: Data) -> (reflectID: Data, reflectedAckAt: Date) {
+        let reflectedPayload = message.subdata(in: MEDIATOR_COMMON_HEADER_LENGTH..<message.count)
+
+        let reflectID = reflectedPayload[4..<8]
+        let reflectedAckAtData: Data = reflectedPayload.subdata(in: 8..<16)
+
+        let milliseconds: UInt64 = reflectedAckAtData.paddedLittleEndian()
+        let reflectedAckAt = Date(millisecondsSince1970: milliseconds)
+
+        return (reflectID, reflectedAckAt)
     }
 
     /// Decode mediator message (type reflected).
     /// - Parameter message: Mediator message
-    /// - Returns: `reflectID` and `envelopeData` encrypted envelope data of reflected message and `timestamp` mediator
-    ///            timestamp
-    static func decodeReflected(_ message: Data) -> (reflectID: Data, envelopeData: Data, timestamp: Date) {
+    /// - Returns: `reflectID` and `reflectedEnvelopeData` encrypted envelope data of reflected message and
+    ///            `reflectedAt` mediator timestamp
+    static func decodeReflected(_ message: Data) -> (reflectID: Data, reflectedEnvelopeData: Data, reflectedAt: Date) {
         let reflectedPayload = message.subdata(in: MEDIATOR_COMMON_HEADER_LENGTH..<message.count)
 
-        let headerLenght: UInt8 = reflectedPayload.convert()
+        let headerLength: UInt8 = reflectedPayload.paddedLittleEndian()
 
         let reflectID: Data = reflectedPayload[4..<8]
-        let timestampData: Data = reflectedPayload.subdata(in: 8..<16)
-        let envelopeData: Data = reflectedPayload.subdata(in: Int(headerLenght)..<reflectedPayload.count)
+        let reflectedAtData: Data = reflectedPayload.subdata(in: 8..<16)
+        let reflectedEnvelopeData: Data = reflectedPayload.subdata(in: Int(headerLength)..<reflectedPayload.count)
 
-        let milliseconds: UInt64 = timestampData.convert(at: 0, endianess: .LittleEndian)
-        let timestamp = Date(milliseconds: milliseconds)
+        let milliseconds: UInt64 = reflectedAtData.paddedLittleEndian()
+        let reflectedAt = Date(millisecondsSince1970: milliseconds)
 
-        return (reflectID, envelopeData, timestamp)
+        return (reflectID, reflectedEnvelopeData, reflectedAt)
     }
 
     static func decodeTransactionLocked(_ message: Data) -> D2m_TransactionRejected? {
@@ -479,18 +495,21 @@ enum MediatorMessageProtocolError: Error {
     }
 
     /// Create Envelope for incoming message.
-    /// - Parameter type: Message type, see MSGTYPE_... in `ProtocolDefinitions.h`
-    /// - Parameter body: Message data
-    /// - Parameter messageID: ID of the message
-    /// - Parameter senderIdentity: Sender of the message
-    /// - Parameter createdAt: Message date
+    /// - Parameters:
+    ///   - type: Message type, see MSGTYPE_... in `ProtocolDefinitions.h`
+    ///   - body: Message data
+    ///   - messageID: ID of the message
+    ///   - senderIdentity: Sender of the message
+    ///   - createdAt: Message date
+    ///   - nonce: Nonce of the message
     /// - Returns: Envelope with incoming message
     func getEnvelopeForIncomingMessage(
         type: Int32,
         body: Data?,
         messageID: UInt64,
         senderIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonce: Data
     ) -> D2d_Envelope {
         var incomigMessage = D2d_IncomingMessage()
         incomigMessage.type = MediatorMessageProtocol.getMultiDeviceMessageType(for: type)
@@ -499,7 +518,8 @@ enum MediatorMessageProtocolError: Error {
         }
         incomigMessage.messageID = messageID
         incomigMessage.senderIdentity = senderIdentity
-        incomigMessage.createdAt = UInt64(createdAt.millisecondsSince1970)
+        incomigMessage.createdAt = createdAt.millisecondsSince1970
+        incomigMessage.nonce = nonce
 
         var envelope = D2d_Envelope()
         envelope.padding = BytesUtility.paddingRandom()
@@ -526,8 +546,8 @@ enum MediatorMessageProtocolError: Error {
         for messageID in messageIDs {
             var updateMessage = D2d_IncomingMessageUpdate.Update()
             updateMessage.read = D2d_IncomingMessageUpdate.Read()
-            updateMessage.messageID = messageID.convert()
-            updateMessage.read.at = UInt64(messageReadDates[index].millisecondsSince1970)
+            updateMessage.messageID = messageID.paddedLittleEndian()
+            updateMessage.read.at = messageReadDates[index].millisecondsSince1970
             updateMessage.conversation = conversationID
             incomingMessageUpdate.updates.append(updateMessage)
 
@@ -542,33 +562,38 @@ enum MediatorMessageProtocolError: Error {
     }
     
     /// Create Envelope for outgoing message.
-    /// - Parameter type: Message type, see MSGTYPE_... in `ProtocolDefinitions.h`
-    /// - Parameter body: Message data
-    /// - Parameter messageID: ID of the message
-    /// - Parameter receiverIdentity: Receiver of the message
-    /// - Parameter createdAt: Message date
+    /// - Parameters:
+    ///   - type: Message type, see MSGTYPE_... in `ProtocolDefinitions.h`
+    ///   - body: Message data
+    ///   - messageID: ID of the message
+    ///   - receiverIdentity: Receiver of the message
+    ///   - createdAt: Message date
+    ///   - nonce: One for one-to-one message
     /// - Returns: Envelope with outgoing message
     func getEnvelopeForOutgoingMessage(
         type: Int32,
         body: Data?,
         messageID: UInt64,
         receiverIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonce: Data
     ) -> D2d_Envelope {
         // swiftformat:disable:next all
         var conversationID = D2d_ConversationId()
         conversationID.contact = receiverIdentity
         
-        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt)
+        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt, [nonce])
     }
     
     /// Create Envelope for outgoing message.
-    /// - Parameter type: Message type, see MSGTYPE_... in `ProtocolDefinitions.h`
-    /// - Parameter body: Message data
-    /// - Parameter messageID: ID of the message
-    /// - Parameter groupID: Group ID of message
-    /// - Parameter groupCreatorIdentity: Group ID of message
-    /// - Parameter createdAt: Message date
+    /// - Parameters:
+    ///   - type: Message type, see MSGTYPE_... in `ProtocolDefinitions.h`
+    ///   - body: Message data
+    ///   - messageID: ID of the message
+    ///   - groupID: Group ID of message
+    ///   - groupCreatorIdentity: Group ID of message
+    ///   - createdAt: Message date
+    ///   - nonces: Count of members minus one for group message
     /// - Returns: Envelope with outgoing group message
     func getEnvelopeForOutgoingMessage(
         type: Int32,
@@ -576,7 +601,8 @@ enum MediatorMessageProtocolError: Error {
         messageID: UInt64,
         groupID: UInt64,
         groupCreatorIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonces: [Data]
     ) -> D2d_Envelope {
         var group = Common_GroupIdentity()
         group.groupID = groupID
@@ -586,7 +612,7 @@ enum MediatorMessageProtocolError: Error {
         var conversationID = D2d_ConversationId()
         conversationID.group = group
 
-        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt)
+        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt, nonces)
     }
     
     private func getEnvelopeForOutgoingMessage(
@@ -595,7 +621,8 @@ enum MediatorMessageProtocolError: Error {
         _ messageID: UInt64,
         // swiftformat:disable:next all
         _ conversationID: D2d_ConversationId,
-        _ createdAt: Date
+        _ createdAt: Date,
+        _ nonces: [Data]
     ) -> D2d_Envelope {
         var outgoingMessage = D2d_OutgoingMessage()
         outgoingMessage.type = MediatorMessageProtocol.getMultiDeviceMessageType(for: type)
@@ -603,9 +630,9 @@ enum MediatorMessageProtocolError: Error {
             outgoingMessage.body = body
         }
         outgoingMessage.messageID = messageID
-        
         outgoingMessage.conversation = conversationID
         outgoingMessage.createdAt = UInt64(createdAt.millisecondsSince1970)
+        outgoingMessage.nonces = nonces
 
         var envelope = D2d_Envelope()
         envelope.padding = BytesUtility.paddingRandom()
@@ -619,7 +646,7 @@ enum MediatorMessageProtocolError: Error {
         var outgoingMessageUpdate = D2d_OutgoingMessageUpdate()
         var updateMessage = D2d_OutgoingMessageUpdate.Update()
         updateMessage.sent = D2d_OutgoingMessageUpdate.Sent()
-        updateMessage.messageID = messageID.convert()
+        updateMessage.messageID = messageID.paddedLittleEndian()
         updateMessage.conversation = conversationID
         outgoingMessageUpdate.updates.append(updateMessage)
 
@@ -792,10 +819,16 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_CONTACT_REQUEST_PHOTO
         case .typingIndicator:
             return MSGTYPE_TYPING_INDICATOR
-        case .___: // Invalid message type
-            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
+        case .groupCallStart:
+            return MSGTYPE_GROUP_CALL_START
         // Not supported types
-        case .groupJoinRequest, .groupJoinResponse, .groupCallStart, .forwardSecurityEnvelope, .UNRECOGNIZED:
+        case .groupJoinRequest, .groupJoinResponse, .forwardSecurityEnvelope:
+            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
+        case .invalidType:
+            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
+        case .UNRECOGNIZED:
+            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
+        case .webSessionResume:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
         }
     }
@@ -869,7 +902,7 @@ enum MediatorMessageProtocolError: Error {
         case MSGTYPE_TYPING_INDICATOR:
             return .typingIndicator
         default:
-            return .___
+            return .invalidType
         }
     }
 
@@ -887,16 +920,6 @@ enum MediatorMessageProtocolError: Error {
     
     private static func getPayloadHeader() -> Data {
         Data(BytesUtility.padding([0x08], pad: 0x00, length: MEDIATOR_PAYLOAD_HEADER_LENGTH))
-    }
-}
-
-extension Date {
-    public var millisecondsSince1970: UInt64 {
-        UInt64((timeIntervalSince1970 * 1000.0).rounded())
-    }
-
-    public init(milliseconds: UInt64) {
-        self = Date(timeIntervalSince1970: TimeInterval(milliseconds) / 1000)
     }
 }
 
@@ -961,7 +984,7 @@ extension D2d_GroupSync: D2d_LoggingDescriptionProtocol {
 
 extension D2d_IncomingMessage: D2d_LoggingDescriptionProtocol {
     var loggingDescription: String {
-        "(type: \(type); id: \(NSData.convertBytes(messageID).hexString))"
+        "(type: \(type); id: \(messageID.littleEndianData.hexString))"
     }
 }
 
@@ -977,7 +1000,7 @@ extension D2d_IncomingMessageUpdate: D2d_LoggingDescriptionProtocol {
 
 extension D2d_OutgoingMessage: D2d_LoggingDescriptionProtocol {
     var loggingDescription: String {
-        "(type: \(type); id: \(NSData.convertBytes(messageID).hexString))"
+        "(type: \(type); id: \(messageID.littleEndianData.hexString))"
     }
 }
 

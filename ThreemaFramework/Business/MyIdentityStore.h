@@ -33,6 +33,17 @@
 
 @property (strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
 
+/*!
+ * @field pendingCreateID
+ * This property should be true if the threema id is created or restored and the setup is not completed.
+ * When the setup is completed, we have to set this value to false. Otherwise it can't connect to the server.
+ */
+
+@property (strong, nonatomic, readwrite) NSString *firstName;
+@property (strong, nonatomic, readwrite) NSString *lastName;
+@property (strong, nonatomic, readwrite) NSString *csi;
+@property (strong, nonatomic, readwrite) NSString *category;
+
 - (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)publicKey;
 - (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey;
 - (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey;
@@ -43,13 +54,16 @@
 
 - (BOOL)isProvisioned;
 
+- (NSString * _Nonnull)displayName;
+
 @property (strong, nonatomic, readwrite) NSString *licenseSupportUrl NS_SWIFT_NAME(licenseSupportURL);
+
+@property (strong, nonatomic, readwrite) NSString *serverGroup;
 
 @end
 
 @interface MyIdentityStore : NSObject <MyIdentityStoreProtocol>
 
-@property (strong, nonatomic, readwrite) NSString *serverGroup;
 @property (strong, nonatomic, readonly) NSData *publicKey;
 
 @property (strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
@@ -81,11 +95,6 @@
 @property (nonatomic, readwrite) BOOL pendingCreateID;
 @property (strong, nonatomic, readwrite) NSString *createIDEmail;
 @property (strong, nonatomic, readwrite) NSString *createIDPhone;
-
-@property (strong, nonatomic, readwrite) NSString *firstName;
-@property (strong, nonatomic, readwrite) NSString *lastName;
-@property (strong, nonatomic, readwrite) NSString *csi;
-@property (strong, nonatomic, readwrite) NSString *category;
 
 @property (strong, nonatomic, readwrite) NSString *companyName;
 @property (strong, nonatomic, readwrite) NSMutableDictionary *directoryCategories;

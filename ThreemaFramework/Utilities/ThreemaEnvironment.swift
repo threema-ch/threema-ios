@@ -18,6 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
+
 @objc public class ThreemaEnvironment: NSObject {
     @objc public enum EnvironmentType: Int {
         case appStore
@@ -54,11 +56,44 @@
         true
     }
 
-    /// Feature Flag for PFS by default
-    @objc public static var pfsByDefault: Bool {
-        if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
-            return true
+    @objc public static var groupCalls: Bool {
+        // We either show GC when activated in dev settings (off by default) or when build is from Xcode or current is
+        // red or red work.
+        UserSettings.shared().groupCallsDeveloper ||
+            ThreemaEnvironment.groupCallsPrerequisites
+    }
+    
+    public static var groupCallsPrerequisites: Bool {
+        [.xcode].contains(env()) || [.red, .workRed].contains(ThreemaApp.current)
+    }
+
+    #if DEBUG
+        // This exists purely for unit tests.
+        static var fsVersion: CspE2eFs_VersionRange = {
+            var range = CspE2eFs_VersionRange()
+            range.min = UInt32(CspE2eFs_Version.v10.rawValue)
+            range.max = UInt32(CspE2eFs_Version.v11.rawValue)
+
+            return range
+        }()
+    #else
+        static var fsVersion: CspE2eFs_VersionRange {
+            var range = CspE2eFs_VersionRange()
+            range.min = UInt32(CspE2eFs_Version.v10.rawValue)
+            range.max = UInt32(CspE2eFs_Version.v11.rawValue)
+        
+            return range
         }
-        return false
+    #endif
+    
+    static var fsDebugStatusMessages: Bool {
+        #if DEBUG
+            return true
+        #else
+            if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+                return true
+            }
+            return false
+        #endif
     }
 }

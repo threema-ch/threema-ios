@@ -428,7 +428,7 @@ message Contact {
   // existing contact.
   optional ConversationCategory conversation_category = 11;
 
-  // Conversation visbility of the contact
+  // Conversation visibility of the contact
   //
   // Required towards a new device and for a new contact. Optional for an
   // existing contact.
@@ -549,7 +549,7 @@ message Group {
   // existing group.
   optional ConversationCategory conversation_category = 4;
 
-  // Conversation visbility of the group
+  // Conversation visibility of the group
   //
   // Required towards a new device and for a new group. Optional for an
   // existing group.
@@ -593,7 +593,7 @@ message DistributionList {
   // for an existing distribution list.
   optional ConversationCategory conversation_category = 4;
 
-  // Conversation visbility of the distribution list
+  // Conversation visibility of the distribution list
   //
   // Required towards a new device and for a new distribution list. Optional
   // for an existing distribution list.

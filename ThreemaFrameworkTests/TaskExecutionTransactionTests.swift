@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import PromiseKit
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -160,6 +161,7 @@ class TaskExecutionTransactionTests: XCTestCase {
             let frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
                 entityManager: EntityManager(databaseContext: databaseMainCnx),
+                userSettings: UserSettingsMock(enableMultiDevice: true),
                 serverConnector: serverConnectorMock
             )
 
@@ -282,7 +284,7 @@ class TaskExecutionTransactionTests: XCTestCase {
                 XCTFail()
             }
             .catch { error in
-                if let error = error as? TaskExecutionError, case .noDeviceGroupPathKey = error {
+                if let error = error as? TaskExecutionError, case .multiDeviceNotRegistered = error {
                     expec.fulfill()
                 }
                 else {

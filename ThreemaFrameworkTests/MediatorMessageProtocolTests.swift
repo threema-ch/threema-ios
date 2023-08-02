@@ -22,7 +22,7 @@ import XCTest
 @testable import ThreemaFramework
 
 class MediatorMessageProtocolTests: XCTestCase {
-    
+
     func testIsMediatorMessage() {
         let messages = [
             [Data([0x00]), false],
@@ -51,16 +51,18 @@ class MediatorMessageProtocolTests: XCTestCase {
     }
 
     func testGetEncryptDecryptEnvelopeForIncomingMessage() {
-        let message = Data([1])
-        let createdAt = Date()
+        let expectedMessage = Data(repeating: 0x01, count: 1)
+        let expectedCreatedAt = Date()
+        let expectedNonce = MockData.generateMessageNonce()
 
         let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
         let envelopeIncomigMessage = mediatorMessageProtocol.getEnvelopeForIncomingMessage(
             type: 0x01,
-            body: message,
+            body: expectedMessage,
             messageID: 1,
             senderIdentity: "ECHOECHO",
-            createdAt: createdAt
+            createdAt: expectedCreatedAt,
+            nonce: expectedNonce
         )
         let encryptedMessage = mediatorMessageProtocol.encodeEnvelope(envelope: envelopeIncomigMessage)
         
@@ -75,9 +77,10 @@ class MediatorMessageProtocolTests: XCTestCase {
 
         XCTAssertEqual(encryptedMessage.reflectID, reflectID)
         XCTAssertEqual(envelope?.incomingMessage.body, Data([1]))
-        XCTAssertEqual(envelope?.incomingMessage.createdAt, UInt64(createdAt.millisecondsSince1970))
+        XCTAssertEqual(envelope?.incomingMessage.createdAt, UInt64(expectedCreatedAt.millisecondsSince1970))
         XCTAssertEqual(envelope?.incomingMessage.messageID, 1)
         XCTAssertEqual(envelope?.incomingMessage.senderIdentity, "ECHOECHO")
+        XCTAssertEqual(envelope?.incomingMessage.nonce, expectedNonce)
     }
 
     func testGetEncryptDecryptEnvelopeForOutgoingMessage() {
@@ -85,14 +88,15 @@ class MediatorMessageProtocolTests: XCTestCase {
         let createdAt = Date()
         
         let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
-        let envelopeOutgoinigMessage = mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
+        let envelopeOutgoingMessage = mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: 0x01,
             body: message,
             messageID: 1,
             receiverIdentity: "ECHOECHO",
-            createdAt: createdAt
+            createdAt: createdAt,
+            nonce: MockData.generateMessageNonce()
         )
-        let encryptedMessage = mediatorMessageProtocol.encodeEnvelope(envelope: envelopeOutgoinigMessage)
+        let encryptedMessage = mediatorMessageProtocol.encodeEnvelope(envelope: envelopeOutgoingMessage)
         
         XCTAssertNotNil(encryptedMessage.reflectID)
         XCTAssertNotNil(encryptedMessage.reflectMessage)

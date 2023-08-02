@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import SwiftProtobuf
+import ThreemaProtocols
 
 class MediatorMessageProcessor: NSObject {
     
@@ -36,6 +37,7 @@ class MediatorMessageProcessor: NSObject {
     private let mediatorMessageProtocol: MediatorMessageProtocolProtocol
     private let userSettings: UserSettingsProtocol
     private let taskManager: TaskManagerProtocol
+    private let socketProtocolDelegate: SocketProtocolDelegate
     private let messageProcessorDelegate: MessageProcessorDelegate
 
     @objc required init(
@@ -46,6 +48,7 @@ class MediatorMessageProcessor: NSObject {
         mediatorMessageProtocol: AnyObject,
         userSettings: UserSettingsProtocol,
         taskManager: AnyObject,
+        socketProtocolDelegate: SocketProtocolDelegate,
         messageProcessorDelegate: MessageProcessorDelegate
     ) {
         assert(mediatorMessageProtocol is MediatorMessageProtocolProtocol)
@@ -58,6 +61,7 @@ class MediatorMessageProcessor: NSObject {
         self.userSettings = userSettings
         self.taskManager = taskManager as! TaskManagerProtocol
         self.mediatorMessageProtocol = mediatorMessageProtocol as! MediatorMessageProtocolProtocol
+        self.socketProtocolDelegate = socketProtocolDelegate
         self.messageProcessorDelegate = messageProcessorDelegate
     }
     
@@ -86,6 +90,13 @@ class MediatorMessageProcessor: NSObject {
         case .serverHello:
             if let serverHello = mediatorMessageProtocol.decodeServerHello(message: message) {
                 DDLogInfo("Server hello")
+
+                guard serverHello.version >= MediatorMessageProtocol.d2mProtocolVersion.min else {
+                    DDLogError("Unsupported d2m protocol version \(serverHello.version)")
+                    socketProtocolDelegate
+                        .didDisconnect(errorCode: ServerConnectionCloseCode.unsupportedProtocolVersion.rawValue)
+                    return nil
+                }
                 
                 if let nonce: Data = NaClCrypto.shared()?.randomBytes(kNaClCryptoNonceSize),
                    let encryptedChallenge = NaClCrypto.shared()?
@@ -101,10 +112,15 @@ class MediatorMessageProcessor: NSObject {
                     
                     var clientHello = D2m_ClientHello()
                     clientHello.response = response
-                    clientHello.deviceID = deviceID.convert()
+                    clientHello.deviceID = deviceID.paddedLittleEndian()
                     clientHello.deviceSlotExpirationPolicy = .persistent
                     clientHello.deviceSlotsExhaustedPolicy = .dropLeastRecent
                     clientHello.expectedDeviceSlotState = userSettings.enableMultiDevice ? .existing : .new
+                    clientHello.version = min(
+                        MediatorMessageProtocol.d2mProtocolVersion.max,
+                        serverHello.version
+                    )
+                    DDLogInfo("Selected D2M protocol version \(clientHello.version)")
 
                     var deviceInfo = D2d_DeviceInfo()
                     deviceInfo.label = UIDevice().name
@@ -132,6 +148,11 @@ class MediatorMessageProcessor: NSObject {
 
             if !userSettings.enableMultiDevice {
                 userSettings.enableMultiDevice = true
+                // Ensure that the change is observed by SettingStores
+                NotificationCenter.default.post(
+                    name: .init(rawValue: kNotificationSettingStoreSynchronization),
+                    object: nil
+                )
                 FeatureMask.update()
             }
 
@@ -147,7 +168,7 @@ class MediatorMessageProcessor: NSObject {
             }
             
         case .rolePromotedToLeader:
-            DDLogInfo("Role promoted to leader")
+            DDLogNotice("Role promoted to leader")
             
             if mediatorMessageProtocol.decodeRolePromotedToLeader(message: message) != nil {
                 DDLogVerbose("Role promoted to leader deserialized")
@@ -180,21 +201,28 @@ class MediatorMessageProcessor: NSObject {
         case .reflectAck:
             DDLogInfo("Reflect ack")
             
-            let reflectID = MediatorMessageProtocol.decodeReflectAck(message)
-            return reflectID
+            let (reflectID, reflectedAckAt) = MediatorMessageProtocol.decodeReflectAck(message)
+
+            NotificationCenter.default.post(
+                name: TaskManager.mediatorMessageAckObserverName(reflectID: reflectID),
+                object: reflectID,
+                userInfo: [reflectID: reflectedAckAt]
+            )
+
+            return nil
         case .reflected:
             DDLogInfo("Reflected")
 
             // Decode and decrypt incoming reflected message
-            let (reflectID, envelopeData, timestamp) = MediatorMessageProtocol.decodeReflected(message)
+            let (reflectID, reflectedEnvelopeData, reflectedAt) = MediatorMessageProtocol.decodeReflected(message)
             DDLogNotice("[MSG] Incoming reflected message (reflect ID \(reflectID.hexString))")
 
-            if let envelope = mediatorMessageProtocol.decryptEnvelope(data: envelopeData) {
+            if let reflectedEnvelope = mediatorMessageProtocol.decryptEnvelope(data: reflectedEnvelopeData) {
                 // Add task for processing incoming reflected message
                 let task = TaskDefinitionReceiveReflectedMessage(
                     reflectID: reflectID,
-                    message: envelope,
-                    mediatorTimestamp: timestamp,
+                    reflectedEnvelope: reflectedEnvelope,
+                    reflectedAt: reflectedAt,
                     receivedAfterInitialQueueSend: receivedAfterInitialQueueSend,
                     maxBytesToDecrypt: maxBytesToDecrypt,
                     timeoutDownloadThumbnail: timeoutDownloadThumbnail

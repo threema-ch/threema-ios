@@ -21,9 +21,10 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 /// Reflect my profile data to mediator server.
-class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
+final class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
 
     override func prepare() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionProfileSync else {
@@ -45,7 +46,7 @@ class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
 
                 return uploadBlobs(blobs: [encryptedProfileImageData!])
                     .then { blobIDs -> Promise<Void> in
-                        if let blobID = blobIDs.first as? Data {
+                        if let blobID = blobIDs.first {
                             task.syncUserProfile.profilePicture.updated.blob = Common_Blob()
                             task.syncUserProfile.profilePicture.updated.blob.id = blobID
                             task.syncUserProfile.profilePicture.updated.blob.key = encryptionKey!
@@ -54,7 +55,7 @@ class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
                             return Promise()
                         }
                         else {
-                            throw TaskExecutionTransactionError.blobUploadFailed
+                            throw TaskExecutionTransactionError.blobIDMissing
                         }
                     }
             case .none:
@@ -74,7 +75,7 @@ class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
             userProfile: task.syncUserProfile
         )
         
-        return [Promise<Void> { try $0.fulfill(reflectMessage(
+        return [Promise { try $0.fulfill(_ = reflectMessage(
             envelope: envelope,
             ltReflect: self.taskContext.logReflectMessageToMediator,
             ltAck: self.taskContext.logReceiveMessageAckFromMediator

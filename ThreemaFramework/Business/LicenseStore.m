@@ -164,6 +164,8 @@ static LicenseStore *singleton;
         
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
         [connector validateLicenseUsername:_licenseUsername password:_licensePassword appId:appId version:version deviceId:[self deviceId] onCompletion:^(BOOL success, NSDictionary *info) {
+            _error = nil;
+            _errorMessage = nil;
             if (success) {
                 [MyIdentityStore sharedMyIdentityStore].licenseLastCheck = [NSDate date];
                 _didCheckLicense = YES;
@@ -249,10 +251,18 @@ static LicenseStore *singleton;
         if (![onPremConfigUrl hasPrefix:@"https://"]) {
             onPremConfigUrl = [NSString stringWithFormat:@"https://%@", onPremConfigUrl];
         }
+        else if ([onPremConfigUrl hasPrefix:@"https://https://"]) {
+            onPremConfigUrl= [onPremConfigUrl substringFromIndex:8];
+        }
         
         NSString *check = [onPremConfigUrl substringFromIndex:8];
-        if (![check containsString:@"/"]) {
-           onPremConfigUrl = [NSString stringWithFormat:@"%@/prov/config.oppf", onPremConfigUrl];
+        if (![check hasSuffix:@".oppf"]) {
+            if ([check hasSuffix:@"/"]) {
+                onPremConfigUrl = [NSString stringWithFormat:@"%@prov/config.oppf", onPremConfigUrl];
+            }
+            else {
+                onPremConfigUrl = [NSString stringWithFormat:@"%@/prov/config.oppf", onPremConfigUrl];
+            }
         }
                
         _onPremConfigUrl = onPremConfigUrl;

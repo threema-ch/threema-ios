@@ -66,7 +66,7 @@ class AppMigrationTests: XCTestCase {
         let appMigration = AppMigration(
             businessInjector: businessInjectorMock
         )
-        appMigration.run()
+        XCTAssertNoThrow(try appMigration.run())
         
         DDLog.sharedInstance.flushLog()
         

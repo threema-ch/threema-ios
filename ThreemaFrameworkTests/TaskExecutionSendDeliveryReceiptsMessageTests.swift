@@ -67,28 +67,30 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
             messageSender: messageSenderMock,
             serverConnector: serverConnectorMock
         )
-        var expecError: Error?
-        let expec = expectation(description: "Task execution")
+
+        let expect = expectation(description: "Task execution")
+        var expectError: Error?
 
         let task = TaskDefinitionSendDeliveryReceiptsMessage(
             fromIdentity: MyIdentityStoreMock().identity,
             toIdentity: expectedToIdentity,
-            receiptType: UInt8(DELIVERYRECEIPT_MSGREAD),
+            receiptType: .read,
             receiptMessageIDs: [MockData.generateMessageID()],
-            receiptReadDates: [Date()]
+            receiptReadDates: [Date()],
+            excludeFromSending: [Data]()
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        wait(for: [expec], timeout: 3)
+        wait(for: [expect], timeout: 3)
 
-        XCTAssertNil(expecError)
+        XCTAssertNil(expectError)
         XCTAssertTrue(serverConnectorMock.reflectMessageCalls.isEmpty)
         switch readReceipt {
         case .send:
@@ -105,15 +107,22 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
     }
 
     func testContactReadReceiptSendAndDoNotSendMultiDeviceActivated() throws {
-        try contactReadReceiptSendMultiDeviceActivated(readReceipt: .send)
-        try contactReadReceiptSendMultiDeviceActivated(readReceipt: .doNotSend)
+        try contactReadReceiptSendMultiDeviceActivated(readReceipt: .send, excludeAll: false)
+        try contactReadReceiptSendMultiDeviceActivated(readReceipt: .send, excludeAll: true)
+        try contactReadReceiptSendMultiDeviceActivated(readReceipt: .doNotSend, excludeAll: false)
+        try contactReadReceiptSendMultiDeviceActivated(readReceipt: .doNotSend, excludeAll: true)
     }
 
-    private func contactReadReceiptSendMultiDeviceActivated(readReceipt: ReadReceipt) throws {
+    private func contactReadReceiptSendMultiDeviceActivated(
+        readReceipt: ReadReceipt,
+        excludeAll: Bool
+    ) throws {
         let expectedToIdentity = "ECHOECHO"
-        let expectedMessageReflectID = MockData.generateReflectID()
-        let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
-        var expectedReflectIDs = [expectedMessageReflectID]
+
+        let readReceiptMessageIDs = [MockData.generateMessageID(), MockData.generateMessageID()]
+        let messageReflectID = MockData.generateReflectID()
+        let messageReflect = BytesUtility.generateRandomBytes(length: 16)!
+        var reflectIDs = [messageReflectID]
 
         var contactEntity: ContactEntity!
         dbPreparer.save {
@@ -134,10 +143,11 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
-                let expectedReflectID = expectedReflectIDs.remove(at: 0)
+                let expectedReflectID = reflectIDs.remove(at: 0)
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
-                    object: expectedReflectID
+                    object: expectedReflectID,
+                    userInfo: [expectedReflectID: Date()]
                 )
                 return true
             }
@@ -151,51 +161,62 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
             ),
             entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
             messageSender: messageSenderMock,
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: MockData.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
-                        id: expectedMessageReflectID,
-                        message: expectedMessageReflect
+                        id: messageReflectID,
+                        message: messageReflect
                     ),
                 ]
             )
         )
-        var expecError: Error?
-        let expec = expectation(description: "Task execution")
+
+        let expect = expectation(description: "Task execution")
+        var expectError: Error?
 
         let task = TaskDefinitionSendDeliveryReceiptsMessage(
             fromIdentity: MyIdentityStoreMock().identity,
             toIdentity: expectedToIdentity,
-            receiptType: UInt8(DELIVERYRECEIPT_MSGREAD),
-            receiptMessageIDs: [MockData.generateMessageID()],
-            receiptReadDates: [Date()]
+            receiptType: .read,
+            receiptMessageIDs: readReceiptMessageIDs,
+            receiptReadDates: [Date()],
+            excludeFromSending: excludeAll ? readReceiptMessageIDs : [readReceiptMessageIDs[0]]
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
-        wait(for: [expec], timeout: 3)
+        wait(for: [expect], timeout: 3)
 
-        XCTAssertNil(expecError)
-        XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
+        let testParameter = "Test parameters -> Read receipt: \(readReceipt) / exclude all: \(excludeAll)"
+
+        XCTAssertNil(expectError, testParameter)
+        XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count, testParameter)
         switch readReceipt {
         case .send:
-            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
-            XCTAssertTrue(
-                serverConnectorMock.sendMessageCalls
-                    .contains(where: { $0.toIdentity == expectedToIdentity })
-            )
+            if excludeAll {
+                XCTAssertTrue(serverConnectorMock.sendMessageCalls.isEmpty, testParameter)
+            }
+            else {
+                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count, testParameter)
+                XCTAssertTrue(
+                    serverConnectorMock.sendMessageCalls
+                        .contains(where: { $0.toIdentity == expectedToIdentity }),
+                    testParameter
+                )
+            }
         case .default:
             break
         case .doNotSend:
-            XCTAssertTrue(serverConnectorMock.sendMessageCalls.isEmpty)
+            XCTAssertTrue(serverConnectorMock.sendMessageCalls.isEmpty, testParameter)
         }
     }
 }

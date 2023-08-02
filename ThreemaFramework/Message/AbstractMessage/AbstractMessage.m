@@ -51,7 +51,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self;
 }
 
-- (BoxedMessage*)makeBox:(ContactEntity *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore {
+- (BoxedMessage*)makeBox:(ContactEntity *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore nonce:(NSData* _Nonnull)nonce {
 
     /* prepare data for box */
     uint8_t type = self.type;
@@ -97,8 +97,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return nil;
     }
 
-    /* make random nonce and save to database */
-    NSData *nonce = [[NaClCrypto sharedCrypto] randomBytes:kNaClCryptoNonceSize];
+    if (nonce.length != kNaClCryptoNonceSize) {
+        DDLogError(@"Message nonce is invalid");
+        return nil;
+    }
 
     /* sign/encrypt with our secret key */
     NSData *boxedData = [myIdentityStore encryptData:boxData withNonce:nonce publicKey:toContact.publicKey];
@@ -158,6 +160,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return YES;
 }
 
+- (BOOL)canUnarchiveConversation {
+    return YES;
+}
+
 - (BOOL)needsConversation {
     return YES;
 }
@@ -190,8 +196,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return YES;
 }
 
-- (BOOL)supportsForwardSecurity {
-    return NO;
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kV11;
 }
 
 - (BOOL)isContentValid {
@@ -278,22 +284,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [NSString stringWithFormat:@"(type: %@; id: %@)", [MediatorMessageProtocol getTypeDescriptionWithType:self.type], [NSString stringWithHexData:self.messageId]];
 }
 
-#pragma mark - NSCoding
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super init]) {
-        self.fromIdentity = [decoder decodeObjectForKey:@"fromIdentity"];
-        self.toIdentity = [decoder decodeObjectForKey:@"toIdentity"];
-        self.messageId = [decoder decodeObjectForKey:@"messageId"];
-        self.pushFromName = [decoder decodeObjectForKey:@"pushFromName"];
-        self.date = [decoder decodeObjectForKey:@"date"];
-        self.deliveryDate = [decoder decodeObjectForKey:@"deliveryDate"];
-        self.delivered = [decoder decodeObjectForKey:@"delivered"];
-        self.userAck = [decoder decodeObjectForKey:@"userAck"];
-        self.sendUserAck = [decoder decodeObjectForKey:@"sendUserAck"];
-        self.nonce = [decoder decodeObjectForKey:@"nonce"];
+        self.fromIdentity = [decoder decodeObjectOfClass:[NSString class] forKey:@"fromIdentity"];
+        self.toIdentity = [decoder decodeObjectOfClass:[NSString class] forKey:@"toIdentity"];
+        self.messageId = [decoder decodeObjectOfClass:[NSData class] forKey:@"messageId"];
+        self.pushFromName = [decoder decodeObjectOfClass:[NSString class] forKey:@"pushFromName"];
+        self.date = [decoder decodeObjectOfClass:[NSDate class] forKey:@"date"];
+        self.deliveryDate = [decoder decodeObjectOfClass:[NSDate class] forKey:@"deliveryDate"];
+        self.delivered = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"delivered"];
+        self.userAck = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"userAck"];
+        self.sendUserAck = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"sendUserAck"];
+        self.nonce = [decoder decodeObjectOfClass:[NSData class] forKey:@"nonce"];
         self.receivedAfterInitialQueueSend = [decoder decodeBoolForKey:@"receivedAfterInitialQueueSend"];
-        self.flags = [decoder decodeObjectForKey:@"flags"];
+        self.flags = [decoder decodeObjectOfClass:[NSNumber class] forKey:@"flags"];
     }
     return self;
 }
@@ -311,6 +317,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [encoder encodeObject:self.nonce forKey:@"nonce"];
     [encoder encodeBool:self.receivedAfterInitialQueueSend forKey:@"receivedAfterInitialQueueSend"];
     [encoder encodeObject:self.flags forKey:@"flags"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

@@ -31,7 +31,6 @@
 #import "ServerAPIConnector.h"
 #import "UserSettings.h"
 #import "TypingIndicatorManager.h"
-#import "StatusNavigationBar.h"
 #import "MyIdentityStore.h"
 #import "PortraitNavigationController.h"
 #import "ThreemaUtilityObjC.h"
@@ -74,7 +73,6 @@
 #import "GroupImageMessage.h"
 #import "BoxVideoMessage.h"
 #import "GroupVideoMessage.h"
-#import "VoIPHelper.h"
 #import "PushPayloadDecryptor.h"
 #import "Threema-Swift.h"
 #import "ThreemaFramework.h"
@@ -380,7 +378,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             });
         } else {
             if ([AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings]) {
-                [[[AppMigration alloc] initWithBusinessInjectorObjc:[BusinessInjector new]] run];
+                NSError *error;
+                // AppMigration makes sure to only throw erros that are considered fatal i.e. the migration failed and we expect
+                // the app to not be usable without it.
+                [[[AppMigration alloc] initWithBusinessInjectorObjc:[BusinessInjector new]] runAndReturnError:&error];
+                
+                if (error != nil) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [ErrorHandler abortWithError: error additionalText:[BundleUtil localizedStringForKey:@"database_migration_error_hints"]];
+                    });
+                    return;
+                }
             }
             
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -649,7 +657,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)handlePresentingScreensWithForce:(BOOL)force {
     // ShouldLoadUIForEnterForeground == false: means UI was never loaded before
     if (shouldLoadUIForEnterForeground == false || force) {
-        if (![[VoIPHelper shared] isCallActiveInBackground] && [[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
+        if (![NavigationBarPromptHandler isCallActiveInBackground] && [[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
             if ([lastViewController.presentedViewController isKindOfClass:[CallViewController class]] || SYSTEM_IS_IPAD) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
@@ -683,7 +691,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 [safeManager deactivate];
             }
             // If Safe activated, check if server has been changed by MDM
-            else if ([safeManager isActivated] && [mdmSetup isManaged]) {
+            else if ([safeManager isActivated] && LicenseStore.sharedLicenseStore.getRequiresLicenseKey) {
                 [safeStore isSafeServerChangedWithMdmSetup:mdmSetup completion:^(BOOL changed) {
                     
                     if (!changed) {
@@ -1020,7 +1028,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 /**
- Selector method to process update all contacts in backgropund thread, to prevent blocking the app, otherwise will killed by watchdog.
+ Selector method to process update all contacts in background thread, to prevent blocking the app, otherwise will killed by watchdog.
 */
 - (void)updateAllContacts {
     [[ContactStore sharedContactStore] updateAllContacts];
@@ -1133,6 +1141,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             timeout = kAppWCBackgroundTaskTime;
         }
         else if ([Old_FileMessageSender hasScheduledUploads] == YES || [manager hasActiveSyncs] || ![TaskManager isEmptyWithQueueType:TaskQueueTypeOutgoing]) {
+
             // Queue has outgoing messages or is syncing files
             key = kAppClosedByUserBackgroundTask;
             timeout = kAppSendingBackgroundTaskTime;
@@ -1141,13 +1150,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             key = kAppClosedByUserBackgroundTask;
             timeout = kAppClosedByUserBackgroundTaskTime;
         }
-        
+
         [[BackgroundTaskManager shared] newBackgroundTaskWithKey:key timeout:timeout completionHandler:nil];
     } else {
         // Disconnect from server - from now on we want push notifications for new messages
         [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp];
         [[WCSessionManager shared] saveSessionsToArchive];
     }
+    
+    [SettingsBundleHelper resetSafeMode];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
@@ -1173,7 +1184,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     isEnterForeground = true;
     BOOL shouldLoadUI = true;
 
-    if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && [[VoIPHelper shared] isCallActiveInBackground]) {
+    if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && [NavigationBarPromptHandler isCallActiveInBackground]) {
         [self presentPasscodeView];
         shouldLoadUI = false;
     }
@@ -1220,6 +1231,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
     [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
     
+    if ([ThreemaEnvironment groupCalls]) {
+        [[GlobalGroupCallsManagerSingleton shared] handleCallsFromDBWithCompletionHandler:^{
+            // Noop
+        }];
+    }
 }
 
 - (void)applicationProtectedDataWillBecomeUnavailable:(UIApplication *)application {
@@ -1302,7 +1318,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     [[GatewayAvatarMaker gatewayAvatarMaker] refresh];
     
-    if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle && ![VoIPHelper shared].isCallActiveInBackground) {
+    if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle && ![NavigationBarPromptHandler isCallActiveInBackground]) {
         [[VoIPCallStateManager shared] presentCallViewController];
     } else {
         // if not a call, then trigger Threema Safe backup (it will show an alert here, if last successful backup older than 7 days)
@@ -1316,7 +1332,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     // Checks is device linking not finished yet
     if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        [[MultiDeviceWizardManager shared] continueLinking];
+        [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_title"] message:[NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_message"], [ThreemaAppObjc currentName]] actionOk:^(UIAlertAction * _Nonnull) {
+            [DeviceJoinObjC cleanupFailedJoin];
+        }];
     }
 }
 
@@ -1507,7 +1525,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     if (isAppLocked && !isCallViewControllerPresented) {
-        if ([[VoIPCallStateManager shared] currentCallState] == CallStateIdle || [VoIPHelper shared].isCallActiveInBackground) {
+        if ([[VoIPCallStateManager shared] currentCallState] == CallStateIdle || [NavigationBarPromptHandler isCallActiveInBackground]) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(100 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
                 [self tryTouchIdAuthentication];
             });

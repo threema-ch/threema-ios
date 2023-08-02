@@ -20,8 +20,16 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import PromiseKit
 
-class BlobUploader: NSObject {
+protocol BlobUploaderProtocol {
+    func upload(
+        data: Data,
+        origin: BlobOrigin
+    ) -> Promise<Data>
+}
+
+class BlobUploader: NSObject, BlobUploaderProtocol {
     
     enum BlobUploaderError: Error {
         case uploadFailed(message: String)
@@ -79,7 +87,7 @@ class BlobUploader: NSObject {
                 }
                 
                 let task = self
-                    .startUpload(for: uploadURL, and: blobData, authorization: authorization) { data, error in
+                    .upload(for: uploadURL, and: blobData, authorization: authorization) { data, error in
                         
                         // Upload was completed
                         if let error {
@@ -118,8 +126,44 @@ class BlobUploader: NSObject {
             })
         }
     }
-    
-    public func startUpload(
+
+    func upload(
+        data: Data,
+        origin: BlobOrigin
+    ) -> Promise<Data> {
+        Promise { seal in
+            blobURL.upload(origin: .local, completionHandler: { uploadURL, authorization, error in
+                if let error {
+                    seal.reject(error)
+                    return
+                }
+
+                guard let uploadURL else {
+                    seal.reject(BlobUploaderError.invalidUploadURL)
+                    return
+                }
+
+                self.upload(for: uploadURL, and: data, authorization: authorization) { data, error in
+                    if let error {
+                        seal.reject(error)
+                        return
+                    }
+
+                    guard let data,
+                          let idHex = String(bytes: data, encoding: .ascii),
+                          let id = BytesUtility.toBytes(hexString: idHex) else {
+                        seal.reject(BlobUploaderError.uploadFailed(message: "[BlobUploader] Upload unsuccessful."))
+                        return
+                    }
+
+                    seal.fulfill(Data(id))
+                }
+            })
+        }
+    }
+
+    @discardableResult
+    private func upload(
         for url: URL,
         and data: Data,
         authorization: String?,

@@ -155,8 +155,7 @@ extension Colors {
     /// Check if a call or web session is active and return the correct appearance
     /// - Returns: Transparent or default UINavigationBarAppearance
     public class func transparentNavigationBarAppearance() -> UINavigationBarAppearance {
-        guard !VoIPHelper.shared().isCallActiveInBackground,
-              !WCSessionHelper.isWCSessionConnected else {
+        guard !NavigationBarPromptHandler.shouldShowPrompt() else {
             let defaultAppearance = defaultNavigationBarAppearance()
             defaultAppearance.shadowColor = .clear
             return defaultAppearance
@@ -175,20 +174,20 @@ extension Colors {
     }
     
     @objc public class func colorForNavigationBackground() -> UIColor? {
-        if VoIPHelper.shared().isCallActiveInBackground {
+        if NavigationBarPromptHandler.isCallActiveInBackground || NavigationBarPromptHandler.isGroupCallActive {
             return Colors.navigationBarCall
         }
-        else if WCSessionHelper.isWCSessionConnected {
+        else if NavigationBarPromptHandler.isWebActive {
             return Colors.navigationBarWeb
         }
         return nil
     }
     
     @objc public class func colorForBarTint() -> UIColor? {
-        if VoIPHelper.shared().isCallActiveInBackground {
+        if NavigationBarPromptHandler.isCallActiveInBackground || NavigationBarPromptHandler.isGroupCallActive {
             return Colors.navigationBarCall
         }
-        else if WCSessionHelper.isWCSessionConnected {
+        else if NavigationBarPromptHandler.isWebActive {
             return Colors.navigationBarWeb
         }
         return Colors.backgroundNavigationController

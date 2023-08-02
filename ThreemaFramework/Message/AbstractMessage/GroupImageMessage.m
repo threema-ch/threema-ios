@@ -57,13 +57,17 @@
     return YES;
 }
 
-#pragma mark - NSCoding
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
-        self.blobId = [decoder decodeObjectForKey:@"blobId"];
+        self.blobId = [decoder decodeObjectOfClass:[NSData class] forKey:@"blobId"];
         self.size = (uint32_t)[decoder decodeIntegerForKey:@"size"];
-        self.encryptionKey = [decoder decodeObjectForKey:@"encryptionKey"];
+        self.encryptionKey = [decoder decodeObjectOfClass:[NSData class] forKey:@"encryptionKey"];
     }
     return self;
 }
@@ -73,6 +77,10 @@
     [encoder encodeObject:self.blobId forKey:@"blobId"];
     [encoder encodeInt:self.size forKey:@"size"];
     [encoder encodeObject:self.encryptionKey forKey:@"encryptionKey"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

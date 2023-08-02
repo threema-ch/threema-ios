@@ -30,7 +30,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
     override init(message: WebAbstractMessage) {
 
         let idString = message.args!["id"] as! String
-        self.id = idString.hexadecimal()
+        self.id = idString.hexadecimal
         self.deleteType = message.args!["deleteType"] as! String
         super.init(message: message)
     }

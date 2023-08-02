@@ -63,6 +63,7 @@
 "copy" = "复制";
 "save" = "保存";
 "download" = "下载";
+"retry" = "重试";
 "share" = "分享";
 "details" = "详情";
 "acknowledge" = "同意";
@@ -503,8 +504,8 @@
 "forward_security_none" = "无保密";
 "forward_security_2dh" = "单向保密";
 "forward_security_4dh" = "完整保密";
-"forward_security_clear_sessions" = "清除所有会话";
-"forward_security_explainer_footer" = "完全正向保密（PFS）可以保护会话记录不被追溯解密，即使长期加密密钥已被盗用。\n如果双方的应用程序都支持完全正向保密的话，就可以启用此选项。";
+"forward_security_clear_sessions" = "重置对此联系人的 “完全正向保密” 状态";
+"forward_security_explainer_footer" = "仅在 Threema 支持团队的指示下，才执行此操作。";
 "md_wizard_pfs_warning" = "启用多设备预览后，所有联系人的完全正向保密将被禁用。";
 "md_wizard_disable_pfs_confirm" = "禁用完全正向保密";
 
@@ -636,7 +637,7 @@
 "push_reminder_set_now" = "启用通知";
 
 "updating_database" = "正在更新数据库...\n\n请保持 Threema 在前台运行直到完成为止。\n\n如果您有大量的聊天记录，可能需要几分钟的时间才能完成。";
-"database_migration_error_hints" = "请确保设备上有足够的可用存储空间，重启设备后再试。";
+"database_migration_error_hints" = "请确保设备上有足够的可用存储空间，重启设备后重试。";
 "database_migration_storage_warning_title" = "可用存储空间不足";
 "database_migration_storage_warning_message" = "数据库更新暂时需要至少 %.1f GB 的可用存储空间。您的设备目前只有 %.1f GB 的可用存储空间。请在 “储存空间” 中删除项目以获得更多可用的存储空间，然后再试。";
 
@@ -762,6 +763,11 @@
 
 "call_threema_cellular_instead_of_wifi_title" = "通过移动数据通话";
 "call_threema_cellular_instead_of_wifi_text" = "警告：这个通话将使用移动数据进行。";
+
+// Group Calls
+"group_call_join_button_title" = "加入";
+"group_call_open_button_title" = "打开";
+"group_call_participants_title" = "参与者：%@";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema 比任何其他即时通讯工具更加严格地保护您的隐私。在我们的隐私政策中了解更多。";
@@ -967,6 +973,7 @@
 "safe_test_server_invalid_url" = "请输入有效的 HTTPS 地址。";
 "safe_restore_error" = "恢复 Threema Safe 备份失败，请重试。";
 "safe_activation_failed" = "恢复备份后，Threema Safe 无法激活。";
+"safe_activation_app_migration_failed_error_message" = "由于数据库发生错误，无法恢复 Threema Safe Backup。请稍后重试。";
 
 "password_bad" = "弱密码";
 "password_bad_explain" = "Threema Safe 所选的密码不安全，容易被攻击者猜中，请选择其他密码。提示：使用由多个单词组成的密码。";
@@ -1222,6 +1229,11 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "如果此应用关闭后，仍然没有收到新消息通知，您可以重新注册通知推送权限。";
 "settings_advanced_reregister_notifications_label" = "重新注册推送通知";
 
+"settings_advanced_reset_fs_db_label" = "重置完全正向保密的状态";
+"settings_advanced_support_settings_header_title" = "支持设置";
+"settings_advanced_support_settings_footer_title" = "仅在 Threema 支持团队的指示下，才执行此操作。";
+"settings_advanced_successfully_deleted_fs_sessions_label" = "完全正向保密的状态已成功重置";
+
 // Sentry
 "sentry_crash_send_title" = "%@ 意外退出";
 "sentry_crash_send_description" = "您可以提交匿名崩溃报告。请您详细解释导致崩溃原因，将有助于解决根本问题。";
@@ -1231,7 +1243,7 @@
 
 // My profile
 "profile_share_id_text" = "我的 Threema ID";
-"my_profile_delete_cell_title" = "删除ID和数据";
+"my_profile_delete_cell_title" = "移除ID和数据";
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";
@@ -1406,12 +1418,11 @@
 
 "contactoverride_sheetMessage" = "这将覆盖此特定联系人的默认设置。";
 
-/* Multi Decvice */
+/* Multi Device */
 "multi_device_linked_devices_title" = "多设备预览";
 "multi_device_linked_devices_desc" = "为这个设备激活或关闭多设备预览。";
 "multi_device_linked_devices_refresh" = "下拉刷新";
 "multi_device_linked_devices_loading_failed" = "加载设备失败：%@";
-"multi_device_linked_devices_failed_to_load_title" = "加载设备列表失败";
 "multi_device_linked_devices_failed_to_load_message" = "无法加载已连接的设备，请检查您的互联网连接并重试。";
 "multi_device_linked_devices_this" = "此设备";
 "multi_device_linked_devices_others" = "其他设备";
@@ -1421,12 +1432,68 @@
 "multi_device_linked_devices_removed_devices_message" = "这将删除所有连接的设备并禁用多设备登录。";
 "multi_device_linked_devices_removed_devices_ok" = "禁用";
 "multi_device_linked_duplicate_contacts_title" = "重复的联系人";
-"multi_device_linked_duplicate_contacts_desc" = "由于存在重复的联系人(%@)，您无法链接此设备。请联系我们的支持人员。";
+"multi_device_linked_devices_failed_to_load_title" = "加载设备列表失败";
 
 "multi_device_linked_devices_failed_remove_title" = "移除设备失败";
-"multi_device_linked_devices_failed_remove_message" = "无法移除已连接的设备，请重试。";
+"multi_device_linked_devices_failed_remove_message" = "无法移除已连接的设备，请稍后重试。";
 "multi_device_linked_devices_failed_remove_message_2" = "无法移除已连接的设备，请检查您的互联网连接并重试。";
-"multi_device_slot_state_mismatch_alert" = "此设备已取消链接，这意味着您现时不能再发送或接收新消息。如果您没有主动取消链接，这可能是由于技术预览版的技术问题而发生错误。对此给您带来的不便我们深感抱歉。如要重新链接，请参阅常见问题解答：https://three.ma/faq";
+
+/* New/reused multi device strings */
+"multi_device_unsupported_protocol_version_alert" = "我们不再支持此版本的 Threema（这是过时的协议版本）。请安装最新版本以继续使用 Threema。";
+"multi_device_slot_state_mismatch_alert" = "此设备已取消链接，因此您目前无法发送或接收新信息。如果您没有主动取消链接，这可能是由于测试版的技术问题而发生错误。我们对此深表歉意。如要重新链接，请按照以下常见问题解答条目中的步骤操作： https://threema.ch/faq/md_reset";
+
+"multi_device_new_linked_devices_title" = "链接设备（测试中）";
+"multi_device_new_linked_devices_add_button" = "添加设备";
+"multi_device_new_linked_devices_limitation_info" = "注意：当前的测试版只能连接一台电脑，但不支持链接其他 iPhone / iPad 或 Android 设备。";
+"multi_device_new_linked_devices_failed_to_load" = "无法加载已链接的设备。请检查您的互联网连接，并下拉刷新重试。";
+"multi_device_new_linked_devices_no_other_device" = "点击 %@ 重新链接新设备";
+"multi_device_new_linked_device_remove_all_button" = "移除所有已链接的设备";
+"multi_device_new_linked_device_remove_all_title" = "移除所有已链接的设备？";
+"multi_device_new_linked_device_remove_all_error_title" = "移除所有已链接设备失败";
+"multi_device_new_linked_device_error_message" = "请检查您的互联网连接并重试。";
+"multi_device_new_linked_device_instructions" = "在添加新设备之前，请下载%@桌面版的当前测试版并打开：\n%@";
+"multi_device_linked_duplicate_contacts_desc" = "由于通讯录存在重复的联系人 (%@)，您无法链接此设备。请联系我们的支持人员。（“设置” → “支持”）。";
+"multi_device_new_linked_own_identity_in_contacts_title" = "将自己的 Threema ID 成为通讯录中的联系人";
+"multi_device_new_linked_own_identity_in_contacts_message" = "通讯录中存在与您的 Threema ID 相同的联系人。请删除他以添加新设备。";
+"multi_device_new_linked_show_contact_button" = "显示联系人";
+"multi_device_new_linked_device_list_no_platform_details" = "无平台详细信息";
+"multi_device_new_linked_device_list_last_active" = "最后上线时间：%@";
+
+"multi_device_join_perfect_forward_secrecy_info" = "当您链接新设备时，将对所有联系人禁用完全正向保密。\n\n这是当前测试版的限制。如想知道更多其他的限制，请参阅[这条常见问题解答条目](%@)。";
+"multi_device_join_scan_qr_code_title" = "扫描二维码";
+"multi_device_join_scan_qr_code_info" = "在您要链接的设备上扫描 %@ 测试版中显示的二维码";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_label" = "相机视图";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_hint" = "将相机对准 %@ 测试版打开时的屏幕。";
+"multi_device_join_connecting" = "连接中...";
+"multi_device_join_unrecoverable_error_title" = "发生意外错误";
+"multi_device_join_fatal_scanning_qr_code_error_title" = "扫描二维码发生错误";
+"multi_device_join_fatal_camera_access_error_title" = "无法访问相机";
+"multi_device_join_fatal_no_internet_connection_title" = "没有网络连接";
+"multi_device_join_failed_to_send_data_title" = "发送数据失败";
+"multi_device_join_fatal_error_message" = "请重试链接设备。如果问题仍然存在，请联系我们的支持人员（“设置” → “支持”）。";
+"multi_device_join_unknown_qr_code_title" = "未知的二维码";
+"multi_device_join_unknown_qr_code_message" = "请确保您使用的是来自 %@ 相应的应用程序。";
+"multi_device_join_incompatible_version_title" = "不兼容版本";
+"multi_device_join_incompatible_version_message" = "请在两台设备上安装最新版本的 %@。";
+"multi_device_join_new_device_not_found_title" = "未找到新设备";
+"multi_device_join_new_device_not_found_message" = "如果您扫描了之前的二维码，则可能会发生错误。请在新设备上重启应用程序，然后重试。";
+"multi_device_join_trust_new_device_title" = "信任新设备";
+"multi_device_join_trust_new_device_info" = "请选择与新设备上显示的相同图像，以确认您信任新设备。";
+"multi_device_join_no_match_button" = "新设备不匹配？";
+"multi_device_join_no_match_title" = "图片与新设备不匹配？";
+"multi_device_join_no_match_message" = "连接设备时似乎存在问题。请在新设备上重新启动此应用程序，然后重试。";
+"multi_device_join_sending_info" = "新设备将存储您的 %@ 个人资料的独立副本，该设备将可以发送和接收消息。";
+"multi_device_join_sending_data" = "正在发送数据…";
+"multi_device_join_sending_continue_on_new_device" = "请在您的新设备上继续。";
+"multi_device_join_sending_wait" = "请稍候，发送可能需时几分钟。";
+"multi_device_join_linked_successfully_title" = "设备链接成功"; // The same as `md_wizard_success_title`
+"multi_device_join_linked_successfully_info" = "现在，您可以在你刚刚链接的设备上使用 %@（即使此 iOS 设备已关机或无互联网连接）。";
+
+"multi_device_join_failed_app_closed_title" = "连接新设备失败";
+"multi_device_join_failed_app_closed_message" = "由于 %@ 已关闭，链接失败。请稍后重试。";
+
+"multi_device_linked_id_missing_title" = "已链接的设备";
+"multi_device_linked_id_missing_message" = "之前已链接的设备已被删除。当您恢复或设置好此设备后，您可以再次链接您的设备。";
 
 "myprofile_link_email_phone_footer" = "将您的电子邮件地址或电话号码与您的ID链接，如果其他人的通讯录中有保存您的资料，他们将在 %@ 上自动找到您。";
 "myprofile_link_email_footer" = "将您的电子邮件地址与您的ID链接，如果其他人的通讯录中有保存您的电子邮件地址，他们将在 %@ 上自动找到您。";
@@ -1452,6 +1519,11 @@
 
 "settings_threema_web_connected" = "已连接到桌面版/网页版";
 "settings_threema_web_connectioninfo" = "为了保持与桌面版/网页版的连接，您的设备必须解锁，并在前台运行 %@。连接后，您的设备将不会自动锁屏。";
+"settings_threema_web_linked_device_section_header" = "多设备";
+"settings_threema_web_linked_device_section_footer" = "即使 %@ 在后台或此设备离线时，也可以使用新链接的设备。";
+"settings_threema_web_section_header" = "直接连接的设备";
+"settings_threema_web_multi_device_qr_code_title" = "二维码有错误";
+"settings_threema_web_multi_device_qr_code_message" = "先点击 “%@”，然后点击 “%@” ，以链接到此桌面应用程序。";
 
 "chat_text_view_placeholder" = "新消息";
 "compose_bar_camera_button_accessibility_label" = "打开摄像头";
@@ -1543,17 +1615,23 @@
 
 "notification_reregister_notifications_successed" = "推送通知已重新注册";
 
+"notification_audio_muted" = "麦克风：已关闭";
+"notification_audio_unmuted" = "麦克风：已开启";
+"notification_video_muted" = "相机：已关闭";
+"notification_video_unmuted" = "相机：已开启";
+
 // Forward security status messages
 "forward_security_message_without" = "您收到一条没有完全正向保密的消息，您可以验证发件人是否主动禁用完全正向保密。";
 "forward_security_session_established" = "此会话中的消息现正受完全正向保密的保护。";
 "forward_security_session_established_rx" = "在此会话中收到的消息现正受完全正向保密的保护，您可以在联系人详细信息中启用完全正向保密来保护以后发送的消息。";
 "forward_security_messages_skipped_1" = "自上一条信息以来，有一条信息已经丢失。";
 "forward_security_messages_skipped_x" = "自上一条信息以来，有%d条信息已经丢失。";
-"forward_security_session_reset" = "与此联系人的完全正向保密会话已被重置。如果联系人更换了设备或重新安装了此应用程序，就会重置会话。";
+"forward_security_session_reset" = "这个之前已启用 “完全正向保密” 的会话，现被重置保密状态。如果对方更换了设备或重新安装此应用程序，就会重置保密状态。";
 "forward_security_message_out_of_order" = "收到的消息发生故障，无法解密。";
 "forward_security_status_enabled_outgoing" = "已为发出消息开启完全正向保密。";
-"forward_security_status_disabled_outgoing" = "已为发出消息关闭完全正向保密。";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "此联系人所使用的应用版本并不支持 “完全正向保密” 功能。从现在起，消息将在没有 “完全正向保密” 的情况下发送。";
+"forward_security_status_disabled_outgoing" = "此会话已禁用 “完全正向保密” 。";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "因为对方使用的应用程序版本不支持 “完全正向保密” 功能，所以在此会话中已禁用 “完全正向保密” 。";
+"forward_security_illegal_session_state" = "这个之前已启用 “完全正向保密” 的会话，因无效而被重置保密状态。";
 
 // Profile view
 "accessibility_profile_button_hint_contact" = "打开联系人详细消息";
@@ -1570,6 +1648,11 @@
 "accessibility_senderDescription_ownMessage" = "您的%@";
 "accessibility_senderDescription_otherMessage_group" = "来自%@的%@";
 "accessibility_senderDescription_systemMessage" = "资讯：%@";
+"accessibility_senderDescription_typing" = "对方正在输入…";
+"accessibility_senderDescription_stopped_typing" = "对方已停止输入";
+"accessibility_senderDescription_contact_typing" = "%@正在输入…";
+"accessibility_senderDescription_contact_stopped_typing" = "%@已停止输入";
+
 
 // Message types
 "accessibility_textMessage_description" = "消息";
@@ -1695,3 +1778,18 @@
 "alert_biometrics_changed_title_touch" = "检测到 Touch ID 可能发生变化";
 "alert_biometrics_changed_title_face" = "检测到 Face ID 可能发生变化";
 "alert_biometrics_changed_message" = "请再输入你的 Threema 密码，以继续使用生物认证来解锁 Threema。";
+
+// Group Calls
+"group_call_started_by_contact_system_message" = "%@发起了群组通话";
+"group_call_started_by_local_system_message" = "您发起了群组通话";
+"group_call_ended_system_message" = "群组通话已结束";
+
+"group_call_start_message_received" = "发起群组通话";
+
+"group_call_navbar_state_connecting" = "连接中...";
+"group_call_navbar_state_joining" = "正在加入…";
+"group_call_navbar_state_connected" = "已连接";
+
+// App Migration
+"sqldhsessionstore_cannot_downgrade_to" = "(%@)\n无法从 %d 版本降级到 %d 版本";
+"sqldhsessionstore_unknownError" = "尝试迁移时发生未知错误：%@";

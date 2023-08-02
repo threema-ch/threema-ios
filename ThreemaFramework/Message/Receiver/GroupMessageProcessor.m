@@ -50,12 +50,13 @@
     id<UserSettingsProtocol> userSettings;
     id<GroupManagerProtocolObjc> groupManager;
     EntityManager *entityManager;
-    NonceGuard *nonceGuard;
+    id<NonceGuardProtocolObjc> nonceGuard;
 }
 
-- (nonnull instancetype)initWithMessage:(nonnull AbstractGroupMessage *)message myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore userSettings:(id<UserSettingsProtocol> _Nonnull)userSettings groupManager:(nonnull NSObject *)groupManagerObject entityManager:(nonnull NSObject *)entityManagerObject
+- (nonnull instancetype)initWithMessage:(nonnull AbstractGroupMessage *)message myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore userSettings:(id<UserSettingsProtocol> _Nonnull)userSettings groupManager:(nonnull NSObject *)groupManagerObject entityManager:(nonnull NSObject *)entityManagerObject nonceGuard:(nonnull NSObject *)nonceGuardObject
 {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
+    NSAssert([nonceGuardObject conformsToProtocol:@protocol(NonceGuardProtocolObjc)], @"Object must implement NonceGuardProtocolObjc");
 
     self = [super init];
     if (self) {
@@ -64,14 +65,14 @@
         self->userSettings = userSettings;
         self->groupManager = (id<GroupManagerProtocolObjc>)groupManagerObject;
         self->entityManager = (EntityManager *)entityManagerObject;
-        self->nonceGuard = [[NonceGuard alloc] initWithEntityManager:self->entityManager];
+        self->nonceGuard = (id<NonceGuardProtocolObjc>)nonceGuardObject;
     }
 
     return self;
 }
 
 - (void)handleMessageOnCompletion:(void (^)(BOOL))onCompletion onError:(void(^)(NSError *error))onError {
-    if ([nonceGuard isProcessedWithMessage:_message isReflected:NO] == YES) {
+    if ([nonceGuard isProcessedWithMessage:_message] == YES) {
         onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
         return;
     }

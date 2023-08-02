@@ -86,7 +86,11 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 return nil
             }
         }
-        
+            
+        if pendingUserNotification.abstractMessage is GroupCallStartMessage, !ThreemaEnvironment.groupCalls {
+            return nil
+        }
+            
         if let flags = pendingUserNotification.baseMessage?.flags {
             guard flags.intValue & Int(MESSAGE_FLAG_SEND_PUSH) != 0,
                   flags.intValue & Int(MESSAGE_FLAG_IMMEDIATE_DELIVERY) == 0 else {

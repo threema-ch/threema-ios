@@ -58,11 +58,14 @@ class ConversationActions: NSObject {
         isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
     ) -> Guarantee<Void> {
         Guarantee { seal in
-            businessInjector.entityManager.performBlock {
-                _ = self.businessInjector.unreadMessages.read(for: conversation, isAppInBackground: isAppInBackground)
+            businessInjector.backgroundEntityManager.performBlock {
+                _ = self.businessInjector.backgroundUnreadMessages.read(
+                    for: conversation,
+                    isAppInBackground: isAppInBackground
+                )
 
                 if conversation.unreadMessageCount == -1 {
-                    self.businessInjector.entityManager.performSyncBlockAndSafe {
+                    self.businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
                         conversation.unreadMessageCount = 0
                     }
                 }
@@ -83,12 +86,19 @@ class ConversationActions: NSObject {
     ///            that were marked as read or 0 if none were marked as read.
     func read(
         _ conversationObjectID: NSManagedObjectID,
-        messages: [BaseMessage]
+        messageObjectIDs: [NSManagedObjectID]
     ) -> Guarantee<Int> {
         Guarantee { seal in
-            businessInjector.entityManager.performBlock {
-                let conversation = self.businessInjector.entityManager.entityFetcher
+            businessInjector.backgroundEntityManager.performBlock {
+                let conversation = self.businessInjector.backgroundEntityManager.entityFetcher
                     .getManagedObject(by: conversationObjectID) as! Conversation
+                var messages = [BaseMessage]()
+                for messageObjectID in messageObjectIDs {
+                    if let message = self.businessInjector.backgroundEntityManager.entityFetcher
+                        .getManagedObject(by: messageObjectID) as? BaseMessage {
+                        messages.append(message)
+                    }
+                }
                 self.read(conversation, messages: messages)
                     .done { markedAsRead in
                         seal(markedAsRead)
@@ -103,16 +113,16 @@ class ConversationActions: NSObject {
         isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
     ) -> Guarantee<Int> {
         Guarantee { seal in
-            businessInjector.entityManager.performBlock {
-                let markedAsRead = self.businessInjector.unreadMessages.read(
+            businessInjector.backgroundEntityManager.performBlock {
+                let markedAsRead = self.businessInjector.backgroundUnreadMessages.read(
                     for: messages,
                     in: conversation,
                     isAppInBackground: isAppInBackground
                 )
 
-                self.businessInjector.entityManager.performBlockAndWait {
+                self.businessInjector.backgroundEntityManager.performBlockAndWait {
                     if conversation.unreadMessageCount == -1 {
-                        self.businessInjector.entityManager.performSyncBlockAndSafe {
+                        self.businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
                             conversation.unreadMessageCount = 0
                         }
                     }

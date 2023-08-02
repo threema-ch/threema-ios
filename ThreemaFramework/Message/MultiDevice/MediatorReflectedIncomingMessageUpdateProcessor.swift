@@ -20,6 +20,7 @@
 
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 class MediatorReflectedIncomingMessageUpdateProcessor {
 
@@ -33,38 +34,36 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
 
     func process(incomingMessageUpdate: D2d_IncomingMessageUpdate) -> Promise<Void> {
         Promise { seal in
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                do {
-                    for item in incomingMessageUpdate.updates {
-                        switch item.update {
-                        case .read:
-                            var senderIdentity: String?
-                            var senderGroupIdentity: GroupIdentity?
-                            if !item.conversation.contact.isEmpty {
-                                senderIdentity = item.conversation.contact
-                            }
-                            else if item.conversation.group.groupID > 0 {
-                                senderGroupIdentity = GroupIdentity(
-                                    id: NSData.convertBytes(item.conversation.group.groupID),
-                                    creator: item.conversation.group.creatorIdentity
-                                )
-                            }
-
-                            try self.saveMessageRead(
-                                messageID: item.messageID,
-                                senderIdentity: senderIdentity,
-                                senderGroupIdentity: senderGroupIdentity,
-                                readDate: Date(milliseconds: item.read.at)
-                            )
-                        case .none:
-                            break
+            do {
+                for item in incomingMessageUpdate.updates {
+                    switch item.update {
+                    case .read:
+                        var senderIdentity: String?
+                        var senderGroupIdentity: GroupIdentity?
+                        if !item.conversation.contact.isEmpty {
+                            senderIdentity = item.conversation.contact
                         }
+                        else if item.conversation.group.groupID > 0 {
+                            senderGroupIdentity = GroupIdentity(
+                                id: item.conversation.group.groupID.littleEndianData,
+                                creator: item.conversation.group.creatorIdentity
+                            )
+                        }
+
+                        try self.saveMessageRead(
+                            messageID: item.messageID,
+                            senderIdentity: senderIdentity,
+                            senderGroupIdentity: senderGroupIdentity,
+                            readDate: Date(millisecondsSince1970: item.read.at)
+                        )
+                    case .none:
+                        break
                     }
-                    seal.fulfill_()
                 }
-                catch {
-                    seal.reject(error)
-                }
+                seal.fulfill_()
+            }
+            catch {
+                seal.reject(error)
             }
         }
     }
@@ -77,10 +76,9 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
         senderGroupIdentity: GroupIdentity?,
         readDate: Date
     ) throws {
-        var internalError: Error?
         var readMessageConversations = Set<Conversation>()
 
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
+        try frameworkInjector.backgroundEntityManager.performAndWait {
             let conversation: Conversation
             if let senderIdentity,
                let contactConversation = self.frameworkInjector.backgroundEntityManager.conversation(
@@ -97,22 +95,22 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                 conversation = groupConversation
             }
             else {
-                internalError = MediatorReflectedProcessorError
+                throw MediatorReflectedProcessorError
                     .messageNotProcessed(
-                        message: "Incoming message (ID: \(NSData.convertBytes(messageID)?.hexString ?? "No message ID")) update failed, could get neither conversation for contact nor group"
+                        message: "Incoming message (ID: \(messageID.littleEndianData.hexString)) update failed, could get neither conversation for contact nor group"
                     )
-                return
             }
             
-            if let id = NSData.convertBytes(messageID),
-               let message = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
-                   with: id,
-                   conversation: conversation
-               ) {
+            let id = messageID.littleEndianData
+            if let message = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
+                with: id,
+                conversation: conversation
+            ) {
                 
                 // If it is not a message from myself then update as read and refresh unread badge
                 if !message.isOwnMessage {
-                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                    DDLogNotice("Message ID \(message.id.hexString) has been read by other device")
+                    self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                         message.read = true
                         message.readDate = readDate
                     }
@@ -134,10 +132,6 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
 
         if !readMessageConversations.isEmpty {
             messageProcessorDelegate.readMessage(inConversations: readMessageConversations)
-        }
-
-        if let internalError {
-            throw internalError
         }
     }
 }

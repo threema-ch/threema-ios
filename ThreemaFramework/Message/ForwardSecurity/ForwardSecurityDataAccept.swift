@@ -19,24 +19,28 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 class ForwardSecurityDataAccept: ForwardSecurityData {
     let ephemeralPublicKey: Data
+    let version: CspE2eFs_VersionRange
     
-    init(sessionID: DHSessionID, ephemeralPublicKey: Data) throws {
+    init(sessionID: DHSessionID, version: CspE2eFs_VersionRange, ephemeralPublicKey: Data) throws {
         if ephemeralPublicKey.count != kNaClCryptoSymmKeySize {
             throw ForwardSecurityError.invalidPublicKeyLength
         }
         self.ephemeralPublicKey = ephemeralPublicKey
+        self.version = version
         super.init(sessionID: sessionID)
     }
     
     override func toProtobuf() throws -> Data {
-        var pb = CspE2eFs_ForwardSecurityEnvelope()
+        var pb = CspE2eFs_Envelope()
         pb.sessionID = sessionID.value
-        var pbAccept = CspE2eFs_ForwardSecurityEnvelope.Accept()
-        pbAccept.ephemeralPublicKey = ephemeralPublicKey
-        pb.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content.accept(pbAccept)
+        var pbAccept = CspE2eFs_Accept()
+        pbAccept.fssk = ephemeralPublicKey
+        pbAccept.supportedVersion = version
+        pb.content = CspE2eFs_Envelope.OneOf_Content.accept(pbAccept)
         return try pb.serializedData()
     }
 }

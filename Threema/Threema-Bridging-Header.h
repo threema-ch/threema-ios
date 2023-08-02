@@ -48,7 +48,6 @@
 #import "KKPasscodeSettingsViewController.h"
 #import "InviteController.h"
 #import "NibUtil.h"
-#import "StatusNavigationBar.h"
 #import <MediaPlayer/MediaPlayer.h>
 #import "ZSWTappableLabel.h"
 #import "UILabel+Markup.h"

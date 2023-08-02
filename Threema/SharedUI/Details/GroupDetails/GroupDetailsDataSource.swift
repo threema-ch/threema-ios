@@ -498,7 +498,7 @@ extension GroupDetailsDataSource {
         })
         
         // Show add members cell if editing is possible
-        if group.canAddMembers {
+        if group.isOwnGroup {
             let localizedAddMembersButton = BundleUtil.localizedString(forKey: "group_manage_members_button")
             let addMembersAction = Details.Action(
                 title: localizedAddMembersButton,
@@ -506,7 +506,7 @@ extension GroupDetailsDataSource {
             ) { [weak self, weak groupDetailsViewController] cell in
                 guard let strongSelf = self,
                       let strongGroupDetailsViewController = groupDetailsViewController,
-                      strongSelf.group.canAddMembers
+                      strongSelf.group.isOwnGroup
                 else {
                     return
                 }

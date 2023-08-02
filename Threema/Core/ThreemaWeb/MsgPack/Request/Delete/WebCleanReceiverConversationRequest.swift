@@ -34,7 +34,7 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
         }
         else {
             let idString = message.args!["id"] as? String
-            self.groupID = idString?.hexadecimal()
+            self.groupID = idString?.hexadecimal
         }
         
         super.init(message: message)

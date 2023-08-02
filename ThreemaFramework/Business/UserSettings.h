@@ -93,6 +93,9 @@ enum ThreemaVideoCallQualitySetting {
 
 @property (nonatomic, readwrite) BOOL flippedTableView;
 
+@property (nonatomic, readwrite) BOOL groupCallsDeveloper;
+@property (nonatomic, readwrite) BOOL groupCallsDebugMessages;
+
 @end
 
 @interface UserSettings : NSObject <UserSettingsProtocol>

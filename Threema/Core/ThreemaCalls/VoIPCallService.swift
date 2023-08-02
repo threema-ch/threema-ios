@@ -608,8 +608,14 @@ extension VoIPCallService {
         // Store call in temporary call history
         Task {
             if let contactIdentity = offer.contactIdentity {
+                DDLogNotice(
+                    "VoipCallService: [cid=\(offer.callID.callID)]: Start add callID to CallHistory"
+                )
                 await CallHistoryManager(identity: contactIdentity, businessInjector: BusinessInjector())
                     .store(callID: offer.callID.callID, date: Date())
+                DDLogNotice(
+                    "VoipCallService: [cid=\(offer.callID.callID)]: End add callID to CallHistory"
+                )
             }
         }
         
@@ -623,6 +629,9 @@ extension VoIPCallService {
             
             let entityManager = BusinessInjector().entityManager
             
+            DDLogNotice(
+                "VoipCallService: [cid=\(offer.callID.callID)]: Update lastUpdate for conversation"
+            )
             entityManager.performSyncBlockAndSafe {
                 if let conversation = entityManager.entityFetcher.conversation(forIdentity: offer.contactIdentity) {
                     conversation.lastUpdate = Date.now
@@ -651,12 +660,18 @@ extension VoIPCallService {
                 // If a call was already reported, it was the initial call launched when the app was in background. So
                 // we update the caller.
                 if let uuid = callKitManager?.currentUUID() {
+                    DDLogNotice(
+                        "VoipCallService: [cid=\(offer.callID.callID)]: updateReportedIncomingCall"
+                    )
                     callKitManager?.updateReportedIncomingCall(
                         uuid: uuid,
                         contactIdentity: offer.contactIdentity!
                     )
                 }
                 else {
+                    DDLogNotice(
+                        "VoipCallService: [cid=\(offer.callID.callID)]: reportIncomingCall"
+                    )
                     callKitManager?.reportIncomingCall(
                         uuid: UUID(),
                         contactIdentity: offer.contactIdentity!,
@@ -683,9 +698,17 @@ extension VoIPCallService {
                         self.threemaVideoCallAvailable = offer.isVideoAvailable
                         self.startIncomingCallTimeoutTimer()
                         
+                        DDLogNotice(
+                            "VoipCallService: [cid=\(offer.callID.callID)]: connectWait"
+                        )
+                        
                         /// Make sure that the connection is not prematurely disconnected when the app is put into the
                         /// background
                         ServerConnector.shared().connectWait(initiator: .threemaCall)
+                        
+                        DDLogNotice(
+                            "VoipCallService: [cid=\(offer.callID.callID)]: Send ringing message"
+                        )
                         
                         // New Call
                         // Send ringing message
@@ -1505,8 +1528,8 @@ extension VoIPCallService {
             }
             
             DispatchQueue.main.async {
-                VoIPHelper.shared()?.isCallActiveInBackground = false
-                VoIPHelper.shared()?.contactName = nil
+                NavigationBarPromptHandler.isCallActiveInBackground = false
+                NavigationBarPromptHandler.name = nil
                 NotificationCenter.default.post(
                     name: NSNotification.Name(kNotificationNavigationItemPromptShouldChange),
                     object: nil
@@ -2563,7 +2586,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                                 "VoipCallService: [cid=\(self.callID?.callID ?? 0)]: State is connected, but shows something different \(self.state.description())"
                             )
                         }
-                        if VoIPHelper.shared()?.isCallActiveInBackground == true {
+                        if NavigationBarPromptHandler.isCallActiveInBackground == true {
                             NotificationCenter.default.post(
                                 name: NSNotification.Name(kNotificationNavigationItemPromptShouldChange),
                                 object: self.callDurationTime

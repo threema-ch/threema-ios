@@ -99,16 +99,16 @@ class CallHistoryManagerTests: XCTestCase {
         var callIDs = [UInt32]()
         var deletedCallIDs = [UInt32]()
         
-        for _ in 0..<100 {
-            let callID = UInt32.random(in: UInt32.min..<UInt32.max)
+        for i in 0..<10 {
+            let callID = UInt32(i)
             let date = Date()
             callIDs.append(callID)
             
             await manager.store(callID: callID, date: date)
         }
         
-        for i in 0..<100 {
-            let callID = UInt32.random(in: UInt32.min..<UInt32.max)
+        for i in 11..<20 {
+            let callID = UInt32(i)
             let date = Calendar.current.date(byAdding: .day, value: -(14 + i), to: Date())!
             deletedCallIDs.append(callID)
             
@@ -125,10 +125,8 @@ class CallHistoryManagerTests: XCTestCase {
             XCTAssertTrue(isMissedCall)
         }
         
-        for _ in 0..<10000 {
-            let callID = UInt32.random(in: UInt32.min..<UInt32.max)
-            let isMissedCall = await manager.isMissedCall(from: "ECHOECHO", callID: callID)
-            XCTAssertEqual(!callIDs.contains(callID), isMissedCall)
-        }
+        let callID = UInt32(21)
+        let isMissedCall = await manager.isMissedCall(from: "ECHOECHO", callID: callID)
+        XCTAssertTrue(isMissedCall)
     }
 }

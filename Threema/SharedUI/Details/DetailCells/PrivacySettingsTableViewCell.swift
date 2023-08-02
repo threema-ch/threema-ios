@@ -91,10 +91,7 @@ class PrivacySettingsTableViewCell: ThemedCodeStackTableViewCell {
         label.font = UIFont.preferredFont(forTextStyle: .body)
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            label.numberOfLines = 0
-        }
+        label.numberOfLines = 0
         
         return label
     }()

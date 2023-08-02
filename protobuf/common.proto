@@ -121,7 +121,7 @@ enum CspFeatureMaskFlag {
 // E2E message type as defined by the Chat Server Protocol.
 enum CspE2eMessageType {
   // Invalid message type
-  _ = 0x00;
+  _INVALID_TYPE = 0x00;
 
   // Conversation messages
   // ---------------------
@@ -242,6 +242,12 @@ enum CspE2eMessageType {
   // Forward security
   // ----------------
 
-  // `csp-e2e-fs.ForwardSecurityEnvelope`
+  // `csp-e2e-fs.Envelope`
   FORWARD_SECURITY_ENVELOPE = 0xa0;
+
+  // Push control
+  // ------------
+
+  // [`web-session-resume`](ref:e2e.web-session-resume)
+  WEB_SESSION_RESUME = 0xfe;
 }

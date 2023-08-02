@@ -38,7 +38,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         }
         else {
             let idString = message.args!["id"] as! String
-            self.groupID = idString.hexadecimal()
+            self.groupID = idString.hexadecimal
         }
         
         let messageIDBase64 = message.args!["messageId"] as! String

@@ -20,7 +20,7 @@
 
 import Foundation
 
-class TaskDefinitionSendGroupLeaveMessage: TaskDefinitionSendMessage {
+final class TaskDefinitionSendGroupLeaveMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

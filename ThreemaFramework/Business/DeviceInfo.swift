@@ -83,6 +83,14 @@ public struct DeviceInfo {
     }
 }
 
+// MARK: - Equatable
+
+extension DeviceInfo: Equatable {
+    public static func == (lhs: DeviceInfo, rhs: DeviceInfo) -> Bool {
+        lhs.deviceID == rhs.deviceID
+    }
+}
+
 // MARK: - Identifiable
 
 extension DeviceInfo: Identifiable {

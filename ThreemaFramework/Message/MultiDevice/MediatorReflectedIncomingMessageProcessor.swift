@@ -21,13 +21,14 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 class MediatorReflectedIncomingMessageProcessor {
 
     private let frameworkInjector: FrameworkInjectorProtocol
     private let messageStore: MessageStoreProtocol
     private let messageProcessorDelegate: MessageProcessorDelegate
-    private let timestamp: Date
+    private let reflectedAt: Date
     private let maxBytesToDecrypt: Int
     private let timeoutDownloadThumbnail: Int
 
@@ -35,14 +36,14 @@ class MediatorReflectedIncomingMessageProcessor {
         frameworkInjector: FrameworkInjectorProtocol,
         messageStore: MessageStoreProtocol,
         messageProcessorDelegate: MessageProcessorDelegate,
-        timestamp: Date,
+        reflectedAt: Date,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) {
         self.frameworkInjector = frameworkInjector
         self.messageStore = messageStore
         self.messageProcessorDelegate = messageProcessorDelegate
-        self.timestamp = timestamp
+        self.reflectedAt = reflectedAt
         self.maxBytesToDecrypt = maxBytesToDecrypt
         self.timeoutDownloadThumbnail = timeoutDownloadThumbnail
     }
@@ -122,6 +123,8 @@ class MediatorReflectedIncomingMessageProcessor {
             return try process(incomingMessage: imsg, voipCallHangupMessage: amsg as! BoxVoIPCallHangupMessage)
         case is BoxVoIPCallRingingMessage:
             return try process(incomingMessage: imsg, voipCallRingingMessage: amsg as! BoxVoIPCallRingingMessage)
+        case is GroupCallStartMessage:
+            return try process(incomingMessage: imsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
         default:
             return Promise { $0.reject(
                 MediatorReflectedProcessorError.messageDecodeFailed(message: imsg.loggingDescription)
@@ -138,8 +141,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             audioMessage: amsg,
             conversationIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt
         )
         return Promise()
     }
@@ -154,8 +157,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             ballotCreateMessage: amsg,
             conversationIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false
         )
         return Promise()
@@ -179,8 +182,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             fileMessage: amsg,
             conversationIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false,
             timeoutDownloadThumbnail: timeoutDownloadThumbnail
         )
@@ -193,8 +196,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             imageMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             maxBytesToDecrypt: maxBytesToDecrypt
         )
     }
@@ -206,8 +209,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             locationMessage: amsg,
             conversationIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false
         )
         return Promise()
@@ -220,8 +223,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             textMessage: amsg,
             conversationIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false
         )
         return Promise()
@@ -234,8 +237,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             videoMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             maxBytesToDecrypt: maxBytesToDecrypt
         )
     }
@@ -270,7 +273,7 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             deliveryReceiptMessage: amsg,
-            createdAt: imsg.createdAt,
+            createdAt: getCreatedAt(for: imsg),
             isOutgoing: false
         )
         return Promise()
@@ -318,7 +321,7 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             groupDeliveryReceiptMessage: amsg,
-            createdAt: imsg.createdAt,
+            createdAt: getCreatedAt(for: imsg),
             isOutgoing: false
         )
         return Promise()
@@ -334,8 +337,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             groupAudioMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt
         )
         return Promise()
     }
@@ -348,8 +351,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             groupBallotCreateMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false
         )
         return Promise()
@@ -375,8 +378,8 @@ class MediatorReflectedIncomingMessageProcessor {
         return try messageStore.save(
             groupFileMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false,
             timeoutDownloadThumbnail: timeoutDownloadThumbnail
         )
@@ -390,8 +393,8 @@ class MediatorReflectedIncomingMessageProcessor {
         return try messageStore.save(
             imageMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             maxBytesToDecrypt: maxBytesToDecrypt
         )
     }
@@ -404,8 +407,8 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             groupLocationMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false
         )
         return Promise()
@@ -419,9 +422,9 @@ class MediatorReflectedIncomingMessageProcessor {
         try messageStore.save(
             groupTextMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            messageID: NSData.convertBytes(imsg.messageID),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            messageID: imsg.messageID.littleEndianData,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             isOutgoing: false
         )
         return Promise()
@@ -435,8 +438,8 @@ class MediatorReflectedIncomingMessageProcessor {
         return try messageStore.save(
             videoMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
-            createdAt: imsg.createdAt,
-            timestamp: timestamp,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
             maxBytesToDecrypt: maxBytesToDecrypt
         )
     }
@@ -550,44 +553,64 @@ class MediatorReflectedIncomingMessageProcessor {
             }
         }
     }
+    
+    // MARK: Process Incoming Group Call Messages
+    
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        groupCallStartMessage amsg: GroupCallStartMessage
+    ) throws -> Promise<Void> {
+        guard ThreemaEnvironment.groupCalls else {
+            throw MediatorReflectedProcessorError
+                .messageWontProcessed(message: "[GroupCall] GroupCalls are not yet enabled. Skip.")
+        }
+        
+        messageProcessorDelegate.incomingMessageStarted(amsg)
+        
+        guard let decodedGroupCallStart = amsg.decoded else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: imsg.loggingDescription)
+        }
+        
+        try getGroup(for: amsg)
+        return try messageStore.save(
+            groupCallStartMessage: amsg,
+            decodedCallStartMessage: decodedGroupCallStart,
+            senderIdentity: getSenderIdentity(for: imsg),
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: false
+        )
+    }
 
     // MARK: Misc
 
     private func getSenderIdentity(for imsg: D2d_IncomingMessage) throws -> String {
-        var senderIdentity: String?
-
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
-            if let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(
+        try frameworkInjector.backgroundEntityManager.performAndWait {
+            guard let senderIdentity = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(
                 for: imsg.senderIdentity
-            ) {
-                senderIdentity = contact.identity
+            )?.identity else {
+                throw MediatorReflectedProcessorError.contactNotFound(identity: imsg.senderIdentity)
             }
-        }
 
-        guard let sender = senderIdentity else {
-            throw MediatorReflectedProcessorError.contactNotFound(identity: imsg.senderIdentity)
+            return senderIdentity
         }
-        return sender
     }
 
     @discardableResult
     private func getGroup(for amsg: AbstractGroupMessage) throws -> (groupID: Data, groupCreatorIdentity: String) {
-        var groupID: Data?
-        var groupCreatorIdentity: String?
-
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
-            if let grp = self.frameworkInjector.backgroundGroupManager.getGroup(
+        try frameworkInjector.backgroundEntityManager.performAndWait {
+            guard let group = self.frameworkInjector.backgroundGroupManager.getGroup(
                 amsg.groupID,
                 creator: amsg.groupCreator
-            ) {
-                groupID = grp.groupID
-                groupCreatorIdentity = grp.groupCreatorIdentity
+            ) else {
+                throw MediatorReflectedProcessorError.groupNotFound(message: amsg.loggingDescription)
             }
-        }
 
-        guard let id = groupID, let creator = groupCreatorIdentity else {
-            throw MediatorReflectedProcessorError.groupNotFound(message: amsg.loggingDescription)
+            return (group.groupID, group.groupCreatorIdentity)
         }
-        return (id, creator)
+    }
+
+    private func getCreatedAt(for imsg: D2d_IncomingMessage) -> Date {
+        imsg.createdAt.date ?? .now
     }
 }

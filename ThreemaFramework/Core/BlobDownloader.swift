@@ -163,14 +163,12 @@ class BlobDownloader: NSObject {
                 if response is HTTPURLResponse {
                     if let response = response as? HTTPURLResponse,
                        !(200...299).contains(response.statusCode) {
-                        downloadError = BlobDownloaderError
-                            .downloadFailed(
-                                message: "[BlobDownloader] Download failed with response code: \(response.statusCode)."
-                            )
+                        downloadError = NSError(domain: "Download failed", code: response.statusCode)
                     }
                 }
                 else {
-                    downloadError = BlobDownloaderError.downloadFailed(message: "[BlobDownloader] Response is missing.")
+                    downloadError = BlobDownloaderError
+                        .downloadFailed(message: "Download failed because response is missing")
                 }
             }
             self.queue.async {

@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Intents
 import PromiseKit
+import ThreemaProtocols
 
 public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol, ObservableObject {
     
@@ -109,8 +110,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         self.validationLogging = userSettings.validationLogging
         self.sentryAppDevice = userSettings.sentryAppDevice
         
-        // Multi Device
-        self.isMultiDeviceEnabled = userSettings.enableMultiDevice
+        // Multi-Device
+        self.isMultiDeviceRegistered = userSettings.enableMultiDevice
         
         NotificationCenter.default.addObserver(
             self,
@@ -449,13 +450,15 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
     }
     
-    // MARK: Multi Device
+    // MARK: Multi-Device
     
-    @Published public var isMultiDeviceEnabled: Bool {
+    /// Is multi-device enabled an the this device registered at the mediator?
+    @Published public var isMultiDeviceRegistered: Bool {
         didSet {
-            guard userSettings.enableMultiDevice != isMultiDeviceEnabled else {
+            guard userSettings.enableMultiDevice != isMultiDeviceRegistered else {
                 return
             }
+            updateUserSettings()
         }
     }
             
@@ -568,7 +571,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     ///   does not update UserSettings, shows alert
     public func syncAndSave() {
             
-        guard serverConnector.isMultiDeviceActivated else {
+        guard userSettings.enableMultiDevice else {
             // Save locally
             updateUserSettings()
             return
@@ -611,7 +614,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
 
         if userSettings.syncContacts != syncContacts {
-            syncSettings.contactSyncPolicy = syncContacts ? .sync : .notSynced
+            syncSettings.updateContactSyncPolicy(syncContacts: syncContacts)
             hasChanges = true
         }
 
@@ -774,8 +777,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&userSettings.validationLogging, validationLogging)
         compareAndAssign(&userSettings.sentryAppDevice, sentryAppDevice)
         
-        // Multi Device
-        compareAndAssign(&userSettings.enableMultiDevice, isMultiDeviceEnabled)
+        // Multi-Device
+        compareAndAssign(&userSettings.enableMultiDevice, isMultiDeviceRegistered)
         
         // Inform other SettingsStores
         NotificationCenter.default.post(
@@ -825,8 +828,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&threemaVideoCallQualitySetting, userSettings.threemaVideoCallQualitySetting)
         compareAndAssign(&voIPSound, userSettings.voIPSound)
         
-        // Multi Device
-        compareAndAssign(&isMultiDeviceEnabled, userSettings.enableMultiDevice)
+        // Multi-Device
+        compareAndAssign(&isMultiDeviceRegistered, userSettings.enableMultiDevice)
         
         // Advanced
         compareAndAssign(&enableIPv6, userSettings.enableIPv6)

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
 protocol ForwardSecurityMessageSenderProtocol {
     func send(message: AbstractMessage)
@@ -29,6 +30,7 @@ protocol ForwardSecurityMessageSenderProtocol {
     private let dhSessionStore: DHSessionStoreProtocol
     private let identityStore: MyIdentityStoreProtocol
     private let messageSender: ForwardSecurityMessageSenderProtocol
+    private let localSupportedVersionRange: CspE2eFs_VersionRange
     
     struct Listener {
         weak var listener: ForwardSecurityStatusListener?
@@ -39,28 +41,34 @@ protocol ForwardSecurityMessageSenderProtocol {
     init(
         dhSessionStore: DHSessionStoreProtocol,
         identityStore: MyIdentityStoreProtocol,
-        messageSender: ForwardSecurityMessageSenderProtocol
+        messageSender: ForwardSecurityMessageSenderProtocol,
+        localSupportedVersionRange: CspE2eFs_VersionRange = ThreemaEnvironment.fsVersion
     ) {
         self.dhSessionStore = dhSessionStore
         self.identityStore = identityStore
         self.messageSender = messageSender
+        self.localSupportedVersionRange = localSupportedVersionRange
+        
+        super.init()
+        
+        self.dhSessionStore.errorHandler = self
     }
     
     func processEnvelopeMessage(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage
-    ) throws -> (AbstractMessage?, DHSession?) {
+    ) async throws -> (AbstractMessage?, DHSession?) {
         switch envelopeMessage.data {
         case let initT as ForwardSecurityDataInit:
-            try processInit(sender: sender, initT: initT)
+            try await processInit(sender: sender, initT: initT)
         case let accept as ForwardSecurityDataAccept:
             try processAccept(sender: sender, accept: accept)
         case let reject as ForwardSecurityDataReject:
-            try processReject(sender: sender, reject: reject)
+            try await processReject(sender: sender, reject: reject)
         case is ForwardSecurityDataMessage:
             return try processMessage(sender: sender, envelopeMessage: envelopeMessage)
         case let terminate as ForwardSecurityDataTerminate:
-            try processTerminate(sender: sender, terminate: terminate)
+            try await processTerminate(sender: sender, terminate: terminate)
         default:
             assertionFailure("Unknown forward security message type")
         }
@@ -71,13 +79,11 @@ protocol ForwardSecurityMessageSenderProtocol {
     @objc func processEnvelopeMessageObjc(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage,
-        sessionP: UnsafeMutablePointer<AnyObject?>,
         errorP: NSErrorPointer
-    ) -> AbstractMessage? {
+    ) async -> AbstractMessageAndPFSSession? {
         do {
-            let (message, session) = try processEnvelopeMessage(sender: sender, envelopeMessage: envelopeMessage)
-            sessionP.pointee = session as AnyObject
-            return message
+            let (message, session) = try await processEnvelopeMessage(sender: sender, envelopeMessage: envelopeMessage)
+            return AbstractMessageAndPFSSession(session: session, message: message)
         }
         catch {
             errorP?.pointee = error as NSError
@@ -92,12 +98,14 @@ protocol ForwardSecurityMessageSenderProtocol {
         // If this is an actual message, then send a reject back (to be used when we don't support FS)
         do {
             if let msg = envelopeMessage.data as? ForwardSecurityDataMessage {
-                DDLogWarn("Rejecting FS message in session ID \(msg.sessionID) from \(sender.identity)")
+                DDLogWarn(
+                    "[ForwardSecurity] Rejecting FS message in session ID \(msg.sessionID) from \(sender.identity)"
+                )
                 
                 let reject = try ForwardSecurityDataReject(
                     sessionID: msg.sessionID,
                     rejectedMessageID: envelopeMessage.messageID,
-                    cause: .disabled
+                    cause: .disabledByLocal
                 )
                 sendMessageToContact(contact: sender, message: reject)
             }
@@ -105,6 +113,46 @@ protocol ForwardSecurityMessageSenderProtocol {
         catch {
             // ignored
         }
+    }
+    
+    /// Given that the contact supports forward security, determines whether we can send the given abstract message to
+    /// this contact with the currently best session we have established
+    /// Will throw an error iff an error occurs when attempting to find the best forward security session with this
+    /// contact
+    /// - Parameters:
+    ///   - message: Message to check
+    ///   - contact: Contact which supports forward security against whose best session we should check `message`
+    /// - Returns: True if we can send this message as forward security encapsulated message and false otherwise
+    func canSend(_ message: AbstractMessage, to contact: ForwardSecurityContact) throws -> Bool {
+        guard let minimumRequiredForwardSecurityVersion = message.minimumRequiredForwardSecurityVersion else {
+            DDLogNotice("[ForwardSecurity] Can't send message with forward security because it is not yet supported.")
+            return false
+        }
+        
+        guard minimumRequiredForwardSecurityVersion != .unspecified else {
+            DDLogNotice("[ForwardSecurity] Can't send message with forward security because it is not yet supported.")
+            return false
+        }
+        
+        if case .UNRECOGNIZED = minimumRequiredForwardSecurityVersion {
+            DDLogNotice("[ForwardSecurity] Can't send message with forward security because it is not yet supported")
+            return false
+        }
+
+        guard let session = try dhSessionStore.bestDHSession(
+            myIdentity: identityStore.identity,
+            peerIdentity: contact.identity
+        ) else {
+            DDLogNotice(
+                "[ForwardSecurity] \(minimumRequiredForwardSecurityVersion.rawValue <= CspE2eFs_Version.v10.rawValue ? "Send" : "Don't send") message \(String(describing: message.type)) with minimum required version \(minimumRequiredForwardSecurityVersion) in session with assumed version \(CspE2eFs_Version.v10.rawValue)"
+            )
+            return minimumRequiredForwardSecurityVersion.rawValue <= CspE2eFs_Version.v10.rawValue
+        }
+        
+        DDLogNotice(
+            "[ForwardSecurity] \(minimumRequiredForwardSecurityVersion.rawValue <= session.outgoingAppliedVersion.rawValue ? "Send" : "Don't send") message \(String(describing: message.type)) with minimum required version \(minimumRequiredForwardSecurityVersion) in session with version \(session.outgoingAppliedVersion.rawValue)"
+        )
+        return minimumRequiredForwardSecurityVersion.rawValue <= session.outgoingAppliedVersion.rawValue
     }
     
     /// Wrap a message in a forward security envelope.
@@ -118,7 +166,6 @@ protocol ForwardSecurityMessageSenderProtocol {
         -> (
             auxMessage: ForwardSecurityEnvelopeMessage?,
             message: ForwardSecurityEnvelopeMessage,
-            sendCompletion: () throws -> Void,
             sendAuxFailure: () -> Void
         ) {
         var initEnvelope: ForwardSecurityEnvelopeMessage?
@@ -137,36 +184,86 @@ protocol ForwardSecurityMessageSenderProtocol {
             )
             newSessionID = newSession.id
             try dhSessionStore.storeDHSession(session: newSession)
-            DDLogVerbose("Starting new DH session ID \(newSession.id) with \(contact.identity)")
+            DDLogNotice("[ForwardSecurity] Starting new DH session ID \(newSession.id) with \(contact.identity)")
             notifyListeners { listener in listener.newSessionInitiated(session: newSession, contact: contact) }
             
             // Send init message
             let initMessage = try ForwardSecurityDataInit(
                 sessionID: newSession.id,
+                versionRange: ThreemaEnvironment.fsVersion,
                 ephemeralPublicKey: newSession.myEphemeralPublicKey
             )
             initEnvelope = ForwardSecurityEnvelopeMessage(data: initMessage)
             initEnvelope?.toIdentity = contact.identity
+            
+            // Warn if we're trying to send something in an illegal state
+            if try! newSession.state == .R20 {
+                DDLogError("[ForwardSecurity] Encapsulating a message in R20 state is illegal")
+            }
+            
+            // Check that the message type is supported in the current session
+            try sanityCheckOrThrow(innerMessage, in: newSession)
+            
+            guard let requiredVersion = innerMessage.minimumRequiredForwardSecurityVersion else {
+                // We check in `TaskExecution` that this never happens. This is just a final safeguard.
+                DDLogError(
+                    "[ForwardSecurity] Message \(innerMessage.messageID.hexEncodedString()) for \(String(describing: innerMessage.toIdentity)) of type \(innerMessage.type()) is not supported in FS session with negotiated version \(newSession.current4DHVersions)"
+                )
+                throw ForwardSecurityError.messageTypeNotSupported
+            }
+            
+            if requiredVersion.rawValue > localSupportedVersionRange.min {
+                // We check in `TaskExecution` that this never happens. This is just a final safeguard.
+                DDLogError(
+                    "[ForwardSecurity] Message \(innerMessage.messageID.hexEncodedString()) for \(String(describing: innerMessage.toIdentity)) of type \(innerMessage.type()) is not supported in FS session with negotiated version \(newSession.current4DHVersions)"
+                )
+                throw ForwardSecurityError.messageTypeNotSupported
+            }
+            
             return newSession
         }()
+            
+        DDLogNotice(
+            "[ForwardSecurity] Make message of type \(innerMessage.type()) with id \(innerMessage.messageID.hexEncodedString()) for \(contact.identity) in session \(session.description)"
+        )
         
+        // Check that the message type is supported in the current session
+        let appliedVersion = session.outgoingAppliedVersion
+        try sanityCheckOrThrow(innerMessage, in: session)
+        
+        guard let requiredVersion = innerMessage.minimumRequiredForwardSecurityVersion else {
+            // We check in `TaskExecution` that this never happens. This is just a final safeguard.
+            DDLogError(
+                "[ForwardSecurity] Message \(innerMessage.messageID.hexEncodedString()) for \(String(describing: innerMessage.toIdentity)) of type \(innerMessage.type()) is not supported in FS session with negotiated version \(session.current4DHVersions)"
+            )
+            throw ForwardSecurityError.messageTypeNotSupported
+        }
+        
+        if requiredVersion.rawValue > appliedVersion.rawValue {
+            // We check in `TaskExecution` that this never happens. This is just a final safeguard.
+            DDLogError(
+                "[ForwardSecurity] Message \(innerMessage.messageID.hexEncodedString()) for \(String(describing: innerMessage.toIdentity)) of type \(innerMessage.type()) is not supported in FS session with negotiated version \(session.current4DHVersions)"
+            )
+            throw ForwardSecurityError.messageTypeNotSupported
+        }
+    
         // Obtain encryption key from ratchet
         let (ratchetv, dhType, forwardSecurityMode): (
             KDFRatchet?,
-            CspE2eFs_ForwardSecurityEnvelope.Message.DHType,
+            CspE2eFs_Encapsulated.DHType,
             ForwardSecurityMode
         ) = { if session.myRatchet4DH == nil {
             // 2DH mode
             return (
                 session.myRatchet2DH,
-                CspE2eFs_ForwardSecurityEnvelope.Message.DHType.twodh,
+                CspE2eFs_Encapsulated.DHType.twodh,
                 .twoDH
             )
         }
         else {
             return (
                 session.myRatchet4DH,
-                CspE2eFs_ForwardSecurityEnvelope.Message.DHType.fourdh,
+                CspE2eFs_Encapsulated.DHType.fourdh,
                 .fourDH
             )
         }
@@ -178,18 +275,12 @@ protocol ForwardSecurityMessageSenderProtocol {
         
         let currentKey = ratchet.currentEncryptionKey
         let counter = ratchet.counter
+        ratchet.turn()
             
-        // We turn the ratchet only when sending was successful. Otherwise it can happen that the client goes
-        // offline just before the message is about to be sent. On the next retry we would use the next key
-        // and sequence number causing our contact to think that a message was lost when in fact all were delivered
-        let sendCompletion = {
-            ratchet.turn()
-            
-            // Update ratchets in store (don't use storeDHSession(), as otherwise we
-            // might overwrite the peer ratchets if an incoming message is being processed
-            // for the same session at the same time)
-            try self.dhSessionStore.updateDHSessionRatchets(session: session, peer: false)
-        }
+        // Update ratchets in store immediately to prevent key re-use with the same nonce (don't use storeDHSession(),
+        // as otherwise we might overwrite the peer ratchets if an incoming message is being processed for the same
+        // session at the same time)
+        try dhSessionStore.updateDHSessionRatchets(session: session, peer: false)
             
         let sendAuxFailure = {
             // If sending the aux (init) message fails, delete the session again, as the peer won't
@@ -208,16 +299,20 @@ protocol ForwardSecurityMessageSenderProtocol {
             plaintext += quotedBody
         }
         else {
-            plaintext += innerMessage.body()
+            if let body = innerMessage.body() {
+                plaintext += body
+            }
         }
         
         // A new key is used for each message, so the nonce can be zero
         let nonce = Data(count: Int(kNaClCryptoNonceSize))
         let ciphertext = NaClCrypto.shared().symmetricEncryptData(plaintext, withKey: currentKey, nonce: nonce)!
-
+            
         let dataMessage = ForwardSecurityDataMessage(
             sessionID: session.id,
             type: dhType,
+            offeredVersion: session.outgoingOfferedVersion,
+            appliedVersion: appliedVersion,
             counter: counter,
             message: ciphertext
         )
@@ -249,7 +344,7 @@ protocol ForwardSecurityMessageSenderProtocol {
             envelope.flags = envelope.flags.int32Value | MESSAGE_FLAG_IMMEDIATE_DELIVERY as NSNumber
         }
 
-        return (initEnvelope, envelope, sendCompletion, sendAuxFailure)
+        return (initEnvelope, envelope, sendAuxFailure)
     }
     
     @objc func hasContactUsedForwardSecurity(contact: ForwardSecurityContact) -> Bool {
@@ -288,64 +383,124 @@ protocol ForwardSecurityMessageSenderProtocol {
     
     // MARK: Private functions
     
-    private func processInit(sender: ForwardSecurityContact, initT: ForwardSecurityDataInit) throws {
+    private func processInit(sender: ForwardSecurityContact, initT: ForwardSecurityDataInit) async throws {
+        DDLogNotice(
+            "[ForwardSecurity] Received init {sessionID=\(initT.sessionID),versionRange=\(initT.versionRange)} from \(sender.identity)"
+        )
+        
         if try dhSessionStore.exactDHSession(
             myIdentity: identityStore.identity,
             peerIdentity: sender.identity,
             sessionID: initT.sessionID
         ) != nil {
             // Silently discard init message for existing session
+            DDLogNotice(
+                "[ForwardSecurity] Silently discard init with session ID \(initT.sessionID) from \(sender.identity)"
+            )
             return
         }
-
+        
         // The initiator will only send an Init if it does not have an existing session. This means
         // that any 4DH sessions that we have stored for this contact are obsolete and should be deleted.
         // We will keep 2DH sessions (which will have been initiated by us), as otherwise messages may
         // be lost during Init race conditions.
-        var existingSessionPreempted = false
-        if try dhSessionStore.deleteAllDHSessionsExcept(
+        let existingSessionPreempted = try dhSessionStore.deleteAllDHSessionsExcept(
             myIdentity: identityStore.identity,
             peerIdentity: sender.identity,
             excludeSessionID: initT.sessionID,
             fourDhOnly: true
-        ) > 0 {
-            existingSessionPreempted = true
+        ) > 0
+        
+        if await !hasForwardSecuritySupport(sender) {
+            _ = await checkFSFeatureMask(for: sender)
         }
         
+        // Create and send accept in case the contact supports forward security
+        guard await hasForwardSecuritySupport(sender) else {
+            DDLogNotice("[ForwardSecurity] Terminate sessions with \(sender.identity) because it is not supported.")
+            
+            // We may still have a FS session to report that was terminated
+            if existingSessionPreempted {
+                notifyListeners { listener in
+                    listener.sessionTerminated(
+                        sessionID: nil,
+                        contact: sender,
+                        sessionUnknown: false,
+                        hasForwardSecuritySupport: false
+                    )
+                }
+            }
+            
+            // If the contact does not have the feature mask set correctly, we assume that the
+            // `Init` is stale, then silently terminate this session.
+            let terminate = ForwardSecurityDataTerminate(sessionID: initT.sessionID, cause: .disabledByRemote)
+            sendMessageToContact(contact: sender, message: terminate)
+            
+            // The feature mask update subroutine should have already detected the downgrade and
+            // removed any existing FS sessions. But we'll do it here again anyways for good
+            // measures and because the remote may be dishonest about its feature capabilities.
+            
+            try ForwardSecuritySessionTerminator().terminateAllSessions(with: sender.identity, cause: .disabledByRemote)
+            return
+        }
+        
+        // Only create a new session from the init if the contact supports forward security
         let session = try DHSession(
             id: initT.sessionID,
             peerEphemeralPublicKey: initT.ephemeralPublicKey,
             peerIdentity: sender.identity,
             peerPublicKey: sender.publicKey,
+            version: initT.versionRange,
             identityStore: identityStore
         )
         try dhSessionStore.storeDHSession(session: session)
-        DDLogVerbose("Responding to new DH session ID \(session.id) request from \(sender.identity)")
+        DDLogNotice("[ForwardSecurity] Responding to new DH session ID \(session.id) request from \(sender.identity)")
         notifyListeners { listener in listener.responderSessionEstablished(
             session: session,
             contact: sender,
             existingSessionPreempted: existingSessionPreempted
         ) }
+        
+        DDLogNotice(
+            "[ForwardSecurity] Create and send accept with version \(ThreemaEnvironment.fsVersion) for init with session ID \(initT.sessionID) from \(sender.identity)"
+        )
 
         // Create and send accept
         let accept = try ForwardSecurityDataAccept(
             sessionID: initT.sessionID,
+            version: ThreemaEnvironment.fsVersion,
             ephemeralPublicKey: session.myEphemeralPublicKey
         )
         sendMessageToContact(contact: sender, message: accept)
     }
     
+    private func checkFSFeatureMask(for contact: ForwardSecurityContact) async -> Bool {
+        await listeners.compactMap { $0.value.listener as? ForwardSecurityStatusSender }.first?
+            .updateFeatureMask(for: contact) ?? true
+    }
+    
+    private func hasForwardSecuritySupport(_ contact: ForwardSecurityContact) async -> Bool {
+        await listeners.compactMap { $0.value.listener as? ForwardSecurityStatusSender }.first?
+            .hasForwardSecuritySupport(contact) ?? true
+    }
+    
     private func processAccept(sender: ForwardSecurityContact, accept: ForwardSecurityDataAccept) throws {
+        DDLogNotice(
+            "[ForwardSecurity] Received accept {sessionID=\(accept.sessionID),versionRange=\(accept.version)} from \(sender.identity)"
+        )
+        
         guard let session = try dhSessionStore.exactDHSession(
             myIdentity: identityStore.identity,
             peerIdentity: sender.identity,
             sessionID: accept.sessionID
         ) else {
             // Session not found, probably lost local data or old accept
-            DDLogWarn("No DH session found for accepted session ID \(accept.sessionID) from \(sender.identity)")
+            DDLogWarn(
+                "[ForwardSecurity] No DH session found for accepted session ID \(accept.sessionID) from \(sender.identity)"
+            )
             
             // Send "terminate" message for this session ID
-            let terminate = ForwardSecurityDataTerminate(sessionID: accept.sessionID)
+            let terminate = ForwardSecurityDataTerminate(sessionID: accept.sessionID, cause: .unknownSession)
             sendMessageToContact(contact: sender, message: terminate)
             
             notifyListeners { listener in listener.sessionNotFound(sessionID: accept.sessionID, contact: sender) }
@@ -355,37 +510,53 @@ protocol ForwardSecurityMessageSenderProtocol {
         try session.processAccept(
             peerEphemeralPublicKey: accept.ephemeralPublicKey,
             peerPublicKey: sender.publicKey,
+            peerSupportedVersionRange: accept.version,
             identityStore: identityStore
         )
+        
         try dhSessionStore.storeDHSession(session: session)
-        DDLogVerbose("Established 4DH session ID \(session.id) with \(sender.identity)")
+        DDLogNotice(
+            "[ForwardSecurity] Established 4DH session ID \(session.id) with \(sender.identity), negotiated version: \(session.current4DHVersions)"
+        )
         notifyListeners { listener in listener.initiatorSessionEstablished(session: session, contact: sender) }
     }
     
-    private func processReject(sender: ForwardSecurityContact, reject: ForwardSecurityDataReject) throws {
-        DDLogWarn("Received reject for DH session ID \(reject.sessionID) from \(sender.identity)")
+    private func processReject(sender: ForwardSecurityContact, reject: ForwardSecurityDataReject) async throws {
+        DDLogWarn(
+            "[ForwardSecurity] Received reject for DH session ID \(reject.sessionID) from \(sender.identity) cause \(reject.cause)"
+        )
         
-        if try dhSessionStore.exactDHSession(
+        let sessionExists = try dhSessionStore.exactDHSession(
             myIdentity: identityStore.identity,
             peerIdentity: sender.identity,
             sessionID: reject.sessionID
-        ) != nil {
+        ) != nil
+        
+        if sessionExists {
             // Discard session
             try dhSessionStore.deleteDHSession(
                 myIdentity: identityStore.identity,
                 peerIdentity: sender.identity,
                 sessionID: reject.sessionID
             )
+            DDLogNotice("[ForwardSecurity] Process reject, session ID \(reject.sessionID) from \(sender.identity)")
         }
         else {
             // Session not found, probably lost local data or old reject
-            DDLogInfo("No DH session found for rejected session ID \(reject.sessionID) from \(sender.identity)")
+            DDLogNotice("No DH session found for rejected session ID \(reject.sessionID) from \(sender.identity)")
         }
         
+        // Refresh feature mask now, in case contact downgraded to a build without PFS
+        let hasForwardSecuritySupport = await checkFSFeatureMask(for: sender)
+        
+        // TODO: (IOS-3949) Is this nil for session correct? I guess were deleting it above?
         notifyListeners { listener in listener.rejectReceived(
             sessionID: reject.sessionID,
             contact: sender,
-            rejectedMessageID: reject.rejectedMessageID
+            session: nil,
+            rejectedMessageID: reject.rejectedMessageID,
+            rejectCause: reject.cause,
+            hasForwardSecuritySupport: hasForwardSecuritySupport
         ) }
     }
     
@@ -401,7 +572,9 @@ protocol ForwardSecurityMessageSenderProtocol {
             sessionID: message.sessionID
         ) else {
             // Session not found, probably lost local data or old message
-            DDLogWarn("No DH session found for message in session ID \(message.sessionID) from \(sender.identity)")
+            DDLogWarn(
+                "[ForwardSecurity] No DH session found for message \(envelopeMessage.getMessageIDString() ?? "Missing Message ID") in session ID \(message.sessionID) from \(sender.identity)"
+            )
 
             // Send reject message
             let reject = try ForwardSecurityDataReject(
@@ -413,6 +586,50 @@ protocol ForwardSecurityMessageSenderProtocol {
             
             notifyListeners { listener in listener.sessionNotFound(sessionID: message.sessionID, contact: sender) }
             return (nil, nil)
+        }
+        
+        // Validate offered and applied version
+        var processedVersion: ProcessedVersions? = nil
+        do {
+            processedVersion = try session.processIncomingMessageVersion(message: message)
+        }
+        catch let RejectMessageError.rejectMessageError(description: description) {
+            DDLogNotice("[ForwardSecurity] ProcessMessaged failed with error: \(description)")
+            DDLogNotice("[ForwardSecurity] Message rejected by session validator, `Reject` and terminate the session")
+            
+            // Message rejected by session validator, `Reject` and terminate the session
+            let reject = try ForwardSecurityDataReject(
+                sessionID: session.id,
+                rejectedMessageID: envelopeMessage.messageID,
+                cause: .stateMismatch
+            )
+            sendMessageToContact(contact: sender, message: reject)
+            try dhSessionStore.deleteDHSession(
+                myIdentity: identityStore.identity,
+                peerIdentity: sender.identity,
+                sessionID: session.id
+            )
+            
+            // TODO: Should we supply an error cause for the UI here? Otherwise this looks as if the remote willingly terminated.
+            notifyListeners { listener in listener.sessionTerminated(
+                sessionID: session.id,
+                contact: sender,
+                sessionUnknown: false,
+                hasForwardSecuritySupport: true
+            ) }
+            
+            return (nil, nil)
+        }
+        catch {
+            fatalError(
+                "[ForwardSecurity] `processIncomingMessageVersion` may only throw errors of kind `RejectMessageError`"
+            )
+        }
+        
+        guard let processedVersion else {
+            fatalError(
+                "[ForwardSecurity] If processedVersion is nil here `DHSession.processIncomingMessageVersion` has thrown an error which was handled above."
+            )
         }
 
         // Obtain appropriate ratchet and turn to match the message's counter value
@@ -427,14 +644,36 @@ protocol ForwardSecurityMessageSenderProtocol {
         
         guard let ratchet else {
             // This can happen if the Accept message from our peer has been lost. In that case
-            // they will think they are in 4DH mode, but we are still in 2DH.
+            // they will think they are in 4DH mode, but we are still in 2DH. `Reject` and terminate the session.
+            
+            DDLogError(
+                "[ForwardSecurity] Rejecting message in session \(session.description) with \(sender.identity), cause: DH type mismatch (mode={\(mode)})"
+            )
+            
             let reject = try ForwardSecurityDataReject(
                 sessionID: message.sessionID,
                 rejectedMessageID: envelopeMessage.messageID,
                 cause: .stateMismatch
             )
+            
             sendMessageToContact(contact: sender, message: reject)
-            notifyListeners { listener in listener.sessionBadDhState(sessionID: message.sessionID, contact: sender) }
+            
+            // Delete our own session as the peer will destroy this session as well
+            try dhSessionStore.deleteDHSession(
+                myIdentity: identityStore.identity,
+                peerIdentity: sender.identity,
+                sessionID: message.sessionID
+            )
+            
+            // TODO: Should we supply an error cause for the UI here? Otherwise this looks as if the remote willingly terminated.
+            notifyListeners { listener in
+                listener.sessionTerminated(
+                    sessionID: session.id,
+                    contact: sender,
+                    sessionUnknown: false,
+                    hasForwardSecuritySupport: true
+                )
+            }
             return (nil, nil)
         }
 
@@ -450,7 +689,11 @@ protocol ForwardSecurityMessageSenderProtocol {
         }
         catch let error as RatchetRotationError {
             notifyListeners { listener in
-                listener.messageOutOfOrder(sessionID: message.sessionID, contact: sender)
+                listener.messageOutOfOrder(
+                    sessionID: message.sessionID,
+                    contact: sender,
+                    messageID: envelopeMessage.messageID
+                )
             }
             throw error
         }
@@ -459,8 +702,14 @@ protocol ForwardSecurityMessageSenderProtocol {
         let ciphertext = message.message
         // A new key is used for each message, so the nonce can be zero
         let nonce = Data(count: Int(kNaClCryptoNonceSize))
-        guard let plaintext = NaClCrypto.shared()
-            .symmetricDecryptData(ciphertext, withKey: ratchet.currentEncryptionKey, nonce: nonce) else {
+        guard let plaintext = NaClCrypto.shared().symmetricDecryptData(
+            ciphertext,
+            withKey: ratchet.currentEncryptionKey,
+            nonce: nonce
+        ) else {
+            DDLogError(
+                "[ForwardSecurity] Rejecting message in session \(session) with \(sender.identity), cause: Message decryption failed (message-id={\(envelopeMessage.messageID.hexString)}"
+            )
             
             // Send reject message
             let reject = try ForwardSecurityDataReject(
@@ -477,17 +726,24 @@ protocol ForwardSecurityMessageSenderProtocol {
                 sessionID: message.sessionID
             )
             
-            notifyListeners { listener in listener.messageDecryptionFailed(
-                sessionID: message.sessionID,
-                contact: sender,
-                failedMessageID: envelopeMessage.messageID
-            ) }
             return (nil, nil)
         }
         
-        DDLogVerbose(
-            "Decrypted \(mode) message ID \(BytesUtility.toHexString(data: envelopeMessage.messageID)) from \(sender.identity) in session \(session.id)"
+        DDLogNotice(
+            "[ForwardSecurity] Decapsulated message from {\(sender.identity)} (message-id={\(envelopeMessage.messageID.hexString)}, mode={\(mode)}, session={\(session.description)}, offered-version={\(processedVersion)}, applied-version={\(message.appliedVersion)})"
         )
+        
+        // Commit the updated negotiated version
+        let updatedVersionsSnapshot = session.commitVersion(processedVersions: processedVersion)
+        if let updatedVersionsSnapshot {
+            notifyListeners { statusListener in
+                statusListener.versionsUpdated(
+                    in: session,
+                    versionUpdatedSnapshot: updatedVersionsSnapshot,
+                    contact: sender
+                )
+            }
+        }
 
         // Turn the ratchet once, as we will not need the current encryption key anymore and the
         // next message from the peer must have a ratchet count of at least one higher
@@ -496,6 +752,7 @@ protocol ForwardSecurityMessageSenderProtocol {
         if mode == .fourDH {
             // If this was a 4DH message, then we should erase the 2DH peer ratchet, as we shall not
             // receive (or send) any further 2DH messages in this session
+            // Note that this is also necessary to determine the correct session state.
             if session.peerRatchet2DH != nil {
                 session.discardPeerRatchet2DH()
             }
@@ -514,10 +771,11 @@ protocol ForwardSecurityMessageSenderProtocol {
                 )
             }
 
-            // If this was the first 4DH message in this session, inform the user
+            // If this was the first 4DH message in this session, inform the user (only required in version 1.0, this is
+            // checked in `first4DhMessageReceived`).
             if ratchet.counter == 2 {
                 notifyListeners { listener in
-                    listener.first4DhMessageReceived(sessionID: message.sessionID, contact: sender)
+                    listener.first4DhMessageReceived(session: session, contact: sender)
                 }
             }
         }
@@ -531,7 +789,11 @@ protocol ForwardSecurityMessageSenderProtocol {
         }
         
         // Decode inner message and pass it to processor
-        let innerMsg = MessageDecoder.decodeEncapsulated(plaintext, outer: envelopeMessage)
+        let innerMsg = try MessageDecoder.decode(
+            encapsulated: plaintext,
+            with: envelopeMessage,
+            for: processedVersion.appliedVersion
+        )
         innerMsg?.forwardSecurityMode = mode
         return (innerMsg, session)
     }
@@ -553,20 +815,117 @@ protocol ForwardSecurityMessageSenderProtocol {
         try dhSessionStore.updateDHSessionRatchets(session: session, peer: true)
     }
     
-    private func processTerminate(sender: ForwardSecurityContact, terminate: ForwardSecurityDataTerminate) throws {
-        DDLogVerbose("Terminating DH session ID \(terminate.sessionID) with \(sender.identity)")
-        try dhSessionStore.deleteDHSession(
+    @objc func warnIfMessageWithoutForwardSecurityReceived(
+        for message: AbstractMessage,
+        from sender: ForwardSecurityContact
+    ) {
+        do {
+            let bestSession = try dhSessionStore.bestDHSession(
+                myIdentity: identityStore.identity,
+                peerIdentity: message.fromIdentity
+            )
+            
+            guard let bestSession else {
+                // If we do not have a session we don't need to do anything
+                DDLogNotice("[ForwardSecurity] \(#function): We do not have a session. Don't warn.")
+                return
+            }
+            
+            let minimumVersion = message.minimumRequiredForwardSecurityVersion()
+            
+            DDLogNotice(
+                "[ForwardSecurity] \(#function): \(minimumVersion != .unspecified && minimumVersion.rawValue <= bestSession.minimumIncomingAppliedVersion.rawValue ? "maybe warn" : "don't warn") Checking message minimum version \(minimumVersion) against session \(bestSession.description) with minimumIncomingAppliedVersion \(bestSession.minimumIncomingAppliedVersion)"
+            )
+            
+            if minimumVersion != .unspecified,
+               minimumVersion.rawValue <= bestSession.minimumIncomingAppliedVersion.rawValue {
+                Task {
+                    let hasForwardSecuritySupport = await hasForwardSecuritySupport(sender)
+                    
+                    // TODO(ANDR-2452): Remove this feature mask update when enough clients have updated
+                    // Check whether this contact still supports forward security when receiving a message without
+                    // forward
+                    // security.
+                    if hasForwardSecuritySupport {
+                        _ = await checkFSFeatureMask(for: sender)
+                    }
+                    
+                    if hasForwardSecuritySupport {
+                        notifyListeners { listener in
+                            listener
+                                .messageWithoutFSReceived(
+                                    in: bestSession,
+                                    contactIdentity: message.fromIdentity,
+                                    message: message
+                                )
+                        }
+                    }
+                    else {
+                        DDLogNotice("\(#function): Contact has downgraded to an unsupported version. Don't warn.")
+                    }
+                }
+            }
+        }
+        catch {
+            DDLogError("Could not get best session: \(error)")
+        }
+    }
+    
+    private func processTerminate(
+        sender: ForwardSecurityContact,
+        terminate: ForwardSecurityDataTerminate
+    ) async throws {
+        DDLogNotice(
+            "Terminating DH session ID \(terminate.sessionID) with \(sender.identity), cause: \(terminate.cause)"
+        )
+        
+        let sessionExists = try dhSessionStore.exactDHSession(
             myIdentity: identityStore.identity,
             peerIdentity: sender.identity,
             sessionID: terminate.sessionID
-        )
+        ) != nil
+        if !sessionExists {
+            DDLogNotice("We do not have a DH session ID \(terminate.sessionID) with \(sender.identity)")
+        }
+        else {
+            try dhSessionStore.deleteDHSession(
+                myIdentity: identityStore.identity,
+                peerIdentity: sender.identity,
+                sessionID: terminate.sessionID
+            )
+        }
         
-        notifyListeners { listener in listener.sessionTerminated(sessionID: terminate.sessionID, contact: sender) }
+        /// Refresh feature mask now, in case contact downgraded to a build without PFS
+        ///
+        /// We're waiting for the feature mask check to complete here. This is not great since we're stopping message
+        /// processing.
+        /// But we need the check to complete before deleting the session since we need to know if the contact has
+        /// downgraded its feature mask.
+        /// There is a similar check in `ContactEntity.h` which would result in a duplicate system message if we didn't
+        /// delete the session above.
+        /// (This might still lead to duplicate status messages if we have other sessions than the one we're deleting
+        /// above. But we expect this case to be rare.)
+        ///
+        /// Improvements for this are tracked as part of SE-267
+        let hasForwardSecuritySupport = await checkFSFeatureMask(for: sender)
+        
+        notifyListeners { listener in listener.sessionTerminated(
+            sessionID: terminate.sessionID,
+            contact: sender,
+            sessionUnknown: !sessionExists,
+            hasForwardSecuritySupport: hasForwardSecuritySupport
+        ) }
     }
     
     private func sendMessageToContact(contact: ForwardSecurityContact, message: ForwardSecurityData) {
         let message = ForwardSecurityEnvelopeMessage(data: message)
         message.toIdentity = contact.identity
+        messageSender.send(message: message)
+    }
+    
+    private func sendMessageToContact(identity: String, message: ForwardSecurityData) {
+        let message = ForwardSecurityEnvelopeMessage(data: message)
+        message.toIdentity = identity
         messageSender.send(message: message)
     }
     
@@ -578,6 +937,44 @@ protocol ForwardSecurityMessageSenderProtocol {
             }
             
             block(listener)
+        }
+    }
+    
+    private func sanityCheckOrThrow(_ message: AbstractMessage, in session: DHSession) throws {
+        guard let requiredVersion = message.minimumRequiredForwardSecurityVersion else {
+            // We check in `TaskExecution` that this never happens. This is just a final safeguard.
+            DDLogError(
+                "Message \(message.messageID.hexEncodedString()) for \(String(describing: message.toIdentity)) of type \(message.type()) is not supported in FS session with negotiated version \(session.current4DHVersions?.description ?? "nil")"
+            )
+            throw ForwardSecurityError.messageTypeNotSupported
+        }
+        
+        if requiredVersion == .unspecified {
+            // We check in `TaskExecution` that this never happens. This is just a final safeguard.
+            DDLogError(
+                "Message \(message.messageID.hexEncodedString()) for \(String(describing: message.toIdentity)) of type \(message.type()) is not supported in FS session with negotiated version \(session.current4DHVersions?.description ?? "nil")"
+            )
+            throw ForwardSecurityError.messageTypeNotSupported
+        }
+        
+        if case .UNRECOGNIZED = requiredVersion {
+            // We check in `TaskExecution` that this never happens. This is just a final safeguard.
+            DDLogError(
+                "Message \(message.messageID.hexEncodedString()) for \(String(describing: message.toIdentity)) of type \(message.type()) is not supported in FS session with negotiated version \(session.current4DHVersions?.description ?? "nil")"
+            )
+            throw ForwardSecurityError.messageTypeNotSupported
+        }
+    }
+}
+
+// MARK: - SQLDHSessionStoreErrorHandler
+
+extension ForwardSecurityMessageProcessor: SQLDHSessionStoreErrorHandler {
+    func handleDHSessionIllegalStateError(sessionID: DHSessionID, peerIdentity: String) {
+        let terminate = ForwardSecurityDataTerminate(sessionID: sessionID, cause: .reset)
+        sendMessageToContact(identity: peerIdentity, message: terminate)
+        notifyListeners { listener in
+            listener.illegalSessionState(identity: peerIdentity, sessionID: sessionID)
         }
     }
 }

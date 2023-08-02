@@ -20,7 +20,9 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import GroupCalls
 import Intents
+import ThreemaProtocols
 
 public struct GroupIdentity: Equatable {
     public let id: Data
@@ -32,7 +34,7 @@ public struct GroupIdentity: Equatable {
     }
 
     init(identity: Common_GroupIdentity) {
-        self.init(id: NSData.convertBytes(identity.groupID), creator: identity.creatorIdentity)
+        self.init(id: identity.groupID.littleEndianData, creator: identity.creatorIdentity)
     }
 }
 
@@ -348,6 +350,13 @@ public class Group: NSObject {
         else {
             return .unknown
         }
+    }
+    
+    @objc public var groupCreatorNickname: String? {
+        if let nickname = conversationContact?.publicNickname {
+            return nickname
+        }
+        return myIdentityStore.pushFromName
     }
     
     /// Number of members including me

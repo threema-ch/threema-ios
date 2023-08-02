@@ -72,7 +72,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
         
         // check MDM for Threema Safe restore
         let mdmSetup = MDMSetup(setup: true)!
-        if mdmSetup.isManaged() {
+        if LicenseStore.shared().getRequiresLicenseKey() {
             if !mdmSetup.isSafeBackupDisable() {
                 activateSafeAnyway = true
             }

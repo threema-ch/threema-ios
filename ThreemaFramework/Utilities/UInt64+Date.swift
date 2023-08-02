@@ -22,6 +22,6 @@ import Foundation
 
 extension UInt64 {
     var date: Date? {
-        Date(timeIntervalSince1970: Double(self))
+        Date(millisecondsSince1970: self)
     }
 }

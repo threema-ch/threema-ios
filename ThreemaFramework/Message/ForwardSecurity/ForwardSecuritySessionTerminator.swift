@@ -18,29 +18,85 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
 public class ForwardSecuritySessionTerminator {
     let businessInjector: BusinessInjector
     let store: SQLDHSessionStore
     
-    public init(businessInjector: BusinessInjector, store: SQLDHSessionStore? = nil) throws {
+    public init(businessInjector: BusinessInjector = BusinessInjector(), store: SQLDHSessionStore? = nil) throws {
         self.businessInjector = businessInjector
         
         let newStore = try SQLDHSessionStore()
         self.store = store ?? newStore
     }
     
-    public func terminateAllSessions(with contact: ContactEntity) throws {
+    public func terminateAllSessions(with contact: ContactEntity, cause: CspE2eFs_Terminate.Cause) throws {
+        try terminateAllSessions(with: contact.identity, cause: cause)
+    }
+    
+    public func terminateAllSessions(with identity: String, cause: CspE2eFs_Terminate.Cause) throws {
+        try businessInjector.entityManager.performAndWaitSave {
+            guard let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) else {
+                return
+            }
+            if contact.forwardSecurityState.intValue == 1 {
+                DDLogVerbose("Reset Forward Security State for Contact \(identity)")
+            }
+            contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
+            
+            while let session = try self.store.bestDHSession(
+                myIdentity: self.businessInjector.myIdentityStore.identity,
+                peerIdentity: identity
+            ) {
+                let terminate = ForwardSecurityDataTerminate(sessionID: session.id, cause: cause)
+                let message = ForwardSecurityEnvelopeMessage(data: terminate)
+                message.toIdentity = identity
+                
+                self.businessInjector.messageSender.sendMessage(abstractMessage: message, isPersistent: true)
+                
+                DDLogVerbose("Terminate FS session with id \(session.id.description)")
+                
+                if try self.store.deleteDHSession(
+                    myIdentity: self.businessInjector.myIdentityStore.identity,
+                    peerIdentity: contact.identity,
+                    sessionID: session.id
+                ) {
+                    return
+                }
+            }
+        }
+    }
+    
+    /// Deletes all sessions with this contact
+    /// This shouldn't be used except for debugging. Will crash if FS debug messages are not enabled
+    ///
+    /// - Parameter contact: The contact whose FS sessions we want to delete
+    public func deleteAllSessions(with contact: ContactEntity) throws {
+        guard ThreemaEnvironment.fsDebugStatusMessages else {
+            fatalError()
+        }
+        
+        let identity = contact.identity
+        businessInjector.entityManager.performAndWaitSave {
+            guard let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) else {
+                return
+            }
+            
+            if contact.forwardSecurityState.intValue == 1 {
+                DDLogVerbose("Reset Forward Security State for Contact \(identity)")
+            }
+            
+            contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
+        }
+        
         while let session = try store.bestDHSession(
             myIdentity: businessInjector.myIdentityStore.identity,
             peerIdentity: contact.identity
         ) {
-            let terminate = ForwardSecurityDataTerminate(sessionID: session.id)
-            let message = ForwardSecurityEnvelopeMessage(data: terminate)
-            message.toIdentity = contact.identity
-            
-            businessInjector.messageSender.sendMessage(abstractMessage: message, isPersistent: true)
+            DDLogVerbose("Delete FS session with id \(session.id.description)")
             
             if try store.deleteDHSession(
                 myIdentity: businessInjector.myIdentityStore.identity,

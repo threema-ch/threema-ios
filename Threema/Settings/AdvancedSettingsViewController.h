@@ -31,6 +31,7 @@
 @property (weak, nonatomic) IBOutlet UITableViewCell *flushMessageQueueCell;
 @property (weak, nonatomic) IBOutlet UILabel *orphanedFilesCleanupLabel;
 @property (weak, nonatomic) IBOutlet UILabel *reregisterPushNotificationsLabel;
+@property (weak, nonatomic) IBOutlet UILabel *resetFSDBLabel;
 
 
 - (IBAction)enableIPv6Changed:(id)sender;

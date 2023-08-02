@@ -75,13 +75,6 @@ import Foundation
     var isBackupRunning: Bool {
         SafeManager.backupIsRunning
     }
-
-    @objc func activate(identity: String, password: String) throws {
-        safeConfigManager.setKey(safeStore.createKey(identity: identity, password: password))
-        safeConfigManager.setIsTriggered(true)
-
-        initTrigger()
-    }
     
     @objc func activate(
         identity: String,
@@ -135,19 +128,20 @@ import Foundation
             safeStore.getSafeDefaultServer(key: key) { result in
                 switch result {
                 case let .success(defaultServer):
-                    let testResult = self.testServer(serverURL: defaultServer)
-                    if let errorMessage = testResult.errorMessage {
-                        completion(SafeError.activateFailed(message: "Test default server: \(errorMessage)"))
-                    }
-                    else {
-                        self.safeConfigManager.setKey(key)
-                        self.safeConfigManager.setCustomServer(nil)
-                        self.safeConfigManager.setServer(defaultServer.absoluteString)
-                        self.safeConfigManager.setMaxBackupBytes(testResult.maxBackupBytes)
-                        self.safeConfigManager.setRetentionDays(testResult.retentionDays)
-                        
-                        self.initTrigger()
-                        completion(nil)
+                    self.testServer(serverURL: defaultServer) { errorMessage, maxBackupBytes, retentionDays in
+                        if let errorMessage {
+                            completion(SafeError.activateFailed(message: "Test default server: \(errorMessage)"))
+                        }
+                        else {
+                            self.safeConfigManager.setKey(key)
+                            self.safeConfigManager.setCustomServer(nil)
+                            self.safeConfigManager.setServer(defaultServer.absoluteString)
+                            self.safeConfigManager.setMaxBackupBytes(maxBackupBytes)
+                            self.safeConfigManager.setRetentionDays(retentionDays)
+                            
+                            self.initTrigger()
+                            completion(nil)
+                        }
                     }
                 case let .failure(error):
                     completion(error)
@@ -376,27 +370,32 @@ import Foundation
             }
         }
     }
-
-    func testServer(serverURL: URL) -> (errorMessage: String?, maxBackupBytes: Int?, retentionDays: Int?) {
+    
+    /// Tests a given server URL for Threema Safe
+    /// - Parameters:
+    ///   - serverURL: Server URL to test
+    ///   - completion: Closure that accepts (errorMessage: String?, maxBackupDays: Int?, retentionDays: Int?)
+    func testServer(serverURL: URL, completion: @escaping (String?, Int?, Int?) -> Void) {
         let safeServerAuth = safeStore.extractSafeServerAuth(server: serverURL)
-        let result = safeApiService.testServer(
+        safeApiService.testServer(
             server: safeServerAuth.server,
             user: safeServerAuth.user,
             password: safeServerAuth.password
-        )
-        
-        if let errorMessage = result.errorMessage {
-            return (errorMessage: errorMessage, maxBackupBytes: nil, retentionDays: nil)
-        }
-        else {
-            let parser = SafeJsonParser()
-            guard let data = result.serverConfig,
-                  let config = parser.getSafeServerConfig(from: data) else {
+        ) { comp in
+            do {
+                let serverConfig = try comp()
+                let parser = SafeJsonParser()
+                guard let config = parser.getSafeServerConfig(from: serverConfig) else {
+                            
+                    completion("Invalid response data", nil, nil)
+                    return
+                }
                     
-                return (errorMessage: "Invalid response data", maxBackupBytes: nil, retentionDays: nil)
+                completion(nil, config.maxBackupBytes, config.retentionDays)
             }
-            
-            return (errorMessage: nil, maxBackupBytes: config.maxBackupBytes, retentionDays: config.retentionDays)
+            catch {
+                completion("Invalid response data", nil, nil)
+            }
         }
     }
     
@@ -466,43 +465,50 @@ import Foundation
                     let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServerURL)
                     let safeBackupURL = safeServerAuth.server
                         .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
-
-                    do {
-                        let resultTest = self.testServer(serverURL: safeServerURL)
-                        if let error = resultTest.errorMessage {
-                            throw SafeError.backupFailed(message: error)
+                    self.testServer(serverURL: safeServerURL) { errorMessage, maxBackupBytes, _ in
+                        
+                        if let error = errorMessage {
+                            continuation.resume(throwing: SafeError.backupFailed(message: error))
                         }
-
-                        // encrypt backup data and upload it
-                        let encryptedData = try self.safeStore.encryptBackupData(key: key, data: data)
-
-                        guard encryptedData.count < resultTest.maxBackupBytes ?? 524_288 else {
-                            throw SafeError
-                                .backupFailed(message: BundleUtil.localizedString(forKey: "safe_upload_size_exceeded"))
+                        
+                        // Encrypt backup data and upload it
+                        do {
+                            let encryptedData = try self.safeStore.encryptBackupData(key: key, data: data)
+                            guard encryptedData.count < maxBackupBytes ?? 524_288 else {
+                                continuation.resume(
+                                    throwing: SafeError
+                                        .backupFailed(
+                                            message: BundleUtil
+                                                .localizedString(forKey: "safe_upload_size_exceeded")
+                                        )
+                                )
+                                return
+                            }
+                            
+                            self.safeApiService.upload(
+                                backup: safeBackupURL,
+                                user: safeServerAuth.user,
+                                password: safeServerAuth.password,
+                                encryptedData: encryptedData
+                            ) { _, error in
+                                if let error {
+                                    continuation.resume(throwing: SafeError.backupFailed(
+                                        message: error.contains("Payload Too Large") ? BundleUtil
+                                            .localizedString(forKey: "safe_upload_size_exceeded") :
+                                            "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(error))"
+                                    ))
+                                }
+                                else {
+                                    continuation.resume()
+                                }
+                            }
                         }
-
-                        self.safeApiService.upload(
-                            backup: safeBackupURL,
-                            user: safeServerAuth.user,
-                            password: safeServerAuth.password,
-                            encryptedData: encryptedData
-                        ) { _, error in
-                            if let error {
-                                continuation.resume(throwing: SafeError.backupFailed(
-                                    message: error.contains("Payload Too Large") ? BundleUtil
-                                        .localizedString(forKey: "safe_upload_size_exceeded") :
-                                        "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(error))"
-                                ))
-                            }
-                            else {
-                                continuation.resume()
-                            }
+                        catch {
+                            continuation
+                                .resume(throwing: SafeError.backupFailed(message: "Encryption of backup failed."))
                         }
                     }
-                    catch {
-                        continuation.resume(throwing: error)
-                    }
-
+                    
                 case let .failure(error):
                     continuation.resume(throwing: SafeError.backupFailed(message: "Invalid safe server url \(error)"))
                 }
@@ -614,52 +620,66 @@ import Foundation
                 let safeBackupURL = safeServerAuth.server
                     .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
                 
-                let result = testServer(serverURL: safeServerURL)
-                if let errorMessage = result.errorMessage {
-                    throw SafeError.backupFailed(message: errorMessage)
-                }
-                else {
-                    safeConfigManager.setMaxBackupBytes(result.maxBackupBytes)
-                    safeConfigManager.setRetentionDays(result.retentionDays)
-                }
-                
-                // encrypt backup data and upload it
-                let encryptedData = try safeStore.encryptBackupData(key: key, data: data)
-                
-                // set actual backup size anyway
-                safeConfigManager.setBackupSize(Int64(encryptedData.count))
-                
-                if encryptedData.count < safeConfigManager.getMaxBackupBytes() ?? 524_288 {
-                    
-                    safeApiService.upload(
-                        backup: safeBackupURL,
-                        user: safeServerAuth.user,
-                        password: safeServerAuth.password,
-                        encryptedData: encryptedData
-                    ) { _, errorMessage in
+                testServer(serverURL: safeServerURL) { errorMessage, maxBackupBytes, retentionDays in
+                    do {
                         if let errorMessage {
-                            self.logger.logString(errorMessage)
-                            
-                            self.safeConfigManager
-                                .setLastResult(
-                                    errorMessage.contains("Payload Too Large") ? BundleUtil
-                                        .localizedString(forKey: "safe_upload_size_exceeded") :
-                                        "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(errorMessage))"
-                                )
+                            throw SafeError.backupFailed(message: errorMessage)
                         }
                         else {
-                            self.safeConfigManager.setLastChecksum(self.checksum)
-                            self.safeConfigManager.setLastBackup(Date())
-                            self.safeConfigManager.setLastResult(BundleUtil.localizedString(forKey: "safe_successful"))
-                            self.safeConfigManager.setLastAlertBackupFailed(nil)
+                            self.safeConfigManager.setMaxBackupBytes(maxBackupBytes)
+                            self.safeConfigManager.setRetentionDays(retentionDays)
                         }
                         
+                        // encrypt backup data and upload it
+                        let encryptedData = try self.safeStore.encryptBackupData(key: key, data: data)
+                        
+                        // set actual backup size anyway
+                        self.safeConfigManager.setBackupSize(Int64(encryptedData.count))
+                        
+                        if encryptedData.count < self.safeConfigManager.getMaxBackupBytes() ?? 524_288 {
+                            
+                            self.safeApiService.upload(
+                                backup: safeBackupURL,
+                                user: safeServerAuth.user,
+                                password: safeServerAuth.password,
+                                encryptedData: encryptedData
+                            ) { _, errorMessage in
+                                if let errorMessage {
+                                    self.logger.logString(errorMessage)
+                                    
+                                    self.safeConfigManager
+                                        .setLastResult(
+                                            errorMessage.contains("Payload Too Large") ? BundleUtil
+                                                .localizedString(forKey: "safe_upload_size_exceeded") :
+                                                "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(errorMessage))"
+                                        )
+                                }
+                                else {
+                                    self.safeConfigManager.setLastChecksum(self.checksum)
+                                    self.safeConfigManager.setLastBackup(Date())
+                                    self.safeConfigManager
+                                        .setLastResult(BundleUtil.localizedString(forKey: "safe_successful"))
+                                    self.safeConfigManager.setLastAlertBackupFailed(nil)
+                                }
+                                
+                                completionHandler()
+                            }
+                        }
+                        else {
+                            throw SafeError
+                                .backupFailed(message: BundleUtil.localizedString(forKey: "safe_upload_size_exceeded"))
+                        }
+                    }
+                    catch {
+                        self.logger.logString(error.localizedDescription)
+                        
+                        self.safeConfigManager
+                            .setLastResult(
+                                "\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): \(error.localizedDescription)"
+                            )
+
                         completionHandler()
                     }
-                }
-                else {
-                    throw SafeError
-                        .backupFailed(message: BundleUtil.localizedString(forKey: "safe_upload_size_exceeded"))
                 }
             case let .failure(error):
                 throw SafeError.backupFailed(message: "Invalid safe server url \(error)")
@@ -749,58 +769,84 @@ import Foundation
         
         var decryptedData: [UInt8]?
         
-        do {
-            let safeApiService = SafeApiService()
-            let encryptedData = try safeApiService.download(
-                backup: backupURL,
-                user: safeServerAuth.user,
-                password: safeServerAuth.password
-            )
-
-            if encryptedData != nil {
-                decryptedData = try safeStore.decryptBackupData(key: key, data: Array(encryptedData!))
-                
-                try safeStore.restoreData(
-                    identity: identity,
-                    data: decryptedData!,
-                    onlyIdentity: restoreIdentityOnly,
-                    completionHandler: { error in
-                        if let error {
-                            switch error {
-                            case let .restoreError(message):
-                                completionHandler(SafeError.restoreError(message: message))
-                            case let .restoreFailed(message):
-                                completionHandler(SafeError.restoreFailed(message: message))
-                            default: break
-                            }
-                        }
-                        else {
-                
-                            // Reset app migration and start a new run
-                            let businessInjector = BusinessInjector()
-                            if AppMigration.isMigrationRequired(userSettings: businessInjector.userSettings) {
-                                AppMigration(businessInjector: businessInjector, reset: true).run()
-                            }
-                                                       
-                            if !restoreIdentityOnly || activateSafeAnyway {
-                                // activate Threema Safe
-                                self.activate(
-                                    key: key,
-                                    customServer: customServer,
-                                    server: safeServerURL.absoluteString,
-                                    maxBackupBytes: nil,
-                                    retentionDays: nil
-                                ) { error in
-                                    if error != nil {
-                                        completionHandler(
-                                            SafeError
-                                                .restoreError(
-                                                    message: BundleUtil
-                                                        .localizedString(forKey: "safe_activation_failed")
+        let safeApiService = SafeApiService()
+        safeApiService.download(
+            backup: backupURL,
+            user: safeServerAuth.user,
+            password: safeServerAuth.password,
+            completionHandler: { comp in
+                do {
+                    let encryptedData = try comp()
+                    
+                    if encryptedData != nil {
+                        decryptedData = try self.safeStore.decryptBackupData(key: key, data: Array(encryptedData!))
+                        
+                        try? self.safeStore.restoreData(
+                            identity: identity,
+                            data: decryptedData!,
+                            onlyIdentity: restoreIdentityOnly,
+                            completionHandler: { error in
+                                if let error {
+                                    switch error {
+                                    case let .restoreError(message):
+                                        completionHandler(SafeError.restoreError(message: message))
+                                    case let .restoreFailed(message):
+                                        completionHandler(SafeError.restoreFailed(message: message))
+                                    default: break
+                                    }
+                                }
+                                else {
+                                    
+                                    // Reset app migration and start a new run
+                                    let businessInjector = BusinessInjector()
+                                    if AppMigrationVersion
+                                        .isMigrationRequired(userSettings: businessInjector.userSettings) {
+                                        do {
+                                            try AppMigration(businessInjector: businessInjector, reset: true).run()
+                                        }
+                                        catch {
+                                            let msg = BundleUtil
+                                                .localizedString(
+                                                    forKey: "safe_activation_app_migration_failed_error_message"
                                                 )
-                                        )
+                                            completionHandler(SafeError.restoreError(message: msg))
+                                            return
+                                        }
+                                    }
+                                    
+                                    if !restoreIdentityOnly || activateSafeAnyway {
+                                        // activate Threema Safe
+                                        self.activate(
+                                            key: key,
+                                            customServer: customServer,
+                                            server: safeServerURL.absoluteString,
+                                            maxBackupBytes: nil,
+                                            retentionDays: nil
+                                        ) { error in
+                                            if error != nil {
+                                                completionHandler(
+                                                    SafeError
+                                                        .restoreError(
+                                                            message: BundleUtil
+                                                                .localizedString(forKey: "safe_activation_failed")
+                                                        )
+                                                )
+                                            }
+                                            else {
+                                                // show Threema Safe-Intro
+                                                UserSettings.shared()?.safeIntroShown = false
+                                                // trigger backup
+                                                NotificationCenter.default.post(
+                                                    name: NSNotification.Name(kSafeBackupTrigger),
+                                                    object: nil
+                                                )
+                                                completionHandler(nil)
+                                            }
+                                        }
                                     }
                                     else {
+                                        // show Threema Safe-Intro
+                                        UserSettings.shared()?.safeIntroShown = false
                                         // trigger backup
                                         NotificationCenter.default.post(
                                             name: NSNotification.Name(kSafeBackupTrigger),
@@ -810,47 +856,37 @@ import Foundation
                                     }
                                 }
                             }
-                            else {
-                                // show Threema Safe-Intro
-                                UserSettings.shared()?.safeIntroShown = false
-                                // trigger backup
-                                NotificationCenter.default.post(
-                                    name: NSNotification.Name(kSafeBackupTrigger),
-                                    object: nil
-                                )
-                                completionHandler(nil)
-                            }
-                        }
+                        )
                     }
-                )
-            }
-        }
-        catch let SafeApiService.SafeApiError.requestFailed(message) {
-            completionHandler(
-                SafeError
-                    .restoreFailed(
-                        message: "\(BundleUtil.localizedString(forKey: "safe_no_backup_found")) (\(message))"
+                }
+                catch let SafeApiService.SafeApiError.requestFailed(message) {
+                    completionHandler(
+                        SafeError
+                            .restoreFailed(
+                                message: "\(BundleUtil.localizedString(forKey: "safe_no_backup_found")) (\(message))"
+                            )
                     )
-            )
-        }
-        catch let SafeStore.SafeError.restoreFailed(message) {
-            completionHandler(SafeError.restoreFailed(message: message))
-            
-            if let decryptedData {
-                // Save decrypted backup data into application documents folder, for analyzing failures
-                _ = FileUtility.write(
-                    fileURL: FileUtility.appDocumentsDirectory?
-                        .appendingPathComponent("safe-backup.json"),
-                    text: String(bytes: decryptedData, encoding: .utf8)!
-                )
+                }
+                catch let SafeStore.SafeError.restoreFailed(message) {
+                    completionHandler(SafeError.restoreFailed(message: message))
+                    
+                    if let decryptedData {
+                        // Save decrypted backup data into application documents folder, for analyzing failures
+                        _ = FileUtility.write(
+                            fileURL: FileUtility.appDocumentsDirectory?
+                                .appendingPathComponent("safe-backup.json"),
+                            text: String(bytes: decryptedData, encoding: .utf8)!
+                        )
+                    }
+                }
+                catch {
+                    completionHandler(
+                        SafeError
+                            .restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found"))
+                    )
+                }
             }
-        }
-        catch {
-            completionHandler(
-                SafeError
-                    .restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found"))
-            )
-        }
+        )
     }
     
     @objc func initTrigger() {

@@ -200,7 +200,8 @@ import ThreemaFramework
                     manager
                         .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
 
-                    notificationManager.updateUnreadMessagesCount()
+                    self.notificationManager.updateUnreadMessagesCount()
+                    
                     seal(true)
                     return
                 }
@@ -208,10 +209,12 @@ import ThreemaFramework
                 // Start timed user notification, will be removed on stage final anyway
                 manager
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
-                    .done { _ in
-                        PendingUserNotificationManager.pendingQueue.sync {
-                            self.notificationManager.updateUnreadMessagesCount()
-                            seal(false)
+                    .done { started in
+                        if !started {
+                            PendingUserNotificationManager.pendingQueue.sync {
+                                self.notificationManager.updateUnreadMessagesCount()
+                                seal(false)
+                            }
                         }
                     }
             }

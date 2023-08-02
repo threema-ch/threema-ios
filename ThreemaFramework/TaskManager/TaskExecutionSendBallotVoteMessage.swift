@@ -27,14 +27,15 @@ import PromiseKit
 /// not my identity.
 ///
 /// Additionally my profile picture will be send to message receiver if is necessary.
-class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendBallotVoteMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return self.isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             Promise { seal in
@@ -45,7 +46,7 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
 
                 self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                     guard let conversation = self.getConversation(task) else {
-                        seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                        seal.reject(TaskExecutionError.createAbstractMessageFailed)
                         return
                     }
                     
@@ -109,7 +110,7 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
                                     self.frameworkInjector.myIdentityStore.identity,
                                     member
                                 ) else {
-                                    seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                                    seal.reject(TaskExecutionError.createAbstractMessageFailed)
                                     return
                                 }
 
@@ -153,7 +154,7 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
                             contactIdentity
                         )
                         else {
-                            seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                            seal.reject(TaskExecutionError.createAbstractMessageFailed)
                             return
                         }
 

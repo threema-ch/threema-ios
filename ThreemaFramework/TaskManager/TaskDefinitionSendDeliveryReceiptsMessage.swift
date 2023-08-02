@@ -19,8 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
-@objc class TaskDefinitionSendDeliveryReceiptsMessage: TaskDefinitionSendMessage {
+final class TaskDefinitionSendDeliveryReceiptsMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -50,9 +51,11 @@ import Foundation
 
     let fromIdentity: ThreemaIdentity
     let toIdentity: ThreemaIdentity
-    let receiptType: UInt8
+    let receiptType: ReceiptType
+    private let receiptTypeValue: UInt8
     let receiptMessageIDs: [Data]
     let receiptReadDates: [Date]
+    let excludeFromSending: [Data]
 
     private enum CodingKeys: String, CodingKey {
         case fromIdentity
@@ -60,20 +63,28 @@ import Foundation
         case receiptType
         case receiptMessageIDs
         case receiptReadDates
+        case excludeFromSending
+    }
+
+    private enum CodingError: Error {
+        case unknownReceiptType
     }
 
     @objc init(
         fromIdentity: ThreemaIdentity,
         toIdentity: ThreemaIdentity,
-        receiptType: UInt8,
+        receiptType: ReceiptType,
         receiptMessageIDs: [Data],
-        receiptReadDates: [Date]
+        receiptReadDates: [Date],
+        excludeFromSending: [Data]
     ) {
         self.fromIdentity = fromIdentity
         self.toIdentity = toIdentity
         self.receiptType = receiptType
+        self.receiptTypeValue = receiptType.rawValue
         self.receiptMessageIDs = receiptMessageIDs
         self.receiptReadDates = receiptReadDates
+        self.excludeFromSending = excludeFromSending
 
         super.init(sendContactProfilePicture: false)
     }
@@ -82,23 +93,33 @@ import Foundation
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.fromIdentity = try container.decode(String.self, forKey: .fromIdentity)
         self.toIdentity = try container.decode(String.self, forKey: .toIdentity)
-        self.receiptType = try container.decode(UInt8.self, forKey: .receiptType)
+        self.receiptTypeValue = try container.decode(UInt8.self, forKey: .receiptType)
+        self.receiptType = try TaskDefinitionSendDeliveryReceiptsMessage.receiptType(rawValue: receiptTypeValue)
         self.receiptMessageIDs = try container.decode([Data].self, forKey: .receiptMessageIDs)
         self.receiptReadDates = try container.decode([Date].self, forKey: .receiptReadDates)
+        self.excludeFromSending = try container.decode([Data].self, forKey: .excludeFromSending)
 
-        let superdecoder = try container.superDecoder()
-        try super.init(from: superdecoder)
+        let superDecoder = try container.superDecoder()
+        try super.init(from: superDecoder)
     }
 
     override func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(fromIdentity, forKey: .fromIdentity)
         try container.encode(toIdentity, forKey: .toIdentity)
-        try container.encode(receiptType, forKey: .receiptType)
+        try container.encode(receiptTypeValue, forKey: .receiptType)
         try container.encode(receiptMessageIDs, forKey: .receiptMessageIDs)
         try container.encode(receiptReadDates, forKey: .receiptReadDates)
+        try container.encode(excludeFromSending, forKey: .excludeFromSending)
 
-        let superencoder = container.superEncoder()
-        try super.encode(to: superencoder)
+        let superEncoder = container.superEncoder()
+        try super.encode(to: superEncoder)
+    }
+
+    private class func receiptType(rawValue: UInt8) throws -> ReceiptType {
+        guard let type = ReceiptType(rawValue: rawValue) else {
+            throw CodingError.unknownReceiptType
+        }
+        return type
     }
 }

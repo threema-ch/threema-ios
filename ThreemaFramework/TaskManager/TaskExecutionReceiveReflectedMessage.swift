@@ -23,9 +23,9 @@ import Foundation
 import PromiseKit
 
 /// Process and ack incoming (reflected) message from mediator server.
-class TaskExecutionReceiveReflectedMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionReceiveReflectedMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
-        guard let task = taskDefinition as? TaskDefinitionReceiveReflectedMessage, task.message != nil else {
+        guard let task = taskDefinition as? TaskDefinitionReceiveReflectedMessage, task.reflectedEnvelope != nil else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
         }
 
@@ -35,8 +35,8 @@ class TaskExecutionReceiveReflectedMessage: TaskExecution, TaskExecutionProtocol
         )
 
         return mediatorReflectedProcessor.process(
-            envelope: task.message,
-            timestamp: task.mediatorTimestamp,
+            reflectedEnvelope: task.reflectedEnvelope,
+            reflectedAt: task.reflectedAt,
             receivedAfterInitialQueueSend: task.receivedAfterInitialQueueSend,
             maxBytesToDecrypt: Int(task.maxBytesToDecrypt),
             timeoutDownloadThumbnail: Int(task.timeoutDownloadThumbnail)

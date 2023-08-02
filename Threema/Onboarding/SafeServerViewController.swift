@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import MBProgressHUD
 import ThreemaFramework
 import UIKit
 
@@ -93,7 +94,7 @@ class SafeServerViewController: IDCreationPageViewController {
         true
     }
     
-    func validateServer() -> Bool {
+    func validateServer(completion: @escaping (Bool) -> Void) {
         if serverSwitch.isOn {
             customServer = nil
             server = nil
@@ -122,23 +123,33 @@ class SafeServerViewController: IDCreationPageViewController {
                     safeStore: safeStore,
                     safeApiService: SafeApiService()
                 )
-                let result = safeManager.testServer(serverURL: customServerURL)
-                if let errorMessage = result.errorMessage {
-                    let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                    alert.showAlert(errorMessage, title: BundleUtil.localizedString(forKey: "safe_test_server"))
-                    return false
+                DispatchQueue.main.async {
+                    MBProgressHUD.showAdded(to: self.view, animated: true)
                 }
-                else {
-                    self.customServer = customServer
-                    server = customServerURL.absoluteString
-                    serverUsername = serverUsernameField.text
-                    serverPassword = serverPasswordField.text
-                    maxBackupBytes = result.maxBackupBytes
-                    retentionDays = result.retentionDays
+                safeManager.testServer(serverURL: customServerURL) { errorMessage, maxBackupBytes, retentionDays in
+                    DispatchQueue.main.async {
+                        MBProgressHUD.hide(for: self.view, animated: true)
+                        
+                        if let errorMessage {
+                            let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
+                            alert.showAlert(errorMessage, title: BundleUtil.localizedString(forKey: "safe_test_server"))
+                            completion(false)
+                            return
+                        }
+                        else {
+                            self.customServer = customServer
+                            self.server = customServerURL.absoluteString
+                            self.serverUsername = self.serverUsernameField.text
+                            self.serverPassword = self.serverPasswordField.text
+                            self.maxBackupBytes = maxBackupBytes
+                            self.retentionDays = retentionDays
+                            completion(true)
+                            return
+                        }
+                    }
                 }
             }
         }
-        return true
     }
 }
 
@@ -157,8 +168,10 @@ extension SafeServerViewController: SetupTextFieldDelegate {
         else if sender == serverPasswordField {
             sender.resignFirstResponder()
             
-            if validateServer() {
-                performSegue(withIdentifier: okSegueID!, sender: self)
+            validateServer { success in
+                if success {
+                    self.performSegue(withIdentifier: self.okSegueID!, sender: self)
+                }
             }
         }
     }
@@ -173,9 +186,12 @@ extension SafeServerViewController {
         if sender == cancelButton {
             performSegue(withIdentifier: cancelSegueID!, sender: sender)
         }
-        else if sender == okButton,
-                validateServer() {
-            performSegue(withIdentifier: okSegueID!, sender: sender)
+        else if sender == okButton {
+            validateServer { success in
+                if success {
+                    self.performSegue(withIdentifier: self.okSegueID!, sender: sender)
+                }
+            }
         }
     }
 }

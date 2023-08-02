@@ -47,11 +47,15 @@
     return YES;
 }
 
-#pragma mark - NSCoding
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
-        self.jsonData = [decoder decodeObjectForKey:@"jsonData"];
+        self.jsonData = [decoder decodeObjectOfClass:[NSData class] forKey:@"jsonData"];
     }
     return self;
 }
@@ -59,6 +63,10 @@
 - (void)encodeWithCoder:(NSCoder *)encoder {
     [super encodeWithCoder:encoder];
     [encoder encodeObject:self.jsonData forKey:@"jsonData"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

@@ -87,11 +87,3 @@ struct MultiDeviceWizardView: View {
         }
     }
 }
-
-// MARK: - Preview
-
-struct MultiDeviceWizardView_Previews: PreviewProvider {
-    static var previews: some View {
-        EmptyView()
-    }
-}

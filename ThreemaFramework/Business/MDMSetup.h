@@ -173,8 +173,6 @@ typedef enum : int {
 
 - (void)restoreIDBackupOnCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
 
-- (BOOL)isManaged;
-
 - (nullable NSString *)supportDescriptionString;
 
 - (BOOL)existsMdmKey:(NSString*)mdmKey;

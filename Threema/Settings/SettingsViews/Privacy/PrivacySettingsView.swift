@@ -329,16 +329,7 @@ private struct PickerAndButtonView: View {
     }
     
     private func resetReadReceipts() {
-        let entityManager = EntityManager()
-        
-        guard let contacts = entityManager.entityFetcher.contactsWithCustomReadReceipt() as? [ContactEntity] else {
-            return
-        }
-        entityManager.performSyncBlockAndSafe {
-            for contact in contacts {
-                contact.readReceipt = .default
-            }
-        }
+        ContactStore.shared().resetCustomReadReceipts()
     }
     
     private func resetTypingIndicator() {

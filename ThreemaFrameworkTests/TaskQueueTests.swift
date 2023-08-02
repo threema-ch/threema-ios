@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -55,7 +56,7 @@ class TaskQueueTests: XCTestCase {
         let msg = BoxTextMessage()
         msg.messageID = MockData.generateMessageID()
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg, doOnlyReflect: false, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg, isPersistent: false)
 
         let tq = TaskQueue(
             queueType: .outgoing,
@@ -124,7 +125,7 @@ class TaskQueueTests: XCTestCase {
 
         let expec = expectation(description: "spool")
 
-        let task = TaskDefinitionSendAbstractMessage(message: message, doOnlyReflect: false, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: message, isPersistent: false)
         try? tq.enqueue(task: task) { _, error in
             XCTAssertNil(error)
             DDLog.flushLog()
@@ -139,7 +140,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertTrue(
                 self.ddLoggerMock
                     .exists(
-                        message: "Task <TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> done"
+                        message: "<TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> done"
                     )
             )
         }
@@ -211,14 +212,14 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertTrue(
                     self.ddLoggerMock
                         .exists(
-                            message: "Task <TaskDefinitionReceiveMessage (type: BoxedMessage; id: \(message.messageID.hexString))> failed Error Domain=\(expectedError.domain) Code=\(expectedError.code) \"(null)\""
+                            message: "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: \(message.messageID.hexString))> failed Error Domain=\(expectedError.domain) Code=\(expectedError.code) \"(null)\""
                         )
                 )
                 if task.retry {
                     XCTAssertTrue(
                         self.ddLoggerMock
                             .exists(
-                                message: "Retry of task <TaskDefinitionReceiveMessage (type: BoxedMessage; id: \(message.messageID.hexString))> after execution failing"
+                                message: "Retry of <TaskDefinitionReceiveMessage (type: BoxedMessage; id: \(message.messageID.hexString))> after execution failing"
                             )
                     )
                 }
@@ -226,7 +227,7 @@ class TaskQueueTests: XCTestCase {
                     XCTAssertFalse(
                         self.ddLoggerMock
                             .exists(
-                                message: "Retry of task <TaskDefinitionReceiveMessage (type: BoxedMessage; id: \(message.messageID.hexString))> after execution failing"
+                                message: "Retry of <TaskDefinitionReceiveMessage (type: BoxedMessage; id: \(message.messageID.hexString))> after execution failing"
                             )
                     )
                 }
@@ -264,7 +265,7 @@ class TaskQueueTests: XCTestCase {
 
             let expec = expectation(description: "spool")
 
-            let task = TaskDefinitionSendAbstractMessage(message: message, doOnlyReflect: false, isPersistent: false)
+            let task = TaskDefinitionSendAbstractMessage(message: message, isPersistent: false)
             task.retry = test[0] as! Bool
 
             try? tq.enqueue(task: task) { _, error in
@@ -283,14 +284,14 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertTrue(
                     self.ddLoggerMock
                         .exists(
-                            message: "Task <TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> failed sendMessageFailed(message: \"Contact not found for identity Optional(\\\"\(expectedReceiver)\\\") ((type: text; id: \(message.messageID.hexString)))\")"
+                            message: "<TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> failed sendMessageFailed(message: \"Contact not found for identity Optional(\\\"\(expectedReceiver)\\\") ((type: text; id: \(message.messageID.hexString)))\")"
                         )
                 )
                 if task.retry {
                     XCTAssertTrue(
                         self.ddLoggerMock
                             .exists(
-                                message: "Retry of task <TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> after execution failing"
+                                message: "Retry of <TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> after execution failing"
                             )
                     )
                 }
@@ -298,7 +299,7 @@ class TaskQueueTests: XCTestCase {
                     XCTAssertFalse(
                         self.ddLoggerMock
                             .exists(
-                                message: "Retry of task <TaskDefinitionSendAbstractMessage> after execution failing"
+                                message: "Retry of <TaskDefinitionSendAbstractMessage> after execution failing"
                             )
                     )
                 }
@@ -339,7 +340,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertTrue(
                 self.ddLoggerMock
                     .exists(
-                        message: "Task <TaskDefinitionDeleteContactSync> failed \(TaskExecutionError.noDeviceGroupPathKey)"
+                        message: "<TaskDefinitionDeleteContactSync> failed \(TaskExecutionError.multiDeviceNotRegistered)"
                     )
             )
         }
@@ -354,6 +355,7 @@ class TaskQueueTests: XCTestCase {
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
 
@@ -383,7 +385,7 @@ class TaskQueueTests: XCTestCase {
             
             tq.spool()
 
-            waitForExpectations(timeout: 6) { error in
+            waitForExpectations(timeout: 10) { error in
                 XCTAssertNil(error)
                 XCTAssertEqual(tq.list.count, 1)
                 XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, test[1] as! Int)
@@ -391,13 +393,13 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertTrue(
                     self.ddLoggerMock
                         .exists(
-                            message: "Task <TaskDefinitionDeleteContactSync> failed reflectMessageFailed(message: Optional(\"type: lock\"))"
+                            message: "<TaskDefinitionDeleteContactSync> failed reflectMessageFailed(message: Optional(\"type: lock\"))"
                         )
                 )
                 if task.retry {
                     XCTAssertTrue(
                         self.ddLoggerMock
-                            .exists(message: "Retry of task <TaskDefinitionDeleteContactSync> after execution failing")
+                            .exists(message: "Retry of <TaskDefinitionDeleteContactSync> after execution failing")
                     )
                 }
                 else {
@@ -560,7 +562,7 @@ class TaskQueueTests: XCTestCase {
         // Add TaskDefinitionSendGroupDeliveryReceiptMessage
         let expectedReceiptFromIdentity = "CONTACT1"
         let expectedReceiptToIdentity = "CONTACT2"
-        let expectedReceiptType = UInt8(DELIVERYRECEIPT_MSGREAD)
+        let expectedReceiptType: ReceiptType = .read
         let expectedReceiptMessageIDs = [
             MockData.generateMessageID(),
             MockData.generateMessageID(),
@@ -575,7 +577,8 @@ class TaskQueueTests: XCTestCase {
             toIdentity: expectedReceiptToIdentity,
             receiptType: expectedReceiptType,
             receiptMessageIDs: expectedReceiptMessageIDs,
-            receiptReadDates: expectedReceiptReadDates
+            receiptReadDates: expectedReceiptReadDates,
+            excludeFromSending: [Data]()
         )
 
         try! tq.enqueue(task: taskDeliveryReceipt, completionHandler: nil)
@@ -697,7 +700,7 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskGroupDeletePhoto, completionHandler: nil)
         
         // Add TaskDefinitionSendGroupDeliveryReceiptMessage
-        let expectedGroupReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.acknowledged.rawValue)
+        let expectedGroupReceiptType: ReceiptType = .ack
         let expectedGroupReceiptMessageIDs = [
             MockData.generateMessageID(),
             MockData.generateMessageID(),
@@ -782,11 +785,11 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskReceiveMessage, completionHandler: nil)
 
         // Add TaskDefinitionReceiveReflectedMessage
-        let expectedTimestamp = Date()
+        let expectedReflectedAt = Date()
         let taskReceiveReflectedMessage = TaskDefinitionReceiveReflectedMessage(
             reflectID: MockData.generateReflectID(),
-            message: D2d_Envelope(),
-            mediatorTimestamp: expectedTimestamp,
+            reflectedEnvelope: D2d_Envelope(),
+            reflectedAt: expectedReflectedAt,
             receivedAfterInitialQueueSend: false,
             maxBytesToDecrypt: 20,
             timeoutDownloadThumbnail: 30
@@ -809,7 +812,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(task.syncUserProfile.identityLinks.links, syncUserProfile.identityLinks.links)
             XCTAssertEqual(task.linkMobileNoPending, false)
             XCTAssertEqual(task.linkEmailPending, false)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -826,7 +829,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(task.syncSettings.callConnectionPolicy, .requireRelay)
             XCTAssertEqual(task.syncSettings.blockedIdentities.identities, ["ECHOECHO"])
             XCTAssertEqual(task.syncSettings.excludeFromSyncIdentities.identities, ["ECHOECHO"])
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -846,9 +849,9 @@ class TaskQueueTests: XCTestCase {
 
         if let task = tq.list[18].taskDefinition as? TaskDefinitionReceiveReflectedMessage {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
-            XCTAssertNotNil(task.message)
+            XCTAssertNotNil(task.reflectedEnvelope)
             XCTAssertEqual(task.receivedAfterInitialQueueSend, false)
-            XCTAssertEqual(task.mediatorTimestamp, expectedTimestamp)
+            XCTAssertEqual(task.reflectedAt, expectedReflectedAt)
             XCTAssertEqual(task.maxBytesToDecrypt, 20)
             XCTAssertEqual(task.timeoutDownloadThumbnail, 30)
             XCTAssertFalse(task.retry)
@@ -883,7 +886,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedGroupDissolveGroupCreator, task.groupCreatorIdentity)
             XCTAssertEqual(1, task.toMembers.count)
             XCTAssertTrue(task.toMembers.contains(expectedGroupDissolveToMember))
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -893,7 +896,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedAbstractMessageID.elementsEqual(task.message.messageID))
             XCTAssertEqual(expectedAbstractText, (task.message as! BoxTextMessage).text)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -902,7 +905,7 @@ class TaskQueueTests: XCTestCase {
         if let task = tq.list[2].taskDefinition as? TaskDefinitionSendBallotVoteMessage {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedBallotVoteBallotID.elementsEqual(task.ballotID))
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -916,7 +919,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedBaseAllGroupMembers, try XCTUnwrap(task.allGroupMembers))
             XCTAssertEqual(expectedBaseIsNoteGroup, task.isNoteGroup)
             XCTAssertTrue(expectedBaseMessageID.elementsEqual(task.messageID))
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -929,7 +932,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedReceiptType, task.receiptType)
             XCTAssertEqual(expectedReceiptMessageIDs, task.receiptMessageIDs)
             XCTAssertEqual(expectedReceiptReadDates, task.receiptReadDates)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -939,7 +942,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedLocationMessageID.elementsEqual(task.messageID))
             XCTAssertEqual(expectedLocationPoiAddress, task.poiAddress)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -948,7 +951,7 @@ class TaskQueueTests: XCTestCase {
         if let task = tq.list[6].taskDefinition as? TaskDefinitionSendVideoMessage {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedVideoMessageID.elementsEqual(task.messageID))
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -957,7 +960,7 @@ class TaskQueueTests: XCTestCase {
         if let task = tq.list[7].taskDefinition as? TaskDefinitionSendGroupCreateMessage {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(Set(expectedMembers), task.members)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -968,7 +971,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
             XCTAssertEqual(0, task.hiddenContacts.count)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -979,7 +982,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
             XCTAssertEqual(expectedGroupRenameName, task.name)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -992,7 +995,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedGroupSetPhotoSize, task.size)
             XCTAssertTrue(expectedGroupSetPhotoBlobID.elementsEqual(taskGroupSetPhoto.blobID))
             XCTAssertTrue(expectedGroupSetPhotoEncryptionKey.elementsEqual(taskGroupSetPhoto.encryptionKey))
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -1002,7 +1005,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()
@@ -1014,7 +1017,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedToMembers, task.toMembers)
             XCTAssertEqual(expectedGroupReceiptType, task.receiptType)
             XCTAssertEqual(expectedGroupReceiptMessageIDs, task.receiptMessageIDs)
-            XCTAssertFalse(task.retry)
+            XCTAssertTrue(task.retry)
         }
         else {
             XCTFail()

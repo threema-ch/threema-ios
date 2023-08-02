@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 public enum TaskExecutionTransactionError: Error {
     case lockTimeout
@@ -29,9 +30,12 @@ public enum TaskExecutionTransactionError: Error {
     case badResponse
     case preconditionFailed
     case localTransactionAlreadyInProgress
-    case blobUploadFailed
-    case blobEncryptFailed
     case shouldSkip
+    case blobDataEncryptionFailed
+    case blobIDDecodeFailed
+    case blobIDMismatch
+    case blobIDMissing
+    case blobUploadURLMissing
 }
 
 class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
@@ -51,11 +55,11 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             guard doReflect else {
-                throw TaskExecutionError.noDeviceGroupPathKey
+                throw TaskExecutionError.multiDeviceNotRegistered
             }
 
             self.frameworkInjector.serverConnector.registerTaskExecutionTransactionDelegate(delegate: self)
@@ -192,7 +196,7 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
 extension TaskExecutionTransaction: TaskExecutionTransactionDelegate {
     func transactionResponse(_ messageType: UInt8, reason: Data?) {
         var scope: D2d_TransactionScope.Scope?
-        if let reasonInt: Int = reason?.convert() {
+        if let reasonInt: Int = reason?.paddedLittleEndian() {
             scope = D2d_TransactionScope.Scope(rawValue: reasonInt)
         }
         if let type = MediatorMessageProtocol.MediatorMessageType(rawValue: messageType) {

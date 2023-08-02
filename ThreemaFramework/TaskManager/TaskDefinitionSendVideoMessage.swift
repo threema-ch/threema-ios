@@ -20,7 +20,7 @@
 
 import Foundation
 
-@objc class TaskDefinitionSendVideoMessage: TaskDefinitionSendBaseMessage {
+@objc final class TaskDefinitionSendVideoMessage: TaskDefinitionSendBaseMessage {
     override var description: String {
         "<\(type(of: self))>"
     }

@@ -56,6 +56,10 @@
     return YES;
 }
 
+- (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    return kUnspecified;
+}
+
 - (NSData *)quotedBody {
     NSString *quotedText = self.quotedMessageId != nil ? [QuoteUtil generateText:self.text quotedId:self.quotedMessageId] : self.text;
 
@@ -65,12 +69,12 @@
     return body;
 }
 
-#pragma mark - NSCoding
+#pragma mark - NSSecureCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {
     if (self = [super initWithCoder:decoder]) {
-        self.text = [decoder decodeObjectForKey:@"text"];
-        self.quotedMessageId = [decoder decodeObjectForKey:@"quotedMessageId"];
+        self.text = [decoder decodeObjectOfClass:[NSString class] forKey:@"text"];
+        self.quotedMessageId = [decoder decodeObjectOfClass:[NSData class] forKey:@"quotedMessageId"];
     }
     return self;
 }
@@ -79,6 +83,10 @@
     [super encodeWithCoder:encoder];
     [encoder encodeObject:self.text forKey:@"text"];
     [encoder encodeObject:self.quotedMessageId forKey:@"quotedMessageId"];
+}
+
++ (BOOL)supportsSecureCoding {
+    return YES;
 }
 
 @end

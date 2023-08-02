@@ -42,9 +42,10 @@ import Foundation
     }
 }
 
-class TaskQueue {
+final class TaskQueue {
     let queueType: TaskQueueType
     let supportedTypes: [TaskDefinition.Type]
+    static let retriesOfFailedTasks = 1
     private let frameworkInjector: FrameworkInjectorProtocol
     private let renewFrameworkInjector: Bool
 
@@ -123,6 +124,9 @@ class TaskQueue {
         dispatchQueue.sync {
             if let item = queue.dequeue(), item.taskDefinition.isPersistent {
                 save()
+
+                DDLogWarn("\(item.taskDefinition) flushed")
+                item.completionHandler?(item.taskDefinition, TaskManagerError.flushedTask)
             }
         }
     }
@@ -139,14 +143,14 @@ class TaskQueue {
             queueItem = queue.peek()
         }
         
-        taskScheduleQueue.sync {
+        taskScheduleQueue.async {
             guard let item = queueItem else {
-                DDLogNotice("Task queue (\(queueType.name())) is empty")
+                DDLogNotice("Task queue (\(self.queueType.name())) is empty")
                 return
             }
             
             if item.taskDefinition.state == .pending || item.taskDefinition.state == .interrupted {
-                DDLogNotice("Task \(item.taskDefinition) state '\(item.taskDefinition.state)' execute")
+                DDLogNotice("\(item.taskDefinition) state '\(item.taskDefinition.state)' execute")
                 
                 item.taskDefinition.state = .executing
                 
@@ -157,8 +161,8 @@ class TaskQueue {
                 //   `TaskDefinitionReceiveReflectedMessage`! Must be a new instance because when is running in
                 //   Notification Extension process (see `NotificationService`) the database context is reseted and than
                 //   the `EntityManager` could be invalid.
-                let injector: FrameworkInjectorProtocol = renewFrameworkInjector ? BusinessInjector() :
-                    frameworkInjector
+                let injector: FrameworkInjectorProtocol = self.renewFrameworkInjector ? BusinessInjector() :
+                    self.frameworkInjector
                 
                 item.taskDefinition.create(frameworkInjector: injector).execute()
                     .done {
@@ -184,39 +188,39 @@ class TaskQueue {
                         }
                         else if (error as NSError).code == kPendingGroupMessageErrorCode {
                             // Means processed message is pending group message
-                            DDLogWarn("Task \(item.taskDefinition) group not found for incoming message: \(error)")
+                            DDLogWarn("\(item.taskDefinition) group not found for incoming message: \(error)")
                             self.done(item: item)
                         }
                         else if case MediatorReflectedProcessorError.messageWontProcessed(message: _) = error,
                                 let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                            DDLogWarn("Task \(item.taskDefinition) incoming message wont processed: \(error)")
+                            DDLogWarn("\(item.taskDefinition) incoming message wont processed: \(error)")
                             try? self.ackReflectedMessage(reflectID: task.reflectID)
                             
                             self.done(item: item)
                         }
                         else if case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage = error {
-                            DDLogWarn("Task \(item.taskDefinition) incoming VoIP message wont not ack: \(error)")
+                            DDLogWarn("\(item.taskDefinition) incoming VoIP message wont not ack: \(error)")
                             self.done(item: item)
                         }
-                        else if case TaskExecutionError.createAbsractMessageFailed = error {
-                            DDLogError("Task \(item.taskDefinition) outgoing message failed: \(error)")
+                        else if case TaskExecutionError.createAbstractMessageFailed = error {
+                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
                             self.done(item: item)
                         }
                         else if case TaskExecutionError.messageReceiverBlockedOrUnknown = error {
-                            DDLogError("Task \(item.taskDefinition) outgoing message failed: \(error)")
+                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
                             self.done(item: item)
                         }
                         else if let transactionError = error as? TaskExecutionTransactionError,
                                 transactionError == .shouldSkip {
-                            DDLogNotice("Task \(item.taskDefinition) skipped")
+                            DDLogNotice("\(item.taskDefinition) skipped")
                             self.done(item: item)
                         }
                         else if case TaskExecutionError.invalidContact(message: _) = error {
-                            DDLogNotice("Task \(item.taskDefinition) skipped. As the contact is invalid: \(error)")
+                            DDLogNotice("\(item.taskDefinition) skipped. As the contact is invalid: \(error)")
                             self.done(item: item)
                         }
                         else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                            DDLogWarn("Task \(item.taskDefinition) discard incoming reflected message: \(error)")
+                            DDLogWarn("\(item.taskDefinition) discard incoming reflected message: \(error)")
                             try? self.ackReflectedMessage(reflectID: task.reflectID)
                             
                             self.done(item: item)
@@ -227,7 +231,7 @@ class TaskQueue {
                     }
             }
             else {
-                DDLogNotice("Task queue (\(queueType.name())) task is still running")
+                DDLogNotice("Task queue (\(self.queueType.name())) task is still running")
             }
         }
     }
@@ -237,20 +241,25 @@ class TaskQueue {
             return nil
         }
         
-        let archiver = NSKeyedArchiver(requiringSecureCoding: false)
-        
-        // Encode type of each item
-        let types: [String] = queue.list.map(\.taskDefinition.className)
-        archiver.encodeRootObject(types)
-        
-        // Encode each task definition
-        var i = 0
-        queue.list.forEach { task in
-            if task.taskDefinition.isPersistent {
-                try? archiver.encodeEncodable(task.taskDefinition, forKey: "\(task.taskDefinition.className)_\(i)")
-            }
+        let archiver = NSKeyedArchiver(requiringSecureCoding: true)
 
-            i += 1
+        do {
+            // Encode type of each item
+            let types: [String] = queue.list.map(\.taskDefinition.className)
+            try archiver.encodeEncodable(types, forKey: "types")
+
+            // Encode each task definition
+            var i = 0
+            queue.list.forEach { task in
+                if task.taskDefinition.isPersistent {
+                    try? archiver.encodeEncodable(task.taskDefinition, forKey: "\(task.taskDefinition.className)_\(i)")
+                }
+
+                i += 1
+            }
+        }
+        catch {
+            DDLogError("Encoding of tasks failed")
         }
         
         archiver.finishEncoding()
@@ -259,99 +268,105 @@ class TaskQueue {
     
     func decode(_ data: Data) {
         do {
-            let unarchiver = try NSKeyedUnarchiver(forReadingWith: data)
-            
+            let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+
             // Decode type of items
-            if let types: [String] = try unarchiver.decodeTopLevelObject() as? [String] {
+            if let types = try unarchiver.decodeTopLevelDecodable([String].self, forKey: "types") {
                 
                 // Decode task definition items
                 var i = 0
-                types.forEach { className in
+                for className in types {
                     var taskDefinition: TaskDefinition?
-                    switch "\(className).Type" {
-                    case String(describing: type(of: TaskDefinitionGroupDissolve.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionGroupDissolve.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendAbstractMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendAbstractMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendBallotVoteMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendBallotVoteMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendBaseMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendBaseMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendDeliveryReceiptsMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendDeliveryReceiptsMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendLocationMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendLocationMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendVideoMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendVideoMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendGroupCreateMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendGroupCreateMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendGroupLeaveMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendGroupLeaveMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendGroupRenameMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendGroupRenameMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendGroupSetPhotoMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendGroupSetPhotoMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendGroupDeletePhotoMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendGroupDeletePhotoMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionSendGroupDeliveryReceiptsMessage.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionUpdateContactSync.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionUpdateContactSync.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    case String(describing: type(of: TaskDefinitionDeleteContactSync.self)):
-                        taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionDeleteContactSync.self,
-                            forKey: "\(className)_\(i)"
-                        )
-                    default:
-                        break
+
+                    do {
+                        switch "\(className).Type" {
+                        case String(describing: type(of: TaskDefinitionGroupDissolve.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionGroupDissolve.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendAbstractMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendAbstractMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendBallotVoteMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendBallotVoteMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendBaseMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendBaseMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendDeliveryReceiptsMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendDeliveryReceiptsMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendLocationMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendLocationMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendVideoMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendVideoMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendGroupCreateMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendGroupCreateMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendGroupLeaveMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendGroupLeaveMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendGroupRenameMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendGroupRenameMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendGroupSetPhotoMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendGroupSetPhotoMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendGroupDeletePhotoMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendGroupDeletePhotoMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendGroupDeliveryReceiptsMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionUpdateContactSync.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionUpdateContactSync.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionDeleteContactSync.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionDeleteContactSync.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        default:
+                            DDLogError("Can't decode unknown task type \(className)")
+                        }
                     }
+                    catch {
+                        DDLogError("Decoding of \(className) failed: \(error)")
+                    }
+
                     i += 1
-                    
-                    taskDefinition?.state = .interrupted
-                    
+
                     if let taskDefinition {
+                        taskDefinition.state = .interrupted
                         queue.enqueue(QueueItem(taskDefinition: taskDefinition, completionHandler: nil))
                     }
                 }
@@ -373,14 +388,15 @@ class TaskQueue {
     /// - Parameter item: Queue item
     private func done(item: QueueItem) {
         dispatchQueue.sync {
-            DDLogNotice("Task \(item.taskDefinition) done")
+            DDLogNotice("\(item.taskDefinition) done")
 
             guard item === queue.peek() else {
-                DDLogError("Task \(item.taskDefinition) wrong spooling order")
+                DDLogError("\(item.taskDefinition) wrong spooling order")
                 return
             }
 
             if item.taskDefinition.state != .pending {
+                DDLogVerbose("\(item.taskDefinition) dequeue")
                 _ = queue.dequeue()
                 if item.taskDefinition.isPersistent {
                     save()
@@ -403,25 +419,34 @@ class TaskQueue {
         var retry = false
 
         dispatchQueue.sync {
-            DDLogError("Task \(item.taskDefinition) failed \(error)")
+            DDLogError("\(item.taskDefinition) failed \(error)")
 
             retry = false
 
             guard item === queue.peek() else {
-                DDLogError("Task \(item.taskDefinition) wrong spooling order")
+                DDLogError("\(item.taskDefinition) wrong spooling order")
                 return
             }
 
             if item.taskDefinition.state != .pending {
                 item.taskDefinition.state = .pending
 
-                if item.taskDefinition.retry, item.taskDefinition.retryCount == 0 {
-                    DDLogNotice("Retry of task \(item.taskDefinition) after execution failing")
-                    item.taskDefinition.retryCount += 1
+                if item.taskDefinition.retry, item.taskDefinition.retryCount < TaskQueue.retriesOfFailedTasks {
+                    if case TaskExecutionError.reflectMessageTimeout(message: _) = error {
+                        DDLogNotice("Retry of \(item.taskDefinition) after reflecting timeout")
+                    }
+                    else if case TaskExecutionError.sendMessageTimeout(message: _) = error {
+                        DDLogNotice("Retry of \(item.taskDefinition) after sending timeout")
+                    }
+                    else {
+                        DDLogNotice("Retry of \(item.taskDefinition) after execution failing")
+                        item.taskDefinition.retryCount += 1
+                    }
                     retry = true
                 }
                 else if queueType == .incoming {
                     // Remove/chancel task processing of failed incoming message, try again with next server connection!
+                    DDLogVerbose("\(item.taskDefinition) dequeue")
                     _ = queue.dequeue()
                 }
 
@@ -455,7 +480,7 @@ class TaskQueue {
     }
 
     private func ackReflectedMessage(reflectID: Data) throws {
-        if frameworkInjector.serverConnector.isMultiDeviceActivated {
+        if frameworkInjector.userSettings.enableMultiDevice {
             if !frameworkInjector.serverConnector
                 .reflectMessage(
                     frameworkInjector.mediatorMessageProtocol
@@ -465,7 +490,7 @@ class TaskQueue {
             }
         }
         else {
-            throw TaskExecutionError.noDeviceGroupPathKey
+            throw TaskExecutionError.multiDeviceNotRegistered
         }
     }
 }

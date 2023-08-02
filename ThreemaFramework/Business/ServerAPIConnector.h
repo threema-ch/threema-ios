@@ -70,6 +70,8 @@ enum IdentityState {
 
 - (void)obtainTurnServersWithStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError;
 
+- (void)obtainSFUCredentials:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError;
+
 - (void)obtainAuthTokenOnCompletion:(void(^)(NSString *authToken))onCompletion onError:(void(^)(NSError *error))onError;
 
 @end

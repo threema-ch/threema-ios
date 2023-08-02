@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 import SwiftProtobuf
+import ThreemaProtocols
 
 enum MediatorReflectedProcessorError: Error {
     case contactNotFound(identity: String)
@@ -50,8 +51,8 @@ enum MediatorReflectedProcessorError: Error {
 
 protocol MediatorReflectedProcessorProtocol {
     func process(
-        envelope: D2d_Envelope,
-        timestamp: Date,
+        reflectedEnvelope: D2d_Envelope,
+        reflectedAt: Date,
         receivedAfterInitialQueueSend: Bool,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
@@ -76,22 +77,22 @@ protocol MediatorReflectedProcessorProtocol {
     
     /// Process reflected message, decode and store message into DB.
     /// - Parameters:
-    ///   - envelope: Reflected data
-    ///   - timestamp: Date of reflected message given Mediator Server
+    ///   - reflectedEnvelope: Reflected data
+    ///   - reflectedAt: Date of reflected message given Mediator Server
     ///   - receivedAfterInitialQueueSend: True indicates the message was received before mediator server message queue
-    ///                     is dry (abstract message will be marked with this flag, to control in app notification)
+    ///                        is dry (abstract message will be marked with this flag, to control in app notification)
     ///   - maxBytesToDecrypt: When e.g. downloaded blob within Notification Extention, then only limited memory
-    ///                     available to decrypt data
+    ///                        available to decrypt data
     ///   - timeoutDownloadThumbnail: Timeout for downloading blob (0 = infinity)
     func process(
-        envelope: D2d_Envelope,
-        timestamp: Date,
+        reflectedEnvelope: D2d_Envelope,
+        reflectedAt: Date,
         receivedAfterInitialQueueSend: Bool,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void> {
 
-        switch envelope.content {
+        switch reflectedEnvelope.content {
         case .distributionListSync:
             DDLogWarn("Distribution list sync not implemented")
             return Promise()
@@ -108,7 +109,7 @@ protocol MediatorReflectedProcessorProtocol {
             return processor.process(incomingMessageUpdate: incomingMessageUpdate)
         case let .outgoingMessageUpdate(outgoingMessageUpdate):
             let processor = MediatorReflectedOutgoingMessageUpdateProcessor(frameworkInjector: frameworkInjector)
-            return processor.process(outgoingMessageUpdate: outgoingMessageUpdate)
+            return processor.process(outgoingMessageUpdate: outgoingMessageUpdate, reflectedAt: reflectedAt)
         case let .outgoingMessage(outgoingMessage):
             return Promise<AbstractMessage> { seal in
                 let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjector)
@@ -122,15 +123,23 @@ protocol MediatorReflectedProcessorProtocol {
                         messageProcessorDelegate: self.messageProcessorDelegate
                     ),
                     messageProcessorDelegate: self.messageProcessorDelegate,
-                    timestamp: timestamp,
+                    reflectedAt: reflectedAt,
                     maxBytesToDecrypt: maxBytesToDecrypt,
                     timeoutDownloadThumbnail: timeoutDownloadThumbnail
                 )
                 return try processor.process(outgoingMessage: outgoingMessage, abstractMessage: abstractMessage)
+                    .then {
+                        self.frameworkInjector.nonceGuard.processed(nonces: outgoingMessage.nonces)
+                    }
             }
 
         case let .incomingMessage(incomingMessage):
             return Promise<AbstractMessage> { seal in
+                guard !frameworkInjector.nonceGuard.isProcessed(nonce: incomingMessage.nonce) else {
+                    throw MediatorReflectedProcessorError
+                        .messageWontProcessed(message: "Message nonce already processed")
+                }
+
                 let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjector)
                 try seal.fulfill(
                     decoder.decode(
@@ -147,12 +156,15 @@ protocol MediatorReflectedProcessorProtocol {
                         messageProcessorDelegate: self.messageProcessorDelegate
                     ),
                     messageProcessorDelegate: self.messageProcessorDelegate,
-                    timestamp: timestamp,
+                    reflectedAt: reflectedAt,
                     maxBytesToDecrypt: maxBytesToDecrypt,
                     timeoutDownloadThumbnail: timeoutDownloadThumbnail
                 )
                 abstractMessage.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
                 return try processor.process(incomingMessage: incomingMessage, abstractMessage: abstractMessage)
+                    .then {
+                        self.frameworkInjector.nonceGuard.processed(nonce: incomingMessage.nonce)
+                    }
             }
         case let .userProfileSync(userProfileSync):
             let processor = MediatorReflectedUserProfileSyncProcessor(

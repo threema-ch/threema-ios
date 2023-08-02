@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 @testable import ThreemaFramework
 
 class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
@@ -130,7 +131,8 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         body: Data?,
         messageID: UInt64,
         senderIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonce: Data
     ) -> D2d_Envelope {
         D2d_Envelope()
     }
@@ -150,7 +152,8 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         messageID: UInt64,
         groupID: UInt64,
         groupCreatorIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonces: [Data]
     ) -> D2d_Envelope {
         D2d_Envelope()
     }
@@ -160,14 +163,16 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         body: Data?,
         messageID: UInt64,
         receiverIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonce: Data
     ) -> D2d_Envelope {
         mmp.getEnvelopeForOutgoingMessage(
             type: type,
             body: body,
             messageID: messageID,
             receiverIdentity: receiverIdentity,
-            createdAt: createdAt
+            createdAt: createdAt,
+            nonce: nonce
         )
     }
 

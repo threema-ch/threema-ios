@@ -63,6 +63,7 @@
 "copy" = "コピー";
 "save" = "保存";
 "download" = "ダウンロード";
+"retry" = "再試行";
 "share" = "共有";
 "details" = "詳細";
 "acknowledge" = "同意";
@@ -503,8 +504,8 @@
 "forward_security_none" = "なし";
 "forward_security_2dh" = "一方向";
 "forward_security_4dh" = "完了";
-"forward_security_clear_sessions" = "すべてのセッションを消去";
-"forward_security_explainer_footer" = "PFS（Perfect Forward Secrecy）は、長期暗号鍵が漏洩した場合でも、記録された通信が遡って復号されないように保護する機能です。\nこのオプションは、双方のアプリがPFSをサポートしている場合に有効にすることができます。";
+"forward_security_clear_sessions" = "この連絡先に対してPerfect Forward Secrecyをリセットする";
+"forward_security_explainer_footer" = "この操作はThreemaのサポートチームが指示した場合のみ実行してください。";
 "md_wizard_pfs_warning" = "マルチデバイスプレビューを有効にすると、すべての連絡先に対してPFS（Perfect Forward Secrecy）が無効になります。";
 "md_wizard_disable_pfs_confirm" = "PFS（Perfect Forward Secrecy）を無効にする";
 
@@ -763,6 +764,11 @@
 "call_threema_cellular_instead_of_wifi_title" = "モバイル回線経由での通話";
 "call_threema_cellular_instead_of_wifi_text" = "警告: この通話は、モバイルデータ通信で行われます。";
 
+// Group Calls
+"group_call_join_button_title" = "参加";
+"group_call_open_button_title" = "開く";
+"group_call_participants_title" = "参加者：%@";
+
 /* Privacy Policy */
 "privacy_policy_about" = "Threemaは、他のどのメッセンジャーよりも厳格にあなたのプライバシーを保護します。詳しくはプライバシーポリシー（英語）をご覧ください。";
 "privacy_policy_about_work" = "%@は、他のどのメッセンジャーよりも厳格にあなたのプライバシーを保護します。詳しくはプライバシーポリシー(英語)をご覧ください。";
@@ -966,6 +972,7 @@
 "safe_test_server_invalid_url" = "有効なHTTPSアドレスを入力してください。";
 "safe_restore_error" = "Threema Safeバックアップの復元に失敗しました、もう一度お試しください。";
 "safe_activation_failed" = "バックアップを復元しても、Threema Safeを起動できませんでした。";
+"safe_activation_app_migration_failed_error_message" = "データベースのエラーにより、Threema Safeバックアップを復元できませんでした。";
 
 "password_bad" = "弱いパスワード";
 "password_bad_explain" = "選択したThreema Safeのパスワードは安全ではなく、攻撃者に簡単に推測されてしまいます。別のパスワードを選択してください。ヒント: 複数の単語を組み合わせたパスワードを使用してください。";
@@ -1222,6 +1229,11 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "受信したメッセージがアプリ外に通知として表示されない場合は、通知を再登録することができます。";
 "settings_advanced_reregister_notifications_label" = "プッシュ通知を再登録";
 
+"settings_advanced_reset_fs_db_label" = "Perfect Forward Secrecyをリセット";
+"settings_advanced_support_settings_header_title" = "サポート設定";
+"settings_advanced_support_settings_footer_title" = "この操作はThreemaのサポートチームが指示した場合のみ実行してください。";
+"settings_advanced_successfully_deleted_fs_sessions_label" = "Forward Securityの状態をリセットしました";
+
 // Sentry
 "sentry_crash_send_title" = "%@ 予期せずに終了";
 "sentry_crash_send_description" = "匿名でクラッシュレポートを提出することができます。原因を詳しく説明することで、根本的な問題を解決することができます。";
@@ -1406,12 +1418,11 @@ iTunesのバックアップを作成してから行ってください。";
 
 "contactoverride_sheetMessage" = "これにより、この特定の連絡先のデフォルト設定が上書きされます。";
 
-/* Multi Decvice */
+/* Multi Device */
 "multi_device_linked_devices_title" = "複数端末プレビュー";
 "multi_device_linked_devices_desc" = "このデバイスの複数端末プレビューを有効または無効にします。";
 "multi_device_linked_devices_refresh" = "引いてリフレッシュ";
 "multi_device_linked_devices_loading_failed" = "端末読み込み失敗：%@";
-"multi_device_linked_devices_failed_to_load_title" = "端末リストの読み込みに失敗しました";
 "multi_device_linked_devices_failed_to_load_message" = "紐付けされた端末を読み込むことができませんでした。インターネット接続を確認して、もう一度やり直してください。";
 "multi_device_linked_devices_this" = "この端末";
 "multi_device_linked_devices_others" = "他の端末";
@@ -1421,12 +1432,68 @@ iTunesのバックアップを作成してから行ってください。";
 "multi_device_linked_devices_removed_devices_message" = "これにより、接続されているすべての端末が削除され、複数端末が無効となります";
 "multi_device_linked_devices_removed_devices_ok" = "無効にする";
 "multi_device_linked_duplicate_contacts_title" = "重複した連絡先";
-"multi_device_linked_duplicate_contacts_desc" = "連絡先が重複しているため、この端末をリンクできません(%@)。サポートまでご連絡ください。";
+"multi_device_linked_devices_failed_to_load_title" = "端末リストの読み込みに失敗しました";
 
 "multi_device_linked_devices_failed_remove_title" = "端末を削除できませんでした";
 "multi_device_linked_devices_failed_remove_message" = "紐付けされた端末を削除できませんでした。もう一度試してください。";
 "multi_device_linked_devices_failed_remove_message_2" = "紐付けされた端末を削除できませんでした。インターネット接続を確認し、もう一度試してください。";
-"multi_device_slot_state_mismatch_alert" = "このデバイスのリンクが解除されたため、現在新しいメッセージを送受信できません。この問題があなたの操作によるものでない場合、技術プレビューの段階で技術的な理由により発生した可能性があります。ご不便をおかけして申し訳ございません。再びリンクするには、「よくある質問」をご覧ください： https://three.ma/faq";
+
+/* New/reused multi device strings */
+"multi_device_unsupported_protocol_version_alert" = "このバージョンのThreemaは非対応となりました（プロトコルのバージョンが古い）。Threemaを使い続けるには最新版をインストールしてください。";
+"multi_device_slot_state_mismatch_alert" = "この端末の紐付けが解除されたため、現在新しいメッセージを送受信できません。紐付け解除があなたの操作によるものでない場合、技術的な理由でベータ版の段階でこのようなことが起こる可能性があることをご了承ください。ご不便をおかけして申し訳ございません。再び紐付けするには、こちらの「よくある質問」の手順に従ってください: https://threema.ch/faq/md_reset";
+
+"multi_device_new_linked_devices_title" = "紐付けされた端末（ベータ）";
+"multi_device_new_linked_devices_add_button" = "端末を追加する";
+"multi_device_new_linked_devices_limitation_info" = "注意：現在、ベータ版と紐付けられるのは1台のコンピュータのみです。他のiPhone/iPadやAndroid端末との紐付けには対応していません。";
+"multi_device_new_linked_devices_failed_to_load" = "紐付けされた端末の読み込みに失敗しました。インターネット接続を確認し、プルダウンして再試行してください。";
+"multi_device_new_linked_devices_no_other_device" = "%@をタップして端末を再び紐付けしてください";
+"multi_device_new_linked_device_remove_all_button" = "紐付けされた端末をすべて削除する";
+"multi_device_new_linked_device_remove_all_title" = "紐付けされた端末をすべて削除しますか？";
+"multi_device_new_linked_device_remove_all_error_title" = "紐付けされた端末すべての削除に失敗しました";
+"multi_device_new_linked_device_error_message" = "インターネット接続を確認して、もう一度やり直してください。";
+"multi_device_new_linked_device_instructions" = "新しい端末を追加する前に、現在のベータ版デスクトップ用%@をダウンロードして開いてください：\n\n%@";
+"multi_device_linked_duplicate_contacts_desc" = "連絡先が重複しているため（%@）、端末を追加できません。サポートまでご連絡ください。";
+"multi_device_new_linked_own_identity_in_contacts_title" = "連絡先としてThreema IDを所有";
+"multi_device_new_linked_own_identity_in_contacts_message" = "連絡先リストにThreema IDの連絡先エントリが含まれています。新しい端末を追加するには、それを削除してください。";
+"multi_device_new_linked_show_contact_button" = "連絡先を表示";
+"multi_device_new_linked_device_list_no_platform_details" = "プラットフォームの詳細がありません";
+"multi_device_new_linked_device_list_last_active" = "前回アクティブ：%@";
+
+"multi_device_join_perfect_forward_secrecy_info" = "端末を紐付けすると、Perfect Forward Secrecyはすべての連絡先で無効になります。\n\nこれは現在のベータ版の制限です。その他の制限については、[こちらのよくある質問]（%@）を参照してください。";
+"multi_device_join_scan_qr_code_title" = "QRコードをスキャンする";
+"multi_device_join_scan_qr_code_info" = "ベータ版の%@に表示されるQRコードを、紐付けした端末でスキャンしてください";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_label" = "カメラビュー";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_hint" = "ベータ版%@が開いている画面にカメラを向けてください。";
+"multi_device_join_connecting" = "接続中…";
+"multi_device_join_unrecoverable_error_title" = "予期せぬエラー";
+"multi_device_join_fatal_scanning_qr_code_error_title" = "QRコードのスキャンでエラー発生";
+"multi_device_join_fatal_camera_access_error_title" = "カメラにアクセスできません";
+"multi_device_join_fatal_no_internet_connection_title" = "インターネット接続がありません";
+"multi_device_join_failed_to_send_data_title" = "データの送信に失敗しました";
+"multi_device_join_fatal_error_message" = "端末の紐付けを再試行してください。この問題が解決しない場合は、サポート（「設定 > サポート」）までご連絡ください。";
+"multi_device_join_unknown_qr_code_title" = "不明なQRコード";
+"multi_device_join_unknown_qr_code_message" = "%@から対応するアプリを使用していることを確認してください。";
+"multi_device_join_incompatible_version_title" = "互換性のないバージョン";
+"multi_device_join_incompatible_version_message" = "両方の端末に最新版の%@をインストールしてください。";
+"multi_device_join_new_device_not_found_title" = "新しい端末が見つかりません";
+"multi_device_join_new_device_not_found_message" = "これはQRコードがすでにスキャンされている場合に発生します。新しい端末でアプリを再起動し、再度お試しください。";
+"multi_device_join_trust_new_device_title" = "新しい端末を信頼する";
+"multi_device_join_trust_new_device_info" = "信頼していることを確認するために、新しい端末に表示されたものと同じ画像を選択してください。";
+"multi_device_join_no_match_button" = "一致しませんか？";
+"multi_device_join_no_match_title" = "画像が一致しませんか？";
+"multi_device_join_no_match_message" = "端末への接続に問題があるようです。新しい端末でアプリを再起動して再度お試しください。";
+"multi_device_join_sending_info" = "新しい端末はあなたの%@プロフィールの独立したコピーを保存し、メッセージはあなたに代わって送受信されます。";
+"multi_device_join_sending_data" = "データを送信中…";
+"multi_device_join_sending_continue_on_new_device" = "新しい端末で続行してください。";
+"multi_device_join_sending_wait" = "送信には数分かかる場合がありますので、しばらくお待ちください。";
+"multi_device_join_linked_successfully_title" = "端末を紐付けしました"; // The same as `md_wizard_success_title`
+"multi_device_join_linked_successfully_info" = "%@が紐付けした端末で使用できるようになりました。（iOSデバイスの電源がオフになっていたり、インターネットに接続されていない場合でも）";
+
+"multi_device_join_failed_app_closed_title" = "新しいデバイスの紐付けに失敗しました";
+"multi_device_join_failed_app_closed_message" = "%@を閉じたため、リンクに失敗しました。再度お試しください。";
+
+"multi_device_linked_id_missing_title" = "紐付けされた端末";
+"multi_device_linked_id_missing_message" = "紐付けされた端末が削除されました。この端末を復元または設定すると、再度紐付けすることができます。";
 
 "myprofile_link_email_phone_footer" = "メールアドレスや電話番号をIDに紐付けることで、”連絡先”アプリにあなたを登録している人は自動的に%@であなたを見つけることができます。";
 "myprofile_link_email_footer" = "メールアドレスとIDを紐付けすることで、他のユーザーが”連絡先”アプリにあなたのメールアドレスを登録していれば、自動的に%@であなたを見つけることができます。";
@@ -1452,6 +1519,11 @@ iTunesのバックアップを作成してから行ってください。";
 
 "settings_threema_web_connected" = "デスクトップ／ウェブ接続済み";
 "settings_threema_web_connectioninfo" = "接続を維持するには、フォアグラウンドで%@を実行した状態で端末をロック解除する必要があります。接続中は、端末は自動的にロックされません。";
+"settings_threema_web_linked_device_section_header" = "複数端末";
+"settings_threema_web_linked_device_section_footer" = "紐付けされた端末は、%@がバックグラウンドであっても、この端末がオフラインであっても使用できます。";
+"settings_threema_web_section_header" = "直接接続された端末";
+"settings_threema_web_multi_device_qr_code_title" = "誤ったQRコード";
+"settings_threema_web_multi_device_qr_code_message" = "「%@」をタップし、次に「%@」をタップすると、このデスクトップアプリにリンクしす。";
 
 "chat_text_view_placeholder" = "新規メッセージ";
 "compose_bar_camera_button_accessibility_label" = "カメラを開く";
@@ -1543,17 +1615,23 @@ iTunesのバックアップを作成してから行ってください。";
 
 "notification_reregister_notifications_successed" = "プッシュ通知を再登録しました";
 
+"notification_audio_muted" = "マイク：オフ";
+"notification_audio_unmuted" = "マイク：オン";
+"notification_video_muted" = "カメラ：オフ";
+"notification_video_unmuted" = "カメラ：オン";
+
 // Forward security status messages
 "forward_security_message_without" = "Perfect Forward Secrecyのないメッセージを受信しました。送信者がPerfect Forward Secrecyを意図的に無効にしていることを確認してください。";
 "forward_security_session_established" = "このトークのメッセージは、Perfect Forward Secrecyによって保護されるようになりました。";
 "forward_security_session_established_rx" = "このトークで受信したメッセージは、Perfect Forward Secrecyによって保護されるようになりました。連絡先の詳細でPerfect Forward Secrecyを有効にすると、送信したメッセージも保護されます。";
 "forward_security_messages_skipped_1" = "前回のメッセージ以降、1件のメッセージが失われました。";
 "forward_security_messages_skipped_x" = "前回のメッセージ以降、%d件のメッセージが失われました。";
-"forward_security_session_reset" = "この連絡先とのPerfect Forward Secrecyセッションがリセットされました。これは、連絡先がデバイスを変更したり、アプリを再インストールした場合に発生する可能性があります。";
+"forward_security_session_reset" = "Perfect Forward Secrecyセッションがリセットされました。これは、チャット相手が端末を変更したり、アプリを再インストールした場合に発生する可能性があります。";
 "forward_security_message_out_of_order" = "メッセージの受信順序がずれたため、復号化できませんでした。";
 "forward_security_status_enabled_outgoing" = "送信メッセージに対してPerfect Forward Secrecyが有効になっています。";
-"forward_security_status_disabled_outgoing" = "送信メッセージに対してPerfect Forward Secrecyが無効になっています。";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "この連絡先は、Perfect Forward Secrecyに対応しないアプリのバージョンを使用するようになりました。今後、メッセージはPFSなしで送信されます。";
+"forward_security_status_disabled_outgoing" = "このチャットに対してPerfect Forward Secrecyが無効になっています。";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "チャット相手のアプリのバージョンが対応していないため、この会話ではPerfect Forward Secrecyが無効になっています。";
+"forward_security_illegal_session_state" = "無効のため、Perfect Forward Secrecyのセッションがリセットされました";
 
 // Profile view
 "accessibility_profile_button_hint_contact" = "連絡先詳細を開く";
@@ -1570,6 +1648,11 @@ iTunesのバックアップを作成してから行ってください。";
 "accessibility_senderDescription_ownMessage" = "あなたの%@";
 "accessibility_senderDescription_otherMessage_group" = "%@からの%@";
 "accessibility_senderDescription_systemMessage" = "情報：%@";
+"accessibility_senderDescription_typing" = "連絡先が入力しています";
+"accessibility_senderDescription_stopped_typing" = "連絡先が入力を止めました";
+"accessibility_senderDescription_contact_typing" = "%@が入力しています";
+"accessibility_senderDescription_contact_stopped_typing" = "%@が入力を止めました";
+
 
 // Message types
 "accessibility_textMessage_description" = "メッセージ";
@@ -1695,3 +1778,18 @@ iTunesのバックアップを作成してから行ってください。";
 "alert_biometrics_changed_title_touch" = "TouchIDの変更の可能性が検出されました";
 "alert_biometrics_changed_title_face" = "FaceIDの変更の可能性が検出されました";
 "alert_biometrics_changed_message" = "生体認証によるThreemaのロック解除を継続するため、Threemaのパスコードを一度入力してください。";
+
+// Group Calls
+"group_call_started_by_contact_system_message" = "%@がグループ通話を開始しました";
+"group_call_started_by_local_system_message" = "あなたがグループ通話を開始しました";
+"group_call_ended_system_message" = "グループ通話が終了しました";
+
+"group_call_start_message_received" = "グループ通話を開始しました";
+
+"group_call_navbar_state_connecting" = "接続中…";
+"group_call_navbar_state_joining" = "参加しています…";
+"group_call_navbar_state_connected" = "接続中";
+
+// App Migration
+"sqldhsessionstore_cannot_downgrade_to" = "（%@）\nバージョン%dからバージョン%dにダウングレードできませんでした";
+"sqldhsessionstore_unknownError" = "移行の試行時に不明なエラーが発生しました：%@";

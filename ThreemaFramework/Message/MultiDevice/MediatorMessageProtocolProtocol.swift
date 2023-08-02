@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 protocol MediatorMessageProtocolProtocol {
 
@@ -70,7 +71,8 @@ protocol MediatorMessageProtocolProtocol {
         body: Data?,
         messageID: UInt64,
         senderIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonce: Data
     ) -> D2d_Envelope
 
     // swiftformat:disable:next all
@@ -82,7 +84,8 @@ protocol MediatorMessageProtocolProtocol {
         body: Data?,
         messageID: UInt64,
         receiverIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonce: Data
     ) -> D2d_Envelope
 
     func getEnvelopeForOutgoingMessage(
@@ -91,7 +94,8 @@ protocol MediatorMessageProtocolProtocol {
         messageID: UInt64,
         groupID: UInt64,
         groupCreatorIdentity: String,
-        createdAt: Date
+        createdAt: Date,
+        nonces: [Data]
     ) -> D2d_Envelope
 
     // swiftformat:disable:next all

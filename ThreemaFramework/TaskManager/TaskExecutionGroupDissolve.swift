@@ -22,7 +22,7 @@ import Foundation
 
 /// Dissolve group reflect group leave message to mediator server is multi device enabled
 /// and send group create messages with empty members to all group members (CSP).
-class TaskExecutionGroupDissolve: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionGroupDissolve: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionGroupDissolve else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -33,7 +33,8 @@ class TaskExecutionGroupDissolve: TaskExecution, TaskExecutionProtocol {
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
             // Reflect group leave message of own group
@@ -44,7 +45,7 @@ class TaskExecutionGroupDissolve: TaskExecution, TaskExecutionProtocol {
             guard groupCreatorIdentity == self.frameworkInjector.myIdentityStore.identity else {
                 return Promise(
                     error: TaskExecutionError
-                        .reflectMessageFailed(message: "Dissolve not allwoed, i'm not creator of the group")
+                        .reflectMessageFailed(message: "Dissolve not allowed, i'm not creator of the group")
                 )
             }
 

@@ -29,7 +29,7 @@ import Foundation
         ports: [Int],
         preferIPv6: Bool,
         delegate: SocketProtocolDelegate,
-        queue: DispatchQueue?
+        queue: DispatchQueue
     ) throws
 
     @objc func connect() -> Bool

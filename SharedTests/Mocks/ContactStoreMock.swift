@@ -113,6 +113,8 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         _ identity: String?,
         imageData: Data,
         shouldReflect: Bool,
+        blobID: Data?,
+        encryptionKey: Data?,
         didFailWithError error: NSErrorPointer
     ) {
         // no-op
@@ -157,5 +159,9 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
 
     func deleteContact(identity: String, entityManagerObject: NSObject) {
         deleteContactCalls.append(identity)
+    }
+    
+    func resetCustomReadReceipts() {
+        // no-op
     }
 }

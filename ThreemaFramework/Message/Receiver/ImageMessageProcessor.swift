@@ -25,7 +25,6 @@ import PromiseKit
 @objc class ImageMessageProcessor: NSObject {
     
     private let blobDownloader: BlobDownloader
-    private let serverConnector: ServerConnectorProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
     private let userSettings: UserSettingsProtocol
     private let entityManager: EntityManager
@@ -37,13 +36,11 @@ import PromiseKit
     
     @objc required init(
         blobDownloader: BlobDownloader,
-        serverConnector: ServerConnectorProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
         entityManager: EntityManager
     ) {
         self.blobDownloader = blobDownloader
-        self.serverConnector = serverConnector
         self.myIdentityStore = myIdentityStore
         self.userSettings = userSettings
         self.entityManager = entityManager
@@ -194,7 +191,7 @@ import PromiseKit
                             self.blobDownloader.markDownloadDone(for: id, origin: msg.blobOrigin)
                         }
                         else if let id = msg.imageBlobID,
-                                self.serverConnector.isMultiDeviceActivated {
+                                self.userSettings.enableMultiDevice {
                             self.blobDownloader.markDownloadDone(for: id, origin: .local)
                         }
 

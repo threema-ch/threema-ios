@@ -19,14 +19,22 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
 class ForwardSecurityDataTerminate: ForwardSecurityData {
+    let cause: CspE2eFs_Terminate.Cause
+    
+    init(sessionID: DHSessionID, cause: CspE2eFs_Terminate.Cause) {
+        self.cause = cause
+        super.init(sessionID: sessionID)
+    }
     
     override func toProtobuf() throws -> Data {
-        var pb = CspE2eFs_ForwardSecurityEnvelope()
+        var pb = CspE2eFs_Envelope()
         pb.sessionID = sessionID.value
-        let pbTerminate = CspE2eFs_ForwardSecurityEnvelope.Terminate()
-        pb.content = CspE2eFs_ForwardSecurityEnvelope.OneOf_Content.terminate(pbTerminate)
+        var pbTerminate = CspE2eFs_Terminate()
+        pbTerminate.cause = cause
+        pb.content = CspE2eFs_Envelope.OneOf_Content.terminate(pbTerminate)
         return try pb.serializedData()
     }
 }

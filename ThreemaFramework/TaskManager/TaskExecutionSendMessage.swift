@@ -21,13 +21,14 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 /// Reflect outgoing message to mediator server (if multi device is enabled) and send
 /// message to chat server (and reflect message sent to mediator) is receiver identity
 /// not my identity.
 ///
 /// Additionally my profile picture will be send to message receiver if is necessary.
-class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
+final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -38,19 +39,20 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
         }
 
         return firstly {
-            isMultiDeviceActivated()
+            try self.generateMessageNonces(for: taskDefinition)
+            return self.isMultiDeviceRegistered()
         }
-        .then { doReflect -> Promise<Void> in
+        .then { doReflect -> Promise<Date?> in
             // Reflect CSP (group) message
             Promise { seal in
                 guard doReflect else {
-                    seal.fulfill_()
+                    seal.fulfill(nil)
                     return
                 }
 
-                self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                self.frameworkInjector.backgroundEntityManager.performBlock {
                     guard let conversation = self.getConversation(task) else {
-                        seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                        seal.reject(TaskExecutionError.createAbstractMessageFailed)
                         return
                     }
                     
@@ -65,30 +67,31 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         }
                         identity = contact.identity
                     }
-                    if let msg = self.getAbstractMessage(
+
+                    guard let msg = self.getAbstractMessage(
                         task,
                         self.frameworkInjector.myIdentityStore.identity,
                         identity
-                    ) {
+                    ) else {
+                        seal.reject(TaskExecutionError.createAbstractMessageFailed)
+                        return
+                    }
 
-                        do {
-                            try self.reflectMessage(
-                                message: msg,
-                                ltReflect: self.taskContext.logReflectMessageToMediator,
-                                ltAck: self.taskContext.logReceiveMessageAckFromMediator
-                            )
-                        }
-                        catch {
-                            seal.reject(error)
-                            return
-                        }
+                    do {
+                        let reflectedAt = try self.reflectMessage(
+                            message: msg,
+                            ltReflect: self.taskContext.logReflectMessageToMediator,
+                            ltAck: self.taskContext.logReceiveMessageAckFromMediator
+                        )
+                        seal.fulfill(reflectedAt)
+                    }
+                    catch {
+                        seal.reject(error)
                     }
                 }
-
-                seal.fulfill_()
             }
         }
-        .then { _ -> Promise<[Promise<AbstractMessage?>]> in
+        .then { reflectedAt -> Promise<(Date?, [Promise<AbstractMessage?>])> in
             // Send CSP (group) message(s)
             Promise { seal in
                 var sendMessages = [Promise<AbstractMessage?>]()
@@ -101,6 +104,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                             if let messageID = (task as? TaskDefinitionSendBaseMessage)?.messageID {
                                 self.frameworkInjector.backgroundEntityManager.markMessageAsSent(
                                     messageID,
+                                    sentAt: reflectedAt ?? .now,
                                     isLocal: true
                                 )
                             }
@@ -125,7 +129,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                                     self.frameworkInjector.myIdentityStore.identity,
                                     member
                                 ) else {
-                                    seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                                    seal.reject(TaskExecutionError.createAbstractMessageFailed)
                                     return
                                 }
 
@@ -166,7 +170,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                             self.frameworkInjector.myIdentityStore.identity,
                             contactIdentity
                         ) else {
-                            seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                            seal.reject(TaskExecutionError.createAbstractMessageFailed)
                             return
                         }
 
@@ -179,18 +183,21 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         )
                     }
 
-                    seal.fulfill(sendMessages)
+                    seal.fulfill((reflectedAt, sendMessages))
                 }
             }
         }
-        .then { sendMessages -> Promise<[AbstractMessage?]> in
+        .then { reflectedAt, sendMessages -> Promise<[AbstractMessage?]> in
             // Send messages parallel
             when(fulfilled: sendMessages)
                 .then { sentMessages -> Promise<[AbstractMessage?]> in
                     // Mark (group) message as sent
                     if let msg = sentMessages.compactMap({ $0 }).first {
                         self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                            self.frameworkInjector.backgroundEntityManager.markMessageAsSent(msg.messageID)
+                            self.frameworkInjector.backgroundEntityManager.markMessageAsSent(
+                                msg.messageID,
+                                sentAt: reflectedAt ?? .now
+                            )
                         }
                     }
                     return Promise { $0.fulfill(sentMessages) }
@@ -212,7 +219,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         messageSentMessageID = msg.messageID
                         // swiftformat:disable:next all
                         messageConversationID = D2d_ConversationId()
-                        messageConversationID?.group.groupID = groupID.convert()
+                        messageConversationID?.group.groupID = try groupID.littleEndian()
                         messageConversationID?.group.creatorIdentity = groupCreatorIdentity
                     }
                     else if let msg = sentMessage,
@@ -240,7 +247,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             }
 
             // Reflect outgoing message sent
-            if self.frameworkInjector.serverConnector.isMultiDeviceActivated,
+            if self.frameworkInjector.userSettings.enableMultiDevice,
                let messageID = messageSentMessageID,
                let receiver = messageConversationID {
 

@@ -26,6 +26,7 @@ import Foundation
 public enum ThreemaProtocol {
     public static let identityLength = Int(kIdentityLen)
     public static let messageIDLength = Int(kMessageIdLen)
+    public static let nonceLength = Int(kNonceLen)
     public static let blobIDLength = Int(kBlobIdLen)
     public static let groupIDLength = Int(kGroupIdLen)
     public static let ballotIDLength = Int(kBallotIdLen)

@@ -26,34 +26,3 @@ class PrivacyPolicyViewController: SettingsWebViewViewController {
         title = BundleUtil.localizedString(forKey: "settings_list_privacy_policy_title")
     }
 }
-
-extension String {
-    func hexadecimal() -> Data? {
-        var data = Data(capacity: count / 2)
-        
-        let regex = try! NSRegularExpression(pattern: "[0-9a-f]{1,2}", options: .caseInsensitive)
-        regex.enumerateMatches(in: self, range: NSMakeRange(0, utf16.count)) { match, _, _ in
-            let byteString = (self as NSString).substring(with: match!.range)
-            var num = UInt8(byteString, radix: 16)!
-            data.append(&num, count: 1)
-        }
-        
-        guard !data.isEmpty else {
-            return nil
-        }
-        
-        return data
-    }
-}
-
-extension Data {
-    struct HexEncodingOptions: OptionSet {
-        let rawValue: Int
-        static let upperCase = HexEncodingOptions(rawValue: 1 << 0)
-    }
-    
-    func hexEncodedString(options: HexEncodingOptions = []) -> String {
-        let format = options.contains(.upperCase) ? "%02hhX" : "%02hhx"
-        return map { String(format: format, $0) }.joined()
-    }
-}

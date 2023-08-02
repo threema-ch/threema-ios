@@ -20,7 +20,7 @@
 
 import Foundation
 
-class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage {
+final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
@@ -50,7 +50,8 @@ class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage 
 
     let fromMember: ThreemaIdentity
     let toMembers: [ThreemaIdentity]
-    let receiptType: UInt8
+    let receiptType: ReceiptType
+    private let receiptTypeValue: UInt8
     let receiptMessageIDs: [Data]
     let receiptReadDates: [Date]
 
@@ -61,18 +62,25 @@ class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage 
         case receiptMessageIDs
         case receiptReadDates
     }
+
+    private enum CodingError: Error {
+        case unknownReceiptType
+    }
     
     @objc init(
         group: Group?,
         from: ThreemaIdentity,
         to: [ThreemaIdentity],
-        receiptType: UInt8,
+        receiptType: ReceiptType,
         receiptMessageIDs: [Data],
         receiptReadDates: [Date]
     ) {
+        assert(receiptType == .read || receiptType == .ack || receiptType == .decline)
+
         self.fromMember = from
         self.toMembers = to
         self.receiptType = receiptType
+        self.receiptTypeValue = receiptType.rawValue
         self.receiptMessageIDs = receiptMessageIDs
         self.receiptReadDates = receiptReadDates
         
@@ -83,23 +91,34 @@ class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage 
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.fromMember = try container.decode(String.self, forKey: .fromMember)
         self.toMembers = try container.decode([String].self, forKey: .toMembers)
-        self.receiptType = try container.decode(UInt8.self, forKey: .receiptType)
+        self.receiptTypeValue = try container.decode(UInt8.self, forKey: .receiptType)
+        self.receiptType = try TaskDefinitionSendGroupDeliveryReceiptsMessage.receiptTyp(rawValue: receiptTypeValue)
         self.receiptMessageIDs = try container.decode([Data].self, forKey: .receiptMessageIDs)
         self.receiptReadDates = try container.decode([Date].self, forKey: .receiptReadDates)
         
-        let superdecoder = try container.superDecoder()
-        try super.init(from: superdecoder)
+        let superDecoder = try container.superDecoder()
+        try super.init(from: superDecoder)
     }
     
     override func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(fromMember, forKey: .fromMember)
         try container.encode(toMembers, forKey: .toMembers)
-        try container.encode(receiptType, forKey: .receiptType)
+        try container.encode(receiptTypeValue, forKey: .receiptType)
         try container.encode(receiptMessageIDs, forKey: .receiptMessageIDs)
         try container.encode(receiptReadDates, forKey: .receiptReadDates)
 
-        let superencoder = container.superEncoder()
-        try super.encode(to: superencoder)
+        let superEncoder = container.superEncoder()
+        try super.encode(to: superEncoder)
+    }
+    
+    private class func receiptTyp(rawValue: UInt8) throws -> ReceiptType {
+        guard let type = ReceiptType(rawValue: rawValue) else {
+            throw CodingError.unknownReceiptType
+        }
+
+        assert(type == .read || type == .ack || type == .decline)
+
+        return type
     }
 }

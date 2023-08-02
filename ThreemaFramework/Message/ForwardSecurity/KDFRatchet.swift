@@ -22,7 +22,7 @@ import Foundation
 
 public class KDFRatchet: Equatable {
     /// Upper limit on how many times we are willing to turn the ratchet to catch up with a peer
-    static let maxCounterIncrement = 10000
+    static let maxCounterIncrement = 25000
     
     static let kdfSaltCk = "kdf-ck"
     static let kdfSaltAek = "kdf-aek"

@@ -504,8 +504,8 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "forward_security_none" = "Žiadny";
 "forward_security_2dh" = "Jednostranný";
 "forward_security_4dh" = "Dokončené";
-"forward_security_clear_sessions" = "Vymazať všetky relácie";
-"forward_security_explainer_footer" = "Perfect Forward Secrecy (PFS) chráni zaznamenanú komunikáciu pred spätným dešifrovaním, aj keď je ohrozený dlhodobý šifrovací kľúč.\nTúto možnosť je možné povoliť, ak aplikácia na oboch stranách podporuje PFS.";
+"forward_security_clear_sessions" = "Obnoviť Perfect Forward Secrecy pre tento kontakt";
+"forward_security_explainer_footer" = "Túto akciu vykonajte iba vtedy, keď vás na to upozorní podporný tím spoločnosti Threema.";
 "md_wizard_pfs_warning" = "Po aktivácii náhľadu viacerých zariadení bude funkcia \"Perfect Forward Secrecy\" pre všetky kontakty deaktivovaná.";
 "md_wizard_disable_pfs_confirm" = "Vypnúť funkciu Perfect Forward Secrecy";
 
@@ -764,6 +764,11 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "call_threema_cellular_instead_of_wifi_title" = "Hovor cez mobilnú sieť";
 "call_threema_cellular_instead_of_wifi_text" = "Varovanie: Tento hovor využíva prenos dát cez mobilnú sieť.";
 
+// Group Calls
+"group_call_join_button_title" = "Pripojiť sa";
+"group_call_open_button_title" = "Otvoriť";
+"group_call_participants_title" = "Účastníci: %@";
+
 /* Privacy Policy */
 "privacy_policy_about" = "Threema chráni vaše súkromie dôslednejšie než ktorýkoľvek iný komunikátor. Dozvedieť sa viac v Zásadách ochrany osobných údajov.";
 "privacy_policy_about_work" = "%@ chráni vaše súkromie dôslednejšie než ktorýkoľvek iný komunikátor. Dozvedieť sa viac v Zásadách ochrany osobných údajov.";
@@ -968,6 +973,7 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "safe_test_server_invalid_url" = "Zadajte prosím platnú HTTPS adresu.";
 "safe_restore_error" = "Obnova zálohy Trezoru Threema zlyhala, skúste to znovu.";
 "safe_activation_failed" = "Trezor Threema sa po obnovení zálohy nepodarilo aktivovať.";
+"safe_activation_app_migration_failed_error_message" = "Nepodarilo sa obnoviť zálohu Trezoru Threema kvôli chybe databázy. Skúste to prosím znova.";
 
 "password_bad" = "Slabé heslo";
 "password_bad_explain" = "Zadané heslo pre Trezor Threema nie je bezpečné a môže byť ľahko uhádnuté útočníkmi. Zadajte prosím iné. Nápoveda: Použite heslo zložené z niekoľkých samostatných slov.";
@@ -1223,6 +1229,11 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_advanced_reregister_push_notifications_footer_title" = "Ak sa prichádzajúce správy nezobrazujú mimo aplikácie ako upozornenia, môžete sa znova registrovať na upozornenia.";
 "settings_advanced_reregister_notifications_label" = "Znova registrovať automatické upozornenia";
 
+"settings_advanced_reset_fs_db_label" = "Resetovať stav služby Perfect Forward Secrecy";
+"settings_advanced_support_settings_header_title" = "Nastavenia podpory";
+"settings_advanced_support_settings_footer_title" = "Túto akciu vykonajte iba vtedy, keď vás na to upozorní podporný tím spoločnosti Threema.";
+"settings_advanced_successfully_deleted_fs_sessions_label" = "Stav Forward Security bol úspešne resetovaný";
+
 // Sentry
 "sentry_crash_send_title" = "Neočakávané ukončenie %@";
 "sentry_crash_send_description" = "Môžete odoslať anonymné hlásenie o zlyhaní. Podrobnosti vysveľujúce, čo viedlo k zlyhaniu nám pomôžu zistiť príčinu problému.";
@@ -1407,12 +1418,11 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 "contactoverride_sheetMessage" = "Týmto sa prepíše predvolené nastavenia pre tento konkrétny kontakt.";
 
-/* Multi Decvice */
+/* Multi Device */
 "multi_device_linked_devices_title" = "Ukážka viacerých zariadení";
 "multi_device_linked_devices_desc" = "Aktivujte alebo deaktivujte náhľad viacerých zariadení pre toto zariadenie.";
 "multi_device_linked_devices_refresh" = "Potiahnutím obnoviť";
 "multi_device_linked_devices_loading_failed" = "Načítanie zariadení zlyhalo: %@";
-"multi_device_linked_devices_failed_to_load_title" = "Nepodarilo sa načítať zoznam zariadení";
 "multi_device_linked_devices_failed_to_load_message" = "Nepodarilo sa načítať prepojené zariadenia, skontrolujte svoje internetové pripojenie a skúste to znova.";
 "multi_device_linked_devices_this" = "Toto zariadenie";
 "multi_device_linked_devices_others" = "Iné zariadenia";
@@ -1422,12 +1432,68 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "multi_device_linked_devices_removed_devices_message" = "Týmto sa odstránia všetky pripojené zariadenia a deaktivuje sa možnosť viacerých zariadení";
 "multi_device_linked_devices_removed_devices_ok" = "Zakázať";
 "multi_device_linked_duplicate_contacts_title" = "Duplicitné kontakty";
-"multi_device_linked_duplicate_contacts_desc" = "Toto zariadenie nemôžete prepojiť z dôvodu duplicitných kontaktov (%@). Kontaktujte prosím našu podporu.";
+"multi_device_linked_devices_failed_to_load_title" = "Nepodarilo sa načítať zoznam zariadení";
 
 "multi_device_linked_devices_failed_remove_title" = "Zariadenie sa nepodarilo odstrániť";
 "multi_device_linked_devices_failed_remove_message" = "Prepojené zariadenie sa nepodarilo odstrániť, skúste to znova.";
 "multi_device_linked_devices_failed_remove_message_2" = "Prepojené zariadenie sa nepodarilo odstrániť. Skontrolujte svoje internetové pripojenie a skúste to znova.";
-"multi_device_slot_state_mismatch_alert" = "Toto zariadenie bolo odpojené. To znamená, že momentálne nemôžete odosielať ani prijímať nové správy. Ak ste to nevykonali vy, upozorňujeme, že k tomu môže dôjsť z technických dôvodov počas fázy Tech Preview. Ospravedlňujeme sa za nepríjemnosti. Pre opätovné pripojenie si pozrite FAQ: https://three.ma/faq";
+
+/* New/reused multi device strings */
+"multi_device_unsupported_protocol_version_alert" = "Táto verzia Threema už nie je podporovaná (zastaraná verzia protokolu). Ak chcete naďalej používať Threemu, nainštalujte si najnovšiu verziu.";
+"multi_device_slot_state_mismatch_alert" = "Toto zariadenie bolo odpojené, preto momentálne nemôžete odosielať ani prijímať nové správy. Ak ste odpojenie nevykonali vy, upozorňujeme, že k tomu môže z technických príčin dôjsť počas beta fázy. Ospravedlňujeme sa za nepríjemnosti. Ak chcete obnoviť pripojenie, postupujte podľa pokynov uvedených v častých otázkach: https://threema.ch/faq/md_reset";
+
+"multi_device_new_linked_devices_title" = "Prepojené zariadenie (Beta)";
+"multi_device_new_linked_devices_add_button" = "Pridať zariadenie";
+"multi_device_new_linked_devices_limitation_info" = "Poznámka: V súčasnosti je možné s beta verziou prepojiť iba jeden počítač. Prepojenie iného iPhone/iPad alebo Android zariadenia nie je podporované.";
+"multi_device_new_linked_devices_failed_to_load" = "Prepojené zariadenia sa nepodarilo načítať. Skontrolujte svoje internetové pripojenie a potiahnutím nadol to skúste znova.";
+"multi_device_new_linked_devices_no_other_device" = "Klepnutím na %@ znova prepojíte zariadenie";
+"multi_device_new_linked_device_remove_all_button" = "Odstrániť všetky prepojené zariadenia";
+"multi_device_new_linked_device_remove_all_title" = "Odstrániť všetky prepojené zariadenia?";
+"multi_device_new_linked_device_remove_all_error_title" = "Odstránenie všetkých prepojených zariadení zlyhalo";
+"multi_device_new_linked_device_error_message" = "Skontrolujte prosím internetové pripojenie a skúste to znova.";
+"multi_device_new_linked_device_instructions" = "Pred pridaním nového zariadenia si prosím stiahnite aktuálnu beta verziu %@ do svojho počítača a spustite ju:\n%@";
+"multi_device_linked_duplicate_contacts_desc" = "Z dôvodu duplicitných kontaktov (%@) nie je možné pridať zariadenie. Kontaktujte prosím podporu („Nastavenia > Podpora“).";
+"multi_device_new_linked_own_identity_in_contacts_title" = "Vlastné Threema ID ako kontakt";
+"multi_device_new_linked_own_identity_in_contacts_message" = "Váš zoznam kontaktov obsahuje položku kontaktu s vaším Threema ID. Ak chcete pridať nové zariadenie, odstráňte ho.";
+"multi_device_new_linked_show_contact_button" = "Zobraziť kontakt";
+"multi_device_new_linked_device_list_no_platform_details" = "Žiadne podrobnosti o platforme";
+"multi_device_new_linked_device_list_last_active" = "Posledná aktivita: %@";
+
+"multi_device_join_perfect_forward_secrecy_info" = "Toto je obmedzenie aktuálnej beta verzie. Ďalšie obmedzenia nájdete v [častých otázkach FAQ] (%@).";
+"multi_device_join_scan_qr_code_title" = "Naskenovať QR kód";
+"multi_device_join_scan_qr_code_info" = "Naskenujte QR kód zobrazený v beta verzii %@ na zariadení, ktoré chcete prepojiť";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_label" = "Pohľad z fotoaparátu";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_hint" = "Nasmerujte fotoaparát na obrazovku, kde je otvorená %@ Beta.";
+"multi_device_join_connecting" = "Pripája sa…";
+"multi_device_join_unrecoverable_error_title" = "Neočakávaná chyba";
+"multi_device_join_fatal_scanning_qr_code_error_title" = "Chyba pri skenovaní QR kódu";
+"multi_device_join_fatal_camera_access_error_title" = "Nedá sa získať prístup k fotoaparátu";
+"multi_device_join_fatal_no_internet_connection_title" = "Bez internetového pripojenia";
+"multi_device_join_failed_to_send_data_title" = "Odoslanie údajov zlyhalo";
+"multi_device_join_fatal_error_message" = "Skúste znova pripojiť zariadenie. Ak tento problém pretrváva, kontaktujte podporu („Nastavenia > Podpora“).";
+"multi_device_join_unknown_qr_code_title" = "Neznámy QR kód";
+"multi_device_join_unknown_qr_code_message" = "Uistite sa, že používate zodpovedajúcu aplikáciu od %@.";
+"multi_device_join_incompatible_version_title" = "Nekompatibilná verzia";
+"multi_device_join_incompatible_version_message" = "Nainštalujte si najnovšiu verziu %@ na obe zariadenia.";
+"multi_device_join_new_device_not_found_title" = "Nové zariadenie sa nenašlo";
+"multi_device_join_new_device_not_found_message" = "Toto sa môže stať, keď už bol QR kód naskenovaný. Reštartujte prosím na novom zariadení aplikáciu a skúste to znova.";
+"multi_device_join_trust_new_device_title" = "Dôverovať novému zariadeniu";
+"multi_device_join_trust_new_device_info" = "Vyberte rovnaké obrázky, aké sú zobrazené na novom zariadení, aby ste potvrdili, že mu dôverujete.";
+"multi_device_join_no_match_button" = "Žiadna zhoda?";
+"multi_device_join_no_match_title" = "Obrázky sa nezhodujú?";
+"multi_device_join_no_match_message" = "Vyzerá to, že sú problémy s pripojením k zariadeniu. Reštartujte prosím na novom zariadení aplikáciu a skúste to znova.";
+"multi_device_join_sending_info" = "Nové zariadenie uloží nezávislú kópiu vášho profilu %@ a správy sa budú odosielať a prijímať vo vašom mene.";
+"multi_device_join_sending_data" = "Odosielajú sa údaje…";
+"multi_device_join_sending_continue_on_new_device" = "Pokračujte prosím na novom zariadení…";
+"multi_device_join_sending_wait" = "Prosím čakajte, odoslanie môže trvať niekoľko minút.";
+"multi_device_join_linked_successfully_title" = "Zariadenie úspešne prepojené"; // The same as `md_wizard_success_title`
+"multi_device_join_linked_successfully_info" = "%@ sa môže teraz použiť na zariadení, ktoré ste práve prepojili (aj keď je toto iOS zariadenie vypnuté alebo nie je pripojené k internetu).";
+
+"multi_device_join_failed_app_closed_title" = "Prepojenie nového zariadenia zlyhalo";
+"multi_device_join_failed_app_closed_message" = "Prepojenie zlyhalo, pretože %@ bola zatvorená. Skúste to prosím znova.";
+
+"multi_device_linked_id_missing_title" = "Prepojené zariadenia";
+"multi_device_linked_id_missing_message" = "Prepojené zariadenia boli odstránené. Po obnovení alebo nastavení tohto zariadenia môžete svoje zariadenia znova prepojiť.";
 
 "myprofile_link_email_phone_footer" = "Ak prepojíte svoju e-mailovú adresu alebo telefónne číslo s vaším ID, ostatní používatelia vás automaticky nájdu na %@, ak vás majú vo svojom adresári.";
 "myprofile_link_email_footer" = "Ak prepojíte svoju e-mailovú adresu s vaším ID, ostatní používatelia vás automaticky nájdu na %@, ak majú váš e-mail vo svojom adresári.";
@@ -1453,6 +1519,11 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 "settings_threema_web_connected" = "Počítač/web pripojený";
 "settings_threema_web_connectioninfo" = "Ak chcete zostať v spojení, vaše zariadenie musí byť odomknuté so spusteným %@ v popredí. Počas pripojenia sa vaše zariadenie automaticky neuzamkne.";
+"settings_threema_web_linked_device_section_header" = "Viac zariadení";
+"settings_threema_web_linked_device_section_footer" = "Prepojené zariadenie možno použiť, aj keď je %@ na pozadí alebo je toto zariadenie offline.";
+"settings_threema_web_section_header" = "Priamo pripojené zariadenia";
+"settings_threema_web_multi_device_qr_code_title" = "Nesprávny QR kód";
+"settings_threema_web_multi_device_qr_code_message" = "Klepnutím na „%@“ a potom na „%@“ sa prepojíte s touto počítačovou aplikáciou.";
 
 "chat_text_view_placeholder" = "Nová správa";
 "compose_bar_camera_button_accessibility_label" = "Otvoriť fotoaparát";
@@ -1544,18 +1615,22 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 "notification_reregister_notifications_successed" = "Push notifikácie boli znova zaregistrované";
 
+"notification_audio_muted" = "Mikrofón: vypnutý";
+"notification_audio_unmuted" = "Mikrofón: zapnutý";
+"notification_video_muted" = "Fotoaparát: vypnutý";
+"notification_video_unmuted" = "Fotoaparát: zapnutý";
+
 // Forward security status messages
 "forward_security_message_without" = "Bola prijatá správa bez ochrany Perfect Forward Secrecy. Overte, či odosielateľ úmyselne zakázal funkciu Perfect Forward Secrecy.";
 "forward_security_session_established" = "Správy v tomto rozhovore sú teraz chránené systémom Perfect Forward Secrecy.";
 "forward_security_session_established_rx" = "Správy prijaté v tomto rozhovore sú teraz chránené systémom Perfect Forward Secrecy. Povoľte Perfect Forward Secrecy v kontaktných údajoch, aby ste ochránili aj odoslané správy.";
 "forward_security_messages_skipped_1" = "Od poslednej správy sa stratila jedna správa.";
 "forward_security_messages_skipped_x" = "Od poslednej správy sa stratilo %d správ.";
-"forward_security_session_reset" = "Relácia Perfect Forward Secrecy s týmto kontaktom bola resetovaná. Môže sa to stať, ak kontakt zmenil zariadenie alebo preinštaloval aplikáciu.";
+"forward_security_session_reset" = "Relácia Perfect Forward Secrecy bola resetovaná. Môže sa to stať, keď partner rozhovoru zmení zariadenie alebo preinštaluje aplikáciu.";
 "forward_security_message_out_of_order" = "Správa bola prijatá ako nefunkčná a nedá sa dešifrovať.";
 "forward_security_status_enabled_outgoing" = "Perfect Forward Secrecy je pre odchádzajúce správy je povolené.";
-"forward_security_status_disabled_outgoing" = "Perfect Forward Secrecy je pre odchádzajúce správy je deaktivované.";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Tento kontakt začal používať verziu aplikácie, ktorá nepodporuje Perfect Forward Secrecy. Správy sa budú odteraz odosielať bez PFS.";
-
+"forward_security_status_disabled_outgoing" = "Perfect Forward Secrecy je pre túto konverzáciu vypnutý.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Funkcia Perfect Forward Secrecy bola v tejto konverzácii vypnutá, pretože verzia aplikácie vášho partnera ju nepodporuje.";
 // Profile view
 "accessibility_profile_button_hint_contact" = "Otvoriť podrobnosti kontaktu";
 "accessibility_profile_button_hint_group" = "Otvorí podrobnosti skupiny";
@@ -1571,7 +1646,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "accessibility_senderDescription_ownMessage" = "Vaše %@";
 "accessibility_senderDescription_otherMessage_group" = "%@ od %@";
 "accessibility_senderDescription_systemMessage" = "Info: %@";
-
 // Message types
 "accessibility_textMessage_description" = "Správa";
 "accessibility_locationMessage_description" = "Poloha";
@@ -1696,3 +1770,18 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "alert_biometrics_changed_title_touch" = "Zistila sa možná zmena v TouchID";
 "alert_biometrics_changed_title_face" = "Zistila sa možná zmena FaceID";
 "alert_biometrics_changed_message" = "Ak chcete pokračovať v používaní biometrickej autentifikácii na odomknutie Threemy, zadajte váš Threema prístupový kód.";
+
+// Group Calls
+"group_call_started_by_contact_system_message" = "%@ začal skupinový hovor";
+"group_call_started_by_local_system_message" = "Začali ste skupinový hovor";
+"group_call_ended_system_message" = "Skupinový hovor sa skončil";
+
+"group_call_start_message_received" = "Začal skupinový hovor";
+
+"group_call_navbar_state_connecting" = "Nadväzovanie spojenia…";
+"group_call_navbar_state_joining" = "Pripája sa…";
+"group_call_navbar_state_connected" = "Pripojené";
+
+// App Migration
+"sqldhsessionstore_cannot_downgrade_to" = "(%@)\n\nNepodarilo sa prejsť z verzie %d na verziu %d";
+"sqldhsessionstore_unknownError" = "Pri pokuse o migráciu sa vyskytla neznáma chyba: %@";

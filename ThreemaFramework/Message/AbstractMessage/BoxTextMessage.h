@@ -21,7 +21,7 @@
 #import "AbstractMessage.h"
 #import "QuotedMessageProtocol.h"
 
-@interface BoxTextMessage : AbstractMessage <NSCoding, QuotedMessageProtocol>
+@interface BoxTextMessage : AbstractMessage <NSSecureCoding, QuotedMessageProtocol>
 
 @property (nonatomic, strong) NSString *text;
 

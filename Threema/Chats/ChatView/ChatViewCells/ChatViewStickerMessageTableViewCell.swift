@@ -38,6 +38,10 @@ final class ChatViewStickerMessageTableViewCell: ChatViewBaseTableViewCell, Meas
     override var nameLabelBottomInset: Double {
         0.0
     }
+    
+    override var bubbleWidthRatio: Double {
+        0.7
+    }
 
     /// Sticker message to display
     ///

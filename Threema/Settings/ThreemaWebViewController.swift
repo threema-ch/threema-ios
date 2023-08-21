@@ -50,10 +50,15 @@ class ThreemaWebViewController: ThemedTableViewController {
         
         switch ThreemaEnvironment.env() {
         case .appStore:
-            // Remove multi device cells
-            return Section.webOnly
+            // Show multi-device only in work App Store releases
+            if ThreemaApp.current == .work {
+                return Section.all
+            }
+            else {
+                return Section.webOnly
+            }
         case .testFlight:
-            // Show multi device only in consumer, work, red and work red betas
+            // Show multi-device only in consumer, work, red and work red betas
             if ThreemaApp.current == .threema || ThreemaApp.current == .work || ThreemaApp.current == .red || ThreemaApp
                 .current == .workRed {
                 return Section.all
@@ -62,7 +67,7 @@ class ThreemaWebViewController: ThemedTableViewController {
                 return Section.webOnly
             }
         case .xcode:
-            // Always show multi device for debug builds
+            // Always show multi-device for debug builds
             return Section.all
         }
     }()
@@ -298,10 +303,16 @@ class ThreemaWebViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         switch sections[section] {
         case .linkedDevice:
-            return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "settings_threema_web_linked_device_section_footer"),
-                ThreemaApp.currentName
-            )
+            let mdmSetup = MDMSetup(setup: false)!
+            if mdmSetup.disableWeb() {
+                return BundleUtil.localizedString(forKey: "disabled_by_device_policy")
+            }
+            else {
+                return String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "settings_threema_web_linked_device_section_footer"),
+                    ThreemaApp.currentName
+                )
+            }
         case .web:
             let mdmSetup = MDMSetup(setup: false)!
             if mdmSetup.existsMdmKey(MDM_KEY_DISABLE_WEB) {
@@ -333,6 +344,11 @@ class ThreemaWebViewController: ThemedTableViewController {
             
             cell.contentConfiguration = contentConfiguration
             cell.accessoryType = .disclosureIndicator
+            
+            let mdmSetup = MDMSetup(setup: false)!
+            if mdmSetup.disableWeb() {
+                cell.isUserInteractionEnabled = false
+            }
             
             return cell
         
@@ -367,6 +383,11 @@ class ThreemaWebViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch sections[indexPath.section] {
         case .linkedDevice:
+            let mdmSetup = MDMSetup(setup: false)!
+            if mdmSetup.disableWeb() {
+                return
+            }
+            
             let hostingController = UIHostingController(
                 rootView: LinkedDevicesView(
                     settingsStore: BusinessInjector().settingsStore as! SettingsStore

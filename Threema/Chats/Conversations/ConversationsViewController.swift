@@ -1098,13 +1098,16 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
                 return
             }
             tableView.deleteRows(at: [indexPath], with: .automatic)
+            
         case .move:
             if let indexPath,
                let newIndexPath {
                 tableView.moveRow(at: indexPath, to: newIndexPath)
             }
+            
         case .update:
             break
+            
         @unknown default:
             DDLogInfo("Unknown default called on controller() in ConversationsVC")
         }

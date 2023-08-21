@@ -268,7 +268,10 @@ public final class DeviceJoin {
         
         let serializedEdToNdEssentialData = try edToNdEssentialData.serializedData()
         
-        DDLogNotice("Send essential data...")
+        // WARNING: Essential data contains the private key so we need to be careful that we only log the size here!
+        let essentialDataSize = serializedEdToNdEssentialData.count
+        DDLogNotice("Send essential data... (\(essentialDataSize) bytes)")
+        
         try await connection.send(serializedEdToNdEssentialData)
         
         // ED <---- Registered ---- ND   [1]
@@ -453,7 +456,9 @@ public final class DeviceJoin {
         
         let serializedEdToNdCommonBlobData = try edToNdCommonBlobData.serializedData()
         
-        DDLogVerbose("Send blob...")
+        let commonDataSize = serializedEdToNdCommonBlobData.count
+        DDLogNotice("Send blob... (\(commonDataSize) bytes)")
+        
         try await connection.send(serializedEdToNdCommonBlobData)
         
         return Common_Image.with {

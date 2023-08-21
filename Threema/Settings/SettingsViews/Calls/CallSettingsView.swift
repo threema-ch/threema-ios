@@ -31,7 +31,14 @@ struct CallSettingsView: View {
                 Toggle(isOn: $settingsVM.enableThreemaCall.animation()) {
                     Text(BundleUtil.localizedString(forKey: "settings_threema_calls_enable_calls"))
                 }
-                .disabled(mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_CALLS) ?? false)
+                .disabled(
+                    ThreemaEnvironment.supportsCallKit() ? mdmSetup?
+                        .disableCalls() ?? false : true
+                )
+            } footer: {
+                if !ThreemaEnvironment.supportsCallKit() {
+                    Text(BundleUtil.localizedString(forKey: "settings_threema_voip_no_callkit_in_china_footer"))
+                }
             }
             
             if settingsVM.enableThreemaCall {

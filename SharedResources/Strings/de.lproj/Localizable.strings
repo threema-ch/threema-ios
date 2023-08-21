@@ -1205,6 +1205,7 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Alle Anrufe über OnPrem-Server leiten. Verschleiert Ihre IP-Adresse, kann jedoch zu schlechterer Anrufqualität führen.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Anrufe werden auf dem Sperrbildschirm angezeigt, jedoch nicht in der Anrufliste der «Telefon»-App aufgeführt.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Anrufe werden auf dem Sperrbildschirm angezeigt und in der Anrufliste der «Telefon»-App aufgeführt. Falls iCloud Drive aktiviert ist, wird die Anrufliste der «Telefon»-App über Apple-Server synchronisiert.";
+"settings_threema_voip_no_callkit_in_china_footer" = "Aufgrund Einschränkungen seitens Apple sind Threema-Anrufe nicht verfügbar, wenn China als Region des Geräts festgelegt ist.";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Netzwerk";

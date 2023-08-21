@@ -267,8 +267,9 @@ class MessageStore: MessageStoreProtocol {
                         self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                     }
                     else {
-                        throw MediatorReflectedProcessorError
-                            .messageNotProcessed(message: deliveryReceiptMessage.loggingDescription)
+                        throw MediatorReflectedProcessorError.messageNotProcessed(
+                            message: "Unable to store delivery receipt (\(deliveryReceiptMessage.receiptType)) for message \(messageID.hexString) because conversation or message was not found"
+                        )
                     }
                 }
             }

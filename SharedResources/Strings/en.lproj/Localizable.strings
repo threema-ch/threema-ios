@@ -1204,6 +1204,7 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Relay all calls through your OnPrem servers to hide IP address from call partners. May affect call quality.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Calls are displayed on the lock screen but not listed in the Phone app’s call list.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Calls are displayed on the lock screen and listed in the Phone app’s call list. If iCloud Drive is activated, the Phone app’s call list is synchronized via Apple servers.";
+"settings_threema_voip_no_callkit_in_china_footer" = "Due to restrictions from Apple, Threema calls are not available if the device’s region is set to China.";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Networking";

@@ -199,9 +199,10 @@ class DeviceLinking: NSObject {
         return polling()
     }
 
-    /// Disable multi device if app doesn't support it
+    /// Disable multi-device if app doesn't support it
     ///
-    /// This should always be in sync with the multi device setting showing up in settings (`SettingsViewController`)
+    /// This should always be in sync with the multi-device setting showing up in Desktop/Web setting
+    /// (`ThreemaWebViewController`)
     @objc func disableMultiDeviceForVersionLessThan5() {
         // Only disable it if it was previously enabled
         guard businessInjector.userSettings.enableMultiDevice else {
@@ -210,8 +211,10 @@ class DeviceLinking: NSObject {
         
         switch ThreemaEnvironment.env() {
         case .appStore:
-            // Disable it for all app store versions
-            autoDisableMultiDevice()
+            // Disable it for all app store versions except work
+            if ThreemaApp.current != .work {
+                autoDisableMultiDevice()
+            }
         case .testFlight:
             switch ThreemaApp.current {
             case .threema:

@@ -452,7 +452,7 @@ extension EntityManager {
             return oneToOneConversation(forMessage: message, fetcher: entityFetcher)
         }
     }
-
+    
     /// Looking for existing contact entity (sender) and conversation in current and in main DB context.
     ///
     /// - Parameter abstractMessage: Get sender and conversation from DB for that message

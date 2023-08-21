@@ -81,20 +81,24 @@ struct DeviceJoinScanQRCodeView: View {
                         Group {
                             if !successfulScanned {
                                 // This needs to reappear after a scan with an error so it actually scans again
-                                CodeScannerView(codeTypes: [.qr], completion: handleScan(result:))
-                                    .background(Color.green) // Only needed for preview & simulator
-                                    .accessibilityElement()
-                                    .accessibilityLabel(
-                                        BundleUtil.localizedString(
-                                            forKey: "multi_device_join_scan_qr_code_scanner_view_accessibility_label"
-                                        )
+                                CodeScannerView(codeTypes: [.qr]) { result in
+                                    Task { @MainActor in
+                                        handleScan(result: result)
+                                    }
+                                }
+                                .background(Color.green) // Only needed for preview & simulator
+                                .accessibilityElement()
+                                .accessibilityLabel(
+                                    BundleUtil.localizedString(
+                                        forKey: "multi_device_join_scan_qr_code_scanner_view_accessibility_label"
                                     )
-                                    .accessibilityHint(String.localizedStringWithFormat(
-                                        BundleUtil.localizedString(
-                                            forKey: "multi_device_join_scan_qr_code_scanner_view_accessibility_hint"
-                                        ),
-                                        ThreemaApp.appName
-                                    ))
+                                )
+                                .accessibilityHint(String.localizedStringWithFormat(
+                                    BundleUtil.localizedString(
+                                        forKey: "multi_device_join_scan_qr_code_scanner_view_accessibility_hint"
+                                    ),
+                                    ThreemaApp.appName
+                                ))
                             }
                             else {
                                 Color.black
@@ -262,7 +266,9 @@ struct DeviceJoinScanQRCodeView: View {
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { granted in
                 if !granted {
-                    showNoCameraAccessAlert = true
+                    Task { @MainActor in
+                        showNoCameraAccessAlert = true
+                    }
                 }
             }
         case .restricted, .denied:

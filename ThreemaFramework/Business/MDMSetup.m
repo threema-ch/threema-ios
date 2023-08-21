@@ -316,7 +316,12 @@ static NSDictionary *_mdmCacheSetup;
     }
     
     if ([self existsMdmKey:MDM_KEY_DISABLE_CALLS]) {
-        userSettings.enableThreemaCall = ![self disableCalls];
+        if ([ThreemaEnvironment supportsCallKit]) {
+            userSettings.enableThreemaCall = ![self disableCalls];
+        }
+        else {
+            userSettings.enableThreemaCall = false;
+        }
     }
     
     if ([self existsMdmKey:MDM_KEY_DISABLE_VIDEO_CALLS]) {

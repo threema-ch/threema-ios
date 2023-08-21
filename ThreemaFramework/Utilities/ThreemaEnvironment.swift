@@ -96,4 +96,27 @@ import ThreemaProtocols
             return false
         #endif
     }
+    
+    // MARK: - CallKit
+    
+    @objc public static func supportsCallKit() -> Bool {
+        let locale = Locale.current
+        var countryCode = ""
+        
+        if #available(iOS 16, *) {
+            if let value = locale.region?.identifier {
+                countryCode = value
+            }
+        }
+        else {
+            if let value = locale.regionCode {
+                countryCode = value
+            }
+        }
+
+        if countryCode.contains("CN") || countryCode.contains("CHN") {
+            return false
+        }
+        return true
+    }
 }

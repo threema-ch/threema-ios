@@ -69,6 +69,10 @@ final class ChatViewAnimatedStickerMessageTableViewCell: ChatViewBaseTableViewCe
         .clear
     }
     
+    override var bubbleWidthRatio: Double {
+        0.7
+    }
+    
     // MARK: - Views & constraints
     
     private lazy var animatedImageTapView = MessageAnimatedMediaTapView { [weak self] in

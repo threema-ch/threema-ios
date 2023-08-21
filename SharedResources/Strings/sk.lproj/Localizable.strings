@@ -63,6 +63,7 @@
 "copy" = "Skopírovať";
 "save" = "Uložiť";
 "download" = "Stiahnuť";
+"retry" = "Znova";
 "share" = "Zdieľať";
 "details" = "Detaily";
 "acknowledge" = "Súhlasím";
@@ -1204,6 +1205,7 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Presmeruje všetky hovory cez vaše OnPrem servery, aby ste skryli IP adresu pred volajúcimi partnermi. Môže byť ovplyvnená kvalita hovoru.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Hovory sa zobrazujú na uzamknutej obrazovke, ale nie sú uvedené v zozname hovorov aplikácie Telefón.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Hovory sa zobrazujú na uzamknutej obrazovke a sú uvedené v zozname hovorov aplikácie Telefón. Ak je aktivovaný iCloud Disk, zoznam hovorov aplikácie Telefón sa synchronizuje cez servery Apple.";
+"settings_threema_voip_no_callkit_in_china_footer" = "Z dôvodu obmedzení od spoločnosti Apple nie sú hovory Threema dostupné, ak je región zariadenia nastavený na Čínu.";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Sieť";
@@ -1631,6 +1633,8 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "forward_security_status_enabled_outgoing" = "Perfect Forward Secrecy je pre odchádzajúce správy je povolené.";
 "forward_security_status_disabled_outgoing" = "Perfect Forward Secrecy je pre túto konverzáciu vypnutý.";
 "forward_security_contact_has_downgraded_to_an_incompatible_version" = "Funkcia Perfect Forward Secrecy bola v tejto konverzácii vypnutá, pretože verzia aplikácie vášho partnera ju nepodporuje.";
+"forward_security_illegal_session_state" = "Relácia Perfect Forward Secrecy bola resetovaná z dôvodu neplatnosti.";
+
 // Profile view
 "accessibility_profile_button_hint_contact" = "Otvoriť podrobnosti kontaktu";
 "accessibility_profile_button_hint_group" = "Otvorí podrobnosti skupiny";
@@ -1646,6 +1650,12 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "accessibility_senderDescription_ownMessage" = "Vaše %@";
 "accessibility_senderDescription_otherMessage_group" = "%@ od %@";
 "accessibility_senderDescription_systemMessage" = "Info: %@";
+"accessibility_senderDescription_typing" = "Kontakt píše";
+"accessibility_senderDescription_stopped_typing" = "Kontakt prestal písať";
+"accessibility_senderDescription_contact_typing" = "%@ píše";
+"accessibility_senderDescription_contact_stopped_typing" = "%@ prestal písať";
+
+
 // Message types
 "accessibility_textMessage_description" = "Správa";
 "accessibility_locationMessage_description" = "Poloha";

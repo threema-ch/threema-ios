@@ -20,8 +20,8 @@
 
 import Foundation
 
-extension ReceiptType {
-    var description: String {
+extension ReceiptType: CustomStringConvertible {
+    public var description: String {
         switch self {
         case .received:
             return "received"

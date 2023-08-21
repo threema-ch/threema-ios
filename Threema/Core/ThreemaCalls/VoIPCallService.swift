@@ -505,6 +505,12 @@ extension VoIPCallService {
     ///   - name: Name of the caller. If it's nil, it use the unknown caller string
     ///   - completion: Completion handler returns true if call successfully reported to CallKit
     func reportInitialCall(from identity: String, name: String?, completion: @escaping (Bool) -> Void) {
+        
+        guard ThreemaEnvironment.supportsCallKit() else {
+            completion(false)
+            return
+        }
+        
         if let callKitManager {
             if callKitManager.currentUUID() != nil {
                 callKitManager.endCall()
@@ -653,7 +659,7 @@ extension VoIPCallService {
                     return
                 }
                 
-                if callKitManager == nil {
+                if ThreemaEnvironment.supportsCallKit(), callKitManager == nil {
                     callKitManager = VoIPCallKitManager()
                 }
                 
@@ -725,7 +731,21 @@ extension VoIPCallService {
                         // call
                         VoIPIceServerSource.prefetchIceServers()
                         
-                        completion()
+                        if !ThreemaEnvironment.supportsCallKit() {
+                            self.presentCallView(
+                                contactIdentity: offer.contactIdentity!,
+                                alreadyAccepted: false,
+                                isCallInitiator: false,
+                                isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
+                                videoActive: false,
+                                receivingVideo: false,
+                                viewWasHidden: false,
+                                completion: completion
+                            )
+                        }
+                        else {
+                            completion()
+                        }
                     }
                     else {
                         DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Audio is not granted")
@@ -1335,7 +1355,7 @@ extension VoIPCallService {
                         return
                     }
 
-                    if self.callKitManager == nil {
+                    if ThreemaEnvironment.supportsCallKit(), self.callKitManager == nil {
                         self.callKitManager = VoIPCallKitManager()
                     }
 

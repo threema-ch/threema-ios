@@ -1204,6 +1204,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "IP adresini gizlemek için tüm aramaları yerinde lokal sunucularınız üzerinden aktarır. Arama kalitesini etkileyebilir.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Aramalar kilit ekranında görüntülenir ancak Telefon uygulamasının arama kayıtlarında listelenmez.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Aramalar kilit ekranında görüntülenir ve Telefon uygulamasının arama kayıtlarında listelenir. iCloud Drive etkinleştirildiyse, Telefon uygulamasının arama kayıtları Apple sunucuları aracılığıyla senkronize edilir.";
+"settings_threema_voip_no_callkit_in_china_footer" = "Apple'ın kısıtlamaları nedeniyle, cihazın bölgesi Çin olarak ayarlanmışsa Threema aramaları yapılamaz.";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Ağ";

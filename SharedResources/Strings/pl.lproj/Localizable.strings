@@ -1606,7 +1606,7 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 
 "notification_caption_too_long" = "Podpis jest zbyt długi";
 
-"notification_updateworkdata_failed" = "Synchronizacja z serwerem uruchomieniowym";
+"notification_updateworkdata_failed" = "Synchronizacja z serwerem komunikacyjnym nie powiodła się";
 
 "notification_empty_debug_log_success" = "Opróżniono rejestr debugowania";
 

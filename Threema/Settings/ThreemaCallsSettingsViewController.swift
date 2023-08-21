@@ -133,6 +133,10 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
                 return nil
             }
         }
+        else if !ThreemaEnvironment.supportsCallKit() {
+            return BundleUtil
+                .localizedString(forKey: "settings_threema_voip_no_callkit_in_china_footer")
+        }
         return nil
     }
 }
@@ -148,9 +152,14 @@ extension ThreemaCallsSettingsViewController {
     }
     
     private func enableDisableCallCellForMDM(_ enable: Bool) {
-        enableThreemaCallsCell.isUserInteractionEnabled = enable
-        enableThreemaCallsCell.textLabel?.isEnabled = enable
-        enableThreemaCallSwitch.isEnabled = enable
+        var shouldEnable = enable
+        if !ThreemaEnvironment.supportsCallKit() {
+            shouldEnable = false
+        }
+        
+        enableThreemaCallsCell.isUserInteractionEnabled = shouldEnable
+        enableThreemaCallsCell.textLabel?.isEnabled = shouldEnable
+        enableThreemaCallSwitch.isEnabled = shouldEnable
     }
     
     private func enableDisableVideoCellForMDM(_ enable: Bool) {

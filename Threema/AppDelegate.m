@@ -614,6 +614,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [sentry start];
 #endif
         
+        if (![ThreemaEnvironment supportsCallKit]) {
+            [UserSettings sharedUserSettings].enableThreemaCall = false;
+        }
+        
         [self updateIdentityInfo];
         
         if (![appSetupState isAppSetupCompleted]) {

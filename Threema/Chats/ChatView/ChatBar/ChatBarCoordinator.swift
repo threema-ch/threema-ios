@@ -366,7 +366,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             return false
         }
         
-        let stickerTypes = ["com.apple.png-sticker"]
+        let stickerTypes = ["com.apple.png-sticker", "com.apple.sticker"]
         let containsMemoji = UIPasteboard.general.contains(pasteboardTypes: stickerTypes) && UIPasteboard.general
             .numberOfItems == 1
         

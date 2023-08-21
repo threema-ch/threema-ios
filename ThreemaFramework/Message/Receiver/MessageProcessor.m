@@ -246,10 +246,9 @@ static NSMutableOrderedSet *pendingGroupMessages;
         return;
     }
 
-    DDLogVerbose(@"Process incoming message: %@", amsg);
-
     void(^processAbstractMessageBlock)(AbstractMessage *, NSObject *) = ^void(AbstractMessage *amsg, NSObject *pfsSession) {
         [messageProcessorDelegate incomingMessageStarted:amsg];
+        DDLogVerbose(@"Process incoming message: %@", amsg);
 
         /* Update public nickname in contact, if necessary */
         if (amsg.allowSendingProfile == YES) {

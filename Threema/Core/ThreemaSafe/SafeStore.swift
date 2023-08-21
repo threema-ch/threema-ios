@@ -730,7 +730,12 @@ import ThreemaFramework
         userSettings.blockUnknown = settings.blockUnknown ?? false
         userSettings.sendReadReceipts = settings.readReceipts ?? true
         userSettings.sendTypingIndicator = settings.sendTyping ?? true
-        userSettings.enableThreemaCall = settings.threemaCalls ?? true
+        if ThreemaEnvironment.supportsCallKit() {
+            userSettings.enableThreemaCall = settings.threemaCalls ?? true
+        }
+        else {
+            userSettings.enableThreemaCall = false
+        }
         userSettings.alwaysRelayCalls = settings.relayThreemaCalls ?? false
         if let blockedContacts = settings.blockedContacts {
             userSettings.blacklist = NSOrderedSet(array: blockedContacts)

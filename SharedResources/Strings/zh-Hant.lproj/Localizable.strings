@@ -1204,6 +1204,7 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "透過 OnPrem 伺服器強制中繼所有通話，從而保護您的 IP 地址。這可能會影響通話品質。";
 "settings_threema_voip_include_call_in_recents_footer_off" = "來電通知雖然顯示在鎖定屏幕上，但未列在原生「電話」應用程式的通話記錄。";
 "settings_threema_voip_include_call_in_recents_footer_on" = "來電通知會顯示在鎖定屏幕上，並列在系統內置的「電話」應用程式的通話記錄。如果啟動了 iCloud Drive，通話記錄會透過 Apple 伺服器同步。";
+"settings_threema_voip_no_callkit_in_china_footer" = "由於 Apple 公司的限制，如果裝置的地區設定為中國大陸，就無法使用 Threema 通話。";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "聯網中";

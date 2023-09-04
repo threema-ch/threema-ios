@@ -86,8 +86,9 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 return nil
             }
         }
-            
-        if pendingUserNotification.abstractMessage is GroupCallStartMessage, !ThreemaEnvironment.groupCalls {
+        
+        if pendingUserNotification.abstractMessage is GroupCallStartMessage,
+           !(ThreemaEnvironment.groupCalls && BusinessInjector().settingsStore.enableThreemaGroupCalls) {
             return nil
         }
             
@@ -128,6 +129,13 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             userNotificationContent.groupCreator = entityManager.entityFetcher
                 .groupEntity(for: baseMessage.conversation)?.groupCreator ?? MyIdentityStore.shared().identity
             userNotificationContent.pushSetting = pushSettingManager.find(forConversation: baseMessage.conversation)
+        }
+        else if let groupCallMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage,
+                let groupConversation = entityManager.entityFetcher.conversation(
+                    for: groupCallMessage.groupID,
+                    creator: groupCallMessage.groupCreator
+                ) {
+            userNotificationContent.pushSetting = pushSettingManager.find(forConversation: groupConversation)
         }
             
         let notificationType = settingsStore.notificationType

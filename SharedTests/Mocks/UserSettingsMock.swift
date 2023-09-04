@@ -70,6 +70,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     
     var alwaysRelayCalls = true
     
+    var enableThreemaGroupCalls = true
+    
     var blacklist: NSOrderedSet! = []
 
     var syncExclusionList: [Any]! = [Any]()
@@ -113,9 +115,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var donateInteractions = false
     
     var voiceMessagesShowTimeRemaining = false
-    
-    var flippedTableView = false
-       
+           
     var disableProximityMonitoring = false
     
     var validationLogging = false

@@ -64,7 +64,7 @@ extension GroupCallKeys {
 extension GroupCallKeys {
     func deriveGCNHAK(from sharedSecret: Data) throws -> Data {
         let salt = try GroupCallKeys.encodeAndPad("nha")
-        let personal = try GroupCallKeys.encodeAndPad(ProtocolDefines.GC_PERSONAL)
+        let personal = try GroupCallKeys.encodeAndPad(ProtocolDefines.personal)
         
         return try ThreemaBlake2b(personal: personal).deriveKey(
             from: sharedSecret,
@@ -80,7 +80,7 @@ extension GroupCallKeys {
 extension GroupCallKeys {
     static func deriveCallID(from inputs: [Data], dependencies: Dependencies) throws -> Data {
         let salt = try encodeAndPad("i")
-        let personal = try encodeAndPad(ProtocolDefines.GC_PERSONAL)
+        let personal = try encodeAndPad(ProtocolDefines.personal)
         
         var inputData = Data()
         
@@ -111,7 +111,7 @@ extension GroupCallKeys {
     
     private static func derive(key: Data, salt: String, dependencies: Dependencies) throws -> Data {
         let salt = try encodeAndPad(salt)
-        let personal = try encodeAndPad(ProtocolDefines.GC_PERSONAL)
+        let personal = try encodeAndPad(ProtocolDefines.personal)
         
         return try ThreemaBlake2b(personal: personal).deriveKey(
             from: key,
@@ -122,6 +122,7 @@ extension GroupCallKeys {
 }
 
 extension GroupCallKeys {
+    // TODO: (IOS-3876) For ThreemaBlake2b calls no padding is needed as this is done by the package already
     fileprivate static func encodeAndPad(_ string: String) throws -> Data {
         guard var value = string.data(using: .utf8) else {
             assertionFailure()

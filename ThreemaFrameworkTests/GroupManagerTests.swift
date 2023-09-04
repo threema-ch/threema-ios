@@ -2226,9 +2226,8 @@ class GroupManagerTests: XCTestCase {
         )
         
         XCTAssertNotNil(conversation)
-        
-        let messageFetcher = MessageFetcher(for: conversation!, with: entityManager)
-        let lastMessage: SystemMessage = messageFetcher.lastMessage() as! SystemMessage
+
+        let lastMessage = MessageFetcher(for: conversation!, with: entityManager).lastMessage() as! SystemMessage
         
         XCTAssertNotNil(grp)
         XCTAssertEqual(grp?.groupID, expectedGroupID)

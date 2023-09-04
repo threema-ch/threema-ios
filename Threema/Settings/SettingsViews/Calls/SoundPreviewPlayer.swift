@@ -84,4 +84,8 @@ final class SoundPreviewPlayer {
             DDLogError("Unable to load audio player to play VoIP sound: \(error)")
         }
     }
+    
+    func stopPlaying() {
+        audioPlayer?.stop()
+    }
 }

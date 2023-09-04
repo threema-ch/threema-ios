@@ -90,7 +90,7 @@
 "TyO-Dl-3LV.text" = "ギャラリープレビューを表示";
 
 /* Class = "UINavigationItem"; title = "Media"; ObjectID = "U7Q-cL-ZiA"; */
-"U7Q-cL-ZiA.title" = "写真・動画";
+"U7Q-cL-ZiA.title" = "写真と動画";
 
 /* Class = "UINavigationItem"; title = "Advanced"; ObjectID = "UsC-dS-qae"; */
 "UsC-dS-qae.title" = "上級者向け";
@@ -135,7 +135,7 @@
 "iDF-6E-SQr.text" = "詳細";
 
 /* Class = "UILabel"; text = "Video Quality"; ObjectID = "icP-dl-OGv"; */
-"icP-dl-OGv.text" = "動画画質";
+"icP-dl-OGv.text" = "動画の画質";
 
 /* Class = "UILabel"; text = "max. 640 x 640 pixels"; ObjectID = "ij7-I7-TzW"; */
 "ij7-I7-TzW.text" = "最大 640 x 640 ピクセル";

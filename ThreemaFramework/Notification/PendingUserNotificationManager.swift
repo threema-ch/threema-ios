@@ -228,7 +228,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                     )
                     
                     let businessInjector = BusinessInjector()
-                    let notificationType = businessInjector.settingsStore.notificationType
+                    let notificationType = NotificationType.type(for: businessInjector.userSettings.notificationType)
                     
                     // Add communication notification if enabled
                     if case .complete = notificationType,
@@ -536,42 +536,56 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
     
     fileprivate static func savePendingUserNotifications() {
-        if FileManager.default.fileExists(atPath: pathPendingUserNotifications) {
-            FileManager.default.removeItem(at: pathPendingUserNotifications, completion: { _, error in
-                if let error {
-                    DDLogError(
-                        "[Push] Unable to delete \(pathPendingUserNotifications) file: \(error.localizedDescription)"
-                    )
-                }
-                
-                if let pendingUserNotifications = PendingUserNotificationManager.pendingUserNotifications,
-                   !pendingUserNotifications.isEmpty {
-                    _ = NSKeyedArchiver.archiveRootObject(
-                        pendingUserNotifications,
-                        toFile: pathPendingUserNotifications
-                    )
-                }
-            })
+        do {
+            try FileManager.default.removeItem(atPath: pathPendingUserNotifications)
+        }
+        catch {
+            DDLogError(
+                "[Push] Unable to delete \(pathPendingUserNotifications) file: \(error)"
+            )
+        }
+        
+        do {
+            if let pendingUserNotifications = PendingUserNotificationManager.pendingUserNotifications,
+               !pendingUserNotifications.isEmpty {
+                let archivedData = try NSKeyedArchiver.archivedData(
+                    withRootObject: pendingUserNotifications,
+                    requiringSecureCoding: false
+                )
+                try archivedData.write(to: URL(fileURLWithPath: pathPendingUserNotifications))
+            }
+        }
+        catch {
+            DDLogError(
+                "[Push] Unable to write \(pathPendingUserNotifications) file: \(error)"
+            )
         }
     }
     
     private static func saveProcessedUserNotifications() {
-        if FileManager.default.fileExists(atPath: pathProcessedUserNotifications) {
-            FileManager.default.removeItem(at: pathProcessedUserNotifications, completion: { _, error in
-                if let error {
-                    DDLogError(
-                        "[Push] Unable to delete \(pathProcessedUserNotifications) file: \(error.localizedDescription)"
-                    )
-                }
-                
-                if let processedUserNotifications = PendingUserNotificationManager.processedUserNotifications,
-                   !processedUserNotifications.isEmpty {
-                    NSKeyedArchiver.archiveRootObject(
-                        processedUserNotifications,
-                        toFile: pathProcessedUserNotifications
-                    )
-                }
-            })
+        do {
+            try FileManager.default.removeItem(atPath: pathProcessedUserNotifications)
+        }
+        catch {
+            DDLogError(
+                "[Push] Unable to delete \(pathProcessedUserNotifications) file: \(error)"
+            )
+        }
+        
+        do {
+            if let processedUserNotifications = PendingUserNotificationManager.processedUserNotifications,
+               !processedUserNotifications.isEmpty {
+                let archivedData = try NSKeyedArchiver.archivedData(
+                    withRootObject: processedUserNotifications,
+                    requiringSecureCoding: false
+                )
+                try archivedData.write(to: URL(fileURLWithPath: pathProcessedUserNotifications))
+            }
+        }
+        catch {
+            DDLogError(
+                "[Push] Unable to write \(pathProcessedUserNotifications) file: \(error)"
+            )
         }
     }
     
@@ -590,7 +604,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         }
         return path!
     }
-
+    
     private func getPendingUserNotification(key: String) -> PendingUserNotification? {
         guard !isProcessed(key: key) else {
             return nil

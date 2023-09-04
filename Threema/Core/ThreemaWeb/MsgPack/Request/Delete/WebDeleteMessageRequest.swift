@@ -78,17 +78,13 @@ class WebDeleteMessageRequest: WebAbstractMessage {
             return
         }
         
-        entityManager.performSyncBlockAndSafe {
-            if message.isKind(of: BaseMessage.self) {
+        entityManager.performAndWaitSave {
+            if message.isKind(of: BaseMessage.self) || message.isKind(of: SystemMessage.self) {
                 entityManager.entityDestroyer.deleteObject(object: message)
-            }
-            if message.isKind(of: SystemMessage.self) {
-                entityManager.entityDestroyer.deleteObject(object: message)
-            }
-            
-            if let conversation = self.conversation {
-                let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
-                conversation.lastMessage = messageFetcher.lastMessage()
+
+                if let conversation = self.conversation {
+                    conversation.lastMessage = MessageFetcher(for: conversation, with: entityManager).lastMessage()
+                }
             }
         }
         

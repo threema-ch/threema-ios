@@ -160,8 +160,10 @@ struct DeleteRevokeInfoView: View {
                     BundleUtil.localizedString(forKey: "my_profile_delete_info_alert_confirm"),
                     role: .destructive
                 ) {
-                    DeleteRevokeIdentityManager.deleteLocalData()
-                    deleteConfirmed = true
+                    Task { @MainActor in
+                        await DeleteRevokeIdentityManager.deleteLocalData()
+                        deleteConfirmed = true
+                    }
                 }
                 Button(BundleUtil.localizedString(forKey: "cancel"), role: .cancel) {
                     // do nothing

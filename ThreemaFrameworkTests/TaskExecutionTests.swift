@@ -54,8 +54,11 @@ class TaskExecutionTests: XCTestCase {
         )
         myIdentityStoreMock = MyIdentityStoreMock()
         frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
+            backgroundEntityManager: EntityManager(
+                databaseContext: dbBackgroundCnx,
+                myIdentityStore: myIdentityStoreMock
+            ),
+            entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock
@@ -67,8 +70,11 @@ class TaskExecutionTests: XCTestCase {
         let expectedToIdentity2 = "TESTER02"
 
         dbPreparer.save {
-            dbPreparer.createContact(identity: expectedToIdentity1)
-            dbPreparer.createContact(identity: expectedToIdentity2)
+            let contactEntity1 = dbPreparer.createContact(identity: expectedToIdentity1)
+            dbPreparer.createConversation(contactEntity: contactEntity1)
+
+            let contactEntity2 = dbPreparer.createContact(identity: expectedToIdentity2)
+            dbPreparer.createConversation(contactEntity: contactEntity2)
         }
 
         let cnx = TaskContext()
@@ -137,19 +143,27 @@ class TaskExecutionTests: XCTestCase {
         let expectedToIdentity1 = "TESTER01"
         let expectedToIdentity2 = "TESTER02"
 
+        let groupID = MockData.generateGroupID()
+
         dbPreparer.save {
             dbPreparer.createContact(identity: expectedToIdentity1)
-            let contact = dbPreparer.createContact(identity: expectedToIdentity2)
-            contact.state = NSNumber(integerLiteral: kStateInvalid)
+            let contactEntity = dbPreparer.createContact(identity: expectedToIdentity2)
+            contactEntity.state = NSNumber(integerLiteral: kStateInvalid)
+
+            dbPreparer.createConversation(groupID: groupID)
         }
 
         let cnx = TaskContext()
         let msg1 = GroupTextMessage()
+        msg1.groupID = groupID
+        msg1.groupCreator = myIdentityStoreMock.identity
         msg1.fromIdentity = myIdentityStoreMock.identity
         msg1.toIdentity = expectedToIdentity1
         msg1.text = "Test message 1"
 
         let msg2 = GroupTextMessage()
+        msg2.groupID = groupID
+        msg2.groupCreator = myIdentityStoreMock.identity
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = expectedToIdentity2
         msg2.text = "Test message 1"
@@ -207,7 +221,8 @@ class TaskExecutionTests: XCTestCase {
         let expectedToIdentity1 = "TESTER01"
 
         dbPreparer.save {
-            dbPreparer.createContact(identity: expectedToIdentity1)
+            let contactEntity1 = dbPreparer.createContact(identity: expectedToIdentity1)
+            dbPreparer.createConversation(contactEntity: contactEntity1)
         }
 
         let cnx = TaskContext()

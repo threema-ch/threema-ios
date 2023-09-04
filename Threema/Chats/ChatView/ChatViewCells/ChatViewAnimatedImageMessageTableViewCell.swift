@@ -351,6 +351,20 @@ extension ChatViewAnimatedImageMessageTableViewCell: ChatViewMessageAction {
             }
         }
         
+        // Retry
+        if message.showRetryAndCancelButton {
+            let retryHandler = Provider.retryAction {
+                self.chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID)
+            }
+            
+            // Retry action position analogously to download
+            if message.isUserAckEnabled {
+                menuItems.insert(retryHandler, at: 2)
+            }
+            else {
+                menuItems.insert(retryHandler, at: 0)
+            }
+        }
         return menuItems
     }
     

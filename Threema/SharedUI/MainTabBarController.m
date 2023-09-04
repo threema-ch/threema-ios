@@ -344,6 +344,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _conversationsNavigationController = nil;
 }
 
+- (BOOL)isChatTopViewController {
+    if ([_conversationsNavigationController.topViewController isKindOfClass:[ChatViewController class]]) {
+        return true;
+    }
+    return false;
+}
+
 #pragma mark - notifications
 
 - (void)selectedGroup:(NSNotification*)notification {
@@ -727,10 +734,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self removeCoverView];
     UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
     
-    Conversation *conversation = [_conversationsViewController getFirstConversation];
-    ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
-    [navigationController setViewControllers:@[chatViewController]];
-    [_conversationsViewController setSelectionFor: conversation];    
+    if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]
+        && _conversationsViewController != nil
+        && _conversationsViewController.selectedConversation != nil) {
+        Conversation *conversation = _conversationsViewController.selectedConversation;
+        ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
+        [navigationController setViewControllers:@[chatViewController]];
+    }
+    else {
+        Conversation *conversation = [_conversationsViewController getFirstConversation];
+        ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
+        [navigationController setViewControllers:@[chatViewController]];
+        [_conversationsViewController setSelectionFor: conversation];
+    }
     
     if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
         [_conversationsViewController removeSelectedConversation];

@@ -465,9 +465,11 @@ public struct D2d_ConversationId {
 ///
 /// When receiving this message:
 ///
-/// 1. [...]
-/// 2. Add all `nonces` to the CSP nonce storage, preventing messages from being
+/// 1. Add all `nonces` to the CSP nonce storage, preventing messages from being
 ///    replayed.
+/// 2. If a message with the same `message_id` exists within the associated
+///    `conversation`, discard the message and abort these steps.
+/// 3. [...]
 ///
 /// ¹: For contacts and distribution lists, there will be exactly one nonce. For
 /// groups, there will be as many nonces as there are group members minus one.
@@ -632,9 +634,11 @@ public struct D2d_OutgoingMessageUpdate {
 ///
 /// When receiving this message:
 ///
-/// 1. [...]
-/// 2. Add `nonce` to the CSP nonce storage, preventing messages from being
+/// 1. Add `nonce` to the CSP nonce storage, preventing messages from being
 ///    replayed.
+/// 2. If a message with the same `message_id` exists within the associated
+///    `conversation`, discard the message and abort these steps.
+/// 3. [...]
 public struct D2d_IncomingMessage {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

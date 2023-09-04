@@ -85,7 +85,7 @@ public actor GroupCallsSFUTokenFetcher: GroupCallsSFUTokenFetchAdapterProtocol {
                 let token = SFUToken(
                     sfuBaseURL: baseURL,
                     hostNameSuffixes: hostNameSuffixes,
-                    sfuTOken: sfuToken,
+                    sfuToken: sfuToken,
                     expiration: expiration
                 )
                 

@@ -65,24 +65,25 @@ final class TaskExecutionSendGroupSetPhotoMessage: TaskExecution, TaskExecutionP
             // Send group set photo messages
             var sendMessages = [Promise<AbstractMessage?>]()
             for toMember in task.toMembers {
-                if !toMember.elementsEqual(self.frameworkInjector.myIdentityStore.identity) {
-                    let msg = self.getGroupSetPhotoMessage(
-                        groupID,
-                        groupCreatorIdentity,
-                        task.fromMember,
-                        toMember,
-                        task.size,
-                        task.blobID,
-                        task.encryptionKey
-                    )
-                    sendMessages.append(
-                        self.sendMessage(
-                            message: msg,
-                            ltSend: self.taskContext.logSendMessageToChat,
-                            ltAck: self.taskContext.logReceiveMessageAckFromChat
-                        )
-                    )
+                if toMember == self.frameworkInjector.myIdentityStore.identity {
+                    continue
                 }
+                let msg = self.getGroupSetPhotoMessage(
+                    groupID,
+                    groupCreatorIdentity,
+                    task.fromMember,
+                    toMember,
+                    task.size,
+                    task.blobID,
+                    task.encryptionKey
+                )
+                sendMessages.append(
+                    self.sendMessage(
+                        message: msg,
+                        ltSend: self.taskContext.logSendMessageToChat,
+                        ltAck: self.taskContext.logReceiveMessageAckFromChat
+                    )
+                )
             }
 
             return when(fulfilled: sendMessages)

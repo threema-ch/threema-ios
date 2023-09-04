@@ -25,6 +25,16 @@ public typealias ThreemaIdentity = String
 
 /// Business representation of a Threema Contact
 public class Contact: NSObject {
+    
+    // These strings are used as static properties for performance reasons
+    private static let inactiveString = BundleUtil.localizedString(forKey: "inactive")
+    private static let invalidString = BundleUtil.localizedString(forKey: "invalid")
+    private static let unknownString = BundleUtil.localizedString(forKey: "(unknown)")
+    private static let workAdjustedVerificationLevelString0 = BundleUtil.localizedString(forKey: "level0_title")
+    private static let workAdjustedVerificationLevelString1 = BundleUtil.localizedString(forKey: "level1_title")
+    private static let workAdjustedVerificationLevelString2 = BundleUtil.localizedString(forKey: "level2_title")
+    private static let workAdjustedVerificationLevelString3 = BundleUtil.localizedString(forKey: "level3_title")
+    private static let workAdjustedVerificationLevelString4 = BundleUtil.localizedString(forKey: "level4_title")
 
     // Tokens for entity subscription, will be removed when is deallocated
     private var subscriptionToken: EntityObserver.SubscriptionToken?
@@ -118,9 +128,9 @@ public class Contact: NSObject {
 
         switch state {
         case kStateInactive:
-            value = "\(value) (\(BundleUtil.localizedString(forKey: "inactive")))"
+            value = "\(value) (\(Contact.inactiveString))"
         case kStateInvalid:
-            value = "\(value) (\(BundleUtil.localizedString(forKey: "invalid")))"
+            value = "\(value) (\(Contact.invalidString))"
         default:
             break
         }
@@ -129,7 +139,7 @@ public class Contact: NSObject {
             DDLogError(
                 "Display name is marked as nonnull and we should have something to show. Falling back to (unknown)."
             )
-            value = BundleUtil.localizedString(forKey: "(unknown)")
+            value = Contact.unknownString
         }
 
         return value
@@ -217,7 +227,20 @@ public class Contact: NSObject {
 
     /// Localized string of verification level usable for accessibility
     var verificationLevelAccessibilityLabel: String {
-        BundleUtil.localizedString(forKey: "level\(workAdjustedVerificationLevel)_title")
+        switch workAdjustedVerificationLevel {
+        case 0:
+            return Contact.workAdjustedVerificationLevelString0
+        case 1:
+            return Contact.workAdjustedVerificationLevelString1
+        case 2:
+            return Contact.workAdjustedVerificationLevelString2
+        case 3:
+            return Contact.workAdjustedVerificationLevelString3
+        case 4:
+            return Contact.workAdjustedVerificationLevelString4
+        default:
+            return Contact.workAdjustedVerificationLevelString0
+        }
     }
     
     public var forwardSecurityState: ForwardSecrecyState? {

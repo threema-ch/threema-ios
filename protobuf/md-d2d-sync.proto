@@ -113,6 +113,12 @@ message MdmParameters {
   ParameterPrecedence parameter_precedence = 3;
 }
 
+// Threema Work credentials.
+message ThreemaWorkCredentials {
+  string username = 1;
+  string password = 2;
+}
+
 // The user's profile.
 message UserProfile {
   // Nickname

@@ -29,17 +29,18 @@ protocol GroupCallBannerButtonViewDelegate: AnyObject {
 
 final class GroupCallBannerView: UIView {
     
-    // MARK: - Private Properties
+    // MARK: - Private properties
 
-    private var joinHandler: (() async -> Void)?
+    private weak var delegate: GroupCallBannerButtonViewDelegate?
+    
     private var startDate: Date?
     private var timer: Timer?
 
-    // MARK: - Subviews
+    // MARK: Subviews
 
     private lazy var joinButton: UIButton = {
         let action = UIAction { [weak self] _ in
-            DDLogVerbose("[GroupCall] Video Mute Button")
+            DDLogVerbose("[GroupCall] Join Button")
             Task {
                 await self?.delegate?.joinCall()
             }
@@ -71,11 +72,8 @@ final class GroupCallBannerView: UIView {
     private lazy var participantsLabel: UILabel = {
         let label = UILabel()
         
-        // Since it takes some time to update, we initialize the label with 1 participant
-        label.text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "group_call_participants_title"),
-            String(1)
-        )
+        // Since it takes some time to update, so we don't show participants initially
+        label.text = BundleUtil.localizedString(forKey: "group_call_title")
         label.font = UIFont.preferredFont(forTextStyle: .footnote).bold()
         label.sizeToFit()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -91,8 +89,6 @@ final class GroupCallBannerView: UIView {
         
         return blurEffectView
     }()
-    
-    private weak var delegate: GroupCallBannerButtonViewDelegate?
 
     // MARK: - Lifecycle
 
@@ -150,10 +146,20 @@ final class GroupCallBannerView: UIView {
         Task { @MainActor in
             switch state {
             case let .visible(info):
-                participantsLabel.text = String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "group_call_participants_title"),
-                    String(info.numberOfParticipants)
-                )
+                
+                // Only show participants if there are more than 0 reported
+                let localizedParticipantsText: String
+                if info.numberOfParticipants > 0 {
+                    localizedParticipantsText = String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "group_call_participants_title"),
+                        String(info.numberOfParticipants)
+                    )
+                }
+                else {
+                    localizedParticipantsText = BundleUtil.localizedString(forKey: "group_call_title")
+                }
+                
+                participantsLabel.text = localizedParticipantsText
                 
                 let text = info.joinState == .runningLocal ? BundleUtil
                     .localizedString(forKey: "group_call_open_button_title") : BundleUtil

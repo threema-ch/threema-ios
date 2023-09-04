@@ -1,3 +1,3 @@
 github "CocoaLumberjack/CocoaLumberjack" "3.8.0"
 github "mxcl/PromiseKit" "6.22.1"
-github "threema-jarem/MBProgressHUD" "4f7142b877ae71e83837a5620230aef5bf390e4d"
+github "threema-matteo/MBProgressHUD" "9b5ec2eb45dc3feede6b0c86f2af734570bfc4f3"

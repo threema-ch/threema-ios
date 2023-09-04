@@ -51,8 +51,12 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                 }
 
                 self.frameworkInjector.backgroundEntityManager.performBlock {
-                    guard let conversation = self.getConversation(task) else {
-                        seal.reject(TaskExecutionError.createAbstractMessageFailed)
+                    var conversation: Conversation
+                    do {
+                        conversation = try self.getConversation(for: task)
+                    }
+                    catch {
+                        seal.reject(error)
                         return
                     }
                     
@@ -101,9 +105,20 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
                             task.sendContactProfilePicture = false
+
+                            var conversation: Conversation
+                            do {
+                                conversation = try self.getConversation(for: task)
+                            }
+                            catch {
+                                seal.reject(error)
+                                return
+                            }
+
                             if let messageID = (task as? TaskDefinitionSendBaseMessage)?.messageID {
                                 self.frameworkInjector.backgroundEntityManager.markMessageAsSent(
                                     messageID,
+                                    in: conversation,
                                     sentAt: reflectedAt ?? .now,
                                     isLocal: true
                                 )
@@ -156,8 +171,16 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         }
                     }
                     else {
-                        guard let conversation = self.getConversation(task),
-                              let contactIdentity = conversation.contact?.identity,
+                        var conversation: Conversation
+                        do {
+                            conversation = try self.getConversation(for: task)
+                        }
+                        catch {
+                            seal.reject(error)
+                            return
+                        }
+
+                        guard let contactIdentity = conversation.contact?.identity,
                               contactIdentity != self.frameworkInjector.myIdentityStore.identity,
                               !self.frameworkInjector.userSettings.blacklist.contains(contactIdentity)
                         else {
@@ -194,8 +217,18 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     // Mark (group) message as sent
                     if let msg = sentMessages.compactMap({ $0 }).first {
                         self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                            var conversation: Conversation
+                            do {
+                                conversation = try self.getConversation(for: task)
+                            }
+                            catch {
+                                DDLogError("Conversation for message ID \(msg.messageID.hexString) not found")
+                                return
+                            }
+
                             self.frameworkInjector.backgroundEntityManager.markMessageAsSent(
                                 msg.messageID,
+                                in: conversation,
                                 sentAt: reflectedAt ?? .now
                             )
                         }

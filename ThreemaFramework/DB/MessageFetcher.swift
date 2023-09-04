@@ -52,6 +52,7 @@ public class MessageFetcher: NSObject {
     private let imageEntityName = "ImageMessage"
     private let videoEntityName = "VideoMessage"
     private let audioEntityName = "AudioMessage"
+    private let systemEntityName = "SystemMessage"
     
     private let conversation: Conversation
     private let entityManager: EntityManager
@@ -120,13 +121,34 @@ public class MessageFetcher: NSObject {
         fetchRequest.sortDescriptors = sortDescriptors(ascending: false)
         return fetchRequest
     }()
-    
-    private lazy var lastMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+
+    private lazy var lastMessageExcludesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let excludePredicateExcludes = NSPredicate(
+            format: "type IN %@",
+            SystemMessage.excludeSystemMessageTypes
+        )
+        let fetchRequestExcludes = NSFetchRequest<NSFetchRequestResult>(entityName: systemEntityName)
+        fetchRequestExcludes
+            .predicate =
+            NSCompoundPredicate(andPredicateWithSubpredicates: [conversationPredicate, excludePredicateExcludes])
+        fetchRequestExcludes.sortDescriptors = sortDescriptors(ascending: false)
+        return fetchRequestExcludes
+    }()
+
+    private func lastMessagesFetchRequest(exclude: [Any]?) -> NSFetchRequest<NSFetchRequestResult> {
+        var predicate: NSPredicate
+        if let exclude {
+            let excludePredicate = NSPredicate(format: "NOT (SELF IN %@)", NSArray(array: exclude))
+            predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [conversationPredicate, excludePredicate])
+        }
+        else {
+            predicate = conversationPredicate
+        }
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-        fetchRequest.predicate = conversationPredicate
+        fetchRequest.predicate = predicate
         fetchRequest.sortDescriptors = sortDescriptors(ascending: false)
         return fetchRequest
-    }()
+    }
     
     private lazy var countFileMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: fileEntityName)
@@ -271,18 +293,18 @@ public class MessageFetcher: NSObject {
         
         return result
     }
-    
+
     /// Most recent message
     @objc public func lastMessage() -> BaseMessage? {
-        lastMessagesFetchRequest.fetchLimit = 1
-        
-        guard let result = entityManager.entityFetcher.execute(lastMessagesFetchRequest).first else {
-            return nil
-        }
-        
-        return result as? BaseMessage
+        lastMessageExcludesFetchRequest.fetchLimit = 10
+        let excludedMessages = entityManager.entityFetcher.execute(lastMessageExcludesFetchRequest)
+
+        let fetchRequest = lastMessagesFetchRequest(exclude: excludedMessages)
+        fetchRequest.fetchLimit = 1
+
+        return entityManager.entityFetcher.execute(fetchRequest)?.first as? BaseMessage
     }
-    
+
     /// Number of media messages in the conversation
     public func mediaCount() -> Int {
         var mediaCount = 0

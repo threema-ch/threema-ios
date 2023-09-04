@@ -21,10 +21,11 @@
 import Foundation
 
 enum ProtocolDefines {
-    static let PROTOCOL_VERSION = 1
-    static let GC_CALL_ID_LENGTH = 32
-    static let GC_PERSONAL = "3ma-call"
-    static let GC_MEDIA_KEY_LENGTH: Int32 = 32
+    static let protocolVersion = 1
+    static let callIDLength = 32
+    static let personal = "3ma-call"
+    static let mediaKeyLength: Int32 = 32
     
-    static let NanosecondsPerSecond: UInt64 = 1_000_000_000
+    static let nanosecondsPerSecond: UInt64 = 1_000_000_000
+    static let allowedBaseURLProtocol = "https"
 }

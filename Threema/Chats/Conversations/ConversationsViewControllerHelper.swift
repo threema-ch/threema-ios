@@ -608,7 +608,7 @@ class ConversationsViewControllerHelper {
                     fatalError("MainTabBarController unexpectedly found nil")
                 }
                 
-                let passCodeViewController = KKPasscodeSettingsViewController(style: .grouped)
+                let passCodeViewController = KKPasscodeSettingsViewController(style: .insetGrouped)
                 tabBarController.showModal(passCodeViewController)
             }
         )

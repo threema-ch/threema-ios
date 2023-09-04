@@ -164,7 +164,8 @@ struct RevokeIdentityInfoView: View {
         Task { @MainActor in
             do {
                 try await DeleteRevokeIdentityManager.revokeIdentity()
-                DeleteRevokeIdentityManager.deleteLocalData()
+                DeleteRevokeIdentityManager.deleteBackups()
+                await DeleteRevokeIdentityManager.deleteLocalData()
                 revokeSuccessful = true
             }
             catch {

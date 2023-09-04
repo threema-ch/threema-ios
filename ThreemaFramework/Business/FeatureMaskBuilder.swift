@@ -96,6 +96,9 @@ import ThreemaProtocols
             .voip(enabled: true)
             .videoCalls(enabled: true)
             .forwardSecurity(enabled: ThreemaUtility.supportsForwardSecurity)
-            .groupCalls(enabled: ThreemaEnvironment.groupCalls)
+            .groupCalls(
+                enabled: ThreemaEnvironment.groupCalls && BusinessInjector().settingsStore
+                    .enableThreemaGroupCalls
+            )
     }
 }

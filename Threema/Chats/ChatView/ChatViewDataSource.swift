@@ -81,11 +81,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         guard sectionIndex >= 0 else {
             return nil
         }
-        
-        guard !flippedTableView else {
-            return IndexPath(row: 0, section: 0)
-        }
-        
+                
         let lastSectionIdentifier = snapshot.sectionIdentifiers[sectionIndex]
         let lastItemInSectionIndex = snapshot.numberOfItems(inSection: lastSectionIdentifier) - 1
         
@@ -105,18 +101,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             return nil
         }
         
-        guard flippedTableView else {
-            return IndexPath(row: 0, section: 0)
-        }
-        
-        let lastSectionIdentifier = snapshot.sectionIdentifiers[sectionIndex]
-        let lastItemInSectionIndex = snapshot.numberOfItems(inSection: lastSectionIdentifier) - 1
-        
-        guard lastItemInSectionIndex >= 0 else {
-            return nil
-        }
-        
-        return IndexPath(item: lastItemInSectionIndex, section: sectionIndex)
+        return IndexPath(row: 0, section: 0)
     }
     
     private var snapshotApplyTiming = CFAbsoluteTimeGetCurrent()
@@ -140,9 +125,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ///
     /// Only set after `initialSetupCompleted` is `true`
     private(set) var isLoadingNewMessages = false
-    
-    private let flippedTableView = UserSettings.shared().flippedTableView
-    
+        
     /// Used for ensuring mutual exclusion between animated scrolling and applying new snapshots
     ///
     /// `apply(_:animatingDifferences:)` will cancel in progress animations such as animated scrolling to the newest
@@ -188,9 +171,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         target: nil
     )
     
-    /// Depending on the orientation of the tableView `firstOrLastMessage` contains the first or the last message in the
-    /// requested snapshot
-    private var fetchRequestSnapshotApplyStore: (firstOrLastMessage: NSManagedObjectID?, seal: Resolver<Void>)?
+    /// `lastMessage` contains the last message in the requested snapshot
+    private var fetchRequestSnapshotApplyStore: (lastMessage: NSManagedObjectID?, seal: Resolver<Void>)?
     
     private var bottomIdentifier: NSManagedObjectID? {
         guard let bottomIndexPath else {
@@ -482,7 +464,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         // Choreograph snapshot apply and subsequent scroll to bottom
         // Resolves points four and five in IOS-3613
         //
-        // In non-flipped mode when sending two messages in quick succession we would observe the scroll
+        // When sending two messages in quick succession we would observe the scroll
         // position to be incorrectly set when the first message would hide its date and state view.
         // Instead of keeping at the very bottom we would scroll up by about the height of the date and state view.
         // It is unclear why this would happen, but we believe that this is coming from UITableView trying to keep a
@@ -492,28 +474,23 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         // visible scroll up and then down animation. To avoid this we move the previous implementation of snapshot
         // apply and a call to scrollToBottom (`snapshotApplyAnimateBlockBlock`) into a single UIView.animate animation
         // block.
-        if flippedTableView {
-            applyBlock()
-        }
-        else {
-            DispatchQueue.main.async {
-                let previousSnapshot = self.snapshot()
-                if let snapshotApplyAnimateBlockBlock,
-                   previousSnapshot.numberOfItems == snapshotInfo.snapshot.numberOfItems ||
-                   ChatViewDataSource.nextRemovesOrAddsUnreadMessageLine(
-                       current: previousSnapshot,
-                       next: snapshotInfo.snapshot
-                   ) || ChatViewDataSource
-                   .nextRemovesTypingIndicator(current: previousSnapshot, next: snapshotInfo.snapshot) {
-                    UIView.animate(withDuration: Config.animationDuration, animations: {
-                        applyBlock()
-                        
-                        snapshotApplyAnimateBlockBlock()
-                    })
-                }
-                else {
+        DispatchQueue.main.async {
+            let previousSnapshot = self.snapshot()
+            if let snapshotApplyAnimateBlockBlock,
+               previousSnapshot.numberOfItems == snapshotInfo.snapshot.numberOfItems ||
+               ChatViewDataSource.nextRemovesOrAddsUnreadMessageLine(
+                   current: previousSnapshot,
+                   next: snapshotInfo.snapshot
+               ) || ChatViewDataSource
+               .nextRemovesTypingIndicator(current: previousSnapshot, next: snapshotInfo.snapshot) {
+                UIView.animate(withDuration: Config.animationDuration, animations: {
                     applyBlock()
-                }
+                    
+                    snapshotApplyAnimateBlockBlock()
+                })
+            }
+            else {
+                applyBlock()
             }
         }
         
@@ -546,11 +523,10 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         /// snapshot has the same identifier as the last (not cancelled) call to one of the load messages methods.
         ///
         /// If we cannot signal completion but have a fetch request waiting for application we cancel it.
-        let firstOrLastMessage = flippedTableView ? snapshotInfo.snapshot.itemIdentifiers.first : snapshotInfo.snapshot
-            .itemIdentifiers.last
-        if case let .message(objectID) = firstOrLastMessage,
+        let lastMessage = snapshotInfo.snapshot.itemIdentifiers.last
+        if case let .message(objectID) = lastMessage,
            let fetchRequestSnapshotApplyStore {
-            if fetchRequestSnapshotApplyStore.firstOrLastMessage == objectID {
+            if fetchRequestSnapshotApplyStore.lastMessage == objectID {
                 fetchRequestSnapshotApplyStore.seal.fulfill_()
                 self.fetchRequestSnapshotApplyStore = nil
             }

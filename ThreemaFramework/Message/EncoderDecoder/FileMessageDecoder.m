@@ -170,33 +170,31 @@ typedef void (^ErrorBlock)(NSError *err);
 }
 
 - (void)fetchThumbnail:(FileMessageEntity *)fileMessageEntity {
+    __block NSManagedObjectID *objectID;
     __block NSData *blobID;
     __block BlobOrigin blobOrigin;
+    __block BlobOrigin blobOriginForDone = BlobOriginPublic;
+    __block BOOL isNotGroupMessage = YES;
+
     [entityManager performBlockAndWait:^{
+        objectID = fileMessageEntity.objectID;
         blobID = fileMessageEntity.blobThumbnailId;
         blobOrigin = fileMessageEntity.blobOrigin;
+        isNotGroupMessage = fileMessageEntity.conversation.groupId == nil;
+
+        if (isNotGroupMessage) {
+            blobOriginForDone = fileMessageEntity.blobOrigin;
+        }
+        else if ([[UserSettings sharedUserSettings] enableMultiDevice]) {
+            blobOriginForDone = BlobOriginLocal;
+        }
     }];
 
     if (blobID) {
         dispatch_semaphore_t sema = dispatch_semaphore_create(0);
         dispatch_queue_t dispatchQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-        __block NSData *decodedData = nil;
-
         [ActivityIndicatorProxy startActivity];
-        
-        __block BOOL isNotGroupMessage = true;
-        __block BlobOrigin blobOriginOrNil = BlobOriginPublic;
-        // `fetchThumbnail` is often called on the thread used by entityManger, we must thus call this before we block the thread
-        // in line 214 with the semaphore.
-        [entityManager performBlockAndWait:^{
-            FileMessageEntity *localfileMessageEntity = [entityManager.entityFetcher existingObjectWithID:fileMessageEntity.objectID];
-            isNotGroupMessage = localfileMessageEntity.conversation.groupId == nil;
-            
-            if (isNotGroupMessage) {
-                blobOriginOrNil = localfileMessageEntity.blobOrigin;
-            }
-        }];
         
         BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:dispatchQueue];
         BlobDownloader *downloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:dispatchQueue];
@@ -206,20 +204,20 @@ typedef void (^ErrorBlock)(NSError *err);
                 NSData *encryptionKey = [encryptionKeyHex decodeHex];
 
                 /* Decrypt the box */
-                decodedData = [[NaClCrypto sharedCrypto] symmetricDecryptData:data withKey:encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_2 length:sizeof(kNonce_2) freeWhenDone:NO]];
+                NSData *decodedData = [[NaClCrypto sharedCrypto] symmetricDecryptData:data withKey:encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_2 length:sizeof(kNonce_2) freeWhenDone:NO]];
                 if (decodedData == nil) {
                     DDLogError(@"Could not decode thumbnail data");
                 }
 
+                [self updateDBMessageWithThumbnail:decodedData objectID:objectID];
+
                 if (isNotGroupMessage) {
-                    [downloader markDownloadDoneFor:blobID origin:blobOriginOrNil];
-                }
-                else if ([[UserSettings sharedUserSettings] enableMultiDevice]) {
-                    [downloader markDownloadDoneFor:blobID origin:BlobOriginLocal];
+                    [downloader markDownloadDoneFor:blobID origin:blobOriginForDone];
                 }
             }
             else {
                 DDLogError(@"Could not download thumbnail for file message %@", error.localizedDescription);
+                [self updateDBMessageWithThumbnail:nil objectID:objectID];
             }
             
             dispatch_semaphore_signal(sema);
@@ -230,20 +228,21 @@ typedef void (^ErrorBlock)(NSError *err);
         // Set timeout 20s if App not active or its notification extension
         if (self->timeoutDownloadThumbnail > 0) {
             // Wait for 20 seconds (20 * 10^9 ns) to downloading thumbnail
-            int64_t nanoseconds = 1000 * 1000 * 1000;
-            timeout = dispatch_time(DISPATCH_TIME_NOW, self->timeoutDownloadThumbnail * nanoseconds);
+            timeout = dispatch_time(DISPATCH_TIME_NOW, self->timeoutDownloadThumbnail * NSEC_PER_SEC);
         }
         else {
             timeout = DISPATCH_TIME_FOREVER;
         }
 
-        dispatch_semaphore_wait(sema, timeout);
+        BOOL timedOut = dispatch_semaphore_wait(sema, timeout);
+        
+        if (timedOut) {
+            [self updateDBMessageWithThumbnail:nil objectID:objectID];
+        }
 
         [ActivityIndicatorProxy stopActivity];
-
-        [self updateDBMessageWithThumbnail:decodedData fileMessageEntity:fileMessageEntity error:nil];
     } else {
-        [self updateDBMessageWithThumbnail:nil fileMessageEntity:fileMessageEntity error:nil];
+        [self updateDBMessageWithThumbnail:nil objectID:objectID];
     }
 }
 
@@ -300,10 +299,11 @@ typedef void (^ErrorBlock)(NSError *err);
     return fileMessageEntity;
 }
 
-- (void)updateDBMessageWithThumbnail:(NSData *)thumbnailData fileMessageEntity:(FileMessageEntity *)fileMessageEntity error:(NSError *)error {
-    __block FileMessageEntity *tmpFileMessageEntity = fileMessageEntity;
-    [entityManager performSyncBlockAndSafe:^{
-        if (thumbnailData) {
+- (void)updateDBMessageWithThumbnail:(nullable NSData *)thumbnailData objectID:(nonnull NSManagedObjectID *)objectID {
+    [entityManager performAsyncBlockAndSafe:^{
+        FileMessageEntity *msg = [[entityManager entityFetcher] existingObjectWithID:objectID];
+
+        if (msg && msg.thumbnail == nil && thumbnailData) {
             ImageData *thumbnail = [entityManager.entityCreator imageData];
             thumbnail.data = thumbnailData;
             
@@ -312,15 +312,11 @@ typedef void (^ErrorBlock)(NSError *err);
             thumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];
             thumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
             
-            tmpFileMessageEntity.thumbnail = thumbnail;
+            msg.thumbnail = thumbnail;
         }
+
+        _onCompletion(msg);
     }];
-    
-    if (error) {
-        _onError(error);
-    } else {
-        _onCompletion(tmpFileMessageEntity);
-    }
 }
 
 @end

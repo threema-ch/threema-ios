@@ -134,7 +134,7 @@ class NotificationService: UNNotificationServiceExtension {
                 
                 businessInjector.serverConnector.businessInjectorForMessageProcessing = businessInjector
                 
-                if ThreemaEnvironment.groupCalls {
+                if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
                     GlobalGroupCallsManagerSingleton.shared.processBusinessInjector = businessInjector
                 }
                 
@@ -339,19 +339,13 @@ class NotificationService: UNNotificationServiceExtension {
     }
 
     private func extensionIsReady() -> Bool {
-        guard let myIdentityStore = MyIdentityStore.shared() else {
-            applyContent(noAccessToKeychainNotificationContent(), recalculateBadgeCount: false)
+        guard let myIdentityStore = MyIdentityStore.shared(), !myIdentityStore.isKeychainLocked() else {
+            DDLogWarn("[Push] There is no MyIdentityStore or Keychain is locked.")
+            showNoAccessToKeychainLocalNotification {
+                self.applyContent(nil, recalculateBadgeCount: false)
+            }
             
             MyIdentityStore.resetSharedInstance()
-            
-            return false
-        }
-        
-        guard !myIdentityStore.isKeychainLocked() else {
-            applyContent(noAccessToKeychainNotificationContent(), recalculateBadgeCount: false)
-            
-            MyIdentityStore.resetSharedInstance()
-            
             return false
         }
         
@@ -359,20 +353,27 @@ class NotificationService: UNNotificationServiceExtension {
         guard appSetupSate.isAppSetupCompleted() else {
             DDLogWarn("[Push] App setup is not completed")
             
+            showNoAccessToKeychainLocalNotification {
+                self.applyContent(nil, recalculateBadgeCount: false)
+            }
+            
             MyIdentityStore.resetSharedInstance()
-
-            applyContent(noAccessToKeychainNotificationContent(), recalculateBadgeCount: false)
-
+            
             return false
         }
 
         guard isDBReady(), !AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) else {
             DDLogWarn("[Push] DB not ready, requires migration")
 
-            let content = UNMutableNotificationContent()
-            content.body = BundleUtil.localizedString(forKey: "new_message_db_requires_migration")
-            applyContent(content, recalculateBadgeCount: false)
-
+            ThreemaUtility.showLocalNotification(
+                identifier: "ErrorMessage",
+                title: "",
+                body: BundleUtil.localizedString(forKey: "new_message_db_requires_migration"),
+                badge: 1,
+                userInfo: nil
+            ) {
+                self.applyContent(nil, recalculateBadgeCount: false)
+            }
             return false
         }
 
@@ -519,20 +520,21 @@ class NotificationService: UNNotificationServiceExtension {
         DDLogNotice("[Push] Memory: \(memoryTotal) in use \(memoryInUse)")
     }
     
-    private func noAccessToKeychainNotificationContent() -> UNMutableNotificationContent {
+    private func showNoAccessToKeychainLocalNotification(onComletion: @escaping () -> Void) {
         let title = BundleUtil.localizedString(forKey: "new_message_no_access_title")
         let message = String.localizedStringWithFormat(
             BundleUtil.localizedString(forKey: "new_message_no_access_message"),
             ThreemaApp.appName
         )
         
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = message
-        content.sound = .default
-        content.threadIdentifier = "ErrorMessage"
-        
-        return content
+        ThreemaUtility.showLocalNotification(
+            identifier: "ErrorMessage",
+            title: title,
+            body: message,
+            badge: 1,
+            userInfo: nil,
+            completionHandler: onComletion
+        )
     }
 }
 

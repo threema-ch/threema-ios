@@ -47,7 +47,7 @@ final class MediaKeys {
     // MARK: - Lifecycle
     
     convenience init(dependencies: Dependencies) {
-        let pcmk = dependencies.groupCallCrypto.randomBytes(of: ProtocolDefines.GC_MEDIA_KEY_LENGTH)
+        let pcmk = dependencies.groupCallCrypto.randomBytes(of: ProtocolDefines.mediaKeyLength)
         
         self.init(pcmk: pcmk, dependencies: dependencies)
     }

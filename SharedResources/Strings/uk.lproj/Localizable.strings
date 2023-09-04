@@ -764,10 +764,21 @@
 "call_threema_cellular_instead_of_wifi_title" = "Виклик через стільник";
 "call_threema_cellular_instead_of_wifi_text" = "Увага: цей виклик передає дані у стільниковій мережі.";
 
-// Group Calls
+/* Group Calls */
 "group_call_join_button_title" = "Приєднатися";
 "group_call_open_button_title" = "Відкрити";
 "group_call_participants_title" = "Учасники: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ почав(-ла) груповий дзвінок";
+"group_call_started_by_local_system_message" = "Ви почали груповий дзвінок";
+"group_call_ended_system_message" = "Груповий дзвінок завершено";
+
+"group_call_start_message_received" = "Розпочато груповий дзвінок";
+
+"group_call_navbar_state_connecting" = "Під’єднання…";
+"group_call_navbar_state_joining" = "Приєднання…";
+"group_call_navbar_state_connected" = "Під’єднано";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema захищає вашу приватність суворіше, ніж будь-який інший месенджер. Дізнайтесь більше у нашій Політиці конфіденційності.";
@@ -1205,7 +1216,6 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Ретранслюйте всі виклики через ваші сервери OnPrem, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Виклики показуються на заблокованому екрані, але не перелічені в списку викликів програми Телефон.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Виклики показуються на заблокованому екрані та перелічені в списку викликів програми Телефон. Якщо iCloud Drive активовано, список викликів програми Телефон синхронізується через сервери Apple.";
-
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Мережа";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1779,17 +1789,6 @@
 "alert_biometrics_changed_title_touch" = "Виявлено можливу зміну в TouchID";
 "alert_biometrics_changed_title_face" = "Виявлено можливу зміну в FaceID";
 "alert_biometrics_changed_message" = "Введіть свій код доступу Threema один раз, щоб і надалі використовувати біометричну автентифікацію для розблокування Threema.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ почав(-ла) груповий дзвінок";
-"group_call_started_by_local_system_message" = "Ви почали груповий дзвінок";
-"group_call_ended_system_message" = "Груповий дзвінок завершено";
-
-"group_call_start_message_received" = "Розпочато груповий дзвінок";
-
-"group_call_navbar_state_connecting" = "Під’єднання…";
-"group_call_navbar_state_joining" = "Приєднання…";
-"group_call_navbar_state_connected" = "Під’єднано";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nНе вдалося перейти з версії %d на нижчу версію %d";

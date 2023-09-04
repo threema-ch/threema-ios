@@ -45,8 +45,12 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                 }
 
                 self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                    guard let conversation = self.getConversation(task) else {
-                        seal.reject(TaskExecutionError.createAbstractMessageFailed)
+                    var conversation: Conversation
+                    do {
+                        conversation = try self.getConversation(for: task)
+                    }
+                    catch {
+                        seal.reject(error)
                         return
                     }
                     
@@ -139,8 +143,16 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                         }
                     }
                     else {
-                        guard let conversation = self.getConversation(task),
-                              let contactIdentity = conversation.contact?.identity,
+                        var conversation: Conversation
+                        do {
+                            conversation = try self.getConversation(for: task)
+                        }
+                        catch {
+                            seal.reject(error)
+                            return
+                        }
+
+                        guard let contactIdentity = conversation.contact?.identity,
                               contactIdentity != self.frameworkInjector.myIdentityStore.identity,
                               !self.frameworkInjector.userSettings.blacklist.contains(contactIdentity)
                         else {

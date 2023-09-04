@@ -695,21 +695,21 @@ extension ConversationsViewController: UISearchResultsUpdating, UISearchControll
         let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
         
         if !searchText.isEmpty {
-            let groupPredicate = NSPredicate(format: "groupName contains[c] %@", searchText)
+            let groupPredicate = NSPredicate(format: "groupId != nil AND groupName contains[c] %@", searchText)
             let firstNamePredicate = NSPredicate(
-                format: "contact.firstName contains[c] %@ AND groupId == nil",
+                format: "groupId == nil AND contact.firstName contains[c] %@",
                 searchText
             )
             let lastNamePredicate = NSPredicate(
-                format: "contact.lastName contains[c] %@ AND groupId == nil",
+                format: "groupId == nil AND contact.lastName contains[c] %@",
                 searchText
             )
             let publicNamePredicate = NSPredicate(
-                format: "contact.publicNickname contains[c] %@ AND groupId == nil",
+                format: "groupId == nil AND contact.publicNickname contains[c] %@",
                 searchText
             )
             let identityPredicate = NSPredicate(
-                format: "contact.identity contains[c] %@ AND groupId == nil",
+                format: "groupId == nil AND contact.identity contains[c] %@",
                 searchText
             )
             

@@ -265,7 +265,7 @@ struct ChatViewCellProvider {
             BundleUtil.localizedString(forKey: "unread_messages_line_with_count"),
             unreadMessagesCount
         )
-        cell.configureCell(with: text)
+        cell.text = text
         
         return cell
     }

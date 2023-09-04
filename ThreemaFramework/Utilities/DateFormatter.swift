@@ -527,6 +527,7 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Formatted date or empty string if `date` is nil
+    @objc
     public static func getDateForExport(_ date: Date?) -> String {
         guard let date else {
             return ""

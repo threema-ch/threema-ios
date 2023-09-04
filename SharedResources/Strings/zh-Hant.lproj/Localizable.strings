@@ -49,7 +49,7 @@
 "cannot_connect_message" = "無法連線，請檢查您的網路連線。";
 
 // JKLockScreenViewController
-"delete_identity_passcode_title" = "密碼鎖已開啟";
+"delete_identity_passcode_title" = "密碼鎖已啟用";
 "delete_identity_passcode_message" = "請在刪除您的ID之前停用密碼鎖。";
 
 /* JKLockScreenViewController */
@@ -523,7 +523,7 @@
 "more_information" = "更多資訊";
 "more_information_link_id_work" = "向我們提供您的電話號碼和電子郵件地址，以協助您的聯絡人在 %@ 上自動找到您。這些訊息將以安全且匿名的方式儲存。如果您跳過此步驟，則完全匿名使用 %@。";
 "more_information_pick_nickname" = "暱稱用於裝置的推播通知。當對方未儲存您的電話號碼在他的通訊錄時。暱稱可以方便對方辨別您的身份。我們建議只提供您的名字或假名。如果您不設定暱稱，我們將預設使用您的 Threema ID 作為暱稱。";
-"more_information_sync_contacts" = "如果開啟此選項，%@ 會將電子郵件地址和電話號碼單向加密（使用雜湊函式），然後將其傳送到伺服器以尋找相符的聯絡人。我們不會儲存任何通訊錄資料。";
+"more_information_sync_contacts" = "如果啟用此選項，%@ 會將電子郵件地址和電話號碼單向加密（使用雜湊函式），然後將其傳送到伺服器以尋找相符的聯絡人。我們不會儲存任何通訊錄資料。";
 "more_information_random_seed" = "您可以移動手指建立隨機資料（稱為熵），生成與 Threema ID 相關的唯一的新金鑰對。";
 "id_confirm_description_work" = "您的 Threema ID 就像電話號碼一樣。您的聯絡人可以透過這個ID與您聯絡。";
 "more_information_link_id" = "向我們提供您的電話號碼和電子郵件地址，以協助您的聯絡人在 Threema 上自動找到您。這些訊息將以安全且匿名的方式儲存。如果您跳過此步驟，則完全匿名使用 Threema。";
@@ -631,10 +631,10 @@
 "new_message_db_requires_migration" = "Threema 已推出更新內容，請開啟應用程式以完成更新。";
 
 /* reminder messages */
-"push_reminder_title" = "未開啟通知";
+"push_reminder_title" = "未啟用通知";
 "push_reminder_message" = "當 %@ 關閉時，您將不會收到新訊息或來電通知。\n\n要解決此問題，請前往系統設定並開啟 %@ 通知。";
 "push_reminder_not_now" = "下次不再提醒我";
-"push_reminder_set_now" = "開啟通知";
+"push_reminder_set_now" = "啟用通知";
 
 "updating_database" = "正在更新資料庫...\n\n請保持 Threema 在前景執行直到完成為止。\n\n如果您有大量的對話記錄，可能需要幾分鐘的時間才能完成。";
 "database_migration_error_hints" = "請確保裝置上有足夠的可用儲存空間，重新啟動裝置後再試一次。";
@@ -765,9 +765,22 @@
 "call_threema_cellular_instead_of_wifi_text" = "警告：這個通話將透過行動網路進行。";
 
 // Group Calls
+"group_call_title" = "群組通話";
+/* Group Calls */
 "group_call_join_button_title" = "加入";
 "group_call_open_button_title" = "開啟";
 "group_call_participants_title" = "參與者：%@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@發起了群組通話";
+"group_call_started_by_local_system_message" = "您發起了群組通話";
+"group_call_ended_system_message" = "群組通話已結束";
+
+"group_call_start_message_received" = "發起群組通話";
+
+"group_call_navbar_state_connecting" = "連線中...";
+"group_call_navbar_state_joining" = "正在加入…";
+"group_call_navbar_state_connected" = "已連線";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema 比任何其他即時通訊工具都更加嚴格地保護您的隱私。在我們的隱私權政策中了解更多。";
@@ -916,7 +929,7 @@
 "invalid_threema_id" = "無效的 Threema ID";
 "number_of_days" = "%d 天";
 
-"safe_enable_explain_short" = "開啟 Threema Safe 可以自動為所有重要資料建立安全和匿名的備份。";
+"safe_enable_explain_short" = "啟用 Threema Safe 可以自動為所有重要資料建立安全和匿名的備份。";
 "safe_enable_explain" = "您對話相關的所有資料只儲存在您的裝置上。因為我們沒有儲存您的帳戶，所以如果您丢失了電話或意外刪除了資料，我们將無法為您提供協助。\n\nThreema Safe 在您選擇的安全伺服器上，以匿名方式建立所有重要資料的自動備份，包括您的金鑰，聯絡人清單和群組成員身份。";
 
 "safe_server_authentication" = "驗證（選用）";
@@ -960,12 +973,12 @@
 "safe_error_preparing" = "準備 Threema Safe 備份時出錯";
 "safe_configure_choose_password_title" = "選擇密碼";
 "safe_configure_choose_password" = "請選擇一個密碼。您將需要此密碼來還原 Threema Safe 備份。";
-"safe_configure_choose_password_mdm" = "您的管理員為您的裝置開啟了 Threema Safe。";
+"safe_configure_choose_password_mdm" = "您的管理員為您的裝置啟用了 Threema Safe。";
 "safe_version_mismatch" = "此備份的版本高於支援的版本。請更新至最新版本的應用程式。";
 "safe_intro_title" = "隆重介紹 Threema Safe";
 "safe_intro_description" = "再也不會丟失您的 Threema ID、聯絡人、群組和設定了！";
 "safe_intro_explain" = "Threema Safe 定期為您最重要的資料建立加密的匿名備份，並將其儲存在 Threema 伺服器，或在您選擇的其他伺服器上。";
-"safe_intro_enable" = "立刻開啟";
+"safe_intro_enable" = "立刻啟用";
 "safe_intro_cancel" = "不再顯示";
 "safe_failed_notification" = "Threema Safe 連續%.0f天備份失敗。請檢查 Threema Safe 的設定。";
 "safe_expired_notification" = "您的 Threema Safe 備份可能已過期，可能很快將被刪除。請檢查 Threema Safe 設定，並確保可以建立 Threema Safe 備份。";
@@ -1184,7 +1197,7 @@
 "files" = "檔案";
 
 // Call Settings
-"settings_threema_calls_enable_calls" = "開啟 Threema 通話";
+"settings_threema_calls_enable_calls" = "啟用 Threema 通話";
 "settings_threema_calls_always_relay_calls" = "始終中繼通話";
 "settings_threema_calls_callkit" = "將通話整合至 iOS";
 "settings_threema_calls_video_section" = "視訊通話";
@@ -1205,6 +1218,8 @@
 "settings_threema_voip_include_call_in_recents_footer_off" = "來電通知雖然顯示在鎖定屏幕上，但未列在原生「電話」應用程式的通話記錄。";
 "settings_threema_voip_include_call_in_recents_footer_on" = "來電通知會顯示在鎖定屏幕上，並列在系統內置的「電話」應用程式的通話記錄。如果啟動了 iCloud Drive，通話記錄會透過 Apple 伺服器同步。";
 "settings_threema_voip_no_callkit_in_china_footer" = "由於 Apple 公司的限制，如果裝置的地區設定為中國大陸，就無法使用 Threema 通話。";
+"settings_threema_calls_group_calls_header" = "群組通話（測試中）";
+"settings_threema_calls_enable_group_calls" = "啟用 Threema 群組通話";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "聯網中";
@@ -1779,17 +1794,6 @@
 "alert_biometrics_changed_title_touch" = "偵測到 Touch ID 可能發生變更";
 "alert_biometrics_changed_title_face" = "偵測到 Face ID 可能發生變更";
 "alert_biometrics_changed_message" = "請再輸入您的 Threema 密碼，以繼續使用生物辨識以解鎖 Threema。";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@發起了群組通話";
-"group_call_started_by_local_system_message" = "您發起了群組通話";
-"group_call_ended_system_message" = "群組通話已結束";
-
-"group_call_start_message_received" = "發起群組通話";
-
-"group_call_navbar_state_connecting" = "連線中...";
-"group_call_navbar_state_joining" = "正在加入…";
-"group_call_navbar_state_connected" = "已連線";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n無法從 %d 版本降級至 %d 版本";

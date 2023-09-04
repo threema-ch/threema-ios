@@ -405,6 +405,21 @@ extension Sync_MdmParameters.ParameterPrecedence: CaseIterable {
 
 #endif  // swift(>=4.2)
 
+/// Threema Work credentials.
+public struct Sync_ThreemaWorkCredentials {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var username: String = String()
+
+  public var password: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 /// The user's profile.
 public struct Sync_UserProfile {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
@@ -2411,6 +2426,7 @@ extension Sync_MdmParameters: @unchecked Sendable {}
 extension Sync_MdmParameters.ParameterPrecedence: @unchecked Sendable {}
 extension Sync_MdmParameters.Parameter: @unchecked Sendable {}
 extension Sync_MdmParameters.Parameter.OneOf_Value: @unchecked Sendable {}
+extension Sync_ThreemaWorkCredentials: @unchecked Sendable {}
 extension Sync_UserProfile: @unchecked Sendable {}
 extension Sync_UserProfile.ProfilePictureShareWith: @unchecked Sendable {}
 extension Sync_UserProfile.ProfilePictureShareWith.OneOf_Policy: @unchecked Sendable {}
@@ -2597,6 +2613,44 @@ extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._Me
 
   public static func ==(lhs: Sync_MdmParameters.Parameter, rhs: Sync_MdmParameters.Parameter) -> Bool {
     if lhs.value != rhs.value {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Sync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ThreemaWorkCredentials"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "username"),
+    2: .same(proto: "password"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.username) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.password) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.username.isEmpty {
+      try visitor.visitSingularStringField(value: self.username, fieldNumber: 1)
+    }
+    if !self.password.isEmpty {
+      try visitor.visitSingularStringField(value: self.password, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Sync_ThreemaWorkCredentials, rhs: Sync_ThreemaWorkCredentials) -> Bool {
+    if lhs.username != rhs.username {return false}
+    if lhs.password != rhs.password {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

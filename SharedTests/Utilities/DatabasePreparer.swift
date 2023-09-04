@@ -174,7 +174,26 @@ class DatabasePreparer {
         locationMessage.sender = sender
         return locationMessage
     }
-    
+
+    @discardableResult func createSystemMessage(
+        conversation: Conversation,
+        type: Int,
+        date: Date = Date(),
+        id: Data = MockData.generateMessageID()
+    ) -> SystemMessage {
+        let systemMessage = createEntity(objectType: SystemMessage.self)
+        systemMessage.conversation = conversation
+        systemMessage.type = NSNumber(integerLiteral: type)
+        systemMessage.date = date
+        systemMessage.delivered = NSNumber(booleanLiteral: false)
+        systemMessage.id = id
+        systemMessage.isOwn = NSNumber(booleanLiteral: true)
+        systemMessage.read = NSNumber(booleanLiteral: false)
+        systemMessage.sent = NSNumber(booleanLiteral: false)
+        systemMessage.userack = NSNumber(booleanLiteral: false)
+        return systemMessage
+    }
+
     @discardableResult func createTextMessage(
         conversation: Conversation,
         text: String = "Test message",
@@ -294,6 +313,9 @@ class DatabasePreparer {
         }
         else if objectType is Ballot.Type {
             entityName = "Ballot"
+        }
+        else if objectType is SystemMessage.Type {
+            entityName = "SystemMessage"
         }
         else if objectType is TextMessage.Type {
             entityName = "TextMessage"

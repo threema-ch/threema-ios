@@ -90,6 +90,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             "[SQLDHSessionStoreMigration] [ForwardSecurity]  Initialized with version \(String(describing: db.userVersion))"
         )
         
+        // Ensure that we are securely deleting entries (no WAL mode / journal mode 'DELETE' and secure_delete on as
+        // stated in the cryptography whitepaper)
         try db.execute("PRAGMA journal_mode = DELETE;")
         try db.execute("PRAGMA secure_delete = true;")
         try createSessionTable()

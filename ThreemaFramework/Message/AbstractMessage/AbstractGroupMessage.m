@@ -109,6 +109,10 @@
     return false;
 }
 
+- (BOOL)isGroupCallMessage {
+    return false;
+}
+
 - (BOOL)noDeliveryReceiptFlagSet {
     return YES;
 }

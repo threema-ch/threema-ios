@@ -764,10 +764,21 @@
 "call_threema_cellular_instead_of_wifi_title" = "Звоните через мобильную сеть";
 "call_threema_cellular_instead_of_wifi_text" = "Внимание: при звонке происходит передача данных через мобильную сеть.";
 
-// Group Calls
+/* Group Calls */
 "group_call_join_button_title" = "Приссоединиться";
 "group_call_open_button_title" = "Открыть";
 "group_call_participants_title" = "Участники: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "Пользователь %@ начал групповой звонок";
+"group_call_started_by_local_system_message" = "Вы начали групповой звонок";
+"group_call_ended_system_message" = "Групповой звонок завершен";
+
+"group_call_start_message_received" = "Начат групповой звонок";
+
+"group_call_navbar_state_connecting" = "Подключение...";
+"group_call_navbar_state_joining" = "Присоединение...";
+"group_call_navbar_state_connected" = "Подключено";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema защищает вашу конфиденциальность тщательнее, чем любой другой мессенджер. Подробнее см в нашей Политика конфиденциальности.";
@@ -1110,7 +1121,7 @@
 "settings_notification_type_preview_restrictive_description" = "Отображается только ник контакта.";
 "settings_notification_type_preview_restrictive_sender_name" = "~Иван";
 
-"settings_notification_type_preview_balanced_title" = "Показывать ия";
+"settings_notification_type_preview_balanced_title" = "Показывать имя";
 "settings_notification_type_preview_balanced_description" = "Отображается полное имя контакта (параметр по умолчанию).";
 "settings_notification_type_preview_balanced_sender_name" = "Иван Петров";
 
@@ -1203,7 +1214,7 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Принудительно ретранслировать все звонки через ваши серверы OnPrem с защитой вашего IP-адреса. Может ухудшаться качество связи.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Вызовы отображаются на экране блокировки, но отсутствуют в телефонном списке вызовов.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Вызовы отображаются на экране блокировки и приводятся в телефонном списке вызовов. Если активирован iCloud Drive, список телефонных вызовов синхронизируется с серверами Apple.";
-
+"settings_threema_voip_no_callkit_in_china_footer" = "В связи с ограничениями, наложенными Apple, звонки Threema недоступны, если в качестве региона устройства выбран Китай..";
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Устранение ошибок";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1777,17 +1788,6 @@
 "alert_biometrics_changed_title_touch" = "Выявлено возможное изменение в TouchID detected";
 "alert_biometrics_changed_title_face" = "Выявлено возможное изменение в FaceID";
 "alert_biometrics_changed_message" = "Чтобы продолжить использование биометрической аутентификации для разблокировки Threema, один раз введите код доступа.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "Пользователь %@ начал групповой звонок";
-"group_call_started_by_local_system_message" = "Вы начали групповой звонок";
-"group_call_ended_system_message" = "Групповой звонок завершен";
-
-"group_call_start_message_received" = "Начат групповой звонок";
-
-"group_call_navbar_state_connecting" = "Подключение...";
-"group_call_navbar_state_joining" = "Присоединение...";
-"group_call_navbar_state_connected" = "Подключено";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nНельзя понизить версию приложения с %d на %d";

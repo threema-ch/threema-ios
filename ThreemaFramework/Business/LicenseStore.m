@@ -246,25 +246,26 @@ static LicenseStore *singleton;
 }
 
 - (void)setOnPremConfigUrl:(NSString *)onPremConfigUrl {
+    // Automatically expand hostnames to default provisioning URL
+    if (![onPremConfigUrl hasPrefix:@"https://"]) {
+        onPremConfigUrl = [NSString stringWithFormat:@"https://%@", onPremConfigUrl];
+    }
+    else if ([onPremConfigUrl hasPrefix:@"https://https://"]) {
+        onPremConfigUrl= [onPremConfigUrl substringFromIndex:8];
+    }
+    
+    NSString *check = [onPremConfigUrl substringFromIndex:8];
+    if (![check hasSuffix:@".oppf"]) {
+        if ([check hasSuffix:@"/"]) {
+            onPremConfigUrl = [NSString stringWithFormat:@"%@prov/config.oppf", onPremConfigUrl];
+        }
+        else {
+            onPremConfigUrl = [NSString stringWithFormat:@"%@/prov/config.oppf", onPremConfigUrl];
+        }
+    }
+    
+    // Change it only if the final url was changed. Otherwise it will be in a endless loop when the url is set in the company mdm
     if ([_onPremConfigUrl isEqualToString:onPremConfigUrl] == NO) {
-        // Automatically expand hostnames to default provisioning URL
-        if (![onPremConfigUrl hasPrefix:@"https://"]) {
-            onPremConfigUrl = [NSString stringWithFormat:@"https://%@", onPremConfigUrl];
-        }
-        else if ([onPremConfigUrl hasPrefix:@"https://https://"]) {
-            onPremConfigUrl= [onPremConfigUrl substringFromIndex:8];
-        }
-        
-        NSString *check = [onPremConfigUrl substringFromIndex:8];
-        if (![check hasSuffix:@".oppf"]) {
-            if ([check hasSuffix:@"/"]) {
-                onPremConfigUrl = [NSString stringWithFormat:@"%@prov/config.oppf", onPremConfigUrl];
-            }
-            else {
-                onPremConfigUrl = [NSString stringWithFormat:@"%@/prov/config.oppf", onPremConfigUrl];
-            }
-        }
-               
         _onPremConfigUrl = onPremConfigUrl;
         _didCheckLicense = NO;
         

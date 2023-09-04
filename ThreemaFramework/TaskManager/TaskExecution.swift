@@ -24,6 +24,7 @@ import PromiseKit
 import ThreemaProtocols
 
 enum TaskExecutionError: Error {
+    case conversationNotFound(for: TaskDefinitionProtocol)
     case createAbstractMessageFailed
     case createReflectedMessageFailed
     case multiDeviceNotRegistered
@@ -39,6 +40,7 @@ enum TaskExecutionError: Error {
     case sendMessageTimeout(message: String)
     case wrongTaskDefinitionType
     case invalidContact(message: String)
+    case ownContact(message: String)
 }
 
 class TaskExecution: NSObject {
@@ -210,6 +212,16 @@ class TaskExecution: NSObject {
     ) -> Promise<AbstractMessage?> {
         Promise { seal in
             assert(ltSend != .none && ltAck != .none)
+            
+            guard message.toIdentity != self.frameworkInjector.myIdentityStore.identity else {
+                seal.reject(
+                    TaskExecutionError
+                        .sendMessageFailed(
+                            message: "Do not sending message to own identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
+                        )
+                )
+                return
+            }
 
             frameworkInjector.backgroundEntityManager.performBlock {
                 guard let toContact = self.frameworkInjector.backgroundEntityManager.entityFetcher
@@ -315,10 +327,18 @@ class TaskExecution: NSObject {
                     self.frameworkInjector.backgroundEntityManager.performBlock {
                         // Save forward security mode in any case (could also be a message first sent with FS and then
                         // resent without)
-                        self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
-                            message.messageID,
-                            forwardSecurityMode: messageToSend.forwardSecurityMode
-                        )
+                        if let conversation = try? self.getConversation(for: self.taskDefinition) {
+                            self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
+                                message.messageID,
+                                in: conversation,
+                                forwardSecurityMode: messageToSend.forwardSecurityMode
+                            )
+                        }
+                        else {
+                            DDLogWarn(
+                                "\(self.taskDefinition) no conversation found for \(message.loggingDescription) to set forward security mode"
+                            )
+                        }
 
                         var nonce: Data
                         do {
@@ -510,8 +530,8 @@ class TaskExecution: NSObject {
                 identities = members
             }
             else {
-                guard let identity = frameworkInjector.backgroundEntityManager.performAndWait({
-                    self.getConversation(task)?.contact?.identity
+                guard let identity = try frameworkInjector.backgroundEntityManager.performAndWait({
+                    try self.getConversation(for: task).contact?.identity
                 }) else {
                     throw TaskExecutionError.missingMessageInformation
                 }
@@ -612,27 +632,51 @@ class TaskExecution: NSObject {
     ///
     /// - Parameter task: Task definition
     /// - Returns: Conversation or nil
-    func getConversation(_ task: TaskDefinitionProtocol) -> Conversation? {
+    func getConversation(for task: TaskDefinitionProtocol) throws -> Conversation {
+        var conversation: Conversation?
+
         if let task = task as? TaskDefinitionSendBaseMessage,
            let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
-            return task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
+            conversation = task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
                 .conversation(
                     for: task.groupID!,
                     creator: groupCreatorIdentity
-                ) : frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: task.messageID)?
-                .conversation
+                ) : frameworkInjector.backgroundEntityManager.entityFetcher
+                .conversation(forIdentity: task.receiverIdentity)
         }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage {
-            return frameworkInjector.backgroundEntityManager.entityFetcher
+            conversation = frameworkInjector.backgroundEntityManager.entityFetcher
                 .ballot(for: task.ballotID)?.conversation
         }
         else if let task = task as? TaskDefinitionReflectIncomingMessage {
-            return frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
+            conversation = frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
         }
         else if let task = task as? TaskDefinitionSendAbstractMessage {
-            return frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
+            conversation = frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
         }
-        return nil
+        else if let task = task as? TaskDefinitionSendDeliveryReceiptsMessage {
+            if task.toIdentity != frameworkInjector.myIdentityStore.identity {
+                conversation = frameworkInjector.backgroundEntityManager.entityFetcher
+                    .conversation(forIdentity: task.toIdentity)
+            }
+            else if task.fromIdentity != frameworkInjector.myIdentityStore.identity {
+                conversation = frameworkInjector.backgroundEntityManager.entityFetcher
+                    .conversation(forIdentity: task.fromIdentity)
+            }
+        }
+        else if let task = task as? TaskDefinitionSendGroupDeliveryReceiptsMessage,
+                let groupID = task.groupID, let creator = task.groupCreatorIdentity {
+            conversation = frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+                for: groupID,
+                creator: creator
+            )
+        }
+
+        guard let conversation else {
+            throw TaskExecutionError.conversationNotFound(for: task)
+        }
+
+        return conversation
     }
     
     // MARK: Abstract Message Types
@@ -655,7 +699,8 @@ class TaskExecution: NSObject {
            .conversation(
                for: task.groupID!,
                creator: task.groupCreatorIdentity!
-           ) : frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: task.messageID)?.conversation,
+           ) : frameworkInjector.backgroundEntityManager.entityFetcher
+           .conversation(forIdentity: task.receiverIdentity),
            let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(
                with: task.messageID,
                conversation: conversation

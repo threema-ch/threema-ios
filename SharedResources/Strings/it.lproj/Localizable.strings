@@ -764,10 +764,21 @@
 "call_threema_cellular_instead_of_wifi_title" = "Chiamata tramite rete di telefonia mobile";
 "call_threema_cellular_instead_of_wifi_text" = "Avviso: questa chiamata comporta un trasferimento di dati nella rete di telefonia mobile.";
 
-// Group Calls
+/* Group Calls */
 "group_call_join_button_title" = "Unisciti";
 "group_call_open_button_title" = "Apri";
 "group_call_participants_title" = "Partecipanti: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ ha iniziato una chiamata di gruppo";
+"group_call_started_by_local_system_message" = "Hai iniziato una chiamata di gruppo";
+"group_call_ended_system_message" = "Chiamata di gruppo terminata";
+
+"group_call_start_message_received" = "Ha iniziato una chiamata di gruppo";
+
+"group_call_navbar_state_connecting" = "Connessione in corso";
+"group_call_navbar_state_joining" = "Unione in corso...";
+"group_call_navbar_state_connected" = "Connesso";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protegge la tua privacy più rigorosamente di qualsiasi altro servizio di messaggistica. Maggiori informazioni nella sezione Norme sulla Privacy.";
@@ -1203,7 +1214,7 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Inoltra tutte le chiamate tramite il server OnPrem, nascondendo così il tuo indirizzo IP. Potrebbe tuttavia avere ripercussioni sulla qualità.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Le chiamate vengono visualizzate sul blocco schermo, ma non vengono elencate nella lista chiamate dell'app del telefono.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Le chiamate vengono visualizzate sul blocco schermo ed elencate nella lista chiamate dell'app del telefono. Se iCloud Drive è attivato, la lista chiamate dell'app del telefono è sincronizzata tramite i server Apple.";
-
+"settings_threema_voip_no_callkit_in_china_footer" = "A causa delle restrizioni imposte da Apple le chiamate Threema non sono disponibili se la Cina è impostata come regione del dispositivo.";
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Rete";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1777,17 +1788,6 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "alert_biometrics_changed_title_touch" = "Riconosciuta possibile modifica al Touch ID";
 "alert_biometrics_changed_title_face" = "Riconosciuta possibile modifica al Face ID";
 "alert_biometrics_changed_message" = "Inserisci il codice una sola volta per consentire di nuovo l'autenticazione biometrica per Threema.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ ha iniziato una chiamata di gruppo";
-"group_call_started_by_local_system_message" = "Hai iniziato una chiamata di gruppo";
-"group_call_ended_system_message" = "Chiamata di gruppo terminata";
-
-"group_call_start_message_received" = "Ha iniziato una chiamata di gruppo";
-
-"group_call_navbar_state_connecting" = "Connessione in corso";
-"group_call_navbar_state_joining" = "Unione in corso...";
-"group_call_navbar_state_connected" = "Connesso";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nImpossibile eseguire il downgrade dalla versione %d alla versione %d";

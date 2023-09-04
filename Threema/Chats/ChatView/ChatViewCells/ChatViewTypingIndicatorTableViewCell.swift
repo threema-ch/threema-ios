@@ -28,8 +28,6 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
     private typealias Config = ChatViewConfiguration.TypingIndicator.View
     
     // MARK: - Private Properties
-
-    private lazy var flipped = UserSettings.shared().flippedTableView
     
     /// Contains the message cell itself, plus the chatBubbleBackgroundView and is added to content view
     private lazy var chatBubbleView = UIView()
@@ -121,10 +119,6 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
     override func configureCell() {
         super.configureCell()
         
-        if flipped {
-            transform = CGAffineTransform(scaleX: 1, y: -1)
-        }
-
         isUserInteractionEnabled = false
                 
         // This removes the shadow cut-off of context menus and makes the avatars not cut-off by next cells
@@ -238,9 +232,17 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
         // reuse.
         // It looks like UIImageView with an animated image isn't meant to be used in UITableView.
         typingIndicatorImageView.animationRepeatCount = 0
-        
-        if flipped {
-            transform = CGAffineTransform(scaleX: 1, y: -1)
+    }
+}
+
+extension ChatViewTypingIndicatorTableViewCell {
+    
+    override public var accessibilityLabel: String? {
+        get {
+            BundleUtil.localizedString(forKey: "accessibility_senderDescription_typing")
+        }
+        set {
+            // No-op
         }
     }
 }

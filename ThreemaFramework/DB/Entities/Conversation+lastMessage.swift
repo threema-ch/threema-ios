@@ -23,10 +23,9 @@ import Foundation
 extension Conversation {
     
     @objc public func updateLastMessage(with entityManager: EntityManager) {
-        entityManager.performSyncBlockAndSafe {
-
-            let fetcher = MessageFetcher(for: self, with: entityManager)
-            guard let message = fetcher.lastMessage() else {
+        entityManager.performAndWaitSave {
+            let messageFetcher = MessageFetcher(for: self, with: entityManager)
+            guard let message = messageFetcher.lastMessage() else {
                 self.lastMessage = nil
                 return
             }

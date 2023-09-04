@@ -25,8 +25,8 @@ import WebRTC
 
 class GroupCallAudioOutputButton: UIButton {
     
-    typealias buttonConfig = GroupCallUIConfiguration.ToolbarButton
-    
+    private typealias buttonConfig = GroupCallUIConfiguration.ToolbarButton
+        
     private lazy var routePickerView: AVRoutePickerView = {
         let routePickerView = AVRoutePickerView(frame: CGRect(
             x: 0.0,
@@ -45,6 +45,10 @@ class GroupCallAudioOutputButton: UIButton {
         
         routePickerView.delegate = self
         
+        // This hides the blinking of the symbol
+        let button = routePickerView.subviews.compactMap { $0 as? UIButton }.first
+        button?.layer.sublayers?.first?.isHidden = true
+        
         return routePickerView
     }()
     
@@ -62,17 +66,24 @@ class GroupCallAudioOutputButton: UIButton {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Configuration
+    
     private func configureButton() {
         
         let initialConfig = UIButton.Configuration.plain()
         configuration = updateConfig(config: initialConfig)
         
-        tintColor = .white
+        layer.masksToBounds = true
+        layer.cornerRadius = buttonConfig.smallerButtonCornerRadius
+        clipsToBounds = true
+        tintColor = buttonConfig.smallerButtonTint
+        backgroundColor = buttonConfig.smallerButtonBackground
+        translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(routePickerView)
 
         NSLayoutConstraint.activate([
-            widthAnchor.constraint(equalToConstant: GroupCallUIConfiguration.ToolbarButton.buttonWidth),
+            widthAnchor.constraint(equalToConstant: buttonConfig.smallerButtonWidth),
             heightAnchor.constraint(equalTo: widthAnchor),
             routePickerView.widthAnchor.constraint(equalTo: widthAnchor),
             routePickerView.heightAnchor.constraint(equalTo: widthAnchor),
@@ -93,18 +104,18 @@ class GroupCallAudioOutputButton: UIButton {
     
     private func registerObserver() {
         NotificationCenter.default.addObserver(
-            forName: AVAudioSession.routeChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            
-            guard let self else {
-                return
-            }
-            
-            Task {
-                await self.setNeedsUpdateConfiguration()
-            }
+            self,
+            selector: #selector(audioSessionRouteChanged),
+            name: AVAudioSession.routeChangeNotification,
+            object: nil
+        )
+    }
+    
+    // MARK: - Notifications
+    
+    @objc private func audioSessionRouteChanged() {
+        Task { @MainActor in
+            self.setNeedsUpdateConfiguration()
         }
     }
     
@@ -117,20 +128,20 @@ class GroupCallAudioOutputButton: UIButton {
             switch output.portType {
             case .builtInSpeaker:
                 newConfig.image = UIImage(
-                    systemName: "speaker.wave.3.fill",
-                    withConfiguration: buttonConfig.buttonImageConfig
+                    systemName: "speaker.wave.3",
+                    withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
                 
             case .headphones, .bluetoothLE, .bluetoothHFP, .bluetoothA2DP:
                 newConfig.image = UIImage(
                     systemName: "earbuds",
-                    withConfiguration: buttonConfig.buttonImageConfig
+                    withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
                 
             default:
                 newConfig.image = UIImage(
                     systemName: "speaker.wave.3",
-                    withConfiguration: buttonConfig.buttonImageConfig
+                    withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
             }
         }

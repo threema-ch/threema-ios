@@ -25,7 +25,7 @@ import ThreemaProtocols
 
 public final class GlobalGroupCallObserver: Sendable {
     
-    public let publisher = GloblGroupCallObserverPublisher()
+    public let publisher = GlobalGroupCallObserverPublisher()
     
     private let stateQueue: AsyncStream<GroupCallsThreemaGroupModel>
     let stateContinuation: AsyncStream<GroupCallsThreemaGroupModel>.Continuation

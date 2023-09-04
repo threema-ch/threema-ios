@@ -79,3 +79,4 @@
 #import "LocationViewController.h"
 #import "FileMessagePreview.h"
 #import "CustomResponderTextView.h"
+#import "IdentityBackupStore.h"

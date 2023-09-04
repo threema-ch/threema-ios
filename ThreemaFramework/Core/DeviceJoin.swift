@@ -36,6 +36,7 @@ public final class DeviceJoin {
         case failedToGatherData
         case failedToGenerateRandomData
         case registrationFailed
+        case noWorkCredentials
         
         case notImplemented
     }
@@ -248,16 +249,26 @@ public final class DeviceJoin {
         }
         let cspNonces = try await gatherCSPNonces()
         
-        let essentialData = Join_EssentialData.with {
+        let essentialData = try Join_EssentialData.with {
             // $0.mediatorServer // This is only required for custom servers
+            
             $0.identityData = identityData
+            
+            // Add credentials for "a Threema Work app"
+            if [.work, .workRed, .onPrem].contains(ThreemaApp.current) {
+                $0.workCredentials = try gatherWorkCredentials()
+            }
+            
             $0.deviceGroupData = deviceGroupData
             $0.userProfile = userProfile
+            
             $0.settings = businessInjector.settingsStore.asSyncSettings
             // $0.mdmParameters // Out of scope in IOS-3674
+            
             $0.contacts = augmentedContacts
             $0.groups = augmentedGroups
             // $0.distributionLists // Not implemented in iOS
+            
             $0.cspHashedNonces = cspNonces
             // $0.d2DHashedNonces // Out of scope in IOS-3674
         }
@@ -420,6 +431,18 @@ public final class DeviceJoin {
             $0.ck = privateClientKey
             $0.cspDeviceCookie = deviceCookie
             $0.cspServerGroup = serverGroup
+        }
+    }
+    
+    private func gatherWorkCredentials() throws -> Sync_ThreemaWorkCredentials {
+        guard let username = LicenseStore.shared().licenseUsername,
+              let password = LicenseStore.shared().licensePassword else {
+            throw Error.noWorkCredentials
+        }
+
+        return Sync_ThreemaWorkCredentials.with {
+            $0.username = username
+            $0.password = password
         }
     }
     

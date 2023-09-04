@@ -20,10 +20,10 @@
 
 import Foundation
 
-protocol GroupCallViewProtocol: AnyObject {
+protocol GroupCallViewModelDelegate: AnyObject {
     func updateNavigationContent(_ contentUpdate: GroupCallNavigationBarContentUpdate) async
-    @MainActor func updateLayout()
-    @MainActor func close() async
+    func updateCollectionViewLayout()
+    func dismissGroupCallView() async
 }
 
 struct GroupCallNavigationBarContentUpdate {

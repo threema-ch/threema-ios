@@ -664,7 +664,7 @@ extension ChatViewVoiceMessageTableViewCell {
         }
         
         if let currentMessage = voiceMessageAndNeighbors?.message,
-           let nextMessage = flipped ? voiceMessageAndNeighbors?.neighbors.previousMessage : voiceMessageAndNeighbors?
+           let nextMessage = voiceMessageAndNeighbors?
            .neighbors.nextMessage,
            let nextFileMessageProvider = nextMessage as? FileMessageProvider {
             if case .voice = nextFileMessageProvider.fileMessageType {

@@ -110,13 +110,18 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
+        var receiverIdentity: ThreemaIdentity?
         let group = groupManager.getGroup(conversation: conversation)
         if let group {
             groupManager.periodicSyncIfNeeded(for: group)
         }
+        else {
+            receiverIdentity = conversation.contact?.identity
+        }
 
         let task = TaskDefinitionSendBaseMessage(
             message: newMessage,
+            receiverIdentity: receiverIdentity,
             group: group,
             sendContactProfilePicture: !quickReply
         )
@@ -174,9 +179,13 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
+        var receiverIdentity: ThreemaIdentity?
         let group = groupManager.getGroup(conversation: conversation)
         if let group {
             groupManager.periodicSyncIfNeeded(for: group)
+        }
+        else {
+            receiverIdentity = conversation.contact?.identity
         }
 
         // We replace \n with \\n to conform to specs
@@ -186,6 +195,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             taskDefinition: TaskDefinitionSendLocationMessage(
                 poiAddress: formattedAddress,
                 message: newMessage,
+                receiverIdentity: receiverIdentity,
                 group: group,
                 sendContactProfilePicture: true
             )
@@ -222,14 +232,19 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
+        var receiverIdentity: ThreemaIdentity?
         let group = groupManager.getGroup(conversation: conversation)
         if let group {
             groupManager.periodicSyncIfNeeded(for: group)
+        }
+        else {
+            receiverIdentity = conversation.contact?.identity
         }
 
         taskManager.add(
             taskDefinition: TaskDefinitionSendBaseMessage(
                 message: newMessage,
+                receiverIdentity: receiverIdentity,
                 group: group,
                 sendContactProfilePicture: false
             )
@@ -272,10 +287,20 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     @objc public func sendMessage(baseMessage: BaseMessage) {
+        let (receiverIdentity, group) = entityManager.performAndWait {
+            var receiverIdentity: ThreemaIdentity?
+            let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
+            if group == nil {
+                receiverIdentity = baseMessage.conversation.contact?.identity
+            }
+            return (receiverIdentity, group)
+        }
+
         taskManager.add(
             taskDefinition: TaskDefinitionSendBaseMessage(
                 message: baseMessage,
-                group: nil,
+                receiverIdentity: receiverIdentity,
+                group: group,
                 sendContactProfilePicture: false
             )
         )

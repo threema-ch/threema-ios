@@ -36,6 +36,7 @@ class Participant: ParticipantDescription {
 
     var microphoneActive = false
     var cameraActive = false
+    var localCameraPosition: CameraPosition = .front
     
     init(id: ParticipantID) {
         self.id = id

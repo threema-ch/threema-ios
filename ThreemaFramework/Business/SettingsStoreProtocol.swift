@@ -59,6 +59,7 @@ public protocol SettingsStoreProtocol {
     var enableVideoCall: Bool { get set }
     var threemaVideoCallQualitySetting: ThreemaVideoCallQualitySetting { get set }
     var voIPSound: String { get set }
+    var enableThreemaGroupCalls: Bool { get set }
 	
     // Multi Device
     var isMultiDeviceRegistered: Bool { get set }

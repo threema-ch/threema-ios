@@ -197,10 +197,10 @@ extension RemoteParticipant {
                 switch innerState {
                 case .on:
                     DDLogNotice("[GroupCall] Camera announced on")
-                    return try .participantToSFU(subscribeVideo(), self, .videoState(.unmuted))
+                    return try .participantToSFU(subscribeVideo(subscribe: true), self, .videoState(.unmuted))
                 case .off:
                     DDLogNotice("[GroupCall] Camera announced off")
-                    return .muteStateChanged(self, .videoState(.muted))
+                    return try .participantToSFU(subscribeVideo(subscribe: false), self, .videoState(.muted))
                 }
             case let .microphone(muteState):
                 guard let innerState = muteState.state else {
@@ -567,7 +567,7 @@ extension RemoteParticipant {
         return outer
     }
     
-    func subscribeVideo() throws -> Groupcall_ParticipantToSfu.Envelope {
+    func subscribeVideo(subscribe: Bool) throws -> Groupcall_ParticipantToSfu.Envelope {
         DDLogNotice("[GroupCall] Participant \(id) \(#function)")
         
         // Sanity Checks
@@ -583,14 +583,20 @@ extension RemoteParticipant {
         res.height = GroupCallConfiguration.SubscribeVideo.height
         res.width = GroupCallConfiguration.SubscribeVideo.width
         
-        var internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe()
-        internalSub.desiredFps = GroupCallConfiguration.SubscribeVideo.fps
-        internalSub.desiredResolution = res
-        
         var subMessage = Groupcall_ParticipantToSfu.ParticipantCamera()
         subMessage.participantID = participant.id
-        subMessage.action = .subscribe(internalSub)
-
+        
+        if subscribe {
+            var internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe()
+            internalSub.desiredFps = GroupCallConfiguration.SubscribeVideo.fps
+            internalSub.desiredResolution = res
+            subMessage.action = .subscribe(internalSub)
+        }
+        else {
+            var internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe()
+            subMessage.action = .unsubscribe(Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe())
+        }
+        
         var outer = Groupcall_ParticipantToSfu.Envelope()
         outer.requestParticipantCamera = subMessage
         outer.padding = dependencies.groupCallCrypto.padding()

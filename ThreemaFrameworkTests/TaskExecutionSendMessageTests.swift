@@ -83,7 +83,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
-        let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBaseMessage(
+            message: textMessage,
+            receiverIdentity: textMessage.conversation.contact?.identity,
+            group: nil,
+            sendContactProfilePicture: false
+        )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expect.fulfill()
@@ -154,7 +159,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
-        let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBaseMessage(
+            message: textMessage,
+            receiverIdentity: textMessage.conversation.contact?.identity,
+            group: nil,
+            sendContactProfilePicture: false
+        )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expect.fulfill()
@@ -220,7 +230,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
-        let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBaseMessage(
+            message: textMessage,
+            receiverIdentity: textMessage.conversation.contact?.identity,
+            group: nil,
+            sendContactProfilePicture: false
+        )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expect.fulfill()
@@ -330,7 +345,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
-        let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBaseMessage(
+            message: textMessage,
+            receiverIdentity: textMessage.conversation.contact?.identity,
+            group: nil,
+            sendContactProfilePicture: false
+        )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expect.fulfill()
@@ -469,6 +489,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
         )
@@ -616,6 +637,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
         )
@@ -764,6 +786,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
         )
@@ -800,6 +823,86 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 )
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
                 XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
+            }
+        }
+    }
+    
+    func testExecuteGroupCreateMessageWithOwnIdentityAsMemberAlreadySent() throws {
+        let userSettingsMock = UserSettingsMock()
+        let serverConnectorMock = ServerConnectorMock(
+            connectionState: .loggedIn
+        )
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let frameworkInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbMainCnx),
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
+            serverConnector: serverConnectorMock
+        )
+        
+        let expectedMessageID = MockData.generateMessageID()
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", myIdentityStoreMock.identity]
+
+        var group: Group!
+        dbPreparer.save {
+            var members = Set<ContactEntity>()
+            for member in expectedMembers {
+                let contact = dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: member,
+                    verificationLevel: 0
+                )
+                if myIdentityStoreMock.identity != member {
+                    members.insert(contact)
+                }
+            }
+
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: MockData.generateGroupID(),
+                groupCreator: "MEMBER01"
+            )
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                conversation.groupID = groupEntity.groupID
+                conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+                conversation.addMembers(members)
+
+                group = Group(
+                    myIdentityStore: myIdentityStoreMock,
+                    userSettings: userSettingsMock,
+                    groupEntity: groupEntity,
+                    conversation: conversation,
+                    lastSyncRequest: nil
+                )
+            }
+        }
+
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
+
+        let task = TaskDefinitionSendGroupCreateMessage(
+            group: group,
+            to: Array(expectedMembers),
+            members: expectedMembers
+        )
+        task.messageAlreadySentTo["MEMBER01"] = MockData.generateMessageNonce()
+        task.create(frameworkInjector: frameworkInjectorMock).execute()
+            .done {
+                expect.fulfill()
+            }
+            .catch { error in
+                expectError = error
+                expect.fulfill()
+            }
+
+        waitForExpectations(timeout: 6) { error in
+            if let error {
+                XCTFail(error.localizedDescription)
+            }
+            else {
+                XCTAssertNil(expectError)
+                XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
+                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
             }
         }
     }
@@ -888,6 +991,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             message: textMessage,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
         )
@@ -1033,6 +1137,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
             let task = TaskDefinitionSendBaseMessage(
                 message: textMessage,
+                receiverIdentity: nil,
                 group: group,
                 sendContactProfilePicture: false
             )
@@ -1139,7 +1244,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
-        let task = TaskDefinitionSendBaseMessage(message: textMessage, group: nil, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBaseMessage(
+            message: textMessage,
+            receiverIdentity: textMessage.conversation.contact?.identity,
+            group: nil,
+            sendContactProfilePicture: false
+        )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expect.fulfill()

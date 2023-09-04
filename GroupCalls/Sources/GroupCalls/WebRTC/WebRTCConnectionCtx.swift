@@ -26,7 +26,7 @@ import ThreemaProtocols
 @GlobalGroupCallActor
 final class WebRTCConnectionContext<PeerConnectionCtxImpl: PeerConnectionContextProtocol> {
     
-    // MARK: - Private Properies
+    // MARK: - Private properties
 
     fileprivate let sessionDescription: GroupCallSessionDescription!
     fileprivate let peerConnectionCtx: PeerConnectionContextProtocol

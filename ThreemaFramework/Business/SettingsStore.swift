@@ -103,6 +103,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         self.enableVideoCall = userSettings.enableVideoCall
         self.threemaVideoCallQualitySetting = userSettings.threemaVideoCallQualitySetting
         self.voIPSound = userSettings.voIPSound
+        self.enableThreemaGroupCalls = userSettings.enableThreemaGroupCalls
 
         // Advanced
         self.enableIPv6 = userSettings.enableIPv6
@@ -122,7 +123,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(updateLocalValues),
+            selector: #selector(updateLocalValuesAsyncObjC),
             name: NSNotification.Name(rawValue: kNotificationSettingStoreSynchronization),
             object: nil
         )
@@ -209,7 +210,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.enablePoi != choosePOI else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -218,7 +219,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.hidePrivateChats != hidePrivateChats else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
 
             NotificationCenter.default.post(
                 name: Notification.Name(kNotificationChangedHidePrivateChat),
@@ -235,7 +236,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.inAppSounds != inAppSounds else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -244,7 +245,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.inAppVibrate != inAppVibrate else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -253,7 +254,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.inAppPreview != inAppPreview else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -262,7 +263,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.notificationType != NSNumber(integerLiteral: notificationType.userSettingsValue) else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
 
             // We only remove the donated Interactions, if the outgoing are disabled.
             switch notificationType {
@@ -281,7 +282,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.pushDecrypt != pushShowPreview else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -290,7 +291,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.pushSound != pushSound else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -299,7 +300,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.pushGroupSound != pushGroupSound else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -314,7 +315,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
                 masterDndWorkingDays = preFillWorkingDays()
             }
             
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -323,7 +324,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? []) != masterDndWorkingDays else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -332,7 +333,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.masterDndStartTime != masterDndStartTime else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -341,7 +342,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.masterDndEndTime != masterDndEndTime else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -352,7 +353,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.disableBigEmojis == useBigEmojis else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -361,7 +362,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.sendMessageFeedback != sendMessageFeedback else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -372,7 +373,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.imageSize != imageSize else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
 
@@ -381,7 +382,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.videoQuality != videoQuality else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
 
@@ -390,7 +391,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.autoSaveMedia != autoSaveMedia else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
 
@@ -419,7 +420,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.includeCallsInRecents != includeCallsInRecents else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -428,7 +429,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.enableVideoCall != enableVideoCall else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -437,7 +438,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.threemaVideoCallQualitySetting != threemaVideoCallQualitySetting else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -446,7 +447,16 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.voIPSound != voIPSound else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
+        }
+    }
+    
+    @Published public var enableThreemaGroupCalls: Bool {
+        didSet {
+            guard userSettings.enableThreemaGroupCalls != enableThreemaGroupCalls else {
+                return
+            }
+            updateUserSettingsAsync()
         }
     }
     
@@ -458,7 +468,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.enableMultiDevice != isMultiDeviceRegistered else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
             
@@ -469,7 +479,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.enableIPv6 != enableIPv6 else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -478,7 +488,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.disableProximityMonitoring != disableProximityMonitoring else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -487,7 +497,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.validationLogging != validationLogging else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -496,7 +506,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.sentryAppDevice != sentryAppDevice else {
                 return
             }
-            updateUserSettings()
+            updateUserSettingsAsync()
         }
     }
     
@@ -512,6 +522,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     /// Saves changed `Sync_Settings` to UserSettings and updates the SettingsStore
     /// - Parameter syncSettings: Delta updates of user settings
+    @MainActor
     func updateSettingsStore(with syncSettings: Sync_Settings) {
         
         /// **IMPORTANT:**
@@ -573,7 +584,9 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             
         guard userSettings.enableMultiDevice else {
             // Save locally
-            updateUserSettings()
+            Task { @MainActor in
+                updateUserSettings()
+            }
             return
         }
         
@@ -668,7 +681,9 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     public func discardUnsyncedChanges() {
         // Since the changes have not been saved yet, we simply load the user settings again
-        updateLocalValues()
+        Task { @MainActor in
+            updateLocalValues()
+        }
     }
     
     /// Removes all INInteractions donated to the OS
@@ -706,8 +721,10 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     // MARK: - Private Functions
     
     @objc private func incomingUpdate() {
-        updateLocalValues()
-        NotificationPresenterWrapper().present(type: .settingsSyncSuccess)
+        Task { @MainActor in
+            updateLocalValues()
+            NotificationPresenterWrapper().present(type: .settingsSyncSuccess)
+        }
     }
     
     private func isSyncing(_ syncing: Bool, failed: Bool) {
@@ -717,6 +734,13 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
     }
     
+    private func updateUserSettingsAsync() {
+        Task { @MainActor in
+            updateUserSettings()
+        }
+    }
+    
+    @MainActor
     private func updateUserSettings() {
        
         // Privacy Settings
@@ -770,6 +794,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&userSettings.enableVideoCall, enableVideoCall)
         compareAndAssign(&userSettings.threemaVideoCallQualitySetting, threemaVideoCallQualitySetting)
         compareAndAssign(&userSettings.voIPSound, voIPSound)
+        compareAndAssign(&userSettings.enableThreemaGroupCalls, enableThreemaGroupCalls)
 
         // Advanced
         compareAndAssign(&userSettings.enableIPv6, enableIPv6)
@@ -787,7 +812,14 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         )
     }
     
-    @objc private func updateLocalValues() {
+    @objc private func updateLocalValuesAsyncObjC() {
+        Task { @MainActor in
+            updateLocalValues()
+        }
+    }
+    
+    @MainActor
+    private func updateLocalValues() {
         // Privacy Settings
         compareAndAssign(&syncContacts, userSettings.syncContacts)
         compareAndAssign(&blacklist, Set<String>(userSettings.blacklist.array as? [String] ?? []))
@@ -827,7 +859,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&enableVideoCall, userSettings.enableVideoCall)
         compareAndAssign(&threemaVideoCallQualitySetting, userSettings.threemaVideoCallQualitySetting)
         compareAndAssign(&voIPSound, userSettings.voIPSound)
-        
+        compareAndAssign(&enableThreemaGroupCalls, userSettings.enableThreemaGroupCalls)
+
         // Multi-Device
         compareAndAssign(&isMultiDeviceRegistered, userSettings.enableMultiDevice)
         

@@ -50,20 +50,9 @@ import ThreemaProtocols
         
         return .appStore
     }
-    
-    /// Feature Flag for late PFS session saving
-    public static var lateSessionSave: Bool {
-        true
-    }
 
     @objc public static var groupCalls: Bool {
-        // We either show GC when activated in dev settings (off by default) or when build is from Xcode or current is
-        // red or red work.
-        UserSettings.shared().groupCallsDeveloper ||
-            ThreemaEnvironment.groupCallsPrerequisites
-    }
-    
-    public static var groupCallsPrerequisites: Bool {
+        // We show GC when build is from Xcode or current is red or red work.
         [.xcode].contains(env()) || [.red, .workRed].contains(ThreemaApp.current)
     }
 

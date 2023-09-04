@@ -247,17 +247,10 @@ public struct D2m_ClientHello {
 
   /// The expected device slot state on the server.
   ///
-  /// If set, and if the expected device slot state does not match the actual
-  /// device slot state, the device will be dropped by the mediator server with
-  /// the close code `4115` before being registered.
-  public var expectedDeviceSlotState: D2m_DeviceSlotState {
-    get {return _expectedDeviceSlotState ?? .new}
-    set {_expectedDeviceSlotState = newValue}
-  }
-  /// Returns true if `expectedDeviceSlotState` has been explicitly set.
-  public var hasExpectedDeviceSlotState: Bool {return self._expectedDeviceSlotState != nil}
-  /// Clears the value of `expectedDeviceSlotState`. Subsequent reads from it will return its default value.
-  public mutating func clearExpectedDeviceSlotState() {self._expectedDeviceSlotState = nil}
+  /// If the expected device slot state does not match the actual device slot
+  /// state, the device will be dropped by the mediator server with the close
+  /// code `4115` before being registered.
+  public var expectedDeviceSlotState: D2m_DeviceSlotState = .new
 
   /// Device info (`d2d.DeviceInfo`), encrypted by `DGDIK.secret` and prefixed
   /// with a random nonce.
@@ -300,8 +293,6 @@ public struct D2m_ClientHello {
   }
 
   public init() {}
-
-  fileprivate var _expectedDeviceSlotState: D2m_DeviceSlotState? = nil
 }
 
 #if swift(>=4.2)
@@ -770,17 +761,13 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
       case 4: try { try decoder.decodeSingularEnumField(value: &self.deviceSlotsExhaustedPolicy) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self.deviceSlotExpirationPolicy) }()
       case 6: try { try decoder.decodeSingularBytesField(value: &self.encryptedDeviceInfo) }()
-      case 7: try { try decoder.decodeSingularEnumField(value: &self._expectedDeviceSlotState) }()
+      case 7: try { try decoder.decodeSingularEnumField(value: &self.expectedDeviceSlotState) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
     if self.version != 0 {
       try visitor.visitSingularUInt32Field(value: self.version, fieldNumber: 1)
     }
@@ -799,9 +786,9 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     if !self.encryptedDeviceInfo.isEmpty {
       try visitor.visitSingularBytesField(value: self.encryptedDeviceInfo, fieldNumber: 6)
     }
-    try { if let v = self._expectedDeviceSlotState {
-      try visitor.visitSingularEnumField(value: v, fieldNumber: 7)
-    } }()
+    if self.expectedDeviceSlotState != .new {
+      try visitor.visitSingularEnumField(value: self.expectedDeviceSlotState, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -811,7 +798,7 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     if lhs.deviceID != rhs.deviceID {return false}
     if lhs.deviceSlotsExhaustedPolicy != rhs.deviceSlotsExhaustedPolicy {return false}
     if lhs.deviceSlotExpirationPolicy != rhs.deviceSlotExpirationPolicy {return false}
-    if lhs._expectedDeviceSlotState != rhs._expectedDeviceSlotState {return false}
+    if lhs.expectedDeviceSlotState != rhs.expectedDeviceSlotState {return false}
     if lhs.encryptedDeviceInfo != rhs.encryptedDeviceInfo {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

@@ -95,7 +95,7 @@ actor GroupCallActor: Sendable {
     
     /// The approximate call start date
     ///
-    /// Do not use this for sorting calls by call creation time.
+    /// Do **not** use this for sorting calls by call creation time.
     var approximateCallStartDateUI: Date?
     
     /// The exact call start date of the call as determined by the SFU
@@ -134,7 +134,7 @@ actor GroupCallActor: Sendable {
             
             switch state.self {
             case is UnJoined:
-                DDLogNotice("")
+                return
             case is Joining:
                 startJoining = false
                 uiContinuation.yield(.joining)
@@ -225,7 +225,7 @@ actor GroupCallActor: Sendable {
         }
     }
     
-    // MARK: - Update Functions
+    // MARK: - State Functions
     
     func join(intent: GroupCallUserIntent) async throws {
         /// **Protocol Step: Create or Join** 1. Let `intent` be the user's intent, i.e. to either only join or create
@@ -356,8 +356,10 @@ actor GroupCallActor: Sendable {
             else {
                 return .invalid
             }
+            
         case .timeout:
             return .timeout
+            
         case let .result(peekResponse):
             if try await handle(peekResult: peekResponse) {
                 return .running
@@ -393,34 +395,38 @@ actor GroupCallActor: Sendable {
                     startDate: approximateCallStartDateUI ?? .now,
                     joinState: joinState()
                 )
-                uiContinuation.yield(.stateChanged(.visible(callInfo)))
+                uiContinuation.yield(.callStateChanged(.visible(callInfo)))
                 
                 DDLogNotice(
                     "[GroupCall] [PeriodicCleanup] Still running call with id \(logIdentifier)"
                 )
             }
             return true
+            
         case .notDetermined:
             DDLogNotice(
                 "[GroupCall] [PeriodicCleanup] Not determined call with id \(logIdentifier)"
             )
             return true
+            
         case .timeout:
             DDLogNotice(
                 "[GroupCall] [PeriodicCleanup] Timeout for call with id \(logIdentifier)"
             )
             
-            uiContinuation.yield(.stateChanged(.hidden))
+            uiContinuation.yield(.callStateChanged(.hidden))
             return false
+            
         case .needsTokenRefresh:
             // TODO: Return this to caller
             fatalError()
+            
         case .notRunning:
             DDLogNotice(
                 "[GroupCall] [PeriodicCleanup] Not running call with id \(logIdentifier)"
             )
             
-            uiContinuation.yield(.stateChanged(.hidden))
+            uiContinuation.yield(.callStateChanged(.hidden))
             return false
         }
     }
@@ -475,23 +481,17 @@ actor GroupCallActor: Sendable {
 //
 //        uiContinuation.finish()
 //        stateContinuation.finish()
-        viewModel.periodicUIUpdateTask?.cancel()
     }
 }
 
+// MARK: View Model
+
 extension GroupCallActor {
-    // MARK: View Model Access Functions
-    
-    func getCallStartDate() -> Date? {
-        approximateCallStartDateUI
-    }
     
     func getNumberOfParticipants() -> Int {
         numberOfParticipants
     }
-    
-    // MARK: View Model Update Functions
-    
+        
     func add(_ localParticipant: LocalParticipant) async {
         self.localParticipant = localParticipant
         
@@ -525,26 +525,12 @@ extension GroupCallActor {
         await uiContinuation.yield(.remove(remoteParticipant.getID()))
     }
     
-    func reloadViewModel() {
-        uiContinuation.yield(.reload)
-    }
-    
-    func subscribeVideo(for participantID: ParticipantID) -> Bool {
-        guard state.self is Connected else {
-            return false
-        }
+    func subscribeVideo(for participantID: ParticipantID) {
         stateContinuation.yield(.subscribeVideo(participantID))
-        
-        return true
     }
     
-    func unsubscribeVideo(for participantID: ParticipantID) -> Bool {
-        guard state.self is Connected else {
-            return false
-        }
+    func unsubscribeVideo(for participantID: ParticipantID) {
         stateContinuation.yield(.unsubscribeVideo(participantID))
-        
-        return true
     }
     
     func toggleOwnAudio(_ mute: Bool) throws {
@@ -601,10 +587,10 @@ extension GroupCallActor {
             assertionFailure(msg)
             DDLogError(msg)
         }
-        
-        await viewModel.pop()
-        
+                
         currentTask?.cancel()
+        
+        uiContinuation.yield(.pop)
         stateContinuation.yield(.none)
         
         currentTask = nil
@@ -645,37 +631,6 @@ extension GroupCallActor {
             return await (state as? Connecting)?.localVideoTrack()
         }
         return nil
-    }
-    
-    func isDominantCompared(to groupCallActor: GroupCallActor) async -> Bool {
-        assert(self != groupCallActor)
-        
-        guard let myStartDate = exactCallStartDate else {
-            DDLogNotice(
-                "[GroupCall] Checking call \(logIdentifier) against call \(groupCallActor.logIdentifier). The other call is dominant because we do not have a start date even though we checked with the SFU."
-            )
-            return false
-        }
-        
-        guard let otherStartDate = await groupCallActor.exactCallStartDate else {
-            DDLogNotice(
-                "[GroupCall] Checking call \(logIdentifier) against call \(groupCallActor.logIdentifier). We are dominant because the other calls does not have a start date even though we checked with the SFU."
-            )
-            return true
-        }
-        
-        DDLogNotice(
-            "[GroupCall] Checking call \(logIdentifier) with start date \(myStartDate) against call \(groupCallActor.logIdentifier) with start date \(otherStartDate)"
-        )
-        
-        // TODO: IOS-3728 What does Android do here or what does the protocol say about this?
-        return myStartDate < otherStartDate
-    }
-}
-
-extension GroupCallActor {
-    nonisolated func getExactCallStartDate() async -> UInt64? {
-        await exactCallStartDate
     }
 }
 

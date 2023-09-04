@@ -25,9 +25,6 @@ import ThreemaFramework
 
 struct DeveloperSettingsView: View {
         
-    // New ChatView
-    @State var flippedTableView = UserSettings.shared().flippedTableView
-
     // Multi-Device
     @State var allowSeveralDevices = UserSettings.shared().allowSeveralLinkedDevices
     @State private var showDebugDeviceJoin = false
@@ -36,20 +33,10 @@ struct DeveloperSettingsView: View {
     @State var newSettings = UserSettings.shared().newSettingsActive
     
     // Group Calls
-    @State var groupCallsDeveloper = UserSettings.shared().groupCallsDeveloper
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
     
     var body: some View {
         List {
-            Section("New ChatView") {
-                Toggle(isOn: $flippedTableView) {
-                    Text("Flip TableView")
-                }
-                .onChange(of: flippedTableView) { newValue in
-                    UserSettings.shared().flippedTableView = newValue
-                }
-            }
-            
             Section("UI") {
                 NavigationLink {
                     UIComponentsView()
@@ -111,24 +98,14 @@ struct DeveloperSettingsView: View {
                 }
             }
             
-            Section("👨‍👩‍👧‍👦☎️ Group Calls") {
-                Toggle(isOn: $groupCallsDeveloper.animation()) {
-                    Text("Group Calls Development")
+            Section("Group Calls") {
+                Toggle(isOn: $groupCallsDebugMessages) {
+                    Text("Send Debug Messages for Group Calls")
                 }
-                .onChange(of: groupCallsDeveloper) { newValue in
-                    UserSettings.shared().groupCallsDeveloper = newValue
+                .onChange(of: groupCallsDebugMessages) { newValue in
+                    UserSettings.shared().groupCallsDebugMessages = newValue
                 }
-                .disabled(!ThreemaEnvironment.groupCallsPrerequisites)
-                
-                if groupCallsDeveloper {
-                    Toggle(isOn: $groupCallsDebugMessages) {
-                        Text("Send Debug Messages for Group Calls")
-                    }
-                    .onChange(of: groupCallsDebugMessages) { newValue in
-                        UserSettings.shared().groupCallsDebugMessages = newValue
-                    }
-                    .disabled(!ThreemaEnvironment.groupCallsPrerequisites)
-                }
+                .disabled(!ThreemaEnvironment.groupCalls)
             }
             
             Section {

@@ -766,9 +766,22 @@
 "call_threema_cellular_instead_of_wifi_text" = "Achtung: Dieser Anruf verursacht Datentransfer im Mobilfunknetz.";
 
 // Group Calls
+"group_call_title" = "Gruppenanruf";
+/* Group Calls */
 "group_call_join_button_title" = "Beitreten";
 "group_call_open_button_title" = "Öffnen";
 "group_call_participants_title" = "Teilnehmer: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ hat einen Gruppenanruf gestartet";
+"group_call_started_by_local_system_message" = "Du hast einen Gruppenanruf gestartet";
+"group_call_ended_system_message" = "Gruppenanruf hat geendet";
+
+"group_call_start_message_received" = "Hat einen Gruppenanruf gestartet";
+
+"group_call_navbar_state_connecting" = "Verbinden…";
+"group_call_navbar_state_joining" = "Beitreten…";
+"group_call_navbar_state_connected" = "Verbunden";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema schützt Ihre Privatsphäre so konsequent wie kein anderer Messenger. In unserer Datenschutzerklärung erfahren Sie mehr.";
@@ -1206,6 +1219,8 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_threema_voip_include_call_in_recents_footer_off" = "Anrufe werden auf dem Sperrbildschirm angezeigt, jedoch nicht in der Anrufliste der «Telefon»-App aufgeführt.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Anrufe werden auf dem Sperrbildschirm angezeigt und in der Anrufliste der «Telefon»-App aufgeführt. Falls iCloud Drive aktiviert ist, wird die Anrufliste der «Telefon»-App über Apple-Server synchronisiert.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Aufgrund Einschränkungen seitens Apple sind Threema-Anrufe nicht verfügbar, wenn China als Region des Geräts festgelegt ist.";
+"settings_threema_calls_group_calls_header" = "Gruppenanrufe (Beta)";
+"settings_threema_calls_enable_group_calls" = "Threema-Gruppenanrufe aktivieren";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Netzwerk";
@@ -1780,17 +1795,6 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "alert_biometrics_changed_title_touch" = "Mögliche TouchID-Änderung erkannt";
 "alert_biometrics_changed_title_face" = "Mögliche FaceID-Änderung erkannt";
 "alert_biometrics_changed_message" = "Geben Sie ihren Code einmalig ein, um die biometrische Authentifizierung für Threema wieder zu erlauben.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ hat einen Gruppenanruf gestartet";
-"group_call_started_by_local_system_message" = "Du hast einen Gruppenanruf gestartet";
-"group_call_ended_system_message" = "Gruppenanruf hat geendet";
-
-"group_call_start_message_received" = "Hat einen Gruppenanruf gestartet";
-
-"group_call_navbar_state_connecting" = "Verbinden…";
-"group_call_navbar_state_joining" = "Beitreten…";
-"group_call_navbar_state_connected" = "Verbunden";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nEin Downgrade von Version %d auf Version %d konnte nicht durchgeführt werden\n";

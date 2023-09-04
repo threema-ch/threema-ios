@@ -181,7 +181,7 @@ extension SFUHTTPConnection {
         DDLogNotice("[GroupCall] Checking at URL \(groupCallURL)")
         
         return try await dependencies.groupCallsHTTPClientAdapter.sendPeek(
-            authorization: "ThreemaSfuToken \(authorizationToken.sfuTOken)",
+            authorization: "ThreemaSfuToken \(authorizationToken.sfuToken)",
             url: groupCallURL,
             body: requestBody
         )

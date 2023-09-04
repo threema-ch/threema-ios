@@ -156,8 +156,8 @@ public class EntityManager: NSObject {
     }
 
     /// Check and repair database integrity at the moment just the relationship of `Conversation.lastMessage`.
-    @objc public func repairDatabaseIntegrity() {
-        performSyncBlockAndSafe {
+    public func repairDatabaseIntegrity() {
+        performAndWaitSave {
             guard let conversations = self.entityFetcher.allConversations() as? [Conversation] else {
                 return
             }
@@ -255,11 +255,18 @@ public class EntityManager: NSObject {
     ///
     /// - Parameters:
     /// - messageID: ID of message that was sent
+    /// - conversation: Conversation of the message
     /// - sentAt: Sent date is reflected at or now if message was not reflected
     /// - isLocal: True means message was NOT sent to the chat server
-    public func markMessageAsSent(_ messageID: Data, sentAt: Date = .now, isLocal: Bool = false) {
+    public func markMessageAsSent(
+        _ messageID: Data,
+        in conversation: Conversation,
+        sentAt: Date = .now,
+        isLocal: Bool = false
+    ) {
         performAndWaitSave {
-            if let dbMsg = self.entityFetcher.ownMessage(with: messageID), let sent = Bool(exactly: dbMsg.sent), !sent {
+            if let dbMsg = self.entityFetcher.ownMessage(with: messageID, conversation: conversation),
+               let sent = Bool(exactly: dbMsg.sent), !sent {
                 dbMsg.sent = true
                 dbMsg.sendFailed = false
 
@@ -273,11 +280,17 @@ public class EntityManager: NSObject {
 
     /// Set forward security mode of own message and save.
     ///
-    /// - Parameter messageID: Message to set FS mode on
-    /// - Parameter forwardSecurityMode: new mode
-    public func setForwardSecurityMode(_ messageID: Data, forwardSecurityMode: ForwardSecurityMode) {
-        performSyncBlockAndSafe {
-            if let dbMsg = self.entityFetcher.ownMessage(with: messageID) {
+    /// - Parameters:
+    /// - messageID: Message to set FS mode on
+    /// - conversation: Conversation of the message
+    /// - forwardSecurityMode: new mode
+    public func setForwardSecurityMode(
+        _ messageID: Data,
+        in conversation: Conversation,
+        forwardSecurityMode: ForwardSecurityMode
+    ) {
+        performAndWaitSave {
+            if let dbMsg = self.entityFetcher.ownMessage(with: messageID, conversation: conversation) {
                 dbMsg.forwardSecurityMode = forwardSecurityMode.rawValue as NSNumber
             }
         }
@@ -452,7 +465,7 @@ extension EntityManager {
             return oneToOneConversation(forMessage: message, fetcher: entityFetcher)
         }
     }
-    
+
     /// Looking for existing contact entity (sender) and conversation in current and in main DB context.
     ///
     /// - Parameter abstractMessage: Get sender and conversation from DB for that message
@@ -779,11 +792,11 @@ extension EntityManager {
     private func oneToOneConversation(forMessage message: AbstractMessage, fetcher: EntityFetcher) -> Conversation? {
         assert(!(message is AbstractGroupMessage))
 
-        if message.toIdentity == myIdentityStore.identity {
-            return fetcher.conversation(forIdentity: message.fromIdentity)
-        }
-        else if message.fromIdentity == myIdentityStore.identity {
+        if message.toIdentity != myIdentityStore.identity {
             return fetcher.conversation(forIdentity: message.toIdentity)
+        }
+        else if message.fromIdentity != myIdentityStore.identity {
+            return fetcher.conversation(forIdentity: message.fromIdentity)
         }
 
         return nil

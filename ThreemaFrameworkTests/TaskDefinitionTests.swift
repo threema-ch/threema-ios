@@ -326,6 +326,7 @@ class TaskDefinitionTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             message: message,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: true
         )
@@ -339,6 +340,7 @@ class TaskDefinitionTests: XCTestCase {
         let result = try decoder.decode(TaskDefinitionSendBaseMessage.self, from: data)
         XCTAssertTrue(result.isGroupMessage)
         XCTAssertEqual(expectedMessageID, result.messageID)
+        XCTAssertNil(result.receiverIdentity)
         XCTAssertEqual(expectedGroupID, result.groupID)
         XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
         XCTAssertTrue(result.sendContactProfilePicture ?? false)
@@ -390,6 +392,7 @@ class TaskDefinitionTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             message: message,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: true
         )
@@ -400,6 +403,7 @@ class TaskDefinitionTests: XCTestCase {
         if let result = result.taskDefinition as? TaskDefinitionSendBaseMessage {
             XCTAssertTrue(result.isGroupMessage)
             XCTAssertEqual(expectedMessageID, result.messageID)
+            XCTAssertNil(result.receiverIdentity)
             XCTAssertEqual(expectedGroupID, try XCTUnwrap(result.groupID))
             XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
             XCTAssertTrue(result.isPersistent)
@@ -451,6 +455,7 @@ class TaskDefinitionTests: XCTestCase {
         let task = TaskDefinitionSendLocationMessage(
             poiAddress: expectedMessagePoiAddress,
             message: message,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: true
         )
@@ -463,6 +468,7 @@ class TaskDefinitionTests: XCTestCase {
         let result = try decoder.decode(TaskDefinitionSendLocationMessage.self, from: data)
         XCTAssertTrue(result.isGroupMessage)
         XCTAssertEqual(expectedMessageID, result.messageID)
+        XCTAssertNil(task.receiverIdentity)
         XCTAssertEqual(expectedGroupID, result.groupID)
         XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
         XCTAssertEqual(expectedMessagePoiAddress, result.poiAddress)
@@ -524,6 +530,7 @@ class TaskDefinitionTests: XCTestCase {
             thumbnailBlobID: expectedThumbnailBlobID,
             thumbnailSize: expectedThumbnailSize,
             message: message,
+            receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: true
         )
@@ -536,6 +543,7 @@ class TaskDefinitionTests: XCTestCase {
         let result = try decoder.decode(TaskDefinitionSendVideoMessage.self, from: data)
         XCTAssertTrue(result.isGroupMessage)
         XCTAssertEqual(expectedMessageID, result.messageID)
+        XCTAssertNil(result.receiverIdentity)
         XCTAssertEqual(result.groupID, expectedGroupID)
         XCTAssertEqual(result.groupCreatorIdentity, expectedGroupCreator)
         XCTAssertEqual(result.thumbnailBlobID, expectedThumbnailBlobID)

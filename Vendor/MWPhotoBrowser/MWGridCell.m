@@ -17,6 +17,7 @@
 #import "MWCommon.h"
 #import "MWPhotoBrowserPrivate.h"
 #import "UIImage+MWPhotoBrowser.h"
+#import "MediaBrowserFile.h"
 
 #define VIDEO_INDICATOR_PADDING 10
 
@@ -27,7 +28,9 @@
     UIImageView *_loadingError;
 	DACircularProgressView *_loadingIndicator;
     UIButton *_selectedButton;
-
+    /***** BEGIN THREEMA MODIFICATION: add label to display filename *********/
+    UILabel *_label;
+    /***** END THREEMA MODIFICATION: add label to display filename *********/
 }
 
 @end
@@ -82,6 +85,21 @@
         _loadingIndicator.thicknessRatio = 0.1;
         _loadingIndicator.roundedCorners = NO;
 		[self addSubview:_loadingIndicator];
+        
+        /***** BEGIN THREEMA MODIFICATION: add label to display filename *********/
+        // Label for File name
+        _label = [[UILabel alloc] initWithFrame:CGRectMake(10 , self.bounds.size.height - 45 , self.bounds.size.width  - 20 , 40)];
+        _label.opaque = NO;
+        _label.backgroundColor = [UIColor clearColor];
+        _label.textAlignment = NSTextAlignmentCenter;
+        _label.adjustsFontSizeToFitWidth = NO;
+        _label.lineBreakMode = NSLineBreakByTruncatingMiddle;
+        _label.numberOfLines = 2;
+        _label.textColor = [UIColor whiteColor];
+        _label.font = [UIFont systemFontOfSize:12];
+        _label.hidden = YES;
+        [self addSubview:_label];
+        /***** END THREEMA MODIFICATION: add label to display filename *********/
         
         // Listen for photo loading notifications
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -141,6 +159,7 @@
     _imageView.image = nil;
     _loadingIndicator.progress = 0;
     _selectedButton.hidden = YES;
+    _label.hidden = YES;
     [self hideImageFailure];
     [super prepareForReuse];
 }
@@ -149,7 +168,22 @@
 
 - (void)setPhoto:(id <MWPhoto>)photo {
     _photo = photo;
-
+    
+    /***** BEGIN THREEMA MODIFICATION: add label to display filename *********/
+    if ( [photo isKindOfClass:[MediaBrowserFile class]] ) {
+        MediaBrowserFile *mediaBrowserFile = (MediaBrowserFile *) photo;
+        if ([mediaBrowserFile sourceReference] && [[mediaBrowserFile sourceReference] isKindOfClass:[FileMessageEntity class]]) {
+            FileMessageEntity *fileMessageEntity = (FileMessageEntity *)[mediaBrowserFile sourceReference];
+            if ( ![fileMessageEntity renderFileImageMessage] && ![fileMessageEntity renderFileVideoMessage] ) {
+                _label.text = [fileMessageEntity fileName];
+                _label.hidden = NO;
+            } else {
+                _label.hidden = YES;
+            }
+        }
+    }
+    /***** END THREEMA MODIFICATION: add label to display filename *********/
+    
     if ([photo respondsToSelector:@selector(isVideo)]) {
         _videoIndicator.hidden = !photo.isVideo;
     } else {

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 public class DeleteRevokeIdentityManager: NSObject {
@@ -25,12 +26,26 @@ public class DeleteRevokeIdentityManager: NSObject {
     enum DeleteRevokeIdentityManagerError: Error {
         case revocationFailed
     }
+
+    @objc static func deleteLocalDataObjC(completion: @escaping () -> Void) {
+        Task { @MainActor in
+            await deleteLocalData()
+            completion()
+        }
+    }
     
-    @objc public static func deleteLocalData() {
-        
+    static func deleteLocalData() async {
+        do {
+            let multiDeviceManager = MultiDeviceManager()
+            try await multiDeviceManager.disableMultiDevice()
+        }
+        catch {
+            DDLogError("Disabling multi-device: \(error)")
+        }
+
         MyIdentityStore.shared().destroy()
         UserReminder.markIdentityAsDeleted()
-        
+
         // Threema Safe
         let safeConfigManager = SafeConfigManager()
         safeConfigManager.destroy()
@@ -45,19 +60,19 @@ public class DeleteRevokeIdentityManager: NSObject {
             safeApiService: SafeApiService()
         )
         safeManager.setBackupReminder()
-        
+
         // DB & Files
         FileUtility.removeItemsInAllDirectories()
         AppGroup.resetUserDefaults()
         DatabaseManager().eraseDB()
-        
-        Task { @MainActor in
+
+        await MainActor.run {
             UIApplication.shared.unregisterForRemoteNotifications()
             UIApplication.shared.applicationIconBadgeNumber = 0
         }
-        
+
         KKPasscodeLock.shared().disablePasscode()
-        
+
         if LicenseStore.requiresLicenseKey() {
             // Delete the license when we delete the ID, to give the user a chance to use a new license.
             // The license may have been supplied by MDM, so we load it again.
@@ -66,7 +81,26 @@ public class DeleteRevokeIdentityManager: NSObject {
             mdmSetup?.deleteThreemaMdm()
         }
     }
-    
+
+    static func deleteBackups() {
+        // Delete Threema Safe backup
+        let safeConfigManager = SafeConfigManager()
+        let safeStore = SafeStore(
+            safeConfigManager: safeConfigManager,
+            serverApiConnector: ServerAPIConnector(),
+            groupManager: GroupManager()
+        )
+        let safeManager = SafeManager(
+            safeConfigManager: safeConfigManager,
+            safeStore: safeStore,
+            safeApiService: SafeApiService()
+        )
+        safeManager.deactivate()
+
+        // Delete ID Export
+        IdentityBackupStore.deleteIdentityBackup()
+    }
+
     static func revokeIdentity() async throws {
         
         try await withCheckedThrowingContinuation { continuation in

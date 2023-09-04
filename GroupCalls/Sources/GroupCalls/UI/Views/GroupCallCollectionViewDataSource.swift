@@ -43,6 +43,7 @@ class GroupCallCollectionViewDataSource: UICollectionViewDiffableDataSource<
         
         self.viewModel = viewModel
         super.init(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
+            // TODO: (IOS-4049) Use cell provider?
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: GroupCallParticipantCell.reuseIdentifier,
                 for: indexPath

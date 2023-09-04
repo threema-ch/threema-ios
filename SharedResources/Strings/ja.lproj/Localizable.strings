@@ -40,7 +40,7 @@
 
 
 "status_disconnected" = "接続解除";
-"status_connecting" = "接続する";
+"status_connecting" = "接続中";
 "status_connected" = "接続中";    /* note: this is intentional; don't want to bother user with protocol details */
 "status_loggedIn" = "接続済み";
 "status_disconnecting" = "接続なし";
@@ -78,7 +78,7 @@
 "file" = "ファイル";
 "location" = "位置情報";
 "locating" = "位置情報を選択…";
-"unknown_location" = "知られていない位置情報";
+"unknown_location" = "未知の位置情報";
 "open" = "開く";
 "call" = "通話"; /* Short version for "Start Threema Call" */
 "Info" = "情報";
@@ -90,11 +90,11 @@
 "settings" = "設定";
 "loadMore" = "もっと読む";
 "all" = "すべて";
-"myIdentity" = "自分の情報";
+"myIdentity" = "プロフィール";
 "share_id" = "あなたのThreema IDを共有する";
 "close" = "閉じる";
 "threema_id" = "Threema ID";
-"nickname" = "ニックネーム";
+"nickname" = "名前";
 "add_button" = "追加";
 "chatview_contextmenu_select" = "選択…";
 "learn_more" = "詳細…";
@@ -123,7 +123,7 @@
 "export_progress_label" = "%li / %li メッセージがエクスポートされました";
 "caption" = "キャプション";
 "fileNotDownloaded" = "ファイルが削除されたか、ダウンロードされていません。";
-"include_media_title" = "画像・動画を添付して送ることができますか？";
+"include_media_title" = "添付ファイルとしてメディア（画像、動画）を含めますか？";
 "include_media_message" = "このファイルを開くには、7-ZipやThe Unarchiver（Mac）など、AESをサポートする最新のZIP解凍ソフトが必要です。";
 
 
@@ -140,7 +140,7 @@
 "image_resize_share_extension" = "容量に限りがあるため、送信された画像は、最大1600×1600ピクセルに縮小されます。";
 
 /* video sizes */
-"videoquality_title" = "動画品質";
+"videoquality_title" = "動画の品質";
 /* video sizes */
 "low" = "低画質";
 "high" = "高画質";
@@ -322,9 +322,9 @@
 "add_items_caption" = "Bildunterschrift hinzufügen";
 "send_item_immediately_photo" = "写真の送信";
 "send_item_immediately_video" = "動画の送信";
-"send_items_immediately" = "%d 動画/写真を送信する";
+"send_items_immediately" = "%d件 動画/写真を送信";
 "send_items_immediately_photo" = "%d写真を送信する";
-"send_items_immediately_video" = "%d 動画を送信する";
+"send_items_immediately_video" = "%d件 動画を送信";
 
 "record" = "録音する";
 "play" = "再生する";
@@ -343,7 +343,7 @@
 
 "include_media" = "メディアを添付";
 "without_media" = "メディアなし";
-"media_overview" = "写真・動画";
+"media_overview" = "写真と動画";
 
 "members" = "参加者";
 "group_one_member_title" = "1人の参加者";
@@ -492,7 +492,7 @@
 "delete_contact_group_exists_message_multiple" = "「%@」さんはまだ%dグループの参加者です。グループから連絡先を削除するか、グループを削除してください。";
 "delete_contact_group_exists_show_contact_button" = "連絡先を表示";
 "delete_contact_existing_conversation_title" = "%@ を削除しますか？";
-"delete_contact_existing_conversation_button" = "連絡先とチャット履歴を削除";
+"delete_contact_existing_conversation_button" = "連絡先とトーク履歴を削除";
 "delete_contact_confirmation_with_exclusion_message" = "「%@」さんを削除し、連絡先を同期から除外しますか？";
 "delete_contact_button" = "連絡先を削除";
 "delete_contact_confirmation_with_exclusion_button" = "連絡先の削除および除外";
@@ -612,7 +612,7 @@
 
 /* invite messages */
 "invite_email_body" = "こんにちは\n\n私は、ユーザーのプライバシーの守られていて、セキュリティも強固なThreemaを使っています。\n\n私のIDは: https://threema.id/%@ です。\n\nぜひThreemaを使って安全に連絡を取りましょう！\n\n良い一日を";
-"invite_email_subject" = "Threema みんなのプライバシーを守る安全なメッセンジャー。";
+"invite_email_subject" = "Threema みんなのプライバシーを守る安全なメッセンジャー";
 "invite_sms_body" = "こんにちは！Threemaを使って、プライバシーに配慮した安全なコミュニケーションをしていきましょう。私のThreema IDは https://threema.id/%@ です。";
 "invite_facebook_text" = "私は、ユーザーのプライバシーを保護する安全なインスタントメッセンジャーであるThreemaを使用しています。私のThreema IDは https://threema.id/%@ です。";
 "invite_twitter_text" = "私は、ユーザーのプライバシーを保護する安全なインスタントメッセンジャーであるThreemaを使用しています。私のThreema IDは https://threema.id/%@ です。";
@@ -714,7 +714,7 @@
 "call_mute" = "消音";
 "call_unmute" = "消音解除";
 "call_speaker" = "スピーカー";
-"call_earpiece" = "イヤースピーカー";
+"call_earpiece" = "耳にあてて聴く";
 "call_end" = "電話を切る";
 "call_camera_activate_button" = "カメラを起動";
 "call_camera_deactivate_button" = "カメラを停止";
@@ -765,9 +765,22 @@
 "call_threema_cellular_instead_of_wifi_text" = "警告: この通話は、モバイルデータ通信で行われます。";
 
 // Group Calls
+"group_call_title" = "グループ通話";
+/* Group Calls */
 "group_call_join_button_title" = "参加";
 "group_call_open_button_title" = "開く";
 "group_call_participants_title" = "参加者：%@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@がグループ通話を開始しました";
+"group_call_started_by_local_system_message" = "あなたがグループ通話を開始しました";
+"group_call_ended_system_message" = "グループ通話が終了しました";
+
+"group_call_start_message_received" = "グループ通話を開始しました";
+
+"group_call_navbar_state_connecting" = "接続中…";
+"group_call_navbar_state_joining" = "参加しています…";
+"group_call_navbar_state_connected" = "接続中";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threemaは、他のどのメッセンジャーよりも厳格にあなたのプライバシーを保護します。詳しくはプライバシーポリシー（英語）をご覧ください。";
@@ -1017,7 +1030,7 @@
 "settings_list_appearance_title" = "外観";
 "settings_list_notifications_title" = "通知";
 "settings_list_chat_title" = "トーク";
-"settings_list_media_title" = "写真・動画";
+"settings_list_media_title" = "写真と動画";
 "settings_list_storage_management_title" = "ストレージ管理";
 "settings_list_passcode_lock_title" = "パスコードロック";
 "settings_threema_calls" = "Threema通話";
@@ -1084,7 +1097,7 @@
 "settings_appearance_hide_stale_contacts" = "有効でないIDを非表示にする";
 "settings_appearance_show_profile_pictures" = "プロフィール写真を表示";
 "settings_appearance_display_order" = "表示順序";
-"settings_appearance_show_gallery_preview" = "ショーギャラリープレビュー";
+"settings_appearance_show_gallery_preview" = "ギャラリープレビューを見る";
 
 // Notification Settings
 "settings_notifications_inapp_section" = "アプリ内";
@@ -1112,11 +1125,11 @@
 
 "settings_notification_type_preview_balanced_title" = "氏名を表示";
 "settings_notification_type_preview_balanced_description" = "連絡先のフルネームを表示します（デフォルト）。";
-"settings_notification_type_preview_balanced_sender_name" = "John Smith";
+"settings_notification_type_preview_balanced_sender_name" = "佐藤 太郎";
 
 "settings_notification_type_preview_complete_title" = "氏名とプロフィール画像を表示";
 "settings_notification_type_preview_complete_description" = "連絡先のフルネームとプロフィール画像を表示します。インタラクションに関する一部の情報は、オペレーティングシステムと共有されます。［詳細…］（%@）";
-"settings_notification_type_preview_complete_sender_name" = "John Smith";
+"settings_notification_type_preview_complete_sender_name" = "佐藤 太郎";
 
 "settings_notification_type_preview_message_text" = "メッセージの例...";
 "settings_notification_type_preview_no_button" = "プッシュ通知を無効にする";
@@ -1134,10 +1147,10 @@
 "settings_chat_send_message_feedback_label" = "送信時の触覚フィードバック";
 
 // Media Settings
-"settings_media_title" = "写真・動画";
+"settings_media_title" = "写真と動画";
 "settings_media_image_size_title" = "画像サイズ";
-"settings_media_video_quality_title" = "動画画質";
-"settings_media_autosave_title" = "\"写真 \"アプリでメディアを自動保存";
+"settings_media_video_quality_title" = "動画の画質";
+"settings_media_autosave_title" = "カメラロールに写真と動画を自動保存";
 /* Media */
 "settings_media_autosave_private_footer" = "プライベートチャットで受信したメディアは、自動保存されません。";
 
@@ -1204,6 +1217,9 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "全ての通話をOnPremサーバーに中継し、IPアドレスを保護します。これは通話品質に影響を与える可能性があります。";
 "settings_threema_voip_include_call_in_recents_footer_off" = "通話はロック画面に表示されますが、電話アプリの通話リストには表示されません。";
 "settings_threema_voip_include_call_in_recents_footer_on" = "通話はロック画面に表示され、電話アプリの通話リストに表示されます。iCloud Driveが有効な場合、電話アプリの通話リストはAppleのサーバーを介して同期されます。";
+"settings_threema_voip_no_callkit_in_china_footer" = "Appleの制限により、端末の地域設定が中国になっている場合、Threema通話は利用できません。";
+"settings_threema_calls_group_calls_header" = "グループ通話 (ベータ版)";
+"settings_threema_calls_enable_group_calls" = "Threemaグループ通話を有効にする";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "ネットワーキング";
@@ -1575,7 +1591,7 @@ iTunesのバックアップを作成してから行ってください。";
 "notification_saving_failed" = "保存に失敗しました";
 
 "notification_saving_to_photos_succeeded" = "画像を追加";
-"notification_saving_to_photos_failed" = "写真への追加に失敗しました";
+"notification_saving_to_photos_failed" = "カメラロールへの追加に失敗しました";
 
 "notification_sending_failed" = "送信に失敗しました";
 "notification_sending_failed_subtitle_size" = "アイテムが大きすぎます";
@@ -1778,17 +1794,6 @@ iTunesのバックアップを作成してから行ってください。";
 "alert_biometrics_changed_title_touch" = "TouchIDの変更の可能性が検出されました";
 "alert_biometrics_changed_title_face" = "FaceIDの変更の可能性が検出されました";
 "alert_biometrics_changed_message" = "生体認証によるThreemaのロック解除を継続するため、Threemaのパスコードを一度入力してください。";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@がグループ通話を開始しました";
-"group_call_started_by_local_system_message" = "あなたがグループ通話を開始しました";
-"group_call_ended_system_message" = "グループ通話が終了しました";
-
-"group_call_start_message_received" = "グループ通話を開始しました";
-
-"group_call_navbar_state_connecting" = "接続中…";
-"group_call_navbar_state_joining" = "参加しています…";
-"group_call_navbar_state_connected" = "接続中";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "（%@）\nバージョン%dからバージョン%dにダウングレードできませんでした";

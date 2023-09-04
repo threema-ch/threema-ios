@@ -38,20 +38,7 @@ import Foundation
         thumbnailBlobID: Data?,
         thumbnailSize: NSNumber?,
         message: BaseMessage,
-        sendContactProfilePicture: Bool
-    ) {
-        self.thumbnailBlobID = thumbnailBlobID
-        if let thumbnailSize {
-            self.thumbnailSizeCurrent = thumbnailSize.doubleValue
-            self.thumbnailSize = thumbnailSize
-        }
-        super.init(message: message, group: nil, sendContactProfilePicture: sendContactProfilePicture)
-    }
-
-    @objc init(
-        thumbnailBlobID: Data?,
-        thumbnailSize: NSNumber?,
-        message: BaseMessage,
+        receiverIdentity: ThreemaIdentity?,
         group: Group?,
         sendContactProfilePicture: Bool
     ) {
@@ -60,7 +47,12 @@ import Foundation
             self.thumbnailSizeCurrent = thumbnailSize.doubleValue
             self.thumbnailSize = thumbnailSize
         }
-        super.init(message: message, group: group, sendContactProfilePicture: sendContactProfilePicture)
+        super.init(
+            message: message,
+            receiverIdentity: receiverIdentity,
+            group: group,
+            sendContactProfilePicture: sendContactProfilePicture
+        )
     }
 
     required init(from decoder: Decoder) throws {

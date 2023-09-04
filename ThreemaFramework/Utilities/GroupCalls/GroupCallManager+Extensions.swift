@@ -25,7 +25,7 @@ import GroupCalls
 extension GroupCallManager {
     // TODO: IOS-3745 This needs to be cleaned up
     public func joinCall(in groupConversationManagedObjectID: NSManagedObjectID) async -> Bool {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return false
         }
@@ -39,7 +39,7 @@ extension GroupCallManager {
     
     public func getGroupModel(for groupConversationManagedObjectID: NSManagedObjectID) async
         -> GroupCallsThreemaGroupModel? {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return nil
         }

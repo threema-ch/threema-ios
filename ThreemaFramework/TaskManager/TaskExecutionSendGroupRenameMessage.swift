@@ -63,16 +63,18 @@ final class TaskExecutionSendGroupRenameMessage: TaskExecution, TaskExecutionPro
             // Send group rename messages
             var sendMessages = [Promise<AbstractMessage?>]()
             for toMember in task.toMembers {
-                if !toMember.elementsEqual(self.frameworkInjector.myIdentityStore.identity) {
-                    let msg = self.getGroupRenameMessage(groupID, groupCreator, task.fromMember, toMember, task.name)
-                    sendMessages.append(
-                        self.sendMessage(
-                            message: msg,
-                            ltSend: self.taskContext.logSendMessageToChat,
-                            ltAck: self.taskContext.logReceiveMessageAckFromChat
-                        )
-                    )
+                if toMember == self.frameworkInjector.myIdentityStore.identity {
+                    continue
                 }
+              
+                let msg = self.getGroupRenameMessage(groupID, groupCreator, task.fromMember, toMember, task.name)
+                sendMessages.append(
+                    self.sendMessage(
+                        message: msg,
+                        ltSend: self.taskContext.logSendMessageToChat,
+                        ltAck: self.taskContext.logReceiveMessageAckFromChat
+                    )
+                )
             }
             
             return when(fulfilled: sendMessages)

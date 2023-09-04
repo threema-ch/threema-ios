@@ -779,14 +779,6 @@ protocol ForwardSecurityMessageSenderProtocol {
                 }
             }
         }
-
-        // Update ratchets in store (don't use storeDHSession(), as otherwise we
-        // might overwrite the "my" ratchets if an outgoing message is being processed
-        // for the same session at the same time)
-        // TODO: Remove
-        if !ThreemaEnvironment.lateSessionSave {
-            try dhSessionStore.updateDHSessionRatchets(session: session, peer: true)
-        }
         
         // Decode inner message and pass it to processor
         let innerMsg = try MessageDecoder.decode(

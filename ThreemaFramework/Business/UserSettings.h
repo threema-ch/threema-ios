@@ -48,6 +48,7 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL includeCallsInRecents;
 @property (nonatomic, readwrite) BOOL enableVideoCall;
 @property (nonatomic, readwrite) enum ThreemaVideoCallQualitySetting threemaVideoCallQualitySetting;
+@property (nonatomic, readwrite) BOOL enableThreemaGroupCalls;
 @property (nonatomic, strong) NSOrderedSet *blacklist;
 @property (nonatomic, strong) NSArray *syncExclusionList;
 @property (nonatomic, strong) NSData *wallpaper;
@@ -91,9 +92,6 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL validationLogging;
 @property (nonatomic, strong) NSString *sentryAppDevice;
 
-@property (nonatomic, readwrite) BOOL flippedTableView;
-
-@property (nonatomic, readwrite) BOOL groupCallsDeveloper;
 @property (nonatomic, readwrite) BOOL groupCallsDebugMessages;
 
 @end

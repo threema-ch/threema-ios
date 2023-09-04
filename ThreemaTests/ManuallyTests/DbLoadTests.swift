@@ -94,7 +94,114 @@ class DBLoadTests: XCTestCase {
             }
         }
     }
+
+    func testImportTestLiveIDs() {
+        let testIDs = [
+            "4SA2FT56", "Y7D72UZ2", "YT2UREKN", "Y2ZS4H4Y", "HV7UKC9B", "S8T7SKVP", "JEAR4C68", "299N6FAF",
+            "8JA7ZRHX", "NJ9NYUNU", "3AD82KSN", "8T6Y4MTA", "C2NTU8DS", "ABP323M8", "MSAAJY4R", "CF6BWXYE",
+            "A9CDB69Z", "BNKTHA3X", "W9JYWXHM", "MRB4X6NY", "JTPT46YP", "6M59BE5H", "3328D2U6", "PWM5HHTK",
+            "D4NVXVYZ", "9UNACVPH", "94SBW52N", "2MCMK2V8", "JBB56TAU", "8PFR4VMC", "V92D9CDN", "38S27RMC",
+            "CPUC6WH9", "C97DW8TJ", "7RWVXVY9", "BJJFNHEZ", "8P3H8ADN", "U6JXRHKX", "Z3PFEKWT", "NZETVFTY",
+            "ENUA5S5D", "6HJTP8XV", "PBJST426", "ZB48CUSJ", "Z3JJZ436", "ZU5TRUAM", "H6AXSHKC", "5U38HREW",
+            "9N2A8689", "NS5EJ4JJ", "95MHAUMK", "UDNEPRMM", "MYJJF7WH", "AX6BBU4K", "RBT83N6W", "P3PM59D7",
+            "XWPSAUSE", "DY7HMAKN", "ECP4HFWE", "FXHR5WFX", "XERCUKNS", "NRH4F2JM", "RY4PAMSV", "FD4D5H6H",
+            "DH5WZHYK", "HJA2S8HA", "2HC47N7Z", "RNJRZPWF", "TCZ3AZ9U", "78Y2MEV6", "EA3SKCJE", "SCV2RXFD",
+            "8V2RMJ28", "C5WF6E79", "669E8U8D", "KZ3CCF88", "RBAS3SBX", "6HSE6VVE", "CXF84N53", "W7KTP29Y",
+            "YRE95V2W", "CPXDFB4M", "F35HXBE3", "XRJZTWXP", "5ZDNC5NZ", "7PVKMD6Y", "92KEZ9H9", "98P3ZJFY",
+            "ADDRTCNX", "8K43TJ9Y", "JAZR8BHV", "TMZJ3E5P", "N9KS9ZMX", "FS46TYHE", "FNHVBMD2", "X6KN2NKU",
+            "ASDUT598", "F4NWU2WY", "2R9TXZMV", "9X7XBJAN", "DFNMZWRZ", "N4PKWSJ5", "NX57R85W", "95RA89WF",
+            "57JTE5EK", "TMV4ZCBK", "97NHH47W", "X7P8B8MM", "5AJ6WD6B", "U89FSTN8", "CHANPKUP", "NKPMFP92",
+            "Y4T3YKW6", "4H6FD5AM", "AYPJVYRS", "D3YAX8BB", "664NJK2C", "YFUF8T5M", "YV3YD9YH", "E272NS79",
+            "DJ8TBMWR", "CH5E8AAF", "R9V9EZ55", "NZ7RSKUB", "5SWJ9KPM", "S4XZPWER", "CZT7WN8C", "J2E9UPY3",
+            "7KMUDH6Z", "583ACKJJ", "4MHT43PT", "A322VDCZ", "V44EUFVE", "AJ78UVJD", "JRDDC6J9", "89WPPC28",
+            "M3Z7A9NF", "TNPEMDAM", "TJT4Y8HD", "9D58MRVF", "VD59NC8Y", "TPVCT7XB", "RN57D48P", "V7T4NFUF",
+            "9S5NZ2MS", "FJUTHMXN", "4N6EKVVB", "22YWHRNT", "N9RJCB6H", "86DWR5FS", "FCU2RFU9", "BUHJVECK",
+            "7YC7JRY5", "2H35ZCHN", "YVRKD6K6", "K7D2DVPA", "AH5K4J36", "9E55UB2K", "BVX4NFF5", "J8CKV4C2",
+            "F9CTVB88", "RZ6V4K7P", "3BZ66RCS", "YSWVXUZP", "H8P8FSK7", "J4NZ8A9F", "Z3R4JBKY", "C36BBD72",
+            "DD52YEPB", "8U88DSJA", "UE9C74SD", "AUBDPXFM", "AW5BE83S", "58NJCKPD", "9877UEYD", "X5CNADHT",
+            "F7F8VD53", "4995K37U", "4KBMDY73", "AZ2HKVXZ", "BR9C76FH", "7TADJ5K7", "JBYYFUMY", "2SKTMD5T",
+            "TV4TRXYW", "BVNNVD5J", "48B4E2ER", "92WZ8DDH", "EJZJX2MM", "CT8BW584", "BDB72MVX", "BAXV3XUK",
+            "45MVVWHB", "7CXV8JUK", "2DET88WJ", "3ENE9X42", "EJEWJ8F7", "8827FF7U", "FEAUXBT3", "MVZ7NYVR",
+            "N46FZW8C", "3F87E2D5", "EWTV2K82", "KYK5YW9E", "V3BESYSR", "53YCJ4ZS", "PFAPHCT7", "KNZNMSX5",
+            "Y3ER2RH7", "R9ND6T48", "3K6KHP7C", "U4DZ9JCN", "MSR393YW", "A336U2RE", "Z3BVCPA3", "JF96657J",
+            "B5CZA8YK", "3ECSYCJD", "X94D97KN", "PV2R9X34", "8XDVA2F7", "RXR58XAS", "7VVC63T5", "AYNJNXKY",
+            "AUWNU8H4", "PDE5CCXY", "BUH7VMKZ", "WTJK9VST", "9RXHBE2N", "YZH66YC6", "677Y6YVW", "2D4EVX57",
+            "77PW947J", "A3PYY24W", "HZ4EYB6V", "ZPT9VWPD", "3Z3EKUAV", "ASDDX5AE", "76NE2Y2C", "PZSX3XUW",
+            "5TA948ZN", "TZ5DFKDP", "8T2EY7WY", "5DW6XRVM", "76UA8N39", "UPH2ENA7", "SZMAK3K7", "VKCCWD3J",
+            "9WS3HKB3", "WTY5WTRH", "ZBT98WNS", "TPJSH62P", "EWH275UV", "R9XFZKYV", "CTM4XR2J", "JM5VD3UX",
+            "AR9394S3", "RX7Y9N9S", "5PTBNNCW", "2UR8PYN2", "8UCCTRJX", "3KWWDN3Z", "3FMRF8V3", "PFT4Y2DP",
+            "2MUJAHE7", "WNPFHRFM", "6AXTPA93", "D5PE9W9X", "B9MX8K69", "S2WYS8JA", "SW35VYZF", "HHDEPX43",
+            "CTD47XRK", "PFZS2AP8", "J4DP9N3Z", "RN9495A7", "V88EY5E5", "EW4ERCX6", "H78FPRFS", "P7J6AENR",
+            "UU7VHDVW", "PSSF8KAA", "PWDVRCDD", "YAKFAKPX", "SFM6DSVZ", "BB4ZTPM9", "UUZW2D9W", "ABYDNFYS",
+            "RSDSENRV", "XV7XWHEM", "JESYRPPR", "8FHKVCA2", "XZ8BTYXE", "UNZRF545", "JSYT4MTK", "MWDJBKYB",
+            "7TNKPMDU", "2SRE23ST", "ANEYAN3J", "RB7C3E5H",
+        ]
+
+        _ = createContacts(for: testIDs)
+    }
     
+    /// Add 1000 messages to every contacts conversation with wrong last message and count of unread messages.
+    /// To test last message workaround (see `AppLaunchTasks.checkLastMessageOfAllConversations()`)
+    func testLoadTextMessagesToAllOneToOneConversations() throws {
+        let testBundle = Bundle(for: DBLoadTests.self)
+
+        guard let textsPath = testBundle.url(forResource: "test_texts", withExtension: "json") else {
+            XCTFail("Cannot find file with test texts")
+            return
+        }
+
+        let texts = try JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath))
+
+        let entityManager = EntityManager()
+        entityManager.performAndWaitSave {
+            for item in entityManager.entityFetcher.allContacts() {
+                guard let contactEntity = item as? ContactEntity, !contactEntity.isContactHidden else {
+                    continue
+                }
+
+                _ = entityManager.conversation(forContact: contactEntity, createIfNotExisting: true)
+            }
+        }
+
+        entityManager.performAndWait {
+            for item in entityManager.entityFetcher.allConversations() {
+                guard let conversation = item as? Conversation else {
+                    continue
+                }
+
+                var lastMessage: BaseMessage?
+
+                entityManager.performAndWaitSave {
+                    for index in 0..<1000 {
+                        let calendar = Calendar.current
+                        let date = calendar.date(byAdding: .second, value: index, to: Date(timeIntervalSince1970: 0))
+                        let message = entityManager.entityCreator.textMessage(for: conversation)!
+                        message.text = "\(index) - \(texts[index % texts.count])"
+                        message.isOwn = index % 4 == 0 ? true : false
+                        message.date = date
+                        message.sender = conversation.contact
+                        message.sent = true
+                        message.delivered = true
+                        message.read = index % 5 == 0 ? true : false
+                        message.remoteSentDate = Date()
+
+                        if index == 998 {
+                            lastMessage = message
+                        }
+
+                        print("\(index)/1000")
+                    }
+                }
+
+                entityManager.performAndWaitSave {
+                    // Set wrong last message and count of unread messages deliberately
+                    conversation.lastMessage = lastMessage
+                    conversation.unreadMessageCount = 0
+                }
+            }
+        }
+    }
+
     func testUnreadMessagesCount() throws {
         let testBundle = Bundle(for: DBLoadTests.self)
 

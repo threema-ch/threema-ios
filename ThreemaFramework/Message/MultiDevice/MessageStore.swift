@@ -735,7 +735,6 @@ class MessageStore: MessageStoreProtocol {
                     ) else {
                         throw MediatorReflectedProcessorError
                             .conversationNotFound(message: groupDeliveryReceiptMessage.loggingDescription)
-                        return
                     }
                     
                     if let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
@@ -747,7 +746,7 @@ class MessageStore: MessageStoreProtocol {
                             let receipt = GroupDeliveryReceipt(
                                 identity: groupDeliveryReceiptMessage.fromIdentity,
                                 deliveryReceiptType: receiptType,
-                                date: createdAt ?? groupDeliveryReceiptMessage.date
+                                date: createdAt
                             )
                             msg.add(groupDeliveryReceipt: receipt)
                         }

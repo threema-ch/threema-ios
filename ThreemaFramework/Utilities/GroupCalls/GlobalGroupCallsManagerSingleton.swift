@@ -32,6 +32,8 @@ import WebRTC
     
     public var processBusinessInjector: BusinessInjectorProtocol?
     
+    public let httpHelper = GroupCallsSFUTokenFetcher()
+    
     fileprivate var currentBusinessInjector: BusinessInjectorProtocol {
         guard let processBusinessInjector else {
             return businessInjector
@@ -61,7 +63,7 @@ import WebRTC
         groupCallSessionHelper: GroupCallSessionHelper.shared,
         groupCallBundleUtil: GroupCallsBundleUtil.shared
     ), businessInjector: BusinessInjectorProtocol = BusinessInjector()) {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             fatalError()
         }
         
@@ -83,7 +85,7 @@ import WebRTC
     }
     
     public func initialCallsFromDBLoaded() async {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return
         }
@@ -98,7 +100,7 @@ import WebRTC
     }
     
     @objc public func handleCallsFromDB() async {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return
         }
@@ -178,7 +180,7 @@ import WebRTC
         receiveDate: Date,
         onCompletion: (() -> Void)?
     ) {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             onCompletion?()
             return
@@ -210,7 +212,7 @@ import WebRTC
         receiveDate: Date,
         in groupConversation: Conversation
     ) async {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return
         }
@@ -219,6 +221,10 @@ import WebRTC
             let msg = "[GroupCall] Incorrect message type passed into \(#function)"
             assertionFailure(msg)
             DDLogError(msg)
+            return
+        }
+        
+        guard await isValidSFUURL(convRawMessage.sfuBaseURL) else {
             return
         }
         
@@ -261,7 +267,7 @@ import WebRTC
         in groupModel: GroupCallsThreemaGroupModel,
         in groupConversation: Conversation
     ) async throws {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return
         }
@@ -320,7 +326,7 @@ import WebRTC
         localIdentity: ThreemaID
     ) async throws -> CspE2e_GroupCallStart? {
         
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return nil
         }
@@ -342,7 +348,7 @@ import WebRTC
     }
     
     public func joinCall(in groupModel: GroupCallsThreemaGroupModel) async throws -> GroupCallViewModel? {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return nil
         }
@@ -351,7 +357,7 @@ import WebRTC
     }
     
     public func viewModel(for group: GroupCallsThreemaGroupModel) async -> GroupCallViewModel? {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return nil
         }
@@ -465,6 +471,17 @@ import WebRTC
                 quickReply: false,
                 requestID: nil
             )
+        }
+    }
+    
+    private func isValidSFUURL(_ baseURL: String) async -> Bool {
+        do {
+            let token = try await httpHelper.sfuCredentials()
+            return token.isAllowedBaseURL(baseURL: baseURL)
+        }
+        catch {
+            DDLogError("[GroupCall] Invalid baseURL: \(baseURL)")
+            return false
         }
     }
 }
@@ -597,7 +614,7 @@ extension GlobalGroupCallsManagerSingleton {
         }
         catch {
             guard let error = error as? GroupCallManager.GroupCallManagerError,
-                  error == .CannotJoinAlreadyInACall else {
+                  error == .cannotJoinAlreadyInACall else {
                 throw error
             }
         }

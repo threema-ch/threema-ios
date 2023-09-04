@@ -68,6 +68,7 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
                     dbSystemMessage.arg = contact.displayName.data(using: .utf8)
                     
                     conversation.lastMessage = dbSystemMessage
+                    conversation.lastUpdate = Date.now
                 case .groupCallEnded:
                     guard let dbSystemMessage = self.businessInjector.backgroundEntityManager.entityCreator
                         .systemMessage(for: conversation) else {
@@ -88,6 +89,7 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
                     dbSystemMessage.type = NSNumber(value: kSystemMessageGroupCallStarted)
                     
                     conversation.lastMessage = dbSystemMessage
+                    conversation.lastUpdate = Date.now
                 }
                 
                 continuation.resume()

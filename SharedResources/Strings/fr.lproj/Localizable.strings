@@ -764,10 +764,21 @@
 "call_threema_cellular_instead_of_wifi_title" = "Appel via réseau cellulaire";
 "call_threema_cellular_instead_of_wifi_text" = "Avertissement : Cet appel entraîne un transfert de données via le réseau cellulaire.";
 
-// Group Calls
+/* Group Calls */
 "group_call_join_button_title" = "Rejoindre";
 "group_call_open_button_title" = "Ouvrir";
 "group_call_participants_title" = "Participants : %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ a lancé un appel de groupe";
+"group_call_started_by_local_system_message" = "Vous avez lancé un appel de groupe";
+"group_call_ended_system_message" = "L'appel de groupe est terminé";
+
+"group_call_start_message_received" = "A lancé un appel";
+
+"group_call_navbar_state_connecting" = "Connexion en cours…";
+"group_call_navbar_state_joining" = "Participation…";
+"group_call_navbar_state_connected" = "Connecté";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protège votre vie privée plus rigoureusement que toute autre messagerie. Vous pouvez en savoir plus dans notre Politique de confidentialité.";
@@ -1203,7 +1214,7 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Transmettre tous les appels via vos serveurs OnPrem pour masquer votre adresse IP à vos partenaires d’appel. Cela peut affecter la qualité de l’appel.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Les appels sont affichés sur l'écran de verrouillage, mais ne sont pas répertoriés sur la liste d'appels de l'application Téléphone.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Les appels sont affichés sur l'écran de verrouillage et répertoriés sur la liste d'appels de l'application Téléphone. Si iCloud Drive est activé, la liste d'appels de l'application Téléphone est synchronisée à travers les serveurs d'Apple.";
-
+"settings_threema_voip_no_callkit_in_china_footer" = "En raison des restrictions imposées par Apple, les appels Threema ne sont pas disponibles si la région de l'appareil est réglée sur la Chine.";
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Dépannage";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1777,17 +1788,6 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "alert_biometrics_changed_title_touch" = "Changement possible dans TouchID détecté";
 "alert_biometrics_changed_title_face" = "Changement possible dans FaceID détecté";
 "alert_biometrics_changed_message" = "Veuillez saisir votre code Threema une fois afin de continuer à utiliser l'authentification biométrique pour déverrouiller Threema.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ a lancé un appel de groupe";
-"group_call_started_by_local_system_message" = "Vous avez lancé un appel de groupe";
-"group_call_ended_system_message" = "L'appel de groupe est terminé";
-
-"group_call_start_message_received" = "A lancé un appel";
-
-"group_call_navbar_state_connecting" = "Connexion en cours…";
-"group_call_navbar_state_joining" = "Participation…";
-"group_call_navbar_state_connected" = "Connecté";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nImpossible de passer de la version %d à la version antérieure %d";

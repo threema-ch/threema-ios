@@ -202,7 +202,6 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
         if let cell = cell as? ChatViewBaseTableViewCell,
            let originalCellCenter {
             cell.center = CGPoint(x: originalCellCenter.x, y: originalCellCenter.y)
-            cell.transform = cell.customIdentityTransform
         }
         quoteSymbolView.alpha = 0.0
         
@@ -260,13 +259,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
             options: UIView.AnimationOptions(),
             animations: {
                 self.cell?.center = originalCellCenter
-                
-                if let cell = self.cell as? ChatViewBaseTableViewCell {
-                    self.cell?.transform = cell.customIdentityTransform
-                }
-                else {
-                    self.cell?.transform = CGAffineTransform(rotationAngle: 0)
-                }
+                self.cell?.transform = .identity
             }
         )
     }

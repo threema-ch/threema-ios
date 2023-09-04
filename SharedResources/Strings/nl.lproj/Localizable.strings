@@ -764,10 +764,21 @@
 "call_threema_cellular_instead_of_wifi_title" = "Oproep via mobiel netwerk";
 "call_threema_cellular_instead_of_wifi_text" = "Waarschuwing: deze oproep zal gegevens naar het mobiele netwerk overdragen.";
 
-// Group Calls
+/* Group Calls */
 "group_call_join_button_title" = "Aansluiten";
 "group_call_open_button_title" = "Openen";
 "group_call_participants_title" = "Deelnemers: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ heeft een groepsgesprek gestart";
+"group_call_started_by_local_system_message" = "U hebt een groepsgesprek gestart";
+"group_call_ended_system_message" = "Groepsgesprek is beëindigd";
+
+"group_call_start_message_received" = "Heeft een groepsgesprek gestart";
+
+"group_call_navbar_state_connecting" = "Verbinden…";
+"group_call_navbar_state_joining" = "Aansluiten…";
+"group_call_navbar_state_connected" = "Verbonden";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema beschermt je privacy beter dan welke messenger dan ook. Raadpleeg voor meer informatie naar ons Privacybeleid.";
@@ -1203,7 +1214,7 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Alle oproepen doorschakelen via OnPrem-servers om je IP-adres te beschermen. Dit kan de kwaliteit beïnvloeden.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Oproepen worden weergegeven in het vergrendelingsscherm maar niet in de oproeplijst van de telefoonapp.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Oproepen worden weergegeven in het vergrendelingsscherm en weergegeven in de oproeplijst van de telefoonapp. Als iCloud Drive is geactiveerd, wordt de oproeplijst van de telefoonapp gesynchroniseerd via Apple-servers.";
-
+"settings_threema_voip_no_callkit_in_china_footer" = "Vanwege beperkingen die Apple oplegt, zijn oproepen via Threema niet beschikbaar als de regio van het apparaat op China is ingesteld.";
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Netwerken";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1777,17 +1788,6 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "alert_biometrics_changed_title_touch" = "Mogelijke wijziging in TouchID ontdekt";
 "alert_biometrics_changed_title_face" = "Mogelijke wijziging in FaceID ontdekt";
 "alert_biometrics_changed_message" = "Voer uw Threema-toegangscode eenmaal in om de biometrische authenticatie verder te gebruiken en Threema te ontgrendelen.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ heeft een groepsgesprek gestart";
-"group_call_started_by_local_system_message" = "U hebt een groepsgesprek gestart";
-"group_call_ended_system_message" = "Groepsgesprek is beëindigd";
-
-"group_call_start_message_received" = "Heeft een groepsgesprek gestart";
-
-"group_call_navbar_state_connecting" = "Verbinden…";
-"group_call_navbar_state_joining" = "Aansluiten…";
-"group_call_navbar_state_connected" = "Verbonden";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nNiet afgewaardeerd van versie %d naar versie %d";

@@ -115,6 +115,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private var conversationObservers = [NSKeyValueObservation]()
     private var lastMessageObservers = [NSKeyValueObservation]()
     private var contactObservers = [NSKeyValueObservation]()
+    private var groupCallButtonBannerObserver: AnyCancellable?
+    
     private var cancellables = Set<AnyCancellable>()
     
     private let businessInjector = BusinessInjector()
@@ -398,36 +400,30 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private(set) var conversation: Conversation? {
         willSet {
             removeAllObjectObservers()
+            group = nil
+            
+            groupCallButtonBannerObserver?.cancel()
+            groupCallButtonBannerObserver = nil
         }
         didSet {
-            guard conversation != nil else {
+            guard let conversation else {
                 return
             }
-
+            
+            if conversation.isGroup() {
+                group = businessInjector.groupManager.getGroup(conversation: conversation)
+            }
+            
+            updateGroupCallModel()
             updateCell()
         }
     }
     
+    private var group: Group?
+    
     private(set) var navigationController: UINavigationController?
     
-    private lazy var groupCallGroupModel: GroupCallsThreemaGroupModel? = {
-        guard let conversation, let group = GroupManager().getGroup(conversation: conversation) else {
-            assertionFailure("[Group Calls] Could not create GroupCallsThreemaGroupModel for conversation.")
-            return nil
-        }
-        
-        let groupCreatorID: String = group.groupCreatorIdentity
-        let groupCreatorNickname: String? = group.groupCreatorNickname
-        let groupID = group.groupID
-        let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
-        
-        return GroupCallsThreemaGroupModel(
-            creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
-            groupID: groupID,
-            groupName: group.name ?? "",
-            members: Set(members)
-        )
-    }()
+    private var groupCallGroupModel: GroupCallsThreemaGroupModel?
 
     // MARK: - Configuration
     
@@ -678,7 +674,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             threemaTypeImageView.isHidden = true
         }
         
-        if conversation.isGroup(), ThreemaEnvironment.groupCalls {
+        if conversation.isGroup(), ThreemaEnvironment.groupCalls,
+           businessInjector.settingsStore.enableThreemaGroupCalls {
             updateGroupCallButton()
         }
         else {
@@ -688,9 +685,40 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         addAllObjectObservers()
     }
     
+    private func updateGroupCallModel() {
+        groupCallGroupModel = nil
+        
+        guard let conversation, conversation.isGroup() else {
+            return
+        }
+                
+        guard let group else {
+            assertionFailure("[Group Calls] Could not create GroupCallsThreemaGroupModel for conversation.")
+            return
+        }
+        
+        let groupCreatorID: String = group.groupCreatorIdentity
+        let groupCreatorNickname: String? = group.groupCreatorNickname
+        
+        guard let creatorThreemaID = try? ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname) else {
+            DDLogError("[Group Calls] Unable to create creator Threema ID")
+            return
+        }
+        
+        let groupID = group.groupID
+        let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
+        
+        groupCallGroupModel = GroupCallsThreemaGroupModel(
+            creator: creatorThreemaID,
+            groupID: groupID,
+            groupName: group.name ?? "",
+            members: Set(members)
+        )
+    }
+    
     private func updateGroupCallButton() {
         
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             updateGroupCallButton(for: .hidden)
             assertionFailure()
             return
@@ -708,12 +736,11 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 self.updateGroupCallButton(for: currentItem)
             }
             
-            viewModel.buttonBannerObserver.publisher.pub.sink { [weak self] newState in
+            groupCallButtonBannerObserver = viewModel.buttonBannerObserver.publisher.pub.sink { [weak self] newState in
                 Task { @MainActor in
                     self?.updateGroupCallButton(for: newState)
                 }
             }
-            .store(in: &self.cancellables)
         }
     }
     
@@ -745,7 +772,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         guard !conversation.isGroup() else {
             // Group conversation
-            if let group = BusinessInjector().groupManager.getGroup(conversation: conversation),
+            if let group,
                !group.isSelfMember {
                 let attributeString = NSMutableAttributedString(string: displayName)
                 attributeString.addAttribute(
@@ -800,8 +827,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         // Show group icon for groups
         guard !conversation.isGroup() else {
             // Check is group a note group
-            let groupManager = GroupManager(entityManager: BusinessInjector().entityManager)
-            if let group = groupManager.getGroup(conversation: conversation),
+            if let group,
                group.isNoteGroup {
                 displayStateImageView.image = UIImage(
                     systemName: "note.text",
@@ -859,9 +885,16 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             }
             
             dateDraftLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: lastMessage.displayDate)
-            if let previewableMessage = lastMessage as? PreviewableMessage {
-                previewLabel.attributedText = previewableMessage
-                    .previewAttributedText(for: PreviewableMessageConfiguration.conversationCell)
+            if conversation.conversationCategory != .private {
+                if let previewableMessage = lastMessage as? PreviewableMessage {
+                    previewLabel.attributedText = previewableMessage
+                        .previewAttributedText(for: PreviewableMessageConfiguration.conversationCell)
+                }
+            }
+            else {
+                previewLabel.attributedText = NSAttributedString(
+                    string: BundleUtil.localizedString(forKey: "private_chat_label")
+                )
             }
         }
         dateDraftLabel.isHidden = false
@@ -1161,7 +1194,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             self.loadAvatar()
         }
         
-        if ThreemaEnvironment.groupCalls {
+        if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on de-init
             startGroupCallObserver()
         }
@@ -1342,7 +1375,7 @@ extension ConversationTableViewCell {
     ///
     /// Note that we don't need to remove this as they will automatically be removed on deallocation
     private func startGroupCallObserver() {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             assertionFailure()
             return
         }

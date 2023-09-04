@@ -58,7 +58,7 @@ typedef enum : NSUInteger {
 
 - (__kindof NSManagedObject *)existingObjectWithIDString:(NSString *)objectIDString;
 
-- (nullable BaseMessage *)ownMessageWithId:(NSData *)messageId NS_SWIFT_NAME(ownMessage(with:));
+- (nullable BaseMessage *)ownMessageWithId:(nonnull NSData *)messageId conversation:(nonnull Conversation *)conversation NS_SWIFT_NAME(ownMessage(with:conversation:));
 
 - (nullable BaseMessage *)messageWithId:(nonnull NSData *)messageId conversation:(nonnull Conversation *)conversation NS_SWIFT_NAME(message(with:conversation:));
 
@@ -77,7 +77,7 @@ typedef enum : NSUInteger {
 - (NSArray *)contactsFilteredByWords:(NSArray *)searchWords forContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 
 // Does a contact exist that contains my identity?
-- (BOOL)contactsContainOwnIdentity;
+- (ContactEntity *_Nullable)contactsContainOwnIdentity;
 
 /**
  Checks if there are duplicate contacts in the contact table.
@@ -152,7 +152,7 @@ typedef enum : NSUInteger {
 
 - (NSFetchRequest *)fetchRequestForEntity:(NSString *)entityName;
 
-- (NSArray *)executeFetchRequest:(NSFetchRequest *)fetchRequest;
+- (nullable NSArray *)executeFetchRequest:(nonnull NSFetchRequest *)fetchRequest;
 
 - (NSInteger)executeCountFetchRequest:(NSFetchRequest *)fetchRequest;
 

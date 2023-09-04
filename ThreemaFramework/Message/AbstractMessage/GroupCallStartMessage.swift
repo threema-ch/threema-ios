@@ -112,4 +112,8 @@ import ThreemaProtocols
     override public static var supportsSecureCoding: Bool {
         true
     }
+    
+    override public func isGroupCall() -> Bool {
+        true
+    }
 }

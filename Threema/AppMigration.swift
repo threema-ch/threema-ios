@@ -145,6 +145,10 @@ import ThreemaFramework
                 try migrateTo5_4()
                 migratedTo = .v5_4
             }
+            if migratedTo < .v5_5 {
+                try migrateTo5_5()
+                migratedTo = .v5_5
+            }
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
@@ -372,5 +376,22 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "5.4 migration")
         DDLogNotice("[AppMigration] App migration to version 5.4 successfully finished")
+    }
+    
+    /// Migrate to version 5.5:
+    /// - Remove own contact from contact list if exists
+    private func migrateTo5_5() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.5 started")
+        os_signpost(.begin, log: osPOILog, name: "5.5 migration")
+        
+        entityManager.performAndWaitSave {
+            if let ownContact = self.entityManager.entityFetcher.contactsContainOwnIdentity() {
+                self.entityManager.entityDestroyer.deleteObject(object: ownContact)
+                DDLogNotice("[AppMigration] Removed own contact from contact list")
+            }
+        }
+        
+        os_signpost(.end, log: osPOILog, name: "5.5 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.5 successfully finished")
     }
 }

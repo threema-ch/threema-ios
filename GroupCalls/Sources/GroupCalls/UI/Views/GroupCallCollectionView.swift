@@ -24,21 +24,25 @@ import UIKit
 
 final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate {
     
-    // MARK: - Private Properties
+    // MARK: - Private properties
 
     private var viewModel: GroupCallViewModel
-    private var groupCallDataSource: UICollectionViewDataSource?
+    private var groupCallDataSource: GroupCallCollectionViewDataSource?
+    
     private var updateVideoTask: Task<Void, Never>?
-    private var previouslyVisibleParticipantCells = Set<GroupCallParticipantCell>()
+    
+    private var previouslyVisibleCellsParticipantIDs = Set<ParticipantID>()
 
     // MARK: - Lifecycle
     
     init(groupCallViewModel: GroupCallViewModel) {
         self.viewModel = groupCallViewModel
+        
         super.init(
             frame: .zero,
-            collectionViewLayout: LayoutProvider
-                .createLayout(numberOfParticipants: viewModel.getNumberOfParticipants())
+            collectionViewLayout: GroupCallLayoutProvider.createLayout(
+                numberOfParticipants: viewModel.numberOfParticipants
+            )
         )
 
         backgroundColor = .black
@@ -66,7 +70,8 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
         }
         
         Task {
-            await viewModel.rendererView(for: cell.participantID!, rendererView: cell.videoRendererView)
+            await viewModel.addRendererView(for: cell.participantID!, rendererView: cell.videoRendererView)
+            cell.videoRendererView.alpha = 1.0
         }
     }
     
@@ -79,27 +84,40 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
             return
         }
         
+        cell.videoRendererView.alpha = 0.0
+
         Task {
-            await self.viewModel.remove(for: cell.participantID!, rendererView: cell.videoRendererView)
+            await self.viewModel.removeRendererView(for: cell.participantID!, rendererView: cell.videoRendererView)
         }
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        // TODO: (IOS-4058) refactor sub/unsub
         updateVideoTask?.cancel()
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        // TODO: (IOS-4058) refactor sub/unsub
         updateVideo()
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        // TODO: (IOS-4058) refactor sub/unsub
         if !decelerate {
             updateVideo()
         }
     }
     
     public func updateLayout() {
-        collectionViewLayout = LayoutProvider.createLayout(numberOfParticipants: viewModel.getNumberOfParticipants())
+        let newLayout = GroupCallLayoutProvider.createLayout(numberOfParticipants: viewModel.numberOfParticipants)
+        
+        // This prevents jumping of the scroll position if the fractional height of the layout is not 1 or 0.5.
+        // But iff animated is false
+        // TODO: (IOS-4049) Is this still needed?
+        let lastContentOffset = contentOffset
+        setCollectionViewLayout(newLayout, animated: false) { _ in
+            self.contentOffset = lastContentOffset
+        }
     }
     
     private func updateVideo() {
@@ -114,23 +132,31 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     }
     
     private func handleChangeOfVisibleParticipants(visibleCells: Set<GroupCallParticipantCell>) async {
-        let removedParticipantCells = previouslyVisibleParticipantCells.subtracting(visibleCells)
-        let addedParticipantCells = visibleCells.subtracting(previouslyVisibleParticipantCells)
+        let visibleCellsParticipantIDs = Set(visibleCells.compactMap(\.participantID))
+        let removedCellsParticipantIDs = previouslyVisibleCellsParticipantIDs.subtracting(visibleCellsParticipantIDs)
+        let addedCellsParticipantIDs = visibleCellsParticipantIDs.subtracting(previouslyVisibleCellsParticipantIDs)
         
-        for removedParticipantCell in removedParticipantCells {
+        // We fill the previouslyVisibleCellsParticipantIDs when entering the first time
+        if previouslyVisibleCellsParticipantIDs.isEmpty {
+            previouslyVisibleCellsParticipantIDs = visibleCellsParticipantIDs
+            return
+        }
+        
+        for removedParticipantID in removedCellsParticipantIDs {
             Task {
-                await viewModel.unsubscribeVideo(for: removedParticipantCell.participantID!)
-                removedParticipantCell.videoRendererView.alpha = 0.0
+                await viewModel.unsubscribeVideo(for: removedParticipantID)
             }
         }
         
-        for addedParticipantCell in addedParticipantCells {
+        for addedCellsParticipantID in addedCellsParticipantIDs {
             Task {
-                await viewModel.subscribeVideo(for: addedParticipantCell.participantID!)
-                addedParticipantCell.videoRendererView.alpha = 1.0
+                await viewModel.subscribeVideo(for: addedCellsParticipantID)
+                if let cell = visibleCells.first(where: { $0.participantID == addedCellsParticipantID }) {
+                    cell.videoRendererView.alpha = 1.0
+                }
             }
         }
         
-        previouslyVisibleParticipantCells = visibleCells
+        previouslyVisibleCellsParticipantIDs = visibleCellsParticipantIDs
     }
 }

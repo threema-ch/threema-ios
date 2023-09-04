@@ -22,7 +22,7 @@ import Foundation
 import GroupCalls
 
 final class GroupCallDateFormatterAdapter: GroupCallDateFormatterProtocol {
-    func timeFormatted(_ totalSeconds: Int) -> String {
-        DateFormatter.timeFormatted(totalSeconds)
+    func timeFormatted(_ totalSeconds: TimeInterval) -> String {
+        DateFormatter.timeFormatted(Int(totalSeconds))
     }
 }

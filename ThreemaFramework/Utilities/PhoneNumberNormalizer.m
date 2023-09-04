@@ -119,7 +119,8 @@
     CTTelephonyNetworkInfo *netInfo = [[CTTelephonyNetworkInfo alloc] init];
     NSDictionary<NSString *, CTCarrier *> *carriers = [netInfo serviceSubscriberCellularProviders];
     for (CTCarrier *carrier in carriers.allValues) {
-        if (carrier.isoCountryCode != nil) {
+        // Since iOS 16 is this function deprecated. It will return always "--".
+        if (carrier.isoCountryCode != nil && ![carrier.isoCountryCode isEqualToString:@"--"]) {
             return [carrier.isoCountryCode uppercaseString];
         }
     }

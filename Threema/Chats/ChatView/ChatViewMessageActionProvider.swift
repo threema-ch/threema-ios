@@ -345,6 +345,15 @@ struct ChatViewMessageActionProvider {
             handler()
         }
     }
+    
+    public static func retryAction(handler: @escaping () -> Void) -> MessageAction {
+        MessageAction(
+            title: BundleUtil.localizedString(forKey: "retry"),
+            image: UIImage(systemName: "arrow.clockwise")
+        ) {
+            handler()
+        }
+    }
 }
 
 extension UIResponder {

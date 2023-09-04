@@ -21,14 +21,40 @@
 import Foundation
 
 /// Implements the unread message line for the new chat view
-/// Name is prefixed by new to avoid name conflicts with the previous implementation
 final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
+    
     private typealias Config = ChatViewConfiguration.UnreadMessageLine
     
     // MARK: - Internal Properties
     
     /// Delegate used to handle cell delegates
-    weak var chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol?
+    weak var chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol? {
+        didSet {
+            guard let chatViewTableViewCellDelegate else {
+                // Reset to default values
+                topContentConstraint.constant = Config.adjustedTopInset
+                bottomContentConstraint.constant = Config.adjustedBottomInset
+                textRoundBackground.isHidden = true
+                return
+            }
+            
+            if chatViewTableViewCellDelegate.chatViewIsGroupConversation {
+                topContentConstraint.constant = Config.adjustedGroupTopInset
+                bottomContentConstraint.constant = Config.adjustedGroupBottomInset
+            }
+            else {
+                topContentConstraint.constant = Config.adjustedTopInset
+                bottomContentConstraint.constant = Config.adjustedBottomInset
+            }
+            
+            if chatViewTableViewCellDelegate.chatViewHasCustomBackground {
+                textRoundBackground.isHidden = false
+            }
+            else {
+                textRoundBackground.isHidden = true
+            }
+        }
+    }
     
     var text: String? {
         didSet {
@@ -37,8 +63,6 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
     }
     
     // MARK: - Private Properties
-    
-    private let debugColors = false
     
     private lazy var textBox: UILabel = {
         let label = UILabel()
@@ -58,33 +82,37 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
         return label
     }()
     
-    /// Pill Shape containing the text; Only visible if delegate returns `true` for `chatViewHasCustomBackground` or
-    /// `debugColors` is activated
+    private lazy var textRoundBackground: UIVisualEffectView = {
+        let blurEffect = UIBlurEffect(style: Config.pillBlurEffectStyle)
+        
+        let blurEffectView = UIVisualEffectView(effect: blurEffect)
+        
+        blurEffectView.translatesAutoresizingMaskIntoConstraints = false
+        blurEffectView.layer.cornerRadius = Config.pillRadius
+        blurEffectView.layer.cornerCurve = .continuous
+        blurEffectView.layer.masksToBounds = true
+        
+        blurEffectView.isHidden = true
+        
+        return blurEffectView
+    }()
+    
+    /// Pill Shape containing the text
+    ///
+    /// Only visible if `blurEffectView` is not hidden
     private lazy var textRound: UIView = {
         let roundView = UIView()
         roundView.translatesAutoresizingMaskIntoConstraints = false
         roundView.layer.cornerRadius = Config.pillRadius
+            
+        roundView.addSubview(textRoundBackground)
         
-        if let chatViewTableViewCellDelegate,
-           chatViewTableViewCellDelegate.chatViewHasCustomBackground || debugColors {
-            let blurEffect = UIBlurEffect(style: Config.pillBlurEffectStyle)
-            
-            let blurEffectView = UIVisualEffectView(effect: blurEffect)
-            
-            blurEffectView.translatesAutoresizingMaskIntoConstraints = false
-            blurEffectView.layer.cornerRadius = Config.pillRadius
-            blurEffectView.layer.cornerCurve = .continuous
-            blurEffectView.layer.masksToBounds = true
-            
-            roundView.addSubview(blurEffectView)
-
-            NSLayoutConstraint.activate([
-                roundView.topAnchor.constraint(equalTo: blurEffectView.topAnchor),
-                roundView.leadingAnchor.constraint(equalTo: blurEffectView.leadingAnchor),
-                roundView.bottomAnchor.constraint(equalTo: blurEffectView.bottomAnchor),
-                roundView.trailingAnchor.constraint(equalTo: blurEffectView.trailingAnchor),
-            ])
-        }
+        NSLayoutConstraint.activate([
+            roundView.topAnchor.constraint(equalTo: textRoundBackground.topAnchor),
+            roundView.leadingAnchor.constraint(equalTo: textRoundBackground.leadingAnchor),
+            roundView.bottomAnchor.constraint(equalTo: textRoundBackground.bottomAnchor),
+            roundView.trailingAnchor.constraint(equalTo: textRoundBackground.trailingAnchor),
+        ])
         
         roundView.addSubview(textBox)
         NSLayoutConstraint.activate([
@@ -106,20 +134,22 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
     private lazy var leftLineView = NewUnreadMessageLineLineView(side: .left)
     private lazy var rightLineView = NewUnreadMessageLineLineView(side: .right)
     
+    private lazy var topContentConstraint: NSLayoutConstraint = textRound.topAnchor.constraint(
+        greaterThanOrEqualTo: contentView.topAnchor,
+        constant: Config.adjustedTopInset
+    )
+    
+    private lazy var bottomContentConstraint: NSLayoutConstraint = textRound.bottomAnchor.constraint(
+        equalTo: contentView.bottomAnchor,
+        constant: -Config.adjustedBottomInset
+    )
+    
     // MARK: - Configuration
     
-    func configureCell(with text: String?) {
+    override func configureCell() {
         super.configureCell()
         
-        if UserSettings.shared().flippedTableView {
-            transform = CGAffineTransform(scaleX: 1, y: -1)
-        }
-
         isUserInteractionEnabled = false
-        
-        if let text {
-            self.text = text
-        }
         
         configureLayout()
         updateColors()
@@ -142,9 +172,9 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
         
         NSLayoutConstraint.activate([
             leftLineView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            /// Inset by one into the blur view shown on custom backgrounds
+            // Inset by one into the blur view shown on custom backgrounds
             textRound.leadingAnchor.constraint(equalTo: leftLineView.trailingAnchor, constant: -1),
-            /// Inset by one into the blur view shown on custom backgrounds
+            // Inset by one into the blur view shown on custom backgrounds
             rightLineView.leadingAnchor.constraint(equalTo: textRound.trailingAnchor, constant: -1),
             
             leftLineView.centerYAnchor.constraint(equalTo: textRound.centerYAnchor),
@@ -153,7 +183,7 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
             leftLineView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             rightLineView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
-            /// Constraint left and right line width to the configured screen width multiplier
+            // Constraint left and right line width to the configured screen width multiplier
             leftLineView.widthAnchor.constraint(
                 greaterThanOrEqualTo: contentView.widthAnchor,
                 multiplier: Config.leftRightLineMaxScreenwidthRatio
@@ -164,7 +194,8 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
             ),
             leftLineView.widthAnchor.constraint(equalTo: rightLineView.widthAnchor),
             
-            textRound.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            topContentConstraint,
+            bottomContentConstraint,
         ])
     }
     
@@ -178,6 +209,8 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
     }
     
     @objc func preferredContentSizeChanged(_ notification: Notification) {
+        // This doesn't work, because the content values are static and not reset when content size category changes
+        // only a relaunch of the app changes this (IOS-3998)
         textBox.font = Config.font
     }
 }

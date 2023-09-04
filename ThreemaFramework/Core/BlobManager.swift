@@ -429,9 +429,14 @@ public actor BlobManager: BlobManagerProtocol {
                 
                 blobData.blobProgress = nil
             }
-            
-            // Send the message
-            try await blobMessageSender.sendBlobMessage(with: objectID)
+
+            switch outgoingDataState {
+            case .downloading, .pendingDownload(error: _):
+                DDLogNotice("[BlobManager] Do not send blob message if reflected outgoing message")
+            default:
+                // Send the message
+                try await blobMessageSender.sendBlobMessage(with: objectID)
+            }
         }
         else {
             DDLogError("[BlobManager] Thumbnail and Data have different directions.")

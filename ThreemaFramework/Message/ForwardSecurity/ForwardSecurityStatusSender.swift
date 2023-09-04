@@ -94,7 +94,12 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         }
         
         entityManager.performAsyncBlockAndSafe { [self] in
-            let message = entityManager.entityFetcher.ownMessage(with: rejectedMessageID)
+            guard let conversation = entityManager.entityFetcher.conversation(forIdentity: contact.identity) else {
+                assertionFailure("Conversation for rejected message ID \(rejectedMessageID.hexString) not found")
+                DDLogError("Conversation for rejected message ID \(rejectedMessageID.hexString) not found")
+                return
+            }
+            let message = entityManager.entityFetcher.ownMessage(with: rejectedMessageID, conversation: conversation)
             message?.sendFailed = NSNumber(booleanLiteral: true)
             message?.sent = NSNumber(booleanLiteral: false)
         }
@@ -123,24 +128,13 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
     }
     
     func messagesSkipped(sessionID: DHSessionID, contact: ForwardSecurityContact, numSkipped: Int) {
-        DDLogNotice(
-            "[ForwardSecurity] \(numSkipped) messages were skipped in session: \(sessionID.description) with contact: \(contact.identity)"
-        )
-
-        guard ThreemaEnvironment.fsDebugStatusMessages else {
-            return
-        }
-        
-        postSystemMessage(
-            for: contact.identity,
-            reason: kFsDebugMessage,
-            arg: "\(numSkipped) messages were skipped in session \(sessionID)"
-        )
+        // No-op
     }
     
     func messageOutOfOrder(sessionID: DHSessionID, contact: ForwardSecurityContact, messageID: Data) {
         let msg =
-            "Message with id \(messageID.hexString) was received out of order in session \(sessionID.description) with contact: \(contact.identity)."
+            "IMPORTANT: REACH OUT TO THE IOS TEAM. Message with id \(messageID.hexString) was received out of order in session \(sessionID.description) with contact: \(contact.identity)."
+        
         DDLogError("[ForwardSecurity] \(msg)")
         
         if ThreemaEnvironment.fsDebugStatusMessages {
@@ -150,41 +144,6 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 arg: msg
             )
         }
-        
-        var lastMessageSameID = false
-        
-        entityManager.performBlockAndWait {
-            guard let lastMessage = self.entityManager.entityFetcher.conversation(forIdentity: contact.identity)
-                .lastMessage else {
-                return
-            }
-            
-            guard lastMessage.id != nil else {
-                return
-            }
-            
-            lastMessageSameID = messageID == lastMessage.id
-        }
-        
-        guard !lastMessageSameID else {
-            // If the latest message of a contact is processed again, it cannot be decrypted again due to FS. It is very
-            // likely that the message has been processed but could not be acknowledged on the server. Therefore we do
-            // not show a warning if the message is already displayed in the chat.
-            
-            DDLogError(
-                "[ForwardSecurity] Message with id \(messageID.hexString) was processed twice. Ignoring the second message."
-            )
-            
-            postSystemMessage(
-                for: contact.identity,
-                reason: kFsDebugMessage,
-                arg: "The latest message with id \(messageID.hexString) was processed twice."
-            )
-            
-            return
-        }
-        
-        postSystemMessage(for: contact.identity, reason: kSystemMessageFsOutOfOrder, arg: 0)
     }
     
     func first4DhMessageReceived(session: DHSession, contact: ForwardSecurityContact) {
@@ -404,7 +363,9 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 systemMessage?.type = NSNumber(value: reason)
                 systemMessage?.arg = arg?.data(using: .utf8)
                 systemMessage?.remoteSentDate = Date()
-                conversation.lastMessage = systemMessage
+                if systemMessage?.isAllowedAsLastMessage ?? false {
+                    conversation.lastMessage = systemMessage
+                }
                 if setsLastUpdate {
                     conversation.lastUpdate = Date()
                 }

@@ -766,9 +766,22 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "call_threema_cellular_instead_of_wifi_text" = "Varovanie: Tento hovor využíva prenos dát cez mobilnú sieť.";
 
 // Group Calls
+"group_call_title" = "Skupinový hovor";
+/* Group Calls */
 "group_call_join_button_title" = "Pripojiť sa";
 "group_call_open_button_title" = "Otvoriť";
 "group_call_participants_title" = "Účastníci: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ začal skupinový hovor";
+"group_call_started_by_local_system_message" = "Začali ste skupinový hovor";
+"group_call_ended_system_message" = "Skupinový hovor sa skončil";
+
+"group_call_start_message_received" = "Začal skupinový hovor";
+
+"group_call_navbar_state_connecting" = "Nadväzovanie spojenia…";
+"group_call_navbar_state_joining" = "Pripája sa…";
+"group_call_navbar_state_connected" = "Pripojené";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema chráni vaše súkromie dôslednejšie než ktorýkoľvek iný komunikátor. Dozvedieť sa viac v Zásadách ochrany osobných údajov.";
@@ -1206,6 +1219,8 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_threema_voip_include_call_in_recents_footer_off" = "Hovory sa zobrazujú na uzamknutej obrazovke, ale nie sú uvedené v zozname hovorov aplikácie Telefón.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Hovory sa zobrazujú na uzamknutej obrazovke a sú uvedené v zozname hovorov aplikácie Telefón. Ak je aktivovaný iCloud Disk, zoznam hovorov aplikácie Telefón sa synchronizuje cez servery Apple.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Z dôvodu obmedzení od spoločnosti Apple nie sú hovory Threema dostupné, ak je región zariadenia nastavený na Čínu.";
+"settings_threema_calls_group_calls_header" = "Skupinové hovory (Beta)";
+"settings_threema_calls_enable_group_calls" = "Povoliť skupinové hovory Threema";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Sieť";
@@ -1780,17 +1795,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "alert_biometrics_changed_title_touch" = "Zistila sa možná zmena v TouchID";
 "alert_biometrics_changed_title_face" = "Zistila sa možná zmena FaceID";
 "alert_biometrics_changed_message" = "Ak chcete pokračovať v používaní biometrickej autentifikácii na odomknutie Threemy, zadajte váš Threema prístupový kód.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ začal skupinový hovor";
-"group_call_started_by_local_system_message" = "Začali ste skupinový hovor";
-"group_call_ended_system_message" = "Skupinový hovor sa skončil";
-
-"group_call_start_message_received" = "Začal skupinový hovor";
-
-"group_call_navbar_state_connecting" = "Nadväzovanie spojenia…";
-"group_call_navbar_state_joining" = "Pripája sa…";
-"group_call_navbar_state_connected" = "Pripojené";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n\nNepodarilo sa prejsť z verzie %d na verziu %d";

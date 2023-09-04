@@ -192,7 +192,7 @@ final class GroupCallContext<
         }
         /// **Protocol Step: Join/Leave of Other Participants** 6. Schedule a task to run the following steps after 2s:
         keyRefreshTask = Task {
-            try await Task.sleep(nanoseconds: 2 * ProtocolDefines.NanosecondsPerSecond)
+            try await Task.sleep(nanoseconds: 2 * ProtocolDefines.nanosecondsPerSecond)
             
             DDLogNotice("[GroupCall] [Rekey] Protocol Step 6.")
             
@@ -428,7 +428,7 @@ extension GroupCallContext {
     
     func participant(with participantID: ParticipantID) -> RemoteParticipant? {
         guard let participant = participants.filter({ $0.id == participantID.id }).first else {
-            DDLogWarn("[GroupCall] Could not find RemoteParticipant in participants")
+            DDLogWarn("[GroupCall] Could not find RemoteParticipant with id: \(participantID.id) in participants")
             #if DEBUG
                 if pendingParticipants.filter({ $0.id == participantID.id }).first != nil {
                     DDLogError(

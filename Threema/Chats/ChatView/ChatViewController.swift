@@ -75,8 +75,6 @@ final class ChatViewController: ThemedViewController {
     
     private let initTime = CACurrentMediaTime()
     
-    private let flippedTableView = UserSettings.shared().flippedTableView
-
     private var scrollPositionRestoreFinished = false
     
     // MARK: - UI
@@ -246,18 +244,14 @@ final class ChatViewController: ThemedViewController {
     // MARK: Table view
     
     private lazy var tableView: ChatViewTableView = {
-        let tableView = ChatViewTableView(frame: .infinite, style: .plain)
+        let tableView = ChatViewTableView(frame: .zero, style: .plain)
         
         tableView.backgroundColor = .clear
         tableView.keyboardDismissMode = .interactive
         
         // Remove any section header padding
         tableView.sectionHeaderTopPadding = 0
-        
-        if self.flippedTableView {
-            tableView.transform = CGAffineTransform(scaleX: 1, y: -1)
-        }
-        
+                
         tableView.alpha = 0.0
         
         // This fixes an issue, where voice over selected a random cell after scrolling to bottom when opening the chat
@@ -385,8 +379,7 @@ final class ChatViewController: ThemedViewController {
             return
         }
         
-        let itemIdentifiersInScreenOrder = self.flippedTableView ? snapshot.itemIdentifiers.reversed() : snapshot
-            .itemIdentifiers
+        let itemIdentifiersInScreenOrder = snapshot.itemIdentifiers
         
         // We either scroll to the previously newest unread message or the unread message line
         for item in itemIdentifiersInScreenOrder {
@@ -760,14 +753,14 @@ final class ChatViewController: ThemedViewController {
             object: nil
         )
         
-        if ThreemaEnvironment.groupCalls {
+        if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on deinit
             startGroupCallObserver()
         }
     }
     
     private func startGroupCallObserver() {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             return
         }
         
@@ -859,18 +852,7 @@ final class ChatViewController: ThemedViewController {
         }
         
         NSLayoutConstraint.activate(defaultScrollToBottomButtonConstraints)
-        
-        if flippedTableView {
-            view.addSubview(scrollToTopHelperView)
-            view.sendSubviewToBack(scrollToTopHelperView)
-            NSLayoutConstraint.activate([
-                scrollToTopHelperView.topAnchor.constraint(equalTo: view.topAnchor),
-                scrollToTopHelperView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-                scrollToTopHelperView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                scrollToTopHelperView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            ])
-        }
-        
+                
         wallpaperChanged()
     }
     
@@ -919,12 +901,10 @@ final class ChatViewController: ThemedViewController {
         ///
         /// This workaround is also present in `updateContentInsets(force:retry:)`
         if !dataSource.initialSetupCompleted, tableView.contentSize.height > 0 {
-            if !flippedTableView {
-                tableView.setContentOffset(
-                    CGPoint(x: 0, y: CGFLOAT_MAX),
-                    animated: false
-                )
-            }
+            tableView.setContentOffset(
+                CGPoint(x: 0, y: CGFLOAT_MAX),
+                animated: false
+            )
         }
     }
     
@@ -1054,7 +1034,7 @@ extension ChatViewController {
             navigationItem.rightBarButtonItems = nil
             
             if conversation.isGroup() {
-                if ThreemaEnvironment.groupCalls {
+                if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
                     // TODO: IOS-3745 This should be somewhat dynamic
                     // TODO: IOS-3745 This should show the correct icon
                     callBarButtonItem.accessibilityLabel = BundleUtil.localizedString(forKey: "call")
@@ -1145,7 +1125,7 @@ extension ChatViewController {
     }
     
     private func updateGroupCallBanner() {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             return
         }
         
@@ -1205,7 +1185,7 @@ extension ChatViewController {
     }
     
     private func startGroupCall() {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             assertionFailure()
             return
         }
@@ -1301,7 +1281,7 @@ extension ChatViewController {
             
         var nextMessageIndexPath: IndexPath?
             
-        let nextMessageOffset = flippedTableView ? -1 : 1
+        let nextMessageOffset = 1
             
         if indexPath.section < tableView.numberOfSections,
            indexPath.row + nextMessageOffset < tableView.numberOfRows(inSection: indexPath.section) {
@@ -1317,7 +1297,7 @@ extension ChatViewController {
             return
         }
             
-        let scrollPosition: UITableView.ScrollPosition = flippedTableView ? .bottom : .top
+        let scrollPosition: UITableView.ScrollPosition = .top
             
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(750)) {
             self.contentSizeChangeSafeScrollToRow(at: nextMessageIndexPath, at: scrollPosition, animated: true)
@@ -1340,7 +1320,7 @@ extension ChatViewController {
         // This needs to be done here and not in the lazy `tableView` initializer. Otherwise we get an infinite loop.
         tableView.dataSource = dataSource
         
-        // Add reusable section header (with flipped TV it is actually a footer...)
+        // Add reusable section header
         tableView.registerHeaderFooter(ChatViewSectionTableViewHeaderView.self)
     }
     
@@ -1382,7 +1362,7 @@ extension ChatViewController {
         
         DDLogVerbose("Scroll to bottom index path \(bottomIndexPath) ...")
         
-        let scrollPosition: UITableView.ScrollPosition = flippedTableView ? .top : .bottom
+        let scrollPosition: UITableView.ScrollPosition = .bottom
         if ChatViewConfiguration.ScrollCompletionBehavior.useCustomViewAnimationBlock {
             if animated {
                 scrollToBottomWithCustomAnimation(bottomIndexPath)
@@ -1404,7 +1384,7 @@ extension ChatViewController {
             delay: 0.0,
             options: [.curveEaseInOut, .allowUserInteraction]
         ) {
-            let scrollPosition: UITableView.ScrollPosition = self.flippedTableView ? .top : .bottom
+            let scrollPosition: UITableView.ScrollPosition = .bottom
             self.contentSizeChangeSafeScrollToRow(at: bottomIndexPath, at: scrollPosition, animated: false)
         } completion: { _ in
             defer {
@@ -1464,7 +1444,7 @@ extension ChatViewController {
         // To alleviate this issue we do another layout pass on tableView (which in general should do nothing) and
         // scroll to bottom again.
         //
-        // In non-flipped mode this is especially noticeable because when opening chat view at the very bottom, the
+        // This is especially noticeable because when opening chat view at the very bottom, the
         // bottommost cell will be slightly cut
         // off if this layout pass isn't present.
         tableView.layoutIfNeeded()
@@ -1580,17 +1560,9 @@ extension ChatViewController {
         isJumping = true
         dataSource.loadOldestMessages().ensure {
             self.view.layoutIfNeeded()
-            if self.flippedTableView {
-                if let topIndexPath = self.dataSource.topIndexPath {
-                    self.tableView.scrollToRow(at: topIndexPath, at: .bottom, animated: true)
-                }
-                else {
-                    DDLogWarn("Could not get topIndexPath from data source")
-                }
-            }
-            else {
-                self.tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-            }
+            
+            self.tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+            
             self.completeJumping { _ in
                 self.userIsAtBottomOfTableView = self.isAtBottomOfView
             }
@@ -1617,7 +1589,7 @@ extension ChatViewController {
     
     private func jump(toUnreadMessage unreadMessageMessageID: Data, completion: ((BaseMessage?) -> Void)? = nil) {
         dataSource.initialSetupCompleted = true
-        let position: UITableView.ScrollPosition = flippedTableView ? .bottom : .top
+        let position: UITableView.ScrollPosition = .top
         jump(to: unreadMessageMessageID, at: position, completion: { baseMessage in
             completion?(baseMessage)
             self.userIsAtBottomOfTableView = self.isAtBottomOfView
@@ -1628,7 +1600,7 @@ extension ChatViewController {
         isJumping = true
         defer { completeJumping() }
         
-        let scrollPosition: UITableView.ScrollPosition = flippedTableView ? .bottom : .top
+        let scrollPosition: UITableView.ScrollPosition = .top
         
         if let indexPath = dataSource
             .indexPath(for: ChatViewDataSource.CellType.message(objectID: unreadMessageMessageObjectID)) {
@@ -1746,12 +1718,6 @@ extension ChatViewController {
             }
         #endif
         
-        guard !flippedTableView else {
-            let x = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
-            DDLogVerbose("\(#function) \(x)")
-            return x
-        }
-        
         let currentContentOffsetY = scrollView.contentOffset.y
         // Content offset is below the top adjusted content inset so we only need to adjust for the bottom inset
         let currentAdjustedHeight = scrollView.frame.height - scrollView.adjustedContentInset.bottom
@@ -1799,55 +1765,16 @@ extension ChatViewController: UITableViewDelegate {
     // MARK: Section headers
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if !flippedTableView {
-            return UITableView.automaticDimension
-        }
-        else {
-            return 0
-        }
+        UITableView.automaticDimension
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard !flippedTableView else {
-            return nil
-        }
-        
         guard dataSource.snapshot().sectionIdentifiers.count > section else {
             return nil
         }
         
         let headerView: ChatViewSectionTableViewHeaderView? = tableView.dequeueHeaderFooter()
         headerView?.title = dataSource.snapshot().sectionIdentifiers[section]
-        
-        return headerView
-    }
-    
-    // MARK: Flipped section headers (i.e. footers)
-    
-    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        if flippedTableView {
-            return UITableView.automaticDimension
-        }
-        else {
-            return 0
-        }
-    }
-    
-    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        guard flippedTableView else {
-            return nil
-        }
-        
-        guard dataSource.snapshot().sectionIdentifiers.count > section else {
-            return nil
-        }
-        
-        let headerView: ChatViewSectionTableViewHeaderView? = tableView.dequeueHeaderFooter()
-        headerView?.title = dataSource.snapshot().sectionIdentifiers[section]
-        
-        if flippedTableView {
-            headerView?.transform = CGAffineTransform(scaleX: 1, y: -1)
-        }
         
         return headerView
     }
@@ -2131,70 +2058,7 @@ extension ChatViewController: ChatViewDataSourceDelegate {
         // In the regular case this shouldn't change anything because we're not animating at this point and the layout
         // should be stable.
         view.layoutIfNeeded()
-        
-        if ChatViewConfiguration.ScrollBehavior.overrideDefaultTableViewBehavior {
-            // `overrideDefaultTableViewBehavior` may only be used together with flipped table view
-            assert(flippedTableView)
-            
-            // Fix bad `contentOffset` updates that happen when we our scroll position is near the very top
-            /// We have found that UITableView has two (three) modes when new cells are added at the very top.
-            
-            /// If we are relatively far down in the table view newly added cells will not influence the currently
-            /// visible cells. UITableView will automatically update the `contentOffset` such that our scroll position
-            /// stays the same.
-
-            /// If we are relatively high up in the table view to opposite thing occurs and we keep the value of our
-            /// `contentOffset` and the new cells will now be visible. This might make sense if we want the user to be
-            /// aware of the new cells but is not what we want in our case.
-            /// Relatively high up in this context means that the `contentOffset` is set to a value larger than the
-            /// height of the newly added cells. Even weirder it doesn't seem to adjust for `contentInsets`. I.e. if the
-            /// `contentOffset` is `-100` if we are at the very top. We still need to be at a value of  `200` if our
-            /// newly added cells / content has height 200.
-
-            /// The third case occurs if we are not quite far enough down to have the newly added cells not influence
-            /// our scroll position but also not quite high up enough for the cells to come into view. In this case
-            /// UITableView weirdly glitches down by the height of the newly added cells and then back up. This very
-            /// well might be an implementation mistake on our side that we weren't able to identify but is something we
-            /// are still working around.
-
-            /// To avoid this we sneakily override `contentOffset` in `ChatViewTableView` in such a way that we can
-            /// control (using `lockContentOffset`) whether it can be updated or not. This way we can not update it
-            /// between `willApplySnapshot(currentDoesIncludeNewestMessage:)` and
-            /// `didApplySnapshot(delegateScrollCompletion:)` and then manually set the correct `contentOffset`.
-
-            /// We don't need to manually handle the first case, but it doesn't matter if we do because we set
-            /// `contentOffset` to the correct value anyways. We set it to the correct value for the third case,
-            /// avoiding the glitch.
-            /// We cannot properly handle the second case and thus scroll down to the very bottom if we believe the
-            /// first case to occur.
-
-            /// The workaround for the third case looks like it should work for the second case as well but we have
-            /// found it to not work. There is one frame in which the `contentOffset` is bad which still looks glitchy.
-            /// We have tried to avoid this by setting a convenient `CATransaction` sometime around applying the
-            /// snapshot. However this only works for non-animated snapshot applies. In the case of snapshot applies
-            /// with an animation the animation apparently cannot complete before the transaction is committed causing
-            /// the completion block of snapshot apply to never be called. We could use a well estimated
-            /// dispatch-async-after to work around this but that seems too finicky (and we're way into finicky
-            /// already). (In cursory tests we have found such an estimate to be around 200 ms.)
-            
-            tableView.lockContentOffset = dataSource.initialSetupCompleted
-            
-            if dataSource.initialSetupCompleted,
-               !isAtBottomOfView,
-               let visibleBottomCellIndexPath = tableView.indexPathsForVisibleRows?.first,
-               let firstVisibleCellIdentifier = dataSource.itemIdentifier(for: visibleBottomCellIndexPath) {
-                let rect = tableView.rectForRow(at: visibleBottomCellIndexPath)
                 
-                /// Keep track of a rendered cell to later estimate the difference between the current `contentOffset`
-                /// and the `contentOffset` after the snapshot has been applied
-                currentScrollState = ChatViewScrollState(
-                    cellRect: rect,
-                    cellType: firstVisibleCellIdentifier,
-                    contentOffsetY: tableView.contentOffset.y
-                )
-            }
-        }
-        
         shouldScrollToBottomAfterNextSnapshotApply = currentDoesIncludeNewestMessage && isAtBottomOfView
             && dataSource.initialSetupCompleted && isApplicationInForeground
         
@@ -2230,11 +2094,6 @@ extension ChatViewController: ChatViewDataSourceDelegate {
         
         defer {
             isApplyingSnapshot = false
-            
-            if ChatViewConfiguration.ScrollBehavior.overrideDefaultTableViewBehavior {
-                tableView.lockContentOffset = false
-                currentScrollState = nil
-            }
         }
         
         /// #  Scroll Behaviour
@@ -2250,59 +2109,7 @@ extension ChatViewController: ChatViewDataSourceDelegate {
         /// anymore (as a new cell has been added).
         /// We use this to determine whether we will scroll on calling `scrollToBottom` and only scroll in that case.
         let hasNewlyAddedCellsInThisSnapshot = !isAtBottomOfView && willEnterForegroundCompletion == nil
-        
-        let forceScrollDown: Bool
-        
-        if ChatViewConfiguration.ScrollBehavior.overrideDefaultTableViewBehavior {
-            // `overrideDefaultTableViewBehavior` may only be used together with flipped table view
-            assert(flippedTableView)
-            
-            if !shouldScrollToBottomAfterNextSnapshotApply,
-               let currentScrollState,
-               let previousVisibleBottomCellIndexPath = dataSource.indexPath(for: currentScrollState.cellType) {
-                
-                let newRect = tableView.rectForRow(at: previousVisibleBottomCellIndexPath)
-                let diff = currentScrollState.cellRect.maxY - newRect.maxY
-                
-                let newOffset = currentScrollState.contentOffsetY - diff
-                // Using the exact height of contentOffset does not work, we need some leeway and have found values
-                // between 1.0 and 25.0 to work
-                // We have not tried values other than 0.0.
-                let leeway = ChatViewConfiguration.ScrollBehavior.newCellsContentHeightLeeway
-                
-                let newContentHeightBiggerThanContentOffset = abs(diff) + leeway > currentScrollState.contentOffsetY
-                
-                DDLogVerbose(
-                    "\(abs(diff) + leeway) \(newContentHeightBiggerThanContentOffset ? ">" : "<") \(currentScrollState.contentOffsetY) \(newContentHeightBiggerThanContentOffset ? "scroll to bottom" : "keep current position")"
-                )
-                
-                if newContentHeightBiggerThanContentOffset {
-                    forceScrollDown = true
-                }
-                else {
-                    forceScrollDown = false
-                    
-                    if !isUserInteractiveScroll {
-                        // If we are user interactive scrolling we must not set the content offset explicitly because
-                        // otherwise we'll cancel the users scroll.
-                        // This is not great because we might skip up or down a bit, but in practice we expect this to
-                        // happen most often when loading content on top or at bottom due to the scroll interaction
-                        // where the content offset issue should not appear at all.
-                        tableView.lockContentOffset = false
-                        tableView.setContentOffset(CGPoint(x: tableView.contentOffset.x, y: newOffset), animated: false)
-                        tableView.lockContentOffset = true
-                    }
-                }
-            }
-            else {
-                forceScrollDown = false
-                tableView.lockContentOffset = false
-            }
-        }
-        else {
-            forceScrollDown = false
-        }
-        
+                        
         if let willEnterForegroundCompletion {
             DDLogVerbose("\(#function) willEnterForegroundCompletion != nil")
             willEnterForegroundCompletion {
@@ -2313,13 +2120,9 @@ extension ChatViewController: ChatViewDataSourceDelegate {
             DDLogVerbose("\(#function) willEnterForegroundCompletion == nil")
         }
         
-        if (
-            shouldScrollToBottomAfterNextSnapshotApply
-                && hasNewlyAddedCellsInThisSnapshot
-                && !isUserInteractiveScroll
-        )
-            ||
-            forceScrollDown {
+        if shouldScrollToBottomAfterNextSnapshotApply,
+           hasNewlyAddedCellsInThisSnapshot,
+           !isUserInteractiveScroll {
             DDLogVerbose("\(#function) Scrolling animated")
             
             DDLogVerbose("[ChatViewDataSourceDelegate] \(#function)  Scrolling animated")
@@ -2470,9 +2273,7 @@ extension ChatViewController {
             // The newest messages should be loaded so we just scroll to the bottom to optimize
             // performance.
             view.layoutIfNeeded()
-            if !flippedTableView {
-                isScrolling = true
-            }
+            isScrolling = true
             scrollToBottom(animated: false)
             dataSource.initialSetupCompleted = true
             userIsAtBottomOfTableView = true
@@ -2499,9 +2300,7 @@ extension ChatViewController {
             // Ensure that we have the bottom data & then scroll to bottom
             dataSource.loadNewestMessages().done {
                 self.view.layoutIfNeeded()
-                if !self.flippedTableView {
-                    self.isScrolling = true
-                }
+                self.isScrolling = true
                 self.scrollToBottom(animated: false)
                 self.dataSource.initialSetupCompleted = true
                 self.userIsAtBottomOfTableView = true
@@ -2597,7 +2396,7 @@ extension ChatViewController {
     }
     
     private func callCreatedByUsOrRemote() {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             return
         }
         
@@ -2665,19 +2464,7 @@ extension ChatViewController: UIScrollViewDelegate {
         // As we normally scroll from bottom to top we first check the top...
         
         // Not really needed, but allows for more consistency across all devices
-        let insetAdjustedTopOffset: CGFloat
-        
-        if flippedTableView {
-            let currentContentOffsetY = scrollView.contentOffset.y
-            // Content offset is below the top adjusted content inset so we only need to adjust for the bottom inset
-            let currentAdjustedHeight = scrollView.frame.height - scrollView.adjustedContentInset.top
-            let currentContentHeight = scrollView.contentSize.height
-
-            insetAdjustedTopOffset = currentContentHeight - (currentContentOffsetY + currentAdjustedHeight)
-        }
-        else {
-            insetAdjustedTopOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
-        }
+        let insetAdjustedTopOffset: CGFloat = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
         
         // If we are at the very bottom we never want to load messages at the top since we have chosen
         // `topOffsetThreshold` and the number of messages that are loaded appropriately.
@@ -2706,13 +2493,8 @@ extension ChatViewController: UIScrollViewDelegate {
                     // overflow)
                     // WARN: This most likely only works due to accidental scheduling.
                     //
-                    // The workaround has been found to be not necessary in flippedTableView mode.
                     // In fact it causes the scroll position to be way off. This might be due to a miscalculation when
                     // calculating `newOffset` but we don't change that until we need it.
-                    guard !self.flippedTableView else {
-                        // This is not necessary in flipped table view
-                        return
-                    }
                     
                     guard initialContentOffSet < 100 else {
                         // We're not high up enough for incorrect cell insertion, don't reset scroll position
@@ -2756,41 +2538,6 @@ extension ChatViewController: UIScrollViewDelegate {
             dataSource.loadMessagesAtBottom().done { _ in
                 DDLogVerbose("loadMessagesAtBottom completed")
             }.ensure {
-                DispatchQueue.main.async {
-                    // WORKAROUND (IOS-2865)
-                    // A description of this workaround can be found above in the case for `loadMessagesAtTop`
-                    
-                    // Non-Flipped tableView doesn't need this workaround at the bottom
-                    // The same workaround is implemented for non-flipped when loading at the top
-                    guard self.flippedTableView else {
-                        // This is not necessary in non-flipped table view
-                        return
-                    }
-                    
-                    // In flipped mode the contentSize might not be very accurate when we're at the very bottom
-                    // the first scroll up might thus lead to a jump because the heightDiff is not zero when it should
-                    // be.
-                    // We avoid this by just skipping this if we have the newest messages loaded anyways and don't need
-                    // to load anything at the bottom.
-                    guard !self.dataSource.previouslyNewestMessagesLoaded else {
-                        return
-                    }
-                    
-                    guard self.tableView.contentOffset.y < 100 else {
-                        return
-                    }
-                    
-                    let heightDiff = self.tableView.contentSize.height - currentHeight
-                    
-                    guard heightDiff > 0 else {
-                        return
-                    }
-                    
-                    let newOffset = initialContentOffSet + heightDiff - scrollView.adjustedContentInset.bottom
-                    
-                    self.tableView.setContentOffset(CGPoint(x: 0, y: newOffset), animated: false)
-                }
-                    
                 self.isLoading = false
             }
             .catch { error in
@@ -2953,92 +2700,40 @@ extension ChatViewController: UIScrollViewDelegate {
         // Tweak the insets
         
         if userInterfaceMode == .default {
-            let newBottomInset: CGFloat
-            
-            if flippedTableView {
-                newBottomInset = view.frame.maxY
-                    - chatBarCoordinator.chatBarContainerView.frame.minY
-                    - tableView.safeAreaInsets.bottom
-                    - (tableView.safeAreaInsets.top - tableView.safeAreaInsets.bottom)
-            }
-            else {
-                newBottomInset = view.frame.maxY
-                    - chatBarCoordinator.chatBarContainerView.frame.minY
-                    - tableView.safeAreaInsets.bottom
-            }
+            let newBottomInset: CGFloat = view.frame.maxY
+                - chatBarCoordinator.chatBarContainerView.frame.minY
+                - tableView.safeAreaInsets.bottom
             
             // We need some extra space to the chat bar for the content/chat bubbles to compensate for the missing
             // spacing from the top of the next bubble.
             if conversation.isGroup() {
-                if flippedTableView {
-                    if conversation.lastMessage?.isOwnMessage ?? false {
-                        newContentInset.top = newBottomInset + ChatViewConfiguration.bottomInset
-                    }
-                    else {
-                        newContentInset.top = newBottomInset + ChatViewConfiguration.groupBottomInset
-                    }
+                if conversation.lastMessage?.isOwnMessage ?? false {
+                    newContentInset.bottom = newBottomInset + ChatViewConfiguration.bottomInset
                 }
                 else {
-                    if conversation.lastMessage?.isOwnMessage ?? false {
-                        newContentInset.bottom = newBottomInset + ChatViewConfiguration.bottomInset
-                    }
-                    else {
-                        newContentInset.bottom = newBottomInset + ChatViewConfiguration.groupBottomInset
-                    }
+                    newContentInset.bottom = newBottomInset + ChatViewConfiguration.groupBottomInset
                 }
             }
             else {
-                if flippedTableView {
-                    newContentInset.top = newBottomInset + ChatViewConfiguration.bottomInset
-                }
-                else {
-                    newContentInset.bottom = newBottomInset + ChatViewConfiguration.bottomInset
-                }
+                newContentInset.bottom = newBottomInset + ChatViewConfiguration.bottomInset
             }
             
             // We just use the default inset for the scroll bars
-            if flippedTableView {
-                newScrollbarIndicatorInset.top = newBottomInset
-            }
-            else {
-                newScrollbarIndicatorInset.bottom = newBottomInset
-            }
+            newScrollbarIndicatorInset.bottom = newBottomInset
         }
         else {
             if conversation.isGroup() {
-                if flippedTableView {
-                    newContentInset.top = ChatViewConfiguration.groupBottomInset
-                }
-                else {
-                    newContentInset.bottom = ChatViewConfiguration.groupBottomInset
-                }
+                newContentInset.bottom = ChatViewConfiguration.groupBottomInset
             }
             else {
-                if flippedTableView {
-                    newContentInset.top = ChatViewConfiguration.bottomInset
-                }
-                else {
-                    newContentInset.bottom = ChatViewConfiguration.bottomInset
-                }
+                newContentInset.bottom = ChatViewConfiguration.bottomInset
             }
 
-            if flippedTableView {
-                newScrollbarIndicatorInset.top = 0.0
-            }
-            else {
-                newScrollbarIndicatorInset.bottom = 0.0
-            }
+            newScrollbarIndicatorInset.bottom = 0.0
         }
         
         // Also (and always) tweak the top inset. (This also influences the sticky section header inset.)
-        if flippedTableView {
-            newContentInset.bottom = ChatViewConfiguration.topInset + tableView.safeAreaInsets.top - tableView
-                .safeAreaInsets.bottom
-            newScrollbarIndicatorInset.bottom = tableView.safeAreaInsets.top - tableView.safeAreaInsets.bottom
-        }
-        else {
-            newContentInset.top = ChatViewConfiguration.topInset
-        }
+        newContentInset.top = ChatViewConfiguration.topInset
         
         guard !dataSource.initialSetupCompleted || tableView.contentInset != newContentInset else {
             DDLogVerbose("\(#function) Do not update content insets because they haven't changed")
@@ -3066,27 +2761,17 @@ extension ChatViewController: UIScrollViewDelegate {
             }
             else if tableView.contentSize.height > 0 {
                 // This replicates the workaround in `viewDidLayoutSubviews`
-                if !flippedTableView {
-                    tableView.setContentOffset(
-                        CGPoint(x: 0, y: CGFLOAT_MAX),
-                        animated: false
-                    )
-                }
+                tableView.setContentOffset(
+                    CGPoint(x: 0, y: CGFLOAT_MAX),
+                    animated: false
+                )
             }
         }
         else {
             DDLogVerbose("\(#function) !wasAtBottomOfView")
-            var newYOffset = 0.0
-            var insetChange = 0.0
-            
-            if flippedTableView {
-                insetChange = newContentInset.top - oldInset.top
-                newYOffset = (oldYOffset - insetChange)
-            }
-            else {
-                insetChange = newContentInset.bottom - oldInset.bottom
-                newYOffset = (oldYOffset + insetChange)
-            }
+            var insetChange = newContentInset.bottom - oldInset.bottom
+            var newYOffset = (oldYOffset + insetChange)
+
             if tableView.contentOffset.y != newYOffset {
                 tableView.setContentOffset(CGPoint(x: 0, y: newYOffset), animated: false)
                 DDLogVerbose("\(#function) did updateContentInsets was at bottom.")

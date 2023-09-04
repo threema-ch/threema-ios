@@ -52,6 +52,8 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
                 verificationLevel: 0
             )
             contactEntity.readReceipt = readReceipt
+
+            dbPreparer.createConversation(contactEntity: contactEntity)
         }
 
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -132,6 +134,8 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
                 verificationLevel: 0
             )
             contactEntity.readReceipt = readReceipt
+
+            dbPreparer.createConversation(contactEntity: contactEntity)
         }
 
         let myIdentityStoreMock = MyIdentityStoreMock()

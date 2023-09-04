@@ -22,16 +22,167 @@ import Foundation
 import UIKit
 
 class GroupCallToolbar: UIView {
+    typealias toolbarConfig = GroupCallUIConfiguration.Toolbar
+    typealias toolbarButtonConfig = GroupCallUIConfiguration.ToolbarButton
     
     // MARK: - Subviews
 
-    private lazy var audioOutputButton = GroupCallAudioOutputButton()
+    // MARK: Toggle Video Button
+
+    private lazy var toggleVideoButton: UIButton = {
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = dependencies.groupCallBundleUtil.image(named: "threema.video.outline.slash")
+            .withConfiguration(toolbarButtonConfig.biggerButtonImageConfig)
+        let action = UIAction { [weak self] _ in
+            self?.didTapToggleVideoButton()
+        }
+        
+        let button = UIButton(configuration: configuration, primaryAction: action)
+        
+        button.layer.masksToBounds = true
+        button.layer.cornerRadius = toolbarButtonConfig.biggerButtonCornerRadius
+        button.clipsToBounds = true
+        button.tintColor = toolbarButtonConfig.biggerButtonTint
+        button.backgroundColor = toolbarButtonConfig.biggerButtonBackground
+
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
+            button.heightAnchor.constraint(equalTo: button.widthAnchor),
+        ])
+        
+        button.configurationUpdateHandler = { [weak self] button in
+            guard let self else {
+                return
+            }
+            
+            var config = button.configuration
+            
+            switch self.viewModel.ownVideoMuteState {
+            case .changing:
+                config?.showsActivityIndicator = true
+
+            case .muted:
+                config?.showsActivityIndicator = false
+                config?.image = dependencies.groupCallBundleUtil.image(named: "threema.video.outline.slash")
+                    .withConfiguration(toolbarButtonConfig.biggerButtonImageConfig)
+            case .unmuted:
+                config?.showsActivityIndicator = false
+                config?.image = dependencies.groupCallBundleUtil.image(named: "threema.video.outline")
+                    .withConfiguration(toolbarButtonConfig.biggerButtonImageConfig)
+            }
+            button.configuration = config
+        }
+        
+        return button
+    }()
     
+    // MARK: Switch Camera Button
+
+    private lazy var switchCameraButton: UIButton = {
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = UIImage(
+            systemName: "arrow.triangle.2.circlepath.camera",
+            withConfiguration: toolbarButtonConfig.smallerButtonImageConfig
+        )
+        
+        let action = UIAction { [weak self] _ in
+            self?.didTapSwitchCamera()
+        }
+        
+        let button = UIButton(configuration: configuration, primaryAction: action)
+        button.layer.masksToBounds = true
+        button.layer.cornerRadius = toolbarButtonConfig.smallerButtonCornerRadius
+        button.clipsToBounds = true
+        button.tintColor = toolbarButtonConfig.smallerButtonTint
+        button.backgroundColor = toolbarButtonConfig.smallerButtonBackground
+        
+        button.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.smallerButtonWidth),
+            button.heightAnchor.constraint(equalTo: button.widthAnchor),
+        ])
+        
+        button.configurationUpdateHandler = { [weak self] button in
+            guard let self else {
+                return
+            }
+            
+            button.isHidden = self.viewModel.ownVideoMuteState == .muted
+            button.tintColor = toolbarButtonConfig.smallerButtonTint
+            button.backgroundColor = toolbarButtonConfig.smallerButtonBackground
+        }
+        
+        return button
+    }()
+    
+    private lazy var switchCameraButtonView: UIView = {
+        let view = UIView()
+        view.addSubview(switchCameraButton)
+        NSLayoutConstraint.activate([
+            view.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
+            switchCameraButton.centerXAnchor.constraint(
+                equalTo: view.centerXAnchor,
+                constant: -toolbarButtonConfig.smallerButtonOffset
+            ),
+            switchCameraButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+        
+        return view
+    }()
+    
+    // MARK: End Call Button
+
+    private lazy var endCallButton: UIButton = {
+        var configuration = UIButton.Configuration.filled()
+        configuration.image = UIImage(
+            systemName: "phone.down.fill",
+            withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
+        )
+        
+        let action = UIAction { [weak self] _ in
+            self?.didTapEndCallButton()
+        }
+        
+        let button = UIButton(configuration: configuration, primaryAction: action)
+        
+        button.layer.masksToBounds = true
+        button.layer.cornerRadius = toolbarButtonConfig.biggerButtonCornerRadius
+        button.clipsToBounds = true
+        button.tintColor = .red
+        
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
+            button.heightAnchor.constraint(equalTo: button.widthAnchor),
+        ])
+        
+        return button
+    }()
+    
+    // MARK: Audio Output Button
+
+    private lazy var audioOutputButton = GroupCallAudioOutputButton()
+    private lazy var audioOutputButtonView: UIView = {
+        let view = UIView()
+        view.addSubview(audioOutputButton)
+        NSLayoutConstraint.activate([
+            view.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
+            audioOutputButton.centerXAnchor.constraint(
+                equalTo: view.centerXAnchor,
+                constant: toolbarButtonConfig.smallerButtonOffset
+            ),
+            audioOutputButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+        
+        return view
+    }()
+
+    // MARK: Toggle Audio Button
+
     private lazy var toggleAudioButton: UIButton = {
         var configuration = UIButton.Configuration.plain()
         configuration.image = UIImage(
             systemName: "mic.slash",
-            withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
+            withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
         )
         
         let action = UIAction { [weak self] _ in
@@ -41,11 +192,13 @@ class GroupCallToolbar: UIView {
         let button = UIButton(configuration: configuration, primaryAction: action)
         
         button.layer.masksToBounds = true
-        button.layer.cornerRadius = GroupCallUIConfiguration.ToolbarButton.cornerRadius
+        button.layer.cornerRadius = toolbarButtonConfig.biggerButtonCornerRadius
         button.clipsToBounds = true
+        button.tintColor = toolbarButtonConfig.biggerButtonTint
+        button.backgroundColor = toolbarButtonConfig.biggerButtonBackground
 
         NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: GroupCallUIConfiguration.ToolbarButton.borderedButtonWidth),
+            button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
             button.heightAnchor.constraint(equalTo: button.widthAnchor),
         ])
         
@@ -63,147 +216,29 @@ class GroupCallToolbar: UIView {
             case .muted:
                 config?.showsActivityIndicator = false
                 config?.image = UIImage(
-                    systemName: "mic.slash.fill",
-                    withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
-                )
-                button.tintColor = .black
-                button.backgroundColor = .white.withAlphaComponent(0.8)
-                
-            case .unmuted:
-                config?.showsActivityIndicator = false
-                config?.image = UIImage(
                     systemName: "mic.slash",
-                    withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
+                    withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
                 )
-                button.tintColor = .white
-                button.backgroundColor = .lightGray.withAlphaComponent(0.8)
-            }
-            button.configuration = config
-        }
-        
-        return button
-    }()
-    
-    private lazy var endCallButton: UIButton = {
-        var configuration = UIButton.Configuration.filled()
-        configuration.image = UIImage(
-            systemName: "phone.down.fill",
-            withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
-        )
-        
-        let action = UIAction { [weak self] _ in
-            self?.didTapEndCallButton()
-        }
-        
-        let button = UIButton(configuration: configuration, primaryAction: action)
-        
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = GroupCallUIConfiguration.ToolbarButton.cornerRadius
-        button.clipsToBounds = true
-        
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: GroupCallUIConfiguration.ToolbarButton.borderedButtonWidth),
-            button.heightAnchor.constraint(equalTo: button.widthAnchor),
-        ])
-        
-        return button
-    }()
-    
-    private lazy var toggleVideoButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(
-            systemName: "eye.slash",
-            withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
-        )
-        
-        let action = UIAction { [weak self] _ in
-            self?.didTapToggleVideoButton()
-        }
-        
-        let button = UIButton(configuration: configuration, primaryAction: action)
-        button.backgroundColor = .white.withAlphaComponent(0.8)
-
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = GroupCallUIConfiguration.ToolbarButton.cornerRadius
-        button.clipsToBounds = true
-        
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: GroupCallUIConfiguration.ToolbarButton.borderedButtonWidth),
-            button.heightAnchor.constraint(equalTo: button.widthAnchor),
-        ])
-        
-        button.configurationUpdateHandler = { [weak self] button in
-            guard let self else {
-                return
-            }
-            
-            var config = button.configuration
-            
-            switch self.viewModel.ownVideoMuteState {
-            case .changing:
-                config?.showsActivityIndicator = true
-
-            case .muted:
-                config?.showsActivityIndicator = false
-                config?.image = UIImage(
-                    systemName: "eye.slash",
-                    withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
-                )
-                button.tintColor = .black
-                button.backgroundColor = .white.withAlphaComponent(0.8)
-                
             case .unmuted:
                 config?.showsActivityIndicator = false
                 config?.image = UIImage(
-                    systemName: "eye.slash.fill",
-                    withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
+                    systemName: "mic",
+                    withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
                 )
-                button.tintColor = .white
-                button.backgroundColor = .lightGray.withAlphaComponent(0.8)
             }
             button.configuration = config
         }
         
         return button
     }()
-    
-    private lazy var switchCameraButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(
-            systemName: "arrow.triangle.2.circlepath.camera.fill",
-            withConfiguration: GroupCallUIConfiguration.ToolbarButton.buttonImageConfig
-        )
-        
-        let action = UIAction { [weak self] _ in
-            self?.didTapSwitchCamera()
-        }
-        
-        let button = UIButton(configuration: configuration, primaryAction: action)
-        button.tintColor = .white
-        
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: GroupCallUIConfiguration.ToolbarButton.buttonWidth),
-            button.heightAnchor.constraint(equalTo: button.widthAnchor),
-        ])
-        
-        button.configurationUpdateHandler = { [weak self] button in
-            guard let self else {
-                return
-            }
-            
-            button.isEnabled = self.viewModel.ownVideoMuteState != .muted
-        }
-        
-        return button
-    }()
-    
+
     private lazy var toolbarStackView: UIStackView = {
         let stackView =
             UIStackView(arrangedSubviews: [
                 toggleVideoButton,
-                switchCameraButton,
+                switchCameraButtonView,
                 endCallButton,
-                audioOutputButton,
+                audioOutputButtonView,
                 toggleAudioButton,
             ])
         
@@ -243,28 +278,25 @@ class GroupCallToolbar: UIView {
     private var isSpeaker = false
     private var isToolbarHidden = false
     
-    private weak var groupCallViewControllerDelegate: GroupCallViewControllerDelegate?
-    
     private lazy var bottomInsetConstant: CGFloat = {
         if UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0 > 0 {
             return 0.0
         }
-        return GroupCallUIConfiguration.Toolbar.inset
+        return toolbarConfig.verticalInset
     }()
     
     // MARK: - Lifecycle
 
     init(
         viewModel: GroupCallViewModel,
-        groupCallViewControllerDelegate: GroupCallViewControllerDelegate,
         dependencies: Dependencies
     ) {
         self.viewModel = viewModel
-        self.groupCallViewControllerDelegate = groupCallViewControllerDelegate
         self.dependencies = dependencies
+        
         super.init(frame: .zero)
         
-        self.viewModel.toolBarDelegate = self
+        self.viewModel.setToolBarDelegate(self)
         setup()
     }
     
@@ -279,13 +311,19 @@ class GroupCallToolbar: UIView {
         layer.insertSublayer(gradientLayer, at: 0)
         
         NSLayoutConstraint.activate([
+            switchCameraButtonView.topAnchor.constraint(equalTo: toolbarStackView.topAnchor),
+            switchCameraButtonView.bottomAnchor.constraint(equalTo: toolbarStackView.bottomAnchor),
+            
+            audioOutputButtonView.topAnchor.constraint(equalTo: toolbarStackView.topAnchor),
+            audioOutputButtonView.bottomAnchor.constraint(equalTo: toolbarStackView.bottomAnchor),
+
             toolbarStackView.topAnchor.constraint(
                 equalTo: topAnchor,
-                constant: GroupCallUIConfiguration.Toolbar.topInset
+                constant: toolbarConfig.verticalInset
             ),
             toolbarStackView.leadingAnchor.constraint(
                 equalTo: leadingAnchor,
-                constant: GroupCallUIConfiguration.Toolbar.inset
+                constant: toolbarConfig.horizontalInset
             ),
             toolbarStackView.bottomAnchor.constraint(
                 equalTo: safeAreaLayoutGuide.bottomAnchor,
@@ -293,10 +331,10 @@ class GroupCallToolbar: UIView {
             ),
             toolbarStackView.trailingAnchor.constraint(
                 equalTo: trailingAnchor,
-                constant: -GroupCallUIConfiguration.Toolbar.inset
+                constant: -toolbarConfig.horizontalInset
             ),
             toolbarStackView.heightAnchor
-                .constraint(equalToConstant: GroupCallUIConfiguration.ToolbarButton.borderedButtonWidth),
+                .constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
         ])
     }
     
@@ -316,19 +354,19 @@ class GroupCallToolbar: UIView {
             toggleVideoButton.removeFromSuperview()
             toolbarStackView.removeArrangedSubview(endCallButton)
             endCallButton.removeFromSuperview()
-            toolbarStackView.removeArrangedSubview(switchCameraButton)
-            switchCameraButton.removeFromSuperview()
-            toolbarStackView.removeArrangedSubview(audioOutputButton)
-            audioOutputButton.removeFromSuperview()
+            toolbarStackView.removeArrangedSubview(switchCameraButtonView)
+            switchCameraButtonView.removeFromSuperview()
+            toolbarStackView.removeArrangedSubview(audioOutputButtonView)
+            audioOutputButtonView.removeFromSuperview()
         }
         else {
             layer.insertSublayer(gradientLayer, at: 0)
             
             toolbarStackView.removeArrangedSubview(spacerView)
             spacerView.removeFromSuperview()
-            toolbarStackView.insertArrangedSubview(audioOutputButton, at: 0)
+            toolbarStackView.insertArrangedSubview(audioOutputButtonView, at: 0)
             toolbarStackView.insertArrangedSubview(endCallButton, at: 0)
-            toolbarStackView.insertArrangedSubview(switchCameraButton, at: 0)
+            toolbarStackView.insertArrangedSubview(switchCameraButtonView, at: 0)
             toolbarStackView.insertArrangedSubview(toggleVideoButton, at: 0)
         }
     }
@@ -348,9 +386,6 @@ class GroupCallToolbar: UIView {
     
     private func didTapEndCallButton() {
         viewModel.endCall()
-        Task { @MainActor in
-            await groupCallViewControllerDelegate?.dismiss()
-        }
     }
     
     private func didTapToggleVideoButton() {

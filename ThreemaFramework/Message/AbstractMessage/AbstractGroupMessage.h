@@ -26,5 +26,6 @@
 @property (nonatomic, strong) NSData *groupId NS_SWIFT_NAME(groupID);
 
 - (BOOL)isGroupControlMessage;
+- (BOOL)isGroupCallMessage;
 
 @end

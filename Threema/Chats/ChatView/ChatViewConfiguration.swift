@@ -26,7 +26,7 @@ enum ChatViewConfiguration {
     /// If `strictMode` is enabled failing sanity checks do not only print errors but may also crash for release builds
     static let strictMode = false
     
-    // TODO: Scale the value according with dynamic type?
+    // TODO: Scale the value according with dynamic type? (IOS-3998)
     
     /// Inset at top of all chats. This also adds to the top inset the sticky section header.
     static let topInset = ChatBubble.defaultTopBottomInset
@@ -635,18 +635,22 @@ enum ChatViewConfiguration {
         
         static let pillLeftRightTextInset = 8.0
         static let pillTopBottomTextInset = 4.0
+        static let adjustedTopInset = ChatBubble.defaultTopBottomInset
+        static let adjustedBottomInset = 0.0
+        static let adjustedGroupTopInset = 0.0
+        static let adjustedGroupBottomInset = (ChatBubble.defaultGroupTopBottomInset * 0.75)
         static let pillRadius = 12.0
         static let pillBlurEffectStyle = UIBlurEffect.Style.systemThinMaterial
         
-        static let leftRightLineHeight = 3.0
-        static let leftRightLineRadius = 1.5
+        static let leftRightLineHeight = 2.0
+        static let leftRightLineRadius = 1.0
         static let leftRightLineInnerRoundedCorners = true
         static let leftRightLineOuterRoundedCorners = false
         static let leftRightLineMaxScreenwidthRatio = 0.125
         
         static let font = UIFont.monospacedDigitSystemFont(
             ofSize: UIFont.preferredFont(forTextStyle: .subheadline).pointSize,
-            weight: .bold
+            weight: .medium
         )
         
         /// Maximum time in milliseconds before the unread message line disappears when the user scrolls to the bottom
@@ -726,17 +730,6 @@ enum ChatViewConfiguration {
     }
     
     enum ScrollBehavior {
-        /// Feature Flag for additional workarounds when using flipped mode of the table view
-        /// Must not be set to true if flipped table view is disabled
-        static var overrideDefaultTableViewBehavior = {
-            if !UserSettings.shared().flippedTableView {
-                return false
-            }
-            
-            // Actual configuration value
-            return true
-        }()
-        
         /// We need some non-zero additional space above the content height of newly added cells when checking
         /// whether we can adjust the content offset or must scroll down to avoid glitches
         /// You can find a more detailed description of the workaround in

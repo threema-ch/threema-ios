@@ -63,16 +63,18 @@ final class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProt
             // Send group leave messages
             var sendMessages = [Promise<AbstractMessage?>]()
             for toMember in task.toMembers {
-                if !toMember.elementsEqual(self.frameworkInjector.myIdentityStore.identity) {
-                    let msg = self.getGroupLeaveMessage(groupID, groupCreatorIdentity, task.fromMember, toMember)
-                    sendMessages.append(
-                        self.sendMessage(
-                            message: msg,
-                            ltSend: self.taskContext.logSendMessageToChat,
-                            ltAck: self.taskContext.logReceiveMessageAckFromChat
-                        )
-                    )
+                if toMember == self.frameworkInjector.myIdentityStore.identity {
+                    continue
                 }
+              
+                let msg = self.getGroupLeaveMessage(groupID, groupCreatorIdentity, task.fromMember, toMember)
+                sendMessages.append(
+                    self.sendMessage(
+                        message: msg,
+                        ltSend: self.taskContext.logSendMessageToChat,
+                        ltAck: self.taskContext.logReceiveMessageAckFromChat
+                    )
+                )
             }
             
             return when(fulfilled: sendMessages)

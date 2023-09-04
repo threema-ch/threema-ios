@@ -70,7 +70,13 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
 
     private func saveMessageSent(messageID: UInt64, receiverIdentity: String, reflectedAt: Date) throws {
         let id = messageID.littleEndianData
-        guard let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) else {
+
+        guard let conversation = frameworkInjector.backgroundEntityManager.entityFetcher
+            .conversation(forIdentity: receiverIdentity),
+            let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(
+                with: id,
+                conversation: conversation
+            ) else {
             DDLogError("Own message ID \(messageID.littleEndianData.hexString) to set as sent not found")
             return
         }
@@ -92,7 +98,13 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
         reflectedAt: Date
     ) throws {
         let id = messageID.littleEndianData
-        guard let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) else {
+
+        guard let conversation = frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+            for: receiverGroupID.littleEndianData,
+            creator: receiverGroupCreator
+        ),
+            let message = frameworkInjector.backgroundEntityManager.entityFetcher
+            .ownMessage(with: id, conversation: conversation) else {
             DDLogError("Own message ID \(messageID.littleEndianData.hexString) to set as sent not found")
             return
         }

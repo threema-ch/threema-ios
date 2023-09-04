@@ -20,6 +20,7 @@
 
 import XCTest
 @testable import Threema
+@testable import ThreemaFramework
 
 class AppMigrationTests: XCTestCase {
     private var dbMainCnx: DatabaseContext!
@@ -27,6 +28,9 @@ class AppMigrationTests: XCTestCase {
     private var dbPreparer: DatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
+    
+    private var myIdentityStoreMock: MyIdentityStoreMock!
+    private var groupManagerMock: GroupManagerMock!
     
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
@@ -40,6 +44,9 @@ class AppMigrationTests: XCTestCase {
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
+        
+        myIdentityStoreMock = MyIdentityStoreMock()
+        groupManagerMock = GroupManagerMock()
     }
 
     override func tearDownWithError() throws {
@@ -48,7 +55,8 @@ class AppMigrationTests: XCTestCase {
 
     func testRunMigrationToLatestVersion() throws {
         setupDataForMigrationVersion4_8()
-        
+        setupDataForMigrationVersion5_5()
+                
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
         DatabaseManager.db().doMigrateDB()
@@ -59,10 +67,12 @@ class AppMigrationTests: XCTestCase {
 
         let businessInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
+            entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
+            groupManager: groupManagerMock,
+            myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock
         )
-
+        
         let appMigration = AppMigration(
             businessInjector: businessInjectorMock
         )
@@ -72,10 +82,13 @@ class AppMigrationTests: XCTestCase {
         
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 4.8 started"))
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 4.8 successfully finished"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.5 started"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] Removed own contact from contact list"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.5 successfully finished"))
 
         let entityManager = EntityManager(databaseContext: dbMainCnx)
-        let conversations = entityManager.entityFetcher.allConversations()
-        XCTAssertEqual(conversations?.count ?? 0, 2)
+        let conversations: [Conversation] = entityManager.entityFetcher.allConversations() as! [Conversation]
+        XCTAssertEqual(conversations.count, 3)
 
         // Checks for 4.8 migration
         for conversation in ["SENDER01", "SENDER02"]
@@ -83,6 +96,18 @@ class AppMigrationTests: XCTestCase {
             XCTAssertEqual(
                 entityManager.entityFetcher.unreadMessages(for: conversation).count, 1
             )
+        }
+        
+        // Checks for 5.5 migration
+    
+        let ownContact = entityManager.entityFetcher.contactsContainOwnIdentity()
+        // Own contact should be removed from contact list
+        XCTAssertNil(ownContact)
+
+        for conversation in conversations.filter({ $0.isGroup() }) {
+            let ownMember = conversation.members.filter { $0.identity == myIdentityStoreMock.identity }
+            // Own contact should be removed from group
+            XCTAssertEqual(ownMember.count, 0)
         }
     }
 
@@ -123,6 +148,63 @@ class AppMigrationTests: XCTestCase {
                         addTextMessage(conversation, "text from \(sender)", false)
                     }
             }
+        }
+    }
+    
+    private func setupDataForMigrationVersion5_5() {
+        dbPreparer.save {
+            let ownContactIdentity = dbPreparer.createContact(
+                publicKey: myIdentityStoreMock.publicKey,
+                identity: myIdentityStoreMock.identity,
+                verificationLevel: 0
+            )
+
+            let groupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: "MEMBER01")
+            let expectedMember01 = "MEMBER01"
+            let expectedMember02 = "MEMBER02"
+
+            let (groupEntity, conversation) = dbPreparer.save {
+
+                let groupEntity = dbPreparer.createGroupEntity(
+                    groupID: groupIdentity.id,
+                    groupCreator: nil
+                )
+                
+                let member01 = dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: expectedMember01,
+                    verificationLevel: 0
+                )
+                let member02 = dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: expectedMember02,
+                    verificationLevel: 0
+                )
+                
+                let conversation = dbPreparer
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                        conversation.groupID = groupEntity.groupID
+                        conversation.groupMyIdentity = self.myIdentityStoreMock.identity
+                        conversation.addMembers([member01, member02, ownContactIdentity])
+                    }
+                
+                dbPreparer.createTextMessage(
+                    conversation: conversation,
+                    isOwn: false,
+                    sender: member01,
+                    remoteSentDate: Date()
+                )
+
+                return (groupEntity, conversation)
+            }
+
+            groupManagerMock.getGroupReturns = Group(
+                myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
         }
     }
 }

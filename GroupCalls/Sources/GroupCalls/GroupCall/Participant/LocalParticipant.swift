@@ -23,6 +23,7 @@ import Foundation
 import ThreemaProtocols
 import WebRTC
 
+/// The participant of this this device (i.e. me)
 @GlobalGroupCallActor
 final class LocalParticipant: NormalParticipant, Sendable {
     private let localContext: LocalContext
@@ -72,9 +73,7 @@ final class LocalParticipant: NormalParticipant, Sendable {
     }
     
     override var mirrorRenderer: Bool {
-        // TODO: Implement
-//        return localContext.cameraVideoContext.currentCamera?.facing == Camera.Facing.FRON
-        false
+        localCameraPosition == .front
     }
     
     override var microphoneActive: Bool {

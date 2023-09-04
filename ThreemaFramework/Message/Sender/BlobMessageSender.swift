@@ -48,18 +48,21 @@ public class BlobMessageSender {
     public func sendBlobMessage(with objectID: NSManagedObjectID) async throws {
                 
         // Concurrency Loading
-        var fileMessage: FileMessage?
-        var conversation: Conversation!
-        var group: Group?
-        
-        businessInjector.entityManager.performBlockAndWait {
-            fileMessage = self.businessInjector.entityManager.entityFetcher
+        let (fileMessage, receiverIdentity, group) = businessInjector.entityManager.performAndWait {
+            let fileMessage = self.businessInjector.entityManager.entityFetcher
                 .existingObject(with: objectID) as? FileMessage
-            
+
+            var receiverIdentity: ThreemaIdentity?
+            var group: Group?
+
             if let message = fileMessage {
-                conversation = message.conversation
-                group = self.businessInjector.groupManager.getGroup(conversation: conversation)
+                group = self.businessInjector.groupManager.getGroup(conversation: message.conversation)
+                if group == nil {
+                    receiverIdentity = message.conversation.contact?.identity
+                }
             }
+
+            return (fileMessage, receiverIdentity, group)
         }
         
         guard let fileMessage else {
@@ -74,10 +77,10 @@ public class BlobMessageSender {
             throw BlobManagerError.sendingFailed
         }
 
-        businessInjector.entityManager.performBlockAndWait {
-    
+        businessInjector.entityManager.performAndWait {
             let taskDefinition = TaskDefinitionSendBaseMessage(
                 message: fileMessage,
+                receiverIdentity: receiverIdentity,
                 group: group,
                 sendContactProfilePicture: true
             )
@@ -95,6 +98,11 @@ public class BlobMessageSender {
         
         entityManager.performBlockAndWait {
             guard let fileMessage = entityManager.entityFetcher.existingObject(with: objectID) as? FileMessage else {
+                return
+            }
+            
+            // If we download our own sent messages (MD), we do not want to send them again.
+            guard !fileMessage.sent.boolValue else {
                 return
             }
             

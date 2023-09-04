@@ -35,7 +35,7 @@ public final class AsyncStreamContinuationToSharedPublisher<Output: Sendable>: S
     
     // MARK: - Private properties
     
-    private let queue = DispatchQueue(label: "ch.threema.GlobalGroupCallObserver")
+    private let queue = DispatchQueue(label: "ch.threema.AsyncStreamContinuationToSharedPublisher")
     
     private var lastItem: Output?
 

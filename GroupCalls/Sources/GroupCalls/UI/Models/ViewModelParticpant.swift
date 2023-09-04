@@ -29,7 +29,9 @@ public class ViewModelParticipant {
     let name: String
     let avatar: UIImage?
     let idColor: UIColor
-    
+    // TODO: (IOS-4052) Can we get rid of this by wrapping this call in a enum on the usage side?
+    let localParticipant: LocalParticipant?
+
     var audioMuteState: MuteState = .muted
     var videoMuteState: MuteState = .muted
     
@@ -40,6 +42,7 @@ public class ViewModelParticipant {
         self.threemaID = threemaID
         self.avatar = avatar
         self.idColor = idColor
+        self.localParticipant = nil
     }
     
     init(localParticipant: LocalParticipant, name: String?, avatar: UIImage?, idColor: UIColor) async {
@@ -49,6 +52,7 @@ public class ViewModelParticipant {
         self.threemaID = threemaID
         self.avatar = avatar
         self.idColor = idColor
+        self.localParticipant = localParticipant
         
         self.audioMuteState = GroupCallConfiguration.LocalInitialMuteState.audio.muteState()
         self.videoMuteState = GroupCallConfiguration.LocalInitialMuteState.video.muteState()

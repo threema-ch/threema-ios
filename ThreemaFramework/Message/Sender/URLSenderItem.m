@@ -128,6 +128,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     else if ([UTIConverter isRenderingVideoMimeType:[self getMimeType]]) {
         return [self getVideoThumnbail];
     }
+    else if ([UTIConverter isImageMimeType:[self getMimeType]]) {
+        return [self getImageThumbnail];
+    }
 
     return nil;
 }

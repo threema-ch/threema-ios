@@ -125,7 +125,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 
                 // do not use the conversation function 'updateLastMessageWith', because we are already in a perform block
                 MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
-                BaseMessage *lastMessage = messageFetcher.lastMessage;
+                 BaseMessage *lastMessage = messageFetcher.lastMessage;
                 
                 if (lastMessage != conversation.lastMessage) {
                     conversation.lastMessage = lastMessage;

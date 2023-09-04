@@ -31,14 +31,20 @@ import Foundation
         case poiAddress
     }
     
-    @objc init(poiAddress: String?, message: BaseMessage, sendContactProfilePicture: Bool) {
+    @objc init(
+        poiAddress: String?,
+        message: BaseMessage,
+        receiverIdentity: ThreemaIdentity?,
+        group: Group?,
+        sendContactProfilePicture: Bool
+    ) {
         self.poiAddress = poiAddress
-        super.init(message: message, group: nil, sendContactProfilePicture: sendContactProfilePicture)
-    }
-
-    @objc init(poiAddress: String?, message: BaseMessage, group: Group?, sendContactProfilePicture: Bool) {
-        self.poiAddress = poiAddress
-        super.init(message: message, group: group, sendContactProfilePicture: sendContactProfilePicture)
+        super.init(
+            message: message,
+            receiverIdentity: receiverIdentity,
+            group: group,
+            sendContactProfilePicture: sendContactProfilePicture
+        )
     }
 
     required init(from decoder: Decoder) throws {

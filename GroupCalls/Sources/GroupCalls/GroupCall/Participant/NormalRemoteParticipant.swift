@@ -33,6 +33,5 @@ class NormalRemoteParticipant: NormalParticipant, RemoteParticipantProtocol {
     
     override var mirrorRenderer: Bool {
         false
-//        return remoteContext?.cameraVideoContext.currentCamera?.facing == .front
     }
 }

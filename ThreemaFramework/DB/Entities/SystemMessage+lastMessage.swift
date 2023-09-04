@@ -19,8 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import WebRTC
 
-protocol GroupCallCellModelProtocol {
-    func rendererView(for participantID: ParticipantID, rendererView: RTCMTLVideoView) async -> Bool
+extension SystemMessage {
+    @objc static let excludeSystemMessageTypes: [Int] = [kSystemMessageFsDisabledOutgoing, kFsDebugMessage]
+
+    var isAllowedAsLastMessage: Bool {
+        !SystemMessage.excludeSystemMessageTypes.contains(type.intValue)
+    }
 }

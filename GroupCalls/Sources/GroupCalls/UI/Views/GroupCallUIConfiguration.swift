@@ -33,26 +33,29 @@ internal enum GroupCallUIConfiguration {
     }
     
     enum Toolbar {
-        static let inset = 20.0
-        static let topInset = 20.0
-        static let cornerRadius = 20.0
+        static let horizontalInset = 20.0
+        static let verticalInset = 20.0
     }
     
     enum ToolbarButton {
-        static let buttonWidth = 40.0
-        static let borderedButtonWidth = 60.0
-        static let cornerRadius = borderedButtonWidth / 2
-        static let borderWidth = 2.0
+        static let smallerButtonWidth = 45.0
+        static let smallerButtonCornerRadius = smallerButtonWidth / 2
+        static let smallerButtonImageConfig: UIImage.Configuration = UIImage.SymbolConfiguration(pointSize: 15)
+        static let smallerButtonOffset = 5.0
+        static let smallerButtonTint: UIColor = .white
+        static let smallerButtonBackground: UIColor = .black.withAlphaComponent(0.2)
 
-        static let buttonImageTextStyle: UIFont.TextStyle = .title3
-        static let buttonImageConfig: UIImage.Configuration = UIImage
-            .SymbolConfiguration(font: UIFont.preferredFont(forTextStyle: buttonImageTextStyle))
+        static let biggerButtonWidth = 60.0
+        static let biggerButtonCornerRadius = biggerButtonWidth / 2
+        static let biggerButtonImageConfig: UIImage.Configuration = UIImage.SymbolConfiguration(pointSize: 20)
+        static let biggerButtonTint: UIColor = .black
+        static let biggerButtonBackground: UIColor = .white.withAlphaComponent(0.6)
     }
     
     enum ParticipantCell {
         static let cellInset = 8.0
-        static let nameTextStyle: UIFont.TextStyle = .title3
-        static let stateImageConfig: UIImage.Configuration = UIImage
+        static let nameTextStyle: UIFont.TextStyle = .body
+        static let stateImageConfig = UIImage
             .SymbolConfiguration(font: UIFont.preferredFont(forTextStyle: nameTextStyle), scale: .small)
     }
     

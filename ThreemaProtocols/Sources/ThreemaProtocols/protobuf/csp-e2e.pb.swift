@@ -73,6 +73,7 @@ public struct CspE2e_MessageMetadata {
 /// - Delivery receipts:
 ///   - Automatic: N/A
 ///   - Manual: No
+/// - Send to Threema Gateway ID group creator: If capture is enabled
 ///
 /// When creating this message to start a call within the group:
 ///
@@ -96,10 +97,10 @@ public struct CspE2e_MessageMetadata {
 /// 6. Start a task to run the _Group Call Refresh Steps_.²
 ///
 /// ¹: Adding unsupported `protocol_version`s allows the user to join an ongoing
-///    call after an app update where support for `protocol_version` has been
-///    added.
+///  call after an app update where support for `protocol_version` has been
+///  added.
 /// ²: This ensures that the user automatically switches to the chosen call if it
-///    is currently participating in a group call of this group.
+///  is currently participating in a group call of this group.
 public struct CspE2e_GroupCallStart {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -143,6 +144,7 @@ public struct CspE2e_GroupCallStart {
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No
+/// - Send to Threema Gateway ID group creator: N/A
 ///
 /// When receiving this message:
 ///
@@ -209,6 +211,7 @@ public struct CspE2e_GroupJoinRequest {
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No
+/// - Send to Threema Gateway ID group creator: N/A
 ///
 /// When receiving this message:
 ///

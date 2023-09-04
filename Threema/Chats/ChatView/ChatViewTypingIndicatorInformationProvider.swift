@@ -48,6 +48,38 @@ class ChatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInforma
     private func setupObservers(conversation: Conversation) {
         conversationIsTypingToken = conversation.observe(\.typing, options: .new) { [weak self] _, change in
             self?.currentlyTyping = change.newValue?.boolValue ?? false
+            self?.accessibilityTyping(conversation: conversation)
+        }
+    }
+    
+    /// Announce the typing indicator for accessibility if the current chat is the top view controller.
+    /// - Parameter conversation: Conversation
+    private func accessibilityTyping(conversation: Conversation) {
+        guard let topViewController = AppDelegate.shared().currentTopViewController() as? MainTabBarController,
+              topViewController.isChatTopViewController() else {
+            return
+        }
+        
+        // Inform with accessibility notification post when user is typing or stops typing
+        guard let displayName = conversation.contact?.displayName else {
+            // If there is no display name, it will use the string 'Contact'
+            let messageKey = currentlyTyping ? "accessibility_senderDescription_typing" :
+                "accessibility_senderDescription_stopped_typing"
+            UIAccessibility.post(
+                notification: UIAccessibility.Notification.announcement,
+                argument: BundleUtil.localizedString(forKey: messageKey)
+            )
+            return
+        }
+        
+        let messageKey = currentlyTyping ? "accessibility_senderDescription_contact_typing" :
+            "accessibility_senderDescription_contact_stopped_typing"
+        let message = String(format: BundleUtil.localizedString(forKey: messageKey), displayName)
+        DispatchQueue.main.async {
+            UIAccessibility.post(
+                notification: UIAccessibility.Notification.announcement,
+                argument: message
+            )
         }
     }
 }

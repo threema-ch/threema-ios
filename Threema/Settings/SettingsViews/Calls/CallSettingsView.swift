@@ -21,8 +21,9 @@
 import SwiftUI
 
 struct CallSettingsView: View {
-    @EnvironmentObject var settingsVM: SettingsStore
-    
+    // @EnvironmentObject var settingsVM: SettingsStore
+    @ObservedObject var settingsVM: SettingsStore
+
     let mdmSetup = MDMSetup(setup: false)
 
     var body: some View {
@@ -32,8 +33,7 @@ struct CallSettingsView: View {
                     Text(BundleUtil.localizedString(forKey: "settings_threema_calls_enable_calls"))
                 }
                 .disabled(
-                    ThreemaEnvironment.supportsCallKit() ? mdmSetup?
-                        .disableCalls() ?? false : true
+                    ThreemaEnvironment.supportsCallKit() ? mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_CALLS) ?? false : true
                 )
             } footer: {
                 if !ThreemaEnvironment.supportsCallKit() {
@@ -44,7 +44,7 @@ struct CallSettingsView: View {
             if settingsVM.enableThreemaCall {
                 Section {
                     NavigationLink {
-                        CallSoundSettingsView()
+                        CallSoundSettingsView(settingsVM: settingsVM)
                     } label: {
                         HStack {
                             Text(BundleUtil.localizedString(forKey: "settings_threema_calls_call_sound"))
@@ -60,7 +60,7 @@ struct CallSettingsView: View {
                         Text(BundleUtil.localizedString(forKey: "settings_threema_calls_always_relay_calls"))
                     }
                 } footer: {
-                    Text(hideVoIPIPFooter())
+                    Text(voIPFooterString())
                 }
                 
                 Section {
@@ -90,7 +90,7 @@ struct CallSettingsView: View {
                     
                     if settingsVM.enableVideoCall {
                         NavigationLink {
-                            VideoCallQualitySelectionView()
+                            VideoCallQualitySelectionView(settingsVM: settingsVM)
                         } label: {
                             HStack {
                                 Text(BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile"))
@@ -110,15 +110,46 @@ struct CallSettingsView: View {
                     }
                 }
             }
+            
+            if ThreemaEnvironment.groupCalls {
+                Section {
+                    Toggle(isOn: $settingsVM.enableThreemaGroupCalls.animation()) {
+                        Text(BundleUtil.localizedString(forKey: "settings_threema_calls_enable_group_calls"))
+                    }
+                    .disabled(disableGroupCallToggle())
+                } header: {
+                    Text(BundleUtil.localizedString(forKey: "settings_threema_calls_group_calls_header"))
+                }
+            }
         }
         .navigationTitle(BundleUtil.localizedString(forKey: "settings_threema_calls"))
         .tint(UIColor.primary.color)
         .environmentObject(SettingsStore())
     }
     
+    private func disableGroupCallToggle() -> Bool {
+        // If there is a value for MDM_KEY_DISABLE_CALLS, we need to check if it is true
+        if mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_CALLS) ?? false {
+            // If calls are disabled, group calls will be disabled too
+            if mdmSetup?.disableCalls() ?? false {
+                return true
+            }
+            // If calls are enabled, we still need to check the MDM_KEY_DISABLE_GROUP_CALLS
+            else if mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_GROUP_CALLS) ?? false {
+                return true
+            }
+        }
+        
+        // Else we only check if there is a value for MDM_KEY_DISABLE_GROUP_CALLS
+        else if mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_GROUP_CALLS) ?? false {
+            return true
+        }
+        return false
+    }
+    
     // MARK: - Private Functions
 
-    private func hideVoIPIPFooter() -> String {
+    private func voIPFooterString() -> String {
         if ThreemaApp.current == .onPrem {
             if settingsVM.alwaysRelayCalls {
                 return BundleUtil.localizedString(forKey: "settings_threema_calls_onprem_hide_voip_call_ip_footer_on")
@@ -143,7 +174,7 @@ struct CallSettingsView: View {
 struct CallSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            CallSettingsView()
+            CallSettingsView(settingsVM: SettingsStore())
                 .navigationBarTitleDisplayMode(.inline)
         }
         .tint(UIColor.primary.color)

@@ -765,9 +765,22 @@
 "call_threema_cellular_instead_of_wifi_text" = "Uyarı: Bu arama, hücresel ağda veri aktarımına neden olur.";
 
 // Group Calls
+"group_call_title" = "Grup Araması";
+/* Group Calls */
 "group_call_join_button_title" = "Katıl";
 "group_call_open_button_title" = "Aç";
 "group_call_participants_title" = "Katılımcılar: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ bir grup araması başlattı";
+"group_call_started_by_local_system_message" = "Bir grup araması başlattınız";
+"group_call_ended_system_message" = "Grup araması sona erdi";
+
+"group_call_start_message_received" = "Bir grup araması başlatıldı";
+
+"group_call_navbar_state_connecting" = "Bağlanıyor…";
+"group_call_navbar_state_joining" = "Katılıyor...";
+"group_call_navbar_state_connected" = "Bağlandı";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema, gizliliğinizi diğer tüm uygulamalardan daha sıkı bir şekilde korur. Gizlilik politikamızda daha fazlasını öğrenebilirsiniz.";
@@ -1205,6 +1218,8 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_threema_voip_include_call_in_recents_footer_off" = "Aramalar kilit ekranında görüntülenir ancak Telefon uygulamasının arama kayıtlarında listelenmez.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Aramalar kilit ekranında görüntülenir ve Telefon uygulamasının arama kayıtlarında listelenir. iCloud Drive etkinleştirildiyse, Telefon uygulamasının arama kayıtları Apple sunucuları aracılığıyla senkronize edilir.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Apple'ın kısıtlamaları nedeniyle, cihazın bölgesi Çin olarak ayarlanmışsa Threema aramaları yapılamaz.";
+"settings_threema_calls_group_calls_header" = "Grup Aramaları (Beta)";
+"settings_threema_calls_enable_group_calls" = "Threema Grup Aramalarını Etkinleştir";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Ağ";
@@ -1780,17 +1795,6 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "alert_biometrics_changed_title_touch" = "TouchID'de olası bir değişiklik tespit edildi";
 "alert_biometrics_changed_title_face" = "FaceID'de olası bir değişiklik tespit edildi";
 "alert_biometrics_changed_message" = "Threema'yı biyometrik doğrulamayla kullanmaya devam etmek istiyorsanız, lütfen şifrenizi bir defalığına giriniz.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ bir grup araması başlattı";
-"group_call_started_by_local_system_message" = "Bir grup araması başlattınız";
-"group_call_ended_system_message" = "Grup araması sona erdi";
-
-"group_call_start_message_received" = "Bir grup araması başlatıldı";
-
-"group_call_navbar_state_connecting" = "Bağlanıyor…";
-"group_call_navbar_state_joining" = "Katılıyor...";
-"group_call_navbar_state_connected" = "Bağlandı";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n%d sürümünden %d sürümüne geçilemedi";

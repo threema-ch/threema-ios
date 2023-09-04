@@ -246,6 +246,11 @@ message EssentialData {
   }
   IdentityData identity_data = 2;
 
+  // Threema Work credentials
+  //
+  // Required for a Threema Work app. Must not be present in a Threema consumer app.
+  sync.ThreemaWorkCredentials work_credentials = 12;
+
   // Device group data
   message DeviceGroupData {
     // The device group key (32 bytes)

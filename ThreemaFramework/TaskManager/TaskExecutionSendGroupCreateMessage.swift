@@ -77,12 +77,16 @@ final class TaskExecutionSendGroupCreateMessage: TaskExecution, TaskExecutionPro
                 }
             }
         
-            for member in task.toMembers {
+            for toMember in task.toMembers {
+                if toMember == self.frameworkInjector.myIdentityStore.identity {
+                    continue
+                }
+           
                 msgSend.append(self.getGroupCreateMessage(
                     groupID,
                     groupCreatorIdentity,
                     self.frameworkInjector.myIdentityStore.identity,
-                    member,
+                    toMember,
                     Array(task.members)
                 ))
             }

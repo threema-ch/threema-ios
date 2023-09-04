@@ -171,6 +171,8 @@ extension BlobData {
             guard blobData != nil else {
                 return .pendingDownload(error: blobError ? .downloadFailed : nil)
             }
+            
+            return .remote
         }
 
         guard blobIdentifier == nil else {

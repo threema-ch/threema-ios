@@ -87,8 +87,8 @@
     return managedObject;
 }
 
-- (BaseMessage *)ownMessageWithId:(NSData *)messageId {
-    return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND isOwn == YES", messageId];
+- (BaseMessage *)ownMessageWithId:(NSData *)messageId conversation:(Conversation *)conversation {
+    return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND conversation == %@ AND isOwn == YES", messageId, conversation];
 }
 
 - (BaseMessage *)messageWithId:(NSData *)messageId conversation:(Conversation *)conversation {
@@ -298,12 +298,12 @@
     return [self executeFetchRequest:fetchRequest];
 }
 
-- (BOOL)contactsContainOwnIdentity {
+- (ContactEntity *)contactsContainOwnIdentity {
     id result;
     
     result = [self singleEntityNamed:@"Contact" withPredicate:@"identity == %@", myIdentityStore.identity];
     
-    return result != nil;
+    return result;
 }
 
 - (BOOL)hasDuplicateContactsWithDuplicateIdentities:(NSSet **)duplicateIdentities {
@@ -711,6 +711,7 @@
 
 - (NSFetchedResultsController *)fetchedResultsControllerForConversationsWithSections:(BOOL)sections {
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    fetchRequest.relationshipKeyPathsForPrefetching = @[@"members"];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Conversation" inManagedObjectContext:_managedObjectContext];
     [fetchRequest setEntity:entity];
     [fetchRequest setFetchBatchSize:20];
@@ -745,6 +746,7 @@
 
 - (NSFetchedResultsController *)fetchedResultsControllerForArchivedConversations {
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    fetchRequest.relationshipKeyPathsForPrefetching = @[@"members"];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Conversation" inManagedObjectContext:_managedObjectContext];
     [fetchRequest setEntity:entity];
     [fetchRequest setFetchBatchSize:20];
@@ -923,7 +925,6 @@
     if (sortDescriptors) {
         fetchRequest.sortDescriptors = sortDescriptors;
     }
-    
     return [self executeFetchRequest:fetchRequest];
 }
 

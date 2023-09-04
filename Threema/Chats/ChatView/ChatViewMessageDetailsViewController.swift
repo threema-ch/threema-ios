@@ -102,8 +102,6 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                         .ChatBubble.defaultGroupTopBottomInset
                     chatViewBaseTableViewCell.bubbleBottomSpacingConstraint.constant = -ChatViewConfiguration
                         .ChatBubble.defaultGroupTopBottomInset
-                    
-                    chatViewBaseTableViewCell.flipped = false
                 }
                 
                 return cell

@@ -92,14 +92,15 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testSpoolTaskDefinitionSendAbstractMessage() {
-        let expectedReceiver = "ECHOECHO"
+        let expectedReceiverIdentity = "ECHOECHO"
 
         databasePreparer.save {
-            databasePreparer.createContact(
+            let contactEntity = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedReceiver,
+                identity: expectedReceiverIdentity,
                 verificationLevel: 0
             )
+            databasePreparer.createConversation(contactEntity: contactEntity)
         }
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
@@ -120,7 +121,7 @@ class TaskQueueTests: XCTestCase {
 
         let message = BoxTextMessage()
         message.fromIdentity = myIdentityStoreMock.identity
-        message.toIdentity = expectedReceiver
+        message.toIdentity = expectedReceiverIdentity
         message.text = "test 123"
 
         let expec = expectation(description: "spool")
@@ -549,6 +550,7 @@ class TaskQueueTests: XCTestCase {
 
         let taskBase = TaskDefinitionSendBaseMessage(
             message: expectedBaseMessage,
+            receiverIdentity: nil,
             group: nil,
             sendContactProfilePicture: false
         )
@@ -587,6 +589,7 @@ class TaskQueueTests: XCTestCase {
         let expectedLocationMessageID = MockData.generateMessageID()
         let expectedLocationPoiAddress = "poi address"
         var expectedLocationMessage: LocationMessage!
+        let expectedLocationMessageReceiverIdentity = "ECHOECHO"
         databasePreparer.save {
             expectedLocationMessage = databasePreparer.createLocationMessage(
                 conversation: expectedConversation,
@@ -602,6 +605,8 @@ class TaskQueueTests: XCTestCase {
         let taskLocation = TaskDefinitionSendLocationMessage(
             poiAddress: expectedLocationPoiAddress,
             message: expectedLocationMessage,
+            receiverIdentity: expectedLocationMessageReceiverIdentity,
+            group: nil,
             sendContactProfilePicture: false
         )
         try! tq.enqueue(task: taskLocation, completionHandler: nil)
@@ -609,6 +614,7 @@ class TaskQueueTests: XCTestCase {
         // Add TaskDefinitionSendVideoMessage
         let expectedVideoMessageID = MockData.generateMessageID()
         var expectedVideoMessage: VideoMessageEntity!
+        let expectedVideoMessageReceiverIdentity = "ECHOECHO"
         databasePreparer.save {
             let imageData = databasePreparer.createImageData(data: Data([1]), height: 1, width: 1)
             let videoData = databasePreparer.createVideoData(data: Data([2]))
@@ -634,6 +640,8 @@ class TaskQueueTests: XCTestCase {
             thumbnailBlobID: nil,
             thumbnailSize: nil,
             message: expectedVideoMessage,
+            receiverIdentity: expectedVideoMessageReceiverIdentity,
+            group: nil,
             sendContactProfilePicture: false
         )
         try! tq.enqueue(task: taskVideo, completionHandler: nil)
@@ -942,6 +950,8 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedLocationMessageID.elementsEqual(task.messageID))
             XCTAssertEqual(expectedLocationPoiAddress, task.poiAddress)
+            XCTAssertEqual(expectedLocationMessageReceiverIdentity, task.receiverIdentity)
+            XCTAssertNil(task.groupID)
             XCTAssertTrue(task.retry)
         }
         else {
@@ -951,6 +961,8 @@ class TaskQueueTests: XCTestCase {
         if let task = tq.list[6].taskDefinition as? TaskDefinitionSendVideoMessage {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedVideoMessageID.elementsEqual(task.messageID))
+            XCTAssertEqual(expectedVideoMessageReceiverIdentity, task.receiverIdentity)
+            XCTAssertNil(task.groupID)
             XCTAssertTrue(task.retry)
         }
         else {

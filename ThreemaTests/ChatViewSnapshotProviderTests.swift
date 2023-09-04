@@ -210,16 +210,12 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         
         waitForExpectations(timeout: 10)
     }
-    
-    func testBasicAddUnreadMessageLineFlipped() {
-        basicUnreadMessageLine(flipped: true)
+        
+    func testBasicAddUnreadMessageLine() {
+        basicUnreadMessageLine()
     }
     
-    func testBasicAddUnreadMessageLineNonFlipped() {
-        basicUnreadMessageLine(flipped: false)
-    }
-    
-    func basicUnreadMessageLine(flipped: Bool) {
+    func basicUnreadMessageLine() {
         let entityManager = EntityManager(databaseContext: databaseMainCnx)
         _ = EntityManager(databaseContext: databaseBackgroundCnx)
         
@@ -242,7 +238,6 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         
         let typingIndicatorInformationProvider = ChatViewTypingIndicatorInformationProviderMock()
         let userSettingsMock = UserSettingsMock()
-        userSettingsMock.flippedTableView = flipped
         
         let snapshotProvider = ChatViewSnapshotProvider(
             conversation: conversation,
@@ -310,13 +305,10 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                     
                     XCTAssert(diffableDataSourceSnapshot.itemIdentifiers.contains(.typingIndicator))
                     
-                    if flipped {
-                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.first, .typingIndicator)
-                    }
-                    else {
-                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
-                    }
-                    
+                    XCTAssertEqual(
+                        diffableDataSourceSnapshot.itemIdentifiers.last,
+                        .typingIndicator
+                    )
                 },
                 { }
             ),
@@ -349,16 +341,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     // TODO: (IOS-3875) Timeout
-    func testUnreadMessageLineStillLastAfterNewMessageSentFlipped() {
-        basicUnreadMessageLine(flipped: true)
-    }
-    
-    // TODO: (IOS-3875) Timeout
-    func testUnreadMessageLineStillLastAfterNewMessageSentNonFlipped() {
-        basicUnreadMessageLine(flipped: false)
-    }
-    
-    func unreadMessageLineStillLastAfterNewMessageSent(flipped: Bool) {
+    func testUnreadMessageLineStillLastAfterNewMessageSent() {
         let entityManager = EntityManager(databaseContext: databaseMainCnx)
         _ = EntityManager(databaseContext: databaseBackgroundCnx)
         
@@ -381,7 +364,6 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         
         let typingIndicatorInformationProvider = ChatViewTypingIndicatorInformationProviderMock()
         let userSettingsMock = UserSettingsMock()
-        userSettingsMock.flippedTableView = flipped
         
         let snapshotProvider = ChatViewSnapshotProvider(
             conversation: conversation,
@@ -452,13 +434,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                     
                     XCTAssert(diffableDataSourceSnapshot.itemIdentifiers.contains(.typingIndicator))
                     
-                    if flipped {
-                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.first, .typingIndicator)
-                    }
-                    else {
-                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
-                    }
-                    
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
                 },
                 {
                     DispatchQueue.global().async {
@@ -475,22 +451,17 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                     
                     // Correct number of items
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
-                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 4)
                     
                     // Correct State for Unread Message line
                     XCTAssert(diffableDataSourceSnapshot.itemIdentifiers.contains(.typingIndicator))
                     
-                    if flipped {
-                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.first, .typingIndicator)
-                    }
-                    else {
-                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
-                    }
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
                 },
                 {
-                    DispatchQueue.global().async {
+                    entityManager.performSyncBlockAndSafe {
                         typingIndicatorInformationProvider.currentlyTyping = false
-                        self.createMessage(in: conversation, entityManager: entityManager)
+                        conversation.typing = NSNumber(booleanLiteral: false)
                     }
                 }
             ),

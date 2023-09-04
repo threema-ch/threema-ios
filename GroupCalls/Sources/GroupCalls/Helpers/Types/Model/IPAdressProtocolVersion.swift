@@ -21,7 +21,7 @@
 import Foundation
 
 enum IPAdressProtocolVersion {
-    case IPv4
-    case IPv6
+    case ipv4
+    case ipv6
     case unknown
 }

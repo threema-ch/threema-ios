@@ -27,5 +27,6 @@
 
 - (void)showModal:(UIViewController *)viewController;
 - (void)showNotificationSettings;
+- (BOOL)isChatTopViewController;
 
 @end

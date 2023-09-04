@@ -768,9 +768,16 @@ Process incoming message.
 
 - (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
     [entityManager performAsyncBlockAndSafe:^{
+        Conversation *conversation = [[entityManager entityFetcher] conversationForIdentity:[msg fromIdentity]];
+
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
+            if (conversation == nil) {
+                DDLogWarn(@"Cannot find conversation for message ID %@ (delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
+                continue;
+            }
+
             /* Fetch message from DB */
-            BaseMessage *dbmsg = [entityManager.entityFetcher ownMessageWithId: receiptMessageId];
+            BaseMessage *dbmsg = [entityManager.entityFetcher ownMessageWithId: receiptMessageId conversation:conversation];
             if (dbmsg == nil) {
                 /* This can happen if the user deletes the message before the receipt comes in */
                 DDLogError(@"Cannot find message ID %@ (delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
@@ -808,14 +815,15 @@ Process incoming message.
 
 - (void)processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
     [entityManager performAsyncBlockAndSafe:^{
+        Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:msg.groupId creator:msg.groupCreator];
+
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
-            /* Fetch message from DB */
-            Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:msg.groupId creator:msg.groupCreator];
             if (conversation == nil) {
                 DDLogWarn(@"Cannot find conversation for message ID %@ (group delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
                 continue;
             }
-            
+
+            /* Fetch message from DB */
             BaseMessage *dbmsg = [entityManager.entityFetcher messageWithId:receiptMessageId conversation:conversation];
             if (dbmsg == nil) {
                 /* This can happen if the user deletes the message before the receipt comes in */

@@ -21,9 +21,9 @@
 import SwiftUI
 
 struct CallSoundSettingsView: View {
-    @EnvironmentObject var settingsVM: SettingsStore
+    @ObservedObject var settingsVM: SettingsStore
     
-    private let soundPreviewPlayer = SoundPreviewPlayer()
+    private static let soundPreviewPlayer = SoundPreviewPlayer()
     
     private let soundList = [
         "default",
@@ -43,8 +43,11 @@ struct CallSoundSettingsView: View {
             }
         }
         .onChange(of: settingsVM.voIPSound, perform: { _ in
-            soundPreviewPlayer.playVoIPSound(voIPSoundName: settingsVM.voIPSound)
+            CallSoundSettingsView.soundPreviewPlayer.playVoIPSound(voIPSoundName: settingsVM.voIPSound)
         })
+        .onDisappear {
+            CallSoundSettingsView.soundPreviewPlayer.stopPlaying()
+        }
         .pickerStyle(.inline)
         .tint(UIColor.primary.color)
         .navigationTitle(BundleUtil.localizedString(forKey: "settings_threema_calls_call_sound"))
@@ -53,7 +56,7 @@ struct CallSoundSettingsView: View {
 
 struct CallSoundSettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        CallSoundSettingsView()
+        CallSoundSettingsView(settingsVM: SettingsStore())
             .tint(UIColor.primary.color)
             .environmentObject(SettingsStore())
     }

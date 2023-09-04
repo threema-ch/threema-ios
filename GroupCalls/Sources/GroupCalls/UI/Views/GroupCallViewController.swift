@@ -32,19 +32,19 @@ public class GroupCallViewController: UIViewController {
     private lazy var toolbar: GroupCallToolbar = {
         let toolbar = GroupCallToolbar(
             viewModel: viewModel,
-            groupCallViewControllerDelegate: self,
             dependencies: dependencies
         )
-        toolbar.translatesAutoresizingMaskIntoConstraints = false
-        
+                
         toolbar.clipsToBounds = true
+        
+        toolbar.translatesAutoresizingMaskIntoConstraints = false
         return toolbar
     }()
     
     private lazy var collectionView: GroupCallCollectionView = {
         let collectionView = GroupCallCollectionView(groupCallViewModel: viewModel)
         
-        collectionView.contentInsetAdjustmentBehavior = .never
+        collectionView.contentInsetAdjustmentBehavior = .never // TODO: (IOS-4049) Verify insets
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()
@@ -66,15 +66,12 @@ public class GroupCallViewController: UIViewController {
     public init(viewModel: GroupCallViewModel, dependencies: Dependencies) {
         self.viewModel = viewModel
         self.dependencies = dependencies
-        
+
         super.init(nibName: nil, bundle: nil)
-        
-        // TODO: Make this prettier
-        self.viewModel.viewDelegate = self
-        self.hidesBottomBarWhenPushed = true
-        
-        isModalInPresentation = true
-        modalPresentationStyle = .overFullScreen
+
+        self.viewModel.setViewDelegate(self)
+
+        configureViewController()
     }
     
     @available(*, unavailable)
@@ -84,18 +81,21 @@ public class GroupCallViewController: UIViewController {
     
     override public func viewDidLoad() {
         super.viewDidLoad()
-        setup()
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(hideOverlay(_:)))
-        collectionView.addGestureRecognizer(tapGestureRecognizer)
+        configureSubviews()
+        addGestureRecognizer()
     }
     
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        updateLayout()
+        
+        UIApplication.shared.isIdleTimerDisabled = true
+
+        updateCollectionViewLayout()
         
         viewModel.startPeriodicUIUpdatesIfNeeded()
 
+        // TODO: (IOS-4049) This is apparently also needed to get the correct layout when number of users changes
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(orientationChanged),
@@ -106,19 +106,23 @@ public class GroupCallViewController: UIViewController {
     
     override public func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        
+        UIApplication.shared.isIdleTimerDisabled = false
+
         NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
-    override public var prefersStatusBarHidden: Bool {
-        true
-    }
+    // MARK: - Configuration
     
-    public func has(_ viewModel: GroupCallViewModel) -> Bool {
-        viewModel.groupCallActor == self.viewModel.groupCallActor
-    }
-    
-    private func setup() {
+    private func configureViewController() {
+        hidesBottomBarWhenPushed = true
+        modalPresentationStyle = .overFullScreen // TODO: (IOS-4049) Whats the difference to `.fullScreen`?
         
+        // TODO: (IOS-4049) Should we adapt dark mode for all GC views?
+        // overrideUserInterfaceStyle = .dark
+    }
+    
+    private func configureSubviews() {
         view.addSubview(collectionView)
         view.addSubview(groupCallNavigationBar)
         view.addSubview(toolbar)
@@ -139,11 +143,13 @@ public class GroupCallViewController: UIViewController {
         ])
     }
     
-    @objc private func orientationChanged() {
-        // "Fixes" a bug when rotating iPhones
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
-            self.updateLayout()
-        }
+    private func addGestureRecognizer() {
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(hideOverlay(_:)))
+        collectionView.addGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    override public var prefersHomeIndicatorAutoHidden: Bool {
+        true
     }
     
     // MARK: - Private Functions
@@ -152,6 +158,13 @@ public class GroupCallViewController: UIViewController {
         if sender.state == .ended {
             toolbar.toggleVisibility()
             groupCallNavigationBar.toggleVisibility()
+        }
+    }
+    
+    @objc private func orientationChanged() {
+        // "Fixes" a bug when rotating iPhones
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
+            self.updateCollectionViewLayout()
         }
     }
 }
@@ -164,28 +177,22 @@ extension GroupCallViewController: GroupCallViewControllerDelegate {
     }
 }
 
-// MARK: - GroupCallViewProtocol
+// MARK: - GroupCallViewModelDelegate
 
-extension GroupCallViewController: GroupCallViewProtocol {
+extension GroupCallViewController: GroupCallViewModelDelegate {
     func updateNavigationContent(_ contentUpdate: GroupCallNavigationBarContentUpdate) async {
         groupCallNavigationBar.updateContent(contentUpdate)
     }
 
-    @MainActor
-    func updateLayout() {
-        collectionView.updateLayout()
+    func updateCollectionViewLayout() {
+        Task { @MainActor in
+            collectionView.updateLayout()
+        }
     }
     
-    @MainActor
-    func close() async {
-        // TODO: This needs to handle global group call views
-        await withCheckedContinuation { continuation in
-            self.dismiss(animated: true) { [self] in
-                if navigationController?.topViewController is GroupCallViewController {
-                    navigationController?.popViewController(animated: true)
-                }
-                continuation.resume()
-            }
+    func dismissGroupCallView() {
+        Task { @MainActor in
+            self.dismiss(animated: true)
         }
     }
 }

@@ -25,14 +25,14 @@ import WebRTC
 
 public final class GroupCallViewModel: Sendable {
     
+    typealias DataSource = GroupCallCollectionViewDataSource
+    typealias Snapshot = NSDiffableDataSourceSnapshot<DataSource.Section, ParticipantID>
+    
     // MARK: - Public Properties
 
     weak var groupCallActor: GroupCallActor?
     
-    @Published var snapshotPublisher = NSDiffableDataSourceSnapshot<
-        GroupCallCollectionViewDataSource.Section,
-        ParticipantID
-    >()
+    @Published var snapshotPublisher = Snapshot()
 
     public let buttonBannerObserver = AsyncStreamContinuationToSharedPublisher<GroupCallButtonBannerState>()
 
@@ -40,7 +40,7 @@ public final class GroupCallViewModel: Sendable {
         didSet {
             toolBarDelegate?.updateToggleAudioButton()
 
-            guard !endCallPressed else {
+            guard !isLeavingCall else {
                 return
             }
             
@@ -61,7 +61,7 @@ public final class GroupCallViewModel: Sendable {
         didSet {
             toolBarDelegate?.updateToggleVideoButton()
             
-            guard !endCallPressed else {
+            guard !isLeavingCall else {
                 return
             }
             
@@ -77,30 +77,23 @@ public final class GroupCallViewModel: Sendable {
             }
         }
     }
-    
-    var isOnScreenVisible: Bool {
-        viewDelegate != nil
-    }
-    
-    weak var viewDelegate: GroupCallViewProtocol?
-    weak var toolBarDelegate: GroupCallToolbarDelegate?
-    
+        
     // MARK: - Private Properties
 
-    fileprivate typealias Snapshot = NSDiffableDataSourceSnapshot<
-        GroupCallCollectionViewDataSource.Section,
-        ParticipantID
-    >
-
-    fileprivate var participantsList = [ViewModelParticipant]()
+    private var participantsList = [ViewModelParticipant]()
     
     private let bannerAndButtonQueue: AsyncStream<GroupCallUIEvent>
     private let bannerAndButtonContinuation: AsyncStream<GroupCallUIEvent>.Continuation
     
-    var periodicUIUpdateTask: Task<Void, Never>?
+    private var periodicUIRefreshTask: Task<Void, Never>?
+    
+    private weak var viewDelegate: GroupCallViewModelDelegate?
+    private weak var toolBarDelegate: GroupCallToolbarDelegate?
     
     private var localParticipant: ViewModelParticipant? = nil
-    private var endCallPressed = false
+    
+    /// True as soon as End-Call Button was pressed
+    private var isLeavingCall = false
     
     // MARK: - Lifecycle
 
@@ -108,9 +101,7 @@ public final class GroupCallViewModel: Sendable {
         self.groupCallActor = groupCallActor
         
         (self.bannerAndButtonQueue, self.bannerAndButtonContinuation) = AsyncStream<GroupCallUIEvent>.makeStream()
-        DDLogNotice(
-            "[GroupCall] [GroupCallUI] Created view model with address \(Unmanaged.passUnretained(self).toOpaque())"
-        )
+        DDLogNotice("[GroupCall] Created view model with address \(Unmanaged.passUnretained(self).toOpaque())")
         
         subscribeToEvents()
     }
@@ -119,7 +110,17 @@ public final class GroupCallViewModel: Sendable {
         bannerAndButtonContinuation.finish()
     }
     
-    // MARK: - Public Functions
+    // MARK: - Public setter
+    
+    func setToolBarDelegate(_ delegate: GroupCallToolbarDelegate) {
+        toolBarDelegate = delegate
+    }
+    
+    func setViewDelegate(_ delegate: GroupCallViewModelDelegate) {
+        viewDelegate = delegate
+    }
+    
+    // MARK: - Public functions
 
     public func getCallStartDate() async -> Date? {
         await groupCallActor?.approximateCallStartDateUI
@@ -129,14 +130,14 @@ public final class GroupCallViewModel: Sendable {
         participantsList.first { $0.id == id }
     }
 
-    func getNumberOfParticipants() -> Int {
+    var numberOfParticipants: Int {
         participantsList.count
     }
     
-    // MARK: - ToolBar Button Actions
+    // MARK: - ToolBar button actions
     
-    public func endCall() {
-        endCallPressed = true
+    func endCall() {
+        isLeavingCall = true
         Task {
             guard let groupCallActor else {
                 await self.leaveConfirmed()
@@ -185,11 +186,9 @@ public final class GroupCallViewModel: Sendable {
     // MARK: - Private Functions
 
     private func subscribeToEvents() {
+        // TODO: (IOS-4047) Is `detached` what we want here?
         Task.detached { [weak self] in
-            guard let self else {
-                return
-            }
-            guard let groupCallActor = self.groupCallActor else {
+            guard let self, let groupCallActor = self.groupCallActor else {
                 return
             }
             
@@ -221,23 +220,22 @@ public final class GroupCallViewModel: Sendable {
             startPeriodicUIUpdatesIfNeeded()
             yieldButtonBannerState()
             await groupCallActor?.connectedConfirmed()
+        
+        case let .callStateChanged(showButton):
+            buttonBannerObserver.stateContinuation.yield(showButton)
             
         case let .add(newParticipant):
             DDLogNotice("[GroupCall] [GroupCallUI] Add participant \(newParticipant.id)")
             await add(newParticipant)
-            await viewDelegate?.updateLayout()
+            viewDelegate?.updateCollectionViewLayout()
             yieldButtonBannerState()
             
         case let .remove(participantID):
             DDLogNotice("[GroupCall] [GroupCallUI] Remove participant \(participantID)")
             await remove(participantID)
-            await viewDelegate?.updateLayout()
+            viewDelegate?.updateCollectionViewLayout()
             yieldButtonBannerState()
-            
-        case .reload:
-            await publishSnapshot()
-            yieldButtonBannerState()
-            
+        
         case let .participantStateChange(participant, change):
             DDLogNotice("[GroupCall] Reconfigure participant \(participant.id)")
             
@@ -245,17 +243,6 @@ public final class GroupCallViewModel: Sendable {
             
             await publishSnapshot(reconfigure: [participant])
             yieldButtonBannerState()
-
-        case .leaveConfirmed:
-            await leaveConfirmed()
-            yieldButtonBannerState()
-            await groupCallActor?.callStopSignalContinuation?.finish()
-            
-        case let .stateChanged(showButton):
-            buttonBannerObserver.stateContinuation.yield(showButton)
-            
-        case .pop:
-            await viewDelegate?.close()
             
         case let .addLocalParticipant(localParticipant):
             self.localParticipant = localParticipant
@@ -263,20 +250,35 @@ public final class GroupCallViewModel: Sendable {
             yieldButtonBannerState()
             
         case let .audioMuteChange(state):
+            // TODO: Check if local participant exists
             ownAudioMuteState = state
             localParticipant?.audioMuteState = state == .muted ? .muted : .unmuted
             await publishSnapshot(reconfigure: [localParticipant!.id])
            
         case let .videoMuteChange(state):
+            // TODO: Check if local participant exists
             ownVideoMuteState = state
             localParticipant?.videoMuteState = state == .muted ? .muted : .unmuted
             await publishSnapshot(reconfigure: [localParticipant!.id])
+
+        case let .videoCameraChange(position):
+            localParticipant?.localParticipant?.localCameraPosition = position
+            await publishSnapshot(reconfigure: [localParticipant!.id])
+            
+        case .leaveConfirmed:
+            await leaveConfirmed()
+            yieldButtonBannerState()
+            await groupCallActor?.callStopSignalContinuation?.finish()
+            
+        case .pop:
+            await viewDelegate?.dismissGroupCallView()
         }
     }
     
     private func yieldButtonBannerState() {
         Task.detached { [self] in
             guard let groupCallActor else {
+                buttonBannerObserver.stateContinuation.yield(.hidden)
                 return
             }
             
@@ -290,24 +292,18 @@ public final class GroupCallViewModel: Sendable {
         }
     }
     
-    func addMyself(videoTrack: RTCVideoTrack) { }
-    
-    func pop() async {
-        await viewDelegate?.close()
-    }
-    
     private func updateNavigationBar(for event: GroupCallUIEvent) async {
         var title: String?
         switch event {
         case .joining:
             title = groupCallActor?.dependencies.groupCallBundleUtil
-                .localizedGCString(for: "group_call_navbar_state_joining")
+                .localizedString(for: "group_call_navbar_state_joining")
         case .connecting:
             title = groupCallActor?.dependencies.groupCallBundleUtil
-                .localizedGCString(for: "group_call_navbar_state_connecting")
+                .localizedString(for: "group_call_navbar_state_connecting")
         case .connected:
             title = groupCallActor?.dependencies.groupCallBundleUtil
-                .localizedGCString(for: "group_call_navbar_state_connected")
+                .localizedString(for: "group_call_navbar_state_connected")
         default:
             break
         }
@@ -333,7 +329,7 @@ public final class GroupCallViewModel: Sendable {
     
     private func handleMuteStateChange(for participant: ParticipantID, change: ParticipantStateChange) {
         
-        guard var participant = participantsList.first(where: { $0.id == participant }) else {
+        guard let participant = participantsList.first(where: { $0.id == participant }) else {
             DDLogNotice("[ViewModel] \(#function)")
             return
         }
@@ -351,20 +347,18 @@ public final class GroupCallViewModel: Sendable {
         DDLogNotice("[ViewModel] \(#function)")
         var newSnapshot = Snapshot()
         newSnapshot.appendSections([.main])
-        newSnapshot.appendItems(participantsList.map(\.id), toSection: .main)
+        newSnapshot.appendItems(participantsList.map(\.id))
         newSnapshot.reconfigureItems(reconfigure)
         
         snapshotPublisher = newSnapshot
     }
-}
 
-// MARK: - GroupCallCellModelProtocol
-
-extension GroupCallViewModel: GroupCallCellModelProtocol {
-    func rendererView(for participantID: ParticipantID, rendererView: RTCMTLVideoView) async -> Bool {
+    // MARK: - Cell Updates
+    
+    func addRendererView(for participantID: ParticipantID, rendererView: RTCMTLVideoView) async {
         guard let participant = participantsList.first(where: { $0.id == participantID }) else {
             DDLogNotice("[GroupCall] [Renderer] Could not get participant")
-            return false
+            return
         }
         
         var track: RTCVideoTrack?
@@ -378,17 +372,15 @@ extension GroupCallViewModel: GroupCallCellModelProtocol {
         
         guard let track else {
             DDLogNotice("[GroupCall] [Renderer] Could not get track")
-            return false
+            return
         }
         
         track.isEnabled = true
         track.add(rendererView)
         DDLogNotice("[GroupCall] [Renderer] Added renderer to track")
-        
-        return true
     }
     
-    func remove(for participantID: ParticipantID, rendererView: RTCMTLVideoView) async {
+    func removeRendererView(for participantID: ParticipantID, rendererView: RTCMTLVideoView) async {
         
         // Local Participant
         if participantID == localParticipant?.id, let track = await groupCallActor?.localContext() {
@@ -409,34 +401,22 @@ extension GroupCallViewModel: GroupCallCellModelProtocol {
     func subscribeVideo(for participant: ParticipantID) async {
         await groupCallActor?.subscribeVideo(for: participant)
     }
-    
-    func unsubscribeAudio(for participant: ParticipantID) { }
-    
-    func subscribeAudio(for participant: ParticipantID) { }
-    
-    func muteAudio() { }
-    
-    func unmuteAudio() { }
-    
-    func muteVideo() { }
-    
-    func unmuteVideo() { }
 }
 
-// MARK: Periodic Callbacks
+// MARK: - Periodic Callbacks
 
 extension GroupCallViewModel {
     func startPeriodicUIUpdatesIfNeeded() {
-        guard periodicUIUpdateTask == nil else {
+        guard periodicUIRefreshTask == nil else {
             return
         }
         
-        periodicUIUpdateTask = Task.detached { [weak self] in
-            let up = {
+        periodicUIRefreshTask = Task.detached { [weak self] in
+            let refresh = {
                 
                 guard let viewDelegate = self?.viewDelegate else {
-                    self?.periodicUIUpdateTask?.cancel()
-                    self?.periodicUIUpdateTask = nil
+                    self?.periodicUIRefreshTask?.cancel()
+                    self?.periodicUIRefreshTask = nil
                     return
                 }
                 
@@ -444,11 +424,11 @@ extension GroupCallViewModel {
                     return
                 }
                 
-                guard let numberOfParticipants = self?.getNumberOfParticipants() else {
+                guard let numberOfParticipants = self?.numberOfParticipants else {
                     return
                 }
                 
-                let diff = Int(Date().timeIntervalSince(startDate))
+                let diff = Date().timeIntervalSince(startDate)
                 let timeString = self?.groupCallActor?.dependencies.groupCallDateFormatter.timeFormatted(diff)
                 
                 let update = GroupCallNavigationBarContentUpdate(
@@ -460,16 +440,10 @@ extension GroupCallViewModel {
             }
             
             while !Task.isCancelled {
-                if #available(iOS 16.0, *) {
-                    try? await Task.sleep(for: .seconds(1))
-                }
-                else {
-                    // Fallback on earlier versions
-                    try? await Task.sleep(nanoseconds: 1 * 1000 * 1000 * 1000)
-                }
-                
                 DDLogNotice("[GroupCall] Update NavigationBar")
-                await up()
+                await refresh()
+                
+                try? await Task.sleep(seconds: 1)
             }
         }
     }
@@ -481,7 +455,10 @@ extension GroupCallViewModel {
         ownAudioMuteState = .muted
         ownVideoMuteState = .muted
         
+        periodicUIRefreshTask?.cancel()
+        periodicUIRefreshTask = nil // Otherwise the update task will not be recreated the next time
+        
         await publishSnapshot()
-        await viewDelegate?.close()
+        await viewDelegate?.dismissGroupCallView()
     }
 }

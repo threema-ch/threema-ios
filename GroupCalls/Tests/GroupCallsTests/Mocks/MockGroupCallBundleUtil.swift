@@ -19,10 +19,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import UIKit
 @testable import GroupCalls
 
 final class MockGroupCallBundleUtil: GroupCallBundleUtilProtocol {
-    func localizedGCString(for key: String) -> String {
+    func image(named: String) -> UIImage {
+        UIImage(systemName: "questionmark.square.dashed")!
+    }
+    
+    func localizedString(for key: String) -> String {
         ""
     }
 }

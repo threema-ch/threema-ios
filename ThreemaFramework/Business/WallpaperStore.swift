@@ -132,7 +132,9 @@ public class WallpaperStore {
     }
     
     public func defaultIsThreemaWallpaper() -> Bool {
-        UserSettings.shared().wallpaper == MediaConverter.pngRepresentation(for: defaultWallPaper)
+        // Check the default background for light and dark theme
+        UserSettings.shared().wallpaper == MediaConverter.pngRepresentation(for: defaultWallPaperDark()) ||
+            UserSettings.shared().wallpaper == MediaConverter.pngRepresentation(for: defaultWallPaperLight())
     }
     
     public func defaultIsEmptyWallpaper() -> Bool {
@@ -156,5 +158,15 @@ public class WallpaperStore {
         let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).map(\.path)[0]
         let docURL = URL(fileURLWithPath: documentsDir)
         return FileUtility.getUniqueFilename(from: Constants.wallpaperKey, directoryURL: docURL, pathExtension: nil)
+    }
+    
+    private func defaultWallPaperDark() -> UIImage {
+        BundleUtil.imageNamed("ChatBackground")!
+            .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .dark))
+    }
+    
+    private func defaultWallPaperLight() -> UIImage {
+        BundleUtil.imageNamed("ChatBackground")!
+            .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .light))
     }
 }

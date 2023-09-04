@@ -46,15 +46,22 @@ import Foundation
 
     @objc let messageID: Data
     private let messageType: String
+    // Is nil if is a group message
+    let receiverIdentity: ThreemaIdentity?
 
     private enum CodingKeys: String, CodingKey {
-        case messageID
-        case messageType
+        case messageID, messageType, receiverIdentity
     }
 
-    @objc init(message: BaseMessage, group: Group?, sendContactProfilePicture: Bool) {
+    @objc init(
+        message: BaseMessage,
+        receiverIdentity: ThreemaIdentity?,
+        group: Group?,
+        sendContactProfilePicture: Bool
+    ) {
         self.messageID = message.id
         self.messageType = "\(type(of: message))"
+        self.receiverIdentity = receiverIdentity
         super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
     }
 
@@ -63,6 +70,7 @@ import Foundation
 
         self.messageID = try container.decode(Data.self, forKey: .messageID)
         self.messageType = try container.decode(String.self, forKey: .messageType)
+        self.receiverIdentity = try container.decode(String?.self, forKey: .receiverIdentity)
 
         let superdecoder = try container.superDecoder()
         try super.init(from: superdecoder)
@@ -72,6 +80,7 @@ import Foundation
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(messageID, forKey: .messageID)
         try container.encode(messageType, forKey: .messageType)
+        try container.encode(receiverIdentity, forKey: .receiverIdentity)
 
         let superencoder = container.superEncoder()
         try super.encode(to: superencoder)

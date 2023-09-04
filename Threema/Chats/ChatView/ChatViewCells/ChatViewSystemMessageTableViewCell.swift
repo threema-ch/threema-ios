@@ -87,10 +87,6 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     override func configureCell() {
         super.configureCell()
         
-        if UserSettings.shared().flippedTableView {
-            transform = CGAffineTransform(scaleX: 1, y: -1)
-        }
-        
         backgroundConfiguration = UIBackgroundConfiguration.clear()
         
         // Layout
@@ -153,16 +149,14 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         
         // Adjust insets depending on the neighbors
         
-        if UserSettings.shared()
-            .flippedTableView ? shouldGroupWithNextSystemMessage : shouldGroupWithPreviousSystemMessage {
+        if shouldGroupWithPreviousSystemMessage {
             topSpacingConstraint.constant = ChatViewConfiguration.SystemMessage.groupedDefaultTopBottomInset
         }
         else {
             topSpacingConstraint.constant = ChatViewConfiguration.SystemMessage.defaultTopBottomInset
         }
         
-        if UserSettings.shared()
-            .flippedTableView ? shouldGroupWithPreviousSystemMessage : shouldGroupWithNextSystemMessage {
+        if shouldGroupWithNextSystemMessage {
             bottomSpacingConstraint.constant = -ChatViewConfiguration.SystemMessage.groupedDefaultTopBottomInset
         }
         else {

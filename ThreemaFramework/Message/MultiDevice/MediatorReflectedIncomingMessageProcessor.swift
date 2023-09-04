@@ -560,7 +560,7 @@ class MediatorReflectedIncomingMessageProcessor {
         incomingMessage imsg: D2d_IncomingMessage,
         groupCallStartMessage amsg: GroupCallStartMessage
     ) throws -> Promise<Void> {
-        guard ThreemaEnvironment.groupCalls else {
+        guard ThreemaEnvironment.groupCalls, BusinessInjector().settingsStore.enableThreemaGroupCalls else {
             throw MediatorReflectedProcessorError
                 .messageWontProcessed(message: "[GroupCall] GroupCalls are not yet enabled. Skip.")
         }

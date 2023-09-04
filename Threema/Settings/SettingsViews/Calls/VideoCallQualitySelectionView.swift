@@ -21,7 +21,7 @@
 import SwiftUI
 
 struct VideoCallQualitySelectionView: View {
-    @EnvironmentObject var settingsVM: SettingsStore
+    @ObservedObject var settingsVM: SettingsStore
     
     private let videoQualitySettings: [ThreemaVideoCallQualitySetting] = [
         ThreemaVideoCallQualitySettingAuto,
@@ -31,21 +31,28 @@ struct VideoCallQualitySelectionView: View {
     
     var body: some View {
         List {
-            Picker("", selection: $settingsVM.threemaVideoCallQualitySetting) {
-                ForEach(videoQualitySettings, id: \.self) { qualitySettingItem in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(CallsignalingProtocol.threemaVideoCallQualitySettingTitle(for: qualitySettingItem))
+            Section {
+                Picker(selection: $settingsVM.threemaVideoCallQualitySetting) {
+                    ForEach(videoQualitySettings, id: \.self) { qualitySettingItem in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(CallsignalingProtocol.threemaVideoCallQualitySettingTitle(for: qualitySettingItem))
                             
-                        Text(CallsignalingProtocol.threemaVideoCallQualitySettingSubtitle(for: qualitySettingItem))
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
+                            Text(CallsignalingProtocol.threemaVideoCallQualitySettingSubtitle(for: qualitySettingItem))
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
                     }
+                } label: {
+                    EmptyView()
                 }
+                
+            } footer: {
+                Text(BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_footer"))
             }
         }
         .pickerStyle(.inline)
         .tint(UIColor.primary.color)
-        .navigationTitle(BundleUtil.localizedString(forKey: "settings_threema_calls_call_sound"))
+        .navigationTitle(BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile"))
     }
 }
 
@@ -55,7 +62,6 @@ extension ThreemaVideoCallQualitySetting: Hashable { }
 
 struct VideoCallQualitySelectionView_Previews: PreviewProvider {
     static var previews: some View {
-        VideoCallQualitySelectionView()
-            .environmentObject(SettingsStore())
+        VideoCallQualitySelectionView(settingsVM: SettingsStore())
     }
 }

@@ -32,6 +32,15 @@ extension Colors {
         }
     }
     
+    public class func backgroundChatLines(colorTheme: Theme) -> UIColor {
+        switch colorTheme {
+        case .light, .undefined:
+            return Asset.SharedColors.gray500.color
+        case .dark:
+            return Asset.SharedColors.gray450.color
+        }
+    }
+    
     public class var chatBubbleReceived: UIColor {
         switch theme {
         case .light, .undefined:

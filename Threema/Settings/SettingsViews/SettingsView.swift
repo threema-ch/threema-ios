@@ -121,7 +121,7 @@ struct SettingsView: View {
                 
                 Section {
                     NavigationLink {
-                        CallSettingsView()
+                        CallSettingsView(settingsVM: settingsStore)
                     } label: {
                         SettingsListView(
                             cellTitle: BundleUtil.localizedString(forKey: "settings_threema_calls"),
@@ -273,6 +273,6 @@ struct PasscodeViewControllerRepresentable: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
     
     func makeUIViewController(context: Context) -> some UIViewController {
-        KKPasscodeSettingsViewController(style: .grouped)
+        KKPasscodeSettingsViewController(style: .insetGrouped)
     }
 }

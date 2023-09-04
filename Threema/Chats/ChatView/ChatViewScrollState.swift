@@ -22,7 +22,6 @@ import Foundation
 
 /// Contains the scroll state that should be persisted between `willApplySnapshot(currentDoesIncludeNewestMessage:)` and
 /// `didApplySnapshot(delegateScrollCompletion:)` of the table view in the ChatViewController
-/// It is currently only used to correctly calculate the contentOffset when the table view is in flipped mode
 ///
 /// In the future this could also contain variables like `isApplyingSnapshot`, `isDragging` etc.
 struct ChatViewScrollState {

@@ -37,7 +37,7 @@ public final actor GroupCallManager {
     // MARK: - Nested Types
     
     public enum GroupCallManagerError: Error {
-        case CannotJoinAlreadyInACall
+        case cannotJoinAlreadyInACall
     }
     
     fileprivate enum PeriodicRefreshResult {
@@ -274,7 +274,7 @@ public final actor GroupCallManager {
         guard try await (getCurrentlyChosenCall(in: group, from: Set(thisGroupCurrentlyRunningGroupCalls))) == nil
         else {
             DDLogError("[GroupCall] There are currently other calls considered to be running in this group")
-            throw GroupCallManagerError.CannotJoinAlreadyInACall
+            throw GroupCallManagerError.cannotJoinAlreadyInACall
         }
         
         let actor = try GroupCallActor(
@@ -423,9 +423,9 @@ extension GroupCallManager {
                 /// remove call from calls, log a warning that a group call with an unsupported version is currently
                 /// running and abort the peek-call sub-steps.
                 
-                if currentlyRunningGroupCall.protocolVersion > ProtocolDefines.PROTOCOL_VERSION {
+                if currentlyRunningGroupCall.protocolVersion > ProtocolDefines.protocolVersion {
                     DDLogWarn(
-                        "[GroupCall] Protocol version of currently running group call (\(currentlyRunningGroupCall.protocolVersion)) is not the same as supported version (\(ProtocolDefines.PROTOCOL_VERSION))."
+                        "[GroupCall] Protocol version of currently running group call (\(currentlyRunningGroupCall.protocolVersion)) is not the same as supported version (\(ProtocolDefines.protocolVersion))."
                     )
                     await remove(currentlyRunningGroupCall)
                 }

@@ -120,37 +120,6 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         chatBubbleBackgroundView.backgroundPath
     }
     
-    /// Should the cell be flipped?
-    ///
-    /// This allows to override the flipping behavior if needed
-    var flipped = UserSettings.shared().flippedTableView {
-        didSet {
-            transform = customIdentityTransform
-        }
-    }
-    
-    var customIdentityTransform: CGAffineTransform {
-        guard flipped else {
-            return .identity
-        }
-        return CGAffineTransform(scaleX: 1, y: -1)
-    }
-    
-    override var transform: CGAffineTransform {
-        didSet {
-            // Verify that we did not accidentally undo our transform
-            // TODO: IOS-3389 Undo this check
-            
-            assert((flipped && transform.d == -1) || (!flipped && transform.d == 1))
-            
-            if ChatViewConfiguration.strictMode {
-                if flipped, transform.d != -1 {
-                    fatalError("Our transform is wrong.")
-                }
-            }
-        }
-    }
-    
     /// Top spacing constraint
     ///
     /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be
@@ -325,10 +294,6 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     override func configureCell() {
         super.configureCell()
         
-        if flipped {
-            transform = customIdentityTransform
-        }
-        
         configureBackgrounds()
         configureViewsAndLayout()
         
@@ -474,18 +439,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     // MARK: - Update
-    
-    override func prepareForReuse() {
-        super.prepareForReuse()
         
-        assert((flipped && transform.d == -1) || (!flipped && transform.d == 1))
-        
-        if transform.d != -1, flipped {
-            DDLogWarn("Transform is incorrect. We have \(transform) but flipped is \(flipped)")
-            transform = customIdentityTransform
-        }
-    }
-    
     override func updateColors() {
         super.updateColors()
         
@@ -623,7 +577,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         setUpdatedInsets(isGroup: isGroup)
         
         // Bubble arrow
-        if UserSettings.shared().flippedTableView ? shouldGroupWithPreviousMessage : shouldGroupWithNextMessage {
+        if shouldGroupWithNextMessage {
             chatBubbleBackgroundView.showChatBubbleArrow = .none
         }
         else {
@@ -647,7 +601,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         setUpdatedInsets(isGroup: isGroup)
         
         // Bubble arrow
-        if UserSettings.shared().flippedTableView ? shouldGroupWithPreviousMessage : shouldGroupWithNextMessage {
+        if shouldGroupWithNextMessage {
             chatBubbleBackgroundView.showChatBubbleArrow = .none
         }
         else {
@@ -659,7 +613,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // See workaround above for details about why the insets are set this way
         
         // Top insets: Add everything needed expect in certain cases
-        if UserSettings.shared().flippedTableView ? shouldUseDefaultBottomInset : shouldUseDefaultTopInset {
+        if shouldUseDefaultTopInset {
             if isGroup {
                 bubbleTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
             }
@@ -667,7 +621,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 bubbleTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.defaultTopBottomInset
             }
         }
-        else if UserSettings.shared().flippedTableView ? shouldGroupWithNextMessage : shouldGroupWithPreviousMessage {
+        else if shouldGroupWithPreviousMessage {
             bubbleTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.groupedTopBottomInset
         }
         else {
@@ -685,7 +639,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // Bottom insets: Normally set to the minimum we always have. Some cells may indicate that the default bottom
         // inset should be used
-        if UserSettings.shared().flippedTableView ? shouldUseDefaultTopInset : shouldUseDefaultBottomInset {
+        if shouldUseDefaultBottomInset {
             if isGroup {
                 bubbleBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
             }
@@ -699,7 +653,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // Date and state
         if ChatViewConfiguration.CellGrouping.enableDateAndStateGrouping {
-            if UserSettings.shared().flippedTableView ? shouldGroupWithPreviousMessage : shouldGroupWithNextMessage {
+            if shouldGroupWithNextMessage {
                 shouldShowDateAndState = !nextMessageHasSameDateAndState
             }
             else {
@@ -728,7 +682,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // constraints for avatars
         
         // Name label on first message
-        if !(UserSettings.shared().flippedTableView ? shouldGroupWithNextMessage : shouldGroupWithPreviousMessage) {
+        if !shouldGroupWithPreviousMessage {
             nameLabel.text = messageAndNeighbors.message?.sender?.displayName
             updateNameLabelColor()
             showNameLabel()
@@ -738,7 +692,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         }
         
         // Avatar on last message
-        if !(UserSettings.shared().flippedTableView ? shouldGroupWithPreviousMessage : shouldGroupWithNextMessage) {
+        if !shouldGroupWithNextMessage {
             updateAvatar()
             avatarImageView.isHidden = false
         }
@@ -815,51 +769,12 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func retryOrCancel() {
-        
+    
         guard let message = messageAndNeighbors.message else {
             return
         }
-        
-        // If it is not a message of type BlobData, we simply resend
-        guard let fileMessage = message as? BlobData else {
-            chatViewTableViewCellDelegate?.resendMessage(withID: message.objectID)
-            return
-        }
-                
-        switch fileMessage.blobDisplayState {
-
-        case .pending:
-            Task {
-                await BlobManager.shared.syncBlobs(for: message.objectID)
-            }
-        case .sendingError:
-            // If a message could not be sent we might only have missed the ack from the chat server
-            // If this is the case a message with the same message ID as the previously sent one will be rejected
-            // This also applied to messages that have been rejected by the receiver due to missing or incorrect session
-            // state
-            let businessInjector = BusinessInjector()
-            guard let message = businessInjector.entityManager.performAndWait({
-                let fetchedMessage = businessInjector.entityManager.entityFetcher
-                    .existingObject(with: message.objectID) as? BaseMessage
-                fetchedMessage?.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
-                return fetchedMessage
-            })
-            else {
-                DDLogError("Message to be re-sent could not be loaded.")
-                return
-            }
-            
-            Task {
-                await BlobManager.shared.syncBlobs(for: message.objectID)
-            }
-        case .uploading:
-            Task {
-                await BlobManager.shared.cancelBlobsSync(for: message.objectID)
-            }
-        default:
-            assertionFailure("RetryAndCancelButton should not have been visible")
-            DDLogError("RetryAndCancelButton button should not have been visible")
-        }
+    
+        chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID)
     }
 
     // MARK: - Neighboring helpers
@@ -925,8 +840,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     private var nextMessageHasSameDateAndState: Bool {
         guard let message = messageAndNeighbors.message,
-              let nextMessage = UserSettings.shared().flippedTableView ? messageAndNeighbors.neighbors?
-              .previousMessage : messageAndNeighbors.neighbors?.nextMessage else {
+              let nextMessage = messageAndNeighbors.neighbors?.nextMessage else {
             return false
         }
         

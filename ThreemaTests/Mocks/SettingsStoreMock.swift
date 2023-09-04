@@ -77,6 +77,8 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     var threemaVideoCallQualitySetting = ThreemaVideoCallQualitySetting(2)
     
     var voIPSound = "Test Sound"
+    
+    var enableThreemaGroupCalls = true
 
     var isMultiDeviceRegistered = false
     

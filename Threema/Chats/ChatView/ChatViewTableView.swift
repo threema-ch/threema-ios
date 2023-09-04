@@ -40,38 +40,21 @@ class ChatViewTableView: DebugTableView {
     var lockContentOffset = false {
         didSet {
             assert(Thread.isMainThread)
-            assert(ChatViewConfiguration.ScrollBehavior.overrideDefaultTableViewBehavior)
         }
     }
     
     /// We override `contentOffset` and allow users to lock the value to something specific
     /// This is used to make sure that `UITableView` internals don't set the `contentOffset` to something weird
     /// before we didn't run `didApplySnapshot(delegateScrollCompletion:)` and updates
-    override var contentOffset: CGPoint {
-        set {
-            guard ChatViewConfiguration.ScrollBehavior.overrideDefaultTableViewBehavior else {
-                super.contentOffset = newValue
-                return
-            }
-            
-            guard !lockContentOffset else {
-                DDLogVerbose(
-                    "contentOffset is locked to \(contentOffset) don't update to suggested value \(contentOffset)"
-                )
-                return
-            }
-            
-            internalContentOffset = newValue
-            super.contentOffset = internalContentOffset
-        }
-        get {
-            guard ChatViewConfiguration.ScrollBehavior.overrideDefaultTableViewBehavior else {
-                return super.contentOffset
-            }
-            
-            return internalContentOffset
-        }
-    }
+    // This lead to crashes in iOS17 Beta 5
+//    override var contentOffset: CGPoint {
+//        set {
+//            super.contentOffset = newValue
+//        }
+//        get {
+//            super.contentOffset
+//        }
+//    }
     
     override func didMoveToWindow() {
         super.didMoveToWindow()

@@ -40,14 +40,10 @@ let package = Package(
             
             swiftSettings: [
                 .unsafeFlags([
-                    "-Xfrontend",
-                    "-warn-concurrency",
-                    "-Xfrontend",
-                    "-enable-actor-data-race-checks",
-                    "-Xfrontend",
-                    "-warn-long-function-bodies=100",
-                    "-Xfrontend",
-                    "-warn-long-expression-type-checking=100",
+                    "-Xfrontend", "-warn-concurrency",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    "-Xfrontend", "-warn-long-function-bodies=100",
+                    "-Xfrontend", "-warn-long-expression-type-checking=100",
                 ]),
             ]
         ),

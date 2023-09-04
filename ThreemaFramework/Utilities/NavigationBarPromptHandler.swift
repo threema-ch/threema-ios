@@ -68,7 +68,12 @@ import GroupCalls
         }
         
         if isGroupCallActive {
-            return name
+            if let name {
+                return "\(BundleUtil.localizedString(forKey: "group_call_title")): \(name)"
+            }
+            else {
+                return BundleUtil.localizedString(forKey: "group_call_title")
+            }
         }
         
         if isWebActive {

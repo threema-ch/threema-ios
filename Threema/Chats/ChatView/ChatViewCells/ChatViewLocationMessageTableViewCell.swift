@@ -179,15 +179,20 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
         
         if let poiName = locationMessage?.poiName {
             messageTextView.text = poiName
+            messageTextView.isHidden = false
         }
-        
-        messageTextView.isHidden = messageTextView.text.isEmpty
+        else {
+            messageTextView.text = ""
+            messageTextView.isHidden = true
+        }
+                
         if let poiAddress = locationMessage?.poiAddress {
             messageSecondaryTextLabel.text = poiAddress
         }
         else {
             messageSecondaryTextLabel.text = locationMessage?.formattedCoordinates
         }
+        
         messageDateAndStateView.message = locationMessage
     }
 }

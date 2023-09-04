@@ -391,14 +391,14 @@ extension SettingsViewController {
                 lockScreen.presentLockScreenView(
                     viewController: self,
                     enteredCorrectly: {
-                        let vc = KKPasscodeSettingsViewController(style: .grouped)
+                        let vc = KKPasscodeSettingsViewController(style: .insetGrouped)
                         vc.delegate = self
                         self.navigationController?.pushViewController(vc, animated: true)
                     }
                 )
             }
             else {
-                let vc = KKPasscodeSettingsViewController(style: .grouped)
+                let vc = KKPasscodeSettingsViewController(style: .insetGrouped)
                 vc.delegate = self
                 navigationController?.pushViewController(vc, animated: true)
             }
@@ -453,12 +453,20 @@ extension SettingsViewController {
             navigationController?.pushViewController(vc, animated: true)
         }
         else if indexPath.section == 1, indexPath.row == 6 {
-            let vc = KKPasscodeSettingsViewController(style: .grouped)
+            let vc = KKPasscodeSettingsViewController(style: .insetGrouped)
             vc.delegate = self
             navigationController?.pushViewController(vc, animated: true)
         }
         else if indexPath.section == 1, indexPath.row == 5 {
             let vc = StorageManagementViewController()
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        else if indexPath.section == 2, indexPath.row == 0 {
+            let vc = UIHostingController(rootView: CallSettingsView(
+                settingsVM: BusinessInjector()
+                    .settingsStore as! SettingsStore
+            ))
+            vc.navigationItem.largeTitleDisplayMode = .never
             navigationController?.pushViewController(vc, animated: true)
         }
         else if indexPath.section == 5, indexPath.row == 0 {

@@ -262,10 +262,10 @@ extension ConnectionContext {
             guard !dependencies.userSettings.ipv6Enabled else {
                 return true
             }
-            return address.protocolVersion == .IPv4
+            return address.protocolVersion == .ipv4
         }.map { address in
              
-            let ipType = address.protocolVersion == .IPv4 ? "1" : "2"
+            let ipType = address.protocolVersion == .ipv4 ? "1" : "2"
             let sdp = "candidate:\(0) 1 udp \(ipType) \(address.ip) \(address.port) typ host"
              
             let candidate = RTCIceCandidate(sdp: sdp, sdpMLineIndex: 0, sdpMid: nil)
@@ -648,6 +648,9 @@ extension ConnectionContext {
         let audioTrack = PeerConnectionContext.peerConnectionFactory.audioTrack(with: audioSource, trackId: "gcAudio0")
         // swiftformat:enable acronyms
         
+        // TODO: IOS-3877 auto mute after 3 participants
+        audioTrack.isEnabled = false
+        
         return audioTrack
     }
     
@@ -665,6 +668,7 @@ extension ConnectionContext {
         let videoTrack = PeerConnectionContext.peerConnectionFactory.videoTrack(with: videoSource, trackId: "gcVideo0")
         // swiftformat:enable acronyms
         
+        videoTrack.isEnabled = false
         return videoTrack
     }
 }

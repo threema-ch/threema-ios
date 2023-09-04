@@ -101,8 +101,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelInfo;
 }
 
 - (NSURL *)tmpAudioUrlWithFileNamed:(NSString *)filename {
+    NSString * fullFileName = [NSString stringWithFormat:@"%@-%@", filename, [DateFormatter getDateForExport:[NSDate date]]];
     NSURL *tmpDirUrl = [NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES];
-    NSURL *url = [[tmpDirUrl URLByAppendingPathComponent:filename] URLByAppendingPathExtension: MEDIA_EXTENSION_AUDIO];
+    NSURL *url = [[tmpDirUrl URLByAppendingPathComponent:fullFileName] URLByAppendingPathExtension: MEDIA_EXTENSION_AUDIO];
     
     DDLogInfo(@"fileURL: %@", [url path]);
     

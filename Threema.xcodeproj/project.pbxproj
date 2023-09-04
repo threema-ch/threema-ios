@@ -363,7 +363,6 @@
 		0A7DF8171C9FDBDE002D4DC3 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773161630AA7A001808D3 /* CFNetwork.framework */; };
 		0A7DF8181C9FDBDE002D4DC3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773141630A858001808D3 /* Security.framework */; };
 		0A7DF8191C9FDBDE002D4DC3 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		0A7DF81A1C9FDBDE002D4DC3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		0A7DF81B1C9FDBDE002D4DC3 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
 		0A7DF81D1C9FDBDE002D4DC3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7514C1CCA900EF7690 /* InfoPlist.strings */; };
 		0A7DF81F1C9FDBDE002D4DC3 /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7E14C1CCA900EF7690 /* MainStoryboard.storyboard */; };
@@ -680,7 +679,7 @@
 		249BA07829B8B9BB00C3C45E /* NotificationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249BA07729B8B9BB00C3C45E /* NotificationType.swift */; };
 		249C15F229FFDA2400F81D20 /* BinUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249C15F129FFDA2300F81D20 /* BinUtils.swift */; };
 		249C15F329FFDA2400F81D20 /* BinUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249C15F129FFDA2300F81D20 /* BinUtils.swift */; };
-		249E08902A49776D009CB548 /* BundleUtil+Swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249E088F2A49776D009CB548 /* BundleUtil+Swift.swift */; };
+		249E08902A49776D009CB548 /* GroupCallsBundleUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249E088F2A49776D009CB548 /* GroupCallsBundleUtil.swift */; };
 		24A25C3928EAFFF600446BB3 /* BlobManagerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A25C3828EAFFF600446BB3 /* BlobManagerProtocol.swift */; };
 		24A4394229A5210800560A72 /* ProcessInfoHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A4393C29A51FAB00560A72 /* ProcessInfoHelper.swift */; };
 		24A4394529A525D000560A72 /* ScreenshotsOnPrem.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 24A4394429A525CF00560A72 /* ScreenshotsOnPrem.xctestplan */; };
@@ -816,6 +815,11 @@
 		24F620EA29ED41DF008A9E17 /* CustomWallpaperSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F620E729ED41DF008A9E17 /* CustomWallpaperSelectionView.swift */; };
 		24F620EB29ED41DF008A9E17 /* CustomWallpaperSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F620E729ED41DF008A9E17 /* CustomWallpaperSelectionView.swift */; };
 		24F620EC29ED41DF008A9E17 /* CustomWallpaperSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F620E729ED41DF008A9E17 /* CustomWallpaperSelectionView.swift */; };
+		24FA8E4E2A73BA8700AB6842 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
+		24FA8E4F2A73BA9600AB6842 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
+		24FA8E502A73BAA500AB6842 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
+		24FA8E512A73BAB200AB6842 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
+		24FA8E522A73BAC000AB6842 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		2D034F3225C3F36700D1B42B /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D034F3125C3F36700D1B42B /* SettingsStore.swift */; };
 		2D0391B42523106C00C24730 /* LogExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0391B32523106C00C24730 /* LogExtension.swift */; };
 		2D052E2A24473ED1000B1223 /* BallotMessageEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A0D902219E685B400DC7578 /* BallotMessageEncoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1169,7 +1173,6 @@
 		2D5A1E4124C9B5DF00F87DD0 /* QRCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DAD0A471A214555001D139C /* QRCodeViewController.m */; };
 		2D5A1E4224C9B5DF00F87DD0 /* WebConversationsRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE92573C2049663E00ACDF98 /* WebConversationsRequest.swift */; };
 		2D5A1E4424C9B5DF00F87DD0 /* DKPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B2E1EB38270004973D5 /* DKPermissionView.swift */; };
-		2D5A1E4624C9B5DF00F87DD0 /* ThreemaVideoCallQualityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */; };
 		2D5A1E4724C9B5DF00F87DD0 /* VideoMessageLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DD5512B1689DF3900B19DF8 /* VideoMessageLoader.m */; };
 		2D5A1E4924C9B5DF00F87DD0 /* WebMessageObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA73A0A2024B7FE008BCF89 /* WebMessageObject.swift */; };
 		2D5A1E4A24C9B5DF00F87DD0 /* (null) in Sources */ = {isa = PBXBuildFile; };
@@ -1244,7 +1247,6 @@
 		2D5A1EBB24C9B5DF00F87DD0 /* WebCreateTextMessageRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE635EB3201B900E0099CAF4 /* WebCreateTextMessageRequest.swift */; };
 		2D5A1EBC24C9B5DF00F87DD0 /* PickNicknameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A9B6B421BE78B79009EE9C1 /* PickNicknameViewController.m */; };
 		2D5A1EBD24C9B5DF00F87DD0 /* (null) in Sources */ = {isa = PBXBuildFile; };
-		2D5A1EBF24C9B5DF00F87DD0 /* ThreemaCallsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */; };
 		2D5A1EC324C9B5DF00F87DD0 /* HighlightButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D5CCF421950774900EA17B9 /* HighlightButton.m */; };
 		2D5A1EC424C9B5DF00F87DD0 /* WebCreateFileMessageResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE04FCFB2077B524000CEE26 /* WebCreateFileMessageResponse.swift */; };
 		2D5A1EC924C9B5DF00F87DD0 /* PPVideoViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8FF1EA8FA0300802355 /* PPVideoViewCell.swift */; };
@@ -1285,7 +1287,6 @@
 		2D5A1EFC24C9B5DF00F87DD0 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773161630AA7A001808D3 /* CFNetwork.framework */; };
 		2D5A1EFD24C9B5DF00F87DD0 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773141630A858001808D3 /* Security.framework */; };
 		2D5A1EFE24C9B5DF00F87DD0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		2D5A1EFF24C9B5DF00F87DD0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		2D5A1F0024C9B5DF00F87DD0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
 		2D5A1F0224C9B5DF00F87DD0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7514C1CCA900EF7690 /* InfoPlist.strings */; };
 		2D5A1F0324C9B5DF00F87DD0 /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7E14C1CCA900EF7690 /* MainStoryboard.storyboard */; };
@@ -1683,7 +1684,6 @@
 		2DEDB22B24C9903400FC9099 /* DKAssetGroupDetailVideoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B2A1EB38270004973D5 /* DKAssetGroupDetailVideoCell.swift */; };
 		2DEDB22C24C9903400FC9099 /* MaterialShowcaseInstructionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEFD85A024193B3A008CB862 /* MaterialShowcaseInstructionView.swift */; };
 		2DEDB22D24C9903400FC9099 /* SafeSetupPasswordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC9B9592181E3B600747457 /* SafeSetupPasswordViewController.swift */; };
-		2DEDB22E24C9903400FC9099 /* ThreemaVideoCallQualityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */; };
 		2DEDB22F24C9903400FC9099 /* WebThumbnailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1C4BA32056EB1400678D32 /* WebThumbnailResponse.swift */; };
 		2DEDB23124C9903400FC9099 /* DKAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B191EB38270004973D5 /* DKAsset.swift */; };
 		2DEDB23224C9903400FC9099 /* Old_EditGroupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0AE10ABD1BA160C7009DD83B /* Old_EditGroupViewController.m */; };
@@ -1763,7 +1763,6 @@
 		2DEDB2A124C9903400FC9099 /* LocationViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D2260261667A25A003C5691 /* LocationViewController.m */; };
 		2DEDB2A224C9903400FC9099 /* WebUpdateContactRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6CFBCC204E948C001FCBDD /* WebUpdateContactRequest.swift */; };
 		2DEDB2A424C9903400FC9099 /* TTOpenInAppActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D233D8718FFD3E700A20E3F /* TTOpenInAppActivity.m */; };
-		2DEDB2A624C9903400FC9099 /* ThreemaCallsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */; };
 		2DEDB2A724C9903400FC9099 /* CustomGroupDetailVideoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB045021EBA18CF00B06571 /* CustomGroupDetailVideoCell.swift */; };
 		2DEDB2AA24C9903400FC9099 /* BackupPasswordViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D776C70166D00BA007A4C32 /* BackupPasswordViewController.m */; };
 		2DEDB2AB24C9903400FC9099 /* WebClientSessionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEDE4B9E20A5AD62008AFF3F /* WebClientSessionCell.swift */; };
@@ -1909,7 +1908,6 @@
 		2DEDB38524C9903400FC9099 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773161630AA7A001808D3 /* CFNetwork.framework */; };
 		2DEDB38624C9903400FC9099 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773141630A858001808D3 /* Security.framework */; };
 		2DEDB38724C9903400FC9099 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		2DEDB38824C9903400FC9099 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		2DEDB38924C9903400FC9099 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
 		2DEDB38C24C9903400FC9099 /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7E14C1CCA900EF7690 /* MainStoryboard.storyboard */; };
 		2DEDB38D24C9903400FC9099 /* CallStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */; };
@@ -2904,7 +2902,6 @@
 		4D0889F3255C0CD4002F3129 /* QRCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DAD0A471A214555001D139C /* QRCodeViewController.m */; };
 		4D0889F5255C0CD4002F3129 /* WebConversationsRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE92573C2049663E00ACDF98 /* WebConversationsRequest.swift */; };
 		4D0889F7255C0CD4002F3129 /* DKPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B2E1EB38270004973D5 /* DKPermissionView.swift */; };
-		4D0889F9255C0CD4002F3129 /* ThreemaVideoCallQualityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */; };
 		4D0889FA255C0CD4002F3129 /* VideoMessageLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DD5512B1689DF3900B19DF8 /* VideoMessageLoader.m */; };
 		4D0889FC255C0CD4002F3129 /* WebMessageObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA73A0A2024B7FE008BCF89 /* WebMessageObject.swift */; };
 		4D0889FD255C0CD4002F3129 /* WebContactDetailRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE887D82204020F100FF5650 /* WebContactDetailRequest.swift */; };
@@ -2972,7 +2969,6 @@
 		4D088A6D255C0CD4002F3129 /* NotificationBannerQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7E4F2823E2C312009977A5 /* NotificationBannerQueue.swift */; };
 		4D088A6F255C0CD4002F3129 /* WebCreateTextMessageRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE635EB3201B900E0099CAF4 /* WebCreateTextMessageRequest.swift */; };
 		4D088A70255C0CD4002F3129 /* PickNicknameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A9B6B421BE78B79009EE9C1 /* PickNicknameViewController.m */; };
-		4D088A73255C0CD4002F3129 /* ThreemaCallsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */; };
 		4D088A78255C0CD4002F3129 /* HighlightButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D5CCF421950774900EA17B9 /* HighlightButton.m */; };
 		4D088A79255C0CD4002F3129 /* WebCreateFileMessageResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE04FCFB2077B524000CEE26 /* WebCreateFileMessageResponse.swift */; };
 		4D088A7D255C0CD4002F3129 /* IDCreationPageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A8FB0891BF32229001A90A7 /* IDCreationPageViewController.m */; };
@@ -3016,7 +3012,6 @@
 		4D088AB3255C0CD4002F3129 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773161630AA7A001808D3 /* CFNetwork.framework */; };
 		4D088AB4255C0CD4002F3129 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773141630A858001808D3 /* Security.framework */; };
 		4D088AB5255C0CD4002F3129 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		4D088AB6255C0CD4002F3129 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		4D088AB7255C0CD4002F3129 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
 		4D088AB9255C0CD4002F3129 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7514C1CCA900EF7690 /* InfoPlist.strings */; };
 		4D088ABA255C0CD4002F3129 /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7E14C1CCA900EF7690 /* MainStoryboard.storyboard */; };
@@ -3284,7 +3279,6 @@
 		61678E8527A14EB400BFD8E1 /* WallpaperTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61678E8227A14EB400BFD8E1 /* WallpaperTableViewCell.swift */; };
 		61678E8627A14EB400BFD8E1 /* WallpaperTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61678E8227A14EB400BFD8E1 /* WallpaperTableViewCell.swift */; };
 		61678E8727A14EB400BFD8E1 /* WallpaperTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61678E8227A14EB400BFD8E1 /* WallpaperTableViewCell.swift */; };
-		6168D33227183DCC00091219 /* VoIPSoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D33127183DCC00091219 /* VoIPSoundViewController.swift */; };
 		6168D35027187ED100091219 /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D34F27187ED100091219 /* LicenseViewController.swift */; };
 		6168D35127187ED100091219 /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D34F27187ED100091219 /* LicenseViewController.swift */; };
 		6168D35227187ED100091219 /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D34F27187ED100091219 /* LicenseViewController.swift */; };
@@ -3382,6 +3376,7 @@
 		7E69C7B2292662A200BCEBA0 /* NonceGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E69C7B1292662A200BCEBA0 /* NonceGuard.swift */; };
 		7E6A738426F1DACD00EA0C47 /* DeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E6A738326F1DACD00EA0C47 /* DeviceInfo.swift */; };
 		7E7815DA26FC5A64005E6799 /* UIDevice+ModelName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7815D926FC5A64005E6799 /* UIDevice+ModelName.swift */; };
+		7E7E7E632A8DE051005EFC6B /* SystemMessage+lastMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7E7E622A8DE051005EFC6B /* SystemMessage+lastMessage.swift */; };
 		7E8432D928588BA100D8ACC2 /* DeviceGroupKeyManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E8432D828588BA100D8ACC2 /* DeviceGroupKeyManagerTests.swift */; };
 		7E85196826DF9C24008E44F4 /* MultiDeviceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E85196726DF9C24008E44F4 /* MultiDeviceViewController.swift */; };
 		7E85196926DF9C24008E44F4 /* MultiDeviceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E85196726DF9C24008E44F4 /* MultiDeviceViewController.swift */; };
@@ -3399,6 +3394,11 @@
 		7E901064270EF2910081858A /* MessageReveiverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E901063270EF2910081858A /* MessageReveiverTests.swift */; };
 		7E90CA4A2A0CC01800BB5BE3 /* Date+UInt64.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E90CA492A0CC01800BB5BE3 /* Date+UInt64.swift */; };
 		7E9222F52A13B0CA00B47220 /* TaskExecutionReflectIncomingMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9222F42A13B0CA00B47220 /* TaskExecutionReflectIncomingMessageTests.swift */; };
+		7E9278DC2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */; };
+		7E9278DD2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */; };
+		7E9278DE2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */; };
+		7E9278DF2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */; };
+		7E9278E02A83B98900AC4871 /* AppLaunchTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */; };
 		7E938E392800298500E69D30 /* MediatorSyncableContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E938E382800298500E69D30 /* MediatorSyncableContacts.swift */; };
 		7E938E3B28002A9D00E69D30 /* DeltaSyncContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E938E3A28002A9C00E69D30 /* DeltaSyncContact.swift */; };
 		7E96035029F023E4001A12F1 /* TaskDefinitionSendDeliveryReceiptsMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E96034F29F023E4001A12F1 /* TaskDefinitionSendDeliveryReceiptsMessage.swift */; };
@@ -3925,8 +3925,6 @@
 		CE48A57325386B6E0057EC71 /* SplashScreenThreemaWork2.png in Resources */ = {isa = PBXBuildFile; fileRef = CE48A57125386B6E0057EC71 /* SplashScreenThreemaWork2.png */; };
 		CE493D0427CE63B200BE0B27 /* NavigationBarPromptHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE493D0327CE63B200BE0B27 /* NavigationBarPromptHandler.swift */; };
 		CE4A7BE224091FDC00CD0015 /* ThreemaWorkViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4A7BE124091FDC00CD0015 /* ThreemaWorkViewController.swift */; };
-		CE5061FA244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */; };
-		CE5061FB244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */; };
 		CE5126B727353FED00CC209A /* AvatarMaker.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D90C0DD1A140BE9005C68B2 /* AvatarMaker.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE535B9425272C0F003495D0 /* SwiftUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE535B9325272C0F003495D0 /* SwiftUtils.swift */; };
 		CE5397D71ED309DC002EB388 /* BoxVoIPCallHangupMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = CE5397D51ED309DC002EB388 /* BoxVoIPCallHangupMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3963,7 +3961,6 @@
 		CE635EC4201F2A000099CAF4 /* WebConversationsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE635EC3201F2A000099CAF4 /* WebConversationsResponse.swift */; };
 		CE635EC6201F2A000099CAF4 /* WebConversationsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE635EC3201F2A000099CAF4 /* WebConversationsResponse.swift */; };
 		CE6511DC202C801300239FB6 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CE5E6E23202C5A80006796B5 /* libresolv.tbd */; };
-		CE6511DD202C804C00239FB6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		CE6511DF202C807400239FB6 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CE6511DE202C807400239FB6 /* libiconv.tbd */; };
 		CE6511E1202C80E000239FB6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CE6511E0202C80E000239FB6 /* libz.tbd */; };
 		CE6511EB202C829200239FB6 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE6511EA202C829100239FB6 /* libsaltyrtc_task_relayed_data_ffi.a */; };
@@ -4018,10 +4015,6 @@
 		CE743B6A274E1AF00051422A /* PushSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A48C7C27294E270070DF15 /* PushSounds.swift */; };
 		CE743B6B274E1AF10051422A /* PushSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A48C7C27294E270070DF15 /* PushSounds.swift */; };
 		CE743B6C274E1AF20051422A /* PushSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A48C7C27294E270070DF15 /* PushSounds.swift */; };
-		CE743B73274E1B170051422A /* VoIPSoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D33127183DCC00091219 /* VoIPSoundViewController.swift */; };
-		CE743B74274E1B170051422A /* VoIPSoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D33127183DCC00091219 /* VoIPSoundViewController.swift */; };
-		CE743B75274E1B180051422A /* VoIPSoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D33127183DCC00091219 /* VoIPSoundViewController.swift */; };
-		CE743B76274E1B180051422A /* VoIPSoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6168D33127183DCC00091219 /* VoIPSoundViewController.swift */; };
 		CE7450AC2553FE29005E6FC5 /* VoIPIceServerSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF319672546F60D0050155F /* VoIPIceServerSource.swift */; };
 		CE7450AD2553FE29005E6FC5 /* VoIPIceServerSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF319672546F60D0050155F /* VoIPIceServerSource.swift */; };
 		CE7450B025540105005E6FC5 /* ConversationExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A3642EA24A0EE1C00B7C277 /* ConversationExporter.swift */; };
@@ -4192,8 +4185,6 @@
 		CEA92C992201A13E0063520A /* CompanyDirectoryCategoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA92C90220197770063520A /* CompanyDirectoryCategoryViewController.swift */; };
 		CEAAD1672630543A001026AA /* WebUpdateActiveConversationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAAD1662630543A001026AA /* WebUpdateActiveConversationRequest.swift */; };
 		CEAAD1682630543A001026AA /* WebUpdateActiveConversationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAAD1662630543A001026AA /* WebUpdateActiveConversationRequest.swift */; };
-		CEAC91E0244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */; };
-		CEAC91E1244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */; };
 		CEAE478F26BA6E6900AC5029 /* UITextField+Themed.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A16FDE31C5A553900A5ABF9 /* UITextField+Themed.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CEAE479626BAE07600AC5029 /* TargetColors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CEAE479526BAE07600AC5029 /* TargetColors.xcassets */; };
 		CEAE47A126BD0ED600AC5029 /* ThemedNavigationController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A59404F1C3EB9D500CC1577 /* ThemedNavigationController.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -5817,7 +5808,7 @@
 		24919047289BE3AA002E3FCE /* ChatViewAnimatedImageMessageTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewAnimatedImageMessageTableViewCell.swift; sourceTree = "<group>"; };
 		249BA07729B8B9BB00C3C45E /* NotificationType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationType.swift; sourceTree = "<group>"; };
 		249C15F129FFDA2300F81D20 /* BinUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BinUtils.swift; sourceTree = "<group>"; };
-		249E088F2A49776D009CB548 /* BundleUtil+Swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BundleUtil+Swift.swift"; sourceTree = "<group>"; };
+		249E088F2A49776D009CB548 /* GroupCallsBundleUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallsBundleUtil.swift; sourceTree = "<group>"; };
 		24A25C3828EAFFF600446BB3 /* BlobManagerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobManagerProtocol.swift; sourceTree = "<group>"; };
 		24A4393C29A51FAB00560A72 /* ProcessInfoHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInfoHelper.swift; sourceTree = "<group>"; };
 		24A4394429A525CF00560A72 /* ScreenshotsOnPrem.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ScreenshotsOnPrem.xctestplan; sourceTree = "<group>"; };
@@ -6871,7 +6862,6 @@
 		61270546273A5C2800DBF74D /* LinkEmailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkEmailViewController.swift; sourceTree = "<group>"; };
 		6132E15227B1114C0008EE65 /* WallpaperStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperStore.swift; sourceTree = "<group>"; };
 		61678E8227A14EB400BFD8E1 /* WallpaperTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperTableViewCell.swift; sourceTree = "<group>"; };
-		6168D33127183DCC00091219 /* VoIPSoundViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPSoundViewController.swift; sourceTree = "<group>"; };
 		6168D34F27187ED100091219 /* LicenseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseViewController.swift; sourceTree = "<group>"; };
 		6168D35A2719552400091219 /* SupportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportViewController.swift; sourceTree = "<group>"; };
 		6168D36D2719773700091219 /* AddThreemaChannelAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddThreemaChannelAction.swift; sourceTree = "<group>"; };
@@ -6934,6 +6924,7 @@
 		7E69C7B1292662A200BCEBA0 /* NonceGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonceGuard.swift; sourceTree = "<group>"; };
 		7E6A738326F1DACD00EA0C47 /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
 		7E7815D926FC5A64005E6799 /* UIDevice+ModelName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+ModelName.swift"; sourceTree = "<group>"; };
+		7E7E7E622A8DE051005EFC6B /* SystemMessage+lastMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SystemMessage+lastMessage.swift"; sourceTree = "<group>"; };
 		7E8432D828588BA100D8ACC2 /* DeviceGroupKeyManagerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceGroupKeyManagerTests.swift; sourceTree = "<group>"; };
 		7E85196726DF9C24008E44F4 /* MultiDeviceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDeviceViewController.swift; sourceTree = "<group>"; };
 		7E8614A52A25D48500D95799 /* ReceiptType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReceiptType.h; sourceTree = "<group>"; };
@@ -6946,6 +6937,7 @@
 		7E901063270EF2910081858A /* MessageReveiverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageReveiverTests.swift; sourceTree = "<group>"; };
 		7E90CA492A0CC01800BB5BE3 /* Date+UInt64.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+UInt64.swift"; sourceTree = "<group>"; };
 		7E9222F42A13B0CA00B47220 /* TaskExecutionReflectIncomingMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskExecutionReflectIncomingMessageTests.swift; sourceTree = "<group>"; };
+		7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLaunchTasks.swift; sourceTree = "<group>"; };
 		7E938E382800298500E69D30 /* MediatorSyncableContacts.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediatorSyncableContacts.swift; sourceTree = "<group>"; };
 		7E938E3A28002A9C00E69D30 /* DeltaSyncContact.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeltaSyncContact.swift; sourceTree = "<group>"; };
 		7E96034F29F023E4001A12F1 /* TaskDefinitionSendDeliveryReceiptsMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinitionSendDeliveryReceiptsMessage.swift; sourceTree = "<group>"; };
@@ -7196,7 +7188,6 @@
 		CE4A7BE124091FDC00CD0015 /* ThreemaWorkViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaWorkViewController.swift; sourceTree = "<group>"; };
 		CE4CA9981E2629B000F3A560 /* ScreenshotsWithData.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotsWithData.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE4CA99C1E2629B100F3A560 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaVideoCallQualityViewController.swift; sourceTree = "<group>"; };
 		CE535B9325272C0F003495D0 /* SwiftUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUtils.swift; sourceTree = "<group>"; };
 		CE5397D51ED309DC002EB388 /* BoxVoIPCallHangupMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxVoIPCallHangupMessage.h; sourceTree = "<group>"; };
 		CE5397D61ED309DC002EB388 /* BoxVoIPCallHangupMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BoxVoIPCallHangupMessage.m; sourceTree = "<group>"; };
@@ -7362,7 +7353,6 @@
 		CEA7F86927623AC5002E148E /* OnPremConfigWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnPremConfigWeb.swift; sourceTree = "<group>"; };
 		CEA92C90220197770063520A /* CompanyDirectoryCategoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyDirectoryCategoryViewController.swift; sourceTree = "<group>"; };
 		CEAAD1662630543A001026AA /* WebUpdateActiveConversationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebUpdateActiveConversationRequest.swift; sourceTree = "<group>"; };
-		CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaCallsSettingsViewController.swift; sourceTree = "<group>"; };
 		CEAE479526BAE07600AC5029 /* TargetColors.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = TargetColors.xcassets; sourceTree = "<group>"; };
 		CEAFA2161E895A7C00FF84FD /* ContactSetPhotoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactSetPhotoMessage.h; sourceTree = "<group>"; };
 		CEAFA2171E895A7C00FF84FD /* ContactSetPhotoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContactSetPhotoMessage.m; sourceTree = "<group>"; };
@@ -7750,6 +7740,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24FA8E4F2A73BA9600AB6842 /* Foundation.framework in Frameworks */,
 				4A9029E12892D953007604D8 /* DSWaveformImage in Frameworks */,
 				8D3485ED2747B1FE0064AD35 /* MBProgressHUD.xcframework in Frameworks */,
 				CED100FD208F90EA00D2B7DA /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
@@ -7803,7 +7794,6 @@
 				0A7DF8171C9FDBDE002D4DC3 /* CFNetwork.framework in Frameworks */,
 				0A7DF8181C9FDBDE002D4DC3 /* Security.framework in Frameworks */,
 				0A7DF8191C9FDBDE002D4DC3 /* UIKit.framework in Frameworks */,
-				0A7DF81A1C9FDBDE002D4DC3 /* Foundation.framework in Frameworks */,
 				8D965B40271E9C5E009A4E4C /* WebRTC.xcframework in Frameworks */,
 				4AA64BFA29B79F8F00F66543 /* GroupCalls in Frameworks */,
 				0A7DF81B1C9FDBDE002D4DC3 /* CoreGraphics.framework in Frameworks */,
@@ -7863,6 +7853,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24FA8E522A73BAC000AB6842 /* Foundation.framework in Frameworks */,
 				2D46B5C3260A018B0017EE3A /* ThreemaFramework.framework in Frameworks */,
 				8D3486052747B25A0064AD35 /* MBProgressHUD.xcframework in Frameworks */,
 				2D5A1ED024C9B5DF00F87DD0 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
@@ -7917,7 +7908,6 @@
 				2D5A1EFD24C9B5DF00F87DD0 /* Security.framework in Frameworks */,
 				8DDCF7C727107CF0000CB4F6 /* MarqueeLabel in Frameworks */,
 				2D5A1EFE24C9B5DF00F87DD0 /* UIKit.framework in Frameworks */,
-				2D5A1EFF24C9B5DF00F87DD0 /* Foundation.framework in Frameworks */,
 				2D5A1F0024C9B5DF00F87DD0 /* CoreGraphics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7964,6 +7954,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24FA8E512A73BAB200AB6842 /* Foundation.framework in Frameworks */,
 				8DBF270D27108A040008045E /* SnapKit in Frameworks */,
 				2DEDB35824C9903400FC9099 /* ContactsUI.framework in Frameworks */,
 				2DEDB35924C9903400FC9099 /* Contacts.framework in Frameworks */,
@@ -8019,7 +8010,6 @@
 				2DEDB38624C9903400FC9099 /* Security.framework in Frameworks */,
 				8DDCF7AC271077F5000CB4F6 /* Gzip in Frameworks */,
 				2DEDB38724C9903400FC9099 /* UIKit.framework in Frameworks */,
-				2DEDB38824C9903400FC9099 /* Foundation.framework in Frameworks */,
 				2DEDB38924C9903400FC9099 /* CoreGraphics.framework in Frameworks */,
 				8DBF271A27108D4A0008045E /* Sentry in Frameworks */,
 			);
@@ -8054,6 +8044,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24FA8E502A73BAA500AB6842 /* Foundation.framework in Frameworks */,
 				4A9029E42892D97E007604D8 /* DSWaveformImage in Frameworks */,
 				4D088A87255C0CD4002F3129 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
 				8D3485F52747B2150064AD35 /* MBProgressHUD.xcframework in Frameworks */,
@@ -8107,7 +8098,6 @@
 				4D088AB4255C0CD4002F3129 /* Security.framework in Frameworks */,
 				8DDCF7C327107CD0000CB4F6 /* MarqueeLabel in Frameworks */,
 				4D088AB5255C0CD4002F3129 /* UIKit.framework in Frameworks */,
-				4D088AB6255C0CD4002F3129 /* Foundation.framework in Frameworks */,
 				8D965B42271E9C6D009A4E4C /* WebRTC.xcframework in Frameworks */,
 				4AA64BFC29B79F9900F66543 /* GroupCalls in Frameworks */,
 				4D088AB7255C0CD4002F3129 /* CoreGraphics.framework in Frameworks */,
@@ -8152,6 +8142,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24FA8E4E2A73BA8700AB6842 /* Foundation.framework in Frameworks */,
 				8DBF2707271089DE0008045E /* SnapKit in Frameworks */,
 				CE88CABF20347CE20021475F /* ContactsUI.framework in Frameworks */,
 				CE88CAB620344E6B0021475F /* Contacts.framework in Frameworks */,
@@ -8209,7 +8200,6 @@
 				4DF773171630AA7A001808D3 /* CFNetwork.framework in Frameworks */,
 				4DF773151630A858001808D3 /* Security.framework in Frameworks */,
 				4DD01F6D14C1CCA900EF7690 /* UIKit.framework in Frameworks */,
-				CE6511DD202C804C00239FB6 /* Foundation.framework in Frameworks */,
 				4DD01F7114C1CCA900EF7690 /* CoreGraphics.framework in Frameworks */,
 				8DBF271427108D260008045E /* Sentry in Frameworks */,
 			);
@@ -8280,7 +8270,7 @@
 				4A428B5C28EC7C710024E31C /* PromiseKitConfiguration.swift */,
 				0A336B4E1B009C7F002D9809 /* BundleUtil.h */,
 				0A336B4F1B009C7F002D9809 /* BundleUtil.m */,
-				249E088F2A49776D009CB548 /* BundleUtil+Swift.swift */,
+				249E088F2A49776D009CB548 /* GroupCallsBundleUtil.swift */,
 				2DD549D223E9C45B0055CE23 /* BytesUtility.swift */,
 				E14837D726F1CF95006295D8 /* Collection+Contact.swift */,
 				0A531D5A1B382A2D00C402B2 /* ContactUtil.h */,
@@ -9461,9 +9451,6 @@
 				E17D9F202625C69500F67B9E /* UIComponentsViewController.swift */,
 				E1CAFCCE2571644000EAA5F6 /* StyleKitDebugViewController.swift */,
 				42507F2828FDB85600742867 /* IDColorDebugViewController.swift */,
-				CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */,
-				6168D33127183DCC00091219 /* VoIPSoundViewController.swift */,
-				CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */,
 				CE5E6DE6202A1281006796B5 /* ThreemaWebViewController.swift */,
 				CEE93D9620AB1EE8002C1304 /* ThreemaWebSettingCell.swift */,
 				CEDE4B9E20A5AD62008AFF3F /* WebClientSessionCell.swift */,
@@ -10554,6 +10541,7 @@
 				4D4C546D1806990400D904AA /* SystemMessage.h */,
 				4D4C546E1806990400D904AA /* SystemMessage.m */,
 				D7313C232812849000A53833 /* SystemMessage+Accessibility.swift */,
+				7E7E7E622A8DE051005EFC6B /* SystemMessage+lastMessage.swift */,
 				D707092D2800647F00D77358 /* SystemMessage+type.swift */,
 				243548BD28F9389100BCD883 /* SystemMessage+PreviewableMessage.swift */,
 				CED100FF2090763300D2B7DA /* Tag.h */,
@@ -10990,6 +10978,7 @@
 				4DD01F7C14C1CCA900EF7690 /* AppDelegate.m */,
 				24434D5429801434001E6F86 /* AppDelegate+Swift.swift */,
 				7EF34E832875822D00DCF512 /* AppMigration.swift */,
+				7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */,
 				CEB044EC1EB9DB3400B06571 /* Threema-Bridging-Header.h */,
 				4D0EDF2B16373472000921EA /* Core */,
 				4D0EDF2A16373456000921EA /* SharedUI */,
@@ -14273,6 +14262,7 @@
 				E1970DF425F76CCA00DACC9D /* PushSetting+PeriodOffTime.swift in Sources */,
 				247700BA28AE3C1900634745 /* NotificationPresenterWrapper.swift in Sources */,
 				2DAE582324975B6200F13F2B /* TaskDefinitionSendGroupLeaveMessage.swift in Sources */,
+				7E7E7E632A8DE051005EFC6B /* SystemMessage+lastMessage.swift in Sources */,
 				E1013CD32850955D00D648F8 /* OtherThreemaTypeImageView.swift in Sources */,
 				CE10D8C926F1D4BC0046F6B3 /* PageView.m in Sources */,
 				CE42BCCA2003C3B0001C132F /* Old_ThemedViewController.m in Sources */,
@@ -14783,7 +14773,7 @@
 				2DDB9D632577DD150032B7CB /* VoIPCallIceCandidatesMessage.swift in Sources */,
 				4ADA8DF62A2DD775001FFB0F /* SQLDHSessionStore+Downgrade.swift in Sources */,
 				CEFB45BF1ECAF5EE0097B39A /* BoxVoIPCallOfferMessage.m in Sources */,
-				249E08902A49776D009CB548 /* BundleUtil+Swift.swift in Sources */,
+				249E08902A49776D009CB548 /* GroupCallsBundleUtil.swift in Sources */,
 				4AB365EC29FF93B200825E74 /* TaskExecutionSendGroupCallStartMessage.swift in Sources */,
 				E1CA8B0225FF55D700F90F3E /* Reusable.swift in Sources */,
 				7E6A738426F1DACD00EA0C47 /* DeviceInfo.swift in Sources */,
@@ -15097,6 +15087,7 @@
 				F2EE8C2228AFDB1700A03321 /* StorageManagementConversationViewController.swift in Sources */,
 				0A7DF6D41C9FDBDE002D4DC3 /* AudioRecorder.m in Sources */,
 				0A7DF6D51C9FDBDE002D4DC3 /* MediaBrowserVideo.m in Sources */,
+				7E9278DD2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */,
 				0A7DF6D61C9FDBDE002D4DC3 /* AppDelegate.m in Sources */,
 				4A78BDAD29A5266C00620CEE /* ChatViewScrollState.swift in Sources */,
 				CE887D8120401F5800FF5650 /* WebClientInfoRequest.swift in Sources */,
@@ -15108,7 +15099,6 @@
 				249C15F329FFDA2400F81D20 /* BinUtils.swift in Sources */,
 				E1D575C325769C5D006631CB /* BallotWithOpenCountButton.swift in Sources */,
 				61879CFA27315D2700EB5A83 /* ProfilePictureSettingViewController.swift in Sources */,
-				CE743B73274E1B170051422A /* VoIPSoundViewController.swift in Sources */,
 				0A7DF6DB1C9FDBDE002D4DC3 /* ChatNavigationController.m in Sources */,
 				CE165D8D20232058006D10E5 /* ShareTextActivityItemProvider.m in Sources */,
 				0A7DF6DC1C9FDBDE002D4DC3 /* SplitViewController.m in Sources */,
@@ -15496,7 +15486,6 @@
 				4270DAB5293F94CD004C1721 /* ChatViewMessageDetailsGroupReactionTableViewCell.swift in Sources */,
 				2451C3E529018ACF0052F57B /* AppIconSettingsView.swift in Sources */,
 				CED48F68272031F600DDB49C /* MultiDeviceCell.swift in Sources */,
-				CE5061FB244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift in Sources */,
 				4A234A63299111F2008E854E /* ChatBubbleView.swift in Sources */,
 				0A7DF7B51C9FDBDE002D4DC3 /* VideoMessageLoader.m in Sources */,
 				CEA73A0D2024B7FE008BCF89 /* WebMessageObject.swift in Sources */,
@@ -15631,7 +15620,6 @@
 				F25905012937CA720052ABB1 /* ConversationTableViewCell.swift in Sources */,
 				0A7DF7EF1C9FDBDE002D4DC3 /* PickNicknameViewController.m in Sources */,
 				E167C44D256E3EC90081767F /* ChatProfileView.swift in Sources */,
-				CEAC91E1244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift in Sources */,
 				4A58FFC9252B215A001DF858 /* ImageAssetPreviewItem.swift in Sources */,
 				4A5E4012256BD29500CE9FE6 /* XQueryComponents.swift in Sources */,
 				0A7DF7F51C9FDBDE002D4DC3 /* HighlightButton.m in Sources */,
@@ -15740,6 +15728,7 @@
 				4AD3501B288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift in Sources */,
 				248B9AB82A0B7F0F0071D796 /* MediaSettingsView.swift in Sources */,
 				2D5A1CEB24C9B5DF00F87DD0 /* WebCreateFileMessageRequest.swift in Sources */,
+				7E9278E02A83B98900AC4871 /* AppLaunchTasks.swift in Sources */,
 				4AE9142129363D1B009FC254 /* SpeechSynthesizerManager.swift in Sources */,
 				2D5A1CED24C9B5DF00F87DD0 /* MWGridCell.m in Sources */,
 				2D5A1CEE24C9B5DF00F87DD0 /* AudioRecorder.m in Sources */,
@@ -16184,7 +16173,6 @@
 				8DE6C4EA26CBDD87009B5EA1 /* POICell.swift in Sources */,
 				2D5A1E4224C9B5DF00F87DD0 /* WebConversationsRequest.swift in Sources */,
 				2D5A1E4424C9B5DF00F87DD0 /* DKPermissionView.swift in Sources */,
-				2D5A1E4624C9B5DF00F87DD0 /* ThreemaVideoCallQualityViewController.swift in Sources */,
 				2483EA1A29BB571D003CD3E9 /* RevocationInfoView.swift in Sources */,
 				CE7450B32554011A005E6FC5 /* ZipFileContainer.swift in Sources */,
 				4A9D4BC129DC31C900E230F5 /* GroupCallBannerView.swift in Sources */,
@@ -16199,7 +16187,6 @@
 				2D5A1E4C24C9B5DF00F87DD0 /* CreateGroupNavigationController.m in Sources */,
 				2D5A1E4D24C9B5DF00F87DD0 /* ScrollViewContent.m in Sources */,
 				2D5A1E4F24C9B5DF00F87DD0 /* IdentityBackupStore.m in Sources */,
-				CE743B76274E1B180051422A /* VoIPSoundViewController.swift in Sources */,
 				2D5A1E5024C9B5DF00F87DD0 /* SafeJsonParser.swift in Sources */,
 				2D5A1E5124C9B5DF00F87DD0 /* PPAsset.swift in Sources */,
 				2D5A1E5324C9B5DF00F87DD0 /* PPAssetsActionConfig.swift in Sources */,
@@ -16324,7 +16311,6 @@
 				E1743C082612FE62002A6B3F /* EditAvatarView.swift in Sources */,
 				426B457829FA533F005B2CF5 /* DeleteRevokeInfoView.swift in Sources */,
 				2D5A1EBD24C9B5DF00F87DD0 /* (null) in Sources */,
-				2D5A1EBF24C9B5DF00F87DD0 /* ThreemaCallsSettingsViewController.swift in Sources */,
 				2D5A1EC324C9B5DF00F87DD0 /* HighlightButton.m in Sources */,
 				42EC346F2A441EF900805E28 /* DeviceJoinHeaderView.swift in Sources */,
 				2D5A1EC424C9B5DF00F87DD0 /* WebCreateFileMessageResponse.swift in Sources */,
@@ -16448,6 +16434,7 @@
 				E16DB9FA25B05C7700E29325 /* LinkedContactDetailsTableViewCell.swift in Sources */,
 				4AFA7DC7285A7BA20067B737 /* TextViewKeyboardWorkaroundHandler.swift in Sources */,
 				2DEDB19D24C9903400FC9099 /* DKAssetGroupDetailCameraCell.swift in Sources */,
+				7E9278DF2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */,
 				2DEDB19E24C9903400FC9099 /* (null) in Sources */,
 				24C9F0CD28EECA510005B5C0 /* MultiDeviceWizardManager.swift in Sources */,
 				2DEDB19F24C9903400FC9099 /* ZSWTappableLabelAccessibilityActionLongPress.m in Sources */,
@@ -16645,7 +16632,6 @@
 				2DEDB22C24C9903400FC9099 /* MaterialShowcaseInstructionView.swift in Sources */,
 				2DEDB22D24C9903400FC9099 /* SafeSetupPasswordViewController.swift in Sources */,
 				CE376F242886A7EE005BD96A /* VoIPCallStateManager.swift in Sources */,
-				2DEDB22E24C9903400FC9099 /* ThreemaVideoCallQualityViewController.swift in Sources */,
 				2DEDB22F24C9903400FC9099 /* WebThumbnailResponse.swift in Sources */,
 				CE376F1E2886A7D8005BD96A /* BackgroundTaskManager.swift in Sources */,
 				2DEDB23124C9903400FC9099 /* DKAsset.swift in Sources */,
@@ -16775,7 +16761,6 @@
 				2DEDB2A124C9903400FC9099 /* LocationViewController.m in Sources */,
 				2DEDB2A224C9903400FC9099 /* WebUpdateContactRequest.swift in Sources */,
 				2DEDB2A424C9903400FC9099 /* TTOpenInAppActivity.m in Sources */,
-				2DEDB2A624C9903400FC9099 /* ThreemaCallsSettingsViewController.swift in Sources */,
 				CE7E006625FA576C0054373A /* CopyLabel.swift in Sources */,
 				2DEDB2A724C9903400FC9099 /* CustomGroupDetailVideoCell.swift in Sources */,
 				2DEDB2AA24C9903400FC9099 /* BackupPasswordViewController.m in Sources */,
@@ -16833,7 +16818,6 @@
 				2DEDB2CF24C9903400FC9099 /* BallotDispatcher.m in Sources */,
 				2DEDB2D024C9903400FC9099 /* WebCreateContactRequest.swift in Sources */,
 				2DEDB2D124C9903400FC9099 /* DeleteConversationAction.m in Sources */,
-				CE743B75274E1B180051422A /* VoIPSoundViewController.swift in Sources */,
 				E1B479BC2681DE2700D601C0 /* QuickAction+UIPreviewAction.swift in Sources */,
 				2DEDB2D224C9903400FC9099 /* SVProgressHUD.m in Sources */,
 				E173736A25C9B5660000244C /* DetailsSectionHeaderView.swift in Sources */,
@@ -17015,6 +16999,7 @@
 				4D0888A2255C0CD4002F3129 /* MWGridCell.m in Sources */,
 				F2EE8C2328AFDB1700A03321 /* StorageManagementConversationViewController.swift in Sources */,
 				4D0888A3255C0CD4002F3129 /* AudioRecorder.m in Sources */,
+				7E9278DE2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */,
 				4D0888A4255C0CD4002F3129 /* MediaBrowserVideo.m in Sources */,
 				4D0888A5255C0CD4002F3129 /* AppDelegate.m in Sources */,
 				4A78BDAE29A5266C00620CEE /* ChatViewScrollState.swift in Sources */,
@@ -17424,7 +17409,6 @@
 				4A234A64299111F2008E854E /* ChatBubbleView.swift in Sources */,
 				4D0889F5255C0CD4002F3129 /* WebConversationsRequest.swift in Sources */,
 				4D0889F7255C0CD4002F3129 /* DKPermissionView.swift in Sources */,
-				4D0889F9255C0CD4002F3129 /* ThreemaVideoCallQualityViewController.swift in Sources */,
 				24D754BD2940D0E700113BD9 /* BetaFeedbackView.swift in Sources */,
 				4D0889FA255C0CD4002F3129 /* VideoMessageLoader.m in Sources */,
 				E11F0943269DE4CD00EF8D4D /* DeleteContactAction.swift in Sources */,
@@ -17487,7 +17471,6 @@
 				E19A00D927D0F9FF004DDA08 /* BlurCircleButton.swift in Sources */,
 				4D088A30255C0CD4002F3129 /* RestoreSafePasswordViewController.swift in Sources */,
 				CE7E01BE25FA5C880054373A /* RTCIceGatheringState+CustomDebugStringConvertible.swift in Sources */,
-				CE743B74274E1B170051422A /* VoIPSoundViewController.swift in Sources */,
 				4D088A33255C0CD4002F3129 /* MWGridViewController.m in Sources */,
 				2483EA1E29BB5A26003CD3E9 /* SwiftUIAdapter.swift in Sources */,
 				42A291452A3B62A600280E74 /* DeviceJoinSuccessView.swift in Sources */,
@@ -17558,7 +17541,6 @@
 				4D088A70255C0CD4002F3129 /* PickNicknameViewController.m in Sources */,
 				4A3B4F8C290AC3EA0023879F /* UnreadMessagesStateManager.swift in Sources */,
 				E167C44E256E3EC90081767F /* ChatProfileView.swift in Sources */,
-				4D088A73255C0CD4002F3129 /* ThreemaCallsSettingsViewController.swift in Sources */,
 				E1331FF1279EF320003BC7B2 /* ChatViewConfiguration.swift in Sources */,
 				4D088A78255C0CD4002F3129 /* HighlightButton.m in Sources */,
 				4D088A79255C0CD4002F3129 /* WebCreateFileMessageResponse.swift in Sources */,
@@ -17630,7 +17612,6 @@
 				4A813EE52892837300D2AD78 /* AudioSessionInputOutputAdapter.swift in Sources */,
 				CE8A2B541EB38270004973D5 /* DKAssetGroupCellItemProtocol.swift in Sources */,
 				CE703D9020615DCF008DB924 /* WebBlobResponse.swift in Sources */,
-				6168D33227183DCC00091219 /* VoIPSoundViewController.swift in Sources */,
 				4AB4AF942A015CE200B65246 /* SoundPreviewPlayer.swift in Sources */,
 				CEB88B25206920FB00A1E371 /* WebConversationUpdate.swift in Sources */,
 				E171E502275F93D100F84148 /* ChatScrollPositionProvider.swift in Sources */,
@@ -17852,6 +17833,7 @@
 				4270DA8B29388DB5004C1721 /* ChatViewCloseToZeroHeightTableViewCell.swift in Sources */,
 				4ABF437A2811AB7C00039696 /* ChatViewMessageDetailsAnimationController.swift in Sources */,
 				6725D93021BEA9EF0058B8C0 /* StdTypeHelper.swift in Sources */,
+				7E9278DC2A83B98900AC4871 /* AppLaunchTasks.swift in Sources */,
 				42C02D0428CF6FA0009826FB /* ChatViewDefaultMessageTapActionProvider.swift in Sources */,
 				4AE9141D29363D1B009FC254 /* SpeechSynthesizerManager.swift in Sources */,
 				CE626F3B20BC01C3004C6D61 /* WebProfileUpdate.swift in Sources */,
@@ -17892,7 +17874,6 @@
 				2DC9B95A2181E3B600747457 /* SafeSetupPasswordViewController.swift in Sources */,
 				E1CA8EB22603B23900F90F3E /* VideoAssetPreviewItem.swift in Sources */,
 				7E85196826DF9C24008E44F4 /* MultiDeviceViewController.swift in Sources */,
-				CE5061FA244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift in Sources */,
 				4A67DFDF28E5B10A00F80651 /* RTLAligningLabel.swift in Sources */,
 				4A95B8FF256BD8E600C3D938 /* CopyLabel.swift in Sources */,
 				CE1C4BA42056EB1400678D32 /* WebThumbnailResponse.swift in Sources */,
@@ -18030,7 +18011,6 @@
 				E17372DA25C959120000244C /* DoNotDisturbDetailsTableViewCell.swift in Sources */,
 				CE6CFBCD204E948C001FCBDD /* WebUpdateContactRequest.swift in Sources */,
 				4D233D8C18FFD3E700A20E3F /* TTOpenInAppActivity.m in Sources */,
-				CEAC91E0244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift in Sources */,
 				CEB045031EBA18CF00B06571 /* CustomGroupDetailVideoCell.swift in Sources */,
 				4D776C71166D00BA007A4C32 /* BackupPasswordViewController.m in Sources */,
 				CEDE4B9F20A5AD62008AFF3F /* WebClientSessionCell.swift in Sources */,
@@ -19345,6 +19325,7 @@
 				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -19387,6 +19368,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "91b1c9ca-b2bd-47f7-8d9c-0019cf5618dc";
 				PROVISIONING_PROFILE_SPECIFIER = "Threema Work Development";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Threema Work Ad Hoc";
 				SKIP_INSTALL = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "$PROJECT_DIR/Threema/Threema-Bridging-Header.h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Threema-Swift.h";
@@ -19536,9 +19518,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = ThreemaShareExtension/SupportingFiles/ThreemaForWorkShareExtension.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = DL5SR3PBJC;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -19567,6 +19551,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "63bd9a8c-b4d4-44fa-8834-ff25bcce4cce";
 				PROVISIONING_PROFILE_SPECIFIER = "Threema Work ShareExtension Development";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Threema Work ShareExtension Ad Hoc";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_INSTALL_OBJC_HEADER = NO;
@@ -23041,12 +23026,14 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = ThreemaNotificationExtension/SupportingFiles/ThreemaForWorkNotificationExtension.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 2569;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = DL5SR3PBJC;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -23074,6 +23061,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.work.iapp.ThreemaNotificationExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "Threema Work NotificationExtension Development";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Threema Work NotificationExtension Ad Hoc";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -26966,7 +26954,7 @@
 			repositoryURL = "https://github.com/calimarkus/JDStatusBarNotification";
 			requirement = {
 				kind = revision;
-				revision = 00f4386a3dbfb56ddfc4703936b7b05076f9d42a;
+				revision = c2357555debf11ac4d1130a2d9293f37e7058438;
 			};
 		};
 		421024172A2E09370037CC91 /* XCRemoteSwiftPackageReference "CodeScanner" */ = {

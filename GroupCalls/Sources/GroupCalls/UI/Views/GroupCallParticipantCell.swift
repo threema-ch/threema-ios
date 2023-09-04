@@ -78,15 +78,20 @@ class GroupCallParticipantCell: UICollectionViewCell {
     
     private lazy var statusSymbolView: UIImageView = {
         let statusSymbolView = UIImageView(
-            image: UIImage(systemName: "mic.slash")?
-                .withConfiguration(cellConfig.stateImageConfig)
+            image: UIImage(systemName: "mic.slash")
         )
+        
+        statusSymbolView.preferredSymbolConfiguration = cellConfig.stateImageConfig
         statusSymbolView.tintColor = .white
         statusSymbolView.translatesAutoresizingMaskIntoConstraints = false
         return statusSymbolView
     }()
     
-    private lazy var blurBackground = GradientBlurBackgroundView()
+    private lazy var blurBackground = {
+        let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+        visualEffectView.translatesAutoresizingMaskIntoConstraints = false
+        return visualEffectView
+    }()
     
     private lazy var participantInfoStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [statusSymbolView, nameLabel])
@@ -102,6 +107,8 @@ class GroupCallParticipantCell: UICollectionViewCell {
         stackView.isLayoutMarginsRelativeArrangement = true
         stackView.insetsLayoutMarginsFromSafeArea = false
         stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        stackView.spacing = 4
         
         return stackView
     }()
@@ -213,6 +220,15 @@ class GroupCallParticipantCell: UICollectionViewCell {
             NSLayoutConstraint.activate(blurBackgroundConstrains + videoRendererConstrains)
             nameLabel.textColor = participant.idColor
             statusSymbolView.tintColor = participant.idColor
+        }
+        
+        // Mirroring
+        if let localParticipant = participant.localParticipant,
+           localParticipant.localCameraPosition == .front {
+            videoRendererView.transform = CGAffineTransformMakeScale(-1, 1)
+        }
+        else {
+            videoRendererView.transform = CGAffineTransformMakeScale(1, 1)
         }
     }
 }

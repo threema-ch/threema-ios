@@ -217,7 +217,6 @@
         conversation.contact = contact;
         
         [self handleConversation:conversation data:conversationData];
-        
         MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
         conversation.lastMessage = [messageFetcher lastMessage];
     }

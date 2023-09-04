@@ -226,7 +226,8 @@ extension Connected {
             
         case let .switchCamera(position):
             await groupCallContext.startVideoCapture(position: position)
-            
+            groupCallActor.uiContinuation.yield(.videoCameraChange(position))
+
         case .muteAudio:
             for participant in groupCallContext.participants {
                 guard let videoUnmuteMessage = try? participant.audioMuteMessage() else {
@@ -276,7 +277,7 @@ extension Connected {
                 DDLogError("Could not find participant with id \(participantID)")
                 return .success
             }
-            let answer = try remoteParticipant.subscribeVideo()
+            let answer = try remoteParticipant.subscribeVideo(subscribe: true)
             try groupCallContext.send(answer)
             
         case .unsubscribeAudio:
@@ -416,8 +417,7 @@ extension Connected {
         // TODO: Add to non-pending participants
         // Add to view
         await groupCallActor.add(participant)
-        // TODO: We probably don't need to reload here at all. ViewModel should handle this
-        groupCallActor.uiContinuation.yield(.reload)
+
         if await groupCallActor.viewModel.ownAudioMuteState == .unmuted {
             try! await sendAudioUnmuteMessages(to: participant)
         }

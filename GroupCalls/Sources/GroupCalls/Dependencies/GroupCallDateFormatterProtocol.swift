@@ -21,5 +21,5 @@
 import Foundation
 
 public protocol GroupCallDateFormatterProtocol {
-    func timeFormatted(_ totalSeconds: Int) -> String
+    func timeFormatted(_ totalSeconds: TimeInterval) -> String
 }

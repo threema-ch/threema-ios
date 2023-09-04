@@ -239,9 +239,14 @@
         if ([blobIds count] > 1) {
             fileMessageEntity.blobThumbnailId = blobIds[1];
         }
-        
-        TaskDefinitionSendBaseMessage *task = [[TaskDefinitionSendBaseMessage alloc] initWithMessage:self.message group:[groupManager getGroupWithConversation:self.message.conversation] sendContactProfilePicture:YES];
 
+        NSString *receiverIdentity;
+        Group *group = [groupManager getGroupWithConversation:self.message.conversation];
+        if (group == nil) {
+            receiverIdentity = self.message.conversation.contact.identity;
+        }
+
+        TaskDefinitionSendBaseMessage *task = [[TaskDefinitionSendBaseMessage alloc] initWithMessage:self.message receiverIdentity:receiverIdentity group:group sendContactProfilePicture:YES];
         [taskManager addObjcWithTaskDefinition:task];
     }];
 }

@@ -36,11 +36,11 @@ struct Address {
         }
         
         if ipv4Regex.firstMatch(in: ip, options: [], range: NSRange(location: 0, length: ip.utf16.count)) != nil {
-            return .IPv4
+            return .ipv4
         }
         else if ipv6Regex
             .firstMatch(in: ip, options: [], range: NSRange(location: 0, length: ip.utf16.count)) != nil {
-            return .IPv6
+            return .ipv6
         }
         else {
             return .unknown

@@ -35,7 +35,7 @@ public enum GroupCallConfiguration {
     
     enum SendVideo {
         static let fps: Int32 = 30
-        static let width: Int32 = 1280
+        static let width: Int32 = 1280 // TODO: (IOS-3877) Why is the width larger?
         static let height: Int32 = 720
     }
     

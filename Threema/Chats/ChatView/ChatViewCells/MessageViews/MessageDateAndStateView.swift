@@ -145,6 +145,8 @@ final class MessageDateAndStateView: UIView {
         statusSymbolImageView.translatesAutoresizingMaskIntoConstraints = false
         groupReactionsStackView.translatesAutoresizingMaskIntoConstraints = false
         
+        dateLabelNoGroupReactionsInsetConstraint.priority = .defaultHigh
+        
         NSLayoutConstraint.activate([
             dateLabel.topAnchor.constraint(equalTo: topAnchor),
             dateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor),

@@ -18,13 +18,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import CocoaLumberjackSwift
-import Combine
-@preconcurrency import Foundation
-import ThreemaProtocols
+import Foundation
+import GroupCalls
 
-public final class GloblGroupCallObserverPublisher: @unchecked Sendable {
-    public lazy var groupCallListChangePublisher = source.share()
+class GroupCallsBundleUtil: GroupCallBundleUtilProtocol {
+    static let shared = GroupCallsBundleUtil()
+
+    // MARK: - Public Functions
     
-    let source = PassthroughSubject<GroupCallsThreemaGroupModel, Never>()
+    public func localizedString(for key: String) -> String {
+        BundleUtil.localizedString(forKey: key)
+    }
+    
+    func image(named name: String) -> UIImage {
+        BundleUtil.imageNamed(name) ?? UIImage(systemName: "questionmark.square.dashed")!
+    }
 }

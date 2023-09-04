@@ -50,6 +50,7 @@ extern NSString * const MDM_KEY_DISABLE_MESSAGE_PREVIEW;
 extern NSString * const MDM_KEY_DISABLE_SEND_PROFILE_PICTURE;
 extern NSString * const MDM_KEY_DISABLE_CALLS;
 extern NSString * const MDM_KEY_DISABLE_VIDEO_CALLS;
+extern NSString * const MDM_KEY_DISABLE_GROUP_CALLS;
 extern NSString * const MDM_KEY_DISABLE_CREATE_GROUP;
 extern NSString * const MDM_KEY_SKIP_WIZARD;
 extern NSString * const MDM_KEY_DISABLE_WEB;
@@ -112,6 +113,8 @@ typedef enum : int {
 - (BOOL)disableCalls;
 
 - (BOOL)disableVideoCalls;
+
+- (BOOL)disableGroupCalls;
 
 - (BOOL)disableWeb;
 

@@ -223,7 +223,7 @@ struct DisabledMultiDeviceListView: View {
         List {
             Section {
                 Button {
-                    if businessInjector.entityManager.entityFetcher.contactsContainOwnIdentity() {
+                    if businessInjector.entityManager.entityFetcher.contactsContainOwnIdentity() != nil {
                         showOwnIdentityInContactsAlert = true
                     }
                     else if KKPasscodeLock.shared().isPasscodeRequired() {

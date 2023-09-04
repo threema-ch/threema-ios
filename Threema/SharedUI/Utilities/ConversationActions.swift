@@ -59,17 +59,19 @@ class ConversationActions: NSObject {
     ) -> Guarantee<Void> {
         Guarantee { seal in
             businessInjector.backgroundEntityManager.performBlock {
-                _ = self.businessInjector.backgroundUnreadMessages.read(
-                    for: conversation,
-                    isAppInBackground: isAppInBackground
-                )
-
-                if conversation.unreadMessageCount == -1 {
-                    self.businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                        conversation.unreadMessageCount = 0
+                if let conv = self.businessInjector.backgroundEntityManager.entityFetcher
+                    .getManagedObject(by: conversation.objectID) as? Conversation {
+                    _ = self.businessInjector.backgroundUnreadMessages.read(
+                        for: conv,
+                        isAppInBackground: isAppInBackground
+                    )
+                    if conv.unreadMessageCount == -1 {
+                        self.businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                            conv.unreadMessageCount = 0
+                        }
                     }
                 }
-
+                
                 self.notificationManager.updateUnreadMessagesCount()
 
                 seal(())

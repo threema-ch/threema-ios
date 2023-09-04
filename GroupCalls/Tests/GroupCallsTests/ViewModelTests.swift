@@ -45,7 +45,7 @@ final class GroupCallViewModelTests: XCTestCase {
         
         let viewModel = GroupCallViewModel(groupCallActor: groupCallActor)
         
-        viewModel.viewDelegate = self
+        viewModel.setViewDelegate(self)
         
         await groupCallActor.uiContinuation.yield(.connected)
         
@@ -93,7 +93,7 @@ final class GroupCallViewModelTests: XCTestCase {
         
         let viewModel = GroupCallViewModel(groupCallActor: groupCallActor)
         
-        viewModel.viewDelegate = self
+        viewModel.setViewDelegate(self)
         let participantID = ParticipantID(id: 0)
         let remoteParticipant = await RemoteParticipant(
             participant: participantID,
@@ -136,14 +136,14 @@ final class GroupCallViewModelTests: XCTestCase {
     }
 }
 
-// MARK: - GroupCallViewProtocol
+// MARK: - GroupCallViewModelDelegate
 
-extension GroupCallViewModelTests: GroupCallViewProtocol {
-    func updateNavigationContent(_ contentUpdate: GroupCalls.GroupCallNavigationBarContentUpdate) async { }
-        
-    func updateLayout() { }
+extension GroupCallViewModelTests: GroupCallViewModelDelegate {
+    func updateCollectionViewLayout() { }
     
-    func close() async {
+    func dismissGroupCallView() async {
         closed = true
     }
+    
+    func updateNavigationContent(_ contentUpdate: GroupCalls.GroupCallNavigationBarContentUpdate) async { }
 }

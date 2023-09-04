@@ -71,13 +71,7 @@ extension PreviewableMessage {
         // Trim text as Swift string to prevent emoji cropping
         let trimmedString = String(previewText.prefix(configuration.trimmingCount))
         
-        // To catch all new lines, we need to remove them in a chain
-        let noNewLinesString = trimmedString
-            .replacingOccurrences(of: " \n", with: "\n")
-            .replacingOccurrences(of: "\n ", with: "\n")
-            .replacingOccurrences(of: "\n", with: " ")
-        
-        let parsedString = MarkupParser().previewString(for: noNewLinesString, font: configuration.font)
+        let parsedString = MarkupParser().previewString(for: trimmedString, font: configuration.font)
         
         let configuredAttributedText = NSMutableAttributedString(attributedString: parsedString)
         configuredAttributedText.removeAttribute(
@@ -87,6 +81,14 @@ extension PreviewableMessage {
         configuredAttributedText.addAttributes(
             [NSAttributedString.Key.foregroundColor: configuration.tintColor()],
             range: NSRange(location: 0, length: configuredAttributedText.length)
+        )
+            
+        // To catch all new lines, we need to remove them in a chain
+        configuredAttributedText.mutableString.setString(
+            configuredAttributedText.mutableString
+                .replacingOccurrences(of: " \n", with: "\n")
+                .replacingOccurrences(of: "\n ", with: "\n")
+                .replacingOccurrences(of: "\n", with: " ")
         )
                 
         // If no symbol was found, we return the text without one

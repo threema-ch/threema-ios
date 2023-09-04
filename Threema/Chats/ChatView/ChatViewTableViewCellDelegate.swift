@@ -46,6 +46,7 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     func willDeleteMessage(with objectID: NSManagedObjectID)
     func didDeleteMessages()
     func sendAck(for message: BaseMessage, ack: Bool)
+    func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID)
     
     func didSelectText(in textView: MessageTextView?)
     
@@ -54,6 +55,8 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     var cellInteractionEnabled: Bool { get }
     
     var chatViewHasCustomBackground: Bool { get }
+    
+    var chatViewIsGroupConversation: Bool { get }
 }
 
 extension ChatViewTableViewCellDelegateProtocol {
@@ -100,6 +103,16 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             WallpaperStore.shared.defaultIsEmptyWallpaper() || WallpaperStore.shared.defaultIsThreemaWallpaper()
         ) ||
             WallpaperStore.shared.hasCustomWallpaper(for: objectID)
+    }
+    
+    // MARK: - Group Conversation flag
+
+    var chatViewIsGroupConversation: Bool {
+
+        guard let conversation = chatViewController?.conversation else {
+            return false
+        }
+        return conversation.isGroup()
     }
     
     // MARK: - Swipe Interactions
@@ -346,6 +359,59 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                     await businessInjector.messageSender.sendUserDecline(for: baseMessage, toIdentity: identity)
                 }
             }
+        }
+    }
+    
+    // MARK: - Retry
+    
+    /// Method which tries to resend an unsent message. In case of BlobMessages the method cancels the resending if the
+    /// message is already uploading
+    /// - Parameter messageObjectID: Managed object ID of the message to be loaded
+    func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID) {
+        guard let message = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage else {
+            DDLogError("Message could not be loaded.")
+            return
+        }
+        
+        // If it is not a message of type BlobData, we simply resend
+        guard let fileMessage = message as? BlobData else {
+            resendMessage(withID: messageID)
+            return
+        }
+      
+        switch fileMessage.blobDisplayState {
+
+        case .pending:
+            Task {
+                await BlobManager.shared.syncBlobs(for: message.objectID)
+            }
+        case .sendingError:
+            // If a message could not be sent we might only have missed the ack from the chat server
+            // If this is the case a message with the same message ID as the previously sent one will be rejected
+            // This also applied to messages that have been rejected by the receiver due to missing or incorrect session
+            // state
+            let businessInjector = BusinessInjector()
+            guard let message = businessInjector.entityManager.performAndWait({
+                let fetchedMessage = businessInjector.entityManager.entityFetcher
+                    .existingObject(with: message.objectID) as? BaseMessage
+                fetchedMessage?.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
+                return fetchedMessage
+            })
+            else {
+                DDLogError("Message to be re-sent could not be loaded.")
+                return
+            }
+            
+            Task {
+                await BlobManager.shared.syncBlobs(for: message.objectID)
+            }
+        case .uploading:
+            Task {
+                await BlobManager.shared.cancelBlobsSync(for: message.objectID)
+            }
+        default:
+            assertionFailure("RetryAndCancelButton should not have been visible")
+            DDLogError("RetryAndCancelButton button should not have been visible")
         }
     }
 }

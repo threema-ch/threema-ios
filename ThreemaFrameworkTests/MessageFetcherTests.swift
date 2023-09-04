@@ -187,10 +187,38 @@ class MessageFetcherTests: XCTestCase {
             XCTAssertEqual(textMessage.text, expectedUnreadMessages[index])
         }
     }
-    
-    func testLastMessage() throws {
-        let lastMessage = try XCTUnwrap(messageFetcher.lastMessage())
-        let lastTextMessage = try XCTUnwrap(lastMessage as? TextMessage)
-        XCTAssertEqual(lastTextMessage.text, testTextMessages.last!)
+
+    func testLastMessageIsTextMessage() throws {
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessage)
+
+        XCTAssertEqual(
+            "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
+            result.text
+        )
+    }
+
+    func testLastMessageIsSystemMessageFsDebugMessage() throws {
+        databasePreparer.save {
+            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
+            databasePreparer.createSystemMessage(conversation: conversation, type: kFsDebugMessage)
+        }
+
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessage)
+
+        XCTAssertEqual(
+            "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
+            result.text
+        )
+    }
+
+    func testLastMessageCheckIsSystemMessageGroupCreatorLeft() throws {
+        databasePreparer.save {
+            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
+            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageGroupCreatorLeft)
+        }
+
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessage)
+
+        XCTAssertEqual(kSystemMessageGroupCreatorLeft, result.type.intValue)
     }
 }

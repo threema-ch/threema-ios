@@ -202,6 +202,10 @@ final class TaskQueue {
                             DDLogWarn("\(item.taskDefinition) incoming VoIP message wont not ack: \(error)")
                             self.done(item: item)
                         }
+                        else if case TaskExecutionError.conversationNotFound(for: _) = error {
+                            DDLogError("\(item.taskDefinition) message processing failed: \(error)")
+                            self.done(item: item)
+                        }
                         else if case TaskExecutionError.createAbstractMessageFailed = error {
                             DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
                             self.done(item: item)

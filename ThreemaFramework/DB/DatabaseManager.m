@@ -630,7 +630,7 @@ BOOL doMigrateInProgress = false;
 - (void)refreshDirtyObjects:(BOOL)removeExisting {
     DDLogInfo(@"[t-dirty-objects] Refresh dirty objects");
 
-    __block NSMutableArray *notifyObjectIds;
+    __block NSMutableSet *notifyObjectIds;
 
     dispatch_sync(dirtyObjectsQueue, ^{
         DatabaseContext *dbContext = [self getDatabaseContext];
@@ -642,7 +642,7 @@ BOOL doMigrateInProgress = false;
             return;
         }
 
-        if(removeExisting) {
+        if (removeExisting) {
             DDLogInfo(@"[t-dirty-objects] Remove array of dirty objects");
             [defaults removeObjectForKey:THREEMA_DB_DIRTY_OBJECT_KEY];
             [defaults synchronize];
@@ -651,7 +651,7 @@ BOOL doMigrateInProgress = false;
         NSTimeInterval stalenessInterval = dbContext.main.stalenessInterval;
         [dbContext main].stalenessInterval = 0.0;
 
-        notifyObjectIds = [[NSMutableArray alloc] initWithCapacity:[objects count]];
+        notifyObjectIds = [[NSMutableSet alloc] initWithCapacity:[objects count]];
         // first refresh objects in context
         for (NSString *urlString in objects) {
             NSURL *url = [NSURL URLWithString:urlString];
@@ -666,7 +666,7 @@ BOOL doMigrateInProgress = false;
 
         if ([dbContext directContexts] && [dbContext directContexts].count > 0) {
             // Note that all objects will be merged even it is updated, inserted or deleted
-            [NSManagedObjectContext mergeChangesFromRemoteContextSave:@{NSUpdatedObjectsKey: notifyObjectIds} intoContexts:[dbContext directContexts]];
+            [NSManagedObjectContext mergeChangesFromRemoteContextSave:@{NSUpdatedObjectsKey: [notifyObjectIds allObjects]} intoContexts:[dbContext directContexts]];
         }
 
         [dbContext main].stalenessInterval = stalenessInterval;
@@ -700,7 +700,7 @@ BOOL doMigrateInProgress = false;
         return;
     }
     
-    if(object.objectID.isTemporaryID) {
+    if (object.objectID.isTemporaryID) {
         DDLogError(@"[t-dirty-objects] We are dirtying a temporary ID. This is probably no intended!");
     }
 
@@ -720,9 +720,9 @@ BOOL doMigrateInProgress = false;
             newObjects = [NSMutableArray new];
         }
 
-        NSURL *url = objectID.URIRepresentation;
-        if ([newObjects containsObject:url] == NO) {
-            [newObjects addObject:url.absoluteString];
+        NSURL *absoluteString = objectID.URIRepresentation.absoluteString;
+        if ([newObjects containsObject:absoluteString] == NO) {
+            [newObjects addObject:absoluteString];
 
             NSArray *newObjectsArray = [[NSArray alloc] initWithArray:newObjects];
             [defaults setObject:newObjectsArray forKey:THREEMA_DB_DIRTY_OBJECT_KEY];

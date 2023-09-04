@@ -22,7 +22,7 @@ import Foundation
 @testable import GroupCalls
 
 final class MockGroupCallDateFormatter: GroupCallDateFormatterProtocol {
-    func timeFormatted(_ totalSeconds: Int) -> String {
+    func timeFormatted(_ totalSeconds: TimeInterval) -> String {
         "\(totalSeconds)"
     }
 }

@@ -412,8 +412,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         });
     }
 
-    EntityManager *em = [EntityManager new];
-    [em repairDatabaseIntegrity];
+    AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
+    [appLaunchTasks runLaunchEventDidFinishLaunching];
     
     incomingMessageManager = [IncomingMessageManager new];
     [incomingMessageManager showIsNotPending];
@@ -1177,6 +1177,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return;
     }
 
+    AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
+    [appLaunchTasks runLaunchEventWillEnterForeground];
+
     // Reload pending user notification cache, because could be changed by Notification Extension in the mean time
     if (incomingMessageManager) {
         [incomingMessageManager reloadPendingUserNotificationCache];
@@ -1232,6 +1235,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [[DatabaseManager dbManager] refreshDirtyObjects: YES];
     
     [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
+    [FeatureMask updateFeatureMask];
+    [AppDelegate registerForLocalNotifications];
+    
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
     [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
     
@@ -1660,8 +1666,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 [self removeAllControllersFromRoot];
             } completion:^(BOOL finished) {
                 // Delete all data then show summary
-                [DeleteRevokeIdentityManager deleteLocalData];
-                self.window.rootViewController = [SwiftUIAdapter createDeleteSummaryView];
+                [DeleteRevokeIdentityManager deleteLocalDataObjCWithCompletion:^{
+                    self.window.rootViewController = [SwiftUIAdapter createDeleteSummaryView];
+                }];
             }];
         }];
     }];

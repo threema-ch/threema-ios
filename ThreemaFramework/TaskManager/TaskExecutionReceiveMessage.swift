@@ -106,19 +106,19 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 DDLogNotice(
                     "\(LoggingTag.sendIncomingMessageAckToChat.hexString) \(LoggingTag.sendIncomingMessageAckToChat) \(abstractMessageAndPFSSession?.message?.loggingDescription ?? task.message.loggingDescription)"
                 )
-
-                if ThreemaEnvironment.lateSessionSave {
-                    if let session = abstractMessageAndPFSSession?.session as? DHSession {
-                        try self.frameworkInjector.fsmp.updateRatchetCounters(session: session)
-                    }
-                }
-
+                
                 if let processedMsg = abstractMessageAndPFSSession?.message {
                     // Message is processed, store message nonce
                     if !processedMsg.flagDontQueue() {
                         try self.frameworkInjector.nonceGuard.processed(message: processedMsg)
                     }
-
+                    
+                    // Commit the peer ratchet. Call this method after an incoming message has been processed
+                    // completely.
+                    if let session = abstractMessageAndPFSSession?.session as? DHSession {
+                        try self.frameworkInjector.fsmp.updateRatchetCounters(session: session)
+                    }
+                    
                     self.frameworkInjector.backgroundEntityManager.performAndWait {
                         // Unarchive conversation if message type can unarchive a conversation and is archived
                         if processedMsg.canUnarchiveConversation(),

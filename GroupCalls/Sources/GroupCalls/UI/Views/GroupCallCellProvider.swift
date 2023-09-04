@@ -28,4 +28,6 @@ struct GroupCallCellProvider {
             forCellWithReuseIdentifier: GroupCallParticipantCell.reuseIdentifier
         )
     }
+    
+    // TODO: (IOS-4049) Move cell provider here
 }

@@ -107,7 +107,7 @@ class GroupCallNavigationBar: UIView {
         
         super.init(frame: .zero)
         
-        setup()
+        configureView()
     }
     
     @available(*, unavailable)
@@ -122,6 +122,7 @@ class GroupCallNavigationBar: UIView {
     
     // MARK: - Public Functions
     
+    // TODO: (IOS-4049) Is this needed in there, can't we just show and hide this whole view?
     public func toggleVisibility() {
         isNavBarHidden.toggle()
         
@@ -149,7 +150,7 @@ class GroupCallNavigationBar: UIView {
     
     // MARK: - Private Functions
     
-    private func setup() {
+    private func configureView() {
         addSubview(dismissButton)
         addSubview(groupNameLabel)
         addSubview(participantIcon)

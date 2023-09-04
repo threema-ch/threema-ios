@@ -765,9 +765,22 @@
 "call_threema_cellular_instead_of_wifi_text" = "Varování: Toto volání využívá k přenosu data mobilní sítě.";
 
 // Group Calls
+"group_call_title" = "Skupinové hovory";
+/* Group Calls */
 "group_call_join_button_title" = "Přidat se";
 "group_call_open_button_title" = "Otevřít";
 "group_call_participants_title" = "Účastníci: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ začal(a) skupinový hovor";
+"group_call_started_by_local_system_message" = "Začal(a) jste skupinový hovor";
+"group_call_ended_system_message" = "Skupinový hovor byl ukončen";
+
+"group_call_start_message_received" = "Zahájen skupinový hovor";
+
+"group_call_navbar_state_connecting" = "Spojování...";
+"group_call_navbar_state_joining" = "Připojování...";
+"group_call_navbar_state_connected" = "Spojeno";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema chrání vaše soukromí pečlivěji než kterákoliv jiná komunikační aplikace. Podrobnější informace najdete v našich Zásadách ochrany osobních údajů.";
@@ -1203,6 +1216,9 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Směrovat hovory přes servery OnPrem kvůli ukrytí IP adresy před partnery v hovoru. Může ovlivnit kvalitu hovorů.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Hovory se zobrazují na uzamčené obrazovce, ale nejsou uvedeny v seznamu hovorů aplikace Telefon.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Hovory se zobrazují na uzamčené obrazovce a vypisují se v seznamu hovorů aplikace Telefon. Je-li zapnutý iCloud Drive, synchronizuje se seznam hovorů z aplikace Telefon přes servery Apple.";
+"settings_threema_voip_no_callkit_in_china_footer" = "Z důvodu omezení od společnosti Apple nejsou hovory Threema k dispozici, je-li region zařízení nastavený na Čínu.";
+"settings_threema_calls_group_calls_header" = "Skupinové hovory (Beta)";
+"settings_threema_calls_enable_group_calls" = "Povolit skupinové hovory Threema";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Práce v síti";
@@ -1364,7 +1380,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "ballot_intermediate_results" = "Průběžné výsledky";
 "ballot_show_intermediate_results" = "Zobrazit průběžné výsledky";
 "ballot_multiple_choice" = "Více možností";
-"ballot_clone" = "Zkopírovat stávající hlasování";
+"ballot_clone" = "Zkopírovat stávající anketu";
 "ballot_clone_warning_title" = "Upozornění";
 "ballot_clone_warning_message" = "Všechny stávající vstupy budou přepsány.";
 "ballot_feature_level_warning_title" = "Upozornění";
@@ -1777,17 +1793,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "alert_biometrics_changed_title_touch" = "Zjištěna možná změna TouchID";
 "alert_biometrics_changed_title_face" = "Zjištěna možná změna FaceID";
 "alert_biometrics_changed_message" = "Chcete-li dál odemykat Threema pomocí biometrického ověření, zadejte jednorázově svůj přístupový kód Threema.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ začal(a) skupinový hovor";
-"group_call_started_by_local_system_message" = "Začal(a) jste skupinový hovor";
-"group_call_ended_system_message" = "Skupinový hovor byl ukončen";
-
-"group_call_start_message_received" = "Zahájen skupinový hovor";
-
-"group_call_navbar_state_connecting" = "Spojování...";
-"group_call_navbar_state_joining" = "Připojování...";
-"group_call_navbar_state_connected" = "Spojeno";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nNelze přejít na níže, tedy z verze %d na verzi %d.";

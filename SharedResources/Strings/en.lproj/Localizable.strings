@@ -765,9 +765,22 @@
 "call_threema_cellular_instead_of_wifi_text" = "Warning: This call causes data transfer in the cellular network.";
 
 // Group Calls
+"group_call_title" = "Group Call";
+/* Group Calls */
 "group_call_join_button_title" = "Join";
 "group_call_open_button_title" = "Open";
 "group_call_participants_title" = "Participants: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ started a group call";
+"group_call_started_by_local_system_message" = "You started a group call";
+"group_call_ended_system_message" = "Group call has ended";
+
+"group_call_start_message_received" = "Started a group call";
+
+"group_call_navbar_state_connecting" = "Connecting…";
+"group_call_navbar_state_joining" = "Joining…";
+"group_call_navbar_state_connected" = "Connected";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protects your privacy more rigorously than any other messenger. Find out more in our Privacy Policy.";
@@ -1205,6 +1218,8 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_threema_voip_include_call_in_recents_footer_off" = "Calls are displayed on the lock screen but not listed in the Phone app’s call list.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Calls are displayed on the lock screen and listed in the Phone app’s call list. If iCloud Drive is activated, the Phone app’s call list is synchronized via Apple servers.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Due to restrictions from Apple, Threema calls are not available if the device’s region is set to China.";
+"settings_threema_calls_group_calls_header" = "Group Calls (Beta)";
+"settings_threema_calls_enable_group_calls" = "Enable Threema Group Calls";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Networking";
@@ -1779,17 +1794,6 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "alert_biometrics_changed_title_touch" = "Possible change in TouchID detected";
 "alert_biometrics_changed_title_face" = "Possible change in FaceID detected";
 "alert_biometrics_changed_message" = "Please enter your Threema passcode once, to continue using biometric authentication to unlock Threema.";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@ started a group call";
-"group_call_started_by_local_system_message" = "You started a group call";
-"group_call_ended_system_message" = "Group call has ended";
-
-"group_call_start_message_received" = "Started a group call";
-
-"group_call_navbar_state_connecting" = "Connecting…";
-"group_call_navbar_state_joining" = "Joining…";
-"group_call_navbar_state_connected" = "Connected";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nCould not downgrade from version %d to version %d";

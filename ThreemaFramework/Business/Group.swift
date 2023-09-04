@@ -40,6 +40,13 @@ public struct GroupIdentity: Equatable {
 
 /// Business representation of a Threema group
 public class Group: NSObject {
+    
+    // These strings are used as static properties for performance reasons
+    private static let meString = BundleUtil.localizedString(forKey: "me")
+    private static let unknownString = BundleUtil.localizedString(forKey: "(unknown)")
+    private static let oneMemberTitleString = BundleUtil.localizedString(forKey: "group_one_member_title")
+    private static let multipleMemberTitleString = BundleUtil.localizedString(forKey: "group_multiple_members_title")
+    private static let maxGroupMembers = BundleUtil.object(forInfoDictionaryKey: "ThreemaMaxGroupMembers") as? Int ?? 0
 
     /// A member in a group
     public enum Member: CustomStringConvertible, Equatable {
@@ -50,11 +57,11 @@ public class Group: NSObject {
         public var shortDisplayName: String {
             switch self {
             case .me:
-                return BundleUtil.localizedString(forKey: "me")
+                return meString
             case let .contact(contact):
                 return contact.shortDisplayName
             case .unknown:
-                return BundleUtil.localizedString(forKey: "(unknown)")
+                return unknownString
             }
         }
         
@@ -62,11 +69,11 @@ public class Group: NSObject {
         public var description: String {
             switch self {
             case .me:
-                return BundleUtil.localizedString(forKey: "me")
+                return meString
             case let .contact(contact):
                 return contact.displayName
             case .unknown:
-                return BundleUtil.localizedString(forKey: "(unknown)")
+                return unknownString
             }
         }
 
@@ -293,7 +300,7 @@ public class Group: NSObject {
     
     /// Can I add new members
     public var canAddMembers: Bool {
-        let maxGroupMembers: Int = BundleUtil.object(forInfoDictionaryKey: "ThreemaMaxGroupMembers") as? Int ?? 0
+        let maxGroupMembers: Int = Group.maxGroupMembers
         
         return isOwnGroup && members.count < maxGroupMembers
     }
@@ -372,11 +379,11 @@ public class Group: NSObject {
     
     public var membersTitleSummary: String {
         if numberOfMembers == 1 {
-            return BundleUtil.localizedString(forKey: "group_one_member_title")
+            return Group.oneMemberTitleString
         }
         else {
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "group_multiple_members_title"),
+                Group.multipleMemberTitleString,
                 numberOfMembers
             )
         }

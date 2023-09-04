@@ -82,11 +82,7 @@ final class ChatViewWorkConsumerInfoSystemMessageTableViewCell: ThemedCodeTableV
     
     override func configureCell() {
         super.configureCell()
-        
-        if UserSettings.shared().flippedTableView {
-            transform = CGAffineTransform(scaleX: 1, y: -1)
-        }
-        
+                
         backgroundConfiguration = UIBackgroundConfiguration.clear()
         
         // Layout

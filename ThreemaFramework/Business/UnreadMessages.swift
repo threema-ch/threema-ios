@@ -28,6 +28,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
 }
 
 @objc public protocol UnreadMessagesProtocolObjc {
+    @discardableResult
     func count(for conversation: Conversation) -> Int
     @discardableResult
     func totalCount() -> Int
@@ -54,10 +55,11 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     /// Unread messages count of conversation and recalculate `Conversation.unreadMessageCount`.
     /// - Parameter conversation: Conversation to counting und recalculating unread messages count
     /// - Returns: Unread messages count for this conversation
+    @discardableResult
     public func count(for conversation: Conversation) -> Int {
         var unreadMessagesCount = 0
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             unreadMessagesCount = self.count(conversations: [conversation], doCalcUnreadMessagesCountOf: [conversation])
         }
 
@@ -79,7 +81,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     public func totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>) -> Int {
         var unreadMessagesCount = 0
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             var conversations = [Conversation]()
             for conversation in self.entityManager.entityFetcher.allConversations() {
                 if let conversation = conversation as? Conversation {
@@ -209,7 +211,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     }
 
     private func updateMessageRead(messages: [BaseMessage]) {
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for message in messages {
                 message.read = NSNumber(booleanLiteral: true)
                 message.readDate = Date()

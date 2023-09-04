@@ -542,7 +542,7 @@ import Foundation
         // It seams, since iOS version 15 is this not necessary anymore. Core Data deleting now the external files.
         // If we do that yet Core Data crashs with: "External data reference can't find underlying file."
         // swiftformat:disable:next all
-        return
+        return;
 
         if !list.isEmpty {
             for filename in list {

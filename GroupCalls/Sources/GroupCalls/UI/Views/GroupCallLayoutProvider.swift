@@ -20,8 +20,11 @@
 
 import Foundation
 import UIKit
-class LayoutProvider {
+
+class GroupCallLayoutProvider {
+    
     @MainActor static func createLayout(numberOfParticipants: Int) -> UICollectionViewCompositionalLayout {
+        // TODO: (IOS-4049) Shouldn't this be based on `UIUserInterfaceSizeClass` in the trait collection?
         if UIDevice.current.userInterfaceIdiom == .pad {
             return createLayoutForPads(numberOfParticipants: numberOfParticipants)
         }
@@ -30,8 +33,11 @@ class LayoutProvider {
         }
     }
     
-    @MainActor static func createLayoutForPhones(numberOfParticipants: Int) -> UICollectionViewCompositionalLayout {
-        let inset: CGFloat = 2
+    // MARK: - Phone
+    
+    @MainActor private static func createLayoutForPhones(numberOfParticipants: Int)
+        -> UICollectionViewCompositionalLayout {
+        let inset: CGFloat = 2 // TODO: (IOS-4049) Add to config
         
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(verticalFractionPhone(numberOfParticipants: numberOfParticipants)),
@@ -52,9 +58,9 @@ class LayoutProvider {
         )
         
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsetsReference = .safeArea
+        section.contentInsetsReference = .safeArea // TODO: (IOS-4049) Verify insets
         let configuration = UICollectionViewCompositionalLayoutConfiguration()
-        configuration.contentInsetsReference = .layoutMargins
+        configuration.contentInsetsReference = .layoutMargins // TODO: (IOS-4049) Verify insets
         let layout = UICollectionViewCompositionalLayout(section: section, configuration: configuration)
 
         return layout
@@ -62,7 +68,9 @@ class LayoutProvider {
     
     private static func cellHeightFactorPhone(numberOfParticipants: Int) -> Double {
         switch numberOfParticipants {
-        case 2...:
+        case 5...:
+            return 0.475
+        case 2..<5:
             return 0.5
         default:
             return 1.0
@@ -78,8 +86,11 @@ class LayoutProvider {
         }
     }
     
-    @MainActor static func createLayoutForPads(numberOfParticipants: Int) -> UICollectionViewCompositionalLayout {
-        let inset: CGFloat = 5
+    // MARK: - Pad
+    
+    @MainActor private static func createLayoutForPads(numberOfParticipants: Int)
+        -> UICollectionViewCompositionalLayout {
+        let inset: CGFloat = 5 // TODO: (IOS-4049) Add to config
         
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(verticalFractionPad(numberOfParticipants: numberOfParticipants)),
@@ -100,9 +111,9 @@ class LayoutProvider {
         )
         
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsetsReference = .safeArea
+        section.contentInsetsReference = .safeArea // TODO: (IOS-4049) Verify insets
         let configuration = UICollectionViewCompositionalLayoutConfiguration()
-        configuration.contentInsetsReference = .layoutMargins
+        configuration.contentInsetsReference = .layoutMargins // TODO: (IOS-4049) Verify insets
         let layout = UICollectionViewCompositionalLayout(section: section, configuration: configuration)
 
         return layout

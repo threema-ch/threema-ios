@@ -95,23 +95,25 @@ final class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskEx
             // Send group delivery receipts messages
             var sendMessages = [Promise<AbstractMessage?>]()
             for toMember in task.toMembers {
-                if !toMember.elementsEqual(self.frameworkInjector.myIdentityStore.identity) {
-                    let msg = self.getGroupDeliveryReceiptMessage(
-                        groupID,
-                        groupCreatorIdentity,
-                        task.fromMember,
-                        toMember,
-                        task.receiptType,
-                        task.receiptMessageIDs
-                    )
-                    sendMessages.append(
-                        self.sendMessage(
-                            message: msg,
-                            ltSend: self.taskContext.logSendMessageToChat,
-                            ltAck: self.taskContext.logReceiveMessageAckFromChat
-                        )
-                    )
+                if toMember == self.frameworkInjector.myIdentityStore.identity {
+                    continue
                 }
+            
+                let msg = self.getGroupDeliveryReceiptMessage(
+                    groupID,
+                    groupCreatorIdentity,
+                    task.fromMember,
+                    toMember,
+                    task.receiptType,
+                    task.receiptMessageIDs
+                )
+                sendMessages.append(
+                    self.sendMessage(
+                        message: msg,
+                        ltSend: self.taskContext.logSendMessageToChat,
+                        ltAck: self.taskContext.logReceiveMessageAckFromChat
+                    )
+                )
             }
 
             return when(fulfilled: sendMessages)

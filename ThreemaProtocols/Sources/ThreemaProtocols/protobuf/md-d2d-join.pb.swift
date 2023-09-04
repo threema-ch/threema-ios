@@ -359,6 +359,18 @@ public struct Join_EssentialData {
   /// Clears the value of `identityData`. Subsequent reads from it will return its default value.
   public mutating func clearIdentityData() {_uniqueStorage()._identityData = nil}
 
+  /// Threema Work credentials
+  ///
+  /// Required for a Threema Work app. Must not be present in a Threema consumer app.
+  public var workCredentials: Sync_ThreemaWorkCredentials {
+    get {return _storage._workCredentials ?? Sync_ThreemaWorkCredentials()}
+    set {_uniqueStorage()._workCredentials = newValue}
+  }
+  /// Returns true if `workCredentials` has been explicitly set.
+  public var hasWorkCredentials: Bool {return _storage._workCredentials != nil}
+  /// Clears the value of `workCredentials`. Subsequent reads from it will return its default value.
+  public mutating func clearWorkCredentials() {_uniqueStorage()._workCredentials = nil}
+
   public var deviceGroupData: Join_EssentialData.DeviceGroupData {
     get {return _storage._deviceGroupData ?? Join_EssentialData.DeviceGroupData()}
     set {_uniqueStorage()._deviceGroupData = newValue}
@@ -762,6 +774,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   public static let protoMessageName: String = _protobuf_package + ".EssentialData"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     2: .standard(proto: "identity_data"),
+    12: .standard(proto: "work_credentials"),
     3: .standard(proto: "device_group_data"),
     4: .standard(proto: "user_profile"),
     5: .same(proto: "settings"),
@@ -775,6 +788,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
   fileprivate class _StorageClass {
     var _identityData: Join_EssentialData.IdentityData? = nil
+    var _workCredentials: Sync_ThreemaWorkCredentials? = nil
     var _deviceGroupData: Join_EssentialData.DeviceGroupData? = nil
     var _userProfile: Sync_UserProfile? = nil
     var _settings: Sync_Settings? = nil
@@ -791,6 +805,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
     init(copying source: _StorageClass) {
       _identityData = source._identityData
+      _workCredentials = source._workCredentials
       _deviceGroupData = source._deviceGroupData
       _userProfile = source._userProfile
       _settings = source._settings
@@ -828,6 +843,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         case 9: try { try decoder.decodeRepeatedMessageField(value: &_storage._distributionLists) }()
         case 10: try { try decoder.decodeRepeatedBytesField(value: &_storage._cspHashedNonces) }()
         case 11: try { try decoder.decodeRepeatedBytesField(value: &_storage._d2DHashedNonces) }()
+        case 12: try { try decoder.decodeSingularMessageField(value: &_storage._workCredentials) }()
         default: break
         }
       }
@@ -870,6 +886,9 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       if !_storage._d2DHashedNonces.isEmpty {
         try visitor.visitRepeatedBytesField(value: _storage._d2DHashedNonces, fieldNumber: 11)
       }
+      try { if let v = _storage._workCredentials {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 12)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -880,6 +899,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         let _storage = _args.0
         let rhs_storage = _args.1
         if _storage._identityData != rhs_storage._identityData {return false}
+        if _storage._workCredentials != rhs_storage._workCredentials {return false}
         if _storage._deviceGroupData != rhs_storage._deviceGroupData {return false}
         if _storage._userProfile != rhs_storage._userProfile {return false}
         if _storage._settings != rhs_storage._settings {return false}

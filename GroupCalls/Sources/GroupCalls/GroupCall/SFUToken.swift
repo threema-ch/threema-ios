@@ -36,7 +36,7 @@ public struct SFUToken: Sendable {
 
     let sfuBaseURL: String
     let hostNameSuffixes: [String]
-    let sfuTOken: String
+    let sfuToken: String
     
     // MARK: - Private Properties
     
@@ -46,11 +46,60 @@ public struct SFUToken: Sendable {
     
     // MARK: - Lifecycle
     
-    public init(sfuBaseURL: String, hostNameSuffixes: [String], sfuTOken: String, expiration: Int) {
+    public init(sfuBaseURL: String, hostNameSuffixes: [String], sfuToken: String, expiration: Int) {
         self.sfuBaseURL = sfuBaseURL
         self.hostNameSuffixes = hostNameSuffixes
-        self.sfuTOken = sfuTOken
+        self.sfuToken = sfuToken
         
         self.expirationDate = Date().addingTimeInterval(TimeInterval(expiration - expirationOffset))
+    }
+    
+    public func isAllowedBaseURL(baseURL: String) -> Bool {
+        guard let url = URL(string: baseURL) else {
+            return false
+        }
+        return hasAllowedProtocol(url: url) && hasAllowedHostnameSuffix(url: url)
+    }
+    
+    public func hasAllowedProtocol(url: URL) -> Bool {
+        url.scheme == ProtocolDefines.allowedBaseURLProtocol
+    }
+    
+    // TODO: (IOS-3880) Add test
+    public func hasAllowedHostnameSuffix(url: URL) -> Bool {
+        var host = ""
+        
+        if #available(iOS 16.0, *) {
+            if let givenHost = url.host() {
+                host = givenHost
+            }
+        }
+        else {
+            if let givenHost = url.host {
+                host = givenHost
+            }
+        }
+        
+        if let port = url.port {
+            switch port {
+            case -1:
+                break
+            default:
+                var components = URLComponents()
+                components.host = host
+                components.port = port
+                if let componentsString = components.string {
+                    host = componentsString
+                }
+                else {
+                    DDLogError("[SFUToken] Could not create host from host and port: \(host):\(port)")
+                    host = "\(host):\(port)"
+                }
+            }
+        }
+        
+        return hostNameSuffixes.contains {
+            host.hasSuffix($0)
+        }
     }
 }

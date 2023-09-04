@@ -765,9 +765,22 @@
 "call_threema_cellular_instead_of_wifi_text" = "警告：这个通话将使用移动数据进行。";
 
 // Group Calls
+"group_call_title" = "群组通话";
+/* Group Calls */
 "group_call_join_button_title" = "加入";
 "group_call_open_button_title" = "打开";
 "group_call_participants_title" = "参与者：%@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@发起了群组通话";
+"group_call_started_by_local_system_message" = "您发起了群组通话";
+"group_call_ended_system_message" = "群组通话已结束";
+
+"group_call_start_message_received" = "发起群组通话";
+
+"group_call_navbar_state_connecting" = "连接中...";
+"group_call_navbar_state_joining" = "正在加入…";
+"group_call_navbar_state_connected" = "已连接";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema 比任何其他即时通讯工具更加严格地保护您的隐私。在我们的隐私政策中了解更多。";
@@ -1205,6 +1218,8 @@
 "settings_threema_voip_include_call_in_recents_footer_off" = "来电通知虽然显示在锁屏上，但未列在系统内置的 “电话” 应用的通话记录。";
 "settings_threema_voip_include_call_in_recents_footer_on" = "来电通知会显示在锁屏上，并列在系统内置的 “电话” 应用的通话记录。如果激活了 iCloud Drive，通话记录会通过苹果服务器同步。";
 "settings_threema_voip_no_callkit_in_china_footer" = "由于苹果公司的限制，如果设备的地区设置为中国大陆，就无法使用 Threema 通话。";
+"settings_threema_calls_group_calls_header" = "群组通话（测试中）";
+"settings_threema_calls_enable_group_calls" = "启用 Threema 群组通话";
 
 // Advanced Settings
 "settings_advanced_networking_section_header" = "联网中";
@@ -1779,17 +1794,6 @@
 "alert_biometrics_changed_title_touch" = "检测到 Touch ID 可能发生变化";
 "alert_biometrics_changed_title_face" = "检测到 Face ID 可能发生变化";
 "alert_biometrics_changed_message" = "请再输入你的 Threema 密码，以继续使用生物认证来解锁 Threema。";
-
-// Group Calls
-"group_call_started_by_contact_system_message" = "%@发起了群组通话";
-"group_call_started_by_local_system_message" = "您发起了群组通话";
-"group_call_ended_system_message" = "群组通话已结束";
-
-"group_call_start_message_received" = "发起群组通话";
-
-"group_call_navbar_state_connecting" = "连接中...";
-"group_call_navbar_state_joining" = "正在加入…";
-"group_call_navbar_state_connected" = "已连接";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n无法从 %d 版本降级到 %d 版本";

@@ -148,6 +148,13 @@ static dispatch_queue_t directContextsQueue;
 }
 
 - (void)managedObjectContextDidSave:(NSNotification *)notification {
+    // Check has something changed
+    if ([[[notification userInfo] objectForKey:NSDeletedObjectsKey] count] == 0
+        && [[[notification userInfo] objectForKey:NSUpdatedObjectsKey] count] == 0
+        && [[[notification userInfo] objectForKey:NSInsertedObjectsKey] count] == 0) {
+        return;
+    }
+
     // Merge changes from context to private context
     NSManagedObjectContext *currentContext = notification.object;
     if (currentContext == mainContext && privateContext != nil) {

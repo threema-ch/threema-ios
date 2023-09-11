@@ -375,12 +375,7 @@ class GroupCallToolbar: UIView {
     
     private func didTapToggleAudioButton() {
         Task {
-            do {
-                try await viewModel.toggleOwnAudio()
-            }
-            catch {
-                // TODO: Test
-            }
+            await viewModel.toggleOwnAudio()
         }
     }
     
@@ -390,12 +385,7 @@ class GroupCallToolbar: UIView {
     
     private func didTapToggleVideoButton() {
         Task {
-            do {
-                try await viewModel.toggleOwnVideo()
-            }
-            catch {
-                // TODO: Test
-            }
+            await viewModel.toggleOwnVideo()
         }
     }
     

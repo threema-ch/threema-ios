@@ -225,11 +225,12 @@ import WebRTC
         }
         
         guard await isValidSFUURL(convRawMessage.sfuBaseURL) else {
+            DDLogError("[GroupCall] Received message with invalid SFU-URL: \(convRawMessage.sfuBaseURL)")
             return
         }
         
         guard let groupModel = await groupCallManager.getGroupModel(for: groupConversation.objectID) else {
-            DDLogError("[GroupCall] Could not get group model")
+            DDLogError("[GroupCall] Could not get group model for group.")
             return
         }
         
@@ -242,13 +243,21 @@ import WebRTC
             dependencies: dependencies
         )
         
-        // TODO: IOS-3728 Gracefully unwrap this
-        try! await saveGroupCallStartMessage(
-            for: convRawMessage,
-            with: receiveDate,
-            in: groupModel,
-            in: groupConversation
-        )
+        do {
+            try await saveGroupCallStartMessage(
+                for: convRawMessage,
+                with: receiveDate,
+                in: groupModel,
+                in: groupConversation
+            )
+        }
+        catch {
+            // TODO: (IOS-3813) Filter error and print its desc
+            // We do not return here to still make it possible to join call.
+            DDLogError(
+                "[GroupCall] Could not save group call start message. Error: \(error.localizedDescription). GroupID: \(groupModel.groupID)"
+            )
+        }
         
         let senderThreemaID: GroupCallCreatorOrigin
         if let senderIdentity {
@@ -271,48 +280,42 @@ import WebRTC
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return
         }
+        var addedObject: NSManagedObjectID?
+
+        try await currentBusinessInjector.backgroundEntityManager.performSave {
+
+            guard let conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
+                .existingObject(with: groupConversation.objectID) as? Conversation,
+                let groupEntity = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
+                .groupEntity(for: conversation) else {
+                DDLogError("[GroupCall] Could not find group entity for group call message")
+                throw GroupCallError.groupNotFound
+            }
+            
+            assert(!groupEntity.groupID.isEmpty)
+            
+            // Setup group call
+            let groupCallEntity = self.currentBusinessInjector.backgroundEntityManager.entityCreator
+                .groupCallEntity()
+            groupCallEntity?.group = groupEntity
+            groupCallEntity?.gck = convRawMessage.gck
+            groupCallEntity?.protocolVersion = NSNumber(value: convRawMessage.protocolVersion)
+            groupCallEntity?.sfuBaseURL = convRawMessage.sfuBaseURL
+            groupCallEntity?.startMessageReceiveDate = receiveDate
+            
+            addedObject = groupCallEntity?.objectID
+            
+            DDLogNotice("[GroupCall] [DB] Saved group call to database")
+        }
         
-        try await withCheckedThrowingContinuation { continuation in
-            var addedObject: NSManagedObjectID?
-            
-            self.currentBusinessInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                
-                guard let conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
-                    .existingObject(with: groupConversation.objectID) as? Conversation,
-                    let groupEntity = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
-                    .groupEntity(for: conversation) else {
-                    let msg = "Could not find group entity for group call message"
-                    DDLogError(msg)
-                    
-                    continuation.resume()
-                    return
-                }
-                
-                assert(!groupEntity.groupID.isEmpty)
-                
-                // Setup group call
-                let groupCallEntity = self.currentBusinessInjector.backgroundEntityManager.entityCreator
-                    .groupCallEntity()
-                groupCallEntity?.group = groupEntity
-                groupCallEntity?.gck = convRawMessage.gck
-                groupCallEntity?.protocolVersion = NSNumber(value: convRawMessage.protocolVersion)
-                groupCallEntity?.sfuBaseURL = convRawMessage.sfuBaseURL
-                groupCallEntity?.startMessageReceiveDate = receiveDate
-                
-                addedObject = groupCallEntity?.objectID
-                
-                DDLogNotice("[GroupCall] [DB] Saved group call to database")
+        // Mark entity as dirty
+        currentBusinessInjector.backgroundEntityManager.performBlock {
+            guard let addedObject else {
+                DDLogError("[GroupCall] Could not mark added group call as dirty.")
+                return
             }
             
-            // Mark entity as dirty
-            self.currentBusinessInjector.backgroundEntityManager.performBlock {
-                guard let addedObject else {
-                    continuation.resume()
-                    return
-                }
-                DatabaseManager().addDirtyObjectID(addedObject)
-                continuation.resume()
-            }
+            DatabaseManager().addDirtyObjectID(addedObject)
         }
     }
     
@@ -335,7 +338,7 @@ import WebRTC
         
         var conversation: Conversation!
         
-        currentBusinessInjector.backgroundEntityManager.performBlockAndWait {
+        await currentBusinessInjector.backgroundEntityManager.perform {
             conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.conversation(
                 for: groupModel.groupID,
                 creator: groupModel.creator.id
@@ -347,13 +350,13 @@ import WebRTC
         return message
     }
     
-    public func joinCall(in groupModel: GroupCallsThreemaGroupModel) async throws -> GroupCallViewModel? {
+    public func joinCall(in groupModel: GroupCallsThreemaGroupModel) async -> GroupCallViewModel? {
         guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return nil
         }
         
-        return await (groupCallManager.joinCall(in: groupModel, intent: .join)).1
+        return await groupCallManager.joinCall(in: groupModel, intent: .join)
     }
     
     public func viewModel(for group: GroupCallsThreemaGroupModel) async -> GroupCallViewModel? {
@@ -378,6 +381,7 @@ import WebRTC
             await groupCallManager.viewModelForCurrentlyJoinedGroupCall()
         }
         
+        // TODO: (IOS-3813) Show error msgs and leave call
         guard let viewModel = try? await task.result.get() else {
             return nil
         }
@@ -389,17 +393,24 @@ import WebRTC
         await groupCallManager.getCallID(in: groupModel)
     }
     
+    // TODO: (IOS-3813) Make this throw instead of bool
+    private func isValidSFUURL(_ baseURL: String) async -> Bool {
+        do {
+            let token = try await httpHelper.sfuCredentials()
+            return token.isAllowedBaseURL(baseURL: baseURL)
+        }
+        catch {
+            DDLogError("[GroupCall] Invalid baseURL: \(baseURL)")
+            return false
+        }
+    }
+
     public static func sendDebugInitMessages(
         for conversationObjectID: NSManagedObjectID,
         and groupModel: GroupCallsThreemaGroupModel,
         startMessage: ThreemaProtocols.CspE2e_GroupCallStart
     ) async {
-        if #available(iOSApplicationExtension 16.0, *) {
-            try! await Task.sleep(for: .seconds(1))
-        }
-        else {
-            // Fallback on earlier versions
-        }
+        try! await Task.sleep(seconds: 1)
         
         var groupDict = [String: String]()
         var memberDict = [[String: String]]()
@@ -473,17 +484,6 @@ import WebRTC
             )
         }
     }
-    
-    private func isValidSFUURL(_ baseURL: String) async -> Bool {
-        do {
-            let token = try await httpHelper.sfuCredentials()
-            return token.isAllowedBaseURL(baseURL: baseURL)
-        }
-        catch {
-            DDLogError("[GroupCall] Invalid baseURL: \(baseURL)")
-            return false
-        }
-    }
 }
 
 // MARK: - Debug Call Start Functions
@@ -534,7 +534,7 @@ import WebRTC
                 // Fallback on earlier versions
             }
         
-            return await (groupCallManager.joinCall(in: groupModel, intent: .create)).1!
+            return await groupCallManager.joinCall(in: groupModel, intent: .create)!
         }
     }
 #endif
@@ -545,9 +545,10 @@ extension GlobalGroupCallsManagerSingleton {
         in conversation: Conversation,
         with identity: String
     ) async throws -> GroupCallViewModel {
-        
+
         guard let group = GroupManager().getGroup(conversation: conversation) else {
-            throw NSError(domain: "GroupCalls", code: 0)
+            DDLogError("[GroupCall] Could not get group to start a group call.")
+            throw GroupCallError.creationError
         }
         
         let groupCreatorID: String = group.groupCreatorIdentity
@@ -567,10 +568,9 @@ extension GlobalGroupCallsManagerSingleton {
         let (groupCallStartMessage, viewModel) = try await startGroupCall(in: groupModel, with: myIdentity)
         
         guard let viewModel else {
-            // TODO: IOS-3743 Graceful Error Handling
-            throw NSError(domain: "GroupCalls", code: 0)
+            throw GroupCallError.creationError
         }
-                    
+                
         if UserSettings.shared().groupCallsDebugMessages, let groupCallStartMessage {
             Task.detached {
                 try! await Task.sleep(nanoseconds: 2 * 1_000_000_000)
@@ -619,9 +619,8 @@ extension GlobalGroupCallsManagerSingleton {
             }
         }
         
-        guard let viewModel = try? await GlobalGroupCallsManagerSingleton.shared.joinCall(in: groupModel) else {
-            // TODO: IOS-3743 Graceful Error Handling
-            throw NSError(domain: "GroupCalls", code: 0)
+        guard let viewModel = await GlobalGroupCallsManagerSingleton.shared.joinCall(in: groupModel) else {
+            throw GroupCallError.creationError
         }
         
         return (groupCallStartMessage, viewModel)
@@ -635,8 +634,10 @@ extension GlobalGroupCallsManagerSingleton {
         var group: Group!
         
         frameworkInjector.entityManager.performBlockAndWait {
+            // TODO: (IOS-3813) This should throw, use async EM
             guard let groupEntity = frameworkInjector.entityManager.entityFetcher.groupEntity(for: conversation) else {
-                fatalError()
+                DDLogError("[GroupCall] Could not get group to send a group call start message.")
+                return
             }
             
             group = Group(
@@ -663,6 +664,7 @@ extension GlobalGroupCallsManagerSingleton {
 // MARK: - GroupCallManagerDatabaseDelegateProtocol
 
 extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProtocol {
+    // TODO: (IOS-3813) Make throwing?
     public func removeFromStoredCalls(_ proposedGroupCall: ProposedGroupCall) {
         currentBusinessInjector.backgroundEntityManager.performBlockAndWait {
             let toDeleteGroupCalls = self.currentBusinessInjector.backgroundEntityManager.entityFetcher

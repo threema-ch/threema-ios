@@ -56,24 +56,7 @@ import Foundation
             }
         }
     }
-    
-    @objc func showSafePassword() {
-        // Display view
-        Task { @MainActor in
-            // Get root view and view to show
-            guard let firstScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let rootView = firstScene.windows.first?.rootViewController else {
-                return
-            }
-            
-            if let presentedViewController = rootView.presentedViewController {
-                presentedViewController.dismiss(animated: false)
-            }
-            
-            rootView.present(LaunchModalType.safeForcePassword.viewController(delegate: self), animated: true)
-        }
-    }
-    
+        
     private func resolveModalType() async -> LaunchModalType? {
         
         guard !ProcessInfoHelper.isRunningForScreenshots else {

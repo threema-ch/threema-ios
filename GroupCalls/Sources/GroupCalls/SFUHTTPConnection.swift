@@ -163,7 +163,7 @@ extension SFUHTTPConnection {
         }
         
         guard let authorizationToken = try? await dependencies.httpHelper.sfuCredentials() else {
-            throw FatalStateError.tokenFailure
+            throw GroupCallError.tokenFailure
         }
         
         guard !Task.isCancelled else {
@@ -175,7 +175,7 @@ extension SFUHTTPConnection {
                 string: "\(groupCallDescription.sfuBaseURL)/v1/\(param)/\(groupCallDescription.callID.bytes.hexEncodedString())"
             )
         else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         DDLogNotice("[GroupCall] Checking at URL \(groupCallURL)")
@@ -193,15 +193,15 @@ extension SFUHTTPConnection {
         switch request {
         case .Peek:
             guard let data = try createPeekRequest() else {
-                throw FatalStateError.SerializationFailure
+                throw GroupCallError.serializationFailure
             }
             return data
         case let .Join(certificate):
             guard let fingerprint = certificate.groupCallFingerprint else {
-                throw FatalStateError.SerializationFailure
+                throw GroupCallError.serializationFailure
             }
             guard let data = try createJoinRequest(fingerprint: fingerprint) else {
-                throw FatalStateError.SerializationFailure
+                throw GroupCallError.serializationFailure
             }
             return data
         }

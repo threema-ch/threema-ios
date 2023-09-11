@@ -147,7 +147,7 @@ extension Connected {
                 try groupCallContext.relay(outer)
             }
             catch {
-                guard !(error is FatalGroupCallError) else {
+                guard !(error is GroupCallError) else {
                     throw error
                 }
                 
@@ -177,13 +177,14 @@ extension Connected {
                 DDLogError("Could not find participant with id \(participantID)")
                 return .success
             }
+            // TODO: (IOS-3813) try? correct?
             try? groupCallContext.send(remoteParticipant.unsubscribeVideo())
             
         case .muteVideo:
             // TODO: Do we announce video to new participants nevertheless?
             for participant in groupCallContext.participants {
                 guard let videoMuteMessage = try? participant.videoMuteMessage() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 
@@ -194,7 +195,7 @@ extension Connected {
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 
                 guard let serialized = try? outer.serializedData() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 groupCallContext.send(serialized)
@@ -206,7 +207,7 @@ extension Connected {
         case let .unmuteVideo(position):
             for participant in groupCallContext.participants {
                 guard let videoUnmuteMessage = try? participant.videoUnmuteMessage() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 
@@ -216,7 +217,7 @@ extension Connected {
                 outer.relay = videoUnmuteEnvelope
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 guard let serialized = try? outer.serializedData() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 groupCallContext.send(serialized)
@@ -231,7 +232,7 @@ extension Connected {
         case .muteAudio:
             for participant in groupCallContext.participants {
                 guard let videoUnmuteMessage = try? participant.audioMuteMessage() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 
@@ -241,7 +242,7 @@ extension Connected {
                 outer.relay = audioMuteEnvelope
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 guard let serialized = try? outer.serializedData() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 groupCallContext.send(serialized)
@@ -252,7 +253,7 @@ extension Connected {
         case .unmuteAudio:
             for participant in groupCallContext.participants {
                 guard let videoUnmuteMessage = try? participant.audioUnmuteMessage() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 
@@ -262,7 +263,7 @@ extension Connected {
                 outer.relay = audioMuteEnvelope
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 guard let serialized = try? outer.serializedData() else {
-                    // TODO: IOS-3743 Group Calls Graceful Error Handling
+                    // TODO: IOS-3813 Group Calls Graceful Error Handling
                     fatalError()
                 }
                 groupCallContext.send(serialized)
@@ -313,6 +314,7 @@ extension Connected {
             fatalError()
         }
         
+        // TODO: (IOS-3813) Error handling below
         switch sfuToParticipant.content {
         case .none:
             fatalError()
@@ -324,18 +326,18 @@ extension Connected {
                 
                 guard groupCallContext.verifyReceiver(for: relay) else {
                     // TODO: What do we need to do here
-                    throw FatalGroupCallError.BadMessage
+                    throw GroupCallError.badMessage
                 }
                 
                 DDLogNotice("[GroupCall] Message received from \(relay.sender)")
                 
                 switch try await groupCallContext.handle(relay) {
                 case let .participantToParticipant(participant, data):
-                    try! serializeAndSend(data, to: participant)
+                    try serializeAndSend(data, to: participant)
                     
                 case let .participantToSFU(envelope, participant, participantStateChange):
                     if envelope.requestParticipantCamera.isInitialized { }
-                    try! groupCallContext.send(envelope)
+                    try groupCallContext.send(envelope)
                     await groupCallActor.uiContinuation
                         .yield(.participantStateChange(participant.getID(), participantStateChange))
                     
@@ -412,7 +414,7 @@ extension Connected {
 // MARK: Helper functions
 
 extension Connected {
-    
+    // TODO: (IOS-3813) Try! are ugly
     private func handshakeCompleted(with participant: RemoteParticipant) async {
         // TODO: Add to non-pending participants
         // Add to view
@@ -439,6 +441,7 @@ extension Connected {
         outer.relay = participantToParticipantEnvelope
         outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let serialized = try? outer.serializedData() else {
             fatalError()
         }
@@ -448,6 +451,7 @@ extension Connected {
     
     private func sendAudioUnmuteMessages(to participant: RemoteParticipant) async throws {
         // Send Microphone Unmute
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let audioUnmuteMessage = try? participant.audioUnmuteMessage() else {
             fatalError()
         }
@@ -460,13 +464,16 @@ extension Connected {
         // TODO: We could have already disabled video here. This needs to be handled somehow
         if groupCallContext.hasVideoCapturer {
             DDLogNotice("[GroupCall] Correct Capturer, send unmute")
+            // TODO: (IOS-3813) fatal error and try? is ugly
             guard let videoUnmuteMessage = try? participant.videoUnmuteMessage() else {
                 fatalError()
             }
             
             try serializeAndSend(videoUnmuteMessage, to: participant)
             
-            await groupCallContext.startVideoCapture(position: .front)
+            if groupCallContext.localVideoTrack() == nil {
+                await groupCallContext.startVideoCapture(position: .front)
+            }
         }
         else {
             DDLogWarn("[GroupCall] We do not have a video capturer")

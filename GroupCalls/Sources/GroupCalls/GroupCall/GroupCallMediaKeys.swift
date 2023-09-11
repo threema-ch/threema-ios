@@ -79,14 +79,14 @@ final class MediaKeys {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because epoch was too big. \(epoch) but maximum is \(UInt8.max)"
             )
-            throw FatalGroupCallError.KeyRatchetError
+            throw GroupCallError.keyRatchetError
         }
         
         guard ratchetCounter < UInt8.max else {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because ratchetCounter was too big. \(ratchetCounter) but maximum is \(UInt8.max)"
             )
-            throw FatalGroupCallError.KeyRatchetError
+            throw GroupCallError.keyRatchetError
         }
         
         let uint8Epoch = UInt8(epoch)
@@ -100,14 +100,14 @@ final class MediaKeys {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because epoch was too big. \(epoch) but maximum is \(UInt8.max)"
             )
-            throw FatalGroupCallError.KeyRatchetError
+            throw GroupCallError.keyRatchetError
         }
         
         guard ratchetCounter < UInt8.max else {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because ratchetCounter was too big. \(ratchetCounter) but maximum is \(UInt8.max)"
             )
-            throw FatalGroupCallError.KeyRatchetError
+            throw GroupCallError.keyRatchetError
         }
         
         let uint8Epoch = UInt8(epoch)

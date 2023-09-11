@@ -143,17 +143,15 @@ import XCTest
 
                 var joinViewModel = await groupCallManager.joinCall(in: groupModel, intent: .join)
 
-                XCTAssertTrue(joinViewModel.0)
                 XCTAssertEqual(
-                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel.1)).toOpaque().hashValue,
+                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel)).toOpaque().hashValue,
                     Unmanaged.passUnretained(goldViewModel).toOpaque().hashValue
                 )
 
                 joinViewModel = await groupCallManager.joinCall(in: groupModel, intent: .join)
 
-                XCTAssertTrue(joinViewModel.0)
                 XCTAssertEqual(
-                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel.1)).toOpaque().hashValue,
+                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel)).toOpaque().hashValue,
                     Unmanaged.passUnretained(goldViewModel).toOpaque().hashValue
                 )
 
@@ -241,17 +239,15 @@ import XCTest
 
                 var joinViewModel = await groupCallManager.joinCall(in: groupModel, intent: .join)
 
-                XCTAssertTrue(joinViewModel.0)
                 XCTAssertEqual(
-                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel.1)).toOpaque().hashValue,
+                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel)).toOpaque().hashValue,
                     Unmanaged.passUnretained(goldViewModel).toOpaque().hashValue
                 )
 
                 joinViewModel = await groupCallManager.joinCall(in: groupModel, intent: .join)
 
-                XCTAssertTrue(joinViewModel.0)
                 XCTAssertEqual(
-                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel.1)).toOpaque().hashValue,
+                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel)).toOpaque().hashValue,
                     Unmanaged.passUnretained(goldViewModel).toOpaque().hashValue
                 )
 
@@ -268,9 +264,8 @@ import XCTest
                 joinViewModel = await groupCallManager.joinCall(in: groupModel, intent: .join)
 
                 XCTAssertEqual(mockHTTPClient.responses[firstCallCallID]!.count, 1)
-                XCTAssertTrue(joinViewModel.0)
                 XCTAssertEqual(
-                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel.1)).toOpaque().hashValue,
+                    try Unmanaged.passUnretained(XCTUnwrap(joinViewModel)).toOpaque().hashValue,
                     Unmanaged.passUnretained(goldViewModel).toOpaque().hashValue
                 )
 

@@ -18,35 +18,55 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-enum GroupCallErrors: Error { }
+// MARK: - Protocol and Extension
 
-enum FatalGroupCallError: Error {
-    case BadMessage
-    case SerializationFailure
-    case KeyRatchetError
-    case FrameCryptoFailure
-    case LocalProtocolViolation
-    case RemoteProtocolViolation
-    case SFUProtocolViolation
-    case MultiThreadingViolation
+public protocol GroupCallErrorProtocol {
+    var alertTitleKey: String { get }
+    var alertMessageKey: String { get }
+    var isFatal: Bool { get }
 }
 
-enum FatalStateError: Error {
-    case SerializationFailure
-    case MissingDependency
-    case MissingCertificate
-    case FirstMessageNotReceived
+extension GroupCallErrorProtocol {
+    public var alertTitleKey: String {
+        "group_call_error_generic_title"
+    }
+
+    public var alertMessageKey: String {
+        "group_call_error_generic_message"
+    }
+    
+    public var isFatal: Bool {
+        false
+    }
+}
+
+// MARK: - Errors
+
+public enum GroupCallError: Error, GroupCallErrorProtocol {
+
+    case creationError
+    case groupNotFound
+    
+    case keyRatchetError
+    case frameCryptoFailure
+    
+    case localProtocolViolation
+    
+    case badMessage
+    case firstMessageNotReceived
     case tokenFailure
-    case EncryptionFailure
+    
+    case serializationFailure
+    case encryptionFailure
+    case decryptionFailure
 }
 
-enum ParticipantError: Error {
-    case EncryptionFailure
-    case DecryptionFailure
-    case BadParticipantState
+public enum GroupCallParticipantError: Error, GroupCallErrorProtocol {
+    case encryptionFailure
+    case badParticipantState
 }
 
-enum GroupCallViewModelError: Error {
+public enum GroupCallViewModelError: Error, GroupCallErrorProtocol {
     case toggleOwnVideoFailed
     case toggleOwnAudioFailed
 }

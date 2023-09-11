@@ -486,7 +486,7 @@ extension SingleDetailsDataSource {
                     Int(FEATURE_MASK_VOIP),
                     forContacts: contactSet
                 ) { [weak self, weak viewController] unsupportedContacts in
-                
+                    
                     if let strongSelf = self, unsupportedContacts?.isEmpty == true {
                         // Happy path: Start call
                         let action = VoIPCallUserAction(
@@ -510,7 +510,6 @@ extension SingleDetailsDataSource {
                     }
                 }
         }
-        
         return [quickAction]
     }
     

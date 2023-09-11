@@ -123,6 +123,7 @@ public final actor GroupCallManager {
             members: proposedGroupCall.groupRepresentation.members
         )
         
+        // TODO: (IOS-3813) Is double catch needed here?
         do {
             let newGroupCall = try GroupCallActor(
                 localIdentity: localIdentity,
@@ -210,27 +211,28 @@ public final actor GroupCallManager {
     public func joinCall(
         in group: GroupCallsThreemaGroupModel,
         intent: GroupCallUserIntent
-    ) async -> (Bool, GroupCallViewModel?) {
+    ) async -> GroupCallViewModel? {
         DDLogWarn("[GroupCall] Creating call in \(group.groupID)")
         startPeriodicCheckIfNeeded()
         
         let candidates = currentlyRunningGroupCalls.filter { $0.group == group }
         
+        // TODO: (IOS-3813) This looks wrong, shouldnt we cancel when calls not running anymore?
         try? await checkCallsStillRunning()
         
         if candidates.isEmpty {
-            return (false, nil)
+            return nil
         }
         else if candidates.count == 1, let first = candidates.first, await first.joinState() == .runningLocal {
             let viewModel = await first.viewModel
             DDLogNotice(
                 "[GroupCall] [GCDEBing view model for \(first.logIdentifier) \(Unmanaged.passUnretained(viewModel).toOpaque())"
             )
-            return (true, viewModel)
+            return viewModel
         }
         
         guard let candidate = try? await getCurrentlyChosenCall(in: group, from: currentlyRunningGroupCalls) else {
-            return (false, nil)
+            return nil
         }
         
         do {
@@ -242,12 +244,13 @@ public final actor GroupCallManager {
                 "[GroupCall] [GCDEBing view model for \(candidate.logIdentifier) \(Unmanaged.passUnretained(viewModel).toOpaque())"
             )
             
-            return (true, viewModel)
+            return viewModel
         }
         catch {
-            DDLogError("We have encountered an error: \(error)")
+            // TODO: (IOS-3813) Clean up
+            DDLogError("[GroupCall] We have encountered an error: \(error)")
             assertionFailure()
-            return (false, nil)
+            return nil
         }
     }
     
@@ -414,6 +417,7 @@ extension GroupCallManager {
                     }
                 }
                 catch {
+                    // TODO: (IOS-3813) This is wrong. Crashes after custom SFU was used in previous run. Also check steps if we should terminate here or what.
                     // Any relevant network errors have already been handled by the peek steps
                     DDLogError("[GroupCall] An error occurred \(error)")
                     assertionFailure()
@@ -530,6 +534,7 @@ extension GroupCallManager {
             }
             
             guard let innerChosenCall = currentlyChosenCall else {
+                // TODO: (IOS-3813) Possibly add fatal error or still throw
                 let msg =
                     "[GroupCall] This never happens because we always either set `currentlyChosenCall` above or call `continue`"
                 assertionFailure(msg)
@@ -621,6 +626,7 @@ extension GroupCallManager {
             await groupCall.assertNotConnected()
         }
         
+        // TODO: (IOS-3813) Try? correct in the two cases below?
         /// **Protocol Step: Periodic Refresh** 8. If the Group Call Join Steps are currently running with a different
         /// (or new) group call
         /// than chosen-call, cancel and restart the Group Call Join Steps asynchronously with the same intent but with

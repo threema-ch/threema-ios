@@ -101,13 +101,13 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
     func apply(mediaKeys: MediaKeys, for participantID: ParticipantID) throws {
         try frameCryptoContextLock.withLock {
             guard participantID.id < UInt16.max else {
-                throw FatalGroupCallError.LocalProtocolViolation
+                throw GroupCallError.localProtocolViolation
             }
             
             let uint16RemoteParticipantID = UInt16(participantID.id)
             
             guard let decryptor = frameCryptoContext.getDecryptorFor(uint16RemoteParticipantID) else {
-                throw FatalGroupCallError.FrameCryptoFailure
+                throw GroupCallError.frameCryptoFailure
             }
             
             try mediaKeys.applyMediaKeys(to: decryptor)
@@ -118,7 +118,7 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
     func addDecryptor(to participant: RemoteParticipant) async throws {
         try frameCryptoContextLock.withLock {
             guard participant.id < UInt16.max else {
-                throw FatalGroupCallError.LocalProtocolViolation
+                throw GroupCallError.localProtocolViolation
             }
             
             let uint16RemoteParticipantID = UInt16(participant.id)
@@ -132,7 +132,7 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
     func removeDecryptor(for participant: ParticipantID) throws {
         try frameCryptoContextLock.withLock {
             guard participant.id < UInt16.max else {
-                throw FatalGroupCallError.LocalProtocolViolation
+                throw GroupCallError.localProtocolViolation
             }
             
             let uInt16ParticipantID = UInt16(participant.id)
@@ -201,7 +201,7 @@ extension GroupCallBaseState: GroupCallMessageCryptoProtocol {
             DDLogError(msg)
             assertionFailure(msg)
             
-            throw FatalStateError.EncryptionFailure
+            throw GroupCallError.encryptionFailure
         }
     }
     
@@ -215,7 +215,7 @@ extension GroupCallBaseState: GroupCallMessageCryptoProtocol {
             DDLogError(msg)
             assertionFailure(msg)
             
-            throw FatalStateError.EncryptionFailure
+            throw GroupCallError.encryptionFailure
         }
     }
 }

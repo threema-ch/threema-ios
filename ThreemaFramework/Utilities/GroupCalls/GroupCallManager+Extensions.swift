@@ -34,7 +34,7 @@ extension GroupCallManager {
             return false
         }
         
-        return await joinCall(in: groupModel, intent: .join).0
+        return await joinCall(in: groupModel, intent: .join) != nil
     }
     
     public func getGroupModel(for groupConversationManagedObjectID: NSManagedObjectID) async

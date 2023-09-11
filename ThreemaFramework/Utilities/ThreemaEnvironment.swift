@@ -52,8 +52,8 @@ import ThreemaProtocols
     }
 
     @objc public static var groupCalls: Bool {
-        // We show GC when build is from Xcode or current is red or red work.
-        [.xcode].contains(env()) || [.red, .workRed].contains(ThreemaApp.current)
+        // We show GC when build is from Xcode or TestFlight.
+        [.xcode, .testFlight].contains(env())
     }
 
     #if DEBUG

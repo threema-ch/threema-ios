@@ -1185,29 +1185,11 @@ extension ChatViewController {
     }
     
     private func startGroupCall() {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            assertionFailure()
+        guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
             return
         }
-            
-        Task { @MainActor in
-            do {
-                let viewModel = try await GlobalGroupCallsManagerSingleton.shared.startGroupCall(
-                    in: conversation,
-                    with: MyIdentityStore.shared().identity
-                )
-                await GlobalGroupCallsManagerSingleton.shared.groupCallManager.set(uiDelegate: self)
-                let groupCallViewController = GlobalGroupCallsManagerSingleton.shared
-                    .groupCallViewController(for: viewModel)
-                self.present(groupCallViewController, animated: true)
-            }
-            catch {
-                // TODO: IOS-3743 Graceful Error Handling
-                let contr = UIAlertController(title: "Call Failed", message: "F", preferredStyle: .alert)
-                contr.addAction(UIAlertAction(title: "OK", style: .default))
-                self.present(contr, animated: true)
-            }
-        }
+        chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
+        group.startGroupCall(settingsStore: businessInjector.settingsStore)
     }
     
     private func startOneToOneCall() {
@@ -2957,7 +2939,7 @@ extension ChatViewController: GroupCallBannerButtonViewDelegate {
         }
         
         guard let viewModel = await GlobalGroupCallsManagerSingleton.shared.groupCallManager
-            .joinCall(in: groupCallGroupModel, intent: .join).1 else {
+            .joinCall(in: groupCallGroupModel, intent: .join) else {
             DDLogError("[GroupCall] Could not get view model")
             return
         }

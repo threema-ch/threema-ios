@@ -24,7 +24,7 @@ enum GroupCallUIEvent {
     case joining
     case connecting
     case connected
-    case error(UIError)
+    case error(GroupCallErrorProtocol)
     case add(ViewModelParticipant)
     case addLocalParticipant(ViewModelParticipant)
     case remove(ParticipantID)

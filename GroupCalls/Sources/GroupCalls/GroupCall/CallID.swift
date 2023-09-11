@@ -39,7 +39,7 @@ struct GroupCallID: Sendable {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw FatalStateError.EncryptionFailure
+            throw GroupCallError.encryptionFailure
         }
         
         let groupID = group.groupID
@@ -53,7 +53,7 @@ struct GroupCallID: Sendable {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw FatalStateError.EncryptionFailure
+            throw GroupCallError.encryptionFailure
         }
         
         let inputs = [creatorID, groupID, protocolVersion, gck, baseURL]

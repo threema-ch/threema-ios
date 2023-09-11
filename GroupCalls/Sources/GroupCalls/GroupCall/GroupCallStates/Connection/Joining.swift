@@ -39,7 +39,7 @@ struct Joining: GroupCallState {
         DDLogNotice("[GroupCall] State is Joining \(groupCallActor.callID.bytes.hexEncodedString())")
         
         guard let certificate = RTCCertificate.generate(withParams: [RTCEncryptionKeyType.ECDSA: 2_592_000]) else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         /// **Protocol Step: Group Call Join Steps** 2. Join (or implicitly create) the group call via a

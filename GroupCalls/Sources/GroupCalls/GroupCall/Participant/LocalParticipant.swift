@@ -174,7 +174,7 @@ extension LocalParticipant {
             let msg = "[GroupCall] [Rekey] Expected to have pending keys but there were none"
             assertionFailure(msg)
             DDLogError(msg)
-            throw FatalGroupCallError.LocalProtocolViolation
+            throw GroupCallError.localProtocolViolation
         }
         
         mediaKeys = pendingMediaKeys

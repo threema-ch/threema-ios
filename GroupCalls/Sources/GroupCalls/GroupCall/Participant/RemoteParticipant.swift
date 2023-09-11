@@ -175,12 +175,13 @@ extension RemoteParticipant {
             nonce: nextPcckNonce
         ) else {
             assertionFailure()
-            throw GroupCallsError.decryptionFailure
+            throw GroupCallError.decryptionFailure
         }
         
+        // TODO: (IOS-3813) Throw directly, remove try?
         guard let envelope = try? Groupcall_ParticipantToParticipant.Envelope(serializedData: innerData) else {
             assertionFailure()
-            throw GroupCallsError.decryptionFailure
+            throw GroupCallError.decryptionFailure
         }
         
         switch envelope.content {
@@ -192,7 +193,7 @@ extension RemoteParticipant {
                 guard let innerState = muteState.state else {
                     DDLogError("[GroupCall] Camera state announcement doesn't have state")
                     assertionFailure()
-                    throw GroupCallsError.decryptionFailure
+                    throw GroupCallError.decryptionFailure
                 }
                 switch innerState {
                 case .on:
@@ -206,7 +207,7 @@ extension RemoteParticipant {
                 guard let innerState = muteState.state else {
                     DDLogError("[GroupCall] Audio state announcement doesn't have state")
                     assertionFailure()
-                    throw GroupCallsError.decryptionFailure
+                    throw GroupCallError.decryptionFailure
                 }
                 switch innerState {
                 case .on:
@@ -250,6 +251,7 @@ extension RemoteParticipant {
         envelope.padding = nonce
         envelope.hello = helloMessage
         
+        // TODO: (IOS-3813) try! is ugly
         let serializedEnvelope = try! envelope.serializedData()
         
         let encryptedEnvelope = groupCallCrypto.symmetricEncryptByGCHK(serializedEnvelope, nonce: nonce)!
@@ -272,6 +274,7 @@ extension RemoteParticipant {
         var handshakeAuthEnvelope = Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope()
         handshakeAuthEnvelope.auth = handshakeAuth
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let serializedHandshakeAuthEnvelope = try? handshakeAuthEnvelope.serializedData() else {
             fatalError()
         }
@@ -290,6 +293,7 @@ extension RemoteParticipant {
             fatalError()
         }
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let innerData = try? groupCallCrypto.symmetricEncryptBYGCNHAK(
             sharedSecret: sharedSecret,
             plainText: serializedHandshakeAuthEnvelope,
@@ -343,6 +347,7 @@ extension RemoteParticipant {
             fatalError()
         }
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let decrypted = try? groupCallCrypto.symmetricDecryptBYGCNHAK(
             sharedSecret: sharedSecret,
             cipherText: ciphertext,
@@ -351,6 +356,7 @@ extension RemoteParticipant {
             fatalError()
         }
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let authMessage = try? Groupcall_ParticipantToParticipant.Handshake
             .AuthEnvelope(serializedData: decrypted).auth else {
             fatalError()
@@ -370,6 +376,7 @@ extension RemoteParticipant {
             fatalError()
         }
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let handshake = try? Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope(serializedData: decrypted)
             .hello else {
             fatalError()
@@ -413,7 +420,7 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw ParticipantError.BadParticipantState
+            throw GroupCallParticipantError.badParticipantState
         }
         
         var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
@@ -427,8 +434,9 @@ extension RemoteParticipant {
             p2pEnvelope.captureState.microphone.state = .on(Common_Unit())
         }
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let serializedp2pEnvelope = try? p2pEnvelope.serializedData() else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         return try encrypt(serializedp2pEnvelope)
@@ -455,7 +463,7 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw ParticipantError.BadParticipantState
+            throw GroupCallParticipantError.badParticipantState
         }
         
         var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
@@ -469,8 +477,9 @@ extension RemoteParticipant {
             p2pEnvelope.captureState.camera.state = .on(Common_Unit())
         }
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let serializedp2pEnvelope = try? p2pEnvelope.serializedData() else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         return try encrypt(serializedp2pEnvelope)
@@ -497,13 +506,14 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw ParticipantError.BadParticipantState
+            throw GroupCallParticipantError.badParticipantState
         }
         
         var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
         p2pEnvelope.rekey = protocolMediaKeys
         p2pEnvelope.padding = dependencies.groupCallCrypto.padding()
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let serializedp2pEnvelope = try? p2pEnvelope.serializedData() else {
             fatalError()
         }
@@ -520,7 +530,7 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw ParticipantError.BadParticipantState
+            throw GroupCallParticipantError.badParticipantState
         }
         
         var nextPcckNonce = pcck
@@ -534,7 +544,7 @@ extension RemoteParticipant {
             secretKey: keyPair.privateKey,
             nonce: nextPcckNonce
         ) else {
-            throw ParticipantError.EncryptionFailure
+            throw GroupCallParticipantError.encryptionFailure
         }
         
         return outerData
@@ -553,7 +563,7 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw ParticipantError.BadParticipantState
+            throw GroupCallParticipantError.badParticipantState
         }
         
         var subMessage = Groupcall_ParticipantToSfu.ParticipantMicrophone()
@@ -576,7 +586,7 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw ParticipantError.BadParticipantState
+            throw GroupCallParticipantError.badParticipantState
         }
         
         var res = Common_Resolution()
@@ -613,7 +623,7 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw ParticipantError.BadParticipantState
+            throw GroupCallParticipantError.badParticipantState
         }
         
         let internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe()
@@ -664,11 +674,11 @@ extension RemoteParticipant: RemoteParticipantProtocol {
         DDLogNotice("[GroupCall] Participant \(id) \(#function)")
         
         guard mediaKey.epoch < UInt8.max else {
-            throw FatalGroupCallError.LocalProtocolViolation
+            throw GroupCallError.localProtocolViolation
         }
         
         guard mediaKey.ratchetCounter < UInt8.max else {
-            throw FatalGroupCallError.LocalProtocolViolation
+            throw GroupCallError.localProtocolViolation
         }
         
         let uint8Epoch = UInt8(mediaKey.epoch)

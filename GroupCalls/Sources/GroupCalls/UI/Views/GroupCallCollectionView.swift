@@ -122,6 +122,7 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     
     private func updateVideo() {
         updateVideoTask = Task {
+            // TODO: (IOS-3813) try? is ugly
             try? await Task.sleep(nanoseconds: 200_000_000)
             if Task.isCancelled {
                 return

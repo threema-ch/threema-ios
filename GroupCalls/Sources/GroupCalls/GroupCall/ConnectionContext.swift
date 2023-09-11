@@ -275,6 +275,7 @@ extension ConnectionContext {
         await withTaskGroup(of: Void.self, body: { group in
             for candidate in candidates {
                 group.addTask {
+                    // TODO: (IOS-3813) should we handle this error?
                     try? await self.add(candidate)
                 }
             }
@@ -589,8 +590,9 @@ extension ConnectionContext {
         relayEnvelope.padding = dependencies.groupCallCrypto.padding()
         relayEnvelope.relay = relay
         
+        // TODO: (IOS-3813) fatal error and try? is ugly
         guard let serializedOuter = try? relayEnvelope.serializedData() else {
-            throw FatalGroupCallError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         let buffer = RTCDataBuffer(data: serializedOuter, isBinary: true)
@@ -623,6 +625,7 @@ extension ConnectionContext {
         )
         videoTrack?.isEnabled = true
         
+        // TODO: (IOS-3813) Shouldn't we handle this error?
         try? await videoCapturer.startCapture(with: device, format: format, fps: 30)
     }
     

@@ -117,7 +117,7 @@ struct Connecting: GroupCallState {
             return Ended(groupCallActor: groupCallActor)
         }
         
-        try? await connectionContext.addIceCandidates(addresses: joinResponse.addresses)
+        try await connectionContext.addIceCandidates(addresses: joinResponse.addresses)
         
         guard !Task.isCancelled else {
             return Ended(groupCallActor: groupCallActor)
@@ -134,11 +134,12 @@ struct Connecting: GroupCallState {
         }
         
         guard let messageData else {
-            throw FatalStateError.FirstMessageNotReceived
+            throw GroupCallError.firstMessageNotReceived
         }
         
+        // TODO: (IOS-3813) Remove guard, throw error directly
         guard let envelope = try? Groupcall_SfuToParticipant.Envelope(serializedData: messageData).hello else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         /// **Protocol Step: Group Call Join Steps** 6. If the hello.participants contains less than 4 items, set the

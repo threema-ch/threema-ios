@@ -21,8 +21,6 @@
 import CocoaLumberjackSwift
 import SwiftUI
 
-// TODO: (IOS-3401) Disable display sleep
-
 struct DeviceJoinSendDataView: View {
     
     @Binding var showWizard: Bool
@@ -32,6 +30,7 @@ struct DeviceJoinSendDataView: View {
     @State private var sendingText = BundleUtil.localizedString(forKey: "multi_device_join_sending_data")
     
     @State private var showSendingError = false
+    @State private var showThreemaWebError = false
 
     @State private var showSuccessView = false
 
@@ -115,6 +114,17 @@ struct DeviceJoinSendDataView: View {
         } message: {
             Text(BundleUtil.localizedString(forKey: "multi_device_join_fatal_error_message"))
         }
+        .alert(
+            BundleUtil.localizedString(forKey: "multi_device_join_failed_threema_web_title"),
+            isPresented: $showThreemaWebError
+        ) {
+            Button("OK") {
+                deviceJoinManager.deviceJoin.cancel()
+                showWizard = false
+            }
+        } message: {
+            Text(BundleUtil.localizedString(forKey: "multi_device_join_failed_threema_web_message"))
+        }
     }
     
     private func sendData() {
@@ -134,6 +144,11 @@ struct DeviceJoinSendDataView: View {
                 Task { @MainActor in
                     try deviceJoinManager.advance(to: .completed)
                 }
+            }
+            catch DeviceJoinServerConnectionHelperError.existingActiveWebSessions {
+                DDLogError("Failed to send data: DeviceJoinServerConnectionHelperError.existingActiveWebSessions")
+
+                showThreemaWebError = true
             }
             catch {
                 DDLogError("Failed to send data: \(error)")

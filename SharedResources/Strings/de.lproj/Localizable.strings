@@ -783,6 +783,9 @@
 "group_call_navbar_state_joining" = "Beitreten…";
 "group_call_navbar_state_connected" = "Verbunden";
 
+"group_call_error_generic_title" = "Ein Fehler ist aufgetreten";
+"group_call_error_generic_message" = "Falls das Problem weiterhin auftritt, wenden Sie sich an den Support.";
+
 /* Privacy Policy */
 "privacy_policy_about" = "Threema schützt Ihre Privatsphäre so konsequent wie kein anderer Messenger. In unserer Datenschutzerklärung erfahren Sie mehr.";
 "privacy_policy_about_work" = "%@ schützt Ihre Privatsphäre so konsequent wie kein anderer Messenger. In unserer Datenschutzerklärung erfahren Sie mehr.";
@@ -1488,6 +1491,8 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "multi_device_join_fatal_no_internet_connection_title" = "Keine Internetverbindung";
 "multi_device_join_failed_to_send_data_title" = "Daten können nicht übertragen werden";
 "multi_device_join_fatal_error_message" = "Bitte versuchen Sie nochmals, das Gerät zu verknüpfen. Falls das Problem weiterhin besteht, wenden Sie sich bitte an den Support («Einstellungen > Support»).";
+"multi_device_join_failed_threema_web_title" = "Bestehende Desktop/Web Verbindung";
+"multi_device_join_failed_threema_web_message" = "Bitte deaktivieren Sie Desktop/Web («Einstellungen > Desktop/Web») und versuchen Sie nochmals, das Gerät zu verknüpfen. Falls das Problem weiterhin besteht, wenden Sie sich bitte an den Support («Einstellungen > Support»).";
 "multi_device_join_unknown_qr_code_title" = "Unbekannter QR-Code";
 "multi_device_join_unknown_qr_code_message" = "Bitte stellen Sie sicher, dass Sie die entsprechende App von %@ verwenden.";
 "multi_device_join_incompatible_version_title" = "Nicht unterstützte Version";

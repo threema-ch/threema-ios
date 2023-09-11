@@ -21,13 +21,13 @@
 import CocoaLumberjackSwift
 import Foundation
 
+public enum DeviceJoinServerConnectionHelperError: Error {
+    case couldNotConnect
+    case existingActiveWebSessions
+}
+
 /// Helper to disconnect and block communication and reenable it again
 class DeviceJoinServerConnectionHelper: NSObject {
-    
-    enum Error: Swift.Error {
-        case couldNotConnect
-        case existingActiveWebSessions
-    }
     
     // MARK: - Private properties
     
@@ -60,7 +60,7 @@ class DeviceJoinServerConnectionHelper: NSObject {
         let webClientSessions = businessInjector.entityManager.entityFetcher.allActiveWebClientSessions()
         
         guard webClientSessions?.isEmpty ?? true else {
-            throw Error.existingActiveWebSessions
+            throw DeviceJoinServerConnectionHelperError.existingActiveWebSessions
         }
         
         businessInjector.userSettings.blockCommunication = true
@@ -134,7 +134,7 @@ extension DeviceJoinServerConnectionHelper: ConnectionStateDelegate {
             stateLoggedInContinuation = nil
         }
         else if state == .disconnected {
-            stateLoggedInContinuation?.resume(throwing: Error.couldNotConnect)
+            stateLoggedInContinuation?.resume(throwing: DeviceJoinServerConnectionHelperError.couldNotConnect)
             stateLoggedInContinuation = nil
 
             stateDisconnectedContinuation?.resume()

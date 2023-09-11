@@ -614,8 +614,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [sentry start];
 #endif
         
-        if (![ThreemaEnvironment supportsCallKit]) {
-            [UserSettings sharedUserSettings].enableThreemaCall = false;
+        if (ProcessInfoHelper.isRunningForScreenshots) {
+            [UserSettings sharedUserSettings].enableThreemaCall = true;
+        }
+        else {
+            if (![ThreemaEnvironment supportsCallKit]) {
+                [UserSettings sharedUserSettings].enableThreemaCall = false;
+            }
         }
         
         [self updateIdentityInfo];
@@ -724,7 +729,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             if (error) {
                 if ([error code] == kSafePasswordEmptyErrorCode) {
                     // password was empty
-                    [LaunchModalManager.shared showSafePassword];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [LaunchModalManager.shared checkLaunchModals];
+                    });
                 }
                 DDLogError(@"Failed to activate Threema Safe: %@", error);
             }

@@ -151,7 +151,7 @@ public final class GroupCallViewModel: Sendable {
         }
     }
         
-    func toggleOwnVideo() async throws {
+    func toggleOwnVideo() async {
         let currentState = ownVideoMuteState
         ownVideoMuteState = .changing
 
@@ -159,13 +159,13 @@ public final class GroupCallViewModel: Sendable {
         case .changing:
             break
         case .muted:
-            try await groupCallActor?.toggleOwnVideo(false)
+            await groupCallActor?.toggleOwnVideo(false)
         case .unmuted:
-            try await groupCallActor?.toggleOwnVideo(true)
+            await groupCallActor?.toggleOwnVideo(true)
         }
     }
         
-    func toggleOwnAudio() async throws {
+    func toggleOwnAudio() async {
         let currentState = ownAudioMuteState
         ownAudioMuteState = .changing
 
@@ -173,9 +173,9 @@ public final class GroupCallViewModel: Sendable {
         case .changing:
             break
         case .muted:
-            try await groupCallActor?.toggleOwnAudio(false)
+            await groupCallActor?.toggleOwnAudio(false)
         case .unmuted:
-            try await groupCallActor?.toggleOwnAudio(true)
+            await groupCallActor?.toggleOwnAudio(true)
         }
     }
     
@@ -443,6 +443,7 @@ extension GroupCallViewModel {
                 DDLogNotice("[GroupCall] Update NavigationBar")
                 await refresh()
                 
+                // TODO: (IOS-3813) Try? is ugly
                 try? await Task.sleep(seconds: 1)
             }
         }

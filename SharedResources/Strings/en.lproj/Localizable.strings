@@ -782,6 +782,9 @@
 "group_call_navbar_state_joining" = "Joining…";
 "group_call_navbar_state_connected" = "Connected";
 
+"group_call_error_generic_title" = "An error occurred";
+"group_call_error_generic_message" = "If the issue persists, please contact support.";
+
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protects your privacy more rigorously than any other messenger. Find out more in our Privacy Policy.";
 "privacy_policy_about_work" = "%@ protects your privacy more rigorously than any other messenger. Find out more in our Privacy Policy.";
@@ -1487,6 +1490,8 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "multi_device_join_fatal_no_internet_connection_title" = "No Internet Connection";
 "multi_device_join_failed_to_send_data_title" = "Sending Data Failed";
 "multi_device_join_fatal_error_message" = "Please retry linking the device. If this problem persists, please contact support (“Settings > Support”).";
+"multi_device_join_failed_threema_web_title" = "Existing Desktop/Web Connection";
+"multi_device_join_failed_threema_web_message" = "Please disable Desktop/Web (“Settings > Desktop/Web”) and retry linking the device. If this problem persists, please contact support (“Settings > Support”).";
 "multi_device_join_unknown_qr_code_title" = "Unknown QR Code";
 "multi_device_join_unknown_qr_code_message" = "Please make sure you’re using the corresponding app from %@.";
 "multi_device_join_incompatible_version_title" = "Incompatible Version";

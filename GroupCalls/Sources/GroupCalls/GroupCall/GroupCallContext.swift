@@ -173,7 +173,7 @@ final class GroupCallContext<
         /// via a rekey message.
         guard let pendingProtocolMediaKeys = participantState.localParticipant.pendingProtocolMediaKeys else {
             DDLogNotice("[GroupCall] Expected to have pending media keys but we do not have any.")
-            throw FatalGroupCallError.LocalProtocolViolation
+            throw GroupCallError.localProtocolViolation
         }
         
         let preRekeyCurrentParticipants = participantState.getCurrentParticipants()
@@ -325,6 +325,7 @@ extension GroupCallContext {
 // MARK: - SFU State Updates
 
 extension GroupCallContext {
+    // TODO: (IOS-3813) Why does this throw? are try? correct?
     func startStateUpdateTaskIfNecessary() throws {
         if let minOtherParticipantID = participants.map(\.id).min() {
             guard myParticipantID().id < minOtherParticipantID else {
@@ -341,7 +342,7 @@ extension GroupCallContext {
         refreshTask = Task {
             while !Task.isCancelled {
                 
-                // TODO: Handle these errors
+                // TODO: (IOS-3813) try? is ugly
                 /// **Protocol Step: State Update** 6. Send a ParticipantToSfu.UpdateCallState message to the SFU and
                 /// schedule a repetitive timer to repeat this step every 10s.
                 try? sendCallStateUpdateToSfu()
@@ -359,8 +360,9 @@ extension GroupCallContext {
         outer.updateCallState = groupCallState
         outer.padding = dependencies.groupCallCrypto.padding()
         
+        // TODO: (IOS-3813) try? is ugly
         guard let serializedOuter = try? outer.serializedData() else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         DDLogNotice("[GroupCall] Update Call State")
@@ -463,6 +465,7 @@ extension GroupCallContext {
     }
     
     func startVideoCapture(position: CameraPosition?) async {
+        // TODO: (IOS-3813) try! is ugly
         try! await connectionContext.startVideoCapture(position: position)
     }
     
@@ -492,7 +495,7 @@ extension GroupCallContext {
     
     func send(_ envelope: Groupcall_ParticipantToSfu.Envelope) throws {
         guard let serialized = try? envelope.serializedData() else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         connectionContext.send(serialized)
@@ -506,13 +509,13 @@ extension GroupCallContext {
         let callState = groupCallState(from: allParticipants)
         
         guard let serialized = try? callState.serializedData() else {
-            throw FatalStateError.SerializationFailure
+            throw GroupCallError.serializationFailure
         }
         
         let nonce = dependencies.groupCallCrypto.randomBytes(of: 24)
         
         guard let encryptedState = groupCallBaseState.symmetricEncryptByGSCK(serialized, nonce: nonce) else {
-            throw FatalStateError.EncryptionFailure
+            throw GroupCallError.encryptionFailure
         }
         
         var encrypted = nonce

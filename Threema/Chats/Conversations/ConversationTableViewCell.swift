@@ -248,7 +248,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 }
                 
                 guard let viewModel = await GlobalGroupCallsManagerSingleton.shared.groupCallManager
-                    .joinCall(in: groupCallGroupModel, intent: .join).1 else {
+                    .joinCall(in: groupCallGroupModel, intent: .join) else {
                     DDLogError("[GroupCall] Could not get view model")
                     return
                 }
@@ -1146,54 +1146,54 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func addAllObjectObservers() {
-        observeConversation(\.lastMessage, callOnCreation: false) {
+        observeConversation(\.lastMessage, callOnCreation: false) { [weak self] in
 
-            self.removeLastMessageObservers()
-            self.observeLastMessageProperties()
-            self.updateTitleLabel()
-            self.updateLastMessagePreview()
-            self.updateDisplayStateImage()
+            self?.removeLastMessageObservers()
+            self?.observeLastMessageProperties()
+            self?.updateTitleLabel()
+            self?.updateLastMessagePreview()
+            self?.updateDisplayStateImage()
         }
 
-        observeConversation(\.typing, callOnCreation: false) {
-            self.updateTypingIndicator()
+        observeConversation(\.typing, callOnCreation: false) { [weak self] in
+            self?.updateTypingIndicator()
         }
-        
-        observeConversation(\.conversationVisibility, callOnCreation: false) {
-            self.updatePinImage()
+
+        observeConversation(\.conversationVisibility, callOnCreation: false) { [weak self] in
+            self?.updatePinImage()
         }
-                
-        observeConversation(\.conversationCategory, callOnCreation: false) {
-            self.updateDisplayStateImage()
-            self.updateLastMessagePreview()
+
+        observeConversation(\.conversationCategory, callOnCreation: false) { [weak self] in
+            self?.updateDisplayStateImage()
+            self?.updateLastMessagePreview()
         }
-        
-        observeConversation(\.unreadMessageCount, callOnCreation: false) {
-            self.updateBadge()
+
+        observeConversation(\.unreadMessageCount, callOnCreation: false) { [weak self] in
+            self?.updateBadge()
         }
-        
+
         observeLastMessageProperties()
-        
-        observeConversation(\.displayName, callOnCreation: false) {
-            self.updateTitleLabel()
+
+        observeConversation(\.displayName, callOnCreation: false) { [weak self] in
+            self?.updateTitleLabel()
         }
-        
-        observeConversation(\.groupName, callOnCreation: false) {
-            self.updateTitleLabel()
+
+        observeConversation(\.groupName, callOnCreation: false) { [weak self] in
+            self?.updateTitleLabel()
         }
-        
-        observeConversation(\.groupImage, callOnCreation: false) {
-            self.loadAvatar()
+
+        observeConversation(\.groupImage, callOnCreation: false) { [weak self] in
+            self?.loadAvatar()
         }
-        
-        observeContact(\.imageData, callOnCreation: false) {
-            self.loadAvatar()
+
+        observeContact(\.imageData, callOnCreation: false) { [weak self] in
+            self?.loadAvatar()
         }
-        
-        observeContact(\.contactImage, callOnCreation: false) {
-            self.loadAvatar()
+
+        observeContact(\.contactImage, callOnCreation: false) { [weak self] in
+            self?.loadAvatar()
         }
-        
+
         if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on de-init
             startGroupCallObserver()
@@ -1202,17 +1202,17 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private func observeLastMessageProperties() {
         if let lastMessage = conversation?.lastMessage as? BallotMessage {
-            observeLastMessage(lastMessage, keyPath: \.ballot, callOnCreation: false) {
-                self.updateLastMessagePreview()
+            observeLastMessage(lastMessage, keyPath: \.ballot, callOnCreation: false) { [weak self] in
+                self?.updateLastMessagePreview()
             }
         }
         else if let lastMessage = conversation?.lastMessage as? FileMessageEntity {
-            observeLastMessage(lastMessage, keyPath: \.mimeType, callOnCreation: false) {
-                self.updateLastMessagePreview()
+            observeLastMessage(lastMessage, keyPath: \.mimeType, callOnCreation: false) { [weak self] in
+                self?.updateLastMessagePreview()
             }
 
-            observeLastMessage(lastMessage, keyPath: \.caption, callOnCreation: false) {
-                self.updateLastMessagePreview()
+            observeLastMessage(lastMessage, keyPath: \.caption, callOnCreation: false) { [weak self] in
+                self?.updateLastMessagePreview()
             }
         }
 
@@ -1222,29 +1222,29 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
 
         if let lastMessage = conversation?.lastMessage {
-            observeLastMessage(lastMessage, keyPath: \.userack, callOnCreation: false) {
-                self.updateDisplayStateImage()
-                self.updateDateDraftLabel()
+            observeLastMessage(lastMessage, keyPath: \.userack, callOnCreation: false) { [weak self] in
+                self?.updateDisplayStateImage()
+                self?.updateDateDraftLabel()
             }
 
-            observeLastMessage(lastMessage, keyPath: \.read, callOnCreation: false) {
-                self.updateDisplayStateImage()
-                self.updateDateDraftLabel()
+            observeLastMessage(lastMessage, keyPath: \.read, callOnCreation: false) { [weak self] in
+                self?.updateDisplayStateImage()
+                self?.updateDateDraftLabel()
             }
 
-            observeLastMessage(lastMessage, keyPath: \.delivered, callOnCreation: false) {
-                self.updateDisplayStateImage()
-                self.updateDateDraftLabel()
+            observeLastMessage(lastMessage, keyPath: \.delivered, callOnCreation: false) { [weak self] in
+                self?.updateDisplayStateImage()
+                self?.updateDateDraftLabel()
             }
 
-            observeLastMessage(lastMessage, keyPath: \.sendFailed, callOnCreation: false) {
-                self.updateDisplayStateImage()
-                self.updateDateDraftLabel()
+            observeLastMessage(lastMessage, keyPath: \.sendFailed, callOnCreation: false) { [weak self] in
+                self?.updateDisplayStateImage()
+                self?.updateDateDraftLabel()
             }
 
-            observeLastMessage(lastMessage, keyPath: \.sent, callOnCreation: false) {
-                self.updateDisplayStateImage()
-                self.updateDateDraftLabel()
+            observeLastMessage(lastMessage, keyPath: \.sent, callOnCreation: false) { [weak self] in
+                self?.updateDisplayStateImage()
+                self?.updateDateDraftLabel()
             }
         }
     }

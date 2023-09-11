@@ -219,13 +219,13 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.hidePrivateChats != hidePrivateChats else {
                 return
             }
-            updateUserSettingsAsync()
-
-            NotificationCenter.default.post(
-                name: Notification.Name(kNotificationChangedHidePrivateChat),
-                object: nil,
-                userInfo: nil
-            )
+            updateUserSettingsAsync {
+                NotificationCenter.default.post(
+                    name: Notification.Name(kNotificationChangedHidePrivateChat),
+                    object: nil,
+                    userInfo: nil
+                )
+            }
         }
     }
     
@@ -263,16 +263,16 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.notificationType != NSNumber(integerLiteral: notificationType.userSettingsValue) else {
                 return
             }
-            updateUserSettingsAsync()
-
-            // We only remove the donated Interactions, if the outgoing are disabled.
-            switch notificationType {
-            case .restrictive, .balanced:
-                if !allowOutgoingDonations {
-                    removeINInteractions()
+            updateUserSettingsAsync {
+                // We only remove the donated Interactions, if the outgoing are disabled.
+                switch self.notificationType {
+                case .restrictive, .balanced:
+                    if !self.allowOutgoingDonations {
+                        self.removeINInteractions()
+                    }
+                case .complete:
+                    return
                 }
-            case .complete:
-                return
             }
         }
     }
@@ -734,9 +734,10 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
     }
     
-    private func updateUserSettingsAsync() {
+    private func updateUserSettingsAsync(completion: (() -> Void)? = nil) {
         Task { @MainActor in
             updateUserSettings()
+            completion?()
         }
     }
     

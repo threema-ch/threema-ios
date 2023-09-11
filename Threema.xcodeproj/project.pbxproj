@@ -4911,6 +4911,11 @@
 		F25905022937CA720052ABB1 /* ConversationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25904FF2937CA720052ABB1 /* ConversationTableViewCell.swift */; };
 		F25905032937CA720052ABB1 /* ConversationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25904FF2937CA720052ABB1 /* ConversationTableViewCell.swift */; };
 		F25905042937CA720052ABB1 /* ConversationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25904FF2937CA720052ABB1 /* ConversationTableViewCell.swift */; };
+		F2594BE52AA5C59000BCE985 /* Group+calls.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2594BE42AA5C59000BCE985 /* Group+calls.swift */; };
+		F2594BE62AA5C59000BCE985 /* Group+calls.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2594BE42AA5C59000BCE985 /* Group+calls.swift */; };
+		F2594BE72AA5C59000BCE985 /* Group+calls.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2594BE42AA5C59000BCE985 /* Group+calls.swift */; };
+		F2594BE82AA5C59000BCE985 /* Group+calls.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2594BE42AA5C59000BCE985 /* Group+calls.swift */; };
+		F2594BE92AA5C59000BCE985 /* Group+calls.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2594BE42AA5C59000BCE985 /* Group+calls.swift */; };
 		F2EE8C0828AFDB1700A03321 /* ConversationOverviewSMTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EE8C0228AFDB1700A03321 /* ConversationOverviewSMTableViewCell.swift */; };
 		F2EE8C0928AFDB1700A03321 /* ConversationOverviewSMTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EE8C0228AFDB1700A03321 /* ConversationOverviewSMTableViewCell.swift */; };
 		F2EE8C0A28AFDB1700A03321 /* ConversationOverviewSMTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EE8C0228AFDB1700A03321 /* ConversationOverviewSMTableViewCell.swift */; };
@@ -7666,6 +7671,7 @@
 		F2439BDD2A0128C200851946 /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettingsView.swift; sourceTree = "<group>"; };
 		F25904F92937C9120052ABB1 /* BadgeCountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeCountView.swift; sourceTree = "<group>"; };
 		F25904FF2937CA720052ABB1 /* ConversationTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationTableViewCell.swift; sourceTree = "<group>"; };
+		F2594BE42AA5C59000BCE985 /* Group+calls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Group+calls.swift"; sourceTree = "<group>"; };
 		F2EE8C0228AFDB1700A03321 /* ConversationOverviewSMTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConversationOverviewSMTableViewCell.swift; sourceTree = "<group>"; };
 		F2EE8C0328AFDB1700A03321 /* StorageConversationSMTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StorageConversationSMTableViewCell.swift; sourceTree = "<group>"; };
 		F2EE8C0428AFDB1700A03321 /* ThreemaStorageSMTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThreemaStorageSMTableViewCell.swift; sourceTree = "<group>"; };
@@ -11735,6 +11741,7 @@
 				6725D92F21BEA9EF0058B8C0 /* StdTypeHelper.swift */,
 				4270DA9F2938B28E004C1721 /* TableViewDiffableHeaderAndFooterDataSource.swift */,
 				E1EC256526A0899F00F20060 /* UIViewController+presentation.swift */,
+				F2594BE42AA5C59000BCE985 /* Group+calls.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -15083,6 +15090,7 @@
 				CEFD85AD24193B3B008CB862 /* MaterialShowcaseInstructionView.swift in Sources */,
 				CE04FCF3207773CE000CEE26 /* WebCreateFileMessageRequest.swift in Sources */,
 				4AF0B635259CD40100129E67 /* SyncExclusionListViewController.swift in Sources */,
+				F2594BE62AA5C59000BCE985 /* Group+calls.swift in Sources */,
 				0A7DF6D31C9FDBDE002D4DC3 /* MWGridCell.m in Sources */,
 				F2EE8C2228AFDB1700A03321 /* StorageManagementConversationViewController.swift in Sources */,
 				0A7DF6D41C9FDBDE002D4DC3 /* AudioRecorder.m in Sources */,
@@ -15870,6 +15878,7 @@
 				4270DABE293F97C9004C1721 /* ChatViewMessageDetailsDebugInfoTableViewCell.swift in Sources */,
 				2DA4C58E26660FA3005CD9F6 /* IncomingMessageManager.swift in Sources */,
 				2D5A1D5024C9B5DF00F87DD0 /* RandomSeedViewController.m in Sources */,
+				F2594BE92AA5C59000BCE985 /* Group+calls.swift in Sources */,
 				2D5A1D5324C9B5DF00F87DD0 /* WebCreateGroupRequest.swift in Sources */,
 				2D5A1D5524C9B5DF00F87DD0 /* ForwardMultipleURLActivity.m in Sources */,
 				2D5A1D5624C9B5DF00F87DD0 /* CallViewController.swift in Sources */,
@@ -16770,6 +16779,7 @@
 				2DEDB2AE24C9903400FC9099 /* pbkdf2.c in Sources */,
 				D7F4E8CF27BBE77C00BC96DA /* CellHeightCache.swift in Sources */,
 				4A7DB2BC288EDEE30047C54A /* ChatViewTableViewVoiceMessageCellDelegate.swift in Sources */,
+				F2594BE82AA5C59000BCE985 /* Group+calls.swift in Sources */,
 				7EE7919726A02E38005785CB /* ServerConnectorHelper.swift in Sources */,
 				2DEDB2AF24C9903400FC9099 /* CallDiagnosticViewController.swift in Sources */,
 				7E697F132876C8F1003BE925 /* AppMigration.swift in Sources */,
@@ -16987,6 +16997,7 @@
 				4D088894255C0CD4002F3129 /* WebBlobResponse.swift in Sources */,
 				4D088896255C0CD4002F3129 /* WebConversationUpdate.swift in Sources */,
 				CE7E01AC25FA5C840054373A /* RTCIceConnectionState+CustomDebugStringConvertible.swift in Sources */,
+				F2594BE72AA5C59000BCE985 /* Group+calls.swift in Sources */,
 				4D088898255C0CD4002F3129 /* LinkIDCountryPickerRowView.m in Sources */,
 				4A85C7032812E22000ABA028 /* ChatViewTableViewCellDelegate.swift in Sources */,
 				4D088899255C0CD4002F3129 /* DKAssetGroupDetailBaseCell.swift in Sources */,
@@ -17760,6 +17771,7 @@
 				E12022EB27AABE0300C1BF43 /* ChatScrollPositionDataProvider.swift in Sources */,
 				42DF39702A2F28D400950136 /* DebugDeviceJoinView.swift in Sources */,
 				6168D35027187ED100091219 /* LicenseViewController.swift in Sources */,
+				F2594BE52AA5C59000BCE985 /* Group+calls.swift in Sources */,
 				CE8A2B631EB38270004973D5 /* DKAssetGroupDetailVC.swift in Sources */,
 				4D70B3A619348247003FA7F0 /* NewMessageToaster.m in Sources */,
 				CE703DA9206544F1008DB924 /* WebCreateGroupRequest.swift in Sources */,

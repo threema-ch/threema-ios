@@ -316,8 +316,10 @@ extension GroupDetailsDataSource {
             
             actions.append(messageQuickAction)
         }
-        
         actions.append(dndQuickAction(in: viewController))
+        if let groupCallQuickAction = groupCallQuickAction(in: viewController) {
+            actions.append(groupCallQuickAction)
+        }
         
         return actions
     }
@@ -326,7 +328,12 @@ extension GroupDetailsDataSource {
         var conversationDetailsQuickActions = [QuickAction]()
         
         conversationDetailsQuickActions.append(dndQuickAction(in: viewController))
-        conversationDetailsQuickActions.append(contentsOf: searchChatQuickAction(in: viewController, for: conversation))
+        if let searchChatQuickAction = searchChatQuickAction(in: viewController, for: conversation) {
+            conversationDetailsQuickActions.append(searchChatQuickAction)
+        }
+        if let groupCallQuickAction = groupCallQuickAction(in: viewController) {
+            conversationDetailsQuickActions.append(groupCallQuickAction)
+        }
         
         return conversationDetailsQuickActions
     }
@@ -367,14 +374,14 @@ extension GroupDetailsDataSource {
     private func searchChatQuickAction(
         in viewController: UIViewController,
         for conversation: Conversation
-    ) -> [QuickAction] {
+    ) -> QuickAction? {
         let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
         guard messageFetcher.count() > 0 else {
-            return []
+            return nil
         }
         
         guard let groupDetailsViewController = viewController as? GroupDetailsViewController else {
-            return []
+            return nil
         }
         
         let quickAction = QuickAction(
@@ -385,7 +392,27 @@ extension GroupDetailsDataSource {
             groupDetailsViewController?.startChatSearch()
         }
         
-        return [quickAction]
+        return quickAction
+    }
+    
+    private func groupCallQuickAction(in viewController: UIViewController) -> QuickAction? {
+        // Only show call icon if group calls are enabled
+        guard UserSettings.shared()?.enableThreemaGroupCalls == true,
+              group.isSelfMember else {
+            return nil
+        }
+        
+        // Can we synchronously test here if this contact supports calls (without updating the
+        // feature mask) instead of checking when the action is actually triggered?
+        let quickAction = QuickAction(
+            imageName: "threema.phone.fill",
+            title: BundleUtil.localizedString(forKey: "group_call_title"),
+            accessibilityIdentifier: "GroupDetailsDataSourceGroupCallQuickActionButton"
+        ) { _ in
+            self.group.startGroupCall(settingsStore: BusinessInjector().settingsStore)
+        }
+        
+        return quickAction
     }
 }
 

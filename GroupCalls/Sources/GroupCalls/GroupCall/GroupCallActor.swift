@@ -61,6 +61,7 @@ actor GroupCallActor: Sendable {
     }
     
     nonisolated var groupCallDescriptionCopy: GroupCallBaseState {
+        // TODO: (IOS-3813) Try! is ugly.
         try! GroupCallBaseState(
             group: group,
             startedAt: groupCallDescription.startedAt,
@@ -179,8 +180,8 @@ actor GroupCallActor: Sendable {
         self.groupCallDescription = try GroupCallBaseState(
             group: groupModel,
             startedAt: Date(),
-            // TODO: Use actual value
-            maxParticipants: 100,
+            // TODO: (IOS-4057) Use actual value
+            maxParticipants: 16,
             dependencies: dependencies,
             groupCallStartData: groupCallStartData
         )
@@ -220,7 +221,7 @@ actor GroupCallActor: Sendable {
                 object: nil
             )
             for await _ in resignNotifications {
-                try? await toggleOwnVideo(true)
+                await toggleOwnVideo(true)
             }
         }
     }
@@ -255,6 +256,7 @@ actor GroupCallActor: Sendable {
         if intent == .create {
             if !(state is Connected) {
                 guard let callStartStateQueue else {
+                    // TODO: (IOS-3813) Check
                     fatalError()
                 }
                 
@@ -296,7 +298,7 @@ actor GroupCallActor: Sendable {
                 iterator = try await current.next()
             }
             catch {
-                DDLogError("[GroupCall] An error occurred \(error.localizedDescription)")
+                // TODO: IOS-3813 Handle Error, and possibly terminate and clean up. see below.
                 break
             }
         }
@@ -340,6 +342,7 @@ actor GroupCallActor: Sendable {
             return .running
         }
         
+        // TODO: (IOS-3813) Actually do as describe below
         /// **Protocol Step: Periodic Refresh** 3.2. Peek the call via a SfuHttpRequest.Peek request. If this does not
         /// result in a response within 5s, remove call from calls and abort the peek-call sub-steps.
         let task = Task {
@@ -361,7 +364,7 @@ actor GroupCallActor: Sendable {
             return .timeout
             
         case let .result(peekResponse):
-            if try await handle(peekResult: peekResponse) {
+            if await handle(peekResult: peekResponse) {
                 return .running
             }
             else {
@@ -370,7 +373,7 @@ actor GroupCallActor: Sendable {
         }
     }
     
-    func handle(peekResult: SFUHTTPConnection.PeekResponse) async throws -> Bool {
+    func handle(peekResult: SFUHTTPConnection.PeekResponse) async -> Bool {
         switch peekResult {
         case let .running(peekResponse):
             approximateCallStartDateUI = Date(timeIntervalSince1970: TimeInterval(peekResponse.startedAt / 1000))
@@ -380,6 +383,7 @@ actor GroupCallActor: Sendable {
                 let nonce = peekResponse.encryptedCallState[0..<24]
                 let peekResponseData = peekResponse.encryptedCallState[24..<peekResponse.encryptedCallState.count]
                 
+                // TODO: (IOS-3813) fatal error and try? is ugly
                 guard let decryptedData = groupCallDescription.symmetricDecryptByGSCK(peekResponseData, nonce: nonce),
                       let decryptedCallState = try? Groupcall_CallState(serializedData: decryptedData) else {
                     DDLogError("[GroupCall] Peek Could not decrypt encrypted call state")
@@ -418,7 +422,7 @@ actor GroupCallActor: Sendable {
             return false
             
         case .needsTokenRefresh:
-            // TODO: Return this to caller
+            // TODO: (IOS-3813) Return this to caller and check error
             fatalError()
             
         case .notRunning:
@@ -533,11 +537,11 @@ extension GroupCallActor {
         stateContinuation.yield(.unsubscribeVideo(participantID))
     }
     
-    func toggleOwnAudio(_ mute: Bool) throws {
+    func toggleOwnAudio(_ mute: Bool) {
         stateContinuation.yield(mute ? .muteAudio : .unmuteAudio)
     }
     
-    func toggleOwnVideo(_ mute: Bool) throws {
+    func toggleOwnVideo(_ mute: Bool) {
         stateContinuation.yield(mute ? .muteVideo : .unmuteVideo(currentCameraPosition))
     }
     
@@ -569,6 +573,7 @@ extension GroupCallActor {
             }
         }
         
+        // TODO: (IOS-3813) Check below
         do {
             switch try await Task.timeout(task, 10) {
             case .result: break

@@ -114,6 +114,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private var conversationObservers = [NSKeyValueObservation]()
     private var lastMessageObservers = [NSKeyValueObservation]()
+    private var groupImageObservers = [NSKeyValueObservation]()
     private var contactObservers = [NSKeyValueObservation]()
     private var groupCallButtonBannerObserver: AnyCancellable?
     
@@ -1102,19 +1103,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             
             strongSelf.updateDndImage()
         }
-        
-        NotificationCenter.default.addObserver(
-            forName: NSNotification.Name(rawValue: kNotificationIdentityAvatarChanged),
-            object: nil,
-            queue: nil
-        ) { [weak self] _ in
-            guard let strongSelf = self else {
-                return
-            }
-            
-            strongSelf.loadAvatar()
-        }
-        
+                
         NotificationCenter.default.addObserver(
             forName: NSNotification.Name(rawValue: kNotificationUpdateDraftForCell),
             object: nil,
@@ -1173,7 +1162,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
 
         observeLastMessageProperties()
-
+        
+        observeGroupImageProperties()
+        
         observeConversation(\.displayName, callOnCreation: false) { [weak self] in
             self?.updateTitleLabel()
         }
@@ -1181,9 +1172,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         observeConversation(\.groupName, callOnCreation: false) { [weak self] in
             self?.updateTitleLabel()
         }
-
-        observeConversation(\.groupImage, callOnCreation: false) { [weak self] in
+        observeConversation(\.groupImage, callOnCreation: true) { [weak self] in
             self?.loadAvatar()
+            self?.removeGroupImageObservers()
+            self?.observeGroupImageProperties()
         }
 
         observeContact(\.imageData, callOnCreation: false) { [weak self] in
@@ -1249,6 +1241,15 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
     }
     
+    private func observeGroupImageProperties() {
+        if let groupImage = conversation?.groupImage as? ImageData {
+            observeGroupImage(groupImage, keyPath: \.data, callOnCreation: false) {
+                AvatarMaker.shared().resetContext()
+                self.loadAvatar()
+            }
+        }
+    }
+    
     /// Helper to add observers to the `conversation` property
     ///
     /// All observers are stored in the `observers` property.
@@ -1302,6 +1303,32 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
 
         lastMessageObservers.append(observer)
     }
+    
+    /// Helper to add observers to the `groupImage` property
+    ///
+    /// All observers are stored in the `observers` property.
+    ///
+    /// - Parameters:
+    ///   - groupImage: ImageData set as `Conversation.groupImage`
+    ///   - keyPath: Key path depending of type `groupImage` to observe
+    ///   - callOnCreation: Should the handler be called during observer creation?
+    ///   - changeHandler: Handler called on each observed change.
+    ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
+    private func observeGroupImage(
+        _ groupImage: ImageData,
+        keyPath: KeyPath<ImageData, some Any>,
+        callOnCreation: Bool = true,
+        changeHandler: @escaping () -> Void
+    ) {
+        let options: NSKeyValueObservingOptions = callOnCreation ? .initial : []
+
+        let observer = groupImage.observe(keyPath, options: options) { _, _ in
+            // Because `changeHandler` updates UI elements we need to ensure that it runs on the main queue
+            DispatchQueue.main.async(execute: changeHandler)
+        }
+
+        groupImageObservers.append(observer)
+    }
 
     /// Helper to add observers to the `contact` property
     ///
@@ -1335,6 +1362,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         removeConversationObservers()
         removeContactObservers()
         removeLastMessageObservers()
+        removeGroupImageObservers()
     }
     
     private func removeConversationObservers() {
@@ -1355,6 +1383,16 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         // Remove them so we don't reference old observers
         lastMessageObservers.removeAll()
+    }
+    
+    private func removeGroupImageObservers() {
+        // Invalidate all observers
+        for observer in groupImageObservers {
+            observer.invalidate()
+        }
+        
+        // Remove them so we don't reference old observers
+        groupImageObservers.removeAll()
     }
     
     private func removeContactObservers() {

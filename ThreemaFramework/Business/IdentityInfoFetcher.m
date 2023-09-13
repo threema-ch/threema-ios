@@ -133,7 +133,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             if (![identityInfo isEqual:[NSNull null]]) {
                 [cachedIdentities addObject:identityInfo];
             }
-        } else {
+        }
+        else if ([prefetchCache.allKeys containsObject:identity]) {
+            NSDictionary *prefetchedIdentityInfo = [prefetchCache objectForKey:identity];
+            [cachedIdentities addObject:prefetchedIdentityInfo];
+        }
+        else {
             allIdentitiesAreCached = false;
             break;
         }

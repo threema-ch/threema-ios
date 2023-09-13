@@ -614,13 +614,14 @@ extension NotificationService: MessageProcessorDelegate {
                 stage: .final,
                 isPendingGroup: isPendingGroup
             ) {
-                DDLogInfo("[Push] Message processor finished for message id: \(msgID) found")
+                DDLogNotice("[Push] Message processor finished for message id: \(msgID) found")
                 self.pendingUserNotificationManager?
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
                     .done { showed in
                         if showed {
                             self.pendingUserNotificationManager?
                                 .addAsProcessed(pendingUserNotification: pendingUserNotification)
+                            DDLogNotice("[Push] Notification shown for message id: \(msgID)")
                         }
 
                         DDLogNotice("[Push] Notification processed for message id: \(msgID)")

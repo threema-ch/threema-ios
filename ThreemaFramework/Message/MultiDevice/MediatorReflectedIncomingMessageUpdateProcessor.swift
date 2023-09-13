@@ -121,6 +121,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                 // message
                 let identity: ThreemaIdentity? = message.sender?.identity ?? message.conversation.contact?.identity
                 if let key = PendingUserNotificationKey.key(identity: identity, messageID: message.id) {
+                    DDLogNotice("Removing notifications from \(#function)")
                     self.frameworkInjector.userNotificationCenterManager.remove(
                         key: key,
                         exceptStage: nil,

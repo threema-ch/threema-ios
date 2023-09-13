@@ -28,6 +28,7 @@
 + (AvatarMaker* _Nonnull)sharedAvatarMaker;
 
 - (void)clearCacheForProfilePicture;
+- (void)resetContext;
 
 - (void)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage, NSString *identity))onCompletion;
 - (UIImage*)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked;

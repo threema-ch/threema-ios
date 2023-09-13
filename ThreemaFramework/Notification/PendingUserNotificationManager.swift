@@ -183,6 +183,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
             }
             
             guard pendingUserNotification.abstractMessage?.canShowUserNotification() ?? true else {
+                DDLogNotice("Removing notification from \(#function)")
                 userNotificationCenterManager.remove(
                     key: pendingUserNotification.key,
                     exceptStage: nil,
@@ -297,6 +298,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                     }
                 }
                 else {
+                    DDLogWarn("[Push] Suppressed push, removing from pending, key: \(pendingUserNotification.key)")
                     userNotificationCenterManager.remove(
                         key: pendingUserNotification.key,
                         exceptStage: nil,
@@ -306,6 +308,9 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 }
             }
             else {
+                DDLogWarn(
+                    "[Push] Invalid Notification content, removed from pending, key: \(pendingUserNotification.key)"
+                )
                 userNotificationCenterManager.remove(
                     key: pendingUserNotification.key,
                     exceptStage: nil,
@@ -374,6 +379,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     /// Remove all timed user notifications from notification center for pending user notification.
     /// - Parameter pendingUserNotification: Remove all timed notifications for this pending user notification
     public func removeAllTimedUserNotifications(pendingUserNotification: PendingUserNotification) {
+        DDLogNotice("Removing all notifications from \(#function)")
         userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil, justPending: true)
     }
     

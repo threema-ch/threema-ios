@@ -170,6 +170,10 @@ static AvatarMaker *sharedInstance = nil;
     [_maskedImageCache removeAllObjects];
 }
 
+- (void)resetContext {
+    [self setInvalidateBackgroundEntityManager:@YES];
+}
+
 - (void)managedObjectImageChanged:(NSNotification*)notification {
     NSManagedObject *managedObject = notification.object;
     [_maskedImageCache removeObjectForKey:managedObject.objectID];

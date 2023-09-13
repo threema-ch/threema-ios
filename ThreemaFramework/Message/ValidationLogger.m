@@ -141,6 +141,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         case MSGTYPE_GROUP_SET_PHOTO:
             typeText = @"GROUP_SET_PHOTO";
             break;
+        case MSGTYPE_GROUP_DELETE_PHOTO:
+            typeText = @"GROUP_DELETE_PHOTO";
+            break;
         case MSGTYPE_GROUP_REQUEST_SYNC:
             typeText = @"GROUP_REQUEST_SYNC";
             break;

@@ -524,6 +524,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             }
         }
     } else {
+        DDLogNotice(@"New work contact added");
         added = YES;
         contact = [em.entityCreator contact];
         contact.identity = identity;

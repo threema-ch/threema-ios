@@ -1676,8 +1676,10 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                     if (featureMask.integerValue >= 0) {
                         NSString *identityString = [identities objectAtIndex:i];
                         ContactEntity *contact = [entityManager.entityFetcher contactForId: identityString];
-                        contact.featureMask = featureMask;
-                        [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
+                        if (![contact.featureMask isEqualToNumber:featureMask]) {
+                            contact.featureMask = featureMask;
+                            [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
+                        }
                     }
                 }
             }];

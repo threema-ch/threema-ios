@@ -50,12 +50,12 @@ class ThreemaWebViewController: ThemedTableViewController {
         
         switch ThreemaEnvironment.env() {
         case .appStore:
-            // Show multi-device only in work App Store releases
-            if ThreemaApp.current == .work {
-                return Section.all
+            // Only hide multi-device in onprem App Store releases
+            if ThreemaApp.current == .onPrem {
+                return Section.webOnly
             }
             else {
-                return Section.webOnly
+                return Section.all
             }
         case .testFlight:
             // Show multi-device only in consumer, work, red and work red betas

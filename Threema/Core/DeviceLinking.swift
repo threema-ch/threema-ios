@@ -211,8 +211,8 @@ class DeviceLinking: NSObject {
         
         switch ThreemaEnvironment.env() {
         case .appStore:
-            // Disable it for all app store versions except work
-            if ThreemaApp.current != .work {
+            // Enable it for all app store versions except onprem
+            if ThreemaApp.current == .onPrem {
                 autoDisableMultiDevice()
             }
         case .testFlight:

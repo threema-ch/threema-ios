@@ -452,11 +452,18 @@ public final class DeviceJoin {
                 throw Error.failedToGatherData
             }
             
-            DDLogNotice("\(allNonces.count) nonces gathered")
+            DDLogNotice("Nonces: \(allNonces.count) nonces gathered")
             
             // This removes the `nil` nonces if there are any
-            // TODO: Should we log an error for nil nonces?
-            return allNonces.compactMap(\.nonce)
+            let nonNilNonces = allNonces.compactMap(\.nonce)
+            DDLogNotice("Nonces: \(allNonces.count - nonNilNonces.count) nonces were nil")
+            
+            let filteredNonces = nonNilNonces.filter {
+                $0.count == 32
+            }
+            DDLogNotice("Nonces: \(nonNilNonces.count - filteredNonces.count) nonces were not 32 bytes")
+
+            return filteredNonces
         }
     }
     

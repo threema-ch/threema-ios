@@ -25,10 +25,13 @@ import PromiseKit
 extension ContactStore {
     @objc func batchAddWorkContacts(batchAddContacts: [BatchAddWorkContact]) {
         let mediatorSyncableContacts = MediatorSyncableContacts()
-        firstly { () -> Promise<[String]> in
+        firstly { () -> Promise<EntityManager> in
             let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
+            return Promise { seal in seal.fulfill(entityManager) }
+        }
+        .then { entityManager -> Promise<[String]> in
             var identities = [String]()
-            entityManager.performSyncBlockAndSafe {
+            return entityManager.performAndWaitSave {
                 for batchAddContact in batchAddContacts {
                     guard let publicKey = batchAddContact.publicKey else {
                         continue
@@ -46,8 +49,8 @@ extension ContactStore {
                         identities.append(contact.identity)
                     }
                 }
+                return Promise { seal in seal.fulfill(identities) }
             }
-            return Promise { seal in seal.fulfill(identities) }
         }
         .then { identities -> AnyPromise in
             self.updateFeatureMasks(forIdentities: identities, contactSyncer: mediatorSyncableContacts)

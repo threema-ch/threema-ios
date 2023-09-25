@@ -72,10 +72,6 @@ class AppLaunchTasks: NSObject {
     /// Checks if the currently assigned last message of given Conversations is actually the correct one and fixes it
     /// if not (and recalculate count of unread messages for this conversation).
     private func checkLastMessageOfAllConversations() async {
-        guard ThreemaEnvironment.env() != .appStore else {
-            return
-        }
-
         var doUpdateUnreadMessagesCount = false
 
         await businessInjector.backgroundEntityManager.performSave {

@@ -1447,18 +1447,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
     if ([self isHandleNotificationAllowed:^{
-        completionHandler(UNNotificationPresentationOptionAlert|UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound);
+        completionHandler(UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionBadge | UNNotificationPresentationOptionSound);
     }] == YES) {
         if (!_active && ([[VoIPCallStateManager shared] currentCallState] == CallStateIdle || ![[VoIPCallStateManager shared] preCallHandling])) {
-            DDLogNotice(@"[Threema Call] Start NotificationExtension for received push (in the app)");
-            DDLogNotice(@"[Threema Call] App active: %i, CallState: %i, PreCallHandling: %i", _active, [[VoIPCallStateManager shared] currentCallState] == CallStateIdle, [[VoIPCallStateManager shared] preCallHandling]);
+            DDLogNotice(@"[Push] willPresentNotification: Start NotificationExtension for received push");
+            DDLogNotice(@"[Push] App active: %i, CallState: %i, PreCallHandling: %i", _active, [[VoIPCallStateManager shared] currentCallState] == CallStateIdle, [[VoIPCallStateManager shared] preCallHandling]);
             // Do not handle notifications if the app is not active -> Show notification in iOS, not in the app
-            completionHandler(UNNotificationPresentationOptionAlert|UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound);
+            completionHandler(UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionBadge | UNNotificationPresentationOptionSound);
         }
         else {
-            DDLogNotice(@"[Threema Call] Handle notification for received push (in the app)");
+            DDLogNotice(@"[Push] willPresentNotification: Handle notification for received push");
             [notificationManager handleThreemaNotificationWithPayload:notification.request.content.userInfo receivedWhileRunning:YES notification:notification withCompletionHandler:completionHandler];
         }
+    }
+    else {
+        DDLogNotice(@"[Push] willPresentNotification: Handle notification is not allowed");
+        completionHandler(UNNotificationPresentationOptionNone);
     }
 }
 

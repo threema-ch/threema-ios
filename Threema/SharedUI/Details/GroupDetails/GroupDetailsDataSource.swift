@@ -397,7 +397,7 @@ extension GroupDetailsDataSource {
     
     private func groupCallQuickAction(in viewController: UIViewController) -> QuickAction? {
         // Only show call icon if group calls are enabled
-        guard UserSettings.shared()?.enableThreemaGroupCalls == true,
+        guard ThreemaEnvironment.groupCalls, UserSettings.shared()?.enableThreemaGroupCalls == true,
               group.isSelfMember else {
             return nil
         }

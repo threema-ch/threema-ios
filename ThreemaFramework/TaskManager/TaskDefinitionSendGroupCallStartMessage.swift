@@ -60,7 +60,7 @@ final class TaskDefinitionSendGroupCallStartMessage: TaskDefinitionSendMessage {
     }
     
     init(
-        group: Group?,
+        group: Group,
         from: String,
         to: [String],
         groupCallStartMessage: CspE2e_GroupCallStart,
@@ -70,7 +70,7 @@ final class TaskDefinitionSendGroupCallStartMessage: TaskDefinitionSendMessage {
         self.toMembers = to
         self.groupCallStartMessage = groupCallStartMessage
         
-        super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
+        super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: sendContactProfilePicture)
     }
 
     required init(from decoder: Decoder) throws {

@@ -394,6 +394,7 @@
 "chat_search_searching" = "Aranıyor...";
 "chat_search_no_matches" = "Eşleşme yok";
 "chat_search_matches" = "%d / %d eşleşme";
+"chat_search_note" = "Not: Medya altyazıları arama sonuçlarına dahil edilmez.";
 
 "choose_recipient" = "Alıcı seçin";
 
@@ -781,6 +782,20 @@
 "group_call_navbar_state_connecting" = "Bağlanıyor…";
 "group_call_navbar_state_joining" = "Katılıyor...";
 "group_call_navbar_state_connected" = "Bağlandı";
+
+"group_call_error_generic_title" = "Bir hata oluştu";
+"group_call_error_generic_message" = "Sorun devam ederse lütfen müşteri hizmetleriyle iletişime geçin.";
+
+"group_call_accessibility_hide_view" = "Grup görüşmesi görünümünü gizle";
+"group_call_accessibility_enable_camera" = "Kamerayı etkinleştir";
+"group_call_accessibility_disable_camera" = "Kamerayı devre dışı bırak";
+"group_call_accessibility_audio_output" = "Ses çıkışını değiştir";
+"group_call_accessibility_enable_microphone" = "Mikrofonu etkinleştir";
+"group_call_accessibility_disable_microphone" = "Mikrofonu devre dışı bırak";
+"group_call_accessibility_audio_enabled" = "Mikrofon etkin";
+"group_call_accessibility_audio_disabled" = "Mikrofon devre dışı";
+"group_call_accessibility_video_enabled" = "Kamera etkin";
+"group_call_accessibility_video_disabled" = "Kamera devre dışı";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema, gizliliğinizi diğer tüm uygulamalardan daha sıkı bir şekilde korur. Gizlilik politikamızda daha fazlasını öğrenebilirsiniz.";
@@ -1218,7 +1233,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_threema_voip_include_call_in_recents_footer_off" = "Aramalar kilit ekranında görüntülenir ancak Telefon uygulamasının arama kayıtlarında listelenmez.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Aramalar kilit ekranında görüntülenir ve Telefon uygulamasının arama kayıtlarında listelenir. iCloud Drive etkinleştirildiyse, Telefon uygulamasının arama kayıtları Apple sunucuları aracılığıyla senkronize edilir.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Apple'ın kısıtlamaları nedeniyle, cihazın bölgesi Çin olarak ayarlanmışsa Threema aramaları yapılamaz.";
-"settings_threema_calls_group_calls_header" = "Grup Aramaları (Beta)";
+"settings_threema_calls_group_calls_header" = "Grup Aramaları";
 "settings_threema_calls_enable_group_calls" = "Threema Grup Aramalarını Etkinleştir";
 
 // Advanced Settings
@@ -1487,6 +1502,8 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "multi_device_join_fatal_no_internet_connection_title" = "İnternet Bağlantısı Yok";
 "multi_device_join_failed_to_send_data_title" = "Veri Gönderme Başarısız";
 "multi_device_join_fatal_error_message" = "Lütfen cihazı bağlamayı yeniden deneyin. Bu sorun devam ederse lütfen destekle iletişime geçin (“Ayarlar > Destek”).";
+"multi_device_join_failed_threema_web_title" = "Mevcut Masaüstü/Web Bağlantısı";
+"multi_device_join_failed_threema_web_message" = "Lütfen Masaüstü/Web'i devre dışı bırakın (Ayarlar > Masaüstü/Web'de) ve cihazı bağlamayı yeniden deneyin. Bu sorun devam ederse lütfen müşteri hizmetleriyle iletişime geçin (Ayarlar > Destek).";
 "multi_device_join_unknown_qr_code_title" = "Bilinmeyen QR Kodu";
 "multi_device_join_unknown_qr_code_message" = "Lütfen %@ üzerinden ilgili uygulamayı kullandığınızdan emin olun.";
 "multi_device_join_incompatible_version_title" = "Uyumsuz Sürüm";

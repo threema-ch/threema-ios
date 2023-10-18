@@ -54,9 +54,13 @@ import Foundation
         case ballotID
     }
     
-    @objc init(ballot: Ballot, group: Group?, sendContactProfilePicture: Bool) {
-        self.ballotID = ballot.id
-        super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
+    @objc init(ballotID: Data, receiverIdentity: ThreemaIdentity?, group: Group?, sendContactProfilePicture: Bool) {
+        self.ballotID = ballotID
+        super.init(
+            receiverIdentity: receiverIdentity,
+            group: group,
+            sendContactProfilePicture: sendContactProfilePicture
+        )
     }
 
     required init(from decoder: Decoder) throws {

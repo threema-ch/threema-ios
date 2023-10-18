@@ -22,4 +22,5 @@ import Foundation
 
 public protocol GroupCallsSFUTokenFetchAdapterProtocol {
     func sfuCredentials() async throws -> SFUToken
+    func refreshTokenWithTimeout(_ timeout: TimeInterval) async throws -> SFUToken?
 }

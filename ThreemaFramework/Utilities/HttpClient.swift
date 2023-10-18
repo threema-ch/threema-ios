@@ -56,7 +56,7 @@ public class HTTPClient: NSObject {
     fileprivate var user: String?
     fileprivate var password: String?
     private var authenticationMethod: String?
-    private var authorization: String?
+    private let authorization: String?
     private let urlSessionManager: URLSessionManager
 
     // MARK: - Lifecycle
@@ -68,6 +68,7 @@ public class HTTPClient: NSObject {
     public init(sessionManager: URLSessionManager = .shared) {
         self.authenticationMethod = NSURLAuthenticationMethodDefault
         self.urlSessionManager = sessionManager
+        self.authorization = nil
         super.init()
     }
     
@@ -84,6 +85,7 @@ public class HTTPClient: NSObject {
             self.authenticationMethod = NSURLAuthenticationMethodDefault
         }
         self.urlSessionManager = sessionManager
+        self.authorization = nil
         super.init()
     }
     
@@ -106,7 +108,7 @@ public class HTTPClient: NSObject {
     // MARK: - Delete
 
     public func delete(url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) {
-        let request = urlRequest(for: url, httpMethod: .delete)
+        let request = urlRequest(for: url, httpMethod: .delete, authorization: authorization)
         let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
         
         let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false)
@@ -122,7 +124,7 @@ public class HTTPClient: NSObject {
         contentType: ContentType,
         completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void
     ) -> URLSessionDataTask {
-        var request = urlRequest(for: url, httpMethod: .get)
+        var request = urlRequest(for: url, httpMethod: .get, authorization: authorization)
         request.setValue(contentType.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
         
         let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
@@ -136,7 +138,7 @@ public class HTTPClient: NSObject {
 
     /// Only used for testing.
     public func downloadData(url: URL, delegate: URLSessionDelegate) {
-        var request = urlRequest(for: url, httpMethod: .get)
+        var request = urlRequest(for: url, httpMethod: .get, authorization: authorization)
         request.setValue(ContentType.octetStream.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
         
         let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
@@ -145,7 +147,7 @@ public class HTTPClient: NSObject {
     }
     
     public func sendDone(url: URL) async throws {
-        let request = urlRequest(for: url, httpMethod: .post)
+        let request = urlRequest(for: url, httpMethod: .post, authorization: authorization)
         let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
         
         // It's just important that there was no error here
@@ -160,7 +162,7 @@ public class HTTPClient: NSObject {
         data: Data,
         completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void
     ) {
-        var request = urlRequest(for: url, httpMethod: .put)
+        var request = urlRequest(for: url, httpMethod: .put, authorization: authorization)
         request.setValue(
             ContentType.octetStream.rawValue,
             forHTTPHeaderField: HTTPHeaderField.contentType.rawValue
@@ -183,7 +185,7 @@ public class HTTPClient: NSObject {
         contentType: ContentType,
         completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void
     ) -> URLSessionDataTask {
-        var request = urlRequest(for: url, httpMethod: .post)
+        var request = urlRequest(for: url, httpMethod: .post, authorization: authorization)
         request.setValue(contentType.rawValue, forHTTPHeaderField: HTTPHeaderField.contentType.rawValue)
 
         let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
@@ -200,7 +202,7 @@ public class HTTPClient: NSObject {
     
     /// Only used for testing.
     public func uploadData(url: URL, file: URL, delegate: URLSessionDelegate) {
-        var request = urlRequest(for: url, httpMethod: .put)
+        var request = urlRequest(for: url, httpMethod: .put, authorization: authorization)
         request.setValue(
             ContentType.octetStream.rawValue,
             forHTTPHeaderField: HTTPHeaderField.contentType.rawValue
@@ -230,7 +232,7 @@ public class HTTPClient: NSObject {
         completionHandler: @escaping (URLSessionUploadTask?, Data?, URLResponse?, Error?) -> Swift.Void
     ) -> URLSessionUploadTask {
         
-        var request = urlRequest(for: url, httpMethod: .post)
+        var request = urlRequest(for: url, httpMethod: .post, authorization: authorization)
         request.setValue(contentType, forHTTPHeaderField: HTTPHeaderField.contentType.rawValue)
 
         var task: URLSessionUploadTask!
@@ -248,7 +250,11 @@ public class HTTPClient: NSObject {
     
     // MARK: - Request
     
-    private func urlRequest(for url: URL, httpMethod: HTTPMethod) -> URLRequest {
+    private func urlRequest(
+        for url: URL,
+        httpMethod: HTTPMethod,
+        authorization requestAuthorization: String?
+    ) -> URLRequest {
         var request = URLRequest(
             url: url,
             cachePolicy: URLRequest.CachePolicy.reloadIgnoringLocalAndRemoteCacheData,
@@ -257,8 +263,8 @@ public class HTTPClient: NSObject {
         request.httpMethod = httpMethod.rawValue
         request.setValue("Threema", forHTTPHeaderField: HTTPHeaderField.userAgent.rawValue)
         
-        if let authorization {
-            request.setValue(authorization, forHTTPHeaderField: HTTPHeaderField.authorization.rawValue)
+        if let requestAuthorization {
+            request.setValue(requestAuthorization, forHTTPHeaderField: HTTPHeaderField.authorization.rawValue)
         }
         
         return request
@@ -319,8 +325,7 @@ extension HTTPClient: URLSessionTaskDelegate {
 
 extension HTTPClient: GroupCallsHTTPClientAdapterProtocol {
     public func sendPeek(authorization: String, url: URL, body: Data) async throws -> (Data, URLResponse) {
-        self.authorization = authorization
-        var request = urlRequest(for: url, httpMethod: .post)
+        var request = urlRequest(for: url, httpMethod: .post, authorization: authorization)
         request.httpBody = body
         
         return try await urlSessionManager.storedSession(for: nil, createAsBackgroundSession: true).data(for: request)

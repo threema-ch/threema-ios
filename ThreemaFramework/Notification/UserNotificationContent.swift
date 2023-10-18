@@ -104,4 +104,12 @@ public class UserNotificationContent {
             return ["threema": ["cmd": cmd, "from": senderID, "messageId": messageID]]
         }
     }
+    
+    public func isGroupCallStartMessage() -> Bool {
+        if let abstractMessage = pendingUserNotification.abstractMessage,
+           abstractMessage.isKind(of: GroupCallStartMessage.self) {
+            return true
+        }
+        return false
+    }
 }

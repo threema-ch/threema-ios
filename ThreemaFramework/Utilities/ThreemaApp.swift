@@ -55,7 +55,7 @@ public enum ThreemaApp {
     /// ThreemaShareExtension this will return `Threema`.
     /// See `currentName`
     public static var appName: String {
-        BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleName") as! String
+        BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Threema"
     }
     
     private static var isRed: Bool {
@@ -95,7 +95,7 @@ public enum ThreemaApp {
         return bundle?.bundleIdentifier?.contains(".red") ?? false
     }
     
-    @objc public class func currentName() -> String {
+    @objc public class func appName() -> String {
         let bundle = BundleUtil.mainBundle()
         return bundle?.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Threema"
     }

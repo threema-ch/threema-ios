@@ -20,6 +20,7 @@
 
 import Foundation
 
-public enum GroupCallUserIntent {
-    case join, create
+public enum GroupCallUserIntent: Sendable {
+    case join
+    case createOrJoin
 }

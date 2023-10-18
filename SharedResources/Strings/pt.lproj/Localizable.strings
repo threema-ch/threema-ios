@@ -394,6 +394,7 @@
 "chat_search_searching" = "Pesquisando...";
 "chat_search_no_matches" = "Nenhum resultado";
 "chat_search_matches" = "%d de %d resultados";
+"chat_search_note" = "Observação: legendas de mídia não estão incluídas nos resultados de busca.";
 
 "choose_recipient" = "Escolher destinatário";
 
@@ -765,6 +766,8 @@
 "call_threema_cellular_instead_of_wifi_title" = "Ligar via rede móvel";
 "call_threema_cellular_instead_of_wifi_text" = "Aviso: esta ligação gera transferência de dados na rede móvel.";
 
+// Group Calls
+"group_call_title" = "Chamada em grupo";
 /* Group Calls */
 "group_call_join_button_title" = "Participar";
 "group_call_open_button_title" = "Aberto";
@@ -780,6 +783,20 @@
 "group_call_navbar_state_connecting" = "Conectando…";
 "group_call_navbar_state_joining" = "Entrando...";
 "group_call_navbar_state_connected" = "Conectado";
+
+"group_call_error_generic_title" = "Ocorreu um erro";
+"group_call_error_generic_message" = "Se o problema persistir, entre em contato com o suporte ao cliente.";
+
+"group_call_accessibility_hide_view" = "Ocultar exibição da chamada em grupo";
+"group_call_accessibility_enable_camera" = "Ativar câmera";
+"group_call_accessibility_disable_camera" = "Desativar câmera";
+"group_call_accessibility_audio_output" = "Alterar saída de áudio";
+"group_call_accessibility_enable_microphone" = "Ativar microfone";
+"group_call_accessibility_disable_microphone" = "Desativar microfone";
+"group_call_accessibility_audio_enabled" = "Microfone ativado";
+"group_call_accessibility_audio_disabled" = "Microfone desativado";
+"group_call_accessibility_video_enabled" = "Câmera ativada";
+"group_call_accessibility_video_disabled" = "Câmera desativada";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protege a sua privacidade com mais rigor do que qualquer outro aplicativo de mensagens. Saiba mais em Política de Privacidade.";
@@ -1216,6 +1233,9 @@
 "settings_threema_voip_include_call_in_recents_footer_off" = "As chamadas são exibidas na tela de bloqueio, mas não são listadas na lista de chamadas do app Telefone.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "As chamadas são exibidas na tela de bloqueio e listadas na lista de chamadas do app Telefone. Se o iCloud Drive está ativado, a lista de chamadas do aplicativo Telefone é sincronizada através dos servidores da Apple.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Devido a restrições da Apple, as chamadas do Threema não estão disponíveis se a região do dispositivo está definida para a China.";
+"settings_threema_calls_group_calls_header" = "Chamas em grupo";
+"settings_threema_calls_enable_group_calls" = "Ativar Chamadas em grupo do Threema";
+
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Solução de problemas";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1482,6 +1502,8 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "multi_device_join_fatal_no_internet_connection_title" = "Não há conexão com a Internet";
 "multi_device_join_failed_to_send_data_title" = "Falha ao enviar os dados";
 "multi_device_join_fatal_error_message" = "Tente vincular o dispositivo novamente. Se o problema persistir, entre em contato com o suporte (\"Configurações > Suporte\").";
+"multi_device_join_failed_threema_web_title" = "Conexão da Web/Desktop existente";
+"multi_device_join_failed_threema_web_message" = "Desative Desktop/Web (em Configurações > Desktop/Web) e tente vincular o dispositivo novamente. Se o problema persistir, entre em contato com o suporte (Configurações > Suporte).";
 "multi_device_join_unknown_qr_code_title" = "Código QR desconhecido";
 "multi_device_join_unknown_qr_code_message" = "Certifique-se de que está usando o app correspondente do %@.";
 "multi_device_join_incompatible_version_title" = "Versão incompatível";

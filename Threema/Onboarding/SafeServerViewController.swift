@@ -102,6 +102,8 @@ class SafeServerViewController: IDCreationPageViewController {
             serverPassword = nil
             maxBackupBytes = nil
             retentionDays = nil
+            completion(true)
+            return
         }
         else {
             let safeConfigManager = SafeConfigManager()

@@ -74,18 +74,18 @@ final class TaskDefinitionSendGroupCreateMessage: TaskDefinitionSendMessage {
     ///   - members: All current members of the group (this should not include any `removedMembers`)
     ///   - sendContactProfilePicture: Should a contact profile picture be sent?
     convenience init(
-        group: Group?,
+        group: Group,
         to toMembers: [String],
         removed removedMembers: [String]? = nil,
         members: Set<String>,
         sendContactProfilePicture: Bool = false
     ) {
         self.init(
-            groupID: group?.groupID,
-            groupCreatorIdentity: group?.groupCreatorIdentity,
-            groupName: group?.name,
-            allGroupMembers: group?.allMemberIdentities,
-            isNoteGroup: group?.isNoteGroup,
+            groupID: group.groupID,
+            groupCreatorIdentity: group.groupCreatorIdentity,
+            groupName: group.name,
+            allGroupMembers: group.allMemberIdentities,
+            isNoteGroup: group.isNoteGroup,
             to: toMembers,
             removed: removedMembers,
             members: members,
@@ -94,8 +94,8 @@ final class TaskDefinitionSendGroupCreateMessage: TaskDefinitionSendMessage {
     }
 
     init(
-        groupID: Data?,
-        groupCreatorIdentity: String?,
+        groupID: Data,
+        groupCreatorIdentity: String,
         groupName: String?,
         allGroupMembers: Set<String>?,
         isNoteGroup: Bool?,
@@ -109,6 +109,7 @@ final class TaskDefinitionSendGroupCreateMessage: TaskDefinitionSendMessage {
         self.members = members
 
         super.init(
+            receiverIdentity: nil,
             groupID: groupID,
             groupCreatorIdentity: groupCreatorIdentity,
             groupName: groupName,

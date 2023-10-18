@@ -151,10 +151,10 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
-        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_onprem_footer"], _serverName, [ThreemaAppObjc currentName]];
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_onprem_footer"], _serverName, [ThreemaAppObjc appName]];
     }
     
-    return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_footer"], [ThreemaAppObjc currentName]];
+    return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_footer"], [ThreemaAppObjc appName]];
 }
 
 @end

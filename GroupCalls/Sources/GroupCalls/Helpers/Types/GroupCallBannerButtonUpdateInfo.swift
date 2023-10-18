@@ -20,11 +20,20 @@
 
 import Foundation
 
-extension FixedWidthInteger {
-    /// Convert into data stored as little endian
-    var littleEndianData: Data {
-        // Inspired by https://www.hackingwithswift.com/forums/swift/how-do-i-get-a-uint32-into-a-data/8802/8803
-        var littleEndianInt = littleEndian
-        return Data(bytes: &littleEndianInt, count: MemoryLayout<Self>.size)
+public struct GroupCallBannerButtonUpdate: Sendable {
+    public let creator: ThreemaID
+    public let groupID: Data
+    public let numberOfParticipants: Int
+    public let startDate: Date
+    public let joinState: GroupCallJoinState
+    public let hideComponent: Bool
+    
+    init(actor: GroupCallActor, hideComponent: Bool) async {
+        self.creator = actor.group.creator
+        self.groupID = actor.group.groupID
+        self.numberOfParticipants = await actor.viewModel.numberOfParticipants
+        self.startDate = await actor.viewModel.getCallStartDate()
+        self.joinState = await actor.joinState()
+        self.hideComponent = hideComponent
     }
 }

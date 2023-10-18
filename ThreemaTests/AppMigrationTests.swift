@@ -31,6 +31,7 @@ class AppMigrationTests: XCTestCase {
     
     private var myIdentityStoreMock: MyIdentityStoreMock!
     private var groupManagerMock: GroupManagerMock!
+    private var userSettingsMock: UserSettingsMock!
     
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
@@ -47,6 +48,7 @@ class AppMigrationTests: XCTestCase {
         
         myIdentityStoreMock = MyIdentityStoreMock()
         groupManagerMock = GroupManagerMock()
+        userSettingsMock = UserSettingsMock()
     }
 
     override func tearDownWithError() throws {
@@ -56,13 +58,13 @@ class AppMigrationTests: XCTestCase {
     func testRunMigrationToLatestVersion() throws {
         setupDataForMigrationVersion4_8()
         setupDataForMigrationVersion5_5()
-                
+        setupDataForMigrationVersion5_6()
+        
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
         DatabaseManager.db().doMigrateDB()
         
         // Setup mocks
-        let userSettingsMock = UserSettingsMock()
         userSettingsMock.appMigratedToVersion = AppMigrationVersion.none.rawValue
 
         let businessInjectorMock = BusinessInjectorMock(
@@ -109,6 +111,10 @@ class AppMigrationTests: XCTestCase {
             // Own contact should be removed from group
             XCTAssertEqual(ownMember.count, 0)
         }
+        
+        // Checks for 5.6 migration
+        let blockList = userSettingsMock.blacklist
+        XCTAssertFalse(blockList!.contains(myIdentityStoreMock.identity))
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -199,12 +205,22 @@ class AppMigrationTests: XCTestCase {
             }
 
             groupManagerMock.getGroupReturns = Group(
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
             )
         }
+    }
+    
+    private func setupDataForMigrationVersion5_6() {
+        // Setup mocks
+                
+        let mutableBlocklist = NSMutableOrderedSet()
+        mutableBlocklist.add(myIdentityStoreMock.identity)
+        userSettingsMock.blacklist = mutableBlocklist
+        
+        XCTAssertTrue(userSettingsMock.blacklist!.contains(myIdentityStoreMock.identity))
     }
 }

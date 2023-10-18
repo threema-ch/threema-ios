@@ -67,7 +67,7 @@ struct Connecting: GroupCallState {
             dtlsParameters: dtlsParameters
         )
         
-        let groupCallDescription = groupCallActor.groupCallDescriptionCopy
+        let groupCallDescription = groupCallActor.groupCallBaseStateCopy
         
         self.connectionContext = try ConnectionContext(
             certificate: certificate,
@@ -78,11 +78,11 @@ struct Connecting: GroupCallState {
         
         let localParticipantID = ParticipantID(id: joinResponse.participantID)
         
-        // TODO: Actual contact
+        // TODO: (IOS-4080) Fetch actual local contact
         let localContactModel = ContactModel(identity: "Test", nickname: "test")
         
         let localParticipant = LocalParticipant(
-            id: localParticipantID,
+            participantID: localParticipantID,
             contactModel: localContactModel,
             localContext: LocalContext(),
             threemaID: groupCallActor.localIdentity,
@@ -114,20 +114,20 @@ struct Connecting: GroupCallState {
         try await connectionContext.createAndApplyInitialOfferAndAnswer()
         
         guard !Task.isCancelled else {
-            return Ended(groupCallActor: groupCallActor)
+            return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
         }
         
         try await connectionContext.addIceCandidates(addresses: joinResponse.addresses)
         
         guard !Task.isCancelled else {
-            return Ended(groupCallActor: groupCallActor)
+            return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
         }
         
         var messageData: Data?
         
         for await message in connectionContext.messageStream {
             guard !Task.isCancelled else {
-                return Ended(groupCallActor: groupCallActor)
+                return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
             }
             messageData = message.data
             break
@@ -137,22 +137,25 @@ struct Connecting: GroupCallState {
             throw GroupCallError.firstMessageNotReceived
         }
         
-        // TODO: (IOS-3813) Remove guard, throw error directly
         guard let envelope = try? Groupcall_SfuToParticipant.Envelope(serializedData: messageData).hello else {
             throw GroupCallError.serializationFailure
         }
         
         /// **Protocol Step: Group Call Join Steps** 6. If the hello.participants contains less than 4 items, set the
         /// initial capture state of the microphone to on.
-        // TODO: (IOS-????) See above
-        assert(envelope.unknownFields.data.isEmpty)
+        // TODO: (IOS-4078) See above
         
         // swiftformat:disable acronyms
         DDLogNotice("[GroupCall] Added participants \(envelope.participantIds)")
         // swiftformat:enable acronyms
         
         guard !Task.isCancelled else {
-            return Ended(groupCallActor: groupCallActor)
+            return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
+        }
+        
+        /// **Protocol Step: Group Call Join Steps** 7. If call is marked as new:
+        if await groupCallActor.isNew {
+            try await groupCallActor.sendStartMessageWithDelay()
         }
         
         return Connected(

@@ -705,6 +705,7 @@ class TaskExecution: NSObject {
                with: task.messageID,
                conversation: conversation
            ) {
+            task.messageType = "\(type(of: message))"
 
             if let message = message as? TextMessage {
                 let msg: AbstractMessage = task.isGroupMessage ? GroupTextMessage() : BoxTextMessage()
@@ -862,13 +863,6 @@ class TaskExecution: NSObject {
                     msg.encryptionKey = message.encryptionKey
                     msg.videoSize = UInt32(exactly: message.videoSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
-                    if let task = task as? TaskDefinitionSendVideoMessage {
-                        msg.thumbnailBlobID = task.thumbnailBlobID
-                        if let thumbnailSize = task.thumbnailSize {
-                            msg.thumbnailSize = UInt32(exactly: thumbnailSize)!
-                        }
-                    }
-
                     msg.groupID = task.groupID
                     msg.groupCreator = task.groupCreatorIdentity
                 }
@@ -877,12 +871,6 @@ class TaskExecution: NSObject {
                     msg.encryptionKey = message.encryptionKey
                     msg.videoSize = UInt32(exactly: message.videoSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
-                    if let task = task as? TaskDefinitionSendVideoMessage {
-                        msg.thumbnailBlobID = task.thumbnailBlobID
-                        if let thumbnailSize = task.thumbnailSize {
-                            msg.thumbnailSize = UInt32(exactly: thumbnailSize)!
-                        }
-                    }
                 }
                 return msg
             }

@@ -393,7 +393,6 @@
 "chat_search_searching" = "Bilatzen...";
 "chat_search_no_matches" = "Ez dago kointzidentziarik";
 "chat_search_matches" = "%d-tik %d kointzidentzia";
-
 "choose_recipient" = "Hautatu hartzailea";
 
 "msg_unknown_group_request_sync_x_title" = "Talde ezezagun batean jasotako mezua";

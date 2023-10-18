@@ -119,8 +119,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
             }
         
         default:
-            assertionFailure("[ChatViewDefaultMessageTapActionProvider] no action for this cell available.")
-            DDLogWarn("[ChatViewDefaultMessageTapActionProvider] no action for this cell available.")
+            DDLogNotice("[ChatViewDefaultMessageTapActionProvider] Tapped on cell with no default action.")
         }
     }
     
@@ -176,7 +175,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
 
             FeatureMask.check(Int(FEATURE_MASK_VOIP), forContacts: contactSet) { unsupportedContacts in
                 if unsupportedContacts?.isEmpty == true {
-                    self.chatViewController?.startVoIPCall()
+                    self.chatViewController?.startOneToOneCall()
                 }
                 else {
                     NotificationPresenterWrapper.shared.present(type: .callCreationError)

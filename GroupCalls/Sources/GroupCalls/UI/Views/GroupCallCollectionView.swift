@@ -32,16 +32,17 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     private var updateVideoTask: Task<Void, Never>?
     
     private var previouslyVisibleCellsParticipantIDs = Set<ParticipantID>()
-
+    
     // MARK: - Lifecycle
     
     init(groupCallViewModel: GroupCallViewModel) {
         self.viewModel = groupCallViewModel
-        
+
         super.init(
             frame: .zero,
             collectionViewLayout: GroupCallLayoutProvider.createLayout(
-                numberOfParticipants: viewModel.numberOfParticipants
+                numberOfParticipants: viewModel.numberOfParticipants,
+                view: UIView()
             )
         )
 
@@ -49,7 +50,8 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
 
         delegate = self
 
-        self.groupCallDataSource = GroupCallCollectionViewDataSource(collectionView: self, viewModel: viewModel)
+        self.groupCallDataSource =
+            GroupCallCollectionViewDataSource(collectionView: self, viewModel: viewModel)
         dataSource = groupCallDataSource
     }
     
@@ -59,37 +61,6 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     }
     
     // MARK: - UICollectionViewDelegate
-
-    func collectionView(
-        _ collectionView: UICollectionView,
-        willDisplay cell: UICollectionViewCell,
-        forItemAt indexPath: IndexPath
-    ) {
-        guard let cell = cell as? GroupCallParticipantCell else {
-            return
-        }
-        
-        Task {
-            await viewModel.addRendererView(for: cell.participantID!, rendererView: cell.videoRendererView)
-            cell.videoRendererView.alpha = 1.0
-        }
-    }
-    
-    func collectionView(
-        _ collectionView: UICollectionView,
-        didEndDisplaying cell: UICollectionViewCell,
-        forItemAt indexPath: IndexPath
-    ) {
-        guard let cell = cell as? GroupCallParticipantCell else {
-            return
-        }
-        
-        cell.videoRendererView.alpha = 0.0
-
-        Task {
-            await self.viewModel.removeRendererView(for: cell.participantID!, rendererView: cell.videoRendererView)
-        }
-    }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         // TODO: (IOS-4058) refactor sub/unsub
@@ -109,7 +80,10 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     }
     
     public func updateLayout() {
-        let newLayout = GroupCallLayoutProvider.createLayout(numberOfParticipants: viewModel.numberOfParticipants)
+        let newLayout = GroupCallLayoutProvider.createLayout(
+            numberOfParticipants: viewModel.numberOfParticipants,
+            view: self
+        )
         
         // This prevents jumping of the scroll position if the fractional height of the layout is not 1 or 0.5.
         // But iff animated is false
@@ -122,11 +96,15 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     
     private func updateVideo() {
         updateVideoTask = Task {
-            // TODO: (IOS-3813) try? is ugly
-            try? await Task.sleep(nanoseconds: 200_000_000)
-            if Task.isCancelled {
+            
+            do {
+                try await Task.sleep(seconds: 0.2)
+            }
+            catch {
+                // Task was cancelled
                 return
             }
+            
             let visibleParticipantCells = visibleCells.compactMap { $0 as? GroupCallParticipantCell }
             await handleChangeOfVisibleParticipants(visibleCells: Set(visibleParticipantCells))
         }
@@ -152,9 +130,6 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
         for addedCellsParticipantID in addedCellsParticipantIDs {
             Task {
                 await viewModel.subscribeVideo(for: addedCellsParticipantID)
-                if let cell = visibleCells.first(where: { $0.participantID == addedCellsParticipantID }) {
-                    cell.videoRendererView.alpha = 1.0
-                }
             }
         }
         

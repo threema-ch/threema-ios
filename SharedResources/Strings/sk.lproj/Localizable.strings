@@ -395,6 +395,7 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "chat_search_searching" = "Hľadá sa…";
 "chat_search_no_matches" = "Žiadna zhoda";
 "chat_search_matches" = "%d z %d zhôd";
+"chat_search_note" = "Poznámka: Vyhľadávanie nezahŕňa titulky médií.";
 
 "choose_recipient" = "Vybrať príjemcu";
 
@@ -782,6 +783,20 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "group_call_navbar_state_connecting" = "Nadväzovanie spojenia…";
 "group_call_navbar_state_joining" = "Pripája sa…";
 "group_call_navbar_state_connected" = "Pripojené";
+
+"group_call_error_generic_title" = "Nastala chyba";
+"group_call_error_generic_message" = "Ak problém pretrváva, kontaktujte podporu.";
+
+"group_call_accessibility_hide_view" = "Skryť zobrazenie skupinového hovoru";
+"group_call_accessibility_enable_camera" = "Povoliť fotoaparát";
+"group_call_accessibility_disable_camera" = "Zakázať fotoaparát";
+"group_call_accessibility_audio_output" = "Zmeniť zvukový výstup";
+"group_call_accessibility_enable_microphone" = "Povoliť mikrofón";
+"group_call_accessibility_disable_microphone" = "Zakázať mikrofón";
+"group_call_accessibility_audio_enabled" = "Mikrofón povolený";
+"group_call_accessibility_audio_disabled" = "Mikrofón zakázaný";
+"group_call_accessibility_video_enabled" = "Fotoaparát povolený";
+"group_call_accessibility_video_disabled" = "Fotoaparát zakázaný";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema chráni vaše súkromie dôslednejšie než ktorýkoľvek iný komunikátor. Dozvedieť sa viac v Zásadách ochrany osobných údajov.";
@@ -1219,7 +1234,7 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_threema_voip_include_call_in_recents_footer_off" = "Hovory sa zobrazujú na uzamknutej obrazovke, ale nie sú uvedené v zozname hovorov aplikácie Telefón.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Hovory sa zobrazujú na uzamknutej obrazovke a sú uvedené v zozname hovorov aplikácie Telefón. Ak je aktivovaný iCloud Disk, zoznam hovorov aplikácie Telefón sa synchronizuje cez servery Apple.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Z dôvodu obmedzení od spoločnosti Apple nie sú hovory Threema dostupné, ak je región zariadenia nastavený na Čínu.";
-"settings_threema_calls_group_calls_header" = "Skupinové hovory (Beta)";
+"settings_threema_calls_group_calls_header" = "Skupinové hovory";
 "settings_threema_calls_enable_group_calls" = "Povoliť skupinové hovory Threema";
 
 // Advanced Settings
@@ -1488,6 +1503,8 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "multi_device_join_fatal_no_internet_connection_title" = "Bez internetového pripojenia";
 "multi_device_join_failed_to_send_data_title" = "Odoslanie údajov zlyhalo";
 "multi_device_join_fatal_error_message" = "Skúste znova pripojiť zariadenie. Ak tento problém pretrváva, kontaktujte podporu („Nastavenia > Podpora“).";
+"multi_device_join_failed_threema_web_title" = "Existujúce pripojenie k Pracovnej ploche/Webu";
+"multi_device_join_failed_threema_web_message" = "Zakážte Pracovnú plochu/Web („Nastavenia > Pracovná plocha/Web“) a skúste znova pripojiť zariadenie. Ak tento problém pretrváva, kontaktujte podporu („Nastavenia > Podpora“).";
 "multi_device_join_unknown_qr_code_title" = "Neznámy QR kód";
 "multi_device_join_unknown_qr_code_message" = "Uistite sa, že používate zodpovedajúcu aplikáciu od %@.";
 "multi_device_join_incompatible_version_title" = "Nekompatibilná verzia";

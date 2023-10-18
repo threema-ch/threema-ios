@@ -21,9 +21,9 @@
 import Foundation
 
 struct Ended: GroupCallState {
+    let groupCallActor: GroupCallActor
+    
     func next() async throws -> GroupCallState? {
         nil
     }
-    
-    let groupCallActor: GroupCallActor
 }

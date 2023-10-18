@@ -66,12 +66,18 @@ final class MediaKeys {
     // MARK: - Update Functions
     
     func ratchet() throws {
+        /// **Protocol Step: Join/Leave of Other Participants (Join 2.)**
+        /// Join 2. If the amount of ratchet rounds for `pcmk` is `255`, abort the call with an error condition and
+        /// abort these steps.
         if ratchetCounter >= 255 {
             throw MediaKeyError.RatchetCounterTooLarge
         }
-        ratchetCounter += 1
         
-        pcmk = try GroupCallKeys.derivePCMK(from: pcmk, dependencies: dependencies)
+        /// **Protocol Step: Join/Leave of Other Participants (Join 3.)**
+        /// Join 3. Advance the ratchet of `pcmk` once (i.e. replace the key by deriving PCMK') and apply for media
+        /// encryption immediately. Note: Do **not** reset the MFSN!
+        ratchetCounter += 1
+        pcmk = try GroupCallKeys.deriveNextPCMK(from: pcmk)
     }
     
     func applyMediaKeys(to encryptor: ThreemaGroupCallFrameCryptoEncryptorProtocol) throws {

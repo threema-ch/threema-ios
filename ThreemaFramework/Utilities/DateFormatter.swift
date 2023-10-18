@@ -499,26 +499,28 @@ public class DateFormatter: NSObject {
     
     // MARK: - Locale independent time formatter
     
-    /// Date independent of locale
+    /// Date independent of locale, used for file names
     ///
-    /// Example: 20200102-131415
+    /// Format: yyyyMMdd-HHmmss-SSS
+    ///
+    /// Example: 20200102-131415-448
     ///
     /// - Parameter date: Date to format
     /// - Returns: Formatted date or empty string if `date` is nil
     @objc
-    public static func getDateForWeb(_ date: Date?) -> String {
+    public static func getDateForFilename(_ date: Date?) -> String {
         guard let date else {
             return ""
         }
         
-        if webDateFormatter == nil {
-            webDateFormatter = Foundation.DateFormatter()
+        if filenameDateFormatter == nil {
+            filenameDateFormatter = Foundation.DateFormatter()
             // Always use this locale for locale independent formats (see https://nsdateformatter.com)
-            webDateFormatter?.locale = Locale(identifier: "en_US_POSIX")
-            webDateFormatter?.dateFormat = "yyyyMMdd-HHmmss"
+            filenameDateFormatter?.locale = Locale(identifier: "en_US_POSIX")
+            filenameDateFormatter?.dateFormat = "yyyyMMdd-HHmmss-SSS"
         }
         
-        return webDateFormatter!.string(from: date)
+        return filenameDateFormatter!.string(from: date)
     }
     
     /// Date independent of locale, used when exporting media
@@ -635,6 +637,8 @@ public class DateFormatter: NSObject {
         
         webDateFormatter = nil
         exportDateFormatter = nil
+        nowDateFormatter = nil
+        filenameDateFormatter = nil
         
         locale = Locale.current
     }
@@ -663,6 +667,7 @@ public class DateFormatter: NSObject {
     private static var webDateFormatter: Foundation.DateFormatter?
     private static var exportDateFormatter: Foundation.DateFormatter?
     private static var nowDateFormatter: Foundation.DateFormatter?
+    private static var filenameDateFormatter: Foundation.DateFormatter?
     
     // MARK: - Private helper functions
     

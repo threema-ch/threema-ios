@@ -82,7 +82,7 @@ final class ConnectedTests: XCTestCase {
         let task = Task.detached {
             let newState = try await connected.next()
             
-            XCTAssertTrue(newState is Ended)
+            XCTAssertTrue(newState is Ending)
             
             expectation.fulfill()
         }
@@ -336,6 +336,6 @@ extension ConnectedTests {
         var envelope = Groupcall_SfuToParticipant.Envelope()
         envelope.participantJoined = participantJoined
         
-        return try! envelope.serializedData()
+        return try! envelope.ownSerializedData()
     }
 }

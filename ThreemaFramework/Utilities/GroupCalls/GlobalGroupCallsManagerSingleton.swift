@@ -22,18 +22,30 @@ import CocoaLumberjackSwift
 import Combine
 import Foundation
 import GroupCalls
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 
-@objc public final class GlobalGroupCallsManagerSingleton: NSObject {
+public final class GlobalGroupCallsManagerSingleton: NSObject {
+    
+    // MARK: - Public properties
+
     @objc public static let shared = GlobalGroupCallsManagerSingleton()
     
-    public let groupCallManager: GroupCallManager
+    public let globalGroupCallObserver = AsyncStreamContinuationToSharedPublisher<GroupCallBannerButtonUpdate>()
     
+    // TODO: (IOS-4029) Is this needed?
     public var processBusinessInjector: BusinessInjectorProtocol?
     
     public let httpHelper = GroupCallsSFUTokenFetcher()
     
+    public weak var uiDelegate: GroupCallManagerSingletonUIDelegate?
+
+    // MARK: - Private properties
+
+    fileprivate let groupCallManager: GroupCallManager
+        
+    // TODO: (IOS-4029) Is this needed?
     fileprivate var currentBusinessInjector: BusinessInjectorProtocol {
         guard let processBusinessInjector else {
             return businessInjector
@@ -46,27 +58,28 @@ import WebRTC
     
     fileprivate var initialLoadTask: Task<Void, Never>?
     
+    // MARK: - Lifecycle
+
     @available(*, unavailable)
     override public init() {
         fatalError()
     }
     
-    fileprivate init(dependencies: Dependencies = Dependencies(
-        groupCallsHTTPClientAdapter: HTTPClient(),
-        httpHelper: GroupCallsSFUTokenFetcher(),
-        groupCallCrypto: GroupCallCrypto(),
-        groupCallDateFormatter: GroupCallDateFormatterAdapter(),
-        userSettings: GroupCallUserSettings(ipv6Enabled: UserSettings.shared().enableIPv6),
-        groupCallSystemMessageAdapter: GroupCallSystemMessageAdapter<BusinessInjector>(businessInjector: BusinessInjector()),
-        notificationPresenterWrapper: NotificationPresenterWrapper.shared,
-        groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcher.shared,
-        groupCallSessionHelper: GroupCallSessionHelper.shared,
-        groupCallBundleUtil: GroupCallsBundleUtil.shared
-    ), businessInjector: BusinessInjectorProtocol = BusinessInjector()) {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            fatalError()
-        }
-        
+    fileprivate init(
+        dependencies: Dependencies = Dependencies(
+            groupCallsHTTPClientAdapter: HTTPClient(),
+            httpHelper: GroupCallsSFUTokenFetcher(),
+            groupCallCrypto: GroupCallCrypto(),
+            groupCallDateFormatter: GroupCallDateFormatterAdapter(),
+            userSettings: GroupCallUserSettings(ipv6Enabled: UserSettings.shared().enableIPv6),
+            groupCallSystemMessageAdapter: GroupCallSystemMessageAdapter<BusinessInjector>(businessInjector: BusinessInjector()),
+            notificationPresenterWrapper: NotificationPresenterWrapper.shared,
+            groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcher.shared,
+            groupCallSessionHelper: GroupCallSessionHelper.shared,
+            groupCallBundleUtil: GroupCallsBundleUtil.shared
+        ),
+        businessInjector: BusinessInjectorProtocol = BusinessInjector()
+    ) {
         self.dependencies = dependencies
         self.businessInjector = businessInjector
         
@@ -77,12 +90,19 @@ import WebRTC
         
         super.init()
         
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
+            return
+        }
+        
         Task {
             await groupCallManager.set(databaseDelegate: self)
+            await groupCallManager.set(singletonDelegate: self)
             
             await self.handleCallsFromDB()
         }
     }
+    
+    // MARK: - Public functions
     
     public func initialCallsFromDBLoaded() async {
         guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
@@ -97,6 +117,8 @@ import WebRTC
             initialLoadTask = Task { await handleCallsFromDB() }
             await initialLoadTask?.value
         }
+        
+        // TODO: (IOS-4047) Should the `initialLoadTask` be reset to `nil` here?
     }
     
     @objc public func handleCallsFromDB() async {
@@ -109,6 +131,7 @@ import WebRTC
         
         // We fetch all calls, that could still be running, from the db an insert them into an array
         let entityManager = currentBusinessInjector.backgroundEntityManager
+        let groupManager = GroupManager()
         let proposedGroupCalls = await entityManager.perform {
             entityManager.entityFetcher
                 .allGroupCallEntities()
@@ -119,7 +142,7 @@ import WebRTC
                     
                     guard let creatorIdentity = groupCallEntity.group.groupCreator ?? self.businessInjector
                         .myIdentityStore.identity,
-                        let group = GroupManager().getGroup(groupCallEntity.group.groupID, creator: creatorIdentity)
+                        let group = groupManager.getGroup(groupCallEntity.group.groupID, creator: creatorIdentity)
                     else {
                         return nil
                     }
@@ -129,7 +152,8 @@ import WebRTC
                     let groupID = group.groupID
                     let members = group.members
                         .compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
-                    
+
+                    // TODO: (IOS-4124) Remove force-unwrapped try
                     let groupModel = GroupCallsThreemaGroupModel(
                         creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
                         groupID: groupID,
@@ -161,7 +185,7 @@ import WebRTC
         
         // For each of the fetched calls, we check if they are still running, if so we leave them
         for proposedGroupCall in proposedGroupCalls {
-            Task {
+            Task { // TODO: (IOS-4047) Is that what we want here?
                 await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
             }
         }
@@ -172,6 +196,7 @@ import WebRTC
     ///   - rawMessage: Message to be handled
     ///   - senderIdentity: Identity of the sender
     ///   - groupConversation: Group to handle message for
+    ///   - receiveDate: Receive date
     ///   - onCompletion: Called after handling, run on main thread
     @objc public func handleMessage(
         rawMessage: Any,
@@ -193,6 +218,7 @@ import WebRTC
                 receiveDate: receiveDate,
                 in: groupConversation
             )
+            
             if let onCompletion {
                 DispatchQueue.main.async {
                     onCompletion()
@@ -205,10 +231,11 @@ import WebRTC
     /// - Parameters:
     ///   - rawMessage: Message to be handled
     ///   - senderIdentity: Identity of the sender
+    ///   - receiveDate: Receive date
     ///   - groupConversation: Group to handle message for
     public func handleMessage(
         rawMessage: Any,
-        from senderIdentity: String?,
+        from senderIdentity: String,
         receiveDate: Date,
         in groupConversation: Conversation
     ) async {
@@ -243,69 +270,126 @@ import WebRTC
             dependencies: dependencies
         )
         
-        do {
-            try await saveGroupCallStartMessage(
-                for: convRawMessage,
-                with: receiveDate,
-                in: groupModel,
-                in: groupConversation
-            )
-        }
-        catch {
-            // TODO: (IOS-3813) Filter error and print its desc
-            // We do not return here to still make it possible to join call.
-            DDLogError(
-                "[GroupCall] Could not save group call start message. Error: \(error.localizedDescription). GroupID: \(groupModel.groupID)"
-            )
-        }
+        await saveGroupCallStartMessage(
+            for: convRawMessage,
+            with: receiveDate,
+            creatorID: groupModel.creator,
+            groupID: groupModel.groupID
+        )
         
-        let senderThreemaID: GroupCallCreatorOrigin
-        if let senderIdentity {
-            senderThreemaID = .remote(try! ThreemaID(id: senderIdentity, nickname: nil))
-        }
-        else {
-            senderThreemaID = .local
-        }
+        // TODO: (IOS-4124) Remove force-unwrapped try
+        let senderThreemaID: GroupCallCreatorOrigin = .remote(try! ThreemaID(id: senderIdentity, nickname: nil))
         
         await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: senderThreemaID)
     }
     
-    private func saveGroupCallStartMessage(
-        for convRawMessage: CspE2e_GroupCallStart,
-        with receiveDate: Date,
-        in groupModel: GroupCallsThreemaGroupModel,
-        in groupConversation: Conversation
-    ) async throws {
+    @MainActor
+    public func startGroupCall(
+        in group: Group,
+        intent: GroupCallUserIntent
+    ) {
         guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
             return
         }
-        var addedObject: NSManagedObjectID?
+        
+        Task {
+            do {
+                let groupCreatorID: String = group.groupCreatorIdentity
+                let groupCreatorNickname: String? = group.groupCreatorNickname
+                let groupID = group.groupID
+                let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
+                
+                // TODO: (IOS-4124) Remove force-unwrapped try
+                let groupModel = GroupCallsThreemaGroupModel(
+                    creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
+                    groupID: groupID,
+                    groupName: group.name ?? "",
+                    members: Set(members)
+                )
+                
+                let myIdentity = try ThreemaID(
+                    id: MyIdentityStore.shared().identity,
+                    nickname: MyIdentityStore.shared().pushFromName
+                )
+                
+                try await groupCallManager.createOrJoinCall(
+                    in: groupModel,
+                    with: intent,
+                    localIdentity: myIdentity
+                )
+                
+                showGroupCallViewController()
+            }
+            catch let error as GroupCallError {
+                uiDelegate?.showAlert(for: error)
+            }
+            catch {
+                DDLogError("[GroupCall] Caught error: \(error.localizedDescription).")
+                uiDelegate?.showAlert(for: GroupCallError.creationError)
+            }
+        }
+    }
+    
+    // MARK: - Private functions
 
-        try await currentBusinessInjector.backgroundEntityManager.performSave {
+    private func getCallID(in groupModel: GroupCallsThreemaGroupModel) async -> String {
+        await groupCallManager.getCallID(in: groupModel)
+    }
+    
+    public func groupCallViewController(for viewModel: GroupCallViewModel) -> UIViewController {
+        GroupCallViewController(viewModel: viewModel, dependencies: dependencies)
+    }
 
-            guard let conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
-                .existingObject(with: groupConversation.objectID) as? Conversation,
-                let groupEntity = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
-                .groupEntity(for: conversation) else {
-                DDLogError("[GroupCall] Could not find group entity for group call message")
-                throw GroupCallError.groupNotFound
+    // MARK: - UI
+                
+    public func showGroupCallViewController() {
+        Task {
+            guard let uiDelegate else {
+                return
+            }
+            guard let viewController = await groupCallManager.viewControllerForCurrentlyJoinedGroupCall() else {
+                return
+            }
+            uiDelegate.showViewController(viewController)
+        }
+    }
+    
+    // MARK: - Private functions
+
+    private func saveGroupCallStartMessage(
+        for convRawMessage: CspE2e_GroupCallStart,
+        with receiveDate: Date = Date.now,
+        creatorID: ThreemaID,
+        groupID: Data
+    ) async {
+        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
+            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
+            return
+        }
+        let addedObject: NSManagedObjectID? = await currentBusinessInjector.backgroundEntityManager.performSave {
+            
+            guard let groupEntity = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.groupEntity(
+                for: groupID,
+                with: creatorID.id
+            ) else {
+                DDLogError("[GroupCall] Could not find group entity for group call message.")
+                return nil
             }
             
             assert(!groupEntity.groupID.isEmpty)
             
             // Setup group call
-            let groupCallEntity = self.currentBusinessInjector.backgroundEntityManager.entityCreator
-                .groupCallEntity()
+            let groupCallEntity = self.currentBusinessInjector.backgroundEntityManager.entityCreator.groupCallEntity()
             groupCallEntity?.group = groupEntity
             groupCallEntity?.gck = convRawMessage.gck
             groupCallEntity?.protocolVersion = NSNumber(value: convRawMessage.protocolVersion)
             groupCallEntity?.sfuBaseURL = convRawMessage.sfuBaseURL
             groupCallEntity?.startMessageReceiveDate = receiveDate
             
-            addedObject = groupCallEntity?.objectID
+            DDLogNotice("[GroupCall] [DB] Saved group call to database.")
             
-            DDLogNotice("[GroupCall] [DB] Saved group call to database")
+            return groupCallEntity?.objectID
         }
         
         // Mark entity as dirty
@@ -319,84 +403,12 @@ import WebRTC
         }
     }
     
-    /// Starts a group call from local interaction
-    /// - Parameters:
-    ///   - groupModel: Model of group the call should be started for
-    ///   - localIdentity: Local ThreemaID
-    /// - Returns: Start message ???
-    public func startGroupCall(
-        groupModel: GroupCallsThreemaGroupModel,
-        localIdentity: ThreemaID
-    ) async throws -> CspE2e_GroupCallStart? {
-        
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
-            return nil
-        }
-        
-        let message = try await groupCallManager.createCall(in: groupModel, localIdentity: localIdentity)
-        
-        var conversation: Conversation!
-        
-        await currentBusinessInjector.backgroundEntityManager.perform {
-            conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.conversation(
-                for: groupModel.groupID,
-                creator: groupModel.creator.id
-            )
-        }
-        
-        try await saveGroupCallStartMessage(for: message, with: Date(), in: groupModel, in: conversation)
-        
-        return message
-    }
-    
-    public func joinCall(in groupModel: GroupCallsThreemaGroupModel) async -> GroupCallViewModel? {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
-            return nil
-        }
-        
-        return await groupCallManager.joinCall(in: groupModel, intent: .join)
-    }
-    
-    public func viewModel(for group: GroupCallsThreemaGroupModel) async -> GroupCallViewModel? {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
-            return nil
-        }
-        
-        await initialCallsFromDBLoaded()
-        
-        return await groupCallManager.viewModel(for: group)
-    }
-    
-    public func groupCallViewController(for viewModel: GroupCallViewModel) -> UIViewController {
-        GroupCallViewController(viewModel: viewModel, dependencies: dependencies)
-    }
-    
-    @MainActor
-    public func getViewControllerForCurrentlyJoinedGroupCall() async -> UIViewController? {
-        
-        let task = Task { () -> GroupCallViewModel? in
-            await groupCallManager.viewModelForCurrentlyJoinedGroupCall()
-        }
-        
-        // TODO: (IOS-3813) Show error msgs and leave call
-        guard let viewModel = try? await task.result.get() else {
-            return nil
-        }
-        
-        return GroupCallViewController(viewModel: viewModel, dependencies: dependencies)
-    }
-    
-    public func getCallID(in groupModel: GroupCallsThreemaGroupModel) async -> String {
-        await groupCallManager.getCallID(in: groupModel)
-    }
-    
-    // TODO: (IOS-3813) Make this throw instead of bool
     private func isValidSFUURL(_ baseURL: String) async -> Bool {
         do {
             let token = try await httpHelper.sfuCredentials()
+            // When receiving the SFU information, ensure the _SFU Base URL_ uses the scheme
+            // `https` and the included hostname ends with one of the _Allowed SFU Hostname
+            // Suffixes_.
             return token.isAllowedBaseURL(baseURL: baseURL)
         }
         catch {
@@ -404,6 +416,59 @@ import WebRTC
             return false
         }
     }
+}
+
+// MARK: - Debug Call Start Functions
+
+extension GlobalGroupCallsManagerSingleton {
+    #if DEBUG
+        public func asyncHandleMessage(
+            rawMessage: Any,
+            groupModel: GroupCallsThreemaGroupModel,
+            messageReceiveDate: Date
+        ) async {
+            guard let convRawMessage = rawMessage as? CspE2e_GroupCallStart else {
+                fatalError()
+            }
+        
+            let proposedGroupCall = ProposedGroupCall(
+                groupRepresentation: groupModel,
+                protocolVersion: convRawMessage.protocolVersion,
+                gck: convRawMessage.gck,
+                sfuBaseURL: convRawMessage.sfuBaseURL,
+                startMessageReceiveDate: messageReceiveDate,
+                dependencies: dependencies
+            )
+        
+            await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .local)
+        }
+    
+        public func startAndJoinDebugCall(groupModel: GroupCallsThreemaGroupModel) async {
+            let rawGroupCall = ""
+        
+            let rawData = rawGroupCall.hexadecimal!
+        
+            var newMessage = CspE2e_GroupCallStart()
+            newMessage.gck = rawData
+            newMessage.protocolVersion = 1
+            newMessage.sfuBaseURL = ""
+        
+            await asyncHandleMessage(
+                rawMessage: newMessage,
+                groupModel: groupModel,
+                messageReceiveDate: Date()
+            )
+            
+            try! await Task.sleep(seconds: 1)
+        
+            let myIdentity = try! ThreemaID(
+                id: MyIdentityStore.shared().identity,
+                nickname: MyIdentityStore.shared().pushFromName
+            )
+            
+            try! await groupCallManager.createOrJoinCall(in: groupModel, with: .createOrJoin, localIdentity: myIdentity)
+        }
+    #endif
 
     public static func sendDebugInitMessages(
         for conversationObjectID: NSManagedObjectID,
@@ -486,168 +551,9 @@ import WebRTC
     }
 }
 
-// MARK: - Debug Call Start Functions
-
-#if DEBUG
-    extension GlobalGroupCallsManagerSingleton {
-        public func asyncHandleMessage(
-            rawMessage: Any,
-            groupModel: GroupCallsThreemaGroupModel,
-            messageReceiveDate: Date
-        ) async {
-            guard let convRawMessage = rawMessage as? CspE2e_GroupCallStart else {
-                fatalError()
-            }
-        
-            let proposedGroupCall = ProposedGroupCall(
-                groupRepresentation: groupModel,
-                protocolVersion: convRawMessage.protocolVersion,
-                gck: convRawMessage.gck,
-                sfuBaseURL: convRawMessage.sfuBaseURL,
-                startMessageReceiveDate: messageReceiveDate,
-                dependencies: dependencies
-            )
-        
-            await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .local)
-        }
-    
-        public func startAndJoinDebugCall(groupModel: GroupCallsThreemaGroupModel) async -> GroupCallViewModel {
-            let rawGroupCall = ""
-        
-            let rawData = rawGroupCall.hexadecimal!
-        
-            var newMessage = CspE2e_GroupCallStart()
-            newMessage.gck = rawData
-            newMessage.protocolVersion = 1
-            newMessage.sfuBaseURL = ""
-        
-            await asyncHandleMessage(
-                rawMessage: newMessage,
-                groupModel: groupModel,
-                messageReceiveDate: Date()
-            )
-            
-            if #available(iOSApplicationExtension 16.0, *) {
-                try! await Task.sleep(for: .seconds(1))
-            }
-            else {
-                // Fallback on earlier versions
-            }
-        
-            return await groupCallManager.joinCall(in: groupModel, intent: .create)!
-        }
-    }
-#endif
-
 extension GlobalGroupCallsManagerSingleton {
-    @MainActor
-    public func startGroupCall(
-        in conversation: Conversation,
-        with identity: String
-    ) async throws -> GroupCallViewModel {
-
-        guard let group = GroupManager().getGroup(conversation: conversation) else {
-            DDLogError("[GroupCall] Could not get group to start a group call.")
-            throw GroupCallError.creationError
-        }
-        
-        let groupCreatorID: String = group.groupCreatorIdentity
-        let groupCreatorNickname: String? = group.groupCreatorNickname
-        let groupID = group.groupID
-        let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
-        
-        let groupModel = GroupCallsThreemaGroupModel(
-            creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
-            groupID: groupID,
-            groupName: group.name ?? "",
-            members: Set(members)
-        )
-        
-        let myIdentity = try ThreemaID(id: identity, nickname: MyIdentityStore.shared().pushFromName)
-        
-        let (groupCallStartMessage, viewModel) = try await startGroupCall(in: groupModel, with: myIdentity)
-        
-        guard let viewModel else {
-            throw GroupCallError.creationError
-        }
-                
-        if UserSettings.shared().groupCallsDebugMessages, let groupCallStartMessage {
-            Task.detached {
-                try! await Task.sleep(nanoseconds: 2 * 1_000_000_000)
-                
-                await GlobalGroupCallsManagerSingleton.sendDebugInitMessages(
-                    for: conversation.objectID,
-                    and: groupModel,
-                    startMessage: groupCallStartMessage
-                )
-            }
-        }
-        
-        if let groupCallStartMessage {
-            try GlobalGroupCallsManagerSingleton.send(from: groupCallStartMessage, conversation: conversation)
-        }
-        
-        return viewModel
-    }
-    
-    public func startGroupCall(
-        in groupModel: GroupCallsThreemaGroupModel,
-        with localIdentity: ThreemaID
-    ) async throws -> (CspE2e_GroupCallStart?, GroupCallViewModel?) {
-        #if DEBUG
-            let debugCall = false
-        
-            guard !debugCall else {
-                let viewModel = await GlobalGroupCallsManagerSingleton.shared
-                    .startAndJoinDebugCall(groupModel: groupModel)
-                return (nil, viewModel)
-            }
-        #endif
-        
-        var groupCallStartMessage: CspE2e_GroupCallStart?
-        
-        do {
-            groupCallStartMessage = try await GlobalGroupCallsManagerSingleton.shared.startGroupCall(
-                groupModel: groupModel,
-                localIdentity: localIdentity
-            )
-        }
-        catch {
-            guard let error = error as? GroupCallManager.GroupCallManagerError,
-                  error == .cannotJoinAlreadyInACall else {
-                throw error
-            }
-        }
-        
-        guard let viewModel = await GlobalGroupCallsManagerSingleton.shared.joinCall(in: groupModel) else {
-            throw GroupCallError.creationError
-        }
-        
-        return (groupCallStartMessage, viewModel)
-    }
-}
-
-extension GlobalGroupCallsManagerSingleton {
-    public static func send(from message: CspE2e_GroupCallStart, conversation: Conversation) throws {
+    private func sendGroupCallStartMessage(_ message: CspE2e_GroupCallStart, to group: Group) async throws {
         let frameworkInjector = BusinessInjector()
-        
-        var group: Group!
-        
-        frameworkInjector.entityManager.performBlockAndWait {
-            // TODO: (IOS-3813) This should throw, use async EM
-            guard let groupEntity = frameworkInjector.entityManager.entityFetcher.groupEntity(for: conversation) else {
-                DDLogError("[GroupCall] Could not get group to send a group call start message.")
-                return
-            }
-            
-            group = Group(
-                myIdentityStore: frameworkInjector.myIdentityStore,
-                userSettings: frameworkInjector.userSettings,
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-        }
         
         let taskDefinition = TaskDefinitionSendGroupCallStartMessage(
             group: group,
@@ -664,7 +570,6 @@ extension GlobalGroupCallsManagerSingleton {
 // MARK: - GroupCallManagerDatabaseDelegateProtocol
 
 extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProtocol {
-    // TODO: (IOS-3813) Make throwing?
     public func removeFromStoredCalls(_ proposedGroupCall: ProposedGroupCall) {
         currentBusinessInjector.backgroundEntityManager.performBlockAndWait {
             let toDeleteGroupCalls = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
@@ -706,6 +611,91 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProt
                         .deleteObject(object: toDeleteGroupCall)
                 }
                 DDLogNotice("[GroupCall] [DB] Deleted \(toDeleteGroupCalls.count)")
+            }
+        }
+    }
+}
+
+// MARK: - GroupCallManagerSingletonDelegate
+
+extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
+    public func showGroupCallViewController(viewController: GroupCallViewController) {
+        guard let uiDelegate else {
+            DDLogError("[GroupCall] Could not show GroupCallViewController, uiDelegate is nil.")
+            return
+        }
+        
+        uiDelegate.showViewController(viewController)
+    }
+    
+    public func updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: GroupCalls.GroupCallBannerButtonUpdate) {
+        globalGroupCallObserver.stateContinuation.yield(groupCallBannerButtonUpdate)
+    }
+    
+    public func sendStartCallMessage(_ wrappedMessage: WrappedGroupCallStartMessage) async throws {
+        guard let group = businessInjector.groupManager.getGroup(
+            wrappedMessage.groupID,
+            creator: wrappedMessage.creatorID.id
+        ) else {
+            return
+        }
+            
+        await saveGroupCallStartMessage(
+            for: wrappedMessage.startMessage,
+            creatorID: wrappedMessage.creatorID,
+            groupID: wrappedMessage.groupID
+        )
+            
+        try await sendGroupCallStartMessage(wrappedMessage.startMessage, to: group)
+    }
+    
+    public func showIncomingGroupCallNotification(
+        groupModel: GroupCalls.GroupCallsThreemaGroupModel,
+        senderThreemaID: ThreemaID
+    ) {
+        guard let uiDelegate else {
+            DDLogError("[GroupCall] Could not show GroupCallViewController, uiDelegate is nil.")
+            return
+        }
+        
+        currentBusinessInjector.backgroundEntityManager.performBlock {
+            guard let conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.conversation(
+                for: groupModel.groupID,
+                creator: groupModel.creator.id
+            ) else {
+                return
+            }
+            
+            guard conversation.conversationCategory != .private else {
+                uiDelegate.newBannerForStartGroupCall(
+                    conversationManagedObjectID: conversation.objectID,
+                    title: BundleUtil.localizedString(forKey: "private_message_label"),
+                    body: " ",
+                    contactImage: AvatarMaker.shared().unknownGroupImage()!,
+                    identifier: groupModel.groupID.hexString
+                )
+                return
+            }
+            
+            guard let contact = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
+                .contact(for: senderThreemaID.id) else {
+                return
+            }
+            
+            let title = conversation.displayName
+            let body = String(
+                format: BundleUtil.localizedString(forKey: "group_call_started_by_contact_system_message"),
+                contact.displayName
+            )
+            let conversationObjectID = conversation.objectID
+            AvatarMaker.shared().avatar(for: conversation, size: 56.0, masked: true) { conversationImage, _ in
+                uiDelegate.newBannerForStartGroupCall(
+                    conversationManagedObjectID: conversationObjectID,
+                    title: title ?? "",
+                    body: body,
+                    contactImage: conversationImage ?? AvatarMaker.shared().unknownGroupImage()!,
+                    identifier: groupModel.groupID.hexString
+                )
             }
         }
     }

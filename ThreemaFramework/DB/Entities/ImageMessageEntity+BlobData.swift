@@ -170,7 +170,7 @@ extension ImageMessageEntity: BlobData {
     }
     
     public var blobWebFilename: String {
-        "threema-\(DateFormatter.getDateForWeb(date))-image.\(MEDIA_EXTENSION_IMAGE)"
+        "threema-\(DateFormatter.getDateForFilename(date))-image.\(MEDIA_EXTENSION_IMAGE)"
     }
     
     public var blobExternalFilename: String? {

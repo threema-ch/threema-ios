@@ -345,6 +345,15 @@
     return YES;
 }
 
+- (BOOL)canSendGroupCallStartMessage:(AbstractMessage *)abstractMessage {
+    if (self.type == kPushSettingTypeOffPeriod || self.type == kPushSettingTypeOff) {
+        if (!(self.mentions && [abstractMessage isKindOfClass: GroupCallStartMessage.class])) {
+            return NO;
+        }
+    }
+    return YES;
+}
+
 - (BOOL)canSendPush {
     if (self.type == kPushSettingTypeOffPeriod || self.type == kPushSettingTypeOff) {
         return NO;

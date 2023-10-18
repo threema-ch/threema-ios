@@ -272,6 +272,10 @@ final class ChatBarView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        DDLogVerbose("\(#function)")
+    }
+    
     // MARK: - Configuration
     
     private func configureLayout() {
@@ -547,6 +551,14 @@ final class ChatBarView: UIView {
     /// - Parameter identity: the mentioned identity
     public func mentionSelected(identity: String) {
         chatTextView.mentionsTableViewHasSelected(identity: identity)
+    }
+    
+    /// Invalidate all typing timers
+    public func stopTypingTimer() {
+        typingTimer?.invalidate()
+        typingTimer = nil
+        continueTypingTimer?.invalidate()
+        continueTypingTimer = nil
     }
 }
 

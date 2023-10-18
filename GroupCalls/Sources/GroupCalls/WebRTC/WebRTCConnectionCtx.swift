@@ -59,12 +59,11 @@ final class WebRTCConnectionContext<PeerConnectionCtxImpl: PeerConnectionContext
         
         // Initialize WebRTC Logger
         Task.detached { [weak self] in
-            // TODO: IOS-3728
             self?.webrtcLogger.severity = .warning
             self?.webrtcLogger.start { message in
-                let trimmed = message.trimmingCharacters(in: .newlines)
-                DDLogNotice("[GroupCall] [libwebrtc] \(trimmed)")
-                print("[GroupCall] [libwebrtc] \(trimmed)")
+                if let trimmed = RTCCallbackLogger.trimMessage(message: message) {
+                    DDLogNotice("[GroupCall] [libwebrtc] \(trimmed)")
+                }
             }
         }
     }

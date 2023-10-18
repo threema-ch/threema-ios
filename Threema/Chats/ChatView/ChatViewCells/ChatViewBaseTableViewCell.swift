@@ -360,6 +360,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         ])
         
         NSLayoutConstraint.activate(avatarImageViewConstraints)
+        
+        isAccessibilityElement = true
     }
     
     override func layoutSubviews() {
@@ -764,7 +766,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         guard let sender = messageAndNeighbors.message?.sender else {
             return
         }
-
+        
         chatViewTableViewCellDelegate?.show(identity: sender.identity)
     }
     
@@ -1047,6 +1049,16 @@ extension ChatViewBaseTableViewCell {
         set {
             // No-op
         }
+    }
+    
+    override func accessibilityActivate() -> Bool {
+        guard let message = messageAndNeighbors.message, !(self is ChatViewVoiceMessageTableViewCell) else {
+            return false
+        }
+        
+        chatViewTableViewCellDelegate?.didTap(message: message, in: self)
+        chatViewTableViewCellDelegate?.didAccessibilityTapOnCell()
+        return true
     }
 }
 

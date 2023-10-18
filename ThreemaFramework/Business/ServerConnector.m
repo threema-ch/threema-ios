@@ -431,7 +431,12 @@ struct pktExtension {
                 if ([licenseStore.error.domain hasPrefix:@"NSURL"] == NO && licenseStore.error.code != 256) {                    
                     // License check failed permanently; need to inform user and ask for new license username/password
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
-                } else {
+                }
+                else if ([licenseStore.error.domain hasPrefix:@"NSURL"] == YES && licenseStore.error.code == -1009 && ![[LicenseStore sharedLicenseStore] isWithinCheckInterval]) {
+                    // License check failed because we don't have network connection. WithinCheckInterval for license failed, show license screen
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
+                }
+                else {
                     // License check failed due to connection error – try again later
                     // TODO: Remove comment IOS-3558
                     DDLogNotice(@"LicenseStore failed, reconnecting after delay.");

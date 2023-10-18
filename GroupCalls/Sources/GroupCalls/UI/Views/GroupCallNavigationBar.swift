@@ -27,10 +27,9 @@ class GroupCallNavigationBar: UIView {
 
     private lazy var dismissButton: UIButton = {
         var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(
-            systemName: "chevron.down",
-            withConfiguration: GroupCallUIConfiguration.NavigationBar.buttonImageConfig
-        )
+        configuration.image = UIImage(systemName: "chevron.down")
+        configuration.preferredSymbolConfigurationForImage = GroupCallUIConfiguration.NavigationBar
+            .dismissButtonSymbolConfiguration
         
         let action = UIAction { [weak self] _ in
             Task { @MainActor in
@@ -40,58 +39,91 @@ class GroupCallNavigationBar: UIView {
         
         let button = UIButton(configuration: configuration, primaryAction: action)
         button.tintColor = .white
+        
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.accessibilityLabel = dependencies.groupCallBundleUtil
+            .localizedString(for: "group_call_accessibility_hide_view")
+        
         return button
     }()
     
-    private var groupNameLabel: UILabel = {
-        let groupNameLabel = UILabel()
-        groupNameLabel.text = "-"
-        groupNameLabel.textColor = .white
-        groupNameLabel.font = UIFont.preferredFont(forTextStyle: GroupCallUIConfiguration.NavigationBar.textStyle)
-        groupNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        return groupNameLabel
-    }()
-    
-    private var participantCountLabel: UILabel = {
-        let participantCountLabel = UILabel()
-        participantCountLabel.text = "0"
-        participantCountLabel.textColor = .white
-        participantCountLabel.font = UIFont
-            .preferredFont(forTextStyle: GroupCallUIConfiguration.NavigationBar.smallerTextStyle)
-        participantCountLabel.translatesAutoresizingMaskIntoConstraints = false
-        return participantCountLabel
-    }()
-    
-    private var participantIcon: UIImageView = {
-        let image = UIImage(
-            systemName: "person.2.fill",
-            withConfiguration: GroupCallUIConfiguration.NavigationBar.smallerImageConfig
+    private var headerLabel: UILabel = {
+        let headerLabel = UILabel()
+        
+        headerLabel.text = "-"
+        headerLabel.textColor = .white
+        headerLabel.font = UIFont.systemFont(
+            ofSize: UIFont.preferredFont(
+                forTextStyle: GroupCallUIConfiguration.NavigationBar.headerTextStyle
+            ).pointSize,
+            weight: GroupCallUIConfiguration.NavigationBar.headerFontWeight
         )
         
-        let imageView = UIImageView(image: image)
-        imageView.tintColor = .white
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
+        // Needed for longer texts to be truncated before the participants number on the trailing side
+        headerLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        return headerLabel
     }()
     
     private var timeLabel: UILabel = {
         let timeLabel = UILabel()
+        
         timeLabel.text = "0:00"
         timeLabel.textColor = .white
-        timeLabel.font = UIFont.preferredFont(forTextStyle: GroupCallUIConfiguration.NavigationBar.smallerTextStyle)
+        
+        timeLabel.font = UIFont.monospacedDigitSystemFont(
+            ofSize: UIFont.preferredFont(
+                forTextStyle: GroupCallUIConfiguration.NavigationBar.smallerTextStyle
+            ).pointSize,
+            weight: .regular
+        )
+        
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
+        
         return timeLabel
+    }()
+    
+    private var participantIcon: UIImageView = {
+        let image = UIImage(systemName: "person.2.fill")
+        
+        let imageView = UIImageView(image: image)
+        imageView.preferredSymbolConfiguration = GroupCallUIConfiguration.NavigationBar.smallerSymbolConfiguration
+        imageView.tintColor = .white
+        
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        return imageView
+    }()
+    
+    private var participantCountLabel: UILabel = {
+        let participantCountLabel = UILabel()
+        
+        participantCountLabel.text = "0"
+        participantCountLabel.textColor = .white
+        
+        participantCountLabel.font = UIFont.monospacedDigitSystemFont(
+            ofSize: UIFont.preferredFont(
+                forTextStyle: GroupCallUIConfiguration.NavigationBar.smallerTextStyle
+            ).pointSize,
+            weight: .regular
+        )
+        
+        participantCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        return participantCountLabel
     }()
     
     private lazy var gradientLayer: CAGradientLayer = {
         let gradientLayer = CAGradientLayer()
+        
         gradientLayer.colors = [
             UIColor.black.withAlphaComponent(GroupCallUIConfiguration.General.initialGradientOpacity).cgColor,
             UIColor.black.withAlphaComponent(0).cgColor,
         ]
         
         gradientLayer.frame = bounds
+        
         return gradientLayer
     }()
     
@@ -99,12 +131,13 @@ class GroupCallNavigationBar: UIView {
     
     private var isNavBarHidden = false
     private weak var groupCallViewControllerDelegate: GroupCallViewControllerDelegate?
+    private var dependencies: Dependencies
 
     // MARK: - Lifecycle
 
-    init(groupCallViewControllerDelegate: GroupCallViewControllerDelegate) {
+    init(groupCallViewControllerDelegate: GroupCallViewControllerDelegate, dependencies: Dependencies) {
         self.groupCallViewControllerDelegate = groupCallViewControllerDelegate
-        
+        self.dependencies = dependencies
         super.init(frame: .zero)
         
         configureView()
@@ -124,6 +157,10 @@ class GroupCallNavigationBar: UIView {
     
     // TODO: (IOS-4049) Is this needed in there, can't we just show and hide this whole view?
     public func toggleVisibility() {
+        guard !UIAccessibility.isVoiceOverRunning else {
+            return
+        }
+
         isNavBarHidden.toggle()
         
         if isNavBarHidden {
@@ -134,7 +171,7 @@ class GroupCallNavigationBar: UIView {
         }
         
         dismissButton.isHidden = isNavBarHidden
-        groupNameLabel.isHidden = isNavBarHidden
+        headerLabel.isHidden = isNavBarHidden
         participantCountLabel.isHidden = isNavBarHidden
         participantIcon.isHidden = isNavBarHidden
         timeLabel.isHidden = isNavBarHidden
@@ -142,39 +179,65 @@ class GroupCallNavigationBar: UIView {
     
     public func updateContent(_ contentUpdate: GroupCallNavigationBarContentUpdate) {
         Task { @MainActor in
-            groupNameLabel.text = contentUpdate.title ?? "-"
+            headerLabel.text = contentUpdate.title ?? "-"
             participantCountLabel.text = "\(contentUpdate.participantCount ?? 0)"
-            timeLabel.text = contentUpdate.timeString ?? "0:00"
+            
+            timeLabel.text = dependencies.groupCallDateFormatter.timeFormatted(contentUpdate.timeInterval)
+            updateAccessibilityLabel(timeInterval: contentUpdate.timeInterval)
         }
+    }
+    
+    public func accessibilityElements() -> [Any] {
+        [dismissButton, headerLabel]
     }
     
     // MARK: - Private Functions
     
     private func configureView() {
         addSubview(dismissButton)
-        addSubview(groupNameLabel)
+        
+        addSubview(headerLabel)
+        addSubview(timeLabel)
+        
         addSubview(participantIcon)
         addSubview(participantCountLabel)
-        addSubview(timeLabel)
         
         layer.insertSublayer(gradientLayer, at: 0)
 
         NSLayoutConstraint.activate([
-            dismissButton.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
-            dismissButton.leadingAnchor.constraint(equalTo: leadingAnchor),
+            // Not really needed but to have at least a basic navigation bar height
+            heightAnchor.constraint(greaterThanOrEqualToConstant: 30),
             
-            timeLabel.topAnchor.constraint(equalTo: dismissButton.bottomAnchor),
-            timeLabel.leadingAnchor.constraint(equalTo: groupNameLabel.leadingAnchor),
-            timeLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
-
-            groupNameLabel.centerYAnchor.constraint(equalTo: dismissButton.centerYAnchor),
-            groupNameLabel.leadingAnchor.constraint(equalTo: dismissButton.trailingAnchor),
+            dismissButton.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 4),
+            dismissButton.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 4),
             
-            participantIcon.centerYAnchor.constraint(equalTo: dismissButton.centerYAnchor),
-            participantIcon.trailingAnchor.constraint(equalTo: participantCountLabel.leadingAnchor, constant: -4),
+            headerLabel.centerYAnchor.constraint(equalTo: dismissButton.centerYAnchor),
+            headerLabel.leadingAnchor.constraint(equalTo: dismissButton.trailingAnchor),
+                        
+            timeLabel.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 2),
+            timeLabel.leadingAnchor.constraint(equalTo: headerLabel.leadingAnchor),
+            timeLabel.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -10),
+            
+            participantIcon.firstBaselineAnchor.constraint(equalTo: participantCountLabel.firstBaselineAnchor),
+            
+            // Needed for long group names
+            participantIcon.leadingAnchor.constraint(greaterThanOrEqualTo: headerLabel.trailingAnchor, constant: 8),
 
-            participantCountLabel.centerYAnchor.constraint(equalTo: dismissButton.centerYAnchor),
-            participantCountLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
+            participantCountLabel.centerYAnchor.constraint(equalTo: headerLabel.centerYAnchor),
+            participantCountLabel.leadingAnchor.constraint(equalTo: participantIcon.trailingAnchor, constant: 2),
+            participantCountLabel.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -16),
         ])
+    }
+    
+    private func updateAccessibilityLabel(timeInterval: TimeInterval) {
+        let timeString = dependencies.groupCallDateFormatter
+            .accessibilityString(
+                at: timeInterval,
+                with: "duration"
+            )
+        let participantsLocalizedString = dependencies.groupCallBundleUtil
+            .localizedString(for: "group_call_participants_title")
+        let participantsString = String(format: participantsLocalizedString, participantCountLabel.text ?? "1")
+        headerLabel.accessibilityLabel = "\(headerLabel.text ?? ""), \(participantsString), \(timeString)"
     }
 }

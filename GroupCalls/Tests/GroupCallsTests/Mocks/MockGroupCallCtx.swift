@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 @testable import GroupCalls
@@ -41,10 +42,10 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
         existingParticipants: Bool
     ) async throws {
         for addParticipant in add {
-            let participant = await RemoteParticipant(
-                participant: addParticipant,
+            let participant = RemoteParticipant(
+                participantID: addParticipant,
                 dependencies: dependencies,
-                groupCallCrypto: groupCallMessageCrypto,
+                groupCallMessageCrypto: groupCallMessageCrypto,
                 isExistingParticipant: existingParticipants
             )
             
@@ -74,10 +75,10 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
     
     func updatePendingParticipants(add: [GroupCalls.ParticipantID], remove: [GroupCalls.ParticipantID]) async throws {
         for addParticipant in add {
-            let participant = await RemoteParticipant(
-                participant: addParticipant,
+            let participant = RemoteParticipant(
+                participantID: addParticipant,
                 dependencies: dependencies,
-                groupCallCrypto: groupCallMessageCrypto,
+                groupCallMessageCrypto: groupCallMessageCrypto,
                 isExistingParticipant: true
             )
             

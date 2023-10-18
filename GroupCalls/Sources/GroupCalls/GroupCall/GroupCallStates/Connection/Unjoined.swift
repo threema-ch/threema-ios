@@ -34,7 +34,7 @@ struct UnJoined: GroupCallState {
 
     func next() async throws -> GroupCallState? {
         // TODO: (IOS-3857) Logging
-        DDLogNotice("[GroupCall] State UnJoined\(groupCallActor.callID.bytes.hexEncodedString())")
+        DDLogNotice("[GroupCall] State UnJoined \(groupCallActor.callID.bytes.hexEncodedString())")
         return Joining(groupCallActor: groupCallActor)
     }
 }

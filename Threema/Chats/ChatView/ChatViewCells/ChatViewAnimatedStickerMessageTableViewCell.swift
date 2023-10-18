@@ -348,7 +348,7 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageAction {
                 }
             }
         }
-        else {
+        else if message.blobDisplayState == .remote {
             let downloadAction = Provider.downloadAction {
                 Task {
                     await BlobManager.shared.syncBlobs(for: message.objectID)

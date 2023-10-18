@@ -285,6 +285,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 user: mdmSetup?.safeServerUsername(),
                 password: mdmSetup?.safeServerPassword()
             )?.absoluteString
+            completion(true)
+            return
         }
         else if serverSwitch.isOn {
             // server is standard (Threema)
@@ -292,6 +294,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             server = nil
             maxBackupBytes = nil
             retentionDays = nil
+            completion(true)
+            return
         }
         else {
             // server is WebDAV
@@ -332,6 +336,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                         self.server = customServerURL.absoluteString
                         self.maxBackupBytes = maxBackupBytes
                         self.retentionDays = retentionDays
+                        completion(true)
+                        return
                     }
                 }
             }
@@ -345,7 +351,6 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 return
             }
         }
-        completion(true)
     }
     
     // MARK: - Table view data source

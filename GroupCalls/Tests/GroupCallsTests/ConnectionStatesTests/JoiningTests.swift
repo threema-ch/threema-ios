@@ -83,6 +83,6 @@ final class JoiningTests: XCTestCase {
             return
         }
         
-        XCTAssertTrue(newState is Ended)
+        XCTAssertTrue(newState is Ending)
     }
 }

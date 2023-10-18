@@ -1448,9 +1448,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     seal.reject(GroupError.blobIDOrKeyMissing)
                     return
                 }
+
+                guard let group = self.getGroup(groupID, creator: groupCreatorIdentity) else {
+                    seal.reject(GroupError.groupNotFound)
+                    return
+                }
                 
                 let task = TaskDefinitionSendGroupSetPhotoMessage(
-                    group: self.getGroup(groupID, creator: groupCreatorIdentity),
+                    group: group,
                     from: self.myIdentityStore.identity,
                     to: toMembers,
                     size: UInt32(imageData.count),

@@ -113,6 +113,14 @@ public enum CallSystemMessageHelper {
                 return
             }
             
+            guard let contact = businessInjector.backgroundEntityManager.entityFetcher
+                .contact(for: hangupMessage.contactIdentity) else {
+                let msg = "Threema Calls: Can't add rejected message because contact can't be found"
+                DDLogError(msg)
+                assertionFailure(msg)
+                return
+            }
+            
             guard let systemMessage = businessInjector.backgroundEntityManager.entityCreator
                 .systemMessage(for: conversation) else {
                 let msg = "Could not create system message"
@@ -124,6 +132,9 @@ public enum CallSystemMessageHelper {
             businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
                 systemMessage.remoteSentDate = hangupMessage.date
                 systemMessage.type = NSNumber(integerLiteral: kSystemMessageCallMissed)
+                
+                let cont = Contact(contactEntity: contact)
+                systemMessage.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
                 
                 let callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),

@@ -229,3 +229,30 @@ public struct NotificationPresenterType {
         notificationStyle: .none
     )
 }
+
+// MARK: - AccessibilityAnnouncementType
+
+public struct AccessibilityAnnouncementType {
+    
+    // MARK: - Properties
+
+    /// String to be used as main notification text
+    let announcementText: String
+    
+    public init(announcementText: String) {
+        self.announcementText = announcementText
+    }
+    
+    public static let audioMuted = AccessibilityAnnouncementType(
+        announcementText: BundleUtil.localizedString(forKey: "notification_audio_muted")
+    )
+    public static let audioUnmuted = AccessibilityAnnouncementType(
+        announcementText: BundleUtil.localizedString(forKey: "notification_audio_unmuted")
+    )
+    public static let videoMuted = AccessibilityAnnouncementType(
+        announcementText: BundleUtil.localizedString(forKey: "notification_video_muted")
+    )
+    public static let videoUnmuted = AccessibilityAnnouncementType(
+        announcementText: BundleUtil.localizedString(forKey: "notification_video_unmuted")
+    )
+}

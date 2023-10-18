@@ -394,6 +394,7 @@
 "chat_search_searching" = "Bezig met zoeken...";
 "chat_search_no_matches" = "Geen overeenkomsten";
 "chat_search_matches" = "%d van %d overeenkomsten";
+"chat_search_note" = "Let op: bijschriften voor media worden niet opgenomen in de zoekresultaten.";
 
 "choose_recipient" = "Ontvanger kiezen";
 
@@ -764,6 +765,8 @@
 "call_threema_cellular_instead_of_wifi_title" = "Oproep via mobiel netwerk";
 "call_threema_cellular_instead_of_wifi_text" = "Waarschuwing: deze oproep zal gegevens naar het mobiele netwerk overdragen.";
 
+// Group Calls
+"group_call_title" = "Groepsgesprek";
 /* Group Calls */
 "group_call_join_button_title" = "Aansluiten";
 "group_call_open_button_title" = "Openen";
@@ -779,6 +782,20 @@
 "group_call_navbar_state_connecting" = "Verbinden…";
 "group_call_navbar_state_joining" = "Aansluiten…";
 "group_call_navbar_state_connected" = "Verbonden";
+
+"group_call_error_generic_title" = "Er is een fout opgetreden";
+"group_call_error_generic_message" = "Neem contact op met de klantenservice als het probleem aanhoudt.";
+
+"group_call_accessibility_hide_view" = "Weergave groepsgesprek verbergen";
+"group_call_accessibility_enable_camera" = "Camera inschakelen";
+"group_call_accessibility_disable_camera" = "Camera uitschakelen";
+"group_call_accessibility_audio_output" = "Audio-uitgang wijzigen";
+"group_call_accessibility_enable_microphone" = "Microfoon inschakelen";
+"group_call_accessibility_disable_microphone" = "Microfoon uitschakelen";
+"group_call_accessibility_audio_enabled" = "Microfoon ingeschakeld";
+"group_call_accessibility_audio_disabled" = "Microfoon uitgeschakeld";
+"group_call_accessibility_video_enabled" = "Camera ingeschakeld";
+"group_call_accessibility_video_disabled" = "Camera uitgeschakeld";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema beschermt je privacy beter dan welke messenger dan ook. Raadpleeg voor meer informatie naar ons Privacybeleid.";
@@ -1215,6 +1232,9 @@
 "settings_threema_voip_include_call_in_recents_footer_off" = "Oproepen worden weergegeven in het vergrendelingsscherm maar niet in de oproeplijst van de telefoonapp.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Oproepen worden weergegeven in het vergrendelingsscherm en weergegeven in de oproeplijst van de telefoonapp. Als iCloud Drive is geactiveerd, wordt de oproeplijst van de telefoonapp gesynchroniseerd via Apple-servers.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Vanwege beperkingen die Apple oplegt, zijn oproepen via Threema niet beschikbaar als de regio van het apparaat op China is ingesteld.";
+"settings_threema_calls_group_calls_header" = "Groepsgesprekken";
+"settings_threema_calls_enable_group_calls" = "Threema-groepsgesprekken inschakelen";
+
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Netwerken";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1481,6 +1501,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "multi_device_join_fatal_no_internet_connection_title" = "Geen internetverbinding";
 "multi_device_join_failed_to_send_data_title" = "Gegevens niet verzonden";
 "multi_device_join_fatal_error_message" = "Probeer het apparaat opnieuw te koppelen. Neem contact op met de klantenservice als het probleem aanhoudt (Instellingen > Ondersteuning).";
+"multi_device_join_failed_threema_web_title" = "Bestaande desktop/web-verbinding";
+"multi_device_join_failed_threema_web_message" = "Schakel desktop/web uit (Instellingen > Desktop/Web) en probeer het apparaat opnieuw te koppelen. Neem contact op met de klantenservice als het probleem aanhoudt (Instellingen > Ondersteuning).";
 "multi_device_join_unknown_qr_code_title" = "Onbekende QR-code";
 "multi_device_join_unknown_qr_code_message" = "Zorg ervoor dat u de bijbehorende app van %@ gebruikt.";
 "multi_device_join_incompatible_version_title" = "Incompatibele versie";

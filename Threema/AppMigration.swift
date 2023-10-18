@@ -149,6 +149,10 @@ import ThreemaFramework
                 try migrateTo5_5()
                 migratedTo = .v5_5
             }
+            if migratedTo < .v5_6 {
+                try migrateTo5_6()
+                migratedTo = .v5_6
+            }
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
@@ -393,5 +397,24 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "5.5 migration")
         DDLogNotice("[AppMigration] App migration to version 5.5 successfully finished")
+    }
+    
+    /// Migrate to version 5.6:
+    /// - Remove own contact from block list
+    private func migrateTo5_6() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.6 started")
+        os_signpost(.begin, log: osPOILog, name: "5.6 migration")
+        
+        if let blockList = businessInjector.userSettings.blacklist,
+           let myIdentity = businessInjector.myIdentityStore.identity,
+           blockList.contains(myIdentity) {
+            let mutableBlocklist = NSMutableOrderedSet(orderedSet: blockList)
+            mutableBlocklist.remove(myIdentity)
+            businessInjector.userSettings.blacklist = mutableBlocklist
+            DDLogNotice("[AppMigration] Removed own contact from block list")
+        }
+        
+        os_signpost(.end, log: osPOILog, name: "5.6 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.6 successfully finished")
     }
 }

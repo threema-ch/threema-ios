@@ -1126,10 +1126,17 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             BOOL hasChanged = NO;
 
             if (nickname && nickname.length > 0 && ![contact.publicNickname isEqualToString:nickname]) {
+                if ([nickname isEqualToString:identity]) {
+                    DDLogNotice(@"[Nickname] Set new nickname (ID) for %@", identity);
+                }
+                else {
+                    DDLogNotice(@"[Nickname] Set new nickname for %@", identity);
+                }
                 contact.publicNickname = nickname;
                 hasChanged = YES;
             }
             else if (nickname == nil && ![contact.publicNickname isEqualToString:contact.identity]) {
+                DDLogNotice(@"[Nickname] Set ID as nickname for %@", identity);
                 contact.publicNickname = contact.identity;
                 hasChanged = YES;
             }

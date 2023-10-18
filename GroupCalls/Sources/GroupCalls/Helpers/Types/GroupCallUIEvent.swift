@@ -29,9 +29,7 @@ enum GroupCallUIEvent {
     case addLocalParticipant(ViewModelParticipant)
     case remove(ParticipantID)
     case participantStateChange(ParticipantID, ParticipantStateChange)
-    case leaveConfirmed
-    case callStateChanged(GroupCallButtonBannerState)
-    case pop
+    case forceDismissGroupCallViewController
     case videoMuteChange(OwnMuteState)
     case videoCameraChange(CameraPosition)
     case audioMuteChange(OwnMuteState)

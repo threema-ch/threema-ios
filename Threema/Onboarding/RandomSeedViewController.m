@@ -83,7 +83,7 @@
     
     _progressView.tintColor = Colors.primaryWizard;
     
-    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], [ThreemaAppObjc currentName]];
+    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], [ThreemaAppObjc appName]];
     _actionLabel.text = [BundleUtil localizedStringForKey:@"move_your_finger"];
     
     self.moreView.mainView = self.mainContentView;

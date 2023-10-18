@@ -23,39 +23,67 @@ import UIKit
 
 public class ViewModelParticipant {
     
-    let id: ParticipantID
+    let participantID: ParticipantID
     let threemaID: ThreemaID
     
     let name: String
     let avatar: UIImage?
     let idColor: UIColor
     // TODO: (IOS-4052) Can we get rid of this by wrapping this call in a enum on the usage side?
-    let localParticipant: LocalParticipant?
+    weak var localParticipant: LocalParticipant?
 
+    let dependencies: Dependencies
+    
     var audioMuteState: MuteState = .muted
     var videoMuteState: MuteState = .muted
     
-    public init(remoteParticipant: RemoteParticipant, name: String?, avatar: UIImage?, idColor: UIColor) async {
-        let threemaID = await remoteParticipant.getIdentity()!
-        self.id = await remoteParticipant.getID()
+    init(remoteParticipant: RemoteParticipant, name: String?, avatar: UIImage?, idColor: UIColor) async {
+        let threemaID = await remoteParticipant.threemaIdentity!
+        self.participantID = await remoteParticipant.getID()
         self.name = name ?? threemaID.id
         self.threemaID = threemaID
         self.avatar = avatar
         self.idColor = idColor
         self.localParticipant = nil
+        self.dependencies = remoteParticipant.dependencies
     }
     
     init(localParticipant: LocalParticipant, name: String?, avatar: UIImage?, idColor: UIColor) async {
         let threemaID = try! ThreemaID(id: localParticipant.identity)
-        self.id = localParticipant.id
+        self.participantID = localParticipant.participantID
         self.name = name ?? threemaID.id
         self.threemaID = threemaID
         self.avatar = avatar
         self.idColor = idColor
         self.localParticipant = localParticipant
+        self.dependencies = localParticipant.dependencies
         
         self.audioMuteState = GroupCallConfiguration.LocalInitialMuteState.audio.muteState()
         self.videoMuteState = GroupCallConfiguration.LocalInitialMuteState.video.muteState()
+    }
+    
+    // MARK: - Accessibility
+    
+    public func cellAccessibilityString() -> String {
+        "\(name), \(cellAccessibilityAudioString()), \(cellAccessibilityVideoString())"
+    }
+    
+    private func cellAccessibilityVideoString() -> String {
+        switch videoMuteState {
+        case .muted:
+            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_video_disabled")
+        case .unmuted:
+            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_video_enabled")
+        }
+    }
+    
+    func cellAccessibilityAudioString() -> String {
+        switch audioMuteState {
+        case .muted:
+            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_audio_disabled")
+        case .unmuted:
+            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_audio_enabled")
+        }
     }
 }
 
@@ -63,7 +91,8 @@ public class ViewModelParticipant {
 
 extension ViewModelParticipant: Equatable {
     public static func == (lhs: ViewModelParticipant, rhs: ViewModelParticipant) -> Bool {
-        lhs.id == rhs.id && lhs.threemaID == rhs.threemaID && lhs.name == rhs.name && lhs.avatar == rhs.avatar && lhs
+        lhs.participantID == rhs.participantID && lhs.threemaID == rhs.threemaID && lhs.name == rhs.name && lhs
+            .avatar == rhs.avatar && lhs
             .idColor == rhs.idColor && lhs.audioMuteState == rhs.audioMuteState && lhs.videoMuteState == rhs
             .videoMuteState
     }

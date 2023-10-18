@@ -246,7 +246,7 @@
             receiverIdentity = self.message.conversation.contact.identity;
         }
 
-        TaskDefinitionSendBaseMessage *task = [[TaskDefinitionSendBaseMessage alloc] initWithMessage:self.message receiverIdentity:receiverIdentity group:group sendContactProfilePicture:YES];
+        TaskDefinitionSendBaseMessage *task = [[TaskDefinitionSendBaseMessage alloc] initWithMessageID:self.message.id receiverIdentity:receiverIdentity group:group sendContactProfilePicture:YES];
         [taskManager addObjcWithTaskDefinition:task];
     }];
 }

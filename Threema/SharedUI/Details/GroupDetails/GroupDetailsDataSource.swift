@@ -397,7 +397,7 @@ extension GroupDetailsDataSource {
     
     private func groupCallQuickAction(in viewController: UIViewController) -> QuickAction? {
         // Only show call icon if group calls are enabled
-        guard ThreemaEnvironment.groupCalls, UserSettings.shared()?.enableThreemaGroupCalls == true,
+        guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls,
               group.isSelfMember else {
             return nil
         }
@@ -405,11 +405,14 @@ extension GroupDetailsDataSource {
         // Can we synchronously test here if this contact supports calls (without updating the
         // feature mask) instead of checking when the action is actually triggered?
         let quickAction = QuickAction(
-            imageName: "threema.phone.fill",
+            imageName: "threema.phone.and.person.3.fill",
             title: BundleUtil.localizedString(forKey: "group_call_title"),
             accessibilityIdentifier: "GroupDetailsDataSourceGroupCallQuickActionButton"
         ) { _ in
-            self.group.startGroupCall(settingsStore: BusinessInjector().settingsStore)
+            GlobalGroupCallsManagerSingleton.shared.startGroupCall(
+                in: self.group,
+                intent: .createOrJoin
+            )
         }
         
         return quickAction
@@ -424,6 +427,10 @@ extension GroupDetailsDataSource {
         var quickActions = [QuickAction]()
         
         guard let viewController = groupDetailsViewController else {
+            return quickActions
+        }
+        
+        guard displayMode == .conversation else {
             return quickActions
         }
         

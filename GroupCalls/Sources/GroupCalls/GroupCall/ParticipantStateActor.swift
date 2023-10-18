@@ -30,7 +30,7 @@ final class ParticipantStateActor {
     
     // MARK: - Private Properties
     
-    // TODO: These should/could be sets. It doesn't make sense to have the same participant twice.
+    // TODO: (IOS-4059) These should/could be sets. It doesn't make sense to have the same participant twice.
     // We also don't need ordering.
     private var pendingParticipants = [RemoteParticipant]()
     private var participants = [RemoteParticipant]()
@@ -50,44 +50,43 @@ final class ParticipantStateActor {
     // MARK: - Update Functions
     
     func add(pending: RemoteParticipant) {
-        DDLogNotice("[GroupCall] [Rekey] \(#function) Added pending participant \(pending.id)")
+        DDLogNotice("[GroupCall] [Rekey] \(#function) Added pending participant \(pending.participantID.id)")
         pendingParticipants.append(pending)
     }
     
     /// Promotes the participant from pending to normal participant
     /// - Parameter participant: The participant to promote
     /// - Returns: True if promoted, false if was already promoted
-    func promote(_ participant: RemoteParticipant) -> Bool {
-        DDLogNotice("[GroupCall] [Rekey] \(#function) Promoted participant \(participant.id)")
+    func promote(_ participant: RemoteParticipant) throws -> Bool {
+        DDLogNotice("[GroupCall] [Rekey] \(#function) Promoted participant \(participant.participantID.id)")
         guard participant.isHandshakeCompleted else {
-            // TODO: IOS-3743 Group Calls Graceful Error Handling
-            fatalError()
+            throw GroupCallError.promotionError
         }
         
-        guard !participants.contains(where: { $0.id == participant.id }) else {
+        guard !participants.contains(where: { $0.participantID == participant.participantID }) else {
             return false
         }
         
-        pendingParticipants.removeAll(where: { $0.id == participant.id })
+        pendingParticipants.removeAll(where: { $0.participantID == participant.participantID })
         participants.append(participant)
         
         return true
     }
     
     func remove(_ participant: RemoteParticipant) {
-        pendingParticipants.removeAll(where: { $0.id == participant.id })
-        participants.removeAll(where: { $0.id == participant.id })
+        pendingParticipants.removeAll(where: { $0.participantID == participant.participantID })
+        participants.removeAll(where: { $0.participantID == participant.participantID })
     }
     
-    func setRemoteContext(participantID: ParticipantID, remoteContext: RemoteContext) async {
-        if let index = participants.firstIndex(where: { $0.id == participantID.id }) {
-            await participants[index].setRemoteContext(remoteContext)
+    func setRemoteContext(participantID: ParticipantID, remoteContext: RemoteContext) {
+        if let index = participants.firstIndex(where: { $0.participantID == participantID }) {
+            participants[index].setRemoteContext(remoteContext)
             DDLogNotice(
                 "[GroupCall] updated transceivers for regular participant \(participantID.id)"
             )
         }
-        else if let index = pendingParticipants.firstIndex(where: { $0.id == participantID.id }) {
-            await pendingParticipants[index].setRemoteContext(remoteContext)
+        else if let index = pendingParticipants.firstIndex(where: { $0.participantID == participantID }) {
+            pendingParticipants[index].setRemoteContext(remoteContext)
             DDLogNotice(
                 "[GroupCall] updated transceivers for pending participant \(participantID.id)"
             )

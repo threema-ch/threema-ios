@@ -93,11 +93,6 @@ class NonceGuard: NSObject, NonceGuardProtocol {
             throw NonceGuardError.messageNonceIsNil
         }
 
-        guard !isProcessed(message: message) else {
-            DDLogWarn("Nonce is already stored in DB")
-            return AnyPromise(Promise(resolver: { $0.fulfill_() }))
-        }
-
         return AnyPromise(processed(nonce: nonce))
     }
 
@@ -110,11 +105,6 @@ class NonceGuard: NSObject, NonceGuardProtocol {
     func processed(boxedMessage: BoxedMessage) throws -> AnyPromise {
         guard let nonce = boxedMessage.nonce else {
             throw NonceGuardError.messageNonceIsNil
-        }
-
-        guard !entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
-            DDLogWarn("Nonce is already stored in DB")
-            return AnyPromise(Promise(resolver: { $0.fulfill_() }))
         }
 
         return AnyPromise(processed(nonce: nonce))
@@ -133,6 +123,11 @@ class NonceGuard: NSObject, NonceGuardProtocol {
             Task {
                 await self.entityManager.performSave {
                     for nonce in nonces {
+                        guard !self.entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
+                            DDLogError("Nonce is already in DB")
+                            continue
+                        }
+                        
                         self.entityManager.entityCreator.nonce(with: NonceHasher.hashedNonce(nonce))
                     }
                     seal.fulfill_()

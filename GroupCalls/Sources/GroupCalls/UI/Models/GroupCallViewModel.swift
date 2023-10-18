@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import UIKit
 import WebRTC
 
@@ -34,15 +35,9 @@ public final class GroupCallViewModel: Sendable {
     
     @Published var snapshotPublisher = Snapshot()
 
-    public let buttonBannerObserver = AsyncStreamContinuationToSharedPublisher<GroupCallButtonBannerState>()
-
     var ownAudioMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.audio {
         didSet {
             toolBarDelegate?.updateToggleAudioButton()
-
-            guard !isLeavingCall else {
-                return
-            }
             
             switch ownAudioMuteState {
             case .changing:
@@ -61,10 +56,6 @@ public final class GroupCallViewModel: Sendable {
         didSet {
             toolBarDelegate?.updateToggleVideoButton()
             
-            guard !isLeavingCall else {
-                return
-            }
-            
             switch ownVideoMuteState {
             case .changing:
                 break
@@ -82,9 +73,6 @@ public final class GroupCallViewModel: Sendable {
 
     private var participantsList = [ViewModelParticipant]()
     
-    private let bannerAndButtonQueue: AsyncStream<GroupCallUIEvent>
-    private let bannerAndButtonContinuation: AsyncStream<GroupCallUIEvent>.Continuation
-    
     private var periodicUIRefreshTask: Task<Void, Never>?
     
     private weak var viewDelegate: GroupCallViewModelDelegate?
@@ -92,22 +80,14 @@ public final class GroupCallViewModel: Sendable {
     
     private var localParticipant: ViewModelParticipant? = nil
     
-    /// True as soon as End-Call Button was pressed
-    private var isLeavingCall = false
-    
     // MARK: - Lifecycle
 
     init(groupCallActor: GroupCallActor) {
         self.groupCallActor = groupCallActor
         
-        (self.bannerAndButtonQueue, self.bannerAndButtonContinuation) = AsyncStream<GroupCallUIEvent>.makeStream()
         DDLogNotice("[GroupCall] Created view model with address \(Unmanaged.passUnretained(self).toOpaque())")
         
         subscribeToEvents()
-    }
-    
-    deinit {
-        bannerAndButtonContinuation.finish()
     }
     
     // MARK: - Public setter
@@ -122,12 +102,15 @@ public final class GroupCallViewModel: Sendable {
     
     // MARK: - Public functions
 
-    public func getCallStartDate() async -> Date? {
-        await groupCallActor?.approximateCallStartDateUI
+    public func getCallStartDate() async -> Date {
+        guard let milisecondsSinceStart = await groupCallActor?.exactCallStartDate else {
+            return .now
+        }
+        return Date(timeIntervalSince1970: TimeInterval(milisecondsSinceStart / 1000))
     }
     
-    func participant(for id: ParticipantID) -> ViewModelParticipant? {
-        participantsList.first { $0.id == id }
+    func participant(for participantID: ParticipantID) -> ViewModelParticipant? {
+        participantsList.first { $0.participantID == participantID }
     }
 
     var numberOfParticipants: Int {
@@ -136,49 +119,76 @@ public final class GroupCallViewModel: Sendable {
     
     // MARK: - ToolBar button actions
     
-    func endCall() {
-        isLeavingCall = true
-        Task {
-            guard let groupCallActor else {
-                await self.leaveConfirmed()
-                return
-            }
-            
-            guard await groupCallActor.stopCall() else {
-                await leaveConfirmed()
-                return
-            }
+    func leaveCall() {
+        /// **Leave Call** 1. The user tapped the leave button, we begin leaving the call
+        DDLogNotice("[GroupCall] User tapped leave call button")
+        
+        Task(priority: .userInitiated) {
+            /// 1.1 Pass on info to `GroupCallActor
+            await groupCallActor?.beginLeaveCall()
         }
     }
         
     func toggleOwnVideo() async {
-        let currentState = ownVideoMuteState
-        ownVideoMuteState = .changing
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            let currentState = ownVideoMuteState
+            ownVideoMuteState = .changing
 
-        switch currentState {
-        case .changing:
-            break
-        case .muted:
-            await groupCallActor?.toggleOwnVideo(false)
-        case .unmuted:
-            await groupCallActor?.toggleOwnVideo(true)
+            switch currentState {
+            case .changing:
+                break
+            case .muted:
+                await groupCallActor?.toggleOwnVideo(false)
+            case .unmuted:
+                await groupCallActor?.toggleOwnVideo(true)
+            }
+            
+        case .denied, .restricted:
+            await viewDelegate?.showRecordVideoPermissionAlert()
+            
+        case .notDetermined:
+            await AVCaptureDevice.requestAccess(for: .video)
+            await toggleOwnVideo()
+            
+        @unknown default:
+            #if DEBUG
+                fatalError()
+            #endif
         }
     }
         
     func toggleOwnAudio() async {
-        let currentState = ownAudioMuteState
-        ownAudioMuteState = .changing
-
-        switch currentState {
-        case .changing:
-            break
-        case .muted:
-            await groupCallActor?.toggleOwnAudio(false)
-        case .unmuted:
-            await groupCallActor?.toggleOwnAudio(true)
+        switch AVAudioSession.sharedInstance().recordPermission {
+        case .granted:
+            let currentState = ownAudioMuteState
+            ownAudioMuteState = .changing
+            
+            switch currentState {
+            case .changing:
+                break
+                
+            case .muted:
+                await groupCallActor?.toggleOwnAudio(false)
+                
+            case .unmuted:
+                await groupCallActor?.toggleOwnAudio(true)
+            }
+            
+        case .denied:
+            await viewDelegate?.showRecordAudioPermissionAlert()
+            
+        case .undetermined:
+            await AVAudioSession.sharedInstance().requestRecordPermission()
+            await toggleOwnAudio()
+            
+        @unknown default:
+            #if DEBUG
+                fatalError()
+            #endif
         }
     }
-    
+        
     func switchCamera() async {
         await groupCallActor?.switchCamera()
     }
@@ -202,39 +212,34 @@ public final class GroupCallViewModel: Sendable {
         switch event {
         case let .error(err):
             DDLogError("[GroupCall] [GroupCallUI] An error occurred \(err)")
-            yieldButtonBannerState()
             
         case .connecting:
             DDLogNotice("[GroupCall] [GroupCallUI] Start connecting")
             await updateNavigationBar(for: .connecting)
-            yieldButtonBannerState()
             
         case .joining:
             DDLogNotice("[GroupCall] [GroupCallUI] Start joining")
             await updateNavigationBar(for: .joining)
-            yieldButtonBannerState()
             
         case .connected:
             DDLogNotice("[GroupCall] [GroupCallUI] Start connected")
             await updateNavigationBar(for: .connected)
             startPeriodicUIUpdatesIfNeeded()
-            yieldButtonBannerState()
             await groupCallActor?.connectedConfirmed()
-        
-        case let .callStateChanged(showButton):
-            buttonBannerObserver.stateContinuation.yield(showButton)
             
         case let .add(newParticipant):
-            DDLogNotice("[GroupCall] [GroupCallUI] Add participant \(newParticipant.id)")
+            DDLogNotice("[GroupCall] [GroupCallUI] Add participant \(newParticipant.participantID.id)")
             await add(newParticipant)
-            viewDelegate?.updateCollectionViewLayout()
-            yieldButtonBannerState()
+            Task { @MainActor in
+                viewDelegate?.updateCollectionViewLayout()
+            }
             
         case let .remove(participantID):
             DDLogNotice("[GroupCall] [GroupCallUI] Remove participant \(participantID)")
             await remove(participantID)
-            viewDelegate?.updateCollectionViewLayout()
-            yieldButtonBannerState()
+            Task { @MainActor in
+                viewDelegate?.updateCollectionViewLayout()
+            }
         
         case let .participantStateChange(participant, change):
             DDLogNotice("[GroupCall] Reconfigure participant \(participant.id)")
@@ -242,53 +247,33 @@ public final class GroupCallViewModel: Sendable {
             handleMuteStateChange(for: participant, change: change)
             
             await publishSnapshot(reconfigure: [participant])
-            yieldButtonBannerState()
             
         case let .addLocalParticipant(localParticipant):
             self.localParticipant = localParticipant
             await add(localParticipant)
-            yieldButtonBannerState()
             
         case let .audioMuteChange(state):
-            // TODO: Check if local participant exists
+            // TODO: (IOS-4078) Check if local participant exists
             ownAudioMuteState = state
             localParticipant?.audioMuteState = state == .muted ? .muted : .unmuted
-            await publishSnapshot(reconfigure: [localParticipant!.id])
+            await publishSnapshot(reconfigure: [localParticipant!.participantID])
            
         case let .videoMuteChange(state):
-            // TODO: Check if local participant exists
+            // TODO: (IOS-4078) Check if local participant exists
             ownVideoMuteState = state
-            localParticipant?.videoMuteState = state == .muted ? .muted : .unmuted
-            await publishSnapshot(reconfigure: [localParticipant!.id])
+            if let localParticipant {
+                localParticipant.videoMuteState = state == .muted ? .muted : .unmuted
+                await publishSnapshot(reconfigure: [localParticipant.participantID])
+            }
 
         case let .videoCameraChange(position):
-            localParticipant?.localParticipant?.localCameraPosition = position
-            await publishSnapshot(reconfigure: [localParticipant!.id])
-            
-        case .leaveConfirmed:
-            await leaveConfirmed()
-            yieldButtonBannerState()
-            await groupCallActor?.callStopSignalContinuation?.finish()
-            
-        case .pop:
-            await viewDelegate?.dismissGroupCallView()
-        }
-    }
-    
-    private func yieldButtonBannerState() {
-        Task.detached { [self] in
-            guard let groupCallActor else {
-                buttonBannerObserver.stateContinuation.yield(.hidden)
-                return
+            if let localParticipant {
+                localParticipant.localParticipant?.localCameraPosition = position
+                await publishSnapshot(reconfigure: [localParticipant.participantID])
             }
             
-            // TODO: Is the start date correct?
-            let state = await GroupCallBannerButtonInfo(
-                numberOfParticipants: participantsList.count,
-                startDate: getCallStartDate() ?? .now,
-                joinState: groupCallActor.joinState()
-            )
-            buttonBannerObserver.stateContinuation.yield(.visible(state))
+        case .forceDismissGroupCallViewController:
+            await viewDelegate?.dismissGroupCallView(animated: false)
         }
     }
     
@@ -308,7 +293,11 @@ public final class GroupCallViewModel: Sendable {
             break
         }
         
-        let update = GroupCallNavigationBarContentUpdate(title: title, participantCount: nil, timeString: nil)
+        let update = GroupCallNavigationBarContentUpdate(
+            title: title,
+            participantCount: nil,
+            timeInterval: TimeInterval(0)
+        )
         
         await viewDelegate?.updateNavigationContent(update)
     }
@@ -322,14 +311,14 @@ public final class GroupCallViewModel: Sendable {
     
     private func remove(_ participantID: ParticipantID) async {
         DDLogNotice("[ViewModel] \(#function)")
-        participantsList.removeAll(where: { $0.id == participantID })
+        participantsList.removeAll(where: { $0.participantID == participantID })
         
         await publishSnapshot()
     }
     
-    private func handleMuteStateChange(for participant: ParticipantID, change: ParticipantStateChange) {
+    private func handleMuteStateChange(for participantID: ParticipantID, change: ParticipantStateChange) {
         
-        guard let participant = participantsList.first(where: { $0.id == participant }) else {
+        guard let participant = participantsList.first(where: { $0.participantID == participantID }) else {
             DDLogNotice("[ViewModel] \(#function)")
             return
         }
@@ -347,16 +336,16 @@ public final class GroupCallViewModel: Sendable {
         DDLogNotice("[ViewModel] \(#function)")
         var newSnapshot = Snapshot()
         newSnapshot.appendSections([.main])
-        newSnapshot.appendItems(participantsList.map(\.id))
+        newSnapshot.appendItems(participantsList.map(\.participantID))
         newSnapshot.reconfigureItems(reconfigure)
         
         snapshotPublisher = newSnapshot
     }
-
+    
     // MARK: - Cell Updates
     
     func addRendererView(for participantID: ParticipantID, rendererView: RTCMTLVideoView) async {
-        guard let participant = participantsList.first(where: { $0.id == participantID }) else {
+        guard let participant = participantsList.first(where: { $0.participantID == participantID }) else {
             DDLogNotice("[GroupCall] [Renderer] Could not get participant")
             return
         }
@@ -383,7 +372,7 @@ public final class GroupCallViewModel: Sendable {
     func removeRendererView(for participantID: ParticipantID, rendererView: RTCMTLVideoView) async {
         
         // Local Participant
-        if participantID == localParticipant?.id, let track = await groupCallActor?.localContext() {
+        if participantID == localParticipant?.participantID, let track = await groupCallActor?.localContext() {
             track.remove(rendererView)
             return
         }
@@ -414,27 +403,27 @@ extension GroupCallViewModel {
         periodicUIRefreshTask = Task.detached { [weak self] in
             let refresh = {
                 
-                guard let viewDelegate = self?.viewDelegate else {
-                    self?.periodicUIRefreshTask?.cancel()
-                    self?.periodicUIRefreshTask = nil
+                guard let strongSelf = self else {
                     return
                 }
                 
-                guard let startDate = await self?.getCallStartDate() else {
+                guard await strongSelf.groupCallActor?.joinState() == .runningLocal else {
                     return
                 }
                 
-                guard let numberOfParticipants = self?.numberOfParticipants else {
+                guard let viewDelegate = strongSelf.viewDelegate else {
+                    strongSelf.periodicUIRefreshTask?.cancel()
+                    strongSelf.periodicUIRefreshTask = nil
                     return
                 }
                 
-                let diff = Date().timeIntervalSince(startDate)
-                let timeString = self?.groupCallActor?.dependencies.groupCallDateFormatter.timeFormatted(diff)
-                
+                let numberOfParticipants = strongSelf.numberOfParticipants
+                let timeInterval = await Date().timeIntervalSince(strongSelf.getCallStartDate())
+
                 let update = GroupCallNavigationBarContentUpdate(
-                    title: self?.groupCallActor?.group.groupName,
+                    title: strongSelf.groupCallActor?.group.groupName,
                     participantCount: numberOfParticipants,
-                    timeString: timeString
+                    timeInterval: timeInterval
                 )
                 await viewDelegate.updateNavigationContent(update)
             }
@@ -443,23 +432,55 @@ extension GroupCallViewModel {
                 DDLogNotice("[GroupCall] Update NavigationBar")
                 await refresh()
                 
-                // TODO: (IOS-3813) Try? is ugly
-                try? await Task.sleep(seconds: 1)
+                do {
+                    try await Task.sleep(seconds: 1)
+                }
+                catch {
+                    self?.periodicUIRefreshTask = nil
+                }
             }
         }
     }
     
-    private func leaveConfirmed() async {
-        participantsList = []
-        
-        // TODO: This is not great and it also posts notifications for the reset even though that's not at all what the user did
-        ownAudioMuteState = .muted
-        ownVideoMuteState = .muted
-        
-        periodicUIRefreshTask?.cancel()
-        periodicUIRefreshTask = nil // Otherwise the update task will not be recreated the next time
-        
+    public func leaveCall() async {
+        DDLogVerbose("[GroupCall] Leave: GroupCallViewModel")
+
+        /// 1.1 Remove all participants and publish the last snapshot, this is needed when the users wants to rejoin the
+        /// call
+        participantsList.removeAll()
         await publishSnapshot()
-        await viewDelegate?.dismissGroupCallView()
+
+        /// 1.2 Mute local participant
+        await groupCallActor?.toggleOwnVideo(true)
+        await groupCallActor?.toggleOwnAudio(true)
+
+        /// 1.3 Dismiss the view
+        await viewDelegate?.dismissGroupCallView(animated: true)
+        
+        /// 1.4 Reset refresh Task
+        periodicUIRefreshTask?.cancel()
+        periodicUIRefreshTask = nil
+    }
+    
+    public func teardown() async {
+        DDLogVerbose("[GroupCall]] Teardown: GroupCallViewModel")
+        
+        // Participants
+        // TODO: (IOS-4047) TaskGroup? Do we even need to unsubscribe?
+        for participant in participantsList {
+            await unsubscribeVideo(for: participant.participantID)
+        }
+        
+        localParticipant = nil
+    }
+}
+
+extension AVAudioSession {
+    func requestRecordPermission() async {
+        await withCheckedContinuation { continuation in
+            requestRecordPermission { _ in
+                continuation.resume()
+            }
+        }
     }
 }

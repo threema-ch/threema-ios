@@ -193,8 +193,8 @@
     _welcomeLabel.text = [BundleUtil localizedStringForKey:@"lets_get_started"];
     NSString *privacyPolicyText;
     
-    _restoreTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"restore_title_text"], [ThreemaAppObjc currentName]];
-    _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], [ThreemaAppObjc currentName]];
+    _restoreTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"restore_title_text"], [ThreemaAppObjc appName]];
+    _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], [ThreemaAppObjc appName]];
     
     if ([LicenseStore requiresLicenseKey]) {
         _setupButton.accessibilityLabel = [NSString stringWithFormat:@"%@ %@", [BundleUtil localizedStringForKey:@"setup_work_title_text"], [BundleUtil localizedStringForKey:@"setup_threema"]];
@@ -202,7 +202,7 @@
         _restoreButton.accessibilityLabel = [NSString stringWithFormat:@"%@ %@", [BundleUtil localizedStringForKey:@"restore_work_title_text"], [BundleUtil localizedStringForKey:@"restore_id"]];
         
         
-        privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about_work"], [ThreemaAppObjc currentName]];
+        privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about_work"], [ThreemaAppObjc appName]];
     } else {
         _setupButton.accessibilityLabel = [NSString stringWithFormat:@"%@ %@", [BundleUtil localizedStringForKey:@"setup_consumer_title_text"], [BundleUtil localizedStringForKey:@"setup_threema"]];
         

@@ -30,6 +30,6 @@
 @interface CustomResponderTextView : UITextView <QRScannerViewControllerDelegate>
 
 @property (nonatomic, weak) UIResponder *overrideNextResponder;
-@property (nonatomic) id<PasteImageHandler> pasteImageHandler;
+@property (nonatomic, weak) id<PasteImageHandler> pasteImageHandler;
 
 @end

@@ -23,39 +23,43 @@ import CocoaLumberjackSwift
 import Foundation
 import SwiftProtobuf
 import ThreemaProtocols
-@preconcurrency import WebRTC
+import WebRTC
 
 @GlobalGroupCallActor
-public final class RemoteParticipant {
+final class RemoteParticipant: Participant {
+    
     // MARK: - Types
-
-    typealias NonceCounterT = Int
     
     enum MessageResponseAction {
         case none
-        case handshakeCompleted(RemoteParticipant)
-        case participantToSFU(Groupcall_ParticipantToSfu.Envelope, RemoteParticipant, ParticipantStateChange)
-        case sendAuth(RemoteParticipant, Data)
+        
         case epHelloAndAuth(RemoteParticipant, (Data, Data))
+        case sendAuth(RemoteParticipant, Data)
+        case handshakeCompleted(RemoteParticipant)
+        
+        case participantToSFU(Groupcall_ParticipantToSfu.Envelope, RemoteParticipant, ParticipantStateChange)
         case participantToParticipant(RemoteParticipant, Data)
+        
         case muteStateChanged(RemoteParticipant, ParticipantStateChange)
         case rekeyReceived(RemoteParticipant, MediaKeys)
     }
     
     // MARK: - Private Variables
     
-    private let dependencies: Dependencies
-    private let groupCallCrypto: GroupCallMessageCryptoProtocol
+    private let groupCallMessageCrypto: GroupCallMessageCryptoProtocol
     
-    private var pcckRemote: Data?
+    // TODO: (IOS-4059) Make these non-optional to prevent force-unwrapping
     private var pckRemote: Data?
+    private var pcckRemote: Data?
     
+    /// Our key pair
     private var keyPair: KeyPair
-    /// Participant Call Cookie
+    
+    /// Our Participant Call Cookie
     private var pcck: Data
     
-    private var nonceCounter: NonceCounterT = 1
-    private var nonceCounterRemote: NonceCounterT = 1
+    private var nonceCounter = SequenceNumber<UInt64>()
+    private var nonceCounterRemote = SequenceNumber<UInt64>()
     
     private var mediaKeys: [Groupcall_ParticipantToParticipant.MediaKey]?
     
@@ -63,47 +67,53 @@ public final class RemoteParticipant {
     
     private var handshakeState: HandShakeState {
         didSet {
-            DDLogNotice("[GroupCall] Participant \(id) handshake state changed from \(oldValue) to \(handshakeState)")
+            DDLogNotice(
+                "[GroupCall] Participant \(participantID.id) handshake state changed from \(oldValue) to \(handshakeState)"
+            )
         }
     }
     
     // MARK: - Internal Variables
     
-    var identityRemote: ThreemaID?
-    
-    let participant: ParticipantID
-    
+    // TODO: (IOS-4059) Move a11y string to NormalParticipant, make `dependencies` private again
+    let dependencies: Dependencies
+
+    private(set) var threemaIdentity: ThreemaID?
+        
     var needsPostHandshakeRekey = false
-    
-    var id: UInt32 {
-        participant.id
-    }
-    
+
     var isHandshakeCompleted: Bool {
         handshakeState == .done
     }
     
     var newMediaKeys: [Groupcall_ParticipantToParticipant.MediaKey] {
-        // TODO: This shouldn't return all we have used ever
+        // TODO: (IOS-4089) This shouldn't return all we have used ever
         mediaKeys ?? [Groupcall_ParticipantToParticipant.MediaKey]()
     }
     
     // MARK: - Lifecycle
     
     init(
-        participant: ParticipantID,
+        participantID: ParticipantID,
         dependencies: Dependencies,
-        groupCallCrypto: GroupCallMessageCryptoProtocol,
+        groupCallMessageCrypto: GroupCallMessageCryptoProtocol,
         isExistingParticipant: Bool
     ) {
-        self.participant = participant
         self.dependencies = dependencies
-        self.groupCallCrypto = groupCallCrypto
+        self.groupCallMessageCrypto = groupCallMessageCrypto
         
-        let keys = dependencies.groupCallCrypto.generateKeyPair()
-        self.keyPair = KeyPair(publicKey: keys.1, privateKey: keys.0)
-        self.pcck = self.dependencies.groupCallCrypto.randomBytes(of: 16)
+        guard let keys = self.dependencies.groupCallCrypto.generateKeyPair() else {
+            // TODO: (IOS-4124) Improve error handling
+            fatalError("Unable to generate key pair")
+        }
+        self.keyPair = KeyPair(publicKey: keys.publicKey, privateKey: keys.privateKey)
+        self.pcck = self.dependencies.groupCallCrypto.randomBytes(of: ProtocolDefines.pcckLength)
+        
+        /// **Protocol Step: Join/Leave of Other Participants (Join 4.)**
+        /// Join 4. Set the _handshake state_ of this participant to `await-np-hello`.
         self.handshakeState = isExistingParticipant ? .await_ep_hello : .await_np_hello
+        
+        super.init(participantID: participantID)
     }
     
     func handle(
@@ -112,38 +122,91 @@ public final class RemoteParticipant {
     ) throws -> MessageResponseAction {
         DDLogNotice("[GroupCall] \(#function)")
         
+        /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 3.)**
+        /// 3. Decrypt `encrypted_data` according to the current _handshake state_ and handle the inner envelope:
+        ///    - `await-ep-hello` or `await-np-hello`: Expect a `Handshake.HelloEnvelope`.
+        ///    - `await-auth`: Expect a `Handshake.AuthEnvelope`.
+        ///    - `done`: Expect a post-auth `Envelope`.
         switch handshakeState {
         case .await_np_hello:
-            handleHandshakeHello(message: message)
+            try handleHandshakeHello(message: message)
+            
+            /// **Protocol Step: Initial handshake message. (Receiving regular 2.)**
+            /// 2. If the group call is scoped to a (Threema) group and `identity` is not part of the associated group
+            /// (including the user itself), log a warning and abort these steps.
+            // TODO: (IOS-4139) Implement step above
+            
+            /// **Protocol Step: Initial handshake message. (Receiving regular 3.)**
+            /// 3. If the sender is a newly joined participant and therefore the _handshake state_ was set to
+            /// `await-np-hello` (as described by the _Join/Leave_ section):
+            ///    1. Respond by sending a `Hello` message, immediately followed by an `Auth` message.
+            ///    2. Set the participant's _handshake state_ to `await-auth` and abort these steps.
+
+            let helloMessage = try handshakeHelloMessage(for: ThreemaID(
+                id: localParticipant.identity,
+                nickname: localParticipant.nickname
+            ))
+            
+            let mediaKeys = [
+                localParticipant.protocolMediaKeys,
+                localParticipant.pendingProtocolMediaKeys,
+            ].compactMap { $0 }
+            let authMessage = try handshakeAuthMessage(with: mediaKeys)
+            
             handshakeState = .await_auth
-            let mediaKeys = [localParticipant.protocolMediaKeys, localParticipant.pendingProtocolMediaKeys]
-                .compactMap { $0 }
-            return .epHelloAndAuth(
-                self,
-                (
-                    handshakeHelloMessage(for: try! ThreemaID(
-                        id: localParticipant.identity,
-                        nickname: localParticipant.nickname
-                    )),
-                    sendHandshakeAuth(with: mediaKeys)
-                )
-            )
+            
+            return .epHelloAndAuth(self, (helloMessage, authMessage))
+            
         case .await_ep_hello:
-            handleHandshakeHello(message: message)
+            try handleHandshakeHello(message: message)
+            
+            /// **Protocol Step: Initial handshake message. (Receiving regular 2.)**
+            /// 2. If the group call is scoped to a (Threema) group and `identity` is not part of the associated group
+            /// (including the user itself), log a warning and abort these steps.
+            // TODO: (IOS-4139) Implement step above
+            
+            /// **Protocol Step: Initial handshake message. (Receiving regular 4.1)**
+            /// 4. If the participant's _handshake state_ is `await-ep-hello`:
+            ///    1. If the `pck` reflects the local PCK.public or the `pcck` reflects
+            ///       the local PCCK, log a warning and abort these steps.
+            guard pckRemote != keyPair.publicKey, pcckRemote != pcck else {
+                DDLogWarn("Received PCK or PCCK match local ones")
+                throw GroupCallError.badMessage
+            }
+            
+            /// **Protocol Step: Initial handshake message. (Receiving regular 4.2. & 4.3.)**
+            ///    4.2. Respond by sending an `Auth` message.
+            ///    4.3. Set the participant's _handshake state_ to `await-auth` and abort these steps.
+            
+            let mediaKeys = [
+                localParticipant.protocolMediaKeys,
+                localParticipant.pendingProtocolMediaKeys,
+            ].compactMap { $0 }
+            let authMessage = try handshakeAuthMessage(with: mediaKeys)
+
             handshakeState = .await_auth
-            let mediaKeys = [localParticipant.protocolMediaKeys, localParticipant.pendingProtocolMediaKeys]
-                .compactMap { $0 }
-            return .sendAuth(self, sendHandshakeAuth(with: mediaKeys))
+            
+            return .sendAuth(self, authMessage)
+            
         case .await_auth:
-            handleAuth(message: message)
+            
+            try handleAuth(message: message)
+            
+            /// **Protocol Step: Second and final handshake message. (Receiving 4.)**
+            /// 4. Set the participant's _handshake state_ to `done`.
             handshakeState = .done
+            
             return .handshakeCompleted(self)
+            
         case .done:
             return try handlePostHandshakeMessage(relayData: message.encryptedData)
         }
+        
+        // This line should never be reached!
     }
     
-    func setNeedsRekeyIfElligible() {
+    // TODO: (IOS-4131) This function is currently unused, might be related to mentioned ticket
+    func setNeedsRekeyIfEligible() {
         guard handshakeState == .await_auth else {
             return
         }
@@ -157,16 +220,13 @@ public final class RemoteParticipant {
 extension RemoteParticipant {
     
     private func handlePostHandshakeMessage(relayData: Data) throws -> MessageResponseAction {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
+        // TODO: (IOS-3883) Why is this copy here?
         let data = relayData
-        // The first message is the handshake auth message
         
         var nextPcckNonce = pcckRemote!
-        var littleEndianNonceCounter = nonceCounterRemote.littleEndian
-        nextPcckNonce.append(Data(bytes: &littleEndianNonceCounter, count: MemoryLayout<NonceCounterT>.size))
-        
-        nonceCounterRemote += 1
+        nextPcckNonce.append(nonceCounterRemote.next().littleEndianData)
         
         guard let innerData = dependencies.groupCallCrypto.decryptData(
             cipherText: data,
@@ -178,7 +238,6 @@ extension RemoteParticipant {
             throw GroupCallError.decryptionFailure
         }
         
-        // TODO: (IOS-3813) Throw directly, remove try?
         guard let envelope = try? Groupcall_ParticipantToParticipant.Envelope(serializedData: innerData) else {
             assertionFailure()
             throw GroupCallError.decryptionFailure
@@ -212,23 +271,29 @@ extension RemoteParticipant {
                 switch innerState {
                 case .on:
                     DDLogNotice("[GroupCall] Audio state announced on")
+                    // TODO: (IOS-4111) According to the protocol no subscribe is needed if the microphone changes
                     return try .participantToSFU(subscribeAudio(), self, .audioState(.unmuted))
                 case .off:
                     DDLogNotice("[GroupCall] Audio state announced off")
                     return .muteStateChanged(self, .audioState(.muted))
                 }
             case .none:
+                // TODO: (IOS-4124)
                 fatalError()
             }
         case .none:
+            // TODO: (IOS-4124)
             fatalError()
-        case .some(.encryptedAdminEnvelope(_)):
+        case .encryptedAdminEnvelope:
+            // TODO: (IOS-4124)
             fatalError()
         case let .rekey(mediaKeys):
             return handleRekey(with: mediaKeys)
-        case .some(.holdState(_)):
-            DDLogNotice("TODO: Handle hold state message")
-            return .none
+        case .holdState:
+            // TODO: (IOS-4124)
+            let message = "Not supported"
+            DDLogNotice(message)
+            fatalError(message)
         }
     }
 }
@@ -236,25 +301,29 @@ extension RemoteParticipant {
 // MARK: - Handshake Messages
 
 extension RemoteParticipant {
-    func handshakeHelloMessage(for localIdentity: ThreemaID) -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+    func handshakeHelloMessage(for localIdentity: ThreemaID) throws -> Data {
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
-        var helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello()
-        helloMessage.identity = localIdentity.id
-        helloMessage.nickname = localIdentity.nickname
-        helloMessage.pck = keyPair.publicKey
-        helloMessage.pcck = pcck
+        let helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello.with {
+            $0.identity = localIdentity.id
+            $0.nickname = localIdentity.nickname
+            $0.pck = keyPair.publicKey
+            $0.pcck = pcck
+        }
         
-        let nonce = dependencies.groupCallCrypto.randomBytes(of: 24)
+        let envelope = Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope.with {
+            $0.padding = dependencies.groupCallCrypto.padding()
+            $0.hello = helloMessage
+        }
         
-        var envelope = Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope()
-        envelope.padding = nonce
-        envelope.hello = helloMessage
+        let serializedEnvelope = try envelope.ownSerializedData()
         
-        // TODO: (IOS-3813) try! is ugly
-        let serializedEnvelope = try! envelope.serializedData()
+        let nonce = dependencies.groupCallCrypto.randomBytes(of: groupCallMessageCrypto.symmetricNonceLength)
         
-        let encryptedEnvelope = groupCallCrypto.symmetricEncryptByGCHK(serializedEnvelope, nonce: nonce)!
+        guard let encryptedEnvelope = groupCallMessageCrypto.symmetricEncryptByGCHK(serializedEnvelope, nonce: nonce)
+        else {
+            throw GroupCallError.encryptionFailure
+        }
         
         var result = nonce
         result.append(encryptedEnvelope)
@@ -262,48 +331,71 @@ extension RemoteParticipant {
         return result
     }
     
-    func sendHandshakeAuth(with mediaKeys: [Groupcall_ParticipantToParticipant.MediaKey]) -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+    private func handshakeAuthMessage(with mediaKeys: [Groupcall_ParticipantToParticipant.MediaKey]) throws -> Data {
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
-        var handshakeAuth = Groupcall_ParticipantToParticipant.Handshake.Auth()
-        handshakeAuth.pcck = pcckRemote!
-        handshakeAuth.pck = pckRemote!
-        
-        handshakeAuth.mediaKeys = mediaKeys
-        
-        var handshakeAuthEnvelope = Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope()
-        handshakeAuthEnvelope.auth = handshakeAuth
-        
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let serializedHandshakeAuthEnvelope = try? handshakeAuthEnvelope.serializedData() else {
-            fatalError()
+        let handshakeAuth = Groupcall_ParticipantToParticipant.Handshake.Auth.with {
+            $0.pck = pckRemote!
+            $0.pcck = pcckRemote!
+            $0.mediaKeys = mediaKeys
         }
         
-        var nextPcckNonce = pcck
-        var littleEndianNonceCounter = nonceCounter.littleEndian
-        nextPcckNonce.append(Data(bytes: &littleEndianNonceCounter, count: MemoryLayout<NonceCounterT>.size))
-        nonceCounter += 1
+        let handshakeAuthEnvelope = Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope.with {
+            $0.padding = dependencies.groupCallCrypto.padding()
+            $0.auth = handshakeAuth
+        }
         
-        let innerNonce = dependencies.groupCallCrypto.randomBytes(of: 24)
-        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: identityRemote!.id) else {
-            // TODO: We need should throw here or attempt to fetch the contact.
+        let serializedHandshakeAuthEnvelope = try handshakeAuthEnvelope.ownSerializedData()
+        
+        /// **Protocol Step**
+        /// 1. Let `inner-nonce` be a random nonce.
+        /// 2. Let `inner-data` be encrypted by:
+        ///
+        /// ```text
+        /// S = X25519HSalsa20(<sender.CK>.secret, <receiver.CK>.public)
+        /// GCNHAK = Blake2b(
+        ///   key=S, salt='nha', personal='3ma-call', input=GCKH)
+        /// XSalsa20-Poly1305(
+        ///   key=GCNHAK,
+        ///   nonce=<inner-nonce>,
+        ///   data=<AuthEnvelope(Auth)>,
+        /// )
+        /// ```
+        
+        let innerNonce = dependencies.groupCallCrypto.randomBytes(of: groupCallMessageCrypto.symmetricNonceLength)
+        
+        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.id) else {
+            // TODO: (IOS-4124) We need should throw here or attempt to fetch the contact.
             // This should be handled by the app, a new contact can join a group call iff it has previously joined the
             // group
             // i.e. the public key should already be known. Thus we can probably safely abort here.
             fatalError()
         }
         
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let innerData = try? groupCallCrypto.symmetricEncryptBYGCNHAK(
+        guard let innerData = try? groupCallMessageCrypto.symmetricEncryptByGCNHAK(
             sharedSecret: sharedSecret,
             plainText: serializedHandshakeAuthEnvelope,
             nonce: innerNonce
         ) else {
-            fatalError()
+            throw GroupCallError.encryptionFailure
         }
+        
+        /// **Protocol Step**
+        /// 3. Let `outer-data` be encrypted by:
+        ///
+        /// ```text
+        /// XSalsa20-Poly1305(
+        ///   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+        ///   nonce=<sender.PCCK> || <sender.PCSN+>,
+        ///   data=<inner-nonce> || <inner-data>,
+        /// )
+        /// ```
         
         var completeInnerData = innerNonce
         completeInnerData.append(innerData)
+        
+        var nextPcckNonce = pcck
+        nextPcckNonce.append(nonceCounter.next().littleEndianData)
         
         guard let outerData = dependencies.groupCallCrypto.encryptData(
             plaintext: completeInnerData,
@@ -311,23 +403,52 @@ extension RemoteParticipant {
             secretKey: keyPair.privateKey,
             nonce: nextPcckNonce
         ) else {
-            fatalError()
+            throw GroupCallError.encryptionFailure
         }
         
         return outerData
     }
     
-    private func handleAuth(message: Groupcall_ParticipantToParticipant.OuterEnvelope) {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+    private func handleHandshakeHello(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         let data = message.encryptedData
         
-        assert(nonceCounterRemote == 1)
+        let nonce = data[0..<groupCallMessageCrypto.symmetricNonceLength]
+        let cipherText = data.advanced(by: Int(groupCallMessageCrypto.symmetricNonceLength))
+       
+        guard let decrypted = groupCallMessageCrypto.symmetricDecryptByGCHK(cipherText, nonce: nonce) else {
+            throw GroupCallError.decryptionFailure
+        }
+        
+        guard let helloEnvelope = try? Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope(
+            serializedData: decrypted
+        ) else {
+            throw GroupCallError.decryptionFailure
+        }
+        
+        let helloMessage: Groupcall_ParticipantToParticipant.Handshake.Hello
+        switch helloEnvelope.content {
+        case let .hello(message):
+            helloMessage = message
+        case .guestHello:
+            throw GroupCallError.unsupportedMessage
+        case .none:
+            throw GroupCallError.badMessage
+        }
+        
+        pckRemote = helloMessage.pck
+        pcckRemote = helloMessage.pcck
+        threemaIdentity = try ThreemaID(id: helloMessage.identity, nickname: helloMessage.nickname)
+    }
+    
+    private func handleAuth(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        
+        let data = message.encryptedData
         
         var nextPcckNonce = pcckRemote!
-        var littleEndianNonceCounter = nonceCounterRemote.littleEndian
-        nextPcckNonce.append(Data(bytes: &littleEndianNonceCounter, count: MemoryLayout<NonceCounterT>.size))
-        nonceCounterRemote += 1
+        nextPcckNonce.append(nonceCounterRemote.next().littleEndianData)
         
         guard let innerData = dependencies.groupCallCrypto.decryptData(
             cipherText: data,
@@ -335,62 +456,52 @@ extension RemoteParticipant {
             signKey: pckRemote!,
             nonce: nextPcckNonce
         ) else {
-            assertionFailure()
-            return
+            throw GroupCallError.decryptionFailure
         }
         
-        let innerNonce = innerData[0..<24]
-        let ciphertext = innerData.advanced(by: 24)
+        let innerNonce = innerData[0..<groupCallMessageCrypto.symmetricNonceLength]
+        let ciphertext = innerData.advanced(by: Int(groupCallMessageCrypto.symmetricNonceLength))
         
-        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: identityRemote!.id) else {
-            // TODO: We need should throw here or attempt to fetch the contact.
+        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.id) else {
+            // TODO: (IOS-4124) We need should throw here or attempt to fetch the contact.
             fatalError()
         }
         
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let decrypted = try? groupCallCrypto.symmetricDecryptBYGCNHAK(
+        guard let decrypted = try? groupCallMessageCrypto.symmetricDecryptByGCNHAK(
             sharedSecret: sharedSecret,
             cipherText: ciphertext,
             nonce: innerNonce
         ) else {
-            fatalError()
+            throw GroupCallError.decryptionFailure
         }
         
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let authMessage = try? Groupcall_ParticipantToParticipant.Handshake
-            .AuthEnvelope(serializedData: decrypted).auth else {
-            fatalError()
+        guard let authEnvelope = try? Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope(
+            serializedData: decrypted
+        ) else {
+            throw GroupCallError.decryptionFailure
+        }
+        
+        let authMessage: Groupcall_ParticipantToParticipant.Handshake.Auth
+        switch authEnvelope.content {
+        case let .auth(auth):
+            authMessage = auth
+        case .guestAuth:
+            throw GroupCallError.unsupportedMessage
+        case .none:
+            throw GroupCallError.badMessage
+        }
+        
+        /// **Protocol Step: Second and final handshake message. (Receiving 2. & 3.)**
+        /// 2. If the repeated `pck` does not equal the local `PCK.public` used towards this participant, log a warning
+        /// and abort these steps.
+        /// 3. If the repeated `pcck` does not equal the local `PCCK` used towards this participant, log a warning and
+        /// abort these steps.
+        guard authMessage.pck == keyPair.publicKey, authMessage.pcck == pcck else {
+            DDLogWarn("Received PCK or PCCK don't match local ones")
+            throw GroupCallError.badMessage
         }
         
         mediaKeys = authMessage.mediaKeys
-    }
-    
-    private func handleHandshakeHello(message: Groupcall_ParticipantToParticipant.OuterEnvelope) {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
-        
-        let data = message.encryptedData
-        
-        let nonce = data[0..<24]
-        let cipherText = data.advanced(by: 24)
-        guard let decrypted = groupCallCrypto.symmetricDecryptByGCHK(cipherText, nonce: nonce) else {
-            fatalError()
-        }
-        
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let handshake = try? Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope(serializedData: decrypted)
-            .hello else {
-            fatalError()
-        }
-        
-        assert(handshake.unknownFields.data.isEmpty)
-        
-        guard handshake.unknownFields.data.isEmpty else {
-            fatalError()
-        }
-        
-        pcckRemote = handshake.pcck
-        pckRemote = handshake.pck
-        identityRemote = try! ThreemaID(id: handshake.identity, nickname: handshake.nickname)
     }
 }
 
@@ -409,10 +520,10 @@ extension RemoteParticipant {
         return .rekeyReceived(self, mediaKey)
     }
     
-    // MARK: Outoging
+    // MARK: Outgoing
     
     func audio(_ mute: MuteState) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         // Sanity Checks
         guard handshakeState == .done else {
@@ -420,12 +531,12 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw GroupCallParticipantError.badParticipantState
+            throw GroupCallError.badParticipantState
         }
         
         var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
-        p2pEnvelope.captureState = Groupcall_ParticipantToParticipant.CaptureState()
         p2pEnvelope.padding = dependencies.groupCallCrypto.padding()
+        p2pEnvelope.captureState = Groupcall_ParticipantToParticipant.CaptureState()
         
         switch mute {
         case .muted:
@@ -434,28 +545,25 @@ extension RemoteParticipant {
             p2pEnvelope.captureState.microphone.state = .on(Common_Unit())
         }
         
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let serializedp2pEnvelope = try? p2pEnvelope.serializedData() else {
-            throw GroupCallError.serializationFailure
-        }
+        let serializedP2PEnvelope = try p2pEnvelope.ownSerializedData()
         
-        return try encrypt(serializedp2pEnvelope)
+        return try encrypt(serializedP2PEnvelope)
     }
     
     func audioMuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         return try audio(.muted)
     }
     
     func audioUnmuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         return try audio(.unmuted)
     }
     
     func video(_ mute: MuteState) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         // Sanity Checks
         guard handshakeState == .done else {
@@ -463,12 +571,12 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw GroupCallParticipantError.badParticipantState
+            throw GroupCallError.badParticipantState
         }
         
         var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
-        p2pEnvelope.captureState = Groupcall_ParticipantToParticipant.CaptureState()
         p2pEnvelope.padding = dependencies.groupCallCrypto.padding()
+        p2pEnvelope.captureState = Groupcall_ParticipantToParticipant.CaptureState()
         
         switch mute {
         case .muted:
@@ -477,28 +585,25 @@ extension RemoteParticipant {
             p2pEnvelope.captureState.camera.state = .on(Common_Unit())
         }
         
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let serializedp2pEnvelope = try? p2pEnvelope.serializedData() else {
-            throw GroupCallError.serializationFailure
-        }
+        let serializedP2PEnvelope = try p2pEnvelope.ownSerializedData()
         
-        return try encrypt(serializedp2pEnvelope)
+        return try encrypt(serializedP2PEnvelope)
     }
     
     func videoUnmuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         return try video(.unmuted)
     }
     
     func videoMuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         return try video(.muted)
     }
     
     func rekeyMessage(with protocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         // Sanity Checks
         guard handshakeState == .done else {
@@ -506,23 +611,21 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw GroupCallParticipantError.badParticipantState
+            throw GroupCallError.badParticipantState
         }
         
-        var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
-        p2pEnvelope.rekey = protocolMediaKeys
-        p2pEnvelope.padding = dependencies.groupCallCrypto.padding()
-        
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let serializedp2pEnvelope = try? p2pEnvelope.serializedData() else {
-            fatalError()
+        let p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope.with {
+            $0.padding = dependencies.groupCallCrypto.padding()
+            $0.rekey = protocolMediaKeys
         }
         
-        return try encrypt(serializedp2pEnvelope)
+        let serializedP2PEnvelope = try p2pEnvelope.ownSerializedData()
+        
+        return try encrypt(serializedP2PEnvelope)
     }
     
     private func encrypt(_ data: Data) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         // Sanity Checks
         guard handshakeState == .done else {
@@ -530,13 +633,11 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw GroupCallParticipantError.badParticipantState
+            throw GroupCallError.badParticipantState
         }
         
         var nextPcckNonce = pcck
-        var littleEndianNonceCounter = nonceCounter.littleEndian
-        nextPcckNonce.append(Data(bytes: &littleEndianNonceCounter, count: MemoryLayout<NonceCounterT>.size))
-        nonceCounter += 1
+        nextPcckNonce.append(nonceCounter.next().littleEndianData)
         
         guard let outerData = dependencies.groupCallCrypto.encryptData(
             plaintext: data,
@@ -544,7 +645,7 @@ extension RemoteParticipant {
             secretKey: keyPair.privateKey,
             nonce: nextPcckNonce
         ) else {
-            throw GroupCallParticipantError.encryptionFailure
+            throw GroupCallError.encryptionFailure
         }
         
         return outerData
@@ -555,7 +656,7 @@ extension RemoteParticipant {
 
 extension RemoteParticipant {
     private func subscribeAudio() throws -> Groupcall_ParticipantToSfu.Envelope {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         // Sanity Checks
         guard handshakeState == .done else {
@@ -563,22 +664,24 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw GroupCallParticipantError.badParticipantState
+            throw GroupCallError.badParticipantState
         }
         
-        var subMessage = Groupcall_ParticipantToSfu.ParticipantMicrophone()
-        subMessage.action = .subscribe(Groupcall_ParticipantToSfu.ParticipantMicrophone.Subscribe())
-        subMessage.participantID = participant.id
+        let subMessage = Groupcall_ParticipantToSfu.ParticipantMicrophone.with {
+            $0.participantID = participantID.id
+            $0.subscribe = Groupcall_ParticipantToSfu.ParticipantMicrophone.Subscribe()
+        }
 
-        var outer = Groupcall_ParticipantToSfu.Envelope()
-        outer.requestParticipantMicrophone = subMessage
-        outer.padding = dependencies.groupCallCrypto.padding()
+        let outer = Groupcall_ParticipantToSfu.Envelope.with {
+            $0.padding = dependencies.groupCallCrypto.padding()
+            $0.requestParticipantMicrophone = subMessage
+        }
         
         return outer
     }
     
     func subscribeVideo(subscribe: Bool) throws -> Groupcall_ParticipantToSfu.Envelope {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         // Sanity Checks
         guard handshakeState == .done else {
@@ -586,36 +689,38 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw GroupCallParticipantError.badParticipantState
+            throw GroupCallError.badParticipantState
         }
         
-        var res = Common_Resolution()
-        res.height = GroupCallConfiguration.SubscribeVideo.height
-        res.width = GroupCallConfiguration.SubscribeVideo.width
+        let resolution = Common_Resolution.with {
+            $0.height = GroupCallConfiguration.SubscribeVideo.height
+            $0.width = GroupCallConfiguration.SubscribeVideo.width
+        }
         
         var subMessage = Groupcall_ParticipantToSfu.ParticipantCamera()
-        subMessage.participantID = participant.id
+        subMessage.participantID = participantID.id
         
         if subscribe {
-            var internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe()
-            internalSub.desiredFps = GroupCallConfiguration.SubscribeVideo.fps
-            internalSub.desiredResolution = res
-            subMessage.action = .subscribe(internalSub)
+            let internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe.with {
+                $0.desiredResolution = resolution
+                $0.desiredFps = GroupCallConfiguration.SubscribeVideo.fps
+            }
+            subMessage.subscribe = internalSub
         }
         else {
-            var internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe()
-            subMessage.action = .unsubscribe(Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe())
+            subMessage.unsubscribe = Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe()
         }
         
-        var outer = Groupcall_ParticipantToSfu.Envelope()
-        outer.requestParticipantCamera = subMessage
-        outer.padding = dependencies.groupCallCrypto.padding()
+        let outer = Groupcall_ParticipantToSfu.Envelope.with {
+            $0.padding = dependencies.groupCallCrypto.padding()
+            $0.requestParticipantCamera = subMessage
+        }
 
         return outer
     }
     
     func unsubscribeVideo() throws -> Groupcall_ParticipantToSfu.Envelope {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         // Sanity Checks
         guard handshakeState == .done else {
@@ -623,28 +728,20 @@ extension RemoteParticipant {
             assertionFailure(msg)
             DDLogError(msg)
             
-            throw GroupCallParticipantError.badParticipantState
+            throw GroupCallError.badParticipantState
         }
-        
-        let internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe()
-        
-        var subMessage = Groupcall_ParticipantToSfu.ParticipantCamera()
-        subMessage.participantID = participant.id
-        subMessage.action = .unsubscribe(internalSub)
+                
+        let subMessage = Groupcall_ParticipantToSfu.ParticipantCamera.with {
+            $0.participantID = participantID.id
+            $0.unsubscribe = Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe()
+        }
 
-        var outer = Groupcall_ParticipantToSfu.Envelope()
-        outer.requestParticipantCamera = subMessage
-        outer.padding = dependencies.groupCallCrypto.padding()
+        let outer = Groupcall_ParticipantToSfu.Envelope.with {
+            $0.padding = dependencies.groupCallCrypto.padding()
+            $0.requestParticipantCamera = subMessage
+        }
 
         return outer
-    }
-}
-
-extension RemoteParticipant {
-    func getIdentity() -> ThreemaID? {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
-        
-        return identityRemote
     }
 }
 
@@ -652,17 +749,17 @@ extension RemoteParticipant {
 
 extension RemoteParticipant: RemoteParticipantProtocol {
     func getID() async -> ParticipantID {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
-        return ParticipantID(id: id)
+        return participantID
     }
     
     func setIdentityRemote(id: ThreemaID) {
-        identityRemote = id
+        threemaIdentity = id
     }
     
     func setRemoteContext(_ remoteContext: RemoteContext) {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         self.remoteContext = remoteContext
     }
@@ -671,7 +768,7 @@ extension RemoteParticipant: RemoteParticipantProtocol {
         _ mediaKey: Groupcall_ParticipantToParticipant.MediaKey,
         using decryptor: ThreemaGroupCallFrameCryptoDecryptor
     ) throws {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         guard mediaKey.epoch < UInt8.max else {
             throw GroupCallError.localProtocolViolation
@@ -689,7 +786,7 @@ extension RemoteParticipant: RemoteParticipantProtocol {
     }
     
     func add(decryptor: ThreemaGroupCallFrameCryptoDecryptor) throws {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         guard let mediaKeys else {
             fatalError()
@@ -708,12 +805,12 @@ extension RemoteParticipant: RemoteParticipantProtocol {
         decryptor.attach(
             with: audioContext.receiver,
             mediaType: .audio,
-            tag: "\(participant.id).\(audioContext.mid).opus.receiver"
+            tag: "\(participantID.id).\(audioContext.mid).opus.receiver"
         )
         decryptor.attach(
             with: videoContext.receiver,
             mediaType: .video,
-            tag: "\(participant.id).\(videoContext.mid).vp8.receiver"
+            tag: "\(participantID.id).\(videoContext.mid).vp8.receiver"
         )
         
         for mediaKey in mediaKeys {
@@ -723,7 +820,7 @@ extension RemoteParticipant: RemoteParticipantProtocol {
     }
     
     func addUsingGroupCallActor(decryptor: ThreemaGroupCallFrameCryptoDecryptor) throws {
-        DDLogNotice("[GroupCall] Participant \(id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         try add(decryptor: decryptor)
     }

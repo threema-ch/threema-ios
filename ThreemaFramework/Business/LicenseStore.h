@@ -40,6 +40,8 @@
 
 - (BOOL)isValid;
 
+- (BOOL)isWithinCheckInterval;
+
 - (void)performLicenseCheckWithCompletion:(nonnull void(^)(BOOL success))onCompletion;
 
 /**

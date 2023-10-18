@@ -73,8 +73,11 @@ final class UnreadMessagesStateManager {
         var unreadMessageObjectIDs = [NSManagedObjectID]()
         var newestUnreadMessageObjectID: NSManagedObjectID?
         
-        businessInjector.entityManager.performBlockAndWait {
-            let count = self.businessInjector.unreadMessages.count(for: self.conversation)
+        businessInjector.entityManager.performAndWaitSave {
+            let count = self.businessInjector.unreadMessages.count(
+                for: self.conversation,
+                withPerformBlockAndWait: false
+            )
             if count > 0 {
                 // swiftformat:disable:next all
                 unreadMessageObjectIDs = self.messageFetcher.unreadMessages(limit: count).compactMap({$0.objectID})

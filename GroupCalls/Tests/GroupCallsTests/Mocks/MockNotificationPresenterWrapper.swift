@@ -27,6 +27,6 @@ final class MockNotificationPresenterWrapper { }
 
 extension MockNotificationPresenterWrapper: NotificationPresenterWrapperProtocol {
     func presentGroupCallNotification(type: GroupCalls.GroupCallNotificationType) {
-        // Noop
+        // No-op
     }
 }

@@ -29,16 +29,16 @@ class UnreadMessagesMock: UnreadMessagesProtocol {
     func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool) -> Int {
         0
     }
-
-    func count(for conversation: Conversation) -> Int {
-        0
-    }
-
-    func totalCount() -> Int {
+    
+    func totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>, withPerformBlockAndWait: Bool) -> Int {
         0
     }
     
-    func totalCount(doCalcUnreadMessagesCountOf conversation: Set<Conversation>) -> Int {
+    func count(for conversation: Conversation, withPerformBlockAndWait: Bool) -> Int {
+        0
+    }
+    
+    func totalCount() -> Int {
         0
     }
 }

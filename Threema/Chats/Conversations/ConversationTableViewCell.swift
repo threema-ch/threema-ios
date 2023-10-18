@@ -241,23 +241,17 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     /// Is used to join a group call but does not create a new call
     private lazy var groupCallJoinButton: UIButton = {
         let action = UIAction { [weak self] _ in
-            DDLogVerbose("[GroupCall] Group Call Join Button tapped")
-            Task {
-                guard let groupCallGroupModel = self?.groupCallGroupModel else {
-                    DDLogError("[GroupCall] Could not get GroupCallGroupModel")
-                    return
-                }
-                
-                guard let viewModel = await GlobalGroupCallsManagerSingleton.shared.groupCallManager
-                    .joinCall(in: groupCallGroupModel, intent: .join) else {
-                    DDLogError("[GroupCall] Could not get view model")
-                    return
-                }
-                
-                let groupCallViewController = GlobalGroupCallsManagerSingleton.shared
-                    .groupCallViewController(for: viewModel)
-                self?.navigationController?.present(groupCallViewController, animated: true)
+            
+            guard let group = self?.group else {
+                assertionFailure("Did tap Group Call Join Button but group was nil")
+                return
             }
+            
+            DDLogVerbose("[GroupCall] Group Call Join Button tapped")
+            GlobalGroupCallsManagerSingleton.shared.startGroupCall(
+                in: group,
+                intent: .join
+            )
         }
         
         var buttonConfig = UIButton.Configuration.bordered()
@@ -415,8 +409,13 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 group = businessInjector.groupManager.getGroup(conversation: conversation)
             }
             
-            updateGroupCallModel()
             updateCell()
+            Task { @MainActor in
+                await updateGroupCallButton(
+                    GlobalGroupCallsManagerSingleton.shared.globalGroupCallObserver
+                        .getCurrentItem()
+                )
+            }
         }
     }
     
@@ -680,86 +679,76 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             updateGroupCallButton()
         }
         else {
-            updateGroupCallButton(for: .hidden)
+            hideUpdateGroupCallButton()
         }
         
         addAllObjectObservers()
     }
     
-    private func updateGroupCallModel() {
-        groupCallGroupModel = nil
-        
-        guard let conversation, conversation.isGroup() else {
-            return
-        }
-                
-        guard let group else {
-            assertionFailure("[Group Calls] Could not create GroupCallsThreemaGroupModel for conversation.")
-            return
-        }
-        
-        let groupCreatorID: String = group.groupCreatorIdentity
-        let groupCreatorNickname: String? = group.groupCreatorNickname
-        
-        guard let creatorThreemaID = try? ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname) else {
-            DDLogError("[Group Calls] Unable to create creator Threema ID")
-            return
-        }
-        
-        let groupID = group.groupID
-        let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
-        
-        groupCallGroupModel = GroupCallsThreemaGroupModel(
-            creator: creatorThreemaID,
-            groupID: groupID,
-            groupName: group.name ?? "",
-            members: Set(members)
-        )
-    }
-    
     private func updateGroupCallButton() {
         
         guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            updateGroupCallButton(for: .hidden)
+            hideUpdateGroupCallButton()
             assertionFailure()
             return
         }
         
         Task {
-            guard let groupCallGroupModel,
-                  let viewModel = await GlobalGroupCallsManagerSingleton.shared.viewModel(for: groupCallGroupModel)
-            else {
-                updateGroupCallButton(for: .hidden)
-                return
-            }
-            
-            if let currentItem = await viewModel.buttonBannerObserver.getCurrentItem() {
-                self.updateGroupCallButton(for: currentItem)
-            }
-            
-            groupCallButtonBannerObserver = viewModel.buttonBannerObserver.publisher.pub.sink { [weak self] newState in
-                Task { @MainActor in
-                    self?.updateGroupCallButton(for: newState)
+            groupCallButtonBannerObserver = GlobalGroupCallsManagerSingleton.shared.globalGroupCallObserver.publisher
+                .pub
+                .filter { [weak self] update in
+                    guard let strongSelf = self, let conversation = strongSelf.conversation else {
+                        return false
+                    }
+                    
+                    var isEqual: Bool?
+                    strongSelf.businessInjector.backgroundEntityManager.performBlockAndWait {
+                        guard let tempConversation = strongSelf.businessInjector.backgroundEntityManager.entityFetcher
+                            .existingObject(with: conversation.objectID) as? Conversation else {
+                            return
+                        }
+                        isEqual = tempConversation.isEqualTo(
+                            groupID: update.groupID,
+                            creator: update.creator.id,
+                            myIdentity: strongSelf.businessInjector.myIdentityStore.identity
+                        )
+                    }
+                    
+                    return isEqual ?? false
                 }
-            }
+                .sink { [weak self] update in
+                    Task { @MainActor in
+                        self?.updateGroupCallButton(update)
+                    }
+                }
         }
     }
     
-    private func updateGroupCallButton(for newState: GroupCallButtonBannerState) {
-        switch newState {
-        case let .visible(stateInfo):
-            groupCallJoinButton.isHidden = false
-            let text = stateInfo.joinState == .runningLocal ? BundleUtil
+    private func updateGroupCallButton(_ update: GroupCallBannerButtonUpdate?) {
+        
+        guard let update,
+              update.groupID == conversation?.groupID else {
+            hideUpdateGroupCallButton()
+            return
+        }
+        
+        if update.hideComponent {
+            hideUpdateGroupCallButton()
+        }
+        else {
+            let text = update.joinState == .runningLocal ? BundleUtil
                 .localizedString(forKey: "group_call_open_button_title") : BundleUtil
                 .localizedString(forKey: "group_call_join_button_title")
             groupCallJoinButton.configuration?.title = text
-            
-        case .hidden:
-            groupCallJoinButton.isHidden = true
-            groupCallJoinButton.configuration?.title = BundleUtil
-                .localizedString(forKey: "group_call_join_button_title")
+            groupCallJoinButton.isHidden = false
         }
         updateIconStackView()
+    }
+    
+    private func hideUpdateGroupCallButton() {
+        groupCallJoinButton.isHidden = true
+        groupCallJoinButton.configuration?.title = BundleUtil
+            .localizedString(forKey: "group_call_join_button_title")
     }
     
     private func updateTitleLabel() {
@@ -786,6 +775,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             else {
                 nameLabel.attributedText = NSMutableAttributedString(string: displayName)
             }
+            nameLabel.textColor = Colors.text
+            nameLabel.highlightedTextColor = Colors.text
             return
         }
         
@@ -797,6 +788,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             let attributeString = NSMutableAttributedString(string: displayName)
             attributeString.addAttribute(.strikethroughStyle, value: 2, range: NSMakeRange(0, attributeString.length))
             nameLabel.attributedText = attributeString
+            nameLabel.textColor = Colors.textLight
+            nameLabel.highlightedTextColor = Colors.textLight
         }
         else if let contact = conversation.contact,
                 UserSettings.shared().blacklist.contains(contact.identity) {
@@ -805,6 +798,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         else {
             nameLabel.attributedText = NSMutableAttributedString(string: displayName)
+            nameLabel.textColor = Colors.text
+            nameLabel.highlightedTextColor = Colors.text
         }
     }
     
@@ -1423,20 +1418,18 @@ extension ConversationTableViewCell {
             return
         }
         
-        Task {
-            await GlobalGroupCallsManagerSingleton.shared.groupCallManager
-                .globalGroupCallObserver.publisher.pub
-                // We'd rather filter on some other queue, but the conversation is loaded on the main thread and
-                // checking on
-                // another thread will cause CD concurrency issues.
-                .receive(on: DispatchQueue.main)
-                .filter { [weak self] in self?.currentConversationIsEqualTo(group: $0.groupID, $0.creator.id) ?? false }
-                .debounce(for: .milliseconds(Configuration.debounceInMilliseconds), scheduler: DispatchQueue.main)
-                .sink(receiveValue: { [weak self] _ in
-                    DDLogVerbose("[GroupCall] Update Conversation Cell for Call")
-                    self?.updateGroupCallButton()
-                }).store(in: &cancellables)
-        }
+        GlobalGroupCallsManagerSingleton.shared.globalGroupCallObserver.publisher.pub
+            // We'd rather filter on some other queue, but the conversation is loaded on the main thread and
+            // checking on
+            // another thread will cause CD concurrency issues.
+            .receive(on: DispatchQueue.main)
+            .filter { [weak self] in self?.currentConversationIsEqualTo(group: $0.groupID, $0.creator.id) ?? false
+            }
+            .debounce(for: .milliseconds(Configuration.debounceInMilliseconds), scheduler: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] _ in
+                DDLogVerbose("[GroupCall] Update Conversation Cell for Call")
+                self?.updateGroupCallButton()
+            }).store(in: &cancellables)
     }
     
     /// Checks whether the current conversation is the group conversation with given groupID and creator

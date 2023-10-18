@@ -31,7 +31,7 @@
 "recent" = "最近";
 "work" = "仕事";
 "creator" = "作成者";
-"%d members" = "%d メンバー";
+"%d members" = "%d名 メンバー";
 
 "ok" = "OK";
 
@@ -85,7 +85,7 @@
 
 "testflight_feedback_viewtitle" = "ベータ•フィードバック";
 "testflight_feedback_title" = "あなたのベータ•フィードバックを私たちに送信してください！";
-"testflight_feedback_description" = "Threemaのベータ版をテストしていただき、ありがとうございます。しかし、テストは全体の半分に過ぎず、残りの半分はフィードバックを提供することです。バグや不具合が発生したら、ぜひお知らせください。その場合は「設定」→「ベータ版フィードバック」でベータ版トークを開いてください。";
+"testflight_feedback_description" = "Threemaのベータ版をテストしていただき、ありがとうございます。しかし、テストは全体の半分に過ぎず、残りの半分はフィードバックを提供することです。バグや不具合が発生したら、ぜひお知らせください。その場合は\"設定\"→\"ベータ版フィードバック\"でベータ版トークを開いてください。";
 
 "notification.threemaweb.connect.title" = "デスクトップ／ウェブ";
 "notification.threemaweb.connect.body" = "ここをタップすると、デスクトップアプリ／ウェブクライアントとの接続が再確立されます。";

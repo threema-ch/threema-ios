@@ -23,11 +23,13 @@ import Foundation
 @preconcurrency import WebRTC
 
 protocol GroupCallMessageCryptoProtocol: Sendable {
+    var symmetricNonceLength: Int32 { get }
+    
     func symmetricDecryptByGCHK(_ cipherText: Data, nonce: Data) -> Data?
     func symmetricEncryptByGCHK(_ plainText: Data, nonce: Data) -> Data?
     
-    func symmetricDecryptBYGCNHAK(sharedSecret: Data, cipherText: Data, nonce: Data) throws -> Data?
-    func symmetricEncryptBYGCNHAK(sharedSecret: Data, plainText: Data, nonce: Data) throws -> Data?
+    func symmetricDecryptByGCNHAK(sharedSecret: Data, cipherText: Data, nonce: Data) throws -> Data?
+    func symmetricEncryptByGCNHAK(sharedSecret: Data, plainText: Data, nonce: Data) throws -> Data?
 }
 
 protocol GroupCallFrameCryptoAdapterProtocol: Sendable {
@@ -72,7 +74,7 @@ struct GroupCallBaseState {
         
         self.callID = try GroupCallID(group: group, callStartData: groupCallStartData, dependencies: dependencies)
         
-        self.keys = try GroupCallKeys(gck: groupCallStartData.gck, dependencies: dependencies)
+        self.keys = try GroupCallKeys(gck: groupCallStartData.gck)
         
         self.frameCryptoContext = ThreemaGroupCallFrameCryptoContext(gckh: keys.gckh)
     }
@@ -117,11 +119,11 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
     @GlobalGroupCallActor
     func addDecryptor(to participant: RemoteParticipant) async throws {
         try frameCryptoContextLock.withLock {
-            guard participant.id < UInt16.max else {
+            guard participant.participantID.id < UInt16.max else {
                 throw GroupCallError.localProtocolViolation
             }
             
-            let uint16RemoteParticipantID = UInt16(participant.id)
+            let uint16RemoteParticipantID = UInt16(participant.participantID.id)
             
             let decryptor = frameCryptoContext.addDecryptor(for: uint16RemoteParticipantID)
             try participant.addUsingGroupCallActor(decryptor: decryptor)
@@ -151,6 +153,10 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
 // MARK: - GroupCallMessageCryptoProtocol
 
 extension GroupCallBaseState: GroupCallMessageCryptoProtocol {
+    var symmetricNonceLength: Int32 {
+        dependencies.groupCallCrypto.symmetricNonceLength
+    }
+    
     func symmetricDecryptByGCHK(_ cipherText: Data, nonce: Data) -> Data? {
         dependencies.groupCallCrypto.symmetricDecryptData(
             cipherText,
@@ -191,7 +197,7 @@ extension GroupCallBaseState: GroupCallMessageCryptoProtocol {
         )
     }
     
-    func symmetricEncryptBYGCNHAK(sharedSecret: Data, plainText: Data, nonce: Data) throws -> Data? {
+    func symmetricEncryptByGCNHAK(sharedSecret: Data, plainText: Data, nonce: Data) throws -> Data? {
         do {
             let gcnhak = try keys.deriveGCNHAK(from: sharedSecret)
             return symmetricEncrypt(by: gcnhak, plainText: plainText, nonce: nonce)
@@ -205,7 +211,7 @@ extension GroupCallBaseState: GroupCallMessageCryptoProtocol {
         }
     }
     
-    func symmetricDecryptBYGCNHAK(sharedSecret: Data, cipherText: Data, nonce: Data) throws -> Data? {
+    func symmetricDecryptByGCNHAK(sharedSecret: Data, cipherText: Data, nonce: Data) throws -> Data? {
         do {
             let gcnhak = try keys.deriveGCNHAK(from: sharedSecret)
             return symmetricDecrypt(by: gcnhak, cipherText: cipherText, nonce: nonce)

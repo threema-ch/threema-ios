@@ -21,7 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-/// A GroupCallID as described by the protocol
+/// A Group Call ID as described by the protocol
 struct GroupCallID: Sendable {
     // MARK: - Internal Properties
 
@@ -58,7 +58,7 @@ struct GroupCallID: Sendable {
         
         let inputs = [creatorID, groupID, protocolVersion, gck, baseURL]
         
-        self.bytes = try GroupCallKeys.deriveCallID(from: inputs, dependencies: dependencies)
+        self.bytes = try GroupCallKeys.deriveCallID(from: inputs)
     }
 }
 

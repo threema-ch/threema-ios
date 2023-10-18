@@ -44,14 +44,16 @@ public class GroupCallViewController: UIViewController {
     private lazy var collectionView: GroupCallCollectionView = {
         let collectionView = GroupCallCollectionView(groupCallViewModel: viewModel)
         
-        collectionView.contentInsetAdjustmentBehavior = .never // TODO: (IOS-4049) Verify insets
         collectionView.translatesAutoresizingMaskIntoConstraints = false
+        
         return collectionView
     }()
     
     private lazy var groupCallNavigationBar: GroupCallNavigationBar = {
-        let navigationBar = GroupCallNavigationBar(groupCallViewControllerDelegate: self)
+        let navigationBar = GroupCallNavigationBar(groupCallViewControllerDelegate: self, dependencies: dependencies)
+        
         navigationBar.translatesAutoresizingMaskIntoConstraints = false
+        
         return navigationBar
     }()
     
@@ -112,14 +114,19 @@ public class GroupCallViewController: UIViewController {
         NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
+    override public func accessibilityPerformMagicTap() -> Bool {
+        toolbar.magicTapToggle()
+        return true
+    }
+    
     // MARK: - Configuration
     
     private func configureViewController() {
         hidesBottomBarWhenPushed = true
-        modalPresentationStyle = .overFullScreen // TODO: (IOS-4049) Whats the difference to `.fullScreen`?
+        modalPresentationStyle = .fullScreen
         
-        // TODO: (IOS-4049) Should we adapt dark mode for all GC views?
-        // overrideUserInterfaceStyle = .dark
+        // TODO: (IOS-4049) Fix light mode for all users
+        overrideUserInterfaceStyle = .light
     }
     
     private func configureSubviews() {
@@ -141,6 +148,13 @@ public class GroupCallViewController: UIViewController {
             toolbar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             toolbar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
+        
+        var accessibilityElements = [Any]()
+        accessibilityElements.append(contentsOf: groupCallNavigationBar.accessibilityElements())
+        accessibilityElements.append(contentsOf: toolbar.accessibilityElements())
+        accessibilityElements.append(collectionView)
+        
+        view.accessibilityElements = [accessibilityElements]
     }
     
     private func addGestureRecognizer() {
@@ -150,6 +164,10 @@ public class GroupCallViewController: UIViewController {
     
     override public var prefersHomeIndicatorAutoHidden: Bool {
         true
+    }
+    
+    override public var preferredStatusBarStyle: UIStatusBarStyle {
+        .lightContent
     }
     
     // MARK: - Private Functions
@@ -167,6 +185,35 @@ public class GroupCallViewController: UIViewController {
             self.updateCollectionViewLayout()
         }
     }
+    
+    @MainActor
+    private func showRecordPermissionAlert(title: String, message: String) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(
+            title: dependencies.groupCallBundleUtil.localizedString(for: "alert_no_access_open_settings"),
+            style: .default,
+            handler: { _ in
+                guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+                    return
+                }
+                
+                UIApplication.shared.open(settingsURL)
+            }
+        ))
+        
+        alert.addAction(UIAlertAction(
+            title: dependencies.groupCallBundleUtil.localizedString(for: "cancel"),
+            style: .cancel,
+            handler: nil
+        ))
+        
+        present(alert, animated: true)
+    }
 }
 
 // MARK: - GroupCallViewControllerDelegate
@@ -174,6 +221,22 @@ public class GroupCallViewController: UIViewController {
 extension GroupCallViewController: GroupCallViewControllerDelegate {
     func dismiss() {
         dismiss(animated: true)
+    }
+    
+    @MainActor
+    func showRecordAudioPermissionAlert() {
+        showRecordPermissionAlert(
+            title: dependencies.groupCallBundleUtil.localizedString(for: "alert_no_access_title_microphone"),
+            message: dependencies.groupCallBundleUtil.localizedString(for: "alert_no_access_message_microphone")
+        )
+    }
+    
+    @MainActor
+    func showRecordVideoPermissionAlert() {
+        showRecordPermissionAlert(
+            title: dependencies.groupCallBundleUtil.localizedString(for: "alert_no_access_title_camera"),
+            message: dependencies.groupCallBundleUtil.localizedString(for: "alert_no_access_message_camera")
+        )
     }
 }
 
@@ -190,9 +253,9 @@ extension GroupCallViewController: GroupCallViewModelDelegate {
         }
     }
     
-    func dismissGroupCallView() {
+    func dismissGroupCallView(animated: Bool) {
         Task { @MainActor in
-            self.dismiss(animated: true)
+            self.dismiss(animated: animated)
         }
     }
 }

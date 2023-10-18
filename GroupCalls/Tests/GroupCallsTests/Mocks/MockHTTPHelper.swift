@@ -42,4 +42,8 @@ final class MockHTTPHelper: GroupCallsSFUTokenFetchAdapterProtocol {
     func sfuCredentials() async throws -> GroupCalls.SFUToken {
         sfuToken
     }
+    
+    func refreshTokenWithTimeout(_ timeout: TimeInterval) async throws -> GroupCalls.SFUToken? {
+        sfuToken
+    }
 }

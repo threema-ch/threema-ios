@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import ThreemaFramework
@@ -131,13 +132,7 @@ import UIKit
             }
             // Group Calls
             else if NavigationBarPromptHandler.isGroupCallActive {
-                guard let groupCallViewNavigationController = await GlobalGroupCallsManagerSingleton.shared
-                    .getViewControllerForCurrentlyJoinedGroupCall() else {
-                    // TODO:
-                    return
-                }
-                AppDelegate.shared().currentTopViewController()
-                    .present(groupCallViewNavigationController, animated: true)
+                GlobalGroupCallsManagerSingleton.shared.showGroupCallViewController()
             }
         }
     }

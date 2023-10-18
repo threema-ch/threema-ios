@@ -414,22 +414,38 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testEncodeDecodeWithAllTaskTypes() throws {
-        var expectedContact: ContactEntity!
-        var expectedConversation: Conversation!
-        databasePreparer.save {
-            expectedContact = databasePreparer.createContact(
+        let expectedContactEntity = databasePreparer.save {
+            let expectedContactEntity = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
-            expectedConversation = databasePreparer.createConversation(
+            databasePreparer.createConversation(
                 typing: false,
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                conversation.contact = expectedContact
+                conversation.contact = expectedContactEntity
             }
+
+            return expectedContactEntity
         }
+
+        let (_, groupEntity, conversation) = try databasePreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "ADMIN007",
+            members: ["MEMBER01", "MEMBER02", "MEMBER03"]
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+
+        let expectedFromMember = "MEMBER01"
+        let expectedToMembers = ["MEMBER02", "MEMBER03"]
 
         let tq = TaskQueue(
             queueType: .outgoing,
@@ -440,7 +456,6 @@ class TaskQueueTests: XCTestCase {
                 TaskDefinitionSendBaseMessage.self,
                 TaskDefinitionSendDeliveryReceiptsMessage.self,
                 TaskDefinitionSendLocationMessage.self,
-                TaskDefinitionSendVideoMessage.self,
                 TaskDefinitionSendGroupCreateMessage.self,
                 TaskDefinitionSendGroupDeletePhotoMessage.self,
                 TaskDefinitionSendGroupLeaveMessage.self,
@@ -459,39 +474,9 @@ class TaskQueueTests: XCTestCase {
         )
 
         // Add TaskDefinitionGroupDissolve
-        let expectedGroupDissolveGroupID = MockData.generateGroupID()
-        let expectedGroupDissolveGroupCreator = "CREATOR01"
         let expectedGroupDissolveToMember = "MEMBER07"
 
-        var groupEntity: GroupEntity!
-        var conversation: Conversation!
-        databasePreparer.save {
-            groupEntity = databasePreparer.createGroupEntity(
-                groupID: expectedGroupDissolveGroupID,
-                groupCreator: expectedGroupDissolveGroupCreator
-            )
-            conversation = databasePreparer.createConversation(
-                typing: false,
-                unreadMessageCount: 0,
-                visibility: .default,
-                complete: nil
-            )
-            conversation.contact = databasePreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: expectedGroupDissolveGroupCreator,
-                verificationLevel: 0
-            )
-        }
-
-        let group = Group(
-            myIdentityStore: frameworkInjectorMock.myIdentityStore,
-            userSettings: frameworkInjectorMock.userSettings,
-            groupEntity: groupEntity,
-            conversation: conversation,
-            lastSyncRequest: nil
-        )
-
-        let taskGroupDissolve = TaskDefinitionGroupDissolve(group: group)
+        let taskGroupDissolve = TaskDefinitionGroupDissolve(group: expectedGroup)
         taskGroupDissolve.toMembers = [expectedGroupDissolveToMember]
         try! tq.enqueue(task: taskGroupDissolve, completionHandler: nil)
 
@@ -502,63 +487,35 @@ class TaskQueueTests: XCTestCase {
         let expectedAbstractMessage = BoxTextMessage()
         expectedAbstractMessage.messageID = expectedAbstractMessageID
         expectedAbstractMessage.text = expectedAbstractText
-        expectedAbstractMessage.toIdentity = "TESTERID"
+        expectedAbstractMessage.toIdentity = "ECHOECHO"
 
         let taskAbstract = TaskDefinitionSendAbstractMessage(message: expectedAbstractMessage)
         try! tq.enqueue(task: taskAbstract, completionHandler: nil)
 
         // Add TaskDefinitionSendBallotVoteMessage
         let expectedBallotVoteBallotID = MockData.generateBallotID()
-        var expectedBallotVoteBallot: Ballot!
-        databasePreparer.save {
-            expectedBallotVoteBallot = databasePreparer.createBallotMessage(
-                conversation: expectedConversation,
-                ballotID: expectedBallotVoteBallotID
-            )
-        }
 
         let taskBallotVote = TaskDefinitionSendBallotVoteMessage(
-            ballot: expectedBallotVoteBallot,
+            ballotID: expectedBallotVoteBallotID,
+            receiverIdentity: expectedContactEntity.identity,
             group: nil,
             sendContactProfilePicture: false
         )
         try! tq.enqueue(task: taskBallotVote, completionHandler: nil)
 
         // Add TaskDefinitionSendBaseMessage
-        let expectedBaseGroupID = MockData.generateGroupID()
-        let expectedBaseGroupCreatorIdentity = "ADMIN007"
-        let expectedBaseGroupName = "Test group name"
-        let expectedBaseAllGroupMembers: Set<String> = ["MEMBER01", "MEMBER01", "MEMBER01"]
-        let expectedBaseIsNoteGroup = false
+        let expectedBaseMessageGroupName = "Test group name"
+        let expectedBaseMessageIsNoteGroup = false
         let expectedBaseMessageID = MockData.generateMessageID()
-        var expectedBaseMessage: TextMessage!
-        databasePreparer.save {
-            expectedBaseMessage = databasePreparer.createTextMessage(
-                conversation: expectedConversation,
-                text: "nil",
-                date: Date(),
-                delivered: false,
-                id: expectedBaseMessageID,
-                isOwn: true,
-                read: false,
-                sent: false,
-                userack: false,
-                sender: expectedContact,
-                remoteSentDate: nil
-            )
-        }
 
         let taskBase = TaskDefinitionSendBaseMessage(
-            message: expectedBaseMessage,
+            messageID: expectedBaseMessageID,
             receiverIdentity: nil,
-            group: nil,
+            group: expectedGroup,
             sendContactProfilePicture: false
         )
-        taskBase.groupID = expectedBaseGroupID
-        taskBase.groupCreatorIdentity = expectedBaseGroupCreatorIdentity
-        taskBase.groupName = expectedBaseGroupName
-        taskBase.allGroupMembers = expectedBaseAllGroupMembers
-        taskBase.isNoteGroup = expectedBaseIsNoteGroup
+        taskBase.groupName = expectedBaseMessageGroupName
+        taskBase.isNoteGroup = expectedBaseMessageIsNoteGroup
         try! tq.enqueue(task: taskBase, completionHandler: nil)
 
         // Add TaskDefinitionSendGroupDeliveryReceiptMessage
@@ -588,97 +545,46 @@ class TaskQueueTests: XCTestCase {
         // Add TaskDefinitionSendLocationMessage
         let expectedLocationMessageID = MockData.generateMessageID()
         let expectedLocationPoiAddress = "poi address"
-        var expectedLocationMessage: LocationMessage!
-        let expectedLocationMessageReceiverIdentity = "ECHOECHO"
-        databasePreparer.save {
-            expectedLocationMessage = databasePreparer.createLocationMessage(
-                conversation: expectedConversation,
-                accuracy: 0.1,
-                latitude: 0.1,
-                longitude: 0.1,
-                poiName: "poi name",
-                id: expectedLocationMessageID,
-                sender: expectedContact
-            )
-        }
 
         let taskLocation = TaskDefinitionSendLocationMessage(
             poiAddress: expectedLocationPoiAddress,
-            message: expectedLocationMessage,
-            receiverIdentity: expectedLocationMessageReceiverIdentity,
+            messageID: expectedLocationMessageID,
+            receiverIdentity: expectedContactEntity.identity,
             group: nil,
             sendContactProfilePicture: false
         )
         try! tq.enqueue(task: taskLocation, completionHandler: nil)
 
-        // Add TaskDefinitionSendVideoMessage
-        let expectedVideoMessageID = MockData.generateMessageID()
-        var expectedVideoMessage: VideoMessageEntity!
-        let expectedVideoMessageReceiverIdentity = "ECHOECHO"
-        databasePreparer.save {
-            let imageData = databasePreparer.createImageData(data: Data([1]), height: 1, width: 1)
-            let videoData = databasePreparer.createVideoData(data: Data([2]))
-            expectedVideoMessage = databasePreparer.createVideoMessageEntity(
-                conversation: expectedConversation,
-                thumbnail: imageData,
-                videoData: videoData,
-                date: Date(),
-                complete: { msg in
-                    msg.delivered = 1
-                    msg.id = expectedVideoMessageID
-                    msg.isOwn = true
-                    msg.read = true
-                    msg.sent = true
-                    msg.userack = false
-                    msg.duration = 10
-                    msg.remoteSentDate = Date()
-                }
-            )
-        }
-
-        let taskVideo = TaskDefinitionSendVideoMessage(
-            thumbnailBlobID: nil,
-            thumbnailSize: nil,
-            message: expectedVideoMessage,
-            receiverIdentity: expectedVideoMessageReceiverIdentity,
-            group: nil,
-            sendContactProfilePicture: false
-        )
-        try! tq.enqueue(task: taskVideo, completionHandler: nil)
-
         // Add TaskDefinitionSendGroupCreateMessage
-        let expectedMembers = ["TESTER01", "TESTER03"]
+        let expectedGroupCreateMessageMembers = ["TESTER01", "TESTER03"]
 
-        let taskGroupCreate = TaskDefinitionSendGroupCreateMessage(
-            group: nil,
-            to: expectedMembers,
-            members: Set(expectedMembers),
+        let taskGroupCreateMessage = TaskDefinitionSendGroupCreateMessage(
+            group: expectedGroup,
+            to: expectedGroupCreateMessageMembers,
+            members: Set(expectedGroupCreateMessageMembers),
             sendContactProfilePicture: false
         )
 
-        try! tq.enqueue(task: taskGroupCreate, completionHandler: nil)
+        try! tq.enqueue(task: taskGroupCreateMessage, completionHandler: nil)
 
         // Add TaskDefinitionSendGroupLeaveMessage
-        let expectedFromMember = "TESTER01"
-        let expectedToMembers = ["TESTER02", "TESTER03"]
-
-        let taskGroupLeave = TaskDefinitionSendGroupLeaveMessage(sendContactProfilePicture: false)
-        taskGroupLeave.fromMember = expectedFromMember
-        taskGroupLeave.toMembers = expectedToMembers
-        try! tq.enqueue(task: taskGroupLeave, completionHandler: nil)
+        let taskGroupLeaveMessage = TaskDefinitionSendGroupLeaveMessage(sendContactProfilePicture: false)
+        taskGroupLeaveMessage.fromMember = expectedFromMember
+        taskGroupLeaveMessage.toMembers = expectedToMembers
+        try! tq.enqueue(task: taskGroupLeaveMessage, completionHandler: nil)
 
         // Add TaskDefinitionSendGroupRenameMessage
         let expectedGroupRenameName = "group name 123!!!"
 
-        let taskGroupRename = TaskDefinitionSendGroupRenameMessage(
-            group: nil,
+        let taskGroupRenameMessage = TaskDefinitionSendGroupRenameMessage(
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             newName: expectedGroupRenameName,
             sendContactProfilePicture: false
         )
 
-        try! tq.enqueue(task: taskGroupRename, completionHandler: nil)
+        try! tq.enqueue(task: taskGroupRenameMessage, completionHandler: nil)
         
         // Add TaskDefinitionSendGroupSetPhotoMessage
         let expectedGroupSetPhotoSize: UInt32 = 10
@@ -686,7 +592,7 @@ class TaskQueueTests: XCTestCase {
         let expectedGroupSetPhotoEncryptionKey = MockData.generateBlobEncryptionKey()
         
         let taskGroupSetPhoto = TaskDefinitionSendGroupSetPhotoMessage(
-            group: nil,
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             size: expectedGroupSetPhotoSize,
@@ -699,7 +605,7 @@ class TaskQueueTests: XCTestCase {
         
         // Add TaskDefinitionSendGroupDeletePhotoMessage
         let taskGroupDeletePhoto = TaskDefinitionSendGroupDeletePhotoMessage(
-            group: nil,
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             sendContactProfilePicture: false
@@ -715,7 +621,7 @@ class TaskQueueTests: XCTestCase {
         ]
         
         let taskGroupDeliveryReceipt = TaskDefinitionSendGroupDeliveryReceiptsMessage(
-            group: nil,
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             receiptType: expectedGroupReceiptType,
@@ -804,14 +710,14 @@ class TaskQueueTests: XCTestCase {
         )
         try! tq.enqueue(task: taskReceiveReflectedMessage, completionHandler: nil)
         
-        let expectedItemCount = 19
+        let expectedItemCount = 18
         guard tq.list.count == expectedItemCount else {
             XCTFail("TaskList has wrong number of items. Expected \(expectedItemCount) but was \(tq.list.count)")
             return
         }
 
         // Check none-persistent tasks
-        if let task = tq.list[14].taskDefinition as? TaskDefinitionProfileSync {
+        if let task = tq.list[13].taskDefinition as? TaskDefinitionProfileSync {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertEqual(task.scope, .userProfileSync)
             XCTAssertEqual(task.profileImage, profileImage)
@@ -826,7 +732,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[16].taskDefinition as? TaskDefinitionSettingsSync {
+        if let task = tq.list[15].taskDefinition as? TaskDefinitionSettingsSync {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertEqual(task.scope, .settingsSync)
             XCTAssertEqual(task.syncSettings.contactSyncPolicy, .sync)
@@ -843,7 +749,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[17].taskDefinition as? TaskDefinitionReceiveMessage {
+        if let task = tq.list[16].taskDefinition as? TaskDefinitionReceiveMessage {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertNotNil(task.message)
             XCTAssertEqual(task.receivedAfterInitialQueueSend, true)
@@ -855,7 +761,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[18].taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+        if let task = tq.list[17].taskDefinition as? TaskDefinitionReceiveReflectedMessage {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertNotNil(task.reflectedEnvelope)
             XCTAssertEqual(task.receivedAfterInitialQueueSend, false)
@@ -881,7 +787,7 @@ class TaskQueueTests: XCTestCase {
         tq.decode(data)
 
         // Check persistent tasks
-        let expectedItemCountAfterDecode = 15
+        let expectedItemCountAfterDecode = 14
         guard tq.list.count == expectedItemCountAfterDecode else {
             XCTFail(
                 "TaskList has wrong number of items. Expected \(expectedItemCountAfterDecode) but was \(tq.list.count)"
@@ -890,8 +796,9 @@ class TaskQueueTests: XCTestCase {
         }
 
         if let task = tq.list[0].taskDefinition as? TaskDefinitionGroupDissolve {
-            XCTAssertEqual(expectedGroupDissolveGroupID, task.groupID)
-            XCTAssertEqual(expectedGroupDissolveGroupCreator, task.groupCreatorIdentity)
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertEqual(expectedGroup.groupID, task.groupID)
+            XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(1, task.toMembers.count)
             XCTAssertTrue(task.toMembers.contains(expectedGroupDissolveToMember))
             XCTAssertTrue(task.retry)
@@ -911,6 +818,9 @@ class TaskQueueTests: XCTestCase {
         }
 
         if let task = tq.list[2].taskDefinition as? TaskDefinitionSendBallotVoteMessage {
+            XCTAssertEqual(expectedContactEntity.identity, task.receiverIdentity)
+            XCTAssertNil(task.groupID)
+            XCTAssertNil(task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedBallotVoteBallotID.elementsEqual(task.ballotID))
             XCTAssertTrue(task.retry)
@@ -920,12 +830,13 @@ class TaskQueueTests: XCTestCase {
         }
 
         if let task = tq.list[3].taskDefinition as? TaskDefinitionSendBaseMessage {
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertEqual(expectedGroup.groupID, task.groupID)
+            XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
-            XCTAssertEqual(expectedBaseGroupID, try XCTUnwrap(task.groupID))
-            XCTAssertEqual(expectedBaseGroupCreatorIdentity, task.groupCreatorIdentity)
-            XCTAssertEqual(expectedBaseGroupName, task.groupName)
-            XCTAssertEqual(expectedBaseAllGroupMembers, try XCTUnwrap(task.allGroupMembers))
-            XCTAssertEqual(expectedBaseIsNoteGroup, task.isNoteGroup)
+            XCTAssertEqual(expectedBaseMessageGroupName, task.groupName)
+            XCTAssertEqual(expectedGroup.allMemberIdentities, try XCTUnwrap(task.allGroupMembers))
+            XCTAssertEqual(expectedBaseMessageIsNoteGroup, task.isNoteGroup)
             XCTAssertTrue(expectedBaseMessageID.elementsEqual(task.messageID))
             XCTAssertTrue(task.retry)
         }
@@ -934,6 +845,9 @@ class TaskQueueTests: XCTestCase {
         }
 
         if let task = tq.list[4].taskDefinition as? TaskDefinitionSendDeliveryReceiptsMessage {
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertNil(task.groupID)
+            XCTAssertNil(task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedReceiptFromIdentity, task.fromIdentity)
             XCTAssertEqual(expectedReceiptToIdentity, task.toIdentity)
@@ -947,10 +861,12 @@ class TaskQueueTests: XCTestCase {
         }
 
         if let task = tq.list[5].taskDefinition as? TaskDefinitionSendLocationMessage {
+            XCTAssertEqual(expectedContactEntity.identity, task.receiverIdentity)
+            XCTAssertNil(task.groupID)
+            XCTAssertNil(task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedLocationMessageID.elementsEqual(task.messageID))
             XCTAssertEqual(expectedLocationPoiAddress, task.poiAddress)
-            XCTAssertEqual(expectedLocationMessageReceiverIdentity, task.receiverIdentity)
             XCTAssertNil(task.groupID)
             XCTAssertTrue(task.retry)
         }
@@ -958,27 +874,22 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[6].taskDefinition as? TaskDefinitionSendVideoMessage {
+        if let task = tq.list[6].taskDefinition as? TaskDefinitionSendGroupCreateMessage {
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertEqual(expectedGroup.groupID, task.groupID)
+            XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
-            XCTAssertTrue(expectedVideoMessageID.elementsEqual(task.messageID))
-            XCTAssertEqual(expectedVideoMessageReceiverIdentity, task.receiverIdentity)
+            XCTAssertEqual(Set(expectedGroupCreateMessageMembers), task.members)
+            XCTAssertTrue(task.retry)
+        }
+        else {
+            XCTFail()
+        }
+
+        if let task = tq.list[7].taskDefinition as? TaskDefinitionSendGroupLeaveMessage {
+            XCTAssertNil(task.receiverIdentity)
             XCTAssertNil(task.groupID)
-            XCTAssertTrue(task.retry)
-        }
-        else {
-            XCTFail()
-        }
-
-        if let task = tq.list[7].taskDefinition as? TaskDefinitionSendGroupCreateMessage {
-            XCTAssertEqual(.interrupted, task.state)
-            XCTAssertEqual(Set(expectedMembers), task.members)
-            XCTAssertTrue(task.retry)
-        }
-        else {
-            XCTFail()
-        }
-
-        if let task = tq.list[8].taskDefinition as? TaskDefinitionSendGroupLeaveMessage {
+            XCTAssertNil(task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
@@ -989,7 +900,10 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[9].taskDefinition as? TaskDefinitionSendGroupRenameMessage {
+        if let task = tq.list[8].taskDefinition as? TaskDefinitionSendGroupRenameMessage {
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertEqual(expectedGroup.groupID, task.groupID)
+            XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
@@ -1000,7 +914,10 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[10].taskDefinition as? TaskDefinitionSendGroupSetPhotoMessage {
+        if let task = tq.list[9].taskDefinition as? TaskDefinitionSendGroupSetPhotoMessage {
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertEqual(expectedGroup.groupID, task.groupID)
+            XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
@@ -1013,7 +930,10 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
         
-        if let task = tq.list[11].taskDefinition as? TaskDefinitionSendGroupDeletePhotoMessage {
+        if let task = tq.list[10].taskDefinition as? TaskDefinitionSendGroupDeletePhotoMessage {
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertEqual(expectedGroup.groupID, task.groupID)
+            XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
@@ -1023,7 +943,10 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
         
-        if let task = tq.list[12].taskDefinition as? TaskDefinitionSendGroupDeliveryReceiptsMessage {
+        if let task = tq.list[11].taskDefinition as? TaskDefinitionSendGroupDeliveryReceiptsMessage {
+            XCTAssertNil(task.receiverIdentity)
+            XCTAssertEqual(expectedGroup.groupID, task.groupID)
+            XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
@@ -1035,7 +958,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[13].taskDefinition as? TaskDefinitionDeleteContactSync {
+        if let task = tq.list[12].taskDefinition as? TaskDefinitionDeleteContactSync {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.scope, .contactSync)
             XCTAssertEqual(task.contacts, deleteableContacts)
@@ -1045,7 +968,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[14].taskDefinition as? TaskDefinitionUpdateContactSync {
+        if let task = tq.list[13].taskDefinition as? TaskDefinitionUpdateContactSync {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.scope, .contactSync)
             XCTAssertEqual(task.deltaSyncContacts.count, updateableContacts.count)

@@ -120,7 +120,36 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
         scrollView.gestureRecognizers?.removeAll()
     }
     
-    func updateImageTo(data: Data) {
+    func updateImageTo(data: Data, isGIF: Bool = false) {
+        guard !isGIF else {
+            return setupGIF(data: data)
+        }
+        
+        guard let image = UIImage(data: data) else {
+            return
+        }
+        
+        imageView.image = image
+        //
+        // Setup imageview
+        imageView.contentMode = .scaleAspectFit
+        
+        // Show imageview and hide loading view
+        imageView.isHidden = false
+        scrollView.isHidden = false
+        loadingView.isHidden = true
+        activityIndicator.stopAnimating()
+        loadingText.isHidden = true
+        
+        gifPlayImageView.image = nil
+        
+        imageSize = image.size
+        setupZooming(image.size)
+        
+        centerImage()
+    }
+       
+    private func setupGIF(data: Data) {
         // Setup gif image view
         guard let image = FLAnimatedImage(animatedGIFData: data) else {
             DDLogError("Could not create gif from data")
@@ -167,27 +196,6 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
         tapGR.numberOfTapsRequired = 1
         animatedImageView!.isUserInteractionEnabled = true
         tapView.addGestureRecognizer(tapGR)
-    }
-    
-    func updateImageTo(image: UIImage) {
-        imageView.image = image
-        //
-        // Setup imageview
-        imageView.contentMode = .scaleAspectFit
-        
-        // Show imageview and hide loading view
-        imageView.isHidden = false
-        scrollView.isHidden = false
-        loadingView.isHidden = true
-        activityIndicator.stopAnimating()
-        loadingText.isHidden = true
-        
-        gifPlayImageView.image = nil
-        
-        imageSize = image.size
-        setupZooming(image.size)
-        
-        centerImage()
     }
     
     private func setupZooming(_ imageSize: CGSize) {

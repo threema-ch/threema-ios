@@ -44,29 +44,66 @@ extension GroupCallErrorProtocol {
 
 public enum GroupCallError: Error, GroupCallErrorProtocol {
 
+    case joinError
     case creationError
     case groupNotFound
+    case invalidThreemaIDLength
+    case viewModelRetrieveError
+    case sendStartMessageError
+    
+    case keyDerivationError
     
     case keyRatchetError
     case frameCryptoFailure
     
     case localProtocolViolation
+    case promotionError
     
     case badMessage
+    case badParticipantState
     case firstMessageNotReceived
-    case tokenFailure
+    case invalidToken
+    case unsupportedMessage
     
     case serializationFailure
     case encryptionFailure
     case decryptionFailure
-}
-
-public enum GroupCallParticipantError: Error, GroupCallErrorProtocol {
-    case encryptionFailure
-    case badParticipantState
+    
+    case streamCreationError
+    case captureError
+    
+    public var isFatal: Bool {
+        switch self {
+        case .joinError, .creationError, .groupNotFound, .invalidThreemaIDLength, .viewModelRetrieveError,
+             .sendStartMessageError,
+             .keyDerivationError,
+             .keyRatchetError, .frameCryptoFailure,
+             .localProtocolViolation, .promotionError,
+             .badMessage, .badParticipantState, .firstMessageNotReceived, .invalidToken, .unsupportedMessage,
+             .serializationFailure, .encryptionFailure, .decryptionFailure,
+             .streamCreationError:
+            return true
+        case .captureError:
+            return false
+        }
+    }
 }
 
 public enum GroupCallViewModelError: Error, GroupCallErrorProtocol {
     case toggleOwnVideoFailed
     case toggleOwnAudioFailed
+}
+
+public enum GroupCallRemoteContextError: Error, GroupCallErrorProtocol {
+    case noRemoteAudioTransceiverSet
+    case invalidTransceiverAudioType
+    case invalidTransceiverAudioDirection
+    case missingAudioTrackOnReceiver
+    case invalidAudioTrackType
+    
+    case noRemoteVideoTransceiverSet
+    case invalidTransceiverVideoType
+    case invalidTransceiverVideoDirection
+    case missingVideoTrackOnReceiver
+    case invalidVideoTrackType
 }

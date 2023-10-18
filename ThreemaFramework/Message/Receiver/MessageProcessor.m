@@ -362,6 +362,14 @@ Process incoming message.
             conversation = [entityManager conversationForContact:sender createIfNotExisting:[amsg canCreateConversation]];
         }];
     }
+    
+    // Set the contact to active if we received a message
+    // Automatic sync is only once a day
+    [entityManager performBlockAndWait:^{
+        if (sender.state.intValue == kStateInactive) {
+            [[ContactStore sharedContactStore] updateStateToActiveFor:sender entityManager:entityManager];
+        }
+    }];
 
     if ([amsg needsConversation] && conversation == nil) {
         onCompletion(nil);
@@ -521,6 +529,14 @@ Process incoming message.
             onCompletion();
             return;
         }
+        
+        // Set the contact to active if we received a message
+        // Automatic sync is only once a day
+        [entityManager performBlockAndWait:^{
+            if (sender.state.intValue == kStateInactive) {
+                [[ContactStore sharedContactStore] updateStateToActiveFor:sender entityManager:entityManager];
+            }
+        }];
 
         if ([amsg isKindOfClass:[GroupRenameMessage class]]) {
             GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
@@ -597,7 +613,7 @@ Process incoming message.
         } else if ([amsg isKindOfClass:[GroupDeliveryReceiptMessage class]]) {
             [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupCallStartMessage class]]) {
-            if ([ThreemaEnvironment groupCalls]) {
+            if ([ThreemaEnvironment groupCalls] && [[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
                 GroupCallStartMessage *newMsg = (GroupCallStartMessage *) amsg;
                 [[GlobalGroupCallsManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation receiveDate:newMsg.date onCompletion:^{
                     DDLogNotice(@"[GroupCall] [DB] Completion handler called");

@@ -64,7 +64,7 @@ final class TaskDefinitionSendGroupRenameMessage: TaskDefinitionSendMessage {
     }
     
     init(
-        group: Group?,
+        group: Group,
         from: String,
         to: [String],
         newName: String?,
@@ -74,7 +74,7 @@ final class TaskDefinitionSendGroupRenameMessage: TaskDefinitionSendMessage {
         self.toMembers = to
         self.name = newName
         
-        super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
+        super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: sendContactProfilePicture)
     }
 
     required init(from decoder: Decoder) throws {

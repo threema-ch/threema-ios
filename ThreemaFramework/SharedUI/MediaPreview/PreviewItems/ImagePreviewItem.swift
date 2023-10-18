@@ -70,12 +70,6 @@ open class ImagePreviewItem: MediaPreviewItem {
         }
     }
     
-    var isGIF: Bool {
-        let uti = UTIConverter.uti(forFileURL: itemURL)
-        let mimeType = UTIConverter.mimeType(fromUTI: uti)
-        return UTIConverter.isGifMimeType(mimeType)
-    }
-    
     open var item: Promise<PreviewType> {
         Promise<Void>().then(on: itemQueue, flags: [.barrier]) { () -> Promise<PreviewType> in
             if let image = self.internalImage {

@@ -48,24 +48,25 @@ public class BlobMessageSender {
     public func sendBlobMessage(with objectID: NSManagedObjectID) async throws {
                 
         // Concurrency Loading
-        let (fileMessage, receiverIdentity, group) = businessInjector.entityManager.performAndWait {
-            let fileMessage = self.businessInjector.entityManager.entityFetcher
-                .existingObject(with: objectID) as? FileMessage
-
+        let (messageID, receiverIdentity, group) = businessInjector.entityManager.performAndWait {
+            var messageID: Data?
             var receiverIdentity: ThreemaIdentity?
             var group: Group?
 
-            if let message = fileMessage {
+            if let message = self.businessInjector.entityManager.entityFetcher
+                .existingObject(with: objectID) as? FileMessage {
+                messageID = message.id
+
                 group = self.businessInjector.groupManager.getGroup(conversation: message.conversation)
                 if group == nil {
                     receiverIdentity = message.conversation.contact?.identity
                 }
             }
 
-            return (fileMessage, receiverIdentity, group)
+            return (messageID, receiverIdentity, group)
         }
         
-        guard let fileMessage else {
+        guard let messageID else {
             DDLogError("[BlobMessageSender]: Unable to load message as FileMessage for object ID: \(objectID)")
             throw BlobManagerError.sendingFailed
         }
@@ -77,15 +78,13 @@ public class BlobMessageSender {
             throw BlobManagerError.sendingFailed
         }
 
-        businessInjector.entityManager.performAndWait {
-            let taskDefinition = TaskDefinitionSendBaseMessage(
-                message: fileMessage,
-                receiverIdentity: receiverIdentity,
-                group: group,
-                sendContactProfilePicture: true
-            )
-            self.taskManager.add(taskDefinition: taskDefinition)
-        }
+        let taskDefinition = TaskDefinitionSendBaseMessage(
+            messageID: messageID,
+            receiverIdentity: receiverIdentity,
+            group: group,
+            sendContactProfilePicture: true
+        )
+        taskManager.add(taskDefinition: taskDefinition)
     }
     
     // MARK: - Private Functions

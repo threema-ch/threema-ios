@@ -68,7 +68,7 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
     }
     
     @objc init(
-        group: Group?,
+        group: Group,
         from: ThreemaIdentity,
         to: [ThreemaIdentity],
         receiptType: ReceiptType,
@@ -84,7 +84,7 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
         self.receiptMessageIDs = receiptMessageIDs
         self.receiptReadDates = receiptReadDates
         
-        super.init(group: group, sendContactProfilePicture: false)
+        super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: false)
     }
 
     required init(from decoder: Decoder) throws {

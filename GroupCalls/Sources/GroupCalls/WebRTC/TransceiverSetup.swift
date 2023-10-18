@@ -24,7 +24,7 @@ import WebRTC
 
 enum TransceiverSetup {
     static func setupTransceiver(_ transceiver: RTCRtpTransceiver) {
-        // TODO: Setup Transceiver
+        // TODO: (IOS-4088) Setup Transceiver
         
         var error: NSError?
         transceiver.setDirection(.recvOnly, error: &error)

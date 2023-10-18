@@ -52,8 +52,8 @@ import ThreemaProtocols
     }
 
     @objc public static var groupCalls: Bool {
-        // We show GC when build is from Xcode or TestFlight.
-        [.xcode, .testFlight].contains(env())
+        // Available for all builds in all flavors, kept to disable it again if everything goes wrong
+        true
     }
 
     #if DEBUG

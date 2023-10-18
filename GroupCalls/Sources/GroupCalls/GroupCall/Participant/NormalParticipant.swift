@@ -20,20 +20,20 @@
 
 import Foundation
 
-// TODO: IOS-3728 Clean this up if not needed in the end
+// TODO: IOS-4059 Clean this up if not needed in the end
 class NormalParticipant: Participant, NormalParticipantDescription, Sendable {
     let contactModel: ContactModel
     let identity: String
     let nickname: String
     
-    init(id: ParticipantID, contactModel: ContactModel, threemaID: ThreemaID) {
+    init(participantID: ParticipantID, contactModel: ContactModel, threemaID: ThreemaID) {
         self.contactModel = contactModel
-        // TODO: Implement
+        // TODO: (IOS-4059) Implement
 //        self.identity = contactModel.identity
 //        self.nickname = contactModel.publicNickName ?? contactModel.identity
         self.identity = threemaID.id
         self.nickname = threemaID.id
-        super.init(id: id)
+        super.init(participantID: participantID)
     }
     
     override var name: String {

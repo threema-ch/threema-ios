@@ -32,7 +32,7 @@ public class PushSettingManager {
         self.isWorkApp = isWorkApp
     }
     
-    func find(forConversation: Conversation) -> PushSetting? {
+    public func find(forConversation: Conversation) -> PushSetting? {
         let id: String?
         if forConversation.isGroup() {
             id = forConversation.groupID?.hexString

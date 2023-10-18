@@ -43,26 +43,19 @@ struct Joining: GroupCallState {
         }
         
         /// **Protocol Step: Group Call Join Steps** 2. Join (or implicitly create) the group call via a
-        /// SfuHttpRequest.Join request. If this does not result in a response within 10s, abort these steps and notify
-        /// the user.
-        switch try await groupCallActor.sfuHTTPConnection.sendJoin(with: certificate) {
-        /// **Protocol Step: Group Call Join Steps** 3. If the received status code is 503, notify the user that the
-        /// group call is full and abort these steps.
-        /// 4. If the server could not be reached or the received status code is not 200 or if the Join response could
-        /// not be decoded, abort these steps and notify the user.
+        /// SfuHttpRequest.Join request. If this does not result in a response within 10s,
+        ///  abort these steps and notify the user.
+        ///  Note: Join Steps 3 & 4 are within the `.join()` below.
+        switch try await groupCallActor.sfuHTTPConnection.join(with: certificate) {
         case .notDetermined, .notRunning, .timeout, .full:
-            // TODO: (IOS-3372) Inform user why failed
-            return Ended(groupCallActor: groupCallActor)
+            return Ending(groupCallActor: groupCallActor)
             
         case let .running(joinResponse):
-            assert(joinResponse.unknownFields.data.isEmpty)
-            
             guard !Task.isCancelled else {
-                return Ended(groupCallActor: groupCallActor)
+                return Ending(groupCallActor: groupCallActor)
             }
             
-            // TODO: IOS-3837
-            
+            // TODO: IOS-4090
             await groupCallActor.setExactCallStartDate(joinResponse.startedAt)
             
             DDLogNotice("[GroupCall] [JoinSteps] Start Connecting")

@@ -520,7 +520,11 @@
  @param creator: Creator of the group, is the creator myself then nil
  */
 - (GroupEntity *)groupEntityForGroupId:(NSData *)groupId groupCreator:(NSString *)groupCreator {
-    return [self singleEntityNamed:@"Group" withPredicate: @"groupId == %@ AND groupCreator == %@", groupId, groupCreator];
+    if (![groupCreator isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
+        return [self singleEntityNamed:@"Group" withPredicate: @"groupId == %@ AND groupCreator == %@", groupId, groupCreator];
+    } else {
+        return [self singleEntityNamed:@"Group" withPredicate: @"groupId == %@ AND groupCreator == nil", groupId];
+    }
 }
 
 - (GroupEntity *)groupEntityForConversation:(Conversation *)conversation {

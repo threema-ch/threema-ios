@@ -60,8 +60,8 @@ final class TaskDefinitionSendGroupLeaveMessage: TaskDefinitionSendMessage {
         super.init(sendContactProfilePicture: sendContactProfilePicture)
     }
 
-    override init(group: Group?, sendContactProfilePicture: Bool) {
-        super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
+    init(group: Group, sendContactProfilePicture: Bool) {
+        super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: sendContactProfilePicture)
     }
 
     required init(from decoder: Decoder) throws {

@@ -164,4 +164,30 @@ class NonceGuardTests: XCTestCase {
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
     }
+    
+    func testDoNotStoreSameNonceTwice() throws {
+        let nonce = MockData.generateMessageNonce()
+        
+        let entityManger = EntityManager(databaseContext: dbMainCnx)
+        let nonceGuard = NonceGuard(entityManager: entityManger)
+        
+        let expect = expectation(description: "nonce guard processed")
+
+        nonceGuard.processed(nonces: [nonce, nonce])
+            .done { _ in
+                expect.fulfill()
+            }
+            .catch { error in
+                XCTFail("\(error)")
+            }
+        
+        wait(for: [expect], timeout: 3)
+
+        let matchedDBNonces = entityManger.entityFetcher.allNonces()?.filter {
+            $0.nonce == nonce
+        }
+        
+        XCTAssertTrue(entityManger.entityFetcher.isNonceAlreadyInDB(nonce: nonce))
+        XCTAssertEqual(1, matchedDBNonces?.count)
+    }
 }

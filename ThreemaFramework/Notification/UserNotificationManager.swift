@@ -213,10 +213,14 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             }
             else if let abstractMessage = pendingUserNotification.abstractMessage {
                 // Apply content from abstract message
-                if abstractMessage is AbstractGroupMessage {
+                if let abstractGroupMessage = abstractMessage as? AbstractGroupMessage {
                     userNotificationContent.title = BundleUtil.localizedString(forKey: "new_group_message")
                     userNotificationContent
-                        .body = "\(userNotificationContent.fromName!): \(abstractMessage.pushNotificationBody()!)"
+                        .body = "\(userNotificationContent.fromName!): \(abstractGroupMessage.pushNotificationBody()!)"
+                    
+                    userNotificationContent.groupID = abstractGroupMessage.groupID
+                        .base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
+                    userNotificationContent.groupCreator = abstractGroupMessage.groupCreator
                 }
                 else {
                     userNotificationContent.title = userNotificationContent.fromName
@@ -238,6 +242,12 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 
             let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
             userNotificationContent.body = BundleUtil.localizedString(forKey: key)
+            
+            if let abstractGroupMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
+                userNotificationContent.groupID = abstractGroupMessage.groupID
+                    .base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
+                userNotificationContent.groupCreator = abstractGroupMessage.groupCreator
+            }
         }
         
         return userNotificationContent
@@ -338,8 +348,12 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         _ baseMessage: BaseMessage?
     ) {
         
-        let pushSound: String = from.categoryIdentifier.elementsEqual("GROUP") ? userSettings
+        var pushSound: String = from.categoryIdentifier.elementsEqual("GROUP") ? userSettings
             .pushGroupSound : userSettings.pushSound
+        
+        if from.isGroupCallStartMessage() {
+            pushSound = "threema_best"
+        }
         
         to.title = from.title ?? ""
         to.body = from.body ?? ""

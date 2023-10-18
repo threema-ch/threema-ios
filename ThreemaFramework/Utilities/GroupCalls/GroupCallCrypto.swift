@@ -24,10 +24,14 @@ import GroupCalls
 import ThreemaProtocols
 import WebRTC
 
-/// Adaper for NaClCrypto from ThreemaFramework
+/// Adapter for NaClCrypto from ThreemaFramework
 struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
 
     // MARK: - Symmetric Encryption & Decryption
+    
+    var symmetricNonceLength: Int32 {
+        kNaClCryptoNonceSize
+    }
     
     func symmetricEncryptData(_ plaintext: Data, withKey key: Data, nonce: Data) -> Data? {
         NaClCrypto.shared().symmetricEncryptData(plaintext, withKey: key, nonce: nonce)
@@ -60,8 +64,8 @@ struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
     func sharedSecret(with identity: String) -> Data? {
         let businessInjector = BusinessInjector()
         guard let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) else {
-            // TODO: IOS-3743 Group Calls Graceful Error Handling
-            fatalError()
+            DDLogError("[GroupCall] Contact not found with id: \(identity)")
+            return nil
         }
         
         var publicKey: Data?
@@ -71,8 +75,8 @@ struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
         }
         
         guard let publicKey else {
-            // TODO: IOS-3743 Group Calls Graceful Error Handling
-            fatalError()
+            DDLogError("[GroupCall] Public Key not found for contact with id: \(identity)")
+            return nil
         }
         
         return businessInjector.myIdentityStore.sharedSecret(withPublicKey: publicKey)
@@ -90,12 +94,15 @@ struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
     
     // MARK: - Key Generation
     
-    func generateKeyPair() -> (Data, Data) {
-        var publicKey: NSData? = NSData()
-        var privateKey: NSData? = NSData()
-        
-        NaClCrypto.shared().generateKeyPairPublicKey(&publicKey, secretKey: &privateKey)
-        
-        return (Data(privateKey!), Data(publicKey!))
+    func generateKeyPair() -> (publicKey: Data, privateKey: Data)? {
+        do {
+            let keyPair = try NaClCrypto.shared().generateNewKeyPair()
+            
+            return (keyPair.publicKey, keyPair.privateKey)
+        }
+        catch {
+            DDLogError("Unable to generate key pair: \(error)")
+            return nil
+        }
     }
 }

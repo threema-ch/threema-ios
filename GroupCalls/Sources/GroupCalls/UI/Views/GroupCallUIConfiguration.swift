@@ -24,17 +24,25 @@ import UIKit
 internal enum GroupCallUIConfiguration {
 
     enum NavigationBar {
-        static let textStyle: UIFont.TextStyle = .title2
-        static let smallerTextStyle: UIFont.TextStyle = .title3
-        static let buttonImageConfig: UIImage.Configuration = UIImage
-            .SymbolConfiguration(font: UIFont.preferredFont(forTextStyle: textStyle))
-        static let smallerImageConfig: UIImage.Configuration = UIImage
-            .SymbolConfiguration(font: UIFont.preferredFont(forTextStyle: textStyle))
+        static let dismissButtonSymbolConfiguration = UIImage.SymbolConfiguration(
+            font: UIFont.preferredFont(forTextStyle: .headline),
+            scale: .large
+        )
+        
+        // Based on .headline but slightly bigger
+        static let headerTextStyle: UIFont.TextStyle = .title3
+        static let headerFontWeight: UIFont.Weight = .semibold
+        
+        static let smallerTextStyle: UIFont.TextStyle = .subheadline
+        static let smallerSymbolConfiguration = UIImage.SymbolConfiguration(
+            font: UIFont.preferredFont(forTextStyle: smallerTextStyle),
+            scale: .small
+        )
     }
     
     enum Toolbar {
-        static let horizontalInset = 20.0
-        static let verticalInset = 20.0
+        static let horizontalInset = 16.0
+        static let verticalInset = 16.0
     }
     
     enum ToolbarButton {
@@ -60,6 +68,6 @@ internal enum GroupCallUIConfiguration {
     }
     
     enum General {
-        static let initialGradientOpacity = 0.6
+        static let initialGradientOpacity = 0.7
     }
 }

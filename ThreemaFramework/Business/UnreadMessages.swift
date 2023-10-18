@@ -29,11 +29,29 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
 
 @objc public protocol UnreadMessagesProtocolObjc {
     @discardableResult
-    func count(for conversation: Conversation) -> Int
+    func count(for conversation: Conversation, withPerformBlockAndWait: Bool) -> Int
     @discardableResult
     func totalCount() -> Int
     @discardableResult
-    func totalCount(doCalcUnreadMessagesCountOf conversation: Set<Conversation>) -> Int
+    func totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>, withPerformBlockAndWait: Bool) -> Int
+}
+
+extension UnreadMessagesProtocolObjc {
+    @discardableResult
+    public func count(for conversation: Conversation, withPerformBlockAndWait: Bool = true) -> Int {
+        count(for: conversation, withPerformBlockAndWait: withPerformBlockAndWait)
+    }
+    
+    @discardableResult
+    public func totalCount(
+        doCalcUnreadMessagesCountOf: Set<Conversation>,
+        withPerformBlockAndWait: Bool = true
+    ) -> Int {
+        totalCount(
+            doCalcUnreadMessagesCountOf: doCalcUnreadMessagesCountOf,
+            withPerformBlockAndWait: withPerformBlockAndWait
+        )
+    }
 }
 
 @objc public class UnreadMessages: NSObject, UnreadMessagesProtocol {
@@ -56,11 +74,18 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     /// - Parameter conversation: Conversation to counting und recalculating unread messages count
     /// - Returns: Unread messages count for this conversation
     @discardableResult
-    public func count(for conversation: Conversation) -> Int {
+    public func count(for conversation: Conversation, withPerformBlockAndWait: Bool = true) -> Int {
         var unreadMessagesCount = 0
-
-        entityManager.performAndWaitSave {
-            unreadMessagesCount = self.count(conversations: [conversation], doCalcUnreadMessagesCountOf: [conversation])
+        if withPerformBlockAndWait {
+            entityManager.performAndWaitSave {
+                unreadMessagesCount = self.count(
+                    conversations: [conversation],
+                    doCalcUnreadMessagesCountOf: [conversation]
+                )
+            }
+        }
+        else {
+            unreadMessagesCount = count(conversations: [conversation], doCalcUnreadMessagesCountOf: [conversation])
         }
 
         return unreadMessagesCount
@@ -78,19 +103,39 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     /// - Parameter doCalcUnreadMessagesCountOf: Recalculate unread messages count for this conversations
     /// - Returns: Unread messages count of all conversations
     @discardableResult
-    public func totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>) -> Int {
+    public func totalCount(
+        doCalcUnreadMessagesCountOf: Set<Conversation>,
+        withPerformBlockAndWait: Bool = true
+    ) -> Int {
         var unreadMessagesCount = 0
-
-        entityManager.performAndWaitSave {
+        
+        if withPerformBlockAndWait {
+            entityManager.performAndWaitSave {
+                var conversations = [Conversation]()
+                for conversation in self.entityManager.entityFetcher.allConversations() {
+                    if let conversation = conversation as? Conversation {
+                        conversations.append(conversation)
+                    }
+                }
+                
+                if !conversations.isEmpty {
+                    unreadMessagesCount = self.count(
+                        conversations: conversations,
+                        doCalcUnreadMessagesCountOf: doCalcUnreadMessagesCountOf
+                    )
+                }
+            }
+        }
+        else {
             var conversations = [Conversation]()
-            for conversation in self.entityManager.entityFetcher.allConversations() {
+            for conversation in entityManager.entityFetcher.allConversations() {
                 if let conversation = conversation as? Conversation {
                     conversations.append(conversation)
                 }
             }
 
             if !conversations.isEmpty {
-                unreadMessagesCount = self.count(
+                unreadMessagesCount = count(
                     conversations: conversations,
                     doCalcUnreadMessagesCountOf: doCalcUnreadMessagesCountOf
                 )
@@ -99,7 +144,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
 
         return unreadMessagesCount
     }
-
+    
     private func count(conversations: [Conversation], doCalcUnreadMessagesCountOf: Set<Conversation>) -> Int {
         var unreadMessagesCount = 0
 

@@ -126,13 +126,6 @@ import ThreemaFramework
     }
     
     private func mediaPreviewItemFromDKAsset(asset: DKAsset) -> MediaPreviewItem {
-        var mediaItem: MediaPreviewItem
-        if asset.isVideo {
-            mediaItem = VideoAssetPreviewItem(originalAsset: asset)
-        }
-        else {
-            mediaItem = ImageAssetPreviewItem(originalAsset: asset)
-        }
-        return mediaItem
+        asset.isVideo ? VideoAssetPreviewItem(originalAsset: asset) : ImageAssetPreviewItem(originalAsset: asset)
     }
 }

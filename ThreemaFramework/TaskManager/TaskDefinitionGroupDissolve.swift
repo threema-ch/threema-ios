@@ -54,8 +54,8 @@ final class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
         case toMembers
     }
 
-    required init(group: Group?) {
-        super.init(group: group, sendContactProfilePicture: false)
+    required init(group: Group) {
+        super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: false)
         self.isPersistent = true
     }
 

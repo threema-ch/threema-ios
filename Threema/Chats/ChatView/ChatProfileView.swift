@@ -391,6 +391,10 @@ final class ChatProfileView: UIStackView {
             self?.verificationLevelImageView.image = self?.conversation.contact?.verificationLevelImageSmall()
         }
         
+        observe(contact, \.state) { [weak self] in
+            self?.nameLabel.text = self?.conversation.displayName
+        }
+        
         // Needed to get appropriate height for verification and description stack (see
         // `verificationAndGroupMembersListStack`)
         groupMembersListLabel.text = " "

@@ -21,7 +21,7 @@
 import Foundation
 
 class Participant: ParticipantDescription {
-    let id: ParticipantID
+    let participantID: ParticipantID
     var mirrorRenderer: Bool {
         false
     }
@@ -34,15 +34,13 @@ class Participant: ParticipantDescription {
         fatalError("Must override")
     }
 
-    var microphoneActive = false
-    var cameraActive = false
     var localCameraPosition: CameraPosition = .front
     
-    init(id: ParticipantID) {
-        self.id = id
+    init(participantID: ParticipantID) {
+        self.participantID = participantID
     }
     
-    // TODO: Replace NSObject with actual valid object
+    // TODO: (IOS-4081) Replace NSObject with actual valid object
     func subscribeCamera(renderer: NSObject, width: Int, height: Int, fps: Int = 30) {
         fatalError("Must override")
     }
@@ -52,10 +50,10 @@ class Participant: ParticipantDescription {
     }
     
     static func == (lhs: Participant, rhs: Participant) -> Bool {
-        lhs.id == rhs.id
+        lhs.participantID == rhs.participantID
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        hasher.combine(participantID)
     }
 }

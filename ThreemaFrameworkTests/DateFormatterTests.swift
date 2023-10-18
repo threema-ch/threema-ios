@@ -34,7 +34,7 @@ class DateFormatterTests: XCTestCase {
         dateComponents.hour = 13
         dateComponents.minute = 14
         dateComponents.second = 15
-        dateComponents.nanosecond = 16
+        dateComponents.nanosecond = 999_000_000
         
         dateComponents.timeZone = Calendar.current.timeZone
 
@@ -169,10 +169,10 @@ class DateFormatterTests: XCTestCase {
         
         return Calendar.current.date(from: dateComponents)!
     }
-
-    func testGetDateForWeb() {
-        let expected = "20200201-131415"
-        let actual = DateFormatter.getDateForWeb(DateFormatterTests.testDate)
+    
+    func testGetDateForFilename() {
+        let expected = "20200201-131415-999"
+        let actual = DateFormatter.getDateForFilename(DateFormatterTests.testDate)
         
         XCTAssertEqual(actual, expected)
     }

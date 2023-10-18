@@ -63,7 +63,7 @@ final class TaskDefinitionSendGroupSetPhotoMessage: TaskDefinitionSendMessage {
     }
     
     init(
-        group: Group?,
+        group: Group,
         from: String,
         to: [String],
         size: UInt32,
@@ -77,7 +77,7 @@ final class TaskDefinitionSendGroupSetPhotoMessage: TaskDefinitionSendMessage {
         self.blobID = blobID
         self.encryptionKey = encryptionKey
         
-        super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
+        super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: sendContactProfilePicture)
     }
     
     required init(from decoder: Decoder) throws {

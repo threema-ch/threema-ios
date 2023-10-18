@@ -22,7 +22,7 @@ import Foundation
 
 extension Data {
     
-    enum LittleEndianConversionError: Error {
+    public enum LittleEndianConversionError: Error {
         case notEnoughBytes
     }
     
@@ -30,7 +30,7 @@ extension Data {
     /// - Parameter fromByteOffset: Start of byte to read from data. Default is `0`
     /// - Returns: `FixedWithInteger` starting at `fromByteOffset` read as little endian
     /// - Throws: `LittleEndianConversionError`
-    func littleEndian<T: FixedWidthInteger>(fromByteOffset: Int = 0) throws -> T {
+    public func littleEndian<T: FixedWidthInteger>(fromByteOffset: Int = 0) throws -> T {
         guard count >= (fromByteOffset + MemoryLayout<T>.size) else {
             throw LittleEndianConversionError.notEnoughBytes
         }
@@ -49,7 +49,7 @@ extension Data {
     ///
     /// - Parameter fromByteOffset: Start of byte to read from data. Default `0`
     /// - Returns: `FixedWithInteger` starting at `fromByteOffset` read as little endian and padded with `0`s if needed
-    func paddedLittleEndian<T: FixedWidthInteger>(fromByteOffset: Data.Index = 0) -> T {
+    public func paddedLittleEndian<T: FixedWidthInteger>(fromByteOffset: Data.Index = 0) -> T {
         let maxOffset = fromByteOffset + MemoryLayout<T>.size
         let actualMaxOffset = maxOffset <= count ? maxOffset : count
         

@@ -20,6 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BaseMessage.h"
+#import "AbstractMessage.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -136,6 +137,9 @@ typedef NS_ENUM(NSInteger, PeriodOffTime) {
 
 /// Should we show a notification for this base message?
 - (BOOL)canSendPushForBaseMessage:(nullable BaseMessage *)baseMessage;
+
+/// Should we show a notification for this GroupCallStartMessage message?
+- (BOOL)canSendGroupCallStartMessage:(nullable AbstractMessage *)abstractMessage NS_SWIFT_NAME(canSendPushForGroupCallStartMessage(abstractMessage:));
 
 /// Should a notification be shown according to this setting?
 - (BOOL)canSendPush;

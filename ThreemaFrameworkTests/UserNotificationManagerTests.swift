@@ -730,7 +730,8 @@ class UserNotificationManagerTests: XCTestCase {
             let expectedCmd = "newgroupmsg"
             let expectedCategoryIdentifier = "GROUP"
             let expectedIsGroupMessage = true
-            let expectedGroupID: String? = nil
+            let expectedGroupID: String? = groupID
+                .base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
 
             // Setup Mocks and DB
 

@@ -189,7 +189,6 @@ typealias TaskReceiverNonce = [ThreemaIdentity: Data]
                         TaskDefinitionSendBaseMessage.self,
                         TaskDefinitionSendDeliveryReceiptsMessage.self,
                         TaskDefinitionSendLocationMessage.self,
-                        TaskDefinitionSendVideoMessage.self,
                         TaskDefinitionSendGroupCreateMessage.self,
                         TaskDefinitionSendGroupDeletePhotoMessage.self,
                         TaskDefinitionSendGroupLeaveMessage.self,

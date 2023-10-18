@@ -170,7 +170,7 @@ extension VideoMessageEntity: BlobData {
     }
     
     public var blobWebFilename: String {
-        "threema-\(DateFormatter.getDateForWeb(date))-video.\(MEDIA_EXTENSION_VIDEO)"
+        "threema-\(DateFormatter.getDateForFilename(date))-video.\(MEDIA_EXTENSION_VIDEO)"
     }
     
     public var blobExternalFilename: String? {

@@ -314,11 +314,6 @@ final class TaskQueue {
                                 TaskDefinitionSendLocationMessage.self,
                                 forKey: "\(className)_\(i)"
                             )
-                        case String(describing: type(of: TaskDefinitionSendVideoMessage.self)):
-                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
-                                TaskDefinitionSendVideoMessage.self,
-                                forKey: "\(className)_\(i)"
-                            )
                         case String(describing: type(of: TaskDefinitionSendGroupCreateMessage.self)):
                             taskDefinition = try unarchiver.decodeTopLevelDecodable(
                                 TaskDefinitionSendGroupCreateMessage.self,

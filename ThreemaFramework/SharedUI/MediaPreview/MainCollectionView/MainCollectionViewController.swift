@@ -155,17 +155,13 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
             fatalError("Cannot display an ImageCell for a non-image item")
         }
         
-        if item.isGIF {
-            handleGifItem(item: item, cell: cell)
+        if delegate.memoryConstrained {
+            handleMemoryConstrainedImageItem(item: item, cell: cell)
         }
         else {
-            if delegate.memoryConstrained {
-                handleMemoryConstrainedImageItem(item: item, cell: cell)
-            }
-            else {
-                handleImageItem(item: item, cell: cell)
-            }
+            handleImageItem(item: item, cell: cell)
         }
+        
         return cell
     }
     
@@ -173,7 +169,7 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
         item.previewImage.then { image in
             self.convertThumbnail(thumbnail: image)
         }.done { imageData in
-            self.updateImageCell(data: imageData, cell: cell)
+            cell.updateImageTo(data: imageData)
         }.catch { error in
             DDLogError("An error occured: \(error)")
             if let error = error as? MainCollectionViewControllerError {
@@ -195,26 +191,18 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
     }
     
     private func handleImageItem(item: ImagePreviewItem, cell: ImagePreviewCollectionViewCell) {
+        let isGifMimeType = UTIConverter.isGifMimeType(UTIConverter.mimeType(fromUTI: item.uti))
         item.item.done { imageData in
-            guard let image = UIImage(data: imageData) else {
-                return
-            }
-            cell.updateImageTo(image: image)
+            cell.updateImageTo(
+                data: imageData,
+                isGIF: isGifMimeType
+            )
         }.catch { error in
             DDLogError("An error occured: \(error)")
             cell.handleError()
         }
     }
-    
-    private func handleGifItem(item: ImagePreviewItem, cell: ImagePreviewCollectionViewCell) {
-        item.item.done { imageData in
-            self.updateImageCell(data: imageData, cell: cell)
-        }.catch { error in
-            DDLogError("An error occured: \(error)")
-            cell.handleError()
-        }
-    }
-    
+
     private func convertThumbnail(thumbnail: UIImage) -> Promise<Data> {
         Promise { seal in
             guard let convertedThumbnail = MediaConverter.jpegRepresentation(for: thumbnail) else {
@@ -223,13 +211,6 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
             }
             seal.resolve(convertedThumbnail, nil)
         }
-    }
-    
-    func updateImageCell(data: Data, cell: ImagePreviewCollectionViewCell) {
-        guard let image = UIImage(data: data) else {
-            return
-        }
-        cell.updateImageTo(image: image)
     }
     
     func prepareVideoItem(indexPath: IndexPath, collectionView: UICollectionView) -> VideoImageCell {

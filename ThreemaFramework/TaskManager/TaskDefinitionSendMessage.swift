@@ -42,6 +42,8 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         groupID != nil && groupCreatorIdentity != nil
     }
 
+    // Is nil if is a group message
+    var receiverIdentity: ThreemaIdentity?
     var groupID: Data?
     var groupCreatorIdentity: String?
     var groupName: String?
@@ -56,6 +58,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     var messageAlreadySentTo = TaskReceiverNonce()
 
     private enum CodingKeys: String, CodingKey {
+        case receiverIdentity
         case groupID
         case groupCreatorIdentity
         case groupName
@@ -70,8 +73,9 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         self.sendContactProfilePicture = sendContactProfilePicture
     }
 
-    init(group: Group?, sendContactProfilePicture: Bool) {
+    init(receiverIdentity: ThreemaIdentity?, group: Group?, sendContactProfilePicture: Bool) {
         super.init(isPersistent: true)
+        self.receiverIdentity = receiverIdentity
         self.groupID = group?.groupID
         self.groupCreatorIdentity = group?.groupCreatorIdentity
         self.groupName = group?.name
@@ -81,6 +85,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     }
 
     init(
+        receiverIdentity: ThreemaIdentity?,
         groupID: Data?,
         groupCreatorIdentity: String?,
         groupName: String?,
@@ -89,6 +94,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         sendContactProfilePicture: Bool
     ) {
         super.init(isPersistent: true)
+        self.receiverIdentity = receiverIdentity
         self.groupID = groupID
         self.groupCreatorIdentity = groupCreatorIdentity
         self.groupName = groupName
@@ -102,6 +108,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         let superdecoder = try container.superDecoder()
         try super.init(from: superdecoder)
 
+        self.receiverIdentity = try container.decode(String?.self, forKey: .receiverIdentity)
         self.groupID = try container.decode(Data?.self, forKey: .groupID)
         self.groupCreatorIdentity = try container.decode(String?.self, forKey: .groupCreatorIdentity)
         self.groupName = try container.decode(String?.self, forKey: .groupName)
@@ -120,6 +127,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     
     override func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(receiverIdentity, forKey: .receiverIdentity)
         try container.encode(groupID, forKey: .groupID)
         try container.encode(groupCreatorIdentity, forKey: .groupCreatorIdentity)
         try container.encode(groupName, forKey: .groupName)

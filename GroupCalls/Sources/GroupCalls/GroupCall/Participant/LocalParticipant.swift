@@ -26,15 +26,21 @@ import WebRTC
 /// The participant of this this device (i.e. me)
 @GlobalGroupCallActor
 final class LocalParticipant: NormalParticipant, Sendable {
+    
+    enum Error: Swift.Error {
+        case existingPendingMediaKeys
+    }
+    
     private let localContext: LocalContext
     
-    private let dependencies: Dependencies
+    // TODO: (IOS-4059) Move a11y string to NormalParticipant, make `dependencies` private again
+    let dependencies: Dependencies
     
     private let localIdentity: ThreemaID
     
     private var mediaKeys: MediaKeys
     private var pendingMediaKeys: MediaKeys?
-    private var pendingMediaKeysIsStale = false
+    private var pendingMediaKeysIsStale = false // TODO: (IOS-4070) Maybe make this part of `MediaKeys`
     
     private let participantType: String
     private let keyPair: KeyPair
@@ -42,7 +48,7 @@ final class LocalParticipant: NormalParticipant, Sendable {
     private let pcck: Data
     
     init(
-        id: ParticipantID,
+        participantID: ParticipantID,
         contactModel: ContactModel,
         localContext: LocalContext,
         threemaID: ThreemaID,
@@ -53,15 +59,18 @@ final class LocalParticipant: NormalParticipant, Sendable {
         self.participantType = "LocalParticipant"
         self.dependencies = dependencies
         
-        let keys = self.dependencies.groupCallCrypto.generateKeyPair()
-        self.keyPair = KeyPair(publicKey: keys.1, privateKey: keys.0)
+        guard let keys = self.dependencies.groupCallCrypto.generateKeyPair() else {
+            // TODO: (IOS-4124) Improve error handling
+            fatalError("Unable to generate key pair")
+        }
+        self.keyPair = KeyPair(publicKey: keys.publicKey, privateKey: keys.privateKey)
         
         self.pcck = self.dependencies.groupCallCrypto.randomBytes(of: 16)
         self.localIdentity = localIdentity
         
         self.mediaKeys = MediaKeys(dependencies: dependencies)
         
-        super.init(id: id, contactModel: contactModel, threemaID: threemaID)
+        super.init(participantID: participantID, contactModel: contactModel, threemaID: threemaID)
     }
     
     var protocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey {
@@ -74,34 +83,6 @@ final class LocalParticipant: NormalParticipant, Sendable {
     
     override var mirrorRenderer: Bool {
         localCameraPosition == .front
-    }
-    
-    override var microphoneActive: Bool {
-        get {
-            super.microphoneActive
-        }
-        set {
-            DDLogNotice("Set microphone active=\(newValue)")
-            super.microphoneActive = newValue
-//            localContext.microphoneAudioContext.active = newValue
-        }
-    }
-    
-    override var cameraActive: Bool {
-        get {
-            super.cameraActive
-        }
-        set {
-            DDLogNotice("Set camera active=\(newValue)")
-            super.cameraActive = newValue
-            DispatchQueue.main.async {
-//                if newValue {
-//                    self.localContext.cameraVideoContext.startCapturing()
-//                } else {
-//                    self.localContext.cameraVideoContext.stopCapturing()
-//                }
-            }
-        }
     }
     
 //    override func subscribeCamera(renderer: SurfaceViewRenderer, width: Int, height: Int, fps: Int) -> DetachSinkFn {
@@ -135,25 +116,27 @@ extension LocalParticipant {
     
     /// Runs the leave protocol steps 1 to 4
     func replaceAndApplyNewMediaKeys() throws {
-        /// **Protocol Step: Join/Leave of Other Participants** 1. Let pending-pcmk be the currently pending PCMK the
-        /// associated context.
+        /// **Protocol Step: Join/Leave of Other Participants (Leave 1.)**
+        /// Leave 1. Let `pendingMediaKeys` be the currently _pending_ PCMK the associated context.
         guard pendingMediaKeys == nil else {
-            /// **Protocol Step: Join/Leave of Other Participants** 2. If pending-pcmk exists, additionally mark
-            /// pending-pcmk as stale and abort these steps.
+            /// **Protocol Step: Join/Leave of Other Participants (Leave 2.)**
+            /// Leave 2. If `pendingMediaKeys` exists, additionally mark `pendingMediaKeys` as stale and abort these
+            /// steps.
             pendingMediaKeysIsStale = true
-            return
+            throw Error.existingPendingMediaKeys
         }
-        /// **Protocol Step: Join/Leave of Other Participants** 3. Let current-pcmk be the currently applied PCMK with
-        /// the associated context.
+        /// **Protocol Step: Join/Leave of Other Participants (Leave 3.)**
+        /// Leave 3. Let current-pcmk (`mediaKeys`) be the currently _applied_ PCMK with the associated context.
         
-        /// **Protocol Step: Join/Leave of Other Participants** 4. Set pending-pcmk in the following way:
-        /// **Protocol Step: Join/Leave of Other Participants** 4.1. Generate a new cryptographically secure random PCMK
-        /// and assign it to pending-pcmk.
+        /// **Protocol Step: Join/Leave of Other Participants (Leave 4. & 4.1)**
+        /// Leave 4. Set pending-pcmk (`pendingMediaKeys`) in the following way:
+        /// Leave 4.1. Generate a new cryptographically secure random PCMK and assign it to pending-pcmk
+        /// (`pendingMediaKeys`).
         pendingMediaKeys = MediaKeys(dependencies: dependencies)
         pendingMediaKeysIsStale = false
         
-        /// **Protocol Step: Join/Leave of Other Participants** 4.2. Set pending-pcmk.epoch to current-pcmk.epoch + 1,
-        /// wrap back to 0 if it would be 256.
+        /// **Protocol Step: Join/Leave of Other Participants (Leave 4.2)**
+        /// Leave 4.2. Set pending-pcmk.epoch to current-pcmk.epoch + 1, wrap back to 0 if it would be 256.
         if mediaKeys.epoch < 255 {
             pendingMediaKeys!.epoch = mediaKeys.epoch + 1
         }
@@ -161,12 +144,13 @@ extension LocalParticipant {
             pendingMediaKeys!.epoch = 0
         }
        
-        /// **Protocol Step: Join/Leave of Other Participants** 4.3. Set pending-pcmk.ratchet_counter to 0.
+        /// **Protocol Step: Join/Leave of Other Participants (Leave 4.3)**
+        /// Leave 4.3. Set pending-pcmk.ratchet_counter to 0.
         // This is done on init of MediaKeys
         
-        /// **Protocol Step: Join/Leave of Other Participants** 4.4. Do not reset the MFSN! Continue the existing MFSN
-        /// counter of the previous PCMK.
-        // Does not apply here, is done somewhere in the imported and patched WebRTC
+        /// **Protocol Step: Join/Leave of Other Participants (Leave 4.4)**
+        /// Leave 4.4. Do **not** reset the MFSN! Continue the existing MFSN counter of the previous PCMK.
+        // Does not apply here, this is done somewhere in the imported and patched WebRTC
     }
     
     func switchCurrentForPendingKeys() throws -> Bool {

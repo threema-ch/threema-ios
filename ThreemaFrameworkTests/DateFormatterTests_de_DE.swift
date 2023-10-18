@@ -62,7 +62,14 @@ class DateFormatterTests_de_DE: XCTestCase {
         }
     }()
     
-    let expectedAccessibilityRelativeDayTime_de_DE = "1. Februar 2020 um 13:14"
+    let expectedAccessibilityRelativeDayTime_de_DE: String = {
+        if #available(iOS 17.0, *) {
+            return "1. Februar 2020, 13:14"
+        }
+        else {
+            return "1. Februar 2020 um 13:14"
+        }
+    }()
     
     // MARK: - Test formats provided by the system
     

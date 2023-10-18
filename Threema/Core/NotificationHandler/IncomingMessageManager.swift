@@ -255,7 +255,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     }
     
     func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
-        businessInjector.backgroundEntityManager.performBlockAndWait {
+        businessInjector.backgroundEntityManager.performAndWaitSave {
             if let msg = self.businessInjector.backgroundEntityManager.entityFetcher
                 .getManagedObject(by: message.objectID) as? BaseMessage {
                 if !AppDelegate.shared().active {
@@ -271,7 +271,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
 
                 if let conversation = msg.conversation {
                     self.businessInjector.backgroundUnreadMessages
-                        .totalCount(doCalcUnreadMessagesCountOf: [conversation])
+                        .totalCount(doCalcUnreadMessagesCountOf: [conversation], withPerformBlockAndWait: false)
                 }
 
                 if let pendingUserNotification = self.pendingUserNotificationManager.pendingUserNotification(

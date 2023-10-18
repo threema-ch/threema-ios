@@ -23,20 +23,6 @@ import Foundation
 import GroupCalls
 
 extension GroupCallManager {
-    // TODO: IOS-3745 This needs to be cleaned up
-    public func joinCall(in groupConversationManagedObjectID: NSManagedObjectID) async -> Bool {
-        guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
-            return false
-        }
-        
-        guard let groupModel = await getGroupModel(for: groupConversationManagedObjectID) else {
-            return false
-        }
-        
-        return await joinCall(in: groupModel, intent: .join) != nil
-    }
-    
     public func getGroupModel(for groupConversationManagedObjectID: NSManagedObjectID) async
         -> GroupCallsThreemaGroupModel? {
         guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls else {

@@ -26,6 +26,7 @@ import WebRTC
 class GroupCallAudioOutputButton: UIButton {
     
     private typealias buttonConfig = GroupCallUIConfiguration.ToolbarButton
+    private var dependencies: Dependencies
         
     private lazy var routePickerView: AVRoutePickerView = {
         let routePickerView = AVRoutePickerView(frame: CGRect(
@@ -54,7 +55,9 @@ class GroupCallAudioOutputButton: UIButton {
     
     // MARK: - Lifecycle
     
-    override init(frame: CGRect) {
+    init(frame: CGRect, dependencies: Dependencies) {
+        self.dependencies = dependencies
+
         super.init(frame: frame)
         
         configureButton()
@@ -79,6 +82,8 @@ class GroupCallAudioOutputButton: UIButton {
         tintColor = buttonConfig.smallerButtonTint
         backgroundColor = buttonConfig.smallerButtonBackground
         translatesAutoresizingMaskIntoConstraints = false
+        accessibilityLabel = dependencies.groupCallBundleUtil
+            .localizedString(for: "group_call_accessibility_audio_output")
         
         addSubview(routePickerView)
 
@@ -135,6 +140,12 @@ class GroupCallAudioOutputButton: UIButton {
             case .headphones, .bluetoothLE, .bluetoothHFP, .bluetoothA2DP:
                 newConfig.image = UIImage(
                     systemName: "earbuds",
+                    withConfiguration: buttonConfig.smallerButtonImageConfig
+                )
+                
+            case .builtInReceiver:
+                newConfig.image = UIImage(
+                    systemName: "ear.and.waveform",
                     withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
                 

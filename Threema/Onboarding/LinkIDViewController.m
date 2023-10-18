@@ -243,7 +243,7 @@
     self.moreView.mainView = self.mainContentView;
     if ([LicenseStore requiresLicenseKey]) {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_link_title_work"];
-        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id_work"], [ThreemaAppObjc currentName], [ThreemaAppObjc currentName]];
+        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id_work"], [ThreemaAppObjc appName], [ThreemaAppObjc appName]];
     } else {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_link_title"];
         self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_link_id"];
@@ -459,7 +459,7 @@
     if (_questionView == nil) {
         _questionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
         if ([LicenseStore requiresLicenseKey]) {
-            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], [ThreemaAppObjc currentName]];
+            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], [ThreemaAppObjc appName]];
         } else {
             _questionView.questionLabel.text = [BundleUtil localizedStringForKey:@"id_link_no_input"];            
         }

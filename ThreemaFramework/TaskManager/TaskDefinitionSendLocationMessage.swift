@@ -33,14 +33,14 @@ import Foundation
     
     @objc init(
         poiAddress: String?,
-        message: BaseMessage,
+        messageID: Data,
         receiverIdentity: ThreemaIdentity?,
         group: Group?,
         sendContactProfilePicture: Bool
     ) {
         self.poiAddress = poiAddress
         super.init(
-            message: message,
+            messageID: messageID,
             receiverIdentity: receiverIdentity,
             group: group,
             sendContactProfilePicture: sendContactProfilePicture

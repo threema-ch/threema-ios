@@ -39,7 +39,7 @@
     LAContext *context = [LAContext new];
     NSError *error;
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) {
-        NSString *reason = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"to_unlock_passcode"], [ThreemaAppObjc currentName]];
+        NSString *reason = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"to_unlock_passcode"], [ThreemaAppObjc appName]];
         [context evaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics localizedReason:reason reply:^(BOOL success, NSError *error) {
             DDLogWarn(@"[Passcode] Biometrics have possibly changed. Passcode needed.");
             

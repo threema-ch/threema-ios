@@ -22,15 +22,19 @@ import Foundation
 
 enum GroupCallUIAction: Equatable {
     case none
+    
+    // Local Participant
+    case connectedConfirmed
+    case leave
+    
     case muteVideo
     case unmuteVideo(CameraPosition)
+    case switchCamera(CameraPosition)
+
     case muteAudio
     case unmuteAudio
-    case unsubscribeVideo(ParticipantID)
+    
+    // Remote Participant
     case subscribeVideo(ParticipantID)
-    case unsubscribeAudio(ParticipantID)
-    case subscribeAudio(ParticipantID)
-    case leave
-    case switchCamera(CameraPosition)
-    case connectedConfirmed
+    case unsubscribeVideo(ParticipantID)
 }

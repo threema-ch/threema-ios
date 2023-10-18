@@ -33,7 +33,7 @@ extension SFUHTTPConnection {
         case notRunning
         case notDetermined
         case needsTokenRefresh
-        case timeout
+        case invalidRequest
         case running(Groupcall_SfuHttpResponse.Peek)
     }
     
@@ -47,8 +47,8 @@ extension SFUHTTPConnection {
 }
 
 extension SFUHTTPConnection {
-    func sendPeek() async throws -> PeekResponse {
-        guard let (data, status) = try await send(.Peek) else {
+    func peek() async throws -> PeekResponse {
+        guard let (data, status) = try await send(.peek) else {
             return .notDetermined
         }
         
@@ -56,9 +56,9 @@ extension SFUHTTPConnection {
             return .notRunning
         }
         
-        guard httpStatus.statusCode == 200 || httpStatus.statusCode == 401 else {
+        guard httpStatus.statusCode == 200 || httpStatus.statusCode == 400 || httpStatus.statusCode == 401 else {
             DDLogWarn(
-                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) returned \(httpStatus.statusCode) instead of 200. Remove call"
+                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) returned \(httpStatus.statusCode) instead of 200, 400 or 401. Remove call"
             )
             return .notRunning
         }
@@ -70,6 +70,13 @@ extension SFUHTTPConnection {
             return .needsTokenRefresh
         }
         
+        if httpStatus.statusCode == 400 {
+            DDLogWarn(
+                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) failed with 400, becasue the provided data invalid or call ids don't match"
+            )
+            return .invalidRequest
+        }
+        
         guard let peekResponse = try? Groupcall_SfuHttpResponse.Peek(serializedData: data) else {
             return .notDetermined
         }
@@ -77,10 +84,10 @@ extension SFUHTTPConnection {
         return .running(peekResponse)
     }
     
-    func sendJoin(with certificate: RTCCertificate) async throws -> JoinResponse {
+    func join(with certificate: RTCCertificate) async throws -> JoinResponse {
         
         let task = Task {
-            try await send(.Join(certificate))
+            try await send(.join(certificate))
         }
         
         let intermediateResult = try await Task.timeout(task, 10)
@@ -107,7 +114,20 @@ extension SFUHTTPConnection {
                 return .notRunning
             }
             
-            guard httpStatus.statusCode == 200 || httpStatus.statusCode == 401 || httpStatus.statusCode == 503 else {
+            /// **Protocol Step: Group Call Join Steps**
+            /// 3. If the received status code is 503, notify the user that the group call is full and abort these
+            /// steps.
+            if httpStatus.statusCode == 503 {
+                DDLogWarn(
+                    "[GroupCall] [Join Steps] Group call is full."
+                )
+                return .full
+            }
+            
+            /// **Protocol Step: Group Call Join Steps**
+            /// 4. If the server could not be reached or the received status code is not 200 or if the Join response
+            /// could not be decoded, abort these steps and notify the user.
+            guard httpStatus.statusCode == 200 || httpStatus.statusCode == 401 else {
                 DDLogWarn(
                     "[GroupCall] [Join Steps] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) returned \(httpStatus.statusCode) instead of 200. Remove call"
                 )
@@ -120,50 +140,50 @@ extension SFUHTTPConnection {
                 )
                 return .notDetermined
             }
-            else if httpStatus.statusCode == 503 {
-                DDLogWarn(
-                    "[GroupCall] [Join Steps] Group call is full."
-                )
-                return .full
-            }
             
-            guard let peekResponse = try? Groupcall_SfuHttpResponse.Join(serializedData: data) else {
+            guard let joinResponse = try? Groupcall_SfuHttpResponse.Join(serializedData: data) else {
                 return .notDetermined
             }
             
-            return .running(peekResponse)
+            return .running(joinResponse)
         }
     }
 }
 
 extension SFUHTTPConnection {
     fileprivate enum SFUHTTPRequest {
-        case Join(RTCCertificate)
-        case Peek
+        case join(RTCCertificate)
+        case peek
         
         var param: String {
             switch self {
-            case .Peek:
+            case .peek:
                 return "peek"
-            case .Join:
+            case .join:
                 return "join"
             }
         }
     }
     
     private func send(_ requestType: SFUHTTPRequest) async throws -> (Data, URLResponse)? {
+        
+        /// **Protocol Step: SfuHttpRequest (Sending 1. - 3.)**
+        /// 1. Use `POST` as method.
+        /// 2. Set the `Authorization` header to `ThreemaSfuToken <sfu-token>`.
+        /// 3. Set the encoded `SfuHttpRequest.Peek`/`SfuHttpRequest.Join` message as body.
+        
         let param: String = requestType.param
         let requestBody: Data
         
         switch requestType {
-        case .Peek:
-            requestBody = try create(.Peek)
-        case let .Join(certificate):
-            requestBody = try create(.Join(certificate))
+        case .peek:
+            requestBody = try create(.peek)
+        case let .join(certificate):
+            requestBody = try create(.join(certificate))
         }
         
         guard let authorizationToken = try? await dependencies.httpHelper.sfuCredentials() else {
-            throw GroupCallError.tokenFailure
+            throw GroupCallError.invalidToken
         }
         
         guard !Task.isCancelled else {
@@ -191,12 +211,12 @@ extension SFUHTTPConnection {
 extension SFUHTTPConnection {
     private func create(_ request: SFUHTTPRequest) throws -> Data {
         switch request {
-        case .Peek:
+        case .peek:
             guard let data = try createPeekRequest() else {
                 throw GroupCallError.serializationFailure
             }
             return data
-        case let .Join(certificate):
+        case let .join(certificate):
             guard let fingerprint = certificate.groupCallFingerprint else {
                 throw GroupCallError.serializationFailure
             }
@@ -211,7 +231,7 @@ extension SFUHTTPConnection {
         var body = Groupcall_SfuHttpRequest.Peek()
         body.callID = groupCallDescription.callID.bytes
         
-        return try? body.serializedData()
+        return try? body.ownSerializedData()
     }
     
     private func createJoinRequest(fingerprint: Data) throws -> Data? {
@@ -220,6 +240,6 @@ extension SFUHTTPConnection {
         body.protocolVersion = groupCallDescription.protocolVersion
         body.dtlsFingerprint = fingerprint
         
-        return try? body.serializedData()
+        return try? body.ownSerializedData()
     }
 }

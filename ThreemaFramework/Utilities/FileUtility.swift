@@ -131,7 +131,7 @@ import Foundation
         directoryURL: URL,
         pathExtension: String? = nil
     ) -> String {
-        let filename = base + "-" + DateFormatter.getDateForWeb(Date())
+        let filename = base + "-" + DateFormatter.getDateForFilename(Date())
         
         return FileUtility.getUniqueFilename(from: filename, directoryURL: directoryURL, pathExtension: pathExtension)
     }

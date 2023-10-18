@@ -204,5 +204,36 @@ extension NotificationPresenterWrapper: NotificationPresenterWrapperProtocol {
         case .videoUnmuted:
             present(type: NotificationPresenterType.videoUnmuted)
         }
+        
+        if UIAccessibility.isVoiceOverRunning {
+            Task {
+                // TODO: (IOS-4111) Remove sleep? Should be quick enough, check with a11y
+                // This is needed to speak out the microphone on/off
+                try? await Task.sleep(seconds: 1)
+                switch type {
+                
+                case .audioMuted:
+                    UIAccessibility.post(
+                        notification: .announcement,
+                        argument: AccessibilityAnnouncementType.audioMuted.announcementText
+                    )
+                case .audioUnmuted:
+                    UIAccessibility.post(
+                        notification: .announcement,
+                        argument: AccessibilityAnnouncementType.audioUnmuted.announcementText
+                    )
+                case .videoMuted:
+                    UIAccessibility.post(
+                        notification: .announcement,
+                        argument: AccessibilityAnnouncementType.videoMuted.announcementText
+                    )
+                case .videoUnmuted:
+                    UIAccessibility.post(
+                        notification: .announcement,
+                        argument: AccessibilityAnnouncementType.videoUnmuted.announcementText
+                    )
+                }
+            }
+        }
     }
 }

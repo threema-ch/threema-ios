@@ -157,7 +157,7 @@ final class ConnectionCtxTests: XCTestCase {
         )
         
         let localParticipant = LocalParticipant(
-            id: ParticipantID(id: 0),
+            participantID: ParticipantID(id: 0),
             contactModel: ContactModel(identity: "ECHOECHO", nickname: "ECHOECHO"),
             localContext: LocalContext(),
             threemaID: try! ThreemaID(id: "ECHOECHO"),
@@ -226,7 +226,7 @@ final class ConnectionCtxTests: XCTestCase {
         )
         
         let localParticipant = LocalParticipant(
-            id: ParticipantID(id: 0),
+            participantID: ParticipantID(id: 0),
             contactModel: ContactModel(identity: "ECHOECHO", nickname: "ECHOECHO"),
             localContext: LocalContext(),
             threemaID: try! ThreemaID(id: "ECHOECHO"),
@@ -291,9 +291,9 @@ final class ConnectionCtxTests: XCTestCase {
         
         for particpant in add {
             let newParticipant = RemoteParticipant(
-                participant: ParticipantID(id: particpant.id),
+                participantID: ParticipantID(id: particpant.id),
                 dependencies: dependencies,
-                groupCallCrypto: groupCallDescription,
+                groupCallMessageCrypto: groupCallDescription,
                 isExistingParticipant: false
             )
             

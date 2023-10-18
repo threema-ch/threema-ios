@@ -26,6 +26,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
     private var dbMainCnx: DatabaseContext!
     private var dbBackgroundCnx: DatabaseContext!
     private var dbPreparer: DatabasePreparer!
+    private var entityManager: EntityManager!
 
     private var ddLoggerMock: DDLoggerMock!
 
@@ -37,6 +38,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
         dbPreparer = DatabasePreparer(context: mainCnx)
+        entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil))
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -48,8 +50,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
     }
 
     func testExecuteTextMessageWithoutReflectingConnectionStateDisconnected() throws {
-        let expectedMessageID = MockData.generateMessageID()
-
         let serverConnectorMock = ServerConnectorMock(connectionState: .disconnected)
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
@@ -57,35 +57,37 @@ class TaskExecutionSendMessageTests: XCTestCase {
             serverConnector: serverConnectorMock
         )
 
-        var textMessage: TextMessage!
-        dbPreparer.save {
+        let (messageID, receiverIdentity, conversation) = dbPreparer.save {
+            let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "ECHOECHO",
+                identity: receiverIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.contact = contact
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.contact = contact
 
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: contact,
-                    remoteSentDate: nil
-                )
-            }
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: contact,
+                remoteSentDate: nil
+            )
+
+            return (messageID, receiverIdentity, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
-            receiverIdentity: textMessage.conversation.contact?.identity,
+            messageID: messageID,
+            receiverIdentity: receiverIdentity,
             group: nil,
             sendContactProfilePicture: false
         )
@@ -98,34 +100,34 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                if let expectedError = try? XCTUnwrap(expectError as? TaskExecutionError) {
-                    XCTAssertEqual(
-                        "\(expectedError)",
-                        "\(TaskExecutionError.sendMessageFailed(message: "(type: text; id: \(expectedMessageID.hexString))"))"
-                    )
-                }
-                else {
-                    XCTFail("Exception should be thrown")
-                }
-                XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
-                )
-                XCTAssertFalse(textMessage.sent.boolValue)
-            }
+        waitForExpectations(timeout: 6)
+
+        if let expectedError = try? XCTUnwrap(expectError as? TaskExecutionError) {
+            XCTAssertEqual(
+                "\(expectedError)",
+                "\(TaskExecutionError.sendMessageFailed(message: "(type: text; id: \(messageID.hexString))"))"
+            )
         }
+        else {
+            XCTFail("Exception should be thrown")
+        }
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }.count
+        )
+        XCTAssertFalse(
+            try XCTUnwrap(
+                entityManager.entityFetcher.message(
+                    with: messageID,
+                    conversation: conversation
+                ) as? TextMessage
+            ).sent.boolValue
+        )
     }
 
     func testExecuteTextMessageWithoutReflecting() throws {
-        let expectedMessageID = MockData.generateMessageID()
-
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
@@ -133,35 +135,37 @@ class TaskExecutionSendMessageTests: XCTestCase {
             serverConnector: serverConnectorMock
         )
 
-        var textMessage: TextMessage!
-        dbPreparer.save {
+        let (messageID, receiverIdentity, conversation) = dbPreparer.save {
+            let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "ECHOECHO",
+                identity: receiverIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.contact = contact
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.contact = contact
 
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: contact,
-                    remoteSentDate: nil
-                )
-            }
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: contact,
+                remoteSentDate: nil
+            )
+
+            return (messageID, receiverIdentity, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
-            receiverIdentity: textMessage.conversation.contact?.identity,
+            messageID: messageID,
+            receiverIdentity: receiverIdentity,
             group: nil,
             sendContactProfilePicture: false
         )
@@ -174,27 +178,26 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                XCTAssertNil(expectError)
-                XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
-                )
-                XCTAssertTrue(textMessage.sent.boolValue)
-            }
-        }
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }.count
+        )
+        XCTAssertTrue(
+            try XCTUnwrap(
+                entityManager.entityFetcher.message(
+                    with: messageID,
+                    conversation: conversation
+                ) as? TextMessage
+            ).sent.boolValue
+        )
     }
 
     func testExecuteTextMessageWithoutReflectingToInvalidContact() throws {
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedToIdentity = "ECHOECHO"
-
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
@@ -202,37 +205,39 @@ class TaskExecutionSendMessageTests: XCTestCase {
             serverConnector: serverConnectorMock
         )
 
-        var textMessage: TextMessage!
-        dbPreparer.save {
+        let (messageID, receiverIdentity, conversation) = dbPreparer.save {
+            let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedToIdentity,
+                identity: receiverIdentity,
                 verificationLevel: 0
             )
             contact.state = NSNumber(integerLiteral: kStateInvalid)
 
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.contact = contact
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.contact = contact
 
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: contact,
-                    remoteSentDate: nil
-                )
-            }
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: contact,
+                remoteSentDate: nil
+            )
+
+            return (messageID, receiverIdentity, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
-            receiverIdentity: textMessage.conversation.contact?.identity,
+            messageID: messageID,
+            receiverIdentity: receiverIdentity,
             group: nil,
             sendContactProfilePicture: false
         )
@@ -245,37 +250,38 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                if let expecError = expectError,
-                   case let TaskExecutionError.invalidContact(message: message) = expecError {
-                    XCTAssertEqual(
-                        message,
-                        "Do not sending message to invalid identity Optional(\"\(expectedToIdentity)\") ((type: text; id: \(expectedMessageID.hexString)))"
-                    )
-                }
-                else {
-                    XCTFail()
-                }
-                
-                XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertFalse(textMessage.sent.boolValue)
-                XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
-            }
+        waitForExpectations(timeout: 6)
+
+        if let expectError,
+           case let TaskExecutionError.invalidContact(message: message) = expectError {
+            XCTAssertEqual(
+                message,
+                "Do not sending message to invalid identity Optional(\"\(receiverIdentity)\") ((type: text; id: \(messageID.hexString)))"
+            )
+        }
+        else {
+            XCTFail()
+        }
+
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
+
+        try entityManager.performAndWait {
+            let textMessage = try XCTUnwrap(
+                self.entityManager.entityFetcher
+                    .message(with: messageID, conversation: conversation)
+            )
+            XCTAssertFalse(textMessage.sent.boolValue)
+            XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
         }
     }
-    
+
     func testExecuteTextMessageWithReflecting() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageID = MockData.generateMessageID()
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
         // Second date (reflected at) is used when reflecting message sent
         var expectedReflectedAtDates = [expectedMessageReflectedAt, Date().addingTimeInterval(10)]
@@ -319,35 +325,38 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
         )
 
-        var textMessage: TextMessage!
-        dbPreparer.save {
+        let (messageID, receiverIdentity, conversation) = dbPreparer.save {
+            let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "ECHOECHO",
+                identity: receiverIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.contact = contact
-                
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: contact,
-                    remoteSentDate: nil
-                )
-            }
+
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.contact = contact
+
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: contact,
+                remoteSentDate: nil
+            )
+
+            return (messageID, receiverIdentity, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
-            receiverIdentity: textMessage.conversation.contact?.identity,
+            messageID: messageID,
+            receiverIdentity: receiverIdentity,
             group: nil,
             sendContactProfilePicture: false
         )
@@ -360,40 +369,42 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                XCTAssertNil(expectError)
-                XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
-                )
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
-                        .count
-                )
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
-                )
-                XCTAssertTrue(textMessage.sent.boolValue)
-                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
-            }
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
+        )
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
+                .count
+        )
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID)
+            }.count
+        )
+
+        try entityManager.performAndWait {
+            let textMessage = try XCTUnwrap(
+                self.entityManager.entityFetcher
+                    .message(with: messageID, conversation: conversation)
+            )
+            XCTAssertTrue(textMessage.sent.boolValue)
+            XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
         }
     }
-    
+
     func testExecuteGroupTextMessageWithReflecting() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageID = MockData.generateMessageID()
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
         // Second date (reflected at) is used when reflecting message sent
@@ -441,9 +452,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
         )
 
-        var textMessage: TextMessage!
-        var group: Group!
-        dbPreparer.save {
+        let (messageID, group, conversation) = dbPreparer.save {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
@@ -458,37 +467,40 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 groupID: MockData.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
-                conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-                conversation.addMembers(members)
-                
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: nil,
-                    remoteSentDate: nil
-                )
-                
-                group = Group(
-                    myIdentityStore: myIdentityStoreMock,
-                    userSettings: userSettingsMock,
-                    groupEntity: groupEntity,
-                    conversation: conversation,
-                    lastSyncRequest: nil
-                )
-            }
+
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(members)
+
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+
+            let group = Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            return (messageID, group, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
+            messageID: messageID,
             receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
@@ -502,42 +514,44 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 600) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                XCTAssertNil(expectError)
-                XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
-                )
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
-                        .count
-                )
-                XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(
-                    2,
-                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
-                )
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
-                XCTAssertTrue(textMessage.sent.boolValue)
-                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
-            }
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
+        )
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
+                .count
+        )
+        XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            2,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID)
+            }.count
+        )
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
+
+        try entityManager.performAndWait {
+            let textMessage = try XCTUnwrap(
+                self.entityManager.entityFetcher
+                    .message(with: messageID, conversation: conversation)
+            )
+            XCTAssertTrue(textMessage.sent.boolValue)
+            XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
         }
     }
-    
+
     func testExecuteGroupTextMessageWithReflectingAndOneInvalidContact() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageID = MockData.generateMessageID()
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
         // Second date (reflected at) is used when reflecting message sent
@@ -585,9 +599,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
         )
 
-        var textMessage: TextMessage!
-        var group: Group!
-        dbPreparer.save {
+        let (messageID, group, conversation) = dbPreparer.save {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
@@ -596,47 +608,50 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     verificationLevel: 0
                 )
                 members.insert(contact)
-                
+
                 if member == "MEMBER04" {
                     contact.state = NSNumber(integerLiteral: kStateInvalid)
                 }
             }
-            
+
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: MockData.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
-                conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-                conversation.addMembers(members)
-                
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: nil,
-                    remoteSentDate: nil
-                )
-                
-                group = Group(
-                    myIdentityStore: myIdentityStoreMock,
-                    userSettings: userSettingsMock,
-                    groupEntity: groupEntity,
-                    conversation: conversation,
-                    lastSyncRequest: nil
-                )
-            }
+
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(members)
+
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+
+            let group = Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            return (messageID, group, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
+            messageID: messageID,
             receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
@@ -650,48 +665,50 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                XCTAssertTrue(
-                    self.ddLoggerMock
-                        .exists(
-                            message: "Do not sending message to invalid identity Optional(\"MEMBER04\") ((type: groupText; id: \(expectedMessageID.hexString); groupCreator: \(group.groupCreatorIdentity) - groupId: \(group.groupID.hexString)))"
-                        )
+        waitForExpectations(timeout: 6)
+
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(
+                    message: "Do not sending message to invalid identity Optional(\"MEMBER04\") ((type: groupText; id: \(messageID.hexString); groupCreator: \(group.groupCreatorIdentity) - groupId: \(group.groupID.hexString)))"
                 )
-                XCTAssertNil(expectError)
-                XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
-                )
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
-                        .count
-                )
-                XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(
-                    2,
-                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
-                )
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
-                XCTAssertTrue(textMessage.sent.boolValue)
-                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
-            }
+        )
+        XCTAssertNil(expectError)
+        XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
+        )
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
+                .count
+        )
+        XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            2,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID)
+            }.count
+        )
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
+
+        try entityManager.performAndWait {
+            let textMessage = try XCTUnwrap(
+                self.entityManager.entityFetcher
+                    .message(with: messageID, conversation: conversation)
+            )
+            XCTAssertTrue(textMessage.sent.boolValue)
+            XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
         }
     }
-    
+
     func testExecuteGroupTextMessageWithReflectingAlreadySent() throws {
         let expectedMessageReflectID = MockData.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = MockData.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageID = MockData.generateMessageID()
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
         // Second date (reflected at) is used when reflecting message sent
@@ -738,9 +755,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
         )
 
-        var textMessage: TextMessage!
-        var group: Group!
-        dbPreparer.save {
+        let (messageID, group, conversation) = dbPreparer.save {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
@@ -755,37 +770,40 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 groupID: MockData.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
-                conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-                conversation.addMembers(members)
 
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: nil,
-                    remoteSentDate: nil
-                )
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(members)
 
-                group = Group(
-                    myIdentityStore: myIdentityStoreMock,
-                    userSettings: userSettingsMock,
-                    groupEntity: groupEntity,
-                    conversation: conversation,
-                    lastSyncRequest: nil
-                )
-            }
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+
+            let group = Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            return (messageID, group, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
+            messageID: messageID,
             receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
@@ -800,33 +818,36 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                XCTAssertNil(expectError)
-                XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
-                )
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
-                        .count
-                )
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
-                )
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
-                XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
-            }
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
+        )
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
+                .count
+        )
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID)
+            }.count
+        )
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
+
+        try entityManager.performAndWait {
+            let textMessage = try XCTUnwrap(
+                self.entityManager.entityFetcher
+                    .message(with: messageID, conversation: conversation)
+            )
+            XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
         }
     }
-    
+
     func testExecuteGroupCreateMessageWithOwnIdentityAsMemberAlreadySent() throws {
         let userSettingsMock = UserSettingsMock()
         let serverConnectorMock = ServerConnectorMock(
@@ -840,12 +861,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock
         )
-        
-        let expectedMessageID = MockData.generateMessageID()
+
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", myIdentityStoreMock.identity]
 
-        var group: Group!
-        dbPreparer.save {
+        let group = dbPreparer.save {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
@@ -862,19 +881,19 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 groupID: MockData.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
-                conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-                conversation.addMembers(members)
 
-                group = Group(
-                    myIdentityStore: myIdentityStoreMock,
-                    userSettings: userSettingsMock,
-                    groupEntity: groupEntity,
-                    conversation: conversation,
-                    lastSyncRequest: nil
-                )
-            }
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(members)
+
+            return Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
@@ -895,22 +914,16 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                XCTAssertNil(expectError)
-                XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
-            }
-        }
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
     }
 
     func testExecuteNoticeGroupTextMessageWithReflecting() throws {
         let expectedReflectID = MockData.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageID = MockData.generateMessageID()
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
@@ -952,45 +965,47 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
         )
 
-        var textMessage: TextMessage!
-        var group: Group!
-        dbPreparer.save {
+        let (messageID, group, conversation) = dbPreparer.save {
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: MockData.generateGroupID(),
                 /// See `GroupManager` line 227 for why this has to be nil
                 groupCreator: nil
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
-                conversation.groupMyIdentity = myIdentityStoreMock.identity
-                /// See `GroupManager` line 227 for why this has to be nil
-                conversation.contact = nil
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: nil,
-                    remoteSentDate: nil
-                )
-                
-                group = Group(
-                    myIdentityStore: myIdentityStoreMock,
-                    userSettings: UserSettingsMock(),
-                    groupEntity: groupEntity,
-                    conversation: conversation,
-                    lastSyncRequest: nil
-                )
-            }
+
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.groupID = groupEntity.groupID
+            conversation.groupMyIdentity = myIdentityStoreMock.identity
+            /// See `GroupManager` line 227 for why this has to be nil
+            conversation.contact = nil
+
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+
+            let group = Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            return (messageID, group, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
+            messageID: messageID,
             receiverIdentity: nil,
             group: group,
             sendContactProfilePicture: false
@@ -1004,29 +1019,32 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
-            if let error {
-                XCTFail(error.localizedDescription)
-            }
-            else {
-                XCTAssertNil(expectError)
-                XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
-                XCTAssertEqual(
-                    1,
-                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedReflectMessage) }.count
-                )
-                XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
-                XCTAssertEqual(
-                    0,
-                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
-                )
-                XCTAssertTrue(textMessage.sent.boolValue)
-                // Local messages don't have a remote sent date
-                XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
-            }
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedReflectMessage) }.count
+        )
+        XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            0,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID)
+            }.count
+        )
+
+        try entityManager.performAndWait {
+            let textMessage = try XCTUnwrap(
+                self.entityManager.entityFetcher
+                    .message(with: messageID, conversation: conversation)
+            )
+            XCTAssertTrue(textMessage.sent.boolValue)
+            // Local messages don't have a remote sent date
+            XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
         }
     }
-    
+
     func testExecuteBroadcastGroupTextMessageWithReflecting() throws {
         let broadcastGroupTests = [
             // group name, count of message receivers, group admin receive message
@@ -1040,7 +1058,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
             let expectedMessageSentReflectID = MockData.generateReflectID()
             let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
-            let expectedMessageID = MockData.generateMessageID()
             let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "*ADMIN01"]
             var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
             // Second date (reflected at) is used when reflecting message sent
@@ -1087,9 +1104,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 )
             )
 
-            var textMessage: TextMessage!
-            var group: Group!
-            dbPreparer.save {
+            let (messageID, group, conversation) = dbPreparer.save {
                 var members = Set<ContactEntity>()
                 for member in expectedMembers {
                     let contact = dbPreparer.createContact(
@@ -1104,39 +1119,42 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     groupID: MockData.generateGroupID(),
                     groupCreator: "*ADMIN01"
                 )
-                dbPreparer
-                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                        conversation.groupID = groupEntity.groupID
-                        conversation.groupName = broadcastGroupTest[0] as? String
-                        conversation.contact = members.first(where: { $0.identity == "*ADMIN01" })
-                        conversation.addMembers(members)
-                    
-                        textMessage = self.dbPreparer.createTextMessage(
-                            conversation: conversation,
-                            delivered: false,
-                            id: expectedMessageID,
-                            isOwn: true,
-                            read: false,
-                            sent: false,
-                            sender: members.first,
-                            remoteSentDate: nil
-                        )
-                    
-                        group = Group(
-                            myIdentityStore: myIdentityStoreMock,
-                            userSettings: UserSettingsMock(),
-                            groupEntity: groupEntity,
-                            conversation: conversation,
-                            lastSyncRequest: nil
-                        )
-                    }
+
+                let conversation = dbPreparer
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+                conversation.groupID = groupEntity.groupID
+                conversation.groupName = broadcastGroupTest[0] as? String
+                conversation.contact = members.first(where: { $0.identity == "*ADMIN01" })
+                conversation.addMembers(members)
+
+                let messageID = MockData.generateMessageID()
+                self.dbPreparer.createTextMessage(
+                    conversation: conversation,
+                    delivered: false,
+                    id: messageID,
+                    isOwn: true,
+                    read: false,
+                    sent: false,
+                    sender: members.first,
+                    remoteSentDate: nil
+                )
+
+                let group = Group(
+                    myIdentityStore: myIdentityStoreMock,
+                    userSettings: UserSettingsMock(),
+                    groupEntity: groupEntity,
+                    conversation: conversation,
+                    lastSyncRequest: nil
+                )
+
+                return (messageID, group, conversation)
             }
 
             let expect = expectation(description: "TaskDefinitionSendBaseMessage")
             var expectError: Error?
 
             let task = TaskDefinitionSendBaseMessage(
-                message: textMessage,
+                messageID: messageID,
                 receiverIdentity: nil,
                 group: group,
                 sendContactProfilePicture: false
@@ -1150,50 +1168,55 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     expect.fulfill()
                 }
 
-            waitForExpectations(timeout: 6) { error in
-                if let error {
-                    XCTFail(error.localizedDescription)
+            waitForExpectations(timeout: 6)
+
+            XCTAssertNil(expectError)
+            XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
+            XCTAssertEqual(
+                1,
+                serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }
+                    .count
+            )
+            XCTAssertEqual(
+                1,
+                serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect)
                 }
-                else {
-                    XCTAssertNil(expectError)
-                    XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
-                    XCTAssertEqual(
-                        1,
-                        serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }
-                            .count
-                    )
-                    XCTAssertEqual(
-                        1,
-                        serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
-                            .count
-                    )
-                    XCTAssertEqual(broadcastGroupTest[1] as! Int, serverConnectorMock.sendMessageCalls.count)
-                    XCTAssertEqual(
-                        broadcastGroupTest[1] as! Int,
-                        serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }
-                            .count
-                    )
-                    XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
-                    XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER02" }.count)
-                    XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
-                    XCTAssertEqual(
-                        broadcastGroupTest[2] as! Int,
-                        serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "*ADMIN01" }.count
-                    )
-                    XCTAssert(textMessage.sent.boolValue)
-                    XCTAssertEqual(
-                        textMessage.remoteSentDate,
-                        expectedMessageReflectedAt
-                    )
-                }
+                .count
+            )
+            XCTAssertEqual(broadcastGroupTest[1] as! Int, serverConnectorMock.sendMessageCalls.count)
+            XCTAssertEqual(
+                broadcastGroupTest[1] as! Int,
+                serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }
+                    .count
+            )
+            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01"
+            }.count)
+            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER02"
+            }.count)
+            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03"
+            }.count)
+            XCTAssertEqual(
+                broadcastGroupTest[2] as! Int,
+                serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "*ADMIN01" }.count
+            )
+
+            try entityManager.performAndWait {
+                let textMessage = try XCTUnwrap(
+                    self.entityManager.entityFetcher
+                        .message(with: messageID, conversation: conversation)
+                )
+                XCTAssert(textMessage.sent.boolValue)
+                XCTAssertEqual(
+                    textMessage.remoteSentDate,
+                    expectedMessageReflectedAt
+                )
             }
         }
     }
-    
+
     func testExecuteTextMessageWithReflectingConnectionStateDisconnected() throws {
         let expectedReflectID = MockData.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageID = MockData.generateMessageID()
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .disconnected,
@@ -1218,35 +1241,38 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
         )
 
-        var textMessage: TextMessage!
-        dbPreparer.save {
+        let (messageID, receiverIdentity, conversation) = dbPreparer.save {
+            let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "ECHOECHO",
+                identity: receiverIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.contact = contact
-                
-                textMessage = self.dbPreparer.createTextMessage(
-                    conversation: conversation,
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    sender: contact,
-                    remoteSentDate: nil
-                )
-            }
+
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.contact = contact
+
+            let messageID = MockData.generateMessageID()
+            self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: contact,
+                remoteSentDate: nil
+            )
+
+            return (messageID, receiverIdentity, conversation)
         }
 
         let expect = expectation(description: "TaskDefinitionSendBaseMessage")
         var expectError: Error?
 
         let task = TaskDefinitionSendBaseMessage(
-            message: textMessage,
-            receiverIdentity: textMessage.conversation.contact?.identity,
+            messageID: messageID,
+            receiverIdentity: receiverIdentity,
             group: nil,
             sendContactProfilePicture: false
         )
@@ -1264,11 +1290,18 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let expectedError = try XCTUnwrap(expectError as? TaskExecutionError)
         XCTAssertEqual(
             "\(expectedError)",
-            "\(TaskExecutionError.reflectMessageFailed(message: "(Reflect ID: \(expectedReflectID.hexString) (type: text; id: \(expectedMessageID.hexString)))"))"
+            "\(TaskExecutionError.reflectMessageFailed(message: "(Reflect ID: \(expectedReflectID.hexString) (type: text; id: \(messageID.hexString)))"))"
         )
         XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
         XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
-        XCTAssertEqual(textMessage.sent.boolValue, false)
-        XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
+
+        try entityManager.performAndWait {
+            let textMessage = try XCTUnwrap(
+                self.entityManager.entityFetcher
+                    .message(with: messageID, conversation: conversation)
+            )
+            XCTAssertEqual(textMessage.sent.boolValue, false)
+            XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
+        }
     }
 }

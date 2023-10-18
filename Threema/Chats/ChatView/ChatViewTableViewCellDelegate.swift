@@ -34,6 +34,8 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     func playNextMessageIfPossible(from message: NSManagedObjectID)
 
     func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?)
+    func didAccessibilityTapOnCell()
+    
     func resendMessage(withID messageID: NSManagedObjectID)
     func showQuoteView(message: QuoteMessage)
     func startMultiselect(with messageObjectID: NSManagedObjectID)
@@ -225,6 +227,10 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         
         // Run Action
         chatViewDefaultTapActionProvider.run(for: message, customDefaultAction: customDefaultAction)
+    }
+    
+    func didAccessibilityTapOnCell() {
+        chatViewController?.didTapOnChatView()
     }
     
     func showQuoteView(message: QuoteMessage) {

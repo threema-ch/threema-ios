@@ -92,24 +92,25 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             )
         )
 
-        var ballot: Ballot!
-        var group: Group!
-        
-        dbPreparer.save {
+        let (ballotID, group) = dbPreparer.save {
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: MockData.generateGroupID(),
                 groupCreator: nil
             )
+
+            var ballotID: Data!
+            var group: Group!
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
 
-                ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
+                let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()!
                 ballot.id = MockData.generateBallotID()
                 ballot.createDate = Date()
                 ballot.creatorID = myIdentityStoreMock.identity
                 ballot.conversation = conversation
-                
+
+                ballotID = ballot.id
                 group = Group(
                     myIdentityStore: myIdentityStoreMock,
                     userSettings: UserSettingsMock(),
@@ -120,12 +121,19 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
 
                 groupManagerMock.getConversationReturns = conversation
             }
+
+            return (ballotID, group)
         }
 
         let expec = expectation(description: "TaskDefinitionSendBaseMessage")
         var expecError: Error?
         
-        let task = TaskDefinitionSendBallotVoteMessage(ballot: ballot, group: group, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBallotVoteMessage(
+            ballotID: ballotID!,
+            receiverIdentity: nil,
+            group: group,
+            sendContactProfilePicture: false
+        )
         
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
@@ -197,29 +205,35 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             )
         )
 
-        var ballot: Ballot!
-        
-        dbPreparer.save {
+        let (ballotID, receiverIdentity) = dbPreparer.save {
+            let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "ECHOECHO",
+                identity: receiverIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.contact = contact
-                
-                ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
-                ballot.id = NaClCrypto.shared().randomBytes(8)
-                ballot.createDate = Date()
-                ballot.creatorID = frameworkInjectorMock.myIdentityStore.identity
-                ballot.conversation = conversation
-            }
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.contact = contact
+
+            let ballotID = MockData.generateBallotID()
+            let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
+            ballot?.id = ballotID
+            ballot?.createDate = Date()
+            ballot?.creatorID = frameworkInjectorMock.myIdentityStore.identity
+            ballot?.conversation = conversation
+
+            return (ballotID, receiverIdentity)
         }
 
         let expec = expectation(description: "TaskDefinitionSendBaseMessage")
         var expecError: Error?
 
-        let task = TaskDefinitionSendBallotVoteMessage(ballot: ballot, group: nil, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBallotVoteMessage(
+            ballotID: ballotID,
+            receiverIdentity: receiverIdentity,
+            group: nil,
+            sendContactProfilePicture: false
+        )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expec.fulfill()
@@ -300,9 +314,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             )
         )
 
-        var ballot: Ballot!
-        var group: Group!
-        dbPreparer.save {
+        let (ballotID, group) = dbPreparer.save {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
@@ -317,33 +329,40 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
-                conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-                conversation.addMembers(members)
-                
-                ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
-                ballot.id = NaClCrypto.shared().randomBytes(8)
-                ballot.createDate = Date()
-                ballot.creatorID = frameworkInjectorMock.myIdentityStore.identity
-                ballot.conversation = conversation
-                
-                group = Group(
-                    myIdentityStore: myIdentityStoreMock,
-                    userSettings: userSettingsMock,
-                    groupEntity: groupEntity,
-                    conversation: conversation,
-                    lastSyncRequest: nil
-                )
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(members)
 
-                groupManagerMock.getConversationReturns = conversation
-            }
+            let ballotID = MockData.generateBallotID()
+            let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
+            ballot?.id = ballotID
+            ballot?.createDate = Date()
+            ballot?.creatorID = frameworkInjectorMock.myIdentityStore.identity
+            ballot?.conversation = conversation
+
+            let group = Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            groupManagerMock.getConversationReturns = conversation
+
+            return (ballotID, group)
         }
 
         let expec = expectation(description: "TaskDefinitionSendBaseMessage")
         var expecError: Error?
         
-        let task = TaskDefinitionSendBallotVoteMessage(ballot: ballot, group: group, sendContactProfilePicture: false)
+        let task = TaskDefinitionSendBallotVoteMessage(
+            ballotID: ballotID,
+            receiverIdentity: nil,
+            group: group,
+            sendContactProfilePicture: false
+        )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expec.fulfill()

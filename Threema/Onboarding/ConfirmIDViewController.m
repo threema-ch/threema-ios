@@ -42,7 +42,7 @@
 }
 
 - (void)setup {
-    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], [ThreemaAppObjc currentName]];
+    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], [ThreemaAppObjc appName]];
 
     if ([LicenseStore requiresLicenseKey]) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_confirm_description_work"];

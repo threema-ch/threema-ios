@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,8 +18,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CoreData
 import Foundation
+import ThreemaProtocols
 
-public protocol GroupCallManagerUIDelegate: AnyObject {
-    @MainActor func showViewController(for: GroupCallViewModel)
+/// Used to pass back information needed for sending the `CspE2e_GroupCallStart` after a new call was successfully set
+/// up
+public struct WrappedGroupCallStartMessage: Sendable {
+    public let startMessage: CspE2e_GroupCallStart
+    public let creatorID: ThreemaID
+    public let groupID: Data
 }

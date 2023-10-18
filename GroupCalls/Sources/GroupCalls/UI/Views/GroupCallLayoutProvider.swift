@@ -23,19 +23,24 @@ import UIKit
 
 class GroupCallLayoutProvider {
     
-    @MainActor static func createLayout(numberOfParticipants: Int) -> UICollectionViewCompositionalLayout {
-        // TODO: (IOS-4049) Shouldn't this be based on `UIUserInterfaceSizeClass` in the trait collection?
+    // TODO: (IOS-4049) Remove `view` hack if possible
+    
+    @MainActor static func createLayout(
+        numberOfParticipants: Int,
+        view: UIView
+    ) -> UICollectionViewCompositionalLayout {
+        // TODO: (IOS-4049) Decide layout based on `UIUserInterfaceSizeClass` in the trait collection instead of this
         if UIDevice.current.userInterfaceIdiom == .pad {
-            return createLayoutForPads(numberOfParticipants: numberOfParticipants)
+            return createLayoutForPads(numberOfParticipants: numberOfParticipants, view: view)
         }
         else {
-            return createLayoutForPhones(numberOfParticipants: numberOfParticipants)
+            return createLayoutForPhones(numberOfParticipants: numberOfParticipants, view: view)
         }
     }
     
     // MARK: - Phone
     
-    @MainActor private static func createLayoutForPhones(numberOfParticipants: Int)
+    @MainActor private static func createLayoutForPhones(numberOfParticipants: Int, view: UIView)
         -> UICollectionViewCompositionalLayout {
         let inset: CGFloat = 2 // TODO: (IOS-4049) Add to config
         
@@ -49,7 +54,7 @@ class GroupCallLayoutProvider {
         
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .fractionalHeight(cellHeightFactorPhone(numberOfParticipants: numberOfParticipants))
+            heightDimension: .absolute(cellHeightFactorPhone(numberOfParticipants: numberOfParticipants, view: view))
         )
         
         let group = NSCollectionLayoutGroup.horizontal(
@@ -58,22 +63,28 @@ class GroupCallLayoutProvider {
         )
         
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsetsReference = .safeArea // TODO: (IOS-4049) Verify insets
-        let configuration = UICollectionViewCompositionalLayoutConfiguration()
-        configuration.contentInsetsReference = .layoutMargins // TODO: (IOS-4049) Verify insets
-        let layout = UICollectionViewCompositionalLayout(section: section, configuration: configuration)
+        let layout = UICollectionViewCompositionalLayout(section: section)
 
         return layout
     }
     
-    private static func cellHeightFactorPhone(numberOfParticipants: Int) -> Double {
+    @MainActor private static func cellHeightFactorPhone(numberOfParticipants: Int, view: UIView) -> Double {
+        let safeAreaHeight: Double
+        if view.bounds.height != 0 {
+            safeAreaHeight = view.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+        }
+        else {
+            // Fallback to never return 0
+            safeAreaHeight = UIScreen.main.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+        }
+        
+        assert(safeAreaHeight != 0.0, "This should never return 0")
+        
         switch numberOfParticipants {
-        case 5...:
-            return 0.475
-        case 2..<5:
-            return 0.5
+        case 2...:
+            return safeAreaHeight / 2
         default:
-            return 1.0
+            return safeAreaHeight
         }
     }
     
@@ -88,12 +99,15 @@ class GroupCallLayoutProvider {
     
     // MARK: - Pad
     
-    @MainActor private static func createLayoutForPads(numberOfParticipants: Int)
-        -> UICollectionViewCompositionalLayout {
+    @MainActor private static func createLayoutForPads(
+        numberOfParticipants: Int,
+        view: UIView
+    ) -> UICollectionViewCompositionalLayout {
+        
         let inset: CGFloat = 5 // TODO: (IOS-4049) Add to config
         
         let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(verticalFractionPad(numberOfParticipants: numberOfParticipants)),
+            widthDimension: .absolute(verticalFractionPad(numberOfParticipants: numberOfParticipants, view: view)),
             heightDimension: .fractionalHeight(1.0)
         )
         
@@ -102,7 +116,7 @@ class GroupCallLayoutProvider {
         
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .fractionalHeight(cellHeightFactorPad(numberOfParticipants: numberOfParticipants))
+            heightDimension: .absolute(cellHeightFactorPad(numberOfParticipants: numberOfParticipants, view: view))
         )
         
         let group = NSCollectionLayoutGroup.horizontal(
@@ -110,34 +124,60 @@ class GroupCallLayoutProvider {
             subitems: [item]
         )
         
+        // If this is true we have have an infinite loop
+        assert(
+            itemSize.widthDimension.dimension != 0.0 && groupSize.heightDimension.dimension != 0.0,
+            "Both sizes should never be 0"
+        )
+        
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsetsReference = .safeArea // TODO: (IOS-4049) Verify insets
         let configuration = UICollectionViewCompositionalLayoutConfiguration()
-        configuration.contentInsetsReference = .layoutMargins // TODO: (IOS-4049) Verify insets
         let layout = UICollectionViewCompositionalLayout(section: section, configuration: configuration)
 
         return layout
     }
     
-    private static func cellHeightFactorPad(numberOfParticipants: Int) -> Double {
+    @MainActor private static func cellHeightFactorPad(numberOfParticipants: Int, view: UIView) -> Double {
+        let safeAreaHeight: Double
+        if view.bounds.height != 0 {
+            safeAreaHeight = view.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+        }
+        else {
+            // Fallback to never return 0
+            safeAreaHeight = UIScreen.main.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+        }
+        
+        assert(safeAreaHeight != 0.0, "This should never return 0")
+        
         switch numberOfParticipants {
-        case 3, 4:
-            return 0.5
-        case 5...:
-            return 0.33
+        case 7...:
+            return safeAreaHeight / 3
+        case 3...6:
+            return safeAreaHeight / 2
         default:
-            return 1.0
+            return safeAreaHeight
         }
     }
     
-    private static func verticalFractionPad(numberOfParticipants: Int) -> Double {
+    @MainActor private static func verticalFractionPad(numberOfParticipants: Int, view: UIView) -> Double {
+        let safeAreaWidth: Double
+        if view.bounds.height != 0 {
+            safeAreaWidth = view.bounds.width - view.safeAreaInsets.left - view.safeAreaInsets.right
+        }
+        else {
+            // Fallback to never return 0
+            safeAreaWidth = UIScreen.main.bounds.width - view.safeAreaInsets.left - view.safeAreaInsets.right
+        }
+        
+        assert(safeAreaWidth != 0.0, "This should never return 0")
+        
         switch numberOfParticipants {
-        case 2, 3, 4:
-            return 0.5
         case 5...:
-            return 0.33
+            return safeAreaWidth / 3
+        case 2...4:
+            return safeAreaWidth / 2
         default:
-            return 1.0
+            return safeAreaWidth
         }
     }
 }

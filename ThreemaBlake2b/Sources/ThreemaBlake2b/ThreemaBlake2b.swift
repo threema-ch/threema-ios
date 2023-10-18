@@ -27,7 +27,7 @@ import Foundation
 ///
 /// There are function to derive a new key and to hash. They allow for various inputs using `Data` or `String`s.
 /// If BLAKE2b is called more than once with the same personal a struct instance can be created.
-public struct ThreemaBlake2b {
+public struct ThreemaBlake2b: Sendable {
     
     public enum Error: Swift.Error {
         case failedToConvertStringToData

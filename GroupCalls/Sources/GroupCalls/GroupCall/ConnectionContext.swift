@@ -69,9 +69,39 @@ final class ConnectionContext<
         sharedInstance.useManualAudio = true
         sharedInstance.isAudioEnabled = true
         
+        let audioConfiguration = RTCAudioSessionConfiguration()
+        audioConfiguration.category = AVAudioSession.Category.playAndRecord.rawValue
+        audioConfiguration.mode = AVAudioSession.Mode.voiceChat.rawValue
+        audioConfiguration.categoryOptions = AVAudioSession.CategoryOptions(
+            arrayLiteral: .duckOthers,
+            .allowBluetooth,
+            .allowBluetoothA2DP,
+            .allowAirPlay
+        )
+        RTCAudioSessionConfiguration.setWebRTC(audioConfiguration)
+        
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(
+                .playAndRecord,
+                mode: .voiceChat,
+                options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP, .allowAirPlay]
+            )
+            if shouldActivateSpeaker() == true {
+                try audioSession.overrideOutputAudioPort(.speaker)
+            }
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        }
+        catch let error as NSError {
+            DDLogError(
+                "GC: Failed to set the audio session category, mode and override output audio port: \(error.localizedDescription)"
+            )
+        }
+        
         return sharedInstance
     }()
     
+    // TODO: (IOS-4161) Unused, see 1:1 calls
     let audioQueue = DispatchQueue(label: "VoIPCallAudioQueue")
         
     var messageStream: AsyncStream<PeerConnectionMessage> {
@@ -103,11 +133,11 @@ final class ConnectionContext<
         
         // Initialize WebRTC Logger
         Task.detached { [weak self] in
-            // TODO: IOS-3728
             self?.webrtcLogger.severity = .warning
             self?.webrtcLogger.start { message in
-                let trimmed = message.trimmingCharacters(in: .newlines)
-                DDLogNotice("[GroupCall] [libwebrtc] \(trimmed)")
+                if let trimmed = RTCCallbackLogger.trimMessage(message: message) {
+                    DDLogNotice("[GroupCall] [libwebrtc] \(trimmed)")
+                }
             }
         }
     }
@@ -129,7 +159,7 @@ final class ConnectionContext<
         self.sessionParameters = sessionParameters
         
         self.sessionDescription = GroupCallSessionDescription(localParticipantID: sessionParameters.participantID)
-        self.myParticipantID = Participant(id: sessionParameters.participantID)
+        self.myParticipantID = Participant(participantID: sessionParameters.participantID)
         self.dependencies = dependencies
     }
     
@@ -210,7 +240,7 @@ final class ConnectionContext<
 
         try await remapLocalTransceivers(unmapped: unmapped, remove: remove, add: add)
         await remapExistingRemoteTransceivers(unmapped: unmapped, add: add)
-        await remapAddedRemoteTransceivers(unmapped: &unmapped, add: add, participantState: call)
+        try await remapAddedRemoteTransceivers(unmapped: &unmapped, add: add, participantState: call)
         
         // Ensure there are no unmapped remaining transceivers
         guard await unmapped.isEmpty else {
@@ -275,15 +305,10 @@ extension ConnectionContext {
         await withTaskGroup(of: Void.self, body: { group in
             for candidate in candidates {
                 group.addTask {
-                    // TODO: (IOS-3813) should we handle this error?
                     try? await self.add(candidate)
                 }
             }
         })
-    }
-    
-    func leave() async {
-        await teardown()
     }
     
     /// Tears down any connections to the SFU and/or other clients
@@ -293,9 +318,11 @@ extension ConnectionContext {
     /// Note that the implementation in the android app is much more sophisticated. Instead of replicating
     /// the solution from android we did a teardown similar to the one done for 1:1 calls in our app.
     func teardown() async {
+        DDLogVerbose("[GroupCall] Teardown: ConnectionContext")
         audioTrack?.isEnabled = false
         videoTrack?.isEnabled = false
         
+        // TODO: (IOS-4161) Restore previous audio session
         RTCAudioSession.sharedInstance().lockForConfiguration()
         do {
             if RTCAudioSession.sharedInstance().isActive {
@@ -304,7 +331,7 @@ extension ConnectionContext {
         }
         catch {
             DDLogError(
-                "[GroupCall] An error occurred when setting the shared audio session to inactive \(error.localizedDescription)"
+                "[GroupCall] An error occurred when resetting the shared audio session \(error.localizedDescription)"
             )
         }
         RTCAudioSession.sharedInstance().unlockForConfiguration()
@@ -338,6 +365,28 @@ extension ConnectionContext {
             throw error
         }
     }
+        
+    private static func shouldActivateSpeaker() -> Bool {
+        let currentRoute = AVAudioSession.sharedInstance().currentRoute
+        var activateSpeaker = true
+        
+        for output in currentRoute.outputs {
+            switch output.portType {
+            case .builtInReceiver:
+                activateSpeaker = true
+            case .builtInSpeaker:
+                activateSpeaker = true
+            case .headphones:
+                activateSpeaker = false
+            case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
+                activateSpeaker = false
+            default:
+                activateSpeaker = true
+            }
+        }
+        
+        return activateSpeaker
+    }
 }
 
 // MARK: - Transceiver Mapping & Remapping
@@ -355,7 +404,7 @@ extension ConnectionContext {
         
         let newLocalTransceivers = try await {
             var result = [SdpKind: RTCRtpTransceiverImpl]()
-            let mids = Mids(from: myParticipantID.id).toMap()
+            let mids = Mids(from: myParticipantID.participantID).toMap()
             
             for (kind, mid) in mids {
                 guard let transceiver = await map.removeValue(for: mid) else {
@@ -383,7 +432,7 @@ extension ConnectionContext {
                     // Add encryptor
                     try self.cryptoContext.attachEncryptor(
                         to: productionTransceiver,
-                        myParticipantID: myParticipantID.id
+                        myParticipantID: myParticipantID.participantID
                     )
                 }
                 else {
@@ -414,7 +463,7 @@ extension ConnectionContext {
         unmapped: inout TransceiverMapActor<RTCRtpTransceiverImpl>,
         add: Set<ParticipantID>,
         participantState: ParticipantStateActor
-    ) async {
+    ) async throws {
         
         // Create all newly added (pending) remote participant states and map their
         // transceivers.
@@ -428,7 +477,7 @@ extension ConnectionContext {
 //                DDLogError(msg)
 //            }
             
-            // TODO: Add decryptor
+            // TODO: (IOS-4058) Add decryptor
 //            let decryptor = frameCrypto.addDecryptor(id: participantID.id)
             
             // Create transceivers map
@@ -455,7 +504,7 @@ extension ConnectionContext {
             }
             
             // Apply newly mapped transceivers to the control state
-            await participantState.setRemoteContext(
+            try participantState.setRemoteContext(
                 participantID: participantID,
                 remoteContext: RemoteContext.fromTransceiverMap(transceivers: remoteTransceivers)
             )
@@ -475,7 +524,7 @@ extension ConnectionContext {
         
         let newLocalTransceivers = await { [self] in
             var result = [SdpKind: RTCRtpTransceiverImpl]()
-            let mids = Mids(from: myParticipantID.id).toMap()
+            let mids = Mids(from: myParticipantID.participantID).toMap()
             for (kind, mid) in mids {
                 // Mark it as mapped
                 guard let transceiver = await unmapped.removeValue(for: mid) else {
@@ -508,7 +557,7 @@ extension ConnectionContext {
         DDLogVerbose("[GroupCall] Remapping all existing remote transceivers")
         for (participantID, remoteTransceivers) in await transceivers.remote {
             // Sanity checks
-            // TODO: Add sanity checks
+            // TODO: (IOS-4085) Add sanity checks
 //            guard sessionParameters.participantID != session.mLineOrder ||
 //                sessionParameters.participantID != transceivers.remote[participantID] ||
 //                add.contains(participantID) else {
@@ -590,11 +639,7 @@ extension ConnectionContext {
         relayEnvelope.padding = dependencies.groupCallCrypto.padding()
         relayEnvelope.relay = relay
         
-        // TODO: (IOS-3813) fatal error and try? is ugly
-        guard let serializedOuter = try? relayEnvelope.serializedData() else {
-            throw GroupCallError.serializationFailure
-        }
-        
+        let serializedOuter = try relayEnvelope.ownSerializedData()
         let buffer = RTCDataBuffer(data: serializedOuter, isBinary: true)
         
         webRTCConnectionContext.send(buffer)
@@ -611,12 +656,16 @@ extension ConnectionContext {
 extension ConnectionContext {
     func startVideoCapture(position: CameraPosition?) async throws {
         guard let videoCapturer else {
-            // TODO: IOS-3743 Group Calls Graceful Error Handling
-            fatalError()
+            throw GroupCallError.captureError
         }
         
         let device = RTCCameraVideoCapturer.captureDevices()
-            .first { $0.position == position?.avDevicePosition ?? .front }!
+            .first { $0.position == position?.avDevicePosition ?? .front }
+        
+        guard let device else {
+            throw GroupCallError.captureError
+        }
+        
         let format = selectFormatForDevice(
             device: device,
             width: GroupCallConfiguration.SendVideo.width,
@@ -625,8 +674,7 @@ extension ConnectionContext {
         )
         videoTrack?.isEnabled = true
         
-        // TODO: (IOS-3813) Shouldn't we handle this error?
-        try? await videoCapturer.startCapture(with: device, format: format, fps: 30)
+        try await videoCapturer.startCapture(with: device, format: format, fps: 30)
     }
     
     func createLocalMediaSenders() {
@@ -647,11 +695,10 @@ extension ConnectionContext {
             fatalError("We assigned audioSource above, this doesn't happen")
         }
         
-        // swiftformat:disable acronyms
+        // swiftformat:disable:next acronyms
         let audioTrack = PeerConnectionContext.peerConnectionFactory.audioTrack(with: audioSource, trackId: "gcAudio0")
-        // swiftformat:enable acronyms
         
-        // TODO: IOS-3877 auto mute after 3 participants
+        // TODO: (IOS-4078) Auto mute after 3 participants
         audioTrack.isEnabled = false
         
         return audioTrack
@@ -659,17 +706,10 @@ extension ConnectionContext {
     
     private func createVideoTrack() -> RTCVideoTrack {
         let videoSource = PeerConnectionContext.peerConnectionFactory.videoSource()
+        videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
         
-        #if targetEnvironment(simulator)
-        // TODO: Do something nice for the simulator
-        //        self.connectionContext.videoCapturer = RTCFileVideoCapturer(delegate: videoSource)
-        #else
-            videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
-        #endif
-        
-        // swiftformat:disable acronyms
+        // swiftformat:disable:next acronyms
         let videoTrack = PeerConnectionContext.peerConnectionFactory.videoTrack(with: videoSource, trackId: "gcVideo0")
-        // swiftformat:enable acronyms
         
         videoTrack.isEnabled = false
         return videoTrack

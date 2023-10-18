@@ -138,7 +138,7 @@ extension AudioMessageEntity: BlobData {
     }
     
     public var blobWebFilename: String {
-        "threema-\(DateFormatter.getDateForWeb(date))-audio.\(MEDIA_EXTENSION_AUDIO)"
+        "threema-\(DateFormatter.getDateForFilename(date))-audio.\(MEDIA_EXTENSION_AUDIO)"
     }
     
     public var blobExternalFilename: String? {

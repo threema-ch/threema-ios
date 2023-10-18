@@ -48,7 +48,7 @@ final class GroupCallContextTests: XCTestCase {
         let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()
         
         let localParticipant = LocalParticipant(
-            id: ParticipantID(id: 0),
+            participantID: ParticipantID(id: 0),
             contactModel: ContactModel(identity: "ECHOECHO", nickname: "ECHOECHO"),
             localContext: LocalContext(),
             threemaID: try! ThreemaID(id: "ECHOECHO"),
@@ -120,7 +120,7 @@ final class GroupCallContextTests: XCTestCase {
         )
         
         let localParticipant = LocalParticipant(
-            id: ParticipantID(id: 0),
+            participantID: ParticipantID(id: 0),
             contactModel: ContactModel(identity: "ECHOECHO", nickname: "ECHOECHO"),
             localContext: LocalContext(),
             threemaID: try! ThreemaID(id: "ECHOECHO"),
@@ -216,7 +216,7 @@ final class GroupCallContextTests: XCTestCase {
                 )
             
                 let localParticipant = await LocalParticipant(
-                    id: ParticipantID(id: 0),
+                    participantID: ParticipantID(id: 0),
                     contactModel: ContactModel(identity: "ECHOECHO", nickname: "ECHOECHO"),
                     localContext: LocalContext(),
                     threemaID: try! ThreemaID(id: "ECHOECHO"),
@@ -293,7 +293,8 @@ final class GroupCallContextTests: XCTestCase {
                 var helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello()
                 helloMessage.identity = "ECHOECHO"
                 helloMessage.nickname = "ECHOECHO"
-                helloMessage.pcck = Data(repeating: 0x01, count: 32)
+                // The random bytes of the crypto mock also returns 0x01 thus we have to use something different here
+                helloMessage.pcck = Data(repeating: 0x03, count: 32)
                 helloMessage.pck = Data(repeating: 0x02, count: 32)
             
                 let nonce = Data(repeating: 0x03, count: 24)
@@ -302,7 +303,7 @@ final class GroupCallContextTests: XCTestCase {
                 handshakeHello.hello = helloMessage
                 handshakeHello.padding = nonce
             
-                let serialized = try handshakeHello.serializedData()
+                let serialized = try handshakeHello.ownSerializedData()
             
                 let encrypted = try XCTUnwrap(groupCallDescription.symmetricEncryptByGCHK(serialized, nonce: nonce))
             
@@ -317,7 +318,7 @@ final class GroupCallContextTests: XCTestCase {
                 let reaction = try! await groupCallContext.handle(envelope)
             
                 if case let .participantToParticipant(participant, data) = reaction {
-                    let id = await participant.id
+                    let id = participant.participantID.id
                     print("ID is \(id)")
                     XCTAssertEqual(id, envelope.sender)
                     XCTAssertGreaterThan(data.count, 0)

@@ -309,8 +309,8 @@ typedef enum : NSUInteger {
             }
         }
         else if (_mode == ModeWorkContacts) {
-            _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc currentName]];
-            _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], [ThreemaAppObjc currentName]];
+            _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
+            _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], [ThreemaAppObjc appName]];
         }
         else {
             _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_groups"];

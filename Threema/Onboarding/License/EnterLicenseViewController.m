@@ -120,7 +120,7 @@
     NSMutableDictionary *workInfoLinkAttributes = [[NSMutableDictionary alloc] initWithDictionary:linkAttributes];
     workInfoLinkAttributes[NSFontAttributeName] = _threemaAppLinkLabel.font;
     
-    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_work_info"], [ThreemaAppObjc currentName]];
+    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_work_info"], [ThreemaAppObjc appName]];
     NSMutableAttributedString *attributedWorkInfoString = [[NSMutableAttributedString alloc] initWithString:message attributes:workInfoLinkAttributes];
     
     _threemaWorkInfoLabel.font = [UIFont systemFontOfSize:16.0];

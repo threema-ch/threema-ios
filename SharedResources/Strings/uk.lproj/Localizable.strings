@@ -394,6 +394,7 @@
 "chat_search_searching" = "Пошук…";
 "chat_search_no_matches" = "Немає збігів";
 "chat_search_matches" = "%d з %d збігів";
+"chat_search_note" = "Примітка: підписи в медіафайлах не включені в результати пошуку.";
 
 "choose_recipient" = "Обрати отримувача";
 
@@ -764,6 +765,8 @@
 "call_threema_cellular_instead_of_wifi_title" = "Виклик через стільник";
 "call_threema_cellular_instead_of_wifi_text" = "Увага: цей виклик передає дані у стільниковій мережі.";
 
+// Group Calls
+"group_call_title" = "Груповий дзвінок";
 /* Group Calls */
 "group_call_join_button_title" = "Приєднатися";
 "group_call_open_button_title" = "Відкрити";
@@ -779,6 +782,20 @@
 "group_call_navbar_state_connecting" = "Під’єднання…";
 "group_call_navbar_state_joining" = "Приєднання…";
 "group_call_navbar_state_connected" = "Під’єднано";
+
+"group_call_error_generic_title" = "Сталася помилка";
+"group_call_error_generic_message" = "Якщо проблема не зникне, зверніться до служби підтримки.";
+
+"group_call_accessibility_hide_view" = "Приховати груповий виклик";
+"group_call_accessibility_enable_camera" = "Увімкнути камеру";
+"group_call_accessibility_disable_camera" = "Вимкнути камеру";
+"group_call_accessibility_audio_output" = "Змінити аудіовихід";
+"group_call_accessibility_enable_microphone" = "Увімкнути мікрофон";
+"group_call_accessibility_disable_microphone" = "Вимкнути мікрофон";
+"group_call_accessibility_audio_enabled" = "Мікрофон увімкнено";
+"group_call_accessibility_audio_disabled" = "Мікрофон вимкнено";
+"group_call_accessibility_video_enabled" = "Камеру увімкнено";
+"group_call_accessibility_video_disabled" = "Камеру вимкнено";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema захищає вашу приватність суворіше, ніж будь-який інший месенджер. Дізнайтесь більше у нашій Політиці конфіденційності.";
@@ -1216,6 +1233,10 @@
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Ретранслюйте всі виклики через ваші сервери OnPrem, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
 "settings_threema_voip_include_call_in_recents_footer_off" = "Виклики показуються на заблокованому екрані, але не перелічені в списку викликів програми Телефон.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Виклики показуються на заблокованому екрані та перелічені в списку викликів програми Телефон. Якщо iCloud Drive активовано, список викликів програми Телефон синхронізується через сервери Apple.";
+"settings_threema_voip_no_callkit_in_china_footer" = "Через обмеження, встановлені Apple, дзвінки через Threema недоступні, якщо регіон пристрою — Китай.";
+"settings_threema_calls_group_calls_header" = "Групові дзвінки ";
+"settings_threema_calls_enable_group_calls" = "Увімкнути групові дзвінки Threema";
+
 // Advanced Settings
 "settings_advanced_networking_section_header" = "Мережа";
 "settings_advanced_ipv6_title" = "IPv6";
@@ -1482,6 +1503,8 @@
 "multi_device_join_fatal_no_internet_connection_title" = "Немає підключення до Інтернету";
 "multi_device_join_failed_to_send_data_title" = "Не вдалося надіслати дані";
 "multi_device_join_fatal_error_message" = "Спробуйте ще раз прив’язати пристрій. Якщо проблема не зникне зверніться до служби підтримки («Налаштування» > «Підтримка»)";
+"multi_device_join_failed_threema_web_title" = "Існуюче підключення до застосунку/вебверсії";
+"multi_device_join_failed_threema_web_message" = "Вимкніть застосунок / вебверсію («Налаштування» > «Застосунок / вебверсія») і спробуйте повторно прив’язати пристрій. Якщо проблема не зникне, зверніться до служби підтримки («Налаштування > «Підтримка»).";
 "multi_device_join_unknown_qr_code_title" = "Невідомий QR-код";
 "multi_device_join_unknown_qr_code_message" = "Переконайтеся, що ви використовуєте відповідний застосунок з %@.";
 "multi_device_join_incompatible_version_title" = "Несумісна версія";

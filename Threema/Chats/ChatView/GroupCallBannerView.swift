@@ -142,37 +142,35 @@ final class GroupCallBannerView: UIView {
     
     // MARK: - Updates
     
-    public func updateBannerState(state: GroupCallButtonBannerState) {
+    public func updateBannerState(_ update: GroupCallBannerButtonUpdate) {
         Task { @MainActor in
-            switch state {
-            case let .visible(info):
-                
+            if update.hideComponent {
+                timer?.invalidate()
+                startDate = nil
+                isHidden = true
+            }
+            else {
                 // Only show participants if there are more than 0 reported
                 let localizedParticipantsText: String
-                if info.numberOfParticipants > 0 {
+                if update.numberOfParticipants > 0 {
                     localizedParticipantsText = String.localizedStringWithFormat(
                         BundleUtil.localizedString(forKey: "group_call_participants_title"),
-                        String(info.numberOfParticipants)
+                        String(update.numberOfParticipants)
                     )
                 }
                 else {
                     localizedParticipantsText = BundleUtil.localizedString(forKey: "group_call_title")
                 }
-                
+
                 participantsLabel.text = localizedParticipantsText
-                
-                let text = info.joinState == .runningLocal ? BundleUtil
+
+                let text = update.joinState == .runningLocal ? BundleUtil
                     .localizedString(forKey: "group_call_open_button_title") : BundleUtil
                     .localizedString(forKey: "group_call_join_button_title")
                 joinButton.configuration?.title = text
-                
-                startTimeLabelUpdates(startDate: info.startDate)
+
+                startTimeLabelUpdates(startDate: update.startDate)
                 isHidden = false
-                
-            case .hidden:
-                timer?.invalidate()
-                startDate = nil
-                isHidden = true
             }
         }
     }

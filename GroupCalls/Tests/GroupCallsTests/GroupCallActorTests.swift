@@ -87,6 +87,28 @@ final class GroupCallActorTests: XCTestCase {
         XCTAssertFalse(result)
     }
     
+    func testLessThanTenHoursAgo() async throws {
+        let dependencies = MockDependencies().create()
+
+        let gck = Data(repeating: 0x01, count: 32)
+
+        let groupCallActor = try GroupCallActor(
+            localIdentity: ThreemaID(id: "ECHOECHO"),
+            groupModel: GroupCallsThreemaGroupModel(
+                creator: ThreemaID(id: "ECHOECHO"),
+                groupID: Data(),
+                groupName: "ECHOECHO",
+                members: Set([])
+            ),
+            sfuBaseURL: "",
+            gck: gck,
+            startMessageReceiveDate: .now,
+            dependencies: dependencies
+        )
+        
+        XCTAssertFalse(groupCallActor.receivedMoreThan10HoursAgo)
+    }
+    
     func testTenHoursAgo() async throws {
         let dependencies = MockDependencies().create()
 

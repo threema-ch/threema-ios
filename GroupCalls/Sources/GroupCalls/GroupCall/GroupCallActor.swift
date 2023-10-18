@@ -21,8 +21,9 @@
 import CocoaLumberjackSwift
 import CryptoKit
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
-import WebRTC
+@preconcurrency import WebRTC
 
 // Manages a single group call
 actor GroupCallActor: Sendable {
@@ -41,43 +42,43 @@ actor GroupCallActor: Sendable {
     var failedCounter = 0
     let startMessageReceiveDate: Date
     var isChosenCall = false
+    var isNew = false
     
-    // MARK: Nonisolated Properties
+    // MARK: Non-isolated Properties
     
     nonisolated var group: GroupCallsThreemaGroupModel {
-        groupCallDescription.group
+        groupCallBaseState.group
     }
     
     nonisolated var callID: GroupCallID {
-        groupCallDescription.callID
+        groupCallBaseState.callID
     }
     
     nonisolated var protocolVersion: UInt32 {
-        groupCallDescription.protocolVersion
+        groupCallBaseState.protocolVersion
     }
     
     nonisolated var sfuBaseURL: String {
-        groupCallDescription.sfuBaseURL
+        groupCallBaseState.sfuBaseURL
     }
     
-    nonisolated var groupCallDescriptionCopy: GroupCallBaseState {
-        // TODO: (IOS-3813) Try! is ugly.
+    nonisolated var groupCallBaseStateCopy: GroupCallBaseState {
         try! GroupCallBaseState(
             group: group,
-            startedAt: groupCallDescription.startedAt,
-            // TODO: Use actual value
-            maxParticipants: groupCallDescription.maxParticipants,
+            startedAt: groupCallBaseState.startedAt,
+            // TODO: (IOS-4086) Use actual value from SFU, this needs to be refactored, also remove try!
+            maxParticipants: groupCallBaseState.maxParticipants,
             dependencies: dependencies,
             groupCallStartData: groupCallStartData
         )
     }
     
     nonisolated var logIdentifier: String {
-        "\(groupCallDescription.callID.bytes.base64EncodedString().prefix(6))"
+        "\(groupCallBaseState.callID.bytes.base64EncodedString().prefix(6))"
     }
     
     nonisolated var receivedMoreThan10HoursAgo: Bool {
-        startMessageReceiveDate.timeIntervalSinceNow < 60 * 60 * 10
+        startMessageReceiveDate.timeIntervalSinceNow < -(60 * 60 * 10)
     }
     
     // MARK: View Model
@@ -90,15 +91,6 @@ actor GroupCallActor: Sendable {
         }
     }
     
-    var hasEnded: Bool {
-        state.self is Ended
-    }
-    
-    /// The approximate call start date
-    ///
-    /// Do **not** use this for sorting calls by call creation time.
-    var approximateCallStartDateUI: Date?
-    
     /// The exact call start date of the call as determined by the SFU
     ///
     /// Use this for ordering calls by call creation time.
@@ -110,39 +102,48 @@ actor GroupCallActor: Sendable {
     
     // MARK: Streams
     
-    let stateQueue: AsyncStream<GroupCallUIAction>
-    private let stateContinuation: AsyncStream<GroupCallUIAction>.Continuation
+    let uiActionQueue: AsyncStream<GroupCallUIAction>
+    private let uiActionContinuation: AsyncStream<GroupCallUIAction>.Continuation
     
     let uiQueue: AsyncStream<GroupCallUIEvent>
     let uiContinuation: AsyncStream<GroupCallUIEvent>.Continuation
     
-    private var callStopSignal: AsyncStream<Void>?
-    var callStopSignalContinuation: AsyncStream<Void>.Continuation?
+    private var callLeaveQueue: AsyncStream<Void>?
+    var callLeaveContinuation: AsyncStream<Void>.Continuation?
+        
+    private weak var actorDelegate: GroupCallActorManagerDelegate?
     
     // MARK: - Private Properties
     
-    /// True between the point where join call was called and the state changed to joining
-    /// False otherwise
+    /// `True` between the point where join call was called and the state changed to joining
+    /// `False` otherwise
     private var startJoining = false
+    
+    private var startMessage: CspE2e_GroupCallStart?
     
     private var numberOfParticipants = 0
     
     private lazy var state: GroupCallState = UnJoined(groupCallActor: self) {
         didSet {
-            if let callStartStateContinuation {
-                callStartStateContinuation.yield(state)
-            }
-            
             switch state.self {
             case is UnJoined:
                 return
             case is Joining:
                 startJoining = false
                 uiContinuation.yield(.joining)
+                Task {
+                    await updateButtonAndBanner()
+                }
             case is Connecting:
                 uiContinuation.yield(.connecting)
+                Task {
+                    await updateButtonAndBanner()
+                }
             case is Connected:
                 uiContinuation.yield(.connected)
+                Task {
+                    await updateButtonAndBanner()
+                }
             default:
                 DDLogWarn(
                     "[GroupCall] State changed but no notice given to the view model for state \(state.self)"
@@ -151,14 +152,13 @@ actor GroupCallActor: Sendable {
         }
     }
     
-    private let groupCallDescription: GroupCallBaseState
+    private let groupCallBaseState: GroupCallBaseState
     private let groupCallStartData: GroupCallStartData
     
+    /// Task running group call state machine
     private var currentTask: Task<Void, Error>?
-    private var currentCameraPosition: CameraPosition = .front
     
-    private var callStartStateQueue: AsyncStream<GroupCallState>?
-    private var callStartStateContinuation: AsyncStream<GroupCallState>.Continuation?
+    private(set) var currentCameraPosition: CameraPosition = .front
     
     // MARK: - Lifecycle
     
@@ -169,6 +169,7 @@ actor GroupCallActor: Sendable {
         gck: Data,
         protocolVersion: UInt32 = 1,
         startMessageReceiveDate: Date = Date(),
+        actorDelegate: GroupCallActorManagerDelegate? = nil,
         dependencies: Dependencies
     ) throws {
         self.groupCallStartData = GroupCallStartData(
@@ -177,20 +178,21 @@ actor GroupCallActor: Sendable {
             sfuBaseURL: sfuBaseURL
         )
         
-        self.groupCallDescription = try GroupCallBaseState(
+        self.groupCallBaseState = try GroupCallBaseState(
             group: groupModel,
             startedAt: Date(),
-            // TODO: (IOS-4057) Use actual value
+            // TODO: (IOS-4086) Use actual value from SFU
             maxParticipants: 16,
             dependencies: dependencies,
             groupCallStartData: groupCallStartData
         )
+        self.actorDelegate = actorDelegate
         self.dependencies = dependencies
         self.localIdentity = localIdentity
         
         self.sfuHTTPConnection = SFUHTTPConnection(
             dependencies: dependencies,
-            groupCallDescription: groupCallDescription
+            groupCallDescription: groupCallBaseState
         )
         
         self.proposedGroupCall = ProposedGroupCall(
@@ -204,13 +206,13 @@ actor GroupCallActor: Sendable {
         
         self.startMessageReceiveDate = startMessageReceiveDate
         
-        (self.stateQueue, self.stateContinuation) = AsyncStream<GroupCallUIAction>.makeStream()
+        (self.uiActionQueue, self.uiActionContinuation) = AsyncStream<GroupCallUIAction>.makeStream()
         (self.uiQueue, self.uiContinuation) = AsyncStream<GroupCallUIEvent>.makeStream()
         observeNotifications()
     }
     
     deinit {
-        stateContinuation.finish()
+        uiActionContinuation.finish()
         uiContinuation.finish()
     }
     
@@ -228,56 +230,6 @@ actor GroupCallActor: Sendable {
     
     // MARK: - State Functions
     
-    func join(intent: GroupCallUserIntent) async throws {
-        /// **Protocol Step: Create or Join** 1. Let `intent` be the user's intent, i.e. to either only join or create
-        /// or join a group call.
-        startJoining = true
-        
-        let cancelledOrNil = currentTask?.isCancelled ?? true
-        approximateCallStartDateUI = Date.now
-        guard cancelledOrNil else {
-            DDLogNotice("[GroupCall] We are already runningLocal. Don't try again.")
-            assert(!(state is Ended))
-            assert(!(state is UnJoined))
-            return
-        }
-        
-        if intent == .create {
-            (callStartStateQueue, callStartStateContinuation) = AsyncStream<GroupCallState>.makeStream()
-        }
-        
-        currentTask = Task.detached(priority: .userInitiated, operation: { [weak self] in
-            guard let self else {
-                return
-            }
-            await self.process(state: self.state)
-        })
-        
-        if intent == .create {
-            if !(state is Connected) {
-                guard let callStartStateQueue else {
-                    // TODO: (IOS-3813) Check
-                    fatalError()
-                }
-                
-                for await newState in callStartStateQueue {
-                    DDLogNotice("[GroupCall] Waiting for call connected \(newState) ...")
-                    if newState is Connected {
-                        break
-                    }
-                    if newState is Ended {
-                        break
-                    }
-                }
-            }
-            
-            callStartStateQueue = nil
-            callStartStateContinuation = nil
-        }
-        
-        DDLogNotice("[GroupCall] Call is not yet connected but is \(state). Wait…")
-    }
-    
     func process(state: GroupCallState) async {
         defer {
             dependencies.groupCallSessionHelper.setHasActiveGroupCall(to: false, groupName: nil)
@@ -290,6 +242,7 @@ actor GroupCallActor: Sendable {
             // TODO: (IOS-3857) Logging
             DDLogNotice("[GroupCall] State is \(current.self)")
             self.state = current
+            
             guard !(state is Ended) else {
                 break
             }
@@ -297,18 +250,22 @@ actor GroupCallActor: Sendable {
             do {
                 iterator = try await current.next()
             }
+            catch let error as GroupCallError where !error.isFatal {
+                let message = "[GroupCall] Caught non-fatal GroupCallError: \(error)"
+                DDLogError(message)
+                assertionFailure(message)
+                continue
+            }
             catch {
-                // TODO: IOS-3813 Handle Error, and possibly terminate and clean up. see below.
-                break
+                let message = "[GroupCall] Caught error: \(error). Tearing down."
+                DDLogError(message)
+                assertionFailure(message)
+                iterator = await Ending(groupCallActor: self)
             }
         }
         
-        uiContinuation.yield(.leaveConfirmed)
-        
-        self.state = UnJoined(groupCallActor: self)
-        
-        currentTask?.cancel()
-        teardown()
+        /// **Leave Call** 4. All other things are cleaned up now, we finish with the actor itself.
+        await leaveCall()
     }
     
     enum PeekResult {
@@ -338,15 +295,14 @@ actor GroupCallActor: Sendable {
         
         /// **Protocol Step: Periodic Refresh** 3.1. If the user is currently participating in call, abort the peek-call
         /// sub-steps.
-        guard !(state is Connected) else {
+        guard state is UnJoined else {
             return .running
         }
         
-        // TODO: (IOS-3813) Actually do as describe below
         /// **Protocol Step: Periodic Refresh** 3.2. Peek the call via a SfuHttpRequest.Peek request. If this does not
         /// result in a response within 5s, remove call from calls and abort the peek-call sub-steps.
         let task = Task {
-            try await self.sfuHTTPConnection.sendPeek()
+            try await self.sfuHTTPConnection.peek()
         }
         
         let intermediateResult = try await Task.timeout(task, 5)
@@ -354,6 +310,9 @@ actor GroupCallActor: Sendable {
         switch intermediateResult {
         case let .error(error):
             if let error {
+                if case GroupCallError.invalidToken = error {
+                    return .invalidToken
+                }
                 throw error
             }
             else {
@@ -364,79 +323,63 @@ actor GroupCallActor: Sendable {
             return .timeout
             
         case let .result(peekResponse):
-            if await handle(peekResult: peekResponse) {
-                return .running
-            }
-            else {
-                return .ended
-            }
+            return try await handle(peekResult: peekResponse)
         }
     }
     
-    func handle(peekResult: SFUHTTPConnection.PeekResponse) async -> Bool {
+    func handle(peekResult: SFUHTTPConnection.PeekResponse) async throws -> PeekResult {
         switch peekResult {
         case let .running(peekResponse):
-            approximateCallStartDateUI = Date(timeIntervalSince1970: TimeInterval(peekResponse.startedAt / 1000))
             exactCallStartDate = peekResponse.startedAt
             
             if peekResponse.hasEncryptedCallState {
                 let nonce = peekResponse.encryptedCallState[0..<24]
                 let peekResponseData = peekResponse.encryptedCallState[24..<peekResponse.encryptedCallState.count]
                 
-                // TODO: (IOS-3813) fatal error and try? is ugly
-                guard let decryptedData = groupCallDescription.symmetricDecryptByGSCK(peekResponseData, nonce: nonce),
+                guard let decryptedData = groupCallBaseState.symmetricDecryptByGSCK(peekResponseData, nonce: nonce),
                       let decryptedCallState = try? Groupcall_CallState(serializedData: decryptedData) else {
                     DDLogError("[GroupCall] Peek Could not decrypt encrypted call state")
-                    return false
+                    throw GroupCallError.decryptionFailure
                 }
-                
-                assert(decryptedCallState.unknownFields.data.isEmpty)
-                
+                                
                 // We add one for the creator, which is not included in participants
                 numberOfParticipants = decryptedCallState.participants.count + 1
-                let callInfo = GroupCallBannerButtonInfo(
-                    numberOfParticipants: numberOfParticipants,
-                    startDate: approximateCallStartDateUI ?? .now,
-                    joinState: joinState()
-                )
-                uiContinuation.yield(.callStateChanged(.visible(callInfo)))
+                
+                await updateButtonAndBanner()
                 
                 DDLogNotice(
                     "[GroupCall] [PeriodicCleanup] Still running call with id \(logIdentifier)"
                 )
             }
-            return true
+            return .running
             
         case .notDetermined:
             DDLogNotice(
                 "[GroupCall] [PeriodicCleanup] Not determined call with id \(logIdentifier)"
             )
-            return true
+            return .invalid
             
-        case .timeout:
+        case .invalidRequest:
             DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] Timeout for call with id \(logIdentifier)"
+                "[GroupCall] [PeriodicCleanup] Invalid Request for call with id \(logIdentifier)"
             )
-            
-            uiContinuation.yield(.callStateChanged(.hidden))
-            return false
+            await updateButtonAndBanner(hide: true)
+            return .ended
             
         case .needsTokenRefresh:
-            // TODO: (IOS-3813) Return this to caller and check error
-            fatalError()
+            return .invalidToken
             
         case .notRunning:
             DDLogNotice(
                 "[GroupCall] [PeriodicCleanup] Not running call with id \(logIdentifier)"
             )
-            
-            uiContinuation.yield(.callStateChanged(.hidden))
-            return false
+            await updateButtonAndBanner(hide: true)
+            return .ended
         }
     }
     
     func connectedConfirmed() {
-        stateContinuation.yield(.connectedConfirmed)
+        uiActionContinuation.yield(.connectedConfirmed)
     }
     
     func joinState() -> GroupCallJoinState {
@@ -479,12 +422,77 @@ actor GroupCallActor: Sendable {
         self.exactCallStartDate = exactCallStartDate
     }
     
-    private func teardown() {
-        // TODO: IOS-3728
-//        uiContinuation.yield(.stateChanged(.hidden))
-//
-//        uiContinuation.finish()
-//        stateContinuation.finish()
+    private func updateButtonAndBanner(hide: Bool = false) async {
+        let buttonBannerUpdate = await GroupCallBannerButtonUpdate(actor: self, hideComponent: hide)
+        await actorDelegate?.updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: buttonBannerUpdate)
+    }
+}
+
+// MARK: -  Group Call Join Steps & Create Steps
+
+extension GroupCallActor {
+    public func join(intent: GroupCallUserIntent) async throws {
+        startJoining = true
+
+        /// **Protocol Step: Group Call Join Steps**
+        /// 1. Let intent be either only join or create or join. Let call be the given group call to be joined (or
+        /// created).
+        /// Note: `call` is here the class itself.
+        
+        // We start the process loop.
+        currentTask = Task.detached(priority: .userInitiated, operation: { [weak self] in
+            
+            guard let self else {
+                return
+            }
+            await self.process(state: self.state)
+        })
+        
+        DDLogNotice("[GroupCall] Call is not yet connected but is \(state). Wait…")
+    }
+    
+    // Create or Join step 5
+    public func createStartMessage(token: SFUToken, gck: Data) {
+        startMessage = CspE2e_GroupCallStart.with {
+            $0.protocolVersion = GroupCallConfiguration.ProtocolDefines.protocolVersion
+            $0.gck = gck
+            $0.sfuBaseURL = token.sfuBaseURL
+        }
+        isNew = true
+    }
+    
+    public func sendStartMessageWithDelay() async throws {
+        /// **Protocol Step: Group Call Join Steps**
+        /// 7.1 Optionally add an artificial wait period of 2s minus the time elapsed since step 1.
+        // TODO: (IOS-4031) Re-add line below, possibly needs UI changes
+        // try await Task.sleep(seconds: 2)
+        guard let startMessage else {
+            throw GroupCallError.creationError
+        }
+        /// 7.2 Announce (the previously created but not yet sent) call in the associated group by sending it as a
+        /// GroupCallStart message.
+        let wrappedMessage = WrappedGroupCallStartMessage(
+            startMessage: startMessage,
+            creatorID: group.creator,
+            groupID: group.groupID
+        )
+        try await actorDelegate?.sendStartCallMessage(wrappedMessage)
+        try await dependencies.groupCallSystemMessageAdapter.post(.groupCallStarted, in: group)
+        
+        isNew = false
+    }
+}
+
+// MARK: - GroupCallActorManagerDelegate helpers
+
+extension GroupCallActor {
+    
+    public func addSelfToCurrentlyRunningCalls() async {
+        await actorDelegate?.addToRunningGroupCalls(groupCall: self)
+    }
+    
+    public func startRefreshSteps() async {
+        await actorDelegate?.startRefreshSteps()
     }
 }
 
@@ -508,11 +516,12 @@ extension GroupCallActor {
             idColor: idColor
         )
         uiContinuation.yield(.addLocalParticipant(viewModelParticipant))
+        await updateButtonAndBanner()
     }
     
     func add(_ remoteParticipant: RemoteParticipant) async {
         
-        guard let id = await remoteParticipant.getIdentity()?.id else {
+        guard let id = await remoteParticipant.threemaIdentity?.id else {
             return
         }
         let (displayName, avatar, idColor) = dependencies.groupCallParticipantInfoFetcher.fetchInfo(id: id)
@@ -523,26 +532,28 @@ extension GroupCallActor {
             idColor: idColor
         )
         uiContinuation.yield(.add(viewModelParticipant))
+        await updateButtonAndBanner()
     }
     
     func remove(_ remoteParticipant: RemoteParticipant) async {
         await uiContinuation.yield(.remove(remoteParticipant.getID()))
+        await updateButtonAndBanner()
     }
     
     func subscribeVideo(for participantID: ParticipantID) {
-        stateContinuation.yield(.subscribeVideo(participantID))
+        uiActionContinuation.yield(.subscribeVideo(participantID))
     }
     
     func unsubscribeVideo(for participantID: ParticipantID) {
-        stateContinuation.yield(.unsubscribeVideo(participantID))
+        uiActionContinuation.yield(.unsubscribeVideo(participantID))
     }
     
     func toggleOwnAudio(_ mute: Bool) {
-        stateContinuation.yield(mute ? .muteAudio : .unmuteAudio)
+        uiActionContinuation.yield(mute ? .muteAudio : .unmuteAudio)
     }
     
     func toggleOwnVideo(_ mute: Bool) {
-        stateContinuation.yield(mute ? .muteVideo : .unmuteVideo(currentCameraPosition))
+        uiActionContinuation.yield(mute ? .muteVideo : .unmuteVideo(currentCameraPosition))
     }
     
     func assertNotConnected() {
@@ -550,63 +561,87 @@ extension GroupCallActor {
         assert(currentTask == nil)
     }
     
-    func stopCall() async -> Bool {
-        callStartStateContinuation?.finish()
+    func beginLeaveCall() {
+        /// **Leave Call** 2. To terminate the process loop, we yield `.leave`
         
-        guard state.self is Connected else {
-            currentTask?.cancel()
-            return false
+        guard currentTask != nil else {
+            Task {
+                await viewModel.leaveCall()
+            }
+            return
+        }
+        uiActionContinuation.yield(.leave)
+    }
+    
+    func leaveCall() async {
+        DDLogVerbose("[GroupCall] Teardown: Actor")
+        state = UnJoined(groupCallActor: self)
+
+        await updateButtonAndBanner()
+        await actorDelegate?.removeFromRunningGroupCalls(groupCall: self)
+        
+        callLeaveContinuation?.yield()
+    }
+    
+    func forceLeaveCall() async {
+        if callLeaveQueue == nil {
+            (callLeaveQueue, callLeaveContinuation) = AsyncStream.makeStream()
         }
         
-        if callStopSignal == nil {
-            (callStopSignal, callStopSignalContinuation) = AsyncStream.makeStream()
-        }
-        
-        stateContinuation.yield(.leave)
-        
-        let task: Task<Void, Error> = Task {
-            if let callStopSignal {
-                for await _ in callStopSignal {
-                    self.callStopSignal = nil
-                    self.callStopSignalContinuation = nil
+        let leaveTask: Task<Void, Error> = Task {
+            // We directly dismiss the call view without an animation, other wise the presentation of the new call
+            // fails.
+            uiContinuation.yield(.forceDismissGroupCallViewController)
+            
+            // This creates a suspension point, we must wait with continuing the force leave until the basic clean up
+            // has finished processing
+            uiActionContinuation.yield(.leave)
+            
+            if let callLeaveQueue {
+                for await _ in callLeaveQueue {
+                    self.callLeaveContinuation?.finish()
                 }
+                
+                self.callLeaveQueue = nil
+                self.callLeaveContinuation = nil
             }
         }
         
-        // TODO: (IOS-3813) Check below
         do {
-            switch try await Task.timeout(task, 10) {
-            case .result: break
+            switch try await Task.timeout(leaveTask, 5) {
+            case .result:
+                break
             case .error:
-                let msg = "An error occurred while waiting for the call stop signal"
+                let msg = "An error occurred while waiting for the call confirmation signal."
                 assertionFailure(msg)
                 DDLogError(msg)
             case .timeout:
-                let msg = "Waiting for call stop confirmation timed out"
+                let msg = "Waiting for call leave confirmation timed out."
                 assertionFailure(msg)
                 DDLogWarn(msg)
             }
         }
         catch {
-            let msg = "An error occurred while waiting for the call stop signal \(error)"
+            let msg = "An error occurred while waiting for the call leave confirmation \(error). Terminating anyway."
             assertionFailure(msg)
             DDLogError(msg)
         }
-                
+    }
+
+    func teardown() async {
+        DDLogVerbose("[GroupCall] Leave: Actor")
+        
+        state = UnJoined(groupCallActor: self)
+        await viewModel.teardown()
+        
+        uiContinuation.finish()
+        uiActionContinuation.finish()
+        
         currentTask?.cancel()
-        
-        uiContinuation.yield(.pop)
-        stateContinuation.yield(.none)
-        
         currentTask = nil
         
-        return true
-    }
-    
-    func prepareForRemove() {
-        currentTask?.cancel()
-        uiContinuation.finish()
-        stateContinuation.finish()
+        await updateButtonAndBanner(hide: true)
+        await actorDelegate?.removeFromRunningGroupCalls(groupCall: self)
     }
     
     func switchCamera() {
@@ -616,11 +651,7 @@ extension GroupCallActor {
         else {
             currentCameraPosition = .front
         }
-        stateContinuation.yield(.switchCamera(currentCameraPosition))
-    }
-    
-    func set(callStartDate: Date) {
-        approximateCallStartDateUI = callStartDate
+        uiActionContinuation.yield(.switchCamera(currentCameraPosition))
     }
 
     func remoteContext(for participantID: ParticipantID) async -> RemoteContext? {
@@ -643,7 +674,7 @@ extension GroupCallActor {
 
 extension GroupCallActor: Equatable {
     static func == (lhs: GroupCallActor, rhs: GroupCallActor) -> Bool {
-        lhs.groupCallDescription.callID == rhs.groupCallDescription.callID
+        lhs.groupCallBaseState.callID == rhs.groupCallBaseState.callID
     }
 }
 
@@ -651,6 +682,6 @@ extension GroupCallActor: Equatable {
 
 extension GroupCallActor: Hashable {
     nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(groupCallDescription.callID.bytes)
+        hasher.combine(groupCallBaseState.callID.bytes)
     }
 }

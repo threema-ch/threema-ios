@@ -150,8 +150,20 @@ class QuickActionButton: UIButton {
     }
     
     private func updateButtonImage() {
-        let image = BundleUtil.imageNamed("\(buttonImageNameProvider())_semibold.L")
+        var image = BundleUtil.imageNamed("\(buttonImageNameProvider())_semibold.L")
+        
+        // TODO: (IOS-1945) Replace all semibold.L PDF symbols and use custom or SFSymbols
+        // If not found, we try to fallback to our custom SFSymbols and apply the configurations to get the right icon
+        if image == nil {
+            image = BundleUtil.imageNamed(buttonImageNameProvider())
+            var weightConfig = UIImage.SymbolConfiguration(weight: .semibold)
+            var scaleConfig = UIImage.SymbolConfiguration(scale: .large)
+            let combinedConfig = scaleConfig.applying(weightConfig)
+            image = image?.withConfiguration(combinedConfig)
+        }
+        
         assert(image != nil, "SF Symbol: semibold & L required")
+        
         buttonImageView.image = image
         buttonImageView.sizeToFit()
     }

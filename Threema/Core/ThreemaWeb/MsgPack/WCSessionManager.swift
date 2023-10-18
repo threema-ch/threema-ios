@@ -131,7 +131,7 @@ extension WCSessionManager {
         NavigationBarPromptHandler.isWebActive = false
 
         if NavigationBarPromptHandler.isCallActiveInBackground || VoIPCallStateManager.shared
-            .currentCallState() == .idle {
+            .currentCallState() == .idle, !NavigationBarPromptHandler.isGroupCallActive {
             DispatchQueue.main.async {
                 UIApplication.shared.isIdleTimerDisabled = false
             }

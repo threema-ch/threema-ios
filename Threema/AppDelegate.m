@@ -114,6 +114,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     NotificationManager *notificationManager;
     DeviceLinking *deviceLinking;
     NSData *evaluatedPolicyDomainState;
+    GroupCallUIHelper *groupCallUIHelper;
 }
 
 @synthesize window = _window;
@@ -211,7 +212,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     pushRegistry.desiredPushTypes = [NSSet setWithObject:PKPushTypeVoIP];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleLicenseMissing:) name:kNotificationLicenseMissing object:nil];
-    
+        
     if (ProcessInfoHelper.isRunningForScreenshots)  {
         [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
             //
@@ -416,7 +417,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [appLaunchTasks runLaunchEventDidFinishLaunching];
     
     incomingMessageManager = [IncomingMessageManager new];
-    [incomingMessageManager showIsNotPending];
     
     // Register message processor delegate
     [[ServerConnector sharedServerConnector] registerMessageProcessorDelegate:incomingMessageManager];
@@ -439,6 +439,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self.window makeKeyAndVisible];
         return;
     }
+    
+    [incomingMessageManager showIsNotPending];
 
     // apply MDM parameter anyway, perhaps company MDM has changed
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
@@ -462,6 +464,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self.window makeKeyAndVisible];
     
     toaster = [[NewMessageToaster alloc] init];
+    
+    groupCallUIHelper = [GroupCallUIHelper new];
+    [groupCallUIHelper setGlobalGroupCallsManagerSingletonUIDelegate];
 
     [self checkForInvalidCountryCode];
     
@@ -534,6 +539,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
         
     toaster = [[NewMessageToaster alloc] init];
+    
+    groupCallUIHelper = [GroupCallUIHelper new];
+    [groupCallUIHelper setGlobalGroupCallsManagerSingletonUIDelegate];
 }
 
 - (void)checkHasPrivateChats {
@@ -1248,7 +1256,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
     [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
     
-    if ([ThreemaEnvironment groupCalls]) {
+    if ([ThreemaEnvironment groupCalls] && [[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
         [[GlobalGroupCallsManagerSingleton shared] handleCallsFromDBWithCompletionHandler:^{
             // Noop
         }];
@@ -1349,7 +1357,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     // Checks is device linking not finished yet
     if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_title"] message:[NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_message"], [ThreemaAppObjc currentName]] actionOk:^(UIAlertAction * _Nonnull) {
+        [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_title"] message:[NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_message"], [ThreemaAppObjc appName]] actionOk:^(UIAlertAction * _Nonnull) {
             [DeviceJoinObjC cleanupFailedJoin];
         }];
     }
@@ -1767,7 +1775,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         requiresMigration != RequiresMigrationNone ||
         isAliveCheck) {
         
-        NSString *appName = [BundleUtil localizedStringForKey: [ThreemaAppObjc currentName]];
+        NSString *appName = [BundleUtil localizedStringForKey: [ThreemaAppObjc appName]];
         [voIPCallStateManager startAndCancelCallFrom: appName showWebNotification:false completion:completion];
         return;
     }

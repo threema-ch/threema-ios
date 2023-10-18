@@ -2292,6 +2292,12 @@ extension VoIPCallService {
                     systemMessage?.arg = callInfoData
                     systemMessage?.isOwn = NSNumber(booleanLiteral: self.isCallInitiator())
                     systemMessage?.conversation = conversation
+                    
+                    if let contact = entityManager.entityFetcher.contact(for: identity) {
+                        let cont = Contact(contactEntity: contact)
+                        systemMessage?.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
+                    }
+                    
                     if messageRead {
                         systemMessage?.read = NSNumber(booleanLiteral: true)
                         systemMessage?.readDate = Date()
@@ -2397,7 +2403,8 @@ extension VoIPCallService {
         
         let entityManager = BusinessInjector().entityManager
         entityManager.performSyncBlockAndSafe {
-            if let conversation = entityManager.conversation(for: contactIdentity, createIfNotExisting: true) {
+            if let conversation = entityManager.conversation(for: contactIdentity, createIfNotExisting: true),
+               let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
                 systemMessage = entityManager.entityCreator.systemMessage(for: conversation)
                 systemMessage?.type = NSNumber(value: reason)
                 let callInfo = [
@@ -2409,6 +2416,10 @@ extension VoIPCallService {
                     systemMessage?.arg = callInfoData
                     systemMessage?.isOwn = NSNumber(booleanLiteral: self.isCallInitiator())
                     systemMessage?.conversation = conversation
+                    
+                    let cont = Contact(contactEntity: contact)
+                    systemMessage?.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
+                    
                     conversation.lastMessage = systemMessage
                     if reason == kSystemMessageCallMissed || reason == kSystemMessageCallRejectedBusy || reason ==
                         kSystemMessageCallRejectedTimeout || reason == kSystemMessageCallRejectedDisabled { }

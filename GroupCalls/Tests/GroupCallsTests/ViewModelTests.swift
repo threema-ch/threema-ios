@@ -96,9 +96,9 @@ final class GroupCallViewModelTests: XCTestCase {
         viewModel.setViewDelegate(self)
         let participantID = ParticipantID(id: 0)
         let remoteParticipant = await RemoteParticipant(
-            participant: participantID,
+            participantID: participantID,
             dependencies: dependencies,
-            groupCallCrypto: groupCallDescription,
+            groupCallMessageCrypto: groupCallDescription,
             isExistingParticipant: false
         )
         await remoteParticipant.setIdentityRemote(id: try! ThreemaID(id: "ECHOECHO"))
@@ -139,9 +139,13 @@ final class GroupCallViewModelTests: XCTestCase {
 // MARK: - GroupCallViewModelDelegate
 
 extension GroupCallViewModelTests: GroupCallViewModelDelegate {
+    func showRecordAudioPermissionAlert() { }
+    
+    func showRecordVideoPermissionAlert() { }
+    
     func updateCollectionViewLayout() { }
     
-    func dismissGroupCallView() async {
+    func dismissGroupCallView(animated: Bool) async {
         closed = true
     }
     

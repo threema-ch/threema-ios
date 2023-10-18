@@ -49,12 +49,25 @@ class GroupCallCollectionViewDataSource: UICollectionViewDiffableDataSource<
                 for: indexPath
             ) as! GroupCallParticipantCell
             
-            cell.participantID = itemIdentifier
-            cell.participant = viewModel.participant(for: itemIdentifier)
-            
-            cell.layer.cornerRadius = 5
-            cell.layer.masksToBounds = true
-            cell.layer.cornerCurve = .continuous
+            Task {
+                if let oldParticipant = cell.participantID, oldParticipant.id != itemIdentifier.id {
+                    await viewModel.removeRendererView(for: oldParticipant, rendererView: cell.videoRendererView)
+                    cell.resetRendererView()
+                }
+                
+                let fetchedParticipant = viewModel.participant(for: itemIdentifier)
+                cell.participantID = itemIdentifier
+                cell.participant = fetchedParticipant
+                
+                if fetchedParticipant?.videoMuteState == .muted {
+                    cell.hideRenderer()
+                    await viewModel.removeRendererView(for: itemIdentifier, rendererView: cell.videoRendererView)
+                }
+                else {
+                    await viewModel.addRendererView(for: itemIdentifier, rendererView: cell.videoRendererView)
+                    cell.showRenderer()
+                }
+            }
             
             return cell
         }

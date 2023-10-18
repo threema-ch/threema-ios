@@ -31,7 +31,7 @@ public final class AsyncStreamContinuationToSharedPublisher<Output: Sendable>: S
     public let publisher = SharedPublisher<Output>()
     
     private let stateQueue: AsyncStream<Output>
-    let stateContinuation: AsyncStream<Output>.Continuation
+    public let stateContinuation: AsyncStream<Output>.Continuation
     
     // MARK: - Private properties
     
@@ -41,7 +41,7 @@ public final class AsyncStreamContinuationToSharedPublisher<Output: Sendable>: S
 
     // MARK: - Lifecycle
     
-    init() {
+    public init() {
         (self.stateQueue, self.stateContinuation) = AsyncStream<Output>.makeStream()
         
         Task {

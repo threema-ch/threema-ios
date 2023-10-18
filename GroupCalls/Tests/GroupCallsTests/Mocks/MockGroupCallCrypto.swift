@@ -22,6 +22,10 @@ import Foundation
 @testable import GroupCalls
 
 final class MockGroupCallCrypto: GroupCallCryptoProtocol {
+    var symmetricNonceLength: Int32 {
+        24
+    }
+    
     func symmetricEncryptData(_ plaintext: Data, withKey key: Data, nonce: Data) -> Data? {
         #if !DEBUG
             // This may only
@@ -56,7 +60,7 @@ final class MockGroupCallCrypto: GroupCallCryptoProtocol {
         return Data(repeating: 0x01, count: 32)
     }
     
-    func generateKeyPair() -> (Data, Data) {
+    func generateKeyPair() -> (publicKey: Data, privateKey: Data)? {
         #if !DEBUG
             // This may only
             fatalError()

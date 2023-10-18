@@ -394,6 +394,7 @@
 "chat_search_searching" = "Vyhledávání...";
 "chat_search_no_matches" = "Žádné shody";
 "chat_search_matches" = "%d z %d shod";
+"chat_search_note" = "Poznámka: Popisky médií nejsou zahrnuty do výsledků vyhledávání.";
 
 "choose_recipient" = "Vyberte příjemce";
 
@@ -781,6 +782,20 @@
 "group_call_navbar_state_connecting" = "Spojování...";
 "group_call_navbar_state_joining" = "Připojování...";
 "group_call_navbar_state_connected" = "Spojeno";
+
+"group_call_error_generic_title" = "Došlo k chybě";
+"group_call_error_generic_message" = "Bude-li problém přetrvávat, obraťte se na zákaznickou podporu.";
+
+"group_call_accessibility_hide_view" = "Skrýt zobrazení skupinových hovorů";
+"group_call_accessibility_enable_camera" = "Povolit kameru";
+"group_call_accessibility_disable_camera" = "Zakázat kameru";
+"group_call_accessibility_audio_output" = "Změnit výstup zvuku";
+"group_call_accessibility_enable_microphone" = "Povolit mikrofon";
+"group_call_accessibility_disable_microphone" = "Zakázat mikrofon";
+"group_call_accessibility_audio_enabled" = "Mikrofon povolen";
+"group_call_accessibility_audio_disabled" = "Mikrofon zakázán";
+"group_call_accessibility_video_enabled" = "Kamera povolena";
+"group_call_accessibility_video_disabled" = "Kamera zakázána";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema chrání vaše soukromí pečlivěji než kterákoliv jiná komunikační aplikace. Podrobnější informace najdete v našich Zásadách ochrany osobních údajů.";
@@ -1217,7 +1232,7 @@
 "settings_threema_voip_include_call_in_recents_footer_off" = "Hovory se zobrazují na uzamčené obrazovce, ale nejsou uvedeny v seznamu hovorů aplikace Telefon.";
 "settings_threema_voip_include_call_in_recents_footer_on" = "Hovory se zobrazují na uzamčené obrazovce a vypisují se v seznamu hovorů aplikace Telefon. Je-li zapnutý iCloud Drive, synchronizuje se seznam hovorů z aplikace Telefon přes servery Apple.";
 "settings_threema_voip_no_callkit_in_china_footer" = "Z důvodu omezení od společnosti Apple nejsou hovory Threema k dispozici, je-li region zařízení nastavený na Čínu.";
-"settings_threema_calls_group_calls_header" = "Skupinové hovory (Beta)";
+"settings_threema_calls_group_calls_header" = "Skupinové hovory";
 "settings_threema_calls_enable_group_calls" = "Povolit skupinové hovory Threema";
 
 // Advanced Settings
@@ -1289,9 +1304,9 @@
 "my_profile_delete_identity_summary_view_removed_title" = "ID a data odstraněna";
 "my_profile_delete_identity_summary_view_removed_success" = "Všechna vaše data Threema byla z tohoto zařízení odstraněna:";
 "my_profile_delete_identity_summary_view_removed_server_success" = "Všechna vaše data Threema byla odstraněna ze serveru:";
-"my_profile_delete_identity_summary_view_removed_threema_id" = "Vaše ID Threema bylo zrušeno";
+"my_profile_delete_identity_summary_view_removed_threema_id" = "Vaše Threema ID bylo zrušeno";
 "my_profile_delete_identity_summary_view_restart" = "Restartujte aplikaci a pokračujte v jejím používání.";
-"my_profile_delete_identity_summary_view_restart_new" = "Restartováním aplikace vytvořte nové ID Threema.";
+"my_profile_delete_identity_summary_view_restart_new" = "Restartováním aplikace vytvořte nové Threema ID.";
 "my_profile_delete_identity_summary_view_close" = "Zavřít aplikaci";
 
 // File message
@@ -1486,6 +1501,8 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "multi_device_join_fatal_no_internet_connection_title" = "Není internetové spojení";
 "multi_device_join_failed_to_send_data_title" = "Odeslání dat se nezdařilo";
 "multi_device_join_fatal_error_message" = "Zkuste propojit zařízení znovu. Bude-li problém přetrvávat, kontaktujte podporu („Nastavení > Podpora“).";
+"multi_device_join_failed_threema_web_title" = "Stávající desktopové/webové připojení";
+"multi_device_join_failed_threema_web_message" = "Deaktivujte desktop/web (v nabídce Nastavení > Desktop/web) a zkuste propojit zařízení znovu. Bude-li problém přetrvávat, obraťte se na zákaznickou podporu (Nastavení > Podpora).";
 "multi_device_join_unknown_qr_code_title" = "Neznámý QR kód";
 "multi_device_join_unknown_qr_code_message" = "Zkontrolujte, že používáte odpovídající aplikaci od %@.";
 "multi_device_join_incompatible_version_title" = "Nekompatibilní verze";
@@ -1768,7 +1785,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "app_icon_description_first" = "2012–2013";
 
 // 10 Years
-"anniversary_view_title" = "10 let Threema!";
+"anniversary_view_title" = "Threema slaví 10 let!";
 "anniversary_view_text" = "Dne 12. prosince 2022 bude aplikaci Threema deset let. U příležitosti zahájení oslav jsme vyšperkovali naši ikonu.";
 "anniversary_view_icon_info" = "Chcete-li si změnit ikonu zpět na výchozí nebo starou verzi, přejděte do nabídky „Nastavení > Vzhled > Ikona aplikace“.";
 

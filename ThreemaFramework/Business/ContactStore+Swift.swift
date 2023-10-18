@@ -62,4 +62,16 @@ extension ContactStore {
             DDLogError("Sync contacts failed: \(error)")
         }
     }
+    
+    /// Update the state of the contact to active and sync it with multi device if activated
+    /// - Parameter contactEntity: The entity of the contact
+    /// - Parameter entityManager: The EntityManager of the contactEntity
+    @objc func updateStateToActive(for contactEntity: ContactEntity, entityManager: EntityManager) {
+        let mediatorSyncableContacts = MediatorSyncableContacts()
+        entityManager.performAndWaitSave {
+            contactEntity.state = NSNumber(value: kStateActive)
+            mediatorSyncableContacts.updateState(identity: contactEntity.identity, value: contactEntity.state)
+        }
+        mediatorSyncableContacts.syncAsync()
+    }
 }

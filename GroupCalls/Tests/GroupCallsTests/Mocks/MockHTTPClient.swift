@@ -72,7 +72,7 @@ final class MockHTTPClient: GroupCallsHTTPClientAdapterProtocol {
             if let callID = url.lastPathComponent.hexadecimal,
                let response = autoDropResponses ? responses[callID]?.removeFirst() : responses[callID]?.first! {
                 print("Returning http code \((response.1 as! HTTPURLResponse).statusCode)")
-                return ((try! response.0?.serializedData()) ?? Data(), response.1)
+                return ((try! response.0?.ownSerializedData()) ?? Data(), response.1)
             }
             else {
                 return (returnData, response)

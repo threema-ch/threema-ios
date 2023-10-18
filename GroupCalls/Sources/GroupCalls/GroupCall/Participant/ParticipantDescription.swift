@@ -21,5 +21,5 @@
 import Foundation
 
 protocol ParticipantDescription: Sendable {
-    var id: ParticipantID { get }
+    var participantID: ParticipantID { get }
 }

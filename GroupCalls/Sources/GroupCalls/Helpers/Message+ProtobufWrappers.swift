@@ -18,10 +18,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import SwiftProtobuf
 
-public struct GroupCallBannerButtonInfo: Sendable {
-    public let numberOfParticipants: Int
-    public let startDate: Date
-    public let joinState: GroupCallJoinState
+extension Message {
+    public func ownSerializedData(partial: Bool = false) throws -> Data {
+        do {
+            return try serializedData(partial: partial)
+        }
+        catch {
+            DDLogError("[GroupCalls] Serialization failed due to error: \(error.localizedDescription).")
+            throw GroupCallError.serializationFailure
+        }
+    }
 }

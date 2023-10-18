@@ -21,6 +21,7 @@
 import AsyncAlgorithms
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 @preconcurrency import WebRTC
 
 enum UserInteraction {
@@ -160,7 +161,7 @@ extension PeerConnectionContext: RTCPeerConnectionDelegate {
     
     public func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
         DDLogNotice(
-            // swiftformat:disable acronyms
+            // swiftformat:disable:next acronyms
             "RTCPeerConnectionDelegate \(#function) with id \(stream.streamId) \(stream.audioTracks) \(stream.videoTracks)"
         )
     }

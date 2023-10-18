@@ -19,16 +19,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import ThreemaEssentials
 
 extension Task where Success == Never, Failure == Never {
-    enum TimeoutResult<Result: Sendable>: Sendable {
+    public enum TimeoutResult<Result: Sendable>: Sendable {
         case timeout
         case result(Result)
         case error(Error?)
     }
     
-    static func timeout<Output>(
+    public static func timeout<Output>(
         _ task: Task<Output, Error>,
         _ seconds: TimeInterval
     ) async throws -> TimeoutResult<Output> {

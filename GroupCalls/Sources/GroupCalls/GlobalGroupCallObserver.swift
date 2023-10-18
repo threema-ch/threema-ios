@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Combine
 @preconcurrency import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 public final class GlobalGroupCallObserver: Sendable {

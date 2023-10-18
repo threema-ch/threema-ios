@@ -61,6 +61,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
         label.textColor = .white
         label.adjustsFontForContentSizeCategory = true
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.isAccessibilityElement = false
         return label
     }()
     
@@ -114,16 +115,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
     }()
     
     // MARK: - Private Properties
-    
-    private lazy var videoRendererConstrains: [NSLayoutConstraint] = {
-        [
-            videoRendererView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            videoRendererView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            videoRendererView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            videoRendererView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-        ]
-    }()
-    
+        
     private lazy var blurBackgroundConstrains: [NSLayoutConstraint] = {
         [
             blurBackground.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -163,6 +155,10 @@ class GroupCallParticipantCell: UICollectionViewCell {
     }
         
     private func configureCell() {
+        layer.cornerRadius = 5
+        layer.masksToBounds = true
+        layer.cornerCurve = .continuous
+        
         backgroundColor = .systemTeal
 
         contentView.addSubview(videoRendererView)
@@ -171,12 +167,51 @@ class GroupCallParticipantCell: UICollectionViewCell {
         contentView.insertSubview(blurBackground, belowSubview: participantInfoStackView)
         
         NSLayoutConstraint.activate(
-            videoRendererConstrains + blurBackgroundConstrains + participantInfoStackViewConstrains +
+            videoRendererViewConstraints() + blurBackgroundConstrains + participantInfoStackViewConstrains +
                 avatarImageViewConstrains
         )
+        
+        isAccessibilityElement = true
     }
     
+    // MARK: - Public functions
+
+    public func hideRenderer() {
+        videoRendererView.removeFromSuperview()
+        blurBackground.removeFromSuperview()
+        NSLayoutConstraint.deactivate(blurBackgroundConstrains + videoRendererViewConstraints())
+        nameLabel.textColor = .white
+        statusSymbolView.tintColor = .white
+    }
+    
+    public func showRenderer() {
+        contentView.insertSubview(blurBackground, at: 1)
+        contentView.insertSubview(videoRendererView, at: 1)
+        NSLayoutConstraint.activate(blurBackgroundConstrains + videoRendererViewConstraints())
+        nameLabel.textColor = participant?.idColor ?? .black
+        statusSymbolView.tintColor = participant?.idColor ?? .black
+    }
+    
+    public func resetRendererView() {
+        // Remove
+        videoRendererView.removeFromSuperview()
+        NSLayoutConstraint.deactivate(videoRendererViewConstraints())
+        
+        // Create
+        let view = RTCMTLVideoView(frame: .zero)
+        view.contentMode = .scaleAspectFit
+        view.translatesAutoresizingMaskIntoConstraints = false
+        videoRendererView = view
+        
+        // Add
+        contentView.addSubview(videoRendererView)
+        NSLayoutConstraint.activate(videoRendererViewConstraints())
+    }
+    
+    // MARK: - Private functions
+
     private func updateView() {
+        
         guard let participant else {
             return
         }
@@ -205,23 +240,6 @@ class GroupCallParticipantCell: UICollectionViewCell {
             }
         }
         
-        // Video
-        switch participant.videoMuteState {
-        case .muted:
-            videoRendererView.removeFromSuperview()
-            blurBackground.removeFromSuperview()
-            NSLayoutConstraint.deactivate(blurBackgroundConstrains + videoRendererConstrains)
-            nameLabel.textColor = .white
-            statusSymbolView.tintColor = .white
-            
-        case .unmuted:
-            contentView.insertSubview(blurBackground, at: 1)
-            contentView.insertSubview(videoRendererView, at: 1)
-            NSLayoutConstraint.activate(blurBackgroundConstrains + videoRendererConstrains)
-            nameLabel.textColor = participant.idColor
-            statusSymbolView.tintColor = participant.idColor
-        }
-        
         // Mirroring
         if let localParticipant = participant.localParticipant,
            localParticipant.localCameraPosition == .front {
@@ -229,6 +247,26 @@ class GroupCallParticipantCell: UICollectionViewCell {
         }
         else {
             videoRendererView.transform = CGAffineTransformMakeScale(1, 1)
+        }
+    }
+    
+    private func videoRendererViewConstraints() -> [NSLayoutConstraint] {
+        [
+            videoRendererView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            videoRendererView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            videoRendererView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            videoRendererView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+        ]
+    }
+    
+    override public var accessibilityLabel: String? {
+        
+        get {
+            participant?.cellAccessibilityString()
+        }
+        
+        set {
+            // No-op
         }
     }
 }

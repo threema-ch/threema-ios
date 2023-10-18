@@ -83,7 +83,6 @@ final class ChatTextView: CustomResponderTextView {
     
     // MARK: - Private type
     
-    private typealias TextChangeItem = (range: NSRange, fullText: NSMutableAttributedString, newText: String)
     private typealias Config = ChatViewConfiguration.ChatTextView
     
     // MARK: - Private properties
@@ -95,7 +94,6 @@ final class ChatTextView: CustomResponderTextView {
     
     private let markupParser = MarkupParser()
     private(set) var notParsedText = NSAttributedString()
-    private var textChangeQueue = [TextChangeItem]()
     
     private lazy var mentionsHelper = MentionsHelper()
         
@@ -199,6 +197,7 @@ final class ChatTextView: CustomResponderTextView {
     }
     
     deinit {
+        DDLogVerbose("\(#function)")
         removeObservers()
     }
     

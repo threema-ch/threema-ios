@@ -57,7 +57,7 @@ final class TaskDefinitionSendGroupDeletePhotoMessage: TaskDefinitionSendMessage
     }
     
     init(
-        group: Group?,
+        group: Group,
         from: String,
         to: [String],
         sendContactProfilePicture: Bool = false
@@ -65,7 +65,7 @@ final class TaskDefinitionSendGroupDeletePhotoMessage: TaskDefinitionSendMessage
         self.fromMember = from
         self.toMembers = to
         
-        super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
+        super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: sendContactProfilePicture)
     }
 
     required init(from decoder: Decoder) throws {

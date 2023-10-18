@@ -20,7 +20,7 @@
 
 import CocoaLumberjackSwift
 import Combine
-@preconcurrency import Foundation
+import Foundation
 import ThreemaProtocols
 
 public final class GlobalGroupCallObserverPublisher: @unchecked Sendable {

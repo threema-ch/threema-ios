@@ -102,7 +102,7 @@
 "dgK-0J-UrZ.footerTitle" = "このデータはお客様が選択されたパスワードとともに、別の端末でIDを復元するために使用することができます。適当な場所にコピー＆ペーストしたり、メールで送信したり、QRコードを別の端末で読み取ったりすることができます。";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
-"eEV-l3-MXP.footerTitle" = "暗号化されたIDのエクスポートは、iTunesやiCloudで携帯電話をバックアップする際に含まれます。";
+"eEV-l3-MXP.footerTitle" = "暗号化されたIDのエクスポートは、iTunesやiCloudで端末をバックアップする際に含まれます。";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "eK9-D8-pFP"; */
 "eK9-D8-pFP.text" = "詳細";

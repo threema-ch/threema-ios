@@ -521,7 +521,7 @@
         return [BundleUtil localizedStringForKey:@"disabled_by_device_policy"];
     }
     else if (section == 1) {
-        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_email_phone_footer"], [ThreemaAppObjc currentName]];
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_email_phone_footer"], [ThreemaAppObjc appName]];
     }
     else if (section == 2) {
         return [BundleUtil localizedStringForKey:![mdmSetup isSafeBackupDisable] ? @"safe_enable_explain_short" : @"disabled_by_device_policy"];

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
+import ThreemaEssentials
 
 enum GroupCallsHTTPHelperError: Error {
     case unknownError
@@ -31,11 +32,13 @@ enum GroupCallsHTTPHelperError: Error {
 public actor GroupCallsSFUTokenFetcher: GroupCallsSFUTokenFetchAdapterProtocol {
     fileprivate let myIdentityStore = MyIdentityStore.shared()
     
+    // TODO: (IOS-4029) Is this needed in the future?
     fileprivate var cachedCredentials: SFUToken?
     
     fileprivate var currentTask: Task<SFUToken, Error>?
     
     public func sfuCredentials() async throws -> SFUToken {
+        // TODO: (IOS-4047) Does this work as expected?
         guard let currentTask, try await currentTask.value.stillValid else {
             DDLogVerbose("[GroupCall] Token never fetched or not valid anymore. Fetch again.")
             let newTask = Task {
@@ -50,9 +53,32 @@ public actor GroupCallsSFUTokenFetcher: GroupCallsSFUTokenFetchAdapterProtocol {
         return try await currentTask.value
     }
     
+    public func refreshTokenWithTimeout(_ timeout: TimeInterval) async throws -> SFUToken? {
+        let task = Task {
+            try await self.sfuCredentials()
+        }
+        
+        let intermediateResult = try await Task.timeout(task, timeout)
+        
+        switch intermediateResult {
+        case let .error(error):
+            if let error {
+                throw error
+            }
+            return nil
+            
+        case .timeout:
+            return nil
+            
+        case let .result(token):
+            return token
+        }
+    }
+    
     private func fetchCredentials() async throws -> SFUToken {
         try await withCheckedThrowingContinuation { checkedContinuation in
             ServerAPIConnector().obtainSFUCredentials(myIdentityStore) { (dict: [AnyHashable: Any]?) in
+                // TODO: (IOS-4070) Use codeable struct to parse dict
                 guard let jsonDict = dict as? [String: Any] else {
                     checkedContinuation.resume(throwing: GroupCallsHTTPHelperError.unknownError)
                     return

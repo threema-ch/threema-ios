@@ -80,36 +80,26 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionGroupDissolveEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "CREATOR01"
         let expectedMember = "MEMBER01"
         let expectedNonces = [
-            expectedGroupCreator: MockData.generateMessageNonce(),
+            "ADMIN007": MockData.generateMessageNonce(),
             expectedMember: MockData.generateMessageNonce(),
         ]
 
-        var group: Group!
-        dbPreparer.save {
-            let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: expectedGroupCreator,
-                verificationLevel: 0
-            )
-            let conversation = dbPreparer
-                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.contact = contact
-                }
-            let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
-            group = Group(
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-        }
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "ADMIN007",
+            members: ["ECHOECHO"]
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
 
-        let task = TaskDefinitionGroupDissolve(group: group)
+        let task = TaskDefinitionGroupDissolve(group: expectedGroup)
         task.toMembers = [expectedMember]
         task.nonces = expectedNonces
 
@@ -118,8 +108,10 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinitionGroupDissolve.self, from: data)
-        XCTAssertEqual(expectedGroupID, result.groupID)
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+
+        XCTAssertNil(result.receiverIdentity)
+        XCTAssertEqual(expectedGroup.groupID, result.groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertEqual(1, result.toMembers.count)
         XCTAssertTrue(result.toMembers.contains(expectedMember))
         XCTAssertTrue(result.nonces.isEmpty)
@@ -147,6 +139,7 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionReflectIncomingMessage.self, from: data))
+
         XCTAssertEqual(result.message.messageID, expectedMessageID)
         XCTAssertEqual(result.message.fromIdentity, expectedIdentity)
         XCTAssertEqual(result.message.toIdentity, expectedIdentity)
@@ -185,6 +178,8 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendDeliveryReceiptsMessage.self, from: data))
+
+        XCTAssertNil(result.receiverIdentity)
         XCTAssertNil(result.groupID)
         XCTAssertEqual(expectedFromIdentity, result.fromIdentity)
         XCTAssertEqual(expectedToIdentity, result.toIdentity)
@@ -208,6 +203,7 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinitionSendMessage.self, from: data)
+
         XCTAssertFalse(result.sendContactProfilePicture ?? true)
         XCTAssertTrue(result.nonces.isEmpty)
         XCTAssertTrue(result.isPersistent)
@@ -216,23 +212,15 @@ class TaskDefinitionTests: XCTestCase {
 
     func testTaskDefinitionSendBallotVoteMessageEncodeDecode() throws {
         let expectedBallotID = MockData.generateBallotID()
+        let expectedReceiverIdentity = "ECHOECHO"
         let expectedNonces = ["ECHOECHO": MockData.generateMessageNonce()]
 
-        var ballot: Ballot!
-        dbPreparer.save {
-            let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: "ECHOECHO",
-                verificationLevel: 0
-            )
-            let conversation = dbPreparer
-                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.contact = contact
-                }
-            ballot = dbPreparer.createBallotMessage(conversation: conversation, ballotID: expectedBallotID)
-        }
-
-        let task = TaskDefinitionSendBallotVoteMessage(ballot: ballot, group: nil, sendContactProfilePicture: true)
+        let task = TaskDefinitionSendBallotVoteMessage(
+            ballotID: expectedBallotID,
+            receiverIdentity: expectedReceiverIdentity,
+            group: nil,
+            sendContactProfilePicture: true
+        )
         task.nonces = expectedNonces
 
         let encoder = JSONEncoder()
@@ -240,7 +228,9 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinitionSendBallotVoteMessage.self, from: data)
+
         XCTAssertEqual(expectedBallotID, result.ballotID)
+        XCTAssertEqual(expectedReceiverIdentity, result.receiverIdentity)
         XCTAssertFalse(result.isGroupMessage)
         XCTAssertTrue(result.sendContactProfilePicture ?? false)
         XCTAssertTrue(result.nonces.isEmpty)
@@ -248,215 +238,73 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertTrue(result.retry)
     }
 
-    func testTaskDefinitionSendBallotVoteMessageCreate() {
-        let expectedBallotID = MockData.generateBallotID()
-        let expectedNonces = ["ECHOECHO": MockData.generateMessageNonce()]
-
-        var ballot: Ballot!
-        dbPreparer.save {
-            let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: "ECHOECHO",
-                verificationLevel: 0
-            )
-            let conversation = dbPreparer
-                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.contact = contact
-                }
-            ballot = dbPreparer.createBallotMessage(conversation: conversation, ballotID: expectedBallotID)
-        }
-
-        let task = TaskDefinitionSendBallotVoteMessage(ballot: ballot, group: nil, sendContactProfilePicture: true)
-        task.nonces = expectedNonces
-
-        let result = task.create(frameworkInjector: frameworkInjectorMock)
-
-        if let result = result.taskDefinition as? TaskDefinitionSendBallotVoteMessage {
-            XCTAssertFalse(result.isGroupMessage)
-            XCTAssertEqual(expectedBallotID, result.ballotID)
-            XCTAssertEqual(expectedNonces, result.nonces)
-            XCTAssertTrue(result.isPersistent)
-            XCTAssertTrue(result.retry)
-        }
-        else {
-            XCTFail()
-        }
-    }
-
     func testTaskDefinitionSendBaseMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "ADMIN007"
         let expectedMessageID = MockData.generateMessageID()
-        let expectedNonces = [expectedGroupCreator: MockData.generateMessageNonce()]
+        let expectedNonces = ["ADMIN007": MockData.generateMessageNonce()]
 
-        var message: TextMessage!
-        var group: Group!
-        dbPreparer.save {
-            let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: expectedGroupCreator,
-                verificationLevel: 0
-            )
-            let conversation = dbPreparer
-                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.contact = contact
-                }
-            let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
-            group = Group(
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                text: "Test text",
-                date: Date(),
-                delivered: false,
-                id: expectedMessageID,
-                isOwn: true,
-                read: true,
-                sent: false,
-                userack: false,
-                sender: contact,
-                remoteSentDate: nil
-            )
-        }
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "ADMIN007",
+            members: ["ECHOECHO"]
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
 
         let task = TaskDefinitionSendBaseMessage(
-            message: message,
+            messageID: expectedMessageID,
             receiverIdentity: nil,
-            group: group,
+            group: expectedGroup,
             sendContactProfilePicture: true
         )
         task.nonces = expectedNonces
-        task.messageAlreadySentTo[message.sender!.identity] = expectedNonces[message.sender!.identity]
+        task.messageAlreadySentTo["ADMIN007"] = expectedNonces["ADMIN007"]
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(task)
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinitionSendBaseMessage.self, from: data)
+
         XCTAssertTrue(result.isGroupMessage)
         XCTAssertEqual(expectedMessageID, result.messageID)
         XCTAssertNil(result.receiverIdentity)
-        XCTAssertEqual(expectedGroupID, result.groupID)
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroup.groupID, result.groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertTrue(result.sendContactProfilePicture ?? false)
+        XCTAssertEqual(1, result.messageAlreadySentTo.count)
         XCTAssertTrue(result.nonces.isEmpty)
         XCTAssertTrue(result.isPersistent)
         XCTAssertTrue(result.retry)
     }
 
-    func testTaskDefinitionSendBaseMessageCreate() {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "ADMIN007"
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedMessageText = "Test text"
-
-        var message: TextMessage!
-        var group: Group!
-        dbPreparer.save {
-            let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: expectedGroupCreator,
-                verificationLevel: 0
-            )
-            let conversation = dbPreparer
-                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.contact = contact
-                }
-            let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
-            group = Group(
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                text: expectedMessageText,
-                date: Date(),
-                delivered: false,
-                id: expectedMessageID,
-                isOwn: true,
-                read: true,
-                sent: false,
-                userack: false,
-                sender: contact,
-                remoteSentDate: nil
-            )
-        }
-
-        let task = TaskDefinitionSendBaseMessage(
-            message: message,
-            receiverIdentity: nil,
-            group: group,
-            sendContactProfilePicture: true
-        )
-
-        let result = task.create(frameworkInjector: frameworkInjectorMock)
-
-        XCTAssertNotNil(result)
-        if let result = result.taskDefinition as? TaskDefinitionSendBaseMessage {
-            XCTAssertTrue(result.isGroupMessage)
-            XCTAssertEqual(expectedMessageID, result.messageID)
-            XCTAssertNil(result.receiverIdentity)
-            XCTAssertEqual(expectedGroupID, try XCTUnwrap(result.groupID))
-            XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
-            XCTAssertTrue(result.isPersistent)
-            XCTAssertTrue(result.retry)
-        }
-        else {
-            XCTFail()
-        }
-    }
-
     func testTaskDefinitionSendLocationMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "ADMIN007"
         let expectedMessageID = MockData.generateMessageID()
         let expectedMessagePoiAddress = "poi address"
-        let expectedNonces = [expectedGroupCreator: MockData.generateMessageNonce()]
+        let expectedNonces = ["ADMIN007": MockData.generateMessageNonce()]
 
-        var message: LocationMessage!
-        var group: Group!
-        dbPreparer.save {
-            let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: expectedGroupCreator,
-                verificationLevel: 0
-            )
-            let conversation = dbPreparer
-                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.contact = contact
-                }
-            let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
-            group = Group(
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            message = dbPreparer.createLocationMessage(
-                conversation: conversation,
-                accuracy: 1.0,
-                latitude: 1.0,
-                longitude: 1.0,
-                poiName: "poi name",
-                id: expectedMessageID,
-                sender: contact
-            )
-        }
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "ADMIN007",
+            members: ["ECHOECHO"]
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
 
         let task = TaskDefinitionSendLocationMessage(
             poiAddress: expectedMessagePoiAddress,
-            message: message,
+            messageID: expectedMessageID,
             receiverIdentity: nil,
-            group: group,
+            group: expectedGroup,
             sendContactProfilePicture: true
         )
         task.nonces = expectedNonces
@@ -466,11 +314,12 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinitionSendLocationMessage.self, from: data)
+
         XCTAssertTrue(result.isGroupMessage)
         XCTAssertEqual(expectedMessageID, result.messageID)
         XCTAssertNil(task.receiverIdentity)
-        XCTAssertEqual(expectedGroupID, result.groupID)
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroup.groupID, result.groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertEqual(expectedMessagePoiAddress, result.poiAddress)
         XCTAssertTrue(result.sendContactProfilePicture ?? false)
         XCTAssertTrue(result.nonces.isEmpty)
@@ -478,103 +327,36 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertTrue(result.retry)
     }
 
-    func testTaskDefinitionSendVideoMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "ADMIN007"
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedThumbnailBlobID = MockData.generateBlobID()
-        let expectedThumbnailSize = NSNumber(value: 1.0)
-        let expectedNonces = [expectedGroupCreator: MockData.generateMessageNonce()]
-
-        var message: VideoMessageEntity!
-        var group: Group!
-        dbPreparer.save {
-            let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
-                identity: expectedGroupCreator,
-                verificationLevel: 0
-            )
-            let conversation = dbPreparer
-                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.contact = contact
-                }
-            let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
-            group = Group(
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            let thumbnail = dbPreparer.createImageData(data: Data([0]), height: 1, width: 1)
-            let videoData = dbPreparer.createVideoData(data: Data([1]))
-            message = dbPreparer.createVideoMessageEntity(
-                conversation: conversation,
-                thumbnail: thumbnail,
-                videoData: videoData,
-                date: Date(),
-                complete: { videoMessage in
-                    videoMessage.delivered = 1
-                    videoMessage.id = expectedMessageID
-                    videoMessage.isOwn = true
-                    videoMessage.read = true
-                    videoMessage.sent = true
-                    videoMessage.userack = false
-                    videoMessage.duration = 10
-                    videoMessage.remoteSentDate = Date()
-                }
-            )
-        }
-
-        let task = TaskDefinitionSendVideoMessage(
-            thumbnailBlobID: expectedThumbnailBlobID,
-            thumbnailSize: expectedThumbnailSize,
-            message: message,
-            receiverIdentity: nil,
-            group: group,
-            sendContactProfilePicture: true
-        )
-        task.nonces = expectedNonces
-
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(task)
-
-        let decoder = JSONDecoder()
-        let result = try decoder.decode(TaskDefinitionSendVideoMessage.self, from: data)
-        XCTAssertTrue(result.isGroupMessage)
-        XCTAssertEqual(expectedMessageID, result.messageID)
-        XCTAssertNil(result.receiverIdentity)
-        XCTAssertEqual(result.groupID, expectedGroupID)
-        XCTAssertEqual(result.groupCreatorIdentity, expectedGroupCreator)
-        XCTAssertEqual(result.thumbnailBlobID, expectedThumbnailBlobID)
-        XCTAssertEqual(result.thumbnailSize, expectedThumbnailSize)
-        XCTAssertTrue(result.sendContactProfilePicture ?? false)
-        XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
-        XCTAssertTrue(result.retry)
-    }
-
     func testTaskDefinitionSendGroupCreateMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "CREATOR01"
         let expectedToMembers = ["MEMBER04", "MEMBER05"]
         let expectedRemovedMembers = ["MEMBER03", "MEMBER04"]
-        let expectedMembers = Set(["MEMBER01", "MEMBER02"])
+        let expectedMembers = ["MEMBER01", "MEMBER02"]
         var expectedNonces = [ThreemaIdentity: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
 
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "CREATOR01",
+            members: expectedMembers
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+
         let task = TaskDefinitionSendGroupCreateMessage(
-            group: nil,
+            group: expectedGroup,
             to: expectedToMembers,
             removed: expectedRemovedMembers,
-            members: expectedMembers,
+            members: Set(expectedMembers),
             sendContactProfilePicture: false
         )
         
-        task.groupID = expectedGroupID
-        task.groupCreatorIdentity = expectedGroupCreator
         task.nonces = expectedNonces
 
         let encoder = JSONEncoder()
@@ -582,21 +364,21 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendGroupCreateMessage.self, from: data))
+
+        XCTAssertNil(result.receiverIdentity)
         let groupID = try XCTUnwrap(result.groupID)
-        XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroup.groupID, groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertFalse(result.sendContactProfilePicture ?? true)
         XCTAssertEqual(expectedToMembers, result.toMembers)
         XCTAssertEqual(expectedRemovedMembers, result.removedMembers)
-        XCTAssertEqual(expectedMembers, result.members)
+        XCTAssertEqual(Set(expectedMembers), result.members)
         XCTAssertTrue(result.nonces.isEmpty)
         XCTAssertTrue(result.isPersistent)
         XCTAssertTrue(result.retry)
     }
 
     func testTaskDefinitionSendGroupDeletePhotoMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         var expectedNonces = [ThreemaIdentity: Data]()
@@ -604,15 +386,26 @@ class TaskDefinitionTests: XCTestCase {
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
 
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "CREATOR01",
+            members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+
         let task = TaskDefinitionSendGroupDeletePhotoMessage(
-            group: nil,
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             sendContactProfilePicture: false
         )
         
-        task.groupID = expectedGroupID
-        task.groupCreatorIdentity = expectedGroupCreator
         task.nonces = expectedNonces
         
         let encoder = JSONEncoder()
@@ -620,9 +413,11 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendGroupDeletePhotoMessage.self, from: data))
+
+        XCTAssertNil(result.receiverIdentity)
         let groupID = try XCTUnwrap(result.groupID)
-        XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroup.groupID, groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertFalse(result.sendContactProfilePicture ?? true)
         XCTAssertEqual(expectedFromMember, result.fromMember)
         XCTAssertEqual(expectedToMembers, result.toMembers)
@@ -655,6 +450,8 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinitionSendGroupLeaveMessage.self, from: data)
+
+        XCTAssertNil(result.receiverIdentity)
         XCTAssertEqual(result.groupID, expectedGroupID)
         XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
         XCTAssertFalse(result.sendContactProfilePicture ?? true)
@@ -667,26 +464,35 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupRenameMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
-        let expectedNewName = "New Groupname"
+        let expectedNewName = "New group name"
         var expectedNonces = [ThreemaIdentity: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
 
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "CREATOR01",
+            members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+
         let task = TaskDefinitionSendGroupRenameMessage(
-            group: nil,
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             newName: expectedNewName,
             sendContactProfilePicture: false
         )
         
-        task.groupID = expectedGroupID
-        task.groupCreatorIdentity = expectedGroupCreator
         task.nonces = expectedNonces
 
         let encoder = JSONEncoder()
@@ -694,10 +500,11 @@ class TaskDefinitionTests: XCTestCase {
         
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendGroupRenameMessage.self, from: data))
-        
+
+        XCTAssertNil(result.receiverIdentity)
         let groupID = try XCTUnwrap(result.groupID)
-        XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroup.groupID, groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertFalse(result.sendContactProfilePicture ?? true)
         XCTAssertEqual(expectedFromMember, result.fromMember)
         XCTAssertEqual(expectedToMembers, result.toMembers)
@@ -708,8 +515,6 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupSetPhotoMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedSize: UInt32 = 10
@@ -720,8 +525,21 @@ class TaskDefinitionTests: XCTestCase {
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
         
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "CREATOR01",
+            members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+
         let task = TaskDefinitionSendGroupSetPhotoMessage(
-            group: nil,
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             size: expectedSize,
@@ -729,8 +547,7 @@ class TaskDefinitionTests: XCTestCase {
             encryptionKey: expectedEncryptionKey,
             sendContactProfilePicture: false
         )
-        task.groupID = expectedGroupID
-        task.groupCreatorIdentity = expectedGroupCreator
+
         task.nonces = expectedNonces
 
         let encoder = JSONEncoder()
@@ -738,10 +555,11 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendGroupSetPhotoMessage.self, from: data))
-        
+
+        XCTAssertNil(result.receiverIdentity)
         let groupID = try XCTUnwrap(result.groupID)
-        XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroup.groupID, groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertFalse(result.sendContactProfilePicture ?? true)
         XCTAssertEqual(expectedFromMember, result.fromMember)
         XCTAssertEqual(expectedToMembers, result.toMembers)
@@ -948,8 +766,6 @@ class TaskDefinitionTests: XCTestCase {
     }
     
     func testTaskDefinitionSendGroupDeliveryReceiptsMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedReceiptType: ReceiptType = .ack
@@ -961,9 +777,22 @@ class TaskDefinitionTests: XCTestCase {
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
-        
+
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+            groupID: MockData.generateGroupID(),
+            groupCreatorIdentity: "CREATOR01",
+            members: expectedToMembers
+        )
+        let expectedGroup = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+
         let task = TaskDefinitionSendGroupDeliveryReceiptsMessage(
-            group: nil,
+            group: expectedGroup,
             from: expectedFromMember,
             to: expectedToMembers,
             receiptType: expectedReceiptType,
@@ -971,8 +800,6 @@ class TaskDefinitionTests: XCTestCase {
             receiptReadDates: [Date]()
         )
         
-        task.groupID = expectedGroupID
-        task.groupCreatorIdentity = expectedGroupCreator
         task.nonces = expectedNonces
         
         let encoder = JSONEncoder()
@@ -980,9 +807,11 @@ class TaskDefinitionTests: XCTestCase {
         
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendGroupDeliveryReceiptsMessage.self, from: data))
+
+        XCTAssertNil(result.receiverIdentity)
         let groupID = try XCTUnwrap(result.groupID)
-        XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroup.groupID, groupID)
+        XCTAssertEqual(expectedGroup.groupCreatorIdentity, result.groupCreatorIdentity)
         XCTAssertEqual(expectedReceiptType, result.receiptType)
         XCTAssertEqual(expectedReceiptMessageIDs, result.receiptMessageIDs)
         XCTAssertEqual(expectedFromMember, result.fromMember)

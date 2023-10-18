@@ -79,48 +79,49 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         requestID: String?,
         completion: ((BaseMessage?) -> Void)?
     ) {
-        guard let newMessage = entityManager.performAndWaitSave({
-            var message: TextMessage?
+        let (messageID, receiverIdentity, group) = entityManager.performAndWaitSave {
+            var messageID: Data?
+            var receiverIdentity: String?
+            var group: Group?
 
-            guard let messageConversation = self.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? Conversation else {
-                return message
+            if let messageConversation = self.entityManager.entityFetcher
+                .getManagedObject(by: conversation.objectID) as? Conversation,
+                let message = self.entityManager.entityCreator.textMessage(for: messageConversation) {
+
+                var remainingBody: NSString?
+                if let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody) {
+                    message.quotedMessageID = quoteMessageID
+                    message.text = remainingBody as String?
+                }
+                else {
+                    message.text = text
+                }
+
+                if let requestID {
+                    message.webRequestID = requestID
+                }
+
+                messageID = message.id
+
+                group = self.groupManager.getGroup(conversation: message.conversation)
+                if let group {
+                    self.groupManager.periodicSyncIfNeeded(for: group)
+                }
+                else {
+                    receiverIdentity = message.conversation.contact?.identity
+                }
             }
 
-            var remainingBody: NSString?
-            let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody)
+            return (messageID, receiverIdentity, group)
+        }
 
-            message = self.entityManager.entityCreator.textMessage(for: messageConversation)
-            if let quoteMessageID {
-                message?.quotedMessageID = quoteMessageID
-                message?.text = remainingBody as String?
-            }
-            else {
-                message?.text = text
-            }
-
-            if let requestID {
-                message?.webRequestID = requestID
-            }
-
-            return message
-        })
-        else {
+        guard let messageID else {
             DDLogError("Create text message failed")
             return
         }
 
-        var receiverIdentity: ThreemaIdentity?
-        let group = groupManager.getGroup(conversation: conversation)
-        if let group {
-            groupManager.periodicSyncIfNeeded(for: group)
-        }
-        else {
-            receiverIdentity = conversation.contact?.identity
-        }
-
         let task = TaskDefinitionSendBaseMessage(
-            message: newMessage,
+            messageID: messageID,
             receiverIdentity: receiverIdentity,
             group: group,
             sendContactProfilePicture: !quickReply
@@ -157,44 +158,47 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         poiAddress: String?,
         in conversation: Conversation
     ) {
-        guard let newMessage = entityManager.performAndWaitSave({
-            var message: LocationMessage?
+        let (messageID, receiverIdentity, group) = entityManager.performAndWaitSave {
+            var messageID: Data?
+            var receiverIdentity: String?
+            var group: Group?
 
-            guard let messageConversation = self.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? Conversation else {
-                return message
+            if let messageConversation = self.entityManager.entityFetcher
+                .getManagedObject(by: conversation.objectID) as? Conversation,
+                let message = self.entityManager.entityCreator.locationMessage(for: messageConversation) {
+
+                message.latitude = NSNumber(floatLiteral: coordinates.latitude)
+                message.longitude = NSNumber(floatLiteral: coordinates.longitude)
+                message.accuracy = NSNumber(floatLiteral: accuracy)
+                message.poiName = poiName
+                message.poiAddress = poiAddress
+
+                messageID = message.id
+
+                group = self.groupManager.getGroup(conversation: message.conversation)
+                if let group {
+                    self.groupManager.periodicSyncIfNeeded(for: group)
+                }
+                else {
+                    receiverIdentity = message.conversation.contact?.identity
+                }
             }
 
-            message = self.entityManager.entityCreator.locationMessage(for: messageConversation)
-            message?.latitude = NSNumber(floatLiteral: coordinates.latitude)
-            message?.longitude = NSNumber(floatLiteral: coordinates.longitude)
-            message?.accuracy = NSNumber(floatLiteral: accuracy)
-            message?.poiName = poiName
-            message?.poiAddress = poiAddress
+            return (messageID, receiverIdentity, group)
+        }
 
-            return message
-        })
-        else {
+        guard let messageID else {
             DDLogError("Create location message failed")
             return
         }
 
-        var receiverIdentity: ThreemaIdentity?
-        let group = groupManager.getGroup(conversation: conversation)
-        if let group {
-            groupManager.periodicSyncIfNeeded(for: group)
-        }
-        else {
-            receiverIdentity = conversation.contact?.identity
-        }
-
         // We replace \n with \\n to conform to specs
-        let formattedAddress = newMessage.poiAddress?.replacingOccurrences(of: "\n", with: "\\n")
+        let formattedAddress = poiAddress?.replacingOccurrences(of: "\n", with: "\\n")
 
         taskManager.add(
             taskDefinition: TaskDefinitionSendLocationMessage(
                 poiAddress: formattedAddress,
-                message: newMessage,
+                messageID: messageID,
                 receiverIdentity: receiverIdentity,
                 group: group,
                 sendContactProfilePicture: true
@@ -210,47 +214,50 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
-        var conversation: Conversation!
+        let (messageID, receiverIdentity, group, conversation) = entityManager.performAndWaitSave {
+            var messageID: Data?
+            var receiverIdentity: ThreemaIdentity?
+            var group: Group?
+            var conversation: Conversation?
 
-        guard let newMessage = entityManager.performAndWaitSave({
-            var message: BallotMessage?
+            if let messageBallot = self.entityManager.entityFetcher.getManagedObject(by: ballot.objectID) as? Ballot,
+               let message = self.entityManager.entityCreator.ballotMessage(for: messageBallot.conversation) {
 
-            guard let messageBallot = self.entityManager.entityFetcher.getManagedObject(by: ballot.objectID) as? Ballot
-            else {
-                return message
+                message.ballot = messageBallot
+
+                messageID = message.id
+
+                group = self.groupManager.getGroup(conversation: message.conversation)
+                if let group {
+                    self.groupManager.periodicSyncIfNeeded(for: group)
+                }
+                else {
+                    receiverIdentity = message.conversation.contact?.identity
+                }
+
+                conversation = message.conversation
             }
 
-            conversation = messageBallot.conversation
+            return (messageID, receiverIdentity, group, conversation)
+        }
 
-            message = self.entityManager.entityCreator.ballotMessage(for: conversation)
-            message?.ballot = messageBallot
-
-            return message
-        })
-        else {
+        guard let messageID else {
             DDLogError("Create ballot message failed")
             return
         }
 
-        var receiverIdentity: ThreemaIdentity?
-        let group = groupManager.getGroup(conversation: conversation)
-        if let group {
-            groupManager.periodicSyncIfNeeded(for: group)
-        }
-        else {
-            receiverIdentity = conversation.contact?.identity
-        }
-
         taskManager.add(
             taskDefinition: TaskDefinitionSendBaseMessage(
-                message: newMessage,
+                messageID: messageID,
                 receiverIdentity: receiverIdentity,
                 group: group,
                 sendContactProfilePicture: false
             )
         )
 
-        donateInteractionForOutgoingMessage(in: conversation)
+        if let conversation {
+            donateInteractionForOutgoingMessage(in: conversation)
+        }
     }
 
     @objc public func sendBallotVoteMessage(for ballot: Ballot) {
@@ -259,20 +266,40 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
-        let group = groupManager.getGroup(conversation: ballot.conversation)
-        if let group {
-            groupManager.periodicSyncIfNeeded(for: group)
+        let (ballotID, receiverIdentity, group, conversation) = entityManager.performAndWait {
+            let ballotID = ballot.id
+
+            var receiverIdentity: ThreemaIdentity?
+            let group = self.groupManager.getGroup(conversation: ballot.conversation)
+            if let group {
+                self.groupManager.periodicSyncIfNeeded(for: group)
+            }
+            else {
+                receiverIdentity = ballot.conversation.contact?.identity
+            }
+
+            let conversation = ballot.conversation
+
+            return (ballotID, receiverIdentity, group, conversation)
+        }
+
+        guard let ballotID else {
+            DDLogError("Ballot ID is nil")
+            return
         }
 
         taskManager.add(
             taskDefinition: TaskDefinitionSendBallotVoteMessage(
-                ballot: ballot,
+                ballotID: ballotID,
+                receiverIdentity: receiverIdentity,
                 group: group,
                 sendContactProfilePicture: false
             )
         )
 
-        donateInteractionForOutgoingMessage(in: ballot.conversation)
+        if let conversation {
+            donateInteractionForOutgoingMessage(in: conversation)
+        }
     }
 
     public func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?) {
@@ -287,18 +314,24 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     @objc public func sendMessage(baseMessage: BaseMessage) {
-        let (receiverIdentity, group) = entityManager.performAndWait {
+        let (messageID, receiverIdentity, group) = entityManager.performAndWait {
+            let messageID = baseMessage.id
             var receiverIdentity: ThreemaIdentity?
             let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
             if group == nil {
                 receiverIdentity = baseMessage.conversation.contact?.identity
             }
-            return (receiverIdentity, group)
+            return (messageID, receiverIdentity, group)
+        }
+
+        guard let messageID else {
+            DDLogError("Message ID is nil")
+            return
         }
 
         taskManager.add(
             taskDefinition: TaskDefinitionSendBaseMessage(
-                message: baseMessage,
+                messageID: messageID,
                 receiverIdentity: receiverIdentity,
                 group: group,
                 sendContactProfilePicture: false

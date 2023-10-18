@@ -30,8 +30,12 @@ import Foundation
     }
     
     @objc public enum DeliveryReceiptType: Int {
-        case acknowledged = 2
-        case declined = 3
+        case unknown = 0
+        case received = 1
+        case read = 2
+        case acknowledged = 3
+        case declined = 4
+        case consumed = 5
     }
     
     @objc public var identity: String
@@ -45,7 +49,10 @@ import Foundation
     }
     
     @objc public func deliveryReceiptType() -> DeliveryReceiptType {
-        DeliveryReceiptType(rawValue: deliveryReceiptTypeValue)!
+        guard let type = DeliveryReceiptType(rawValue: deliveryReceiptTypeValue) else {
+            return .unknown
+        }
+        return type
     }
     
     public func icon() -> UIImage {
@@ -63,7 +70,7 @@ import Foundation
                     .identity ? "hand.thumbsdown.fill" : "hand.thumbsdown"
             )!
                 .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
-        case .none:
+        default:
             return UIImage()
         }
     }

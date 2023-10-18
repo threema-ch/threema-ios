@@ -276,6 +276,41 @@ public class Contact: NSObject {
             return nil
         }
     }
+    
+    public var forwardSecurityMode: ForwardSecurityMode {
+        
+        guard isForwardSecurityAvailable else {
+            return .none
+        }
+        
+        do {
+            let businessInjector = BusinessInjector()
+            guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
+                myIdentity: MyIdentityStore.shared().identity,
+                peerIdentity: identity
+            ) else {
+                return .none
+            }
+            
+            let state = try dhSession.state
+            let current4DHVersions = dhSession.current4DHVersions
+            
+            switch state {
+            case .L20:
+                return .twoDH
+            case .RL44:
+                return .fourDH
+            case .R20:
+                return .twoDH
+            case .R24:
+                return .twoDH
+            }
+        }
+        catch {
+            DDLogError("Could not get ForwardSecurityMode for contact with identity: \(identity).")
+            return .none
+        }
+    }
 
     // MARK: Comparing function
 

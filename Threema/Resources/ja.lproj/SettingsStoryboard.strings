@@ -159,7 +159,7 @@
 "mWM-cJ-vcw.text" = "POIsを選ぶ";
 
 /* Class = "UILabel"; text = "Send Read Receipts"; ObjectID = "pd4-eC-QZk"; */
-"pd4-eC-QZk.text" = "「既読」の送信";
+"pd4-eC-QZk.text" = "\"既読\"の送信";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "qCc-Eb-8rc"; */
 "qCc-Eb-8rc.text" = "詳細";

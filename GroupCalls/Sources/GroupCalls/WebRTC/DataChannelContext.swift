@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import WebRTC
 
 protocol DataChannelContextProtocol: AnyObject, Sendable {

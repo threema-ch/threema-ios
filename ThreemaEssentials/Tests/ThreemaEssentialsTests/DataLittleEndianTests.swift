@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import XCTest
-@testable import ThreemaFramework
+@testable import ThreemaEssentials
 
 final class DataLittleEndianTests: XCTestCase {
     
@@ -92,7 +92,7 @@ final class DataLittleEndianTests: XCTestCase {
         
         let data = Data([0x2E, 0xEE, 0x11, 0xD4, 0xFD, 0xF8, 0xF7, 0xA3])
         
-        let actualNumber: UInt64 = try data.paddedLittleEndian()
+        let actualNumber: UInt64 = data.paddedLittleEndian()
         
         XCTAssertEqual(actualNumber, expectedNumber)
     }
@@ -102,7 +102,7 @@ final class DataLittleEndianTests: XCTestCase {
         
         let data = Data([0x01, 0x01])
         
-        let actualNumber: UInt64 = try data.paddedLittleEndian()
+        let actualNumber: UInt64 = data.paddedLittleEndian()
         
         XCTAssertEqual(actualNumber, expectedNumber)
     }

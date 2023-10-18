@@ -276,18 +276,20 @@ extension ChatViewFileMessageTableViewCell: ChatViewMessageAction {
         
         menuItems.append(contentsOf: defaultActions)
         
-        let downloadAction = Provider.downloadAction {
-            Task {
-                await BlobManager.shared.syncBlobs(for: message.objectID)
+        if message.blobDisplayState == .remote {
+            let downloadAction = Provider.downloadAction {
+                Task {
+                    await BlobManager.shared.syncBlobs(for: message.objectID)
+                }
             }
-        }
-        // Download action is inserted before default action, depending if ack/dec is possible at a different
-        // position
-        if message.isUserAckEnabled {
-            menuItems.insert(downloadAction, at: 2)
-        }
-        else {
-            menuItems.insert(downloadAction, at: 0)
+            // Download action is inserted before default action, depending if ack/dec is possible at a different
+            // position
+            if message.isUserAckEnabled {
+                menuItems.insert(downloadAction, at: 2)
+            }
+            else {
+                menuItems.insert(downloadAction, at: 0)
+            }
         }
         
         // Retry

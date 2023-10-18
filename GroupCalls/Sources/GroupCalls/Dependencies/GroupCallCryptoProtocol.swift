@@ -22,12 +22,14 @@ import Foundation
 
 /// Various functions related to cryptography
 public protocol GroupCallCryptoProtocol: Sendable {
+    var symmetricNonceLength: Int32 { get }
+    
     func symmetricEncryptData(_ plaintext: Data, withKey key: Data, nonce: Data) -> Data?
     func symmetricDecryptData(_ ciphertext: Data, withSecretKey key: Data, nonce: Data) -> Data?
     
     func randomBytes(of length: Int32) -> Data
     
-    func generateKeyPair() -> (Data, Data)
+    func generateKeyPair() -> (publicKey: Data, privateKey: Data)?
     func encryptData(plaintext: Data, withPublicKey: Data, secretKey: Data, nonce: Data) -> Data?
     func decryptData(cipherText: Data, withKey: Data, signKey: Data, nonce: Data) -> Data?
     

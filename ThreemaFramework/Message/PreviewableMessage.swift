@@ -72,8 +72,26 @@ extension PreviewableMessage {
         let trimmedString = String(previewText.prefix(configuration.trimmingCount))
         
         let parsedString = MarkupParser().previewString(for: trimmedString, font: configuration.font)
-        
         let configuredAttributedText = NSMutableAttributedString(attributedString: parsedString)
+        configuredAttributedText.mutableString.replaceOccurrences(
+            of: " \n",
+            with: "\n",
+            options: [],
+            range: NSMakeRange(0, configuredAttributedText.length)
+        )
+        configuredAttributedText.mutableString.replaceOccurrences(
+            of: "\n ",
+            with: "\n",
+            options: [],
+            range: NSMakeRange(0, configuredAttributedText.length)
+        )
+        configuredAttributedText.mutableString.replaceOccurrences(
+            of: "\n",
+            with: " ",
+            options: [],
+            range: NSMakeRange(0, configuredAttributedText.length)
+        )
+        
         configuredAttributedText.removeAttribute(
             NSAttributedString.Key.link,
             range: NSRange(location: 0, length: configuredAttributedText.length)
@@ -82,15 +100,7 @@ extension PreviewableMessage {
             [NSAttributedString.Key.foregroundColor: configuration.tintColor()],
             range: NSRange(location: 0, length: configuredAttributedText.length)
         )
-            
-        // To catch all new lines, we need to remove them in a chain
-        configuredAttributedText.mutableString.setString(
-            configuredAttributedText.mutableString
-                .replacingOccurrences(of: " \n", with: "\n")
-                .replacingOccurrences(of: "\n ", with: "\n")
-                .replacingOccurrences(of: "\n", with: " ")
-        )
-                
+        
         // If no symbol was found, we return the text without one
         if let image = previewSymbol {
             // Create string containing icon
@@ -116,7 +126,7 @@ extension PreviewableMessage {
         let shouldShowName = configuration.includeSender &&
             (conversation?.isGroup() ?? false) &&
             !(self is SystemMessage) // TODO: We might need to update this for group calls
-
+        
         if shouldShowName {
             let attributedName: NSAttributedString
             

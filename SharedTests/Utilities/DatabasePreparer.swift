@@ -64,7 +64,8 @@ class DatabasePreparer {
         publicKey: Data = MockData.generatePublicKey(),
         identity: String,
         verificationLevel: Int = 0,
-        nickname: String? = nil
+        nickname: String? = nil,
+        state: NSNumber? = NSNumber(value: kStateActive)
     ) -> ContactEntity {
         let contact = createEntity(objectType: ContactEntity.self)
         contact.publicKey = publicKey
@@ -72,6 +73,9 @@ class DatabasePreparer {
         contact.verificationLevel = NSNumber(integerLiteral: verificationLevel)
         if let nickname {
             contact.publicNickname = nickname
+        }
+        if let state {
+            contact.state = state
         }
         return contact
     }
@@ -285,6 +289,25 @@ class DatabasePreparer {
         complete?(fileMessage)
         
         return fileMessage
+    }
+
+    func createGroup(
+        groupID: Data,
+        groupCreatorIdentity: ThreemaIdentity,
+        members: [ThreemaIdentity]
+    ) throws -> (ContactEntity, GroupEntity, Conversation) {
+        save {
+            let contactEntity = createContact(identity: groupCreatorIdentity)
+            let groupEntity = createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
+            let conversation = createConversation()
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = contactEntity
+            members.forEach { identity in
+                conversation.members.insert(createContact(identity: identity))
+            }
+
+            return (contactEntity, groupEntity, conversation)
+        }
     }
     
     private func createEntity<T: NSManagedObject>(objectType: T.Type) -> T {

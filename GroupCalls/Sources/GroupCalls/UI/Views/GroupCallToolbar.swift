@@ -45,6 +45,12 @@ class GroupCallToolbar: UIView {
         button.tintColor = toolbarButtonConfig.biggerButtonTint
         button.backgroundColor = toolbarButtonConfig.biggerButtonBackground
 
+        // TODO: (IOS-4111) Remove? See comment in NotificationPresenterWrapper
+        button.accessibilityTraits.insert(.startsMediaSession)
+        
+        button.accessibilityLabel = dependencies.groupCallBundleUtil
+            .localizedString(for: "group_call_accessibility_enable_camera")
+
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
             button.heightAnchor.constraint(equalTo: button.widthAnchor),
@@ -59,13 +65,19 @@ class GroupCallToolbar: UIView {
             
             switch self.viewModel.ownVideoMuteState {
             case .changing:
+                button.accessibilityLabel = nil
                 config?.showsActivityIndicator = true
 
             case .muted:
+                button.accessibilityLabel = dependencies.groupCallBundleUtil
+                    .localizedString(for: "group_call_accessibility_enable_camera")
                 config?.showsActivityIndicator = false
                 config?.image = dependencies.groupCallBundleUtil.image(named: "threema.video.outline.slash")
                     .withConfiguration(toolbarButtonConfig.biggerButtonImageConfig)
+                
             case .unmuted:
+                button.accessibilityLabel = dependencies.groupCallBundleUtil
+                    .localizedString(for: "group_call_accessibility_disable_camera")
                 config?.showsActivityIndicator = false
                 config?.image = dependencies.groupCallBundleUtil.image(named: "threema.video.outline")
                     .withConfiguration(toolbarButtonConfig.biggerButtonImageConfig)
@@ -95,7 +107,9 @@ class GroupCallToolbar: UIView {
         button.clipsToBounds = true
         button.tintColor = toolbarButtonConfig.smallerButtonTint
         button.backgroundColor = toolbarButtonConfig.smallerButtonBackground
-        
+        button.accessibilityLabel = dependencies.groupCallBundleUtil
+            .localizedString(for: "call_camera_switch_to_back_button")
+
         button.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.smallerButtonWidth),
@@ -106,7 +120,6 @@ class GroupCallToolbar: UIView {
             guard let self else {
                 return
             }
-            
             button.isHidden = self.viewModel.ownVideoMuteState == .muted
             button.tintColor = toolbarButtonConfig.smallerButtonTint
             button.backgroundColor = toolbarButtonConfig.smallerButtonBackground
@@ -130,9 +143,9 @@ class GroupCallToolbar: UIView {
         return view
     }()
     
-    // MARK: End Call Button
+    // MARK: Leave Call Button
 
-    private lazy var endCallButton: UIButton = {
+    private lazy var leaveCallButton: UIButton = {
         var configuration = UIButton.Configuration.filled()
         configuration.image = UIImage(
             systemName: "phone.down.fill",
@@ -140,7 +153,7 @@ class GroupCallToolbar: UIView {
         )
         
         let action = UIAction { [weak self] _ in
-            self?.didTapEndCallButton()
+            self?.viewModel.leaveCall()
         }
         
         let button = UIButton(configuration: configuration, primaryAction: action)
@@ -160,7 +173,7 @@ class GroupCallToolbar: UIView {
     
     // MARK: Audio Output Button
 
-    private lazy var audioOutputButton = GroupCallAudioOutputButton()
+    private lazy var audioOutputButton = GroupCallAudioOutputButton(frame: .zero, dependencies: dependencies)
     private lazy var audioOutputButtonView: UIView = {
         let view = UIView()
         view.addSubview(audioOutputButton)
@@ -172,7 +185,7 @@ class GroupCallToolbar: UIView {
             ),
             audioOutputButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
-        
+                
         return view
     }()
 
@@ -196,6 +209,11 @@ class GroupCallToolbar: UIView {
         button.clipsToBounds = true
         button.tintColor = toolbarButtonConfig.biggerButtonTint
         button.backgroundColor = toolbarButtonConfig.biggerButtonBackground
+        button.accessibilityLabel = dependencies.groupCallBundleUtil
+            .localizedString(for: "group_call_accessibility_enable_microphone")
+        
+        // TODO: (IOS-4111) Remove? See comment in NotificationPresenterWrapper
+        button.accessibilityTraits.insert(.startsMediaSession)
 
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
@@ -211,15 +229,21 @@ class GroupCallToolbar: UIView {
             
             switch self.viewModel.ownAudioMuteState {
             case .changing:
+                button.accessibilityLabel = nil
                 config?.showsActivityIndicator = true
-
+                
             case .muted:
+                button.accessibilityLabel = dependencies.groupCallBundleUtil
+                    .localizedString(for: "group_call_accessibility_enable_microphone")
                 config?.showsActivityIndicator = false
                 config?.image = UIImage(
                     systemName: "mic.slash",
                     withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
                 )
+
             case .unmuted:
+                button.accessibilityLabel = dependencies.groupCallBundleUtil
+                    .localizedString(for: "group_call_accessibility_disable_microphone")
                 config?.showsActivityIndicator = false
                 config?.image = UIImage(
                     systemName: "mic",
@@ -237,7 +261,7 @@ class GroupCallToolbar: UIView {
             UIStackView(arrangedSubviews: [
                 toggleVideoButton,
                 switchCameraButtonView,
-                endCallButton,
+                leaveCallButton,
                 audioOutputButtonView,
                 toggleAudioButton,
             ])
@@ -277,13 +301,6 @@ class GroupCallToolbar: UIView {
     
     private var isSpeaker = false
     private var isToolbarHidden = false
-    
-    private lazy var bottomInsetConstant: CGFloat = {
-        if UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0 > 0 {
-            return 0.0
-        }
-        return toolbarConfig.verticalInset
-    }()
     
     // MARK: - Lifecycle
 
@@ -327,7 +344,7 @@ class GroupCallToolbar: UIView {
             ),
             toolbarStackView.bottomAnchor.constraint(
                 equalTo: safeAreaLayoutGuide.bottomAnchor,
-                constant: -bottomInsetConstant
+                constant: -toolbarConfig.verticalInset
             ),
             toolbarStackView.trailingAnchor.constraint(
                 equalTo: trailingAnchor,
@@ -344,6 +361,9 @@ class GroupCallToolbar: UIView {
     }
     
     public func toggleVisibility() {
+        guard !UIAccessibility.isVoiceOverRunning else {
+            return
+        }
         isToolbarHidden.toggle()
         
         if isToolbarHidden {
@@ -352,8 +372,8 @@ class GroupCallToolbar: UIView {
             
             toolbarStackView.removeArrangedSubview(toggleVideoButton)
             toggleVideoButton.removeFromSuperview()
-            toolbarStackView.removeArrangedSubview(endCallButton)
-            endCallButton.removeFromSuperview()
+            toolbarStackView.removeArrangedSubview(leaveCallButton)
+            leaveCallButton.removeFromSuperview()
             toolbarStackView.removeArrangedSubview(switchCameraButtonView)
             switchCameraButtonView.removeFromSuperview()
             toolbarStackView.removeArrangedSubview(audioOutputButtonView)
@@ -365,10 +385,20 @@ class GroupCallToolbar: UIView {
             toolbarStackView.removeArrangedSubview(spacerView)
             spacerView.removeFromSuperview()
             toolbarStackView.insertArrangedSubview(audioOutputButtonView, at: 0)
-            toolbarStackView.insertArrangedSubview(endCallButton, at: 0)
+            toolbarStackView.insertArrangedSubview(leaveCallButton, at: 0)
             toolbarStackView.insertArrangedSubview(switchCameraButtonView, at: 0)
             toolbarStackView.insertArrangedSubview(toggleVideoButton, at: 0)
         }
+    }
+    
+    // MARK: - Public Functions
+       
+    public func accessibilityElements() -> [Any] {
+        [toggleVideoButton, switchCameraButton, leaveCallButton, audioOutputButton, toggleAudioButton]
+    }
+    
+    public func magicTapToggle() {
+        didTapToggleAudioButton()
     }
     
     // MARK: - Button Config Updates
@@ -377,10 +407,6 @@ class GroupCallToolbar: UIView {
         Task {
             await viewModel.toggleOwnAudio()
         }
-    }
-    
-    private func didTapEndCallButton() {
-        viewModel.endCall()
     }
     
     private func didTapToggleVideoButton() {
@@ -392,6 +418,14 @@ class GroupCallToolbar: UIView {
     private func didTapSwitchCamera() {
         Task {
             await viewModel.switchCamera()
+            if await viewModel.groupCallActor?.currentCameraPosition == .front {
+                switchCameraButton.accessibilityLabel = dependencies.groupCallBundleUtil
+                    .localizedString(for: "call_camera_switch_to_back_button")
+            }
+            else {
+                switchCameraButton.accessibilityLabel = dependencies.groupCallBundleUtil
+                    .localizedString(for: "call_camera_switch_to_front_button")
+            }
         }
     }
 }

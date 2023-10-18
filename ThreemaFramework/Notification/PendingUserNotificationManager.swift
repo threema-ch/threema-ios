@@ -210,11 +210,16 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 // Add notification or suppress it
                 var suppress = false
                 var silent = false
+                
                 if let pushSetting = userNotificationContent.pushSetting {
                     suppress = (!userNotificationContent.isGroupMessage && !pushSetting.canSendPush()) ||
                         (
                             userNotificationContent.isGroupMessage && !pushSetting
-                                .canSendPush(for: userNotificationContent.baseMessage)
+                                .canSendPush(for: userNotificationContent.baseMessage) && !pushSetting
+                                .canSendPushForGroupCallStartMessage(
+                                    abstractMessage: pendingUserNotification
+                                        .abstractMessage
+                                )
                         )
                     silent = pushSetting.silent
                 }

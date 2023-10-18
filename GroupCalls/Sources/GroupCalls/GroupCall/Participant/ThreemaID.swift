@@ -21,16 +21,12 @@
 import Foundation
 
 public struct ThreemaID: Sendable {
-    enum ThreemaIDError: Error {
-        case invalidLength
-    }
-    
     public let id: String
     let nickname: String
     
     public init(id: String, nickname: String? = nil) throws {
         guard id.count == 8 else {
-            throw ThreemaIDError.invalidLength
+            throw GroupCallError.invalidThreemaIDLength
         }
         
         self.id = id

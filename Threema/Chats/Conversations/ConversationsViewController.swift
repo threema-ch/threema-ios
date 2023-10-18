@@ -680,7 +680,7 @@ extension ConversationsViewController: UISearchResultsUpdating, UISearchControll
     }
     
     func didDismissSearchController(_ searchController: UISearchController) {
-        archivedChatsButton.isHidden = false
+        updateArchivedButton()
         if UIDevice.current.userInterfaceIdiom == .pad {
             setSelection(for: selectedConversation)
         }

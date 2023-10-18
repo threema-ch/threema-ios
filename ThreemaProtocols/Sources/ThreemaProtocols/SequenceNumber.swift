@@ -18,24 +18,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import CocoaLumberjack
-import CocoaLumberjackSwift
-import WebRTC
-import XCTest
-@testable import GroupCalls
+import Foundation
 
-final class GroupCallsTests: XCTestCase {
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertTrue(true)
+/// Sequence number as defined in various Threema protocol specifications
+///
+/// Initialized at 0 so the first `next()` number is 1
+public class SequenceNumber<T: UnsignedInteger> {
+    
+    private var current: T = 0
+    
+    /// Create a new sequence number
+    public init() {
+        // no-op
     }
-//
-//    func test2() throws {
-//        // This is an example of a functional test case.
-//        // Use XCTAssert and related functions to verify your tests produce the correct
-//        // results.
-//        XCTAssertEqual(GroupCalls().text, "Hello, World!")
-//    }
+    
+    /// Get next sequence number
+    ///
+    /// The first number will be 1.
+    ///
+    /// - Returns: Next sequence number
+    public func next() -> T {
+        // This will crash if the sequence number overflows
+        current += 1
+        return current
+    }
 }

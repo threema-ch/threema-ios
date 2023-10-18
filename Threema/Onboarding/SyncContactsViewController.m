@@ -66,8 +66,8 @@
 
 - (void)setup {
     if ([LicenseStore requiresLicenseKey]) {
-        _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title_work"], [ThreemaAppObjc currentName]];
-        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description_work"], [ThreemaAppObjc currentName]];
+        _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title_work"], [ThreemaAppObjc appName]];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description_work"], [ThreemaAppObjc appName]];
     } else {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_sync_title"];
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_sync_description"];
@@ -75,7 +75,7 @@
     _syncContactsLabel.text = [BundleUtil localizedStringForKey:@"id_sync_contacts"];
 
     self.moreView.mainView = self.mainContentView;
-    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_sync_contacts"], [ThreemaAppObjc currentName]];
+    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_sync_contacts"], [ThreemaAppObjc appName]];
     
     _syncContactsView.layer.cornerRadius = 3;
     _syncContactsView.layer.borderColor = [UIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.1].CGColor;

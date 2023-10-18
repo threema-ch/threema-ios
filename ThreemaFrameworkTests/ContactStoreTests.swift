@@ -99,4 +99,41 @@ class ContactStoreTests: XCTestCase {
         XCTAssertEqual(expectedFirstName, contact?.firstName)
         XCTAssertNil(contact?.lastName)
     }
+    
+    func testUpdateContactStatus() throws {
+        let expectedIdentity = "TESTER01"
+        let expectedPublicKey = BytesUtility.generateRandomBytes(length: Int(32))!
+        let expectedStatus = kStateActive
+
+        let dbPreparer = DatabasePreparer(context: databaseMainCnx.current)
+        var savedContact: ContactEntity?
+        dbPreparer.save {
+            savedContact = dbPreparer.createContact(
+                publicKey: expectedPublicKey,
+                identity: expectedIdentity,
+                verificationLevel: 0,
+                state: NSNumber(value: kStateInactive)
+            )
+        }
+
+        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+
+        let contactStore = ContactStore(
+            userSettings: UserSettingsMock(),
+            entityManager: em
+        )
+        
+        XCTAssertEqual(kStateInactive, savedContact?.state?.intValue)
+        
+        contactStore.updateStateToActive(for: savedContact!, entityManager: em)
+
+        let contact = em.entityFetcher.contact(for: expectedIdentity)
+
+        XCTAssertNotNil(contact)
+        XCTAssertEqual(expectedIdentity, contact?.identity)
+        XCTAssertEqual(expectedPublicKey, contact?.publicKey)
+        XCTAssertNil(contact?.firstName)
+        XCTAssertNil(contact?.lastName)
+        XCTAssertEqual(expectedStatus, contact?.state?.intValue)
+    }
 }

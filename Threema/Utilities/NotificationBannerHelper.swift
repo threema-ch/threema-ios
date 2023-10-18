@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import GroupCalls
 import MarqueeLabel
 import SnapKit
 import ThreemaFramework
@@ -205,6 +206,87 @@ import ThreemaFramework
         }
     }
     
+    class func newBannerForStartGroupCall(
+        conversationManagedObjectID: NSManagedObjectID,
+        title: String,
+        body: String,
+        contactImage: UIImage,
+        identifier: String
+    ) {
+        let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
+        let bodyFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .subheadline)
+        
+        let banner = FloatingNotificationBanner(
+            title: title,
+            subtitle: body,
+            titleFont: UIFont.boldSystemFont(ofSize: titleFontDescriptor.pointSize),
+            titleColor: Colors.text,
+            subtitleFont: UIFont.preferredFont(forTextStyle: .title1),
+            subtitleColor: Colors.text,
+            leftView: UIImageView(image: contactImage),
+            rightView: nil,
+            style: .info,
+            colors: CustomBannerColors(),
+            sideViewSize: 50.0
+        )
+        
+        banner.identifier = identifier
+        banner.transparency = 0.9
+        banner.duration = 3.0
+        banner.applyStyling(cornerRadius: 8)
+        banner.subtitleLabel?.numberOfLines = 2
+        
+        let attributed = TextStyleUtils.makeAttributedString(
+            from: body,
+            with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
+            textColor: Colors.text,
+            isOwn: true,
+            application: UIApplication.shared
+        )
+        let bodyAttributedString = NSMutableAttributedString(
+            attributedString: banner.subtitleLabel!
+                .applyMarkup(for: attributed)
+        )
+        
+        banner.subtitleLabel!.attributedText = bodyAttributedString
+        
+        banner.onTap = {
+            banner.bannerQueue.dismissAllForced()
+            // switch to selected conversation
+            let entityManager = BusinessInjector().entityManager
+            entityManager.performBlock {
+                if let conversation = entityManager.entityFetcher.getManagedObject(by: conversationManagedObjectID) {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                        object: nil,
+                        userInfo: [kKeyConversation: conversation]
+                    )
+                }
+            }
+        }
+        
+        banner.onSwipeUp = {
+            banner.bannerQueue.removeAll()
+        }
+        let shadowEdgeInsets = UIEdgeInsets(top: 8, left: 2, bottom: 0, right: 2)
+        if Colors.theme == .dark {
+            banner.show(
+                shadowColor: Colors.shadowNotification,
+                shadowOpacity: 0.5,
+                shadowBlurRadius: 7,
+                shadowEdgeInsets: shadowEdgeInsets
+            )
+        }
+        else {
+            banner.show(
+                shadowColor: Colors.shadowNotification,
+                shadowOpacity: 1.0,
+                shadowBlurRadius: 10,
+                shadowEdgeInsets: shadowEdgeInsets
+            )
+        }
+    }
+        
     @objc class func dismissAllNotifications() {
         DispatchQueue.main.async {
             NotificationBannerQueue.default.removeAll()

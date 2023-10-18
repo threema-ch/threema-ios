@@ -547,6 +547,10 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
     }
     
+    func stopTypingTimers() {
+        chatBar.stopTypingTimer()
+    }
+    
     func updateLayoutForTextChange() {
         UIView.animate(
             withDuration: ChatViewConfiguration.ChatBar.ContentInsetAnimation.totalDuration,

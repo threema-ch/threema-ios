@@ -46,6 +46,11 @@ import Sentry
             options.enableAutoSessionTracking = false
             options.enableNetworkTracking = false
 
+            // Disable breadcrumbs
+            options.maxBreadcrumbs = 0
+            options.enableAutoBreadcrumbTracking = false
+            options.enableNetworkBreadcrumbs = false
+            
             options.beforeSend = { event in
                 // TODO: IOS-3786
                 guard !Thread.isMainThread else {

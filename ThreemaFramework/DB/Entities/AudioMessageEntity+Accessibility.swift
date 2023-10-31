@@ -46,6 +46,6 @@ extension AudioMessageEntity: MessageAccessibility {
     }
     
     public var accessibilityMessageTypeDescription: String {
-        BundleUtil.localizedString(forKey: "accessibility_VoiceMessage_description")
+        BundleUtil.localizedString(forKey: "accessibility_voiceMessage_description")
     }
 }

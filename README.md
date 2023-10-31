@@ -100,9 +100,8 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
    rustup-init
    ```
 
-   (You might want to add $HOME/.cargo/bin to your PATH.)   
-   (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://rustup.rs).)
-
+   (You might want to add $HOME/.cargo/bin to your PATH.)
+   
 5. Ensure that submodules are checked out
 
    ```sh
@@ -161,8 +160,9 @@ These are the most important groups of the Xcode project:
 - `Threema`: Code of both apps (Threema and Threema Work)
 - `ThreemaShareExtension`: Code of share extension
 - `Threema{Framework}Tests`: Test files
+- `GroupCalls`: Code of group calls
 
-Our dependencies are manged with Carthage. Additionally we use WebRTC based on binaries hosted on our servers. If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).
+Our dependencies are manged with Swift Package Manager & Carthage. Additionally we use WebRTC based on binaries hosted on our servers. If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).
 
 
 ## <a name="contributions"></a>Contributions

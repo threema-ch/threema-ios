@@ -334,10 +334,20 @@ public final class GroupCallViewModel: Sendable {
     @MainActor
     private func publishSnapshot(reconfigure: [ParticipantID] = []) {
         DDLogNotice("[ViewModel] \(#function)")
+        
+        let newParticipantIDs = participantsList.map(\.participantID)
+        
+        // It is illegal to reconfigure an item that is not in the snapshot. Thus we filter the list
+        // TODO: (IOS-4162) This can be removed if teardown is implemented correctly
+        let filteredReconfigureParticipantIDs = Set(newParticipantIDs).intersection(reconfigure)
+        if filteredReconfigureParticipantIDs.count != reconfigure.count {
+            DDLogWarn("[GroupCall] Trying to reconfigure participants that are not in the participants list")
+        }
+        
         var newSnapshot = Snapshot()
         newSnapshot.appendSections([.main])
-        newSnapshot.appendItems(participantsList.map(\.participantID))
-        newSnapshot.reconfigureItems(reconfigure)
+        newSnapshot.appendItems(newParticipantIDs)
+        newSnapshot.reconfigureItems(Array(filteredReconfigureParticipantIDs))
         
         snapshotPublisher = newSnapshot
     }

@@ -558,6 +558,8 @@ static NSDictionary *_mdmCacheSetup;
     dispatch_sync(queue, ^{
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
+        // Only update MDM settings if key exists in work data
+        // This means MDM settings are only reset if the key is returned with no settings in it.
         if (workData != nil && [[workData allKeys] containsObject:MDM_KEY_THREEMA_CONFIGURATION]) {
             NSDictionary *threemaMdm = [defaults dictionaryForKey:MDM_THREEMA_CONFIGURATION_KEY];
             
@@ -588,9 +590,6 @@ static NSDictionary *_mdmCacheSetup;
             
             // store Threema MDM
             [defaults setObject:threemaMdm forKey:MDM_THREEMA_CONFIGURATION_KEY];
-            [defaults synchronize];
-        } else {
-            [defaults removeObjectForKey:MDM_THREEMA_CONFIGURATION_KEY];
             [defaults synchronize];
         }
 

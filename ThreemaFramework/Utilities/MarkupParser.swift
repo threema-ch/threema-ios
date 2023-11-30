@@ -44,6 +44,8 @@ public class MarkupParser {
     
     private static let MENTION_ALL = "@@@@@@@@"
     
+    private static let PREFORMAT_MAX_COUNT = 5000
+    
     private static let markupAttributes = [
         NSAttributedString.Key.foregroundColor: Colors.textVeryLight,
         NSAttributedString.Key.tokenType: TokenType.markup,
@@ -208,6 +210,7 @@ extension MarkupParser {
         parseURL: Bool = false,
         parseMention: Bool = true,
         removeMarkups: Bool = false,
+        forTextStorage: Bool = false,
         forTests: Bool = false
     ) -> NSAttributedString {
         var parsedMarkups = NSMutableAttributedString(attributedString: attributedString)
@@ -218,7 +221,12 @@ extension MarkupParser {
             }
             
             try parse(
-                allTokens: tokenize(text: parsedMarkups.string, parseURL: parseURL, parseMention: parseMention),
+                allTokens: tokenize(
+                    text: parsedMarkups.string,
+                    parseURL: parseURL,
+                    parseMention: parseMention,
+                    forTextStorage: forTextStorage
+                ),
                 attributedString: parsedMarkups,
                 font: font
             )
@@ -272,7 +280,12 @@ extension MarkupParser {
         
         do {
             try parse(
-                allTokens: tokenize(text: parsedMarkups.string, parseURL: false, parseMention: true),
+                allTokens: tokenize(
+                    text: parsedMarkups.string,
+                    parseURL: false,
+                    parseMention: true,
+                    forTextStorage: false
+                ),
                 attributedString: parsedMarkups,
                 font: font
             )
@@ -612,7 +625,7 @@ extension MarkupParser {
     /// Find all tokens and return the token array
     /// - Parameter text: Text to search for all tokens
     /// - Returns: The founded tokens
-    private func tokenize(text: String, parseURL: Bool, parseMention: Bool) -> [Token] {
+    private func tokenize(text: String, parseURL: Bool, parseMention: Bool, forTextStorage: Bool) -> [Token] {
         var tokenLength = 0
         var matchingURL = false
         var matchingMention = false
@@ -621,7 +634,11 @@ extension MarkupParser {
         let textCount = utf16Text.count
         
         // Initialize Parse Caches
-        if textCount > 1000 {
+        if forTextStorage,
+           textCount >= MarkupParser.PREFORMAT_MAX_COUNT {
+            setupisMentionCache(text: text, textCount: textCount)
+        }
+        else if textCount > 1000 {
             let sema = DispatchSemaphore(value: 0)
             DispatchQueue.global(qos: .userInteractive).async {
                 self.setupisURLCache(text: text, textCount: textCount)
@@ -651,78 +668,104 @@ extension MarkupParser {
             setupIsURLBoundaryCache(text: text, textCount: textCount)
         }
         
-        for (index, char) in utf16Text.enumerated() {
-            if matchingMention {
-                if char == "]".utf16.first {
-                    matchingMention = false
-                    let idStartIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index - 8)
-                    let idEndIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index)
-                    tokens
-                        .append(Token(
-                            kind: .mention,
-                            start: index - 10,
-                            end: index + 1,
-                            link: String("ThreemaId:" + text[idStartIndex..<idEndIndex])
-                        ))
+        if forTextStorage,
+           textCount >= MarkupParser.PREFORMAT_MAX_COUNT {
+            // Only parse mentions if there are more then 5'000 characters to send
+            if let regex = mentionPattern {
+                regex.enumerateMatches(
+                    in: text,
+                    options: NSRegularExpression.MatchingOptions(),
+                    range: NSMakeRange(0, text.count)
+                ) { textCheckingResult, _, _ in
+                    if let textCheckingResult,
+                       isMention(text: text, position: textCheckingResult.range.location, textCount: text.count) {
+                        let idStartIndex = text.index(text.startIndex, offsetBy: textCheckingResult.range.location + 2)
+                        let idEndIndex = text.index(text.startIndex, offsetBy: textCheckingResult.range.location + 10)
+                        tokens
+                            .append(Token(
+                                kind: .mention,
+                                start: textCheckingResult.range.location,
+                                end: textCheckingResult.range.location + textCheckingResult.range.length,
+                                link: String("ThreemaId:" + text[idStartIndex..<idEndIndex])
+                            ))
+                    }
                 }
             }
-            else {
-                // Detect URLs
-                if !matchingURL {
-                    matchingURL = isURLStart(text: text, position: index, textCount: textCount)
-                    if matchingURL, parseURL {
-                        tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
+        }
+        else {
+            for (index, char) in utf16Text.enumerated() {
+                if matchingMention {
+                    if char == "]".utf16.first {
+                        matchingMention = false
+                        let idStartIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index - 8)
+                        let idEndIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index)
+                        tokens
+                            .append(Token(
+                                kind: .mention,
+                                start: index - 10,
+                                end: index + 1,
+                                link: String("ThreemaId:" + text[idStartIndex..<idEndIndex])
+                            ))
                     }
-                }
-                
-                if isMention(text: text, position: index, textCount: textCount), parseMention {
-                    tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
-                    matchingMention = true
-                }
-                else if matchingURL {
-                    // URLs have a limited set of boundary characters, therefore we need to
-                    // treat them separately.
-                    if isURLBoundary(text: text, position: index + 1, textCount: textCount) {
-                        if parseURL {
-                            let urlStartIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index - tokenLength)
-                            let urlEndIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index + 1)
-                            tokenLength = pushURLToken(
-                                tokenLength: &tokenLength,
-                                i: index,
-                                tokens: &tokens,
-                                url: String(text[urlStartIndex..<urlEndIndex])
-                            )
-                        }
-                        else {
-                            tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
-                        }
-                        matchingURL = false
-                    }
-                    tokenLength += 1
                 }
                 else {
-                    let prevIsBoundary = isBoundary(text: text, position: index - 1, textCount: textCount)
-                    let nextIsBoundary = isBoundary(text: text, position: index + 1, textCount: textCount)
+                    // Detect URLs
+                    if !matchingURL {
+                        matchingURL = isURLStart(text: text, position: index, textCount: textCount)
+                        if matchingURL, parseURL {
+                            tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
+                        }
+                    }
                     
-                    if char == MarkupParser.MARKUP_CHAR_BOLD.utf16.first, prevIsBoundary || nextIsBoundary {
+                    if isMention(text: text, position: index, textCount: textCount), parseMention {
                         tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
-                        tokens.append(Token(kind: .asterisk, start: index, end: index + 1))
+                        matchingMention = true
                     }
-                    else if char == MarkupParser.MARKUP_CHAR_ITALIC.utf16.first, prevIsBoundary || nextIsBoundary {
-                        tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
-                        tokens.append(Token(kind: .underscore, start: index, end: index + 1))
-                    }
-                    else if char == MarkupParser.MARKUP_CHAR_STRIKETHROUGH.utf16.first,
-                            prevIsBoundary || nextIsBoundary {
-                        tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
-                        tokens.append(Token(kind: .tilde, start: index, end: index + 1))
-                    }
-                    else if char == "\n".utf16.first {
-                        tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
-                        tokens.append(Token(kind: .newLine, start: index, end: index + 1))
+                    else if matchingURL {
+                        // URLs have a limited set of boundary characters, therefore we need to
+                        // treat them separately.
+                        if isURLBoundary(text: text, position: index + 1, textCount: textCount) {
+                            if parseURL {
+                                let urlStartIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index - tokenLength)
+                                let urlEndIndex = utf16Text.index(utf16Text.startIndex, offsetBy: index + 1)
+                                tokenLength = pushURLToken(
+                                    tokenLength: &tokenLength,
+                                    i: index,
+                                    tokens: &tokens,
+                                    url: String(text[urlStartIndex..<urlEndIndex])
+                                )
+                            }
+                            else {
+                                tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
+                            }
+                            matchingURL = false
+                        }
+                        tokenLength += 1
                     }
                     else {
-                        tokenLength += 1
+                        let prevIsBoundary = isBoundary(text: text, position: index - 1, textCount: textCount)
+                        let nextIsBoundary = isBoundary(text: text, position: index + 1, textCount: textCount)
+                        
+                        if char == MarkupParser.MARKUP_CHAR_BOLD.utf16.first, prevIsBoundary || nextIsBoundary {
+                            tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
+                            tokens.append(Token(kind: .asterisk, start: index, end: index + 1))
+                        }
+                        else if char == MarkupParser.MARKUP_CHAR_ITALIC.utf16.first, prevIsBoundary || nextIsBoundary {
+                            tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
+                            tokens.append(Token(kind: .underscore, start: index, end: index + 1))
+                        }
+                        else if char == MarkupParser.MARKUP_CHAR_STRIKETHROUGH.utf16.first,
+                                prevIsBoundary || nextIsBoundary {
+                            tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
+                            tokens.append(Token(kind: .tilde, start: index, end: index + 1))
+                        }
+                        else if char == "\n".utf16.first {
+                            tokenLength = pushTextToken(tokenLength: &tokenLength, i: index, tokens: &tokens)
+                            tokens.append(Token(kind: .newLine, start: index, end: index + 1))
+                        }
+                        else {
+                            tokenLength += 1
+                        }
                     }
                 }
             }

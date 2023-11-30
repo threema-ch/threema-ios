@@ -121,7 +121,7 @@
       "options" : {
         "commandLineArgumentEntries" : [
           {
-            "argument" : ""
+            "argument" : "-isRunningForScreenshots"
           }
         ],
         "language" : "ja",

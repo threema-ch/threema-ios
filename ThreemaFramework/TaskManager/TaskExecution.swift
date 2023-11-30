@@ -325,21 +325,23 @@ class TaskExecution: NSObject {
                         }
                     }
                     self.frameworkInjector.backgroundEntityManager.performBlock {
-                        // Save forward security mode in any case (could also be a message first sent with FS and then
-                        // resent without)
-                        if let conversation = try? self.getConversation(for: self.taskDefinition) {
-                            self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
-                                message.messageID,
-                                in: conversation,
-                                forwardSecurityMode: messageToSend.forwardSecurityMode
-                            )
+                        if !messageToSend.flagGroupMessage() {
+                            // Save forward security mode in any case (could also be a message first sent with FS and
+                            // then resent without)
+                            if let conversation = try? self.getConversation(for: self.taskDefinition) {
+                                self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
+                                    message.messageID,
+                                    in: conversation,
+                                    forwardSecurityMode: messageToSend.forwardSecurityMode
+                                )
+                            }
+                            else {
+                                DDLogWarn(
+                                    "\(self.taskDefinition) no conversation found for \(message.loggingDescription) to set forward security mode"
+                                )
+                            }
                         }
-                        else {
-                            DDLogWarn(
-                                "\(self.taskDefinition) no conversation found for \(message.loggingDescription) to set forward security mode"
-                            )
-                        }
-
+                        
                         var nonce: Data
                         do {
                             nonce = try self.messageNonce(for: toContact.identity)
@@ -371,7 +373,7 @@ class TaskExecution: NSObject {
                             }
                         }
 
-                        DispatchQueue.global().async {
+                        DispatchQueue.global(qos: .utility).async {
                             do {
                                 try self.sendAndWait(
                                     abstractMessage: messageToSend,
@@ -407,17 +409,14 @@ class TaskExecution: NSObject {
         let chatMessageAck = DispatchGroup()
         let notificationCenter = NotificationCenter.default
         var messageAckObserver: NSObjectProtocol?
-        
-        let operationQueue = OperationQueue()
-        operationQueue.qualityOfService = .userInitiated
-        
+                
         messageAckObserver = notificationCenter.addObserver(
             forName: TaskManager.chatMessageAckObserverName(
                 messageID: abstractMessage.messageID,
                 toIdentity: abstractMessage.toIdentity
             ),
             object: nil,
-            queue: operationQueue
+            queue: OperationQueue.current
         ) { _ in
             DDLogNotice(
                 "\(ltAck.hexString) \(ltAck) \(abstractMessage.loggingDescription) from \(abstractMessage.toIdentity ?? "?")"

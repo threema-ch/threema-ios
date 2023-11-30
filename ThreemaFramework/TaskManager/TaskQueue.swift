@@ -172,7 +172,7 @@ final class TaskQueue {
                         
                         self.done(item: item)
                     }
-                    .catch { error in
+                    .catch(on: .global()) { error in
                         if (error as NSError).code == kBlockUnknownContactErrorCode ||
                             (error as NSError).code == kBadMessageErrorCode ||
                             (error as NSError).code == kUnknownMessageTypeErrorCode ||

@@ -522,15 +522,15 @@
 }
 
 /// Bestehendes Threema MDM wird deaktiviert
-- (void)testApplyThreemaMdmWithNoThreemaMdmDoOverrideSetupNo {
+- (void)testApplyThreemaMdmWithEmptyThreemaMdmDoOverrideSetupNo {
     [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
     
     // "old" Threema-MDM
-    NSDictionary *oldWorkData = @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:[self getAllMdmParameters:YES]};
+    NSDictionary *oldWorkData = @{MDM_KEY_THREEMA_OVERRIDE:@true, MDM_KEY_THREEMA_PARAMS:[self getAllMdmParameters:YES]};
     [self setMdm:nil threemaMdm:oldWorkData];
     
     // NO "new" Threema-MDM
-    NSDictionary *workData = @{};
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{}};
    
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
@@ -580,7 +580,64 @@
     XCTAssertNil([mdmSetup webHosts]);
 }
 
-/// Bestehendes Firmen MDM wird mit Threema MDM aktulisiert ("normaler" sync: NICHT renewable Parameter werden NICHT übernommen)
+/// MDM ohne `MDM_KEY_THREEMA_CONFIGURATION` führt zu keiner MDM Änderung
+- (void)testApplyThreemaMdmWithNoThreemaMdmDoOverrideSetupNo {
+    [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
+    
+    // "old" Threema-MDM
+    NSDictionary *oldWorkData = @{MDM_KEY_THREEMA_OVERRIDE:@true, MDM_KEY_THREEMA_PARAMS:[self getAllMdmParameters:YES]};
+    [self setMdm:nil threemaMdm:oldWorkData];
+    
+    // NO "new" Threema-MDM
+    NSDictionary *workData = @{};
+   
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+
+    [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
+    [verifyCount(_mockLicenseStore, times(0)) setLicensePassword:anything()];
+    
+    [verifyCount(_mockMyIdentityStore, times(1)) setPushFromName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setLastName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setCategory:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()];
+
+    XCTAssertTrue([mdmSetup readonlyProfile]);
+    
+    [verifyCount(_mockUserSettings, times(1)) setBlockUnknown:anything()];
+    [verifyCount(_mockUserSettings, times(2)) setSyncContacts:anything()];
+
+    XCTAssertTrue([mdmSetup disableSaveToGallery]);
+    XCTAssertTrue([mdmSetup disableAddContact]);
+    XCTAssertTrue([mdmSetup disableExport]);
+    XCTAssertTrue([mdmSetup disableBackups]);
+    XCTAssertTrue([mdmSetup disableIdExport]);
+    XCTAssertTrue([mdmSetup disableSystemBackups]);
+    XCTAssertTrue([mdmSetup disableMessagePreview]);
+    XCTAssertTrue([mdmSetup disableSendProfilePicture]);
+    XCTAssertTrue([mdmSetup disableCalls]);
+    XCTAssertTrue([mdmSetup disableGroupCalls]);
+    XCTAssertTrue([mdmSetup disableVideoCalls]);
+    XCTAssertTrue([mdmSetup disableCreateGroup]);
+    XCTAssertTrue([mdmSetup disableWeb]);
+    
+    XCTAssertFalse([mdmSetup skipWizard]);
+    XCTAssertEqual(_yes, [mdmSetup safeEnable]);
+    XCTAssertNil([mdmSetup safePassword]);
+    XCTAssertEqual(@"http://test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqual(@"server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqual(@"server-password", [mdmSetup safeServerPassword]);
+    XCTAssertTrue([mdmSetup safeRestoreEnable]);
+    XCTAssertNil([mdmSetup safeRestoreId]);
+    XCTAssertEqual(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqual(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqual(@"threema.ch", [mdmSetup webHosts]);
+}
+
+/// Bestehendes Firmen MDM wird mit Threema MDM aktualisiert ("normaler" sync: NICHT renewable Parameter werden NICHT übernommen)
 - (void)testApplyThreemaMdmWithCompanyMdmAddingThreemaMdmDoOverrideSetupNo {
     [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
     

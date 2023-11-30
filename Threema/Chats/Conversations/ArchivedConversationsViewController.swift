@@ -528,11 +528,11 @@ extension ArchivedConversationsViewController: UISearchResultsUpdating, UISearch
                     NSCompoundPredicate(andPredicateWithSubpredicates: [searchCompound, archivedPredicate])
                 fetchedResultsController.fetchRequest.predicate = archivedCompound
             }
+            refreshData()
         }
         else {
             updatePredicates()
         }
-        refreshData()
     }
 }
 
@@ -719,20 +719,24 @@ extension ArchivedConversationsViewController {
     }
     
     @objc private func updatePredicates() {
-        
+        var newPredicate: NSPredicate
         let archivedPredicate = NSPredicate(format: "visibility == %d", ConversationVisibility.archived.rawValue)
         let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
         
         if UserSettings.shared().hidePrivateChats {
             
-            fetchedResultsController.fetchRequest.predicate = NSCompoundPredicate(
+            newPredicate = NSCompoundPredicate(
                 andPredicateWithSubpredicates: [archivedPredicate, notPrivatePredicate]
             )
         }
         else {
-            fetchedResultsController.fetchRequest.predicate = archivedPredicate
+            newPredicate = archivedPredicate
         }
-        refreshData()
+        
+        if fetchedResultsController.fetchRequest.predicate != newPredicate {
+            fetchedResultsController.fetchRequest.predicate = newPredicate
+            refreshData()
+        }
     }
 }
 

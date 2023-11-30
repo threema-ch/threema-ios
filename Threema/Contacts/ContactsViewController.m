@@ -929,7 +929,9 @@ typedef enum : NSUInteger {
 
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller
 {
-    [self updateContactsTimer];
+    if (controller.managedObjectContext.hasChanges) {
+        [self updateContactsTimer];
+    }
 }
 
 - (void)updateContactsTimer {

@@ -496,30 +496,24 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     public func sanitizeAndSendText(_ rawText: String, in conversation: Conversation) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
-            let splitMessages = ThreemaUtilityObjC.getTrimmedMessages(trimmedText)
-
-            if let splitMessages = splitMessages as? [String] {
-                for splitMessage in splitMessages {
-                    DispatchQueue.main.async {
-                        self.sendTextMessage(
-                            text: splitMessage,
-                            in: conversation,
-                            quickReply: false
-                        )
-                    }
-                }
+        let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
+        let splitMessages = ThreemaUtilityObjC.getTrimmedMessages(trimmedText)
+        
+        if let splitMessages = splitMessages as? [String] {
+            for splitMessage in splitMessages {
+                sendTextMessage(
+                    text: splitMessage,
+                    in: conversation,
+                    quickReply: false
+                )
             }
-            else {
-                DispatchQueue.main.async {
-                    self.sendTextMessage(
-                        text: trimmedText,
-                        in: conversation,
-                        quickReply: false
-                    )
-                }
-            }
+        }
+        else {
+            sendTextMessage(
+                text: trimmedText,
+                in: conversation,
+                quickReply: false
+            )
         }
     }
 

@@ -123,12 +123,23 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             checkPasswordAndActivate()
             return
         }
-        
+        navigationItem.leftBarButtonItem?.isEnabled = false
+        navigationItem.rightBarButtonItem?.isEnabled = false
+        view.isUserInteractionEnabled = false
+        MBProgressHUD.showAdded(to: view, animated: true)
         validateServer { success in
             // Is already activated means is in change password mode and server validation is not necessary
             if success, !self.safeManager.isActivated {
                 DispatchQueue.main.async {
                     self.checkPasswordAndActivate()
+                }
+            }
+            else {
+                DispatchQueue.main.async {
+                    MBProgressHUD.hide(for: self.view, animated: true)
+                    self.navigationItem.leftBarButtonItem?.isEnabled = true
+                    self.navigationItem.rightBarButtonItem?.isEnabled = true
+                    self.view.isUserInteractionEnabled = true
                 }
             }
         }
@@ -151,6 +162,10 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                         self.passwordField.becomeFirstResponder()
                     }
                 )
+                MBProgressHUD.hide(for: view, animated: true)
+                navigationItem.leftBarButtonItem?.isEnabled = true
+                navigationItem.rightBarButtonItem?.isEnabled = true
+                view.isUserInteractionEnabled = true
             }
             else {
                 activate(password: password)
@@ -159,6 +174,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     }
     
     private func activate(password: String) {
+        navigationItem.leftBarButtonItem?.isEnabled = false
+        navigationItem.rightBarButtonItem?.isEnabled = false
         view.isUserInteractionEnabled = false
         MBProgressHUD.showAdded(to: view, animated: true)
 
@@ -204,6 +221,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 
                 DispatchQueue.main.async {
                     MBProgressHUD.hide(for: self.view, animated: true)
+                    self.navigationItem.leftBarButtonItem?.isEnabled = true
+                    self.navigationItem.rightBarButtonItem?.isEnabled = true
                     self.view.isUserInteractionEnabled = true
                 }
             }
@@ -318,8 +337,9 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     safeStore: safeStore,
                     safeApiService: SafeApiService()
                 )
+                
                 safeManager.testServer(serverURL: customServerURL) { errorMessage, maxBackupBytes, retentionDays in
-                        
+                    
                     if let errorMessage {
                         DispatchQueue.main.async {
                             UIAlertTemplate.showAlert(

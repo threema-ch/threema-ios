@@ -28,7 +28,7 @@ class MarkupParsingTextStorage: NSTextStorage {
     
     // MARK: Internal State
 
-    private var backingStore = NSMutableAttributedString()
+    private var backingStore = NSTextStorage()
     
     private lazy var markupParser = MarkupParser()
     
@@ -197,11 +197,12 @@ class MarkupParsingTextStorage: NSTextStorage {
         
         let prevLength = backingStore.length
         
-        backingStore = markupParser.markify(
+        backingStore.setAttributedString(markupParser.markify(
             attributedString: attributedString,
             font: UIFont.preferredFont(forTextStyle: UIFont.TextStyle.body),
-            parseMention: true
-        ) as! NSMutableAttributedString
+            parseMention: true,
+            forTextStorage: true
+        ))
         
         if !backingStore.string.isEmpty {
             let textAlignment = backingStore.string.textAlignment

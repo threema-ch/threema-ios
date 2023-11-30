@@ -217,7 +217,7 @@ class MakeScreenshots: XCTestCase {
             // leave single chat --> chat overview
             app!.navigationBars.buttons.element(boundBy: 0).tap()
             // open chat of lisa goldman
-            app!.tables.cells.element(boundBy: 4).tap()
+            app!.tables.cells.element(boundBy: 5).tap()
         case .work: break
         case .onPrem: break
         }
@@ -242,7 +242,7 @@ class MakeScreenshots: XCTestCase {
             // leave single chat --> chat overview
             app!.navigationBars.buttons.element(boundBy: 0).tap()
             // open chat from roberto dias
-            app!.tables.cells.element(boundBy: 3).tap()
+            app!.tables.cells.element(boundBy: 4).tap()
             // open call view
             app!.buttons["ChatViewControllerCallBarButtonItem"].tap()
             // tap hide button to change ui to connected call
@@ -425,7 +425,7 @@ class MakeScreenshots: XCTestCase {
         switch threemaApp {
         case .threema:
             // open chat of lisa goldman
-            app!.tables.cells.element(boundBy: 4).tap()
+            app!.tables.cells.element(boundBy: 5).tap()
         case .work: break
         case .onPrem: break
         }
@@ -448,7 +448,7 @@ class MakeScreenshots: XCTestCase {
             app!.buttons["CallViewControllerEndButton"].tap()
             
             // open chat from roberto dias
-            app!.tables.cells.element(boundBy: 3).tap()
+            app!.tables.cells.element(boundBy: 4).tap()
             // open call view
             app!.buttons["ChatViewControllerCallBarButtonItem"].tap()
             // tap hide button to change ui to connected call
@@ -581,13 +581,13 @@ class MakeScreenshots: XCTestCase {
     }
     
     private func indexOfHannaSchmidt() -> Int {
-        if language == "ru_RU" || language == "nl_NL" || language == "zh_Hans" || language == "zh_Hant" {
+        if language == "ru_RU" || language == "nl_NL" || language == "zh_hans" || language == "zh_hant" {
             return 4
         }
         else if language == "it_IT" || language == "pt_BR" {
             return 0
         }
-        else if language == "fr_FR" {
+        else if language == "fr_FR" || language == "cs_cz" {
             return 1
         }
         

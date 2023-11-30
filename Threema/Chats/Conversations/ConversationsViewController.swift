@@ -731,11 +731,11 @@ extension ConversationsViewController: UISearchResultsUpdating, UISearchControll
             else {
                 fetchedResultsController.fetchRequest.predicate = searchCompound
             }
+            refreshData()
         }
         else {
             updatePredicates()
         }
-        refreshData()
     }
 }
 
@@ -1049,21 +1049,25 @@ extension ConversationsViewController {
     
     /// Updates the Predicates to the default and refreshes the TableView
     @objc private func updatePredicates() {
-        
+        var newPredicate: NSPredicate
         let archivedPredicate = NSPredicate(format: "visibility != %d", ConversationVisibility.archived.rawValue)
         let privatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
         
         if UserSettings.shared().hidePrivateChats {
             
-            fetchedResultsController.fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            newPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
                 archivedPredicate,
                 privatePredicate,
             ])
         }
         else {
-            fetchedResultsController.fetchRequest.predicate = archivedPredicate
+            newPredicate = archivedPredicate
         }
-        refreshData()
+        
+        if fetchedResultsController.fetchRequest.predicate != newPredicate {
+            fetchedResultsController.fetchRequest.predicate = newPredicate
+            refreshData()
+        }
     }
 }
 

@@ -555,9 +555,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
         ChatViewController *chatViewController = navigationController.viewControllers.firstObject;
-        if (chatViewController.conversation.willBeDeleted) {
-            _conversationsViewController.selectedConversation = nil;
-            [self switchConversation:nil notification:nil];
+        if ([chatViewController isKindOfClass:[ChatViewController class]]) {
+            if (chatViewController.conversation.willBeDeleted) {
+                _conversationsViewController.selectedConversation = nil;
+                [self switchConversation:nil notification:nil];
+            }
         }
     }
 }

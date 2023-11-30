@@ -130,7 +130,9 @@
   "defaultOptions" : {
     "codeCoverage" : false,
     "commandLineArgumentEntries" : [
-
+      {
+        "argument" : "-isRunningForScreenshots"
+      }
     ],
     "environmentVariableEntries" : [
       {
@@ -178,6 +180,7 @@
         "SafeJson",
         "SafeTests",
         "TextViewKeyboardWorkaroundHandlerTests",
+        "VoIPCallServiceTests",
         "VoIPCallTests",
         "WebTest"
       ],

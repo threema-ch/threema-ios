@@ -146,7 +146,9 @@ extension AudioMessageEntity: BlobData {
     }
     
     public var blobThumbnailExternalFilename: String? {
-        assertionFailure("AudioMessageEntity does not have a thumbnail.")
+        if !ProcessInfoHelper.isRunningForScreenshots {
+            assertionFailure("AudioMessageEntity does not have a thumbnail.")
+        }
         return nil
     }
 }

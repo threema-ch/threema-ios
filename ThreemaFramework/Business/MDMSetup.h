@@ -57,6 +57,7 @@ extern NSString * const MDM_KEY_DISABLE_WEB;
 extern NSString * const MDM_KEY_WEB_HOSTS;
 extern NSString * const MDM_KEY_DISABLE_SHARE_MEDIA;
 extern NSString * const MDM_KEY_DISABLE_WORK_DIRECTORY;
+extern NSString * const MDM_KEY_KEEP_MESSAGE_DAYS;
 
 extern NSString * const MDM_KEY_SAFE_ENABLE;
 extern NSString * const MDM_KEY_SAFE_PASSWORD;
@@ -145,6 +146,8 @@ typedef enum : int {
 - (NSString *)safePasswordPattern;
 
 - (NSString *)safePasswordMessage;
+
+- (NSNumber *)keepMessagesDays;
 
 - (BOOL)safeRestoreEnable;
 

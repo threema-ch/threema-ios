@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import PromiseKit
 import UIKit
 
 private let imageReuseIdentifier = "ImagePreviewCell"

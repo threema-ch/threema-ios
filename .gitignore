@@ -21,6 +21,7 @@ Screenshots/
 
 ## Swift Package Manager
 .build/
+*.resolved
 
 ## Other
 *.moved-aside
@@ -36,5 +37,5 @@ fastlane/AppStore/ThreemaForWork/screenshots
 fastlane/Preview.html
 fastlane/test_output
 fastlane/report.xml
-fastlane/fastlane-symbols/*
+fastlane/symbolicate-crash
 export/

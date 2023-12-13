@@ -149,41 +149,53 @@ import ThreemaProtocols
     }
 
     /// Sync and save email to link if multi device activated otherwise only save
-    /// - Parameter email: Email address to link
-    @objc func syncAndSave(email: String?) -> AnyPromise {
-        AnyPromise(
-            syncAndSave(
-                Profile(
-                    nickname: myIdentityStore.pushFromName,
-                    profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
-                    sendProfilePicture: userSettings.sendProfilePicture,
-                    profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
-                    mobilePhoneNo: myIdentityStore.linkedMobileNo,
-                    isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
-                    email: email,
-                    isLinkEmailPending: myIdentityStore.linkEmailPending
-                )
+    /// - Parameters:
+    /// - email: Email address to link
+    /// - completionHandler: Successfully if is error nil
+    @objc func syncAndSave(email: String?, completionHandler: @escaping (Error?) -> Void) {
+        syncAndSave(
+            Profile(
+                nickname: myIdentityStore.pushFromName,
+                profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
+                sendProfilePicture: userSettings.sendProfilePicture,
+                profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
+                mobilePhoneNo: myIdentityStore.linkedMobileNo,
+                isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
+                email: email,
+                isLinkEmailPending: myIdentityStore.linkEmailPending
             )
         )
+        .done {
+            completionHandler(nil)
+        }
+        .catch { error in
+            completionHandler(error)
+        }
     }
 
     /// Sync and save mobile number to link if multi device activated otherwise only save
-    /// - Parameter mobileNo: Mobile number to link
-    @objc func syncAndSave(mobileNo: String?) -> AnyPromise {
-        AnyPromise(
-            syncAndSave(
-                Profile(
-                    nickname: myIdentityStore.pushFromName,
-                    profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
-                    sendProfilePicture: userSettings.sendProfilePicture,
-                    profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
-                    mobilePhoneNo: mobileNo,
-                    isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
-                    email: myIdentityStore.linkedEmail,
-                    isLinkEmailPending: myIdentityStore.linkEmailPending
-                )
+    /// - Parameters:
+    /// - mobileNo: Mobile number to link
+    /// - completionHandler: Successfully if is error nil
+    @objc func syncAndSave(mobileNo: String?, completionHandler: @escaping (Error?) -> Void) {
+        syncAndSave(
+            Profile(
+                nickname: myIdentityStore.pushFromName,
+                profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
+                sendProfilePicture: userSettings.sendProfilePicture,
+                profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
+                mobilePhoneNo: mobileNo,
+                isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
+                email: myIdentityStore.linkedEmail,
+                isLinkEmailPending: myIdentityStore.linkEmailPending
             )
         )
+        .done {
+            completionHandler(nil)
+        }
+        .catch { error in
+            completionHandler(error)
+        }
     }
 
     public func save(_ profile: Profile) {

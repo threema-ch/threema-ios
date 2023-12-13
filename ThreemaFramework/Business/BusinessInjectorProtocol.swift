@@ -24,6 +24,7 @@ public protocol BusinessInjectorProtocol {
     var backgroundEntityManager: EntityManager { get }
     var backgroundGroupManager: GroupManagerProtocol { get }
     var backgroundUnreadMessages: UnreadMessagesProtocol { get }
+    var backgroundPushSettingManager: PushSettingManagerProtocol { get }
     var contactStore: ContactStoreProtocol { get }
     var conversationStore: any ConversationStoreProtocol { get }
     var entityManager: EntityManager { get }
@@ -34,12 +35,15 @@ public protocol BusinessInjectorProtocol {
     var myIdentityStore: MyIdentityStoreProtocol { get }
     var serverConnector: ServerConnectorProtocol { get }
     var unreadMessages: UnreadMessagesProtocol { get }
+    var messageRetentionManager: MessageRetentionManagerModelProtocol { get }
     var userSettings: UserSettingsProtocol { get }
     var settingsStore: any SettingsStoreProtocol { get }
+    var pushSettingManager: PushSettingManagerProtocol { get }
 }
 
 protocol BusinessInternalInjectorProtocol {
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol { get }
+    var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol { get }
     var messageProcessor: MessageProcessorProtocol { get }
     var dhSessionStore: DHSessionStoreProtocol { get }
     var fsmp: ForwardSecurityMessageProcessor { get }

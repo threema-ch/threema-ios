@@ -67,7 +67,7 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, strong) NSString *pushGroupSound;
 @property (nonatomic, readwrite) NSNumber *notificationType;
 @property (nonatomic, readwrite) BOOL pushDecrypt;
-@property (nonatomic, strong) NSOrderedSet *pushSettingsList;
+@property (nonatomic, strong) NSArray *pushSettings;
 @property (nonatomic, readwrite) BOOL hidePrivateChats;
 @property (nonatomic, readwrite) BOOL voiceMessagesShowTimeRemaining;
 
@@ -93,6 +93,8 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, strong) NSString *sentryAppDevice;
 
 @property (nonatomic, readwrite) BOOL groupCallsDebugMessages;
+
+@property (nonatomic, readwrite) NSInteger keepMessagesDays;
 
 @end
 
@@ -125,8 +127,6 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) enum AcceptPrivacyPolicyVariant acceptedPrivacyPolicyVariant;
 
 @property (nonatomic, readonly) NSInteger largeTitleDisplayMode;
-
-@property (nonatomic, readwrite) BOOL pushGroupGenerated;
 
 @property (nonatomic, readwrite) BOOL threemaWeb;
 

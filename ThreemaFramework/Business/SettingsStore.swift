@@ -534,14 +534,14 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             blacklist = Set(syncSettings.blockedIdentities.identities)
         }
 
-        if syncSettings.hasCallConnectionPolicy {
-            let newValue = syncSettings.callConnectionPolicy == .requireRelay
+        if syncSettings.hasO2OCallConnectionPolicy {
+            let newValue = syncSettings.o2OCallConnectionPolicy == .requireRelayedConnection
             userSettings.alwaysRelayCalls = newValue
             alwaysRelayCalls = newValue
         }
 
-        if syncSettings.hasCallPolicy {
-            let newValue = syncSettings.callPolicy == .allowCall
+        if syncSettings.hasO2OCallPolicy {
+            let newValue = syncSettings.o2OCallPolicy == .allowO2OCall
             userSettings.enableThreemaCall = newValue
             enableThreemaCall = newValue
         }
@@ -617,12 +617,12 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
 
         if userSettings.alwaysRelayCalls != alwaysRelayCalls {
-            syncSettings.callConnectionPolicy = alwaysRelayCalls ? .requireRelay : .allowDirect
+            syncSettings.o2OCallConnectionPolicy = alwaysRelayCalls ? .requireRelayedConnection : .allowDirectConnection
             hasChanges = true
         }
 
         if userSettings.enableThreemaCall != enableThreemaCall {
-            syncSettings.callPolicy = enableThreemaCall ? .allowCall : .denyCall
+            syncSettings.o2OCallPolicy = enableThreemaCall ? .allowO2OCall : .denyO2OCall
             hasChanges = true
         }
 

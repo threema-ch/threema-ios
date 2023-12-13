@@ -1,11 +1,7 @@
 /* Localized versions of Info.plist keys */
 
-"New message" = "Nová správa";
-"Scan QR code" = "Skenovať QR kód";
-"My ID" = "Môj profil";
-
 "NSCameraUsageDescription" = "Vaša kamera sa používa keď fotíte alebo natáčate video a posielate ich do konverzácií, alebo keď skenujete QR kódy.";
-"NSContactsUsageDescription" = "Kontakty slúžia k vyhľadávaniu ostatných užíavateľov Threema pri zapnutej synchronizácii. Za týmto účelom budú na server Threema odoslané hashe telefónnych čísiel a e-mailových adries. Tieto informácie nie sú na serveroch ukladané.";
+"NSContactsUsageDescription" = "Kontakty slúžia k vyhľadávaniu ostatných užíavateľov Threema pri zapnutej synchronizácii. Za týmto účelom budú na server Threema odoslané hashe telefónnych čísiel a emailových adries. Tieto informácie nie sú na serveroch ukladané.";
 "NSLocationWhenInUseUsageDescription" = "Vaša poloha sa používa, ak ju odošlete do konverzácie a na zobrazenie vašej vlastnej polohy na mape.";
 "NSMicrophoneUsageDescription" = "Mikforón sa používa na nahrávanie zvukových správ.";
 "NSPhotoLibraryUsageDescription" = "Vaša knižnica fotografií sa používa, keď z nej vyberáte obrázok a odošlete ho do konverzácie.";

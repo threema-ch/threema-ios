@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="YzN-ra-8fg">
-    <device id="retina3_5" orientation="portrait" appearance="light"/>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="YzN-ra-8fg">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -13,24 +13,24 @@
             <objects>
                 <viewController storyboardIdentifier="RandomSeedViewController" id="YzN-ra-8fg" customClass="EnterLicenseViewController" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="cbu-LX-QFI" customClass="WizardBackgroundView" customModule="ThreemaFramework">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="mBx-JJ-6ij">
-                                <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                                <rect key="frame" x="0.0" y="59" width="393" height="759"/>
                                 <subviews>
-                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="center" spacing="35" translatesAutoresizingMaskIntoConstraints="NO" id="nKb-Kd-Uub">
-                                        <rect key="frame" x="16" y="16" width="288" height="464"/>
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="center" spacing="25" translatesAutoresizingMaskIntoConstraints="NO" id="nKb-Kd-Uub">
+                                        <rect key="frame" x="16" y="16" width="361" height="539.66666666666663"/>
                                         <subviews>
                                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="ThreemaOnPremWhite" translatesAutoresizingMaskIntoConstraints="NO" id="S6X-YV-IZt">
-                                                <rect key="frame" x="58.5" y="0.0" width="171" height="18"/>
+                                                <rect key="frame" x="95" y="0.0" width="171" height="18"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="171" id="ShG-pz-fN9"/>
                                                     <constraint firstAttribute="height" constant="18" id="Stb-hw-Wdp"/>
                                                 </constraints>
                                             </imageView>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" ambiguous="YES" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="snH-6H-LAC">
-                                                <rect key="frame" x="5.5" y="53" width="277" height="53"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="snH-6H-LAC">
+                                                <rect key="frame" x="0.0" y="43.000000000000007" width="361" height="95.666666666666686"/>
                                                 <string key="text">The Messenger for Organizations.
 
 Please enter your credentials. If you do not know your credentials, please contact your administrator.</string>
@@ -38,8 +38,8 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                 <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9jY-jK-Z7C">
-                                                <rect key="frame" x="24" y="141" width="240" height="184"/>
+                                            <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9jY-jK-Z7C">
+                                                <rect key="frame" x="60.666666666666686" y="163.66666666666666" width="240" height="183.99999999999997"/>
                                                 <subviews>
                                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="hp2-iC-HVL">
                                                         <rect key="frame" x="0.0" y="0.0" width="240" height="184"/>
@@ -85,7 +85,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                                 </subviews>
                                                             </stackView>
                                                             <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="nof-HN-J11">
-                                                                <rect key="frame" x="0.0" y="48" width="240" height="40"/>
+                                                                <rect key="frame" x="0.0" y="48.000000000000028" width="240" height="40"/>
                                                                 <subviews>
                                                                     <view contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="749" verticalCompressionResistancePriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="0qN-aS-HIh">
                                                                         <rect key="frame" x="0.0" y="10" width="20" height="20"/>
@@ -126,10 +126,10 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                                 </subviews>
                                                             </stackView>
                                                             <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="a2Y-Mz-IBx">
-                                                                <rect key="frame" x="0.0" y="96" width="240" height="40"/>
+                                                                <rect key="frame" x="0.0" y="96.000000000000028" width="240" height="40"/>
                                                                 <subviews>
                                                                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="749" verticalCompressionResistancePriority="749" image="globe" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="qeN-1C-blh">
-                                                                        <rect key="frame" x="0.0" y="10.5" width="20" height="19"/>
+                                                                        <rect key="frame" x="0.0" y="10.999999999999998" width="20" height="18.666666666666664"/>
                                                                         <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                         <constraints>
                                                                             <constraint firstAttribute="width" constant="20" id="47P-zk-BmM"/>
@@ -167,7 +167,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                                 </subviews>
                                                             </stackView>
                                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Zic-Qm-k5G">
-                                                                <rect key="frame" x="0.0" y="144" width="240" height="40"/>
+                                                                <rect key="frame" x="0.0" y="144.00000000000003" width="240" height="40"/>
                                                                 <color key="backgroundColor" red="0.2470588235" green="0.90196078430000004" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                 <accessibility key="accessibilityConfiguration" identifier="ConfirmButton"/>
                                                                 <constraints>
@@ -186,40 +186,39 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                     </stackView>
                                                 </subviews>
                                             </stackView>
-                                            <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="8m2-LJ-uzO">
-                                                <rect key="frame" x="5" y="360" width="278" height="34"/>
+                                            <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="8m2-LJ-uzO">
+                                                <rect key="frame" x="0.0" y="372.66666666666669" width="361" height="40.333333333333314"/>
                                                 <subviews>
                                                     <activityIndicatorView opaque="NO" contentMode="scaleToFill" style="white" translatesAutoresizingMaskIntoConstraints="NO" id="M7f-dh-W1N">
-                                                        <rect key="frame" x="0.0" y="7" width="20" height="20"/>
+                                                        <rect key="frame" x="0.0" y="10.333333333333314" width="20" height="20"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="20" id="RrB-1u-UTy"/>
                                                             <constraint firstAttribute="width" constant="20" id="ZEq-PU-42P"/>
                                                         </constraints>
                                                     </activityIndicatorView>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="750" verticalHuggingPriority="750" image="Checkbox" translatesAutoresizingMaskIntoConstraints="NO" id="Fno-8X-7wh">
-                                                        <rect key="frame" x="30" y="7" width="20" height="20"/>
+                                                        <rect key="frame" x="30" y="10.333333333333314" width="20" height="20"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="20" id="F0Q-Yj-tlb"/>
                                                             <constraint firstAttribute="width" constant="20" id="JWm-H5-He7"/>
                                                         </constraints>
                                                     </imageView>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" text="kasd fkja lksdj fkla sld fljaslkd fölajs askjd jfkajsökdf jklaj södf jaöls" lineBreakMode="tailTruncation" numberOfLines="5" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GQn-BF-swQ">
-                                                        <rect key="frame" x="60" y="0.0" width="218" height="34"/>
+                                                        <rect key="frame" x="60" y="0.0" width="301" height="40.333333333333336"/>
                                                         <fontDescription key="fontDescription" style="UICTFontTextStyleCallout"/>
                                                         <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                         <nil key="highlightedColor"/>
                                                     </label>
                                                 </subviews>
                                             </stackView>
-                                            <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UfL-E2-JNV">
-                                                <rect key="frame" x="0.0" y="429" width="288" height="0.0"/>
-                                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" id="0m8-mC-3yL"/>
-                                                </constraints>
-                                            </view>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" ambiguous="YES" text="If you are a private user, please tap here to download Threema." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JeT-iT-lao" customClass="ZSWTappableLabel">
-                                                <rect key="frame" x="13.5" y="464" width="261" height="0.0"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Forgot your credentials? Please contact your Threema OnPrem administrator." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ndr-jK-rhu">
+                                                <rect key="frame" x="16.666666666666657" y="438" width="327.66666666666674" height="38.333333333333314"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="If you are a private user, please tap here to download Threema." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JeT-iT-lao" customClass="ZSWTappableLabel">
+                                                <rect key="frame" x="21.333333333333343" y="501.33333333333331" width="318.66666666666663" height="38.333333333333314"/>
                                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
                                                 <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
@@ -229,7 +228,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="9jY-jK-Z7C" secondAttribute="trailing" constant="16" id="IYx-ga-1pJ"/>
                                             <constraint firstItem="9jY-jK-Z7C" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="nKb-Kd-Uub" secondAttribute="leading" constant="16" id="MXW-Pu-r14"/>
                                         </constraints>
-                                        <variation key="heightClass=regular-widthClass=compact" spacing="35"/>
+                                        <variation key="heightClass=regular-widthClass=compact" spacing="25"/>
                                         <variation key="heightClass=regular-widthClass=regular" spacing="60"/>
                                     </stackView>
                                 </subviews>
@@ -267,6 +266,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                         <outlet property="licenseUsernameTextField" destination="RWz-Bl-GSS" id="izf-bv-VJ1"/>
                         <outlet property="serverTextField" destination="8J3-qs-M07" id="ZId-66-mE4"/>
                         <outlet property="stackView" destination="nKb-Kd-Uub" id="UhE-7b-cHn"/>
+                        <outlet property="threemaAdminInfoLabel" destination="ndr-jK-rhu" id="UoI-2B-5LT"/>
                         <outlet property="threemaAppLinkLabel" destination="JeT-iT-lao" id="CkA-Vk-0JH"/>
                     </connections>
                 </viewController>
@@ -277,13 +277,13 @@ Please enter your credentials. If you do not know your credentials, please conta
     </scenes>
     <designables>
         <designable name="JeT-iT-lao">
-            <size key="intrinsicContentSize" width="469" height="20"/>
+            <size key="intrinsicContentSize" width="465.66666666666669" height="19.333333333333332"/>
         </designable>
     </designables>
     <resources>
         <image name="Checkbox" width="36" height="36"/>
         <image name="Key" width="36" height="36"/>
         <image name="ThreemaOnPremWhite" width="1707" height="180"/>
-        <image name="globe" catalog="system" width="128" height="121"/>
+        <image name="globe" catalog="system" width="128" height="123"/>
     </resources>
 </document>

@@ -19,31 +19,41 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import PromiseKit
+import ThreemaProtocols
 @testable import ThreemaFramework
 
 class NonceGuardMock: NSObject, NonceGuardProtocol {
-    func isProcessed(nonce: Data) -> Bool {
+    var processedCalls = Set<Data>()
+
+    func isProcessed(d2dIncomingMessage message: D2d_IncomingMessage) throws -> Bool {
         false
     }
 
-    func processed(nonce: Data) -> PromiseKit.Promise<Void> {
-        Promise()
+    func processed(nonce: Data) {
+        processedCalls(nonce: nonce)
     }
 
-    func processed(nonces: [Data]) -> PromiseKit.Promise<Void> {
-        Promise()
+    func processed(nonces: [Data]) {
+        for nonce in nonces {
+            processedCalls(nonce: nonce)
+        }
     }
 
     func isProcessed(message: AbstractMessage) -> Bool {
         false
     }
 
-    func processed(message: AbstractMessage) throws -> AnyPromise {
-        AnyPromise(Promise())
+    func processed(message: AbstractMessage) throws {
+        processedCalls(nonce: message.nonce)
     }
 
-    func processed(boxedMessage: BoxedMessage) throws -> AnyPromise {
-        AnyPromise(Promise())
+    func processed(boxedMessage: BoxedMessage) throws {
+        processedCalls(nonce: boxedMessage.nonce)
+    }
+
+    private func processedCalls(nonce: Data?) {
+        if let nonce {
+            processedCalls.insert(nonce)
+        }
     }
 }

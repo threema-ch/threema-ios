@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaFramework
 
 @objc class WCSessionManager: NSObject {
@@ -648,7 +649,7 @@ extension WCSessionManager {
         sendMessagePackToAllActiveSessions(messagePack: receiverUpdate.messagePack(), blackListed: false)
     }
 
-    private func responseUpdateTyping(identity: String, isTyping: Bool) {
+    private func responseUpdateTyping(identity: ThreemaIdentity, isTyping: Bool) {
         let typingUpdate = WebTypingUpdate(identity: identity, typing: isTyping)
         DDLogVerbose("[Threema Web] MessagePack -> Send update/typing")
         sendMessagePackToAllActiveSessions(messagePack: typingUpdate.messagePack(), blackListed: true)
@@ -969,7 +970,7 @@ extension WCSessionManager {
             else if let contact = currentConversation.contact,
                     changedValuesForCurrentEvent.keys.contains("typing") {
                 self.responseUpdateTyping(
-                    identity: contact.identity,
+                    identity: contact.threemaIdentity,
                     isTyping: currentConversation.typing.boolValue
                 )
             }

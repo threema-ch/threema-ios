@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 /// Protocol that allows delegation from the `GroupCallActor` to the `GroupCallManager`
@@ -41,4 +42,8 @@ protocol GroupCallActorManagerDelegate: AnyObject {
     
     /// Starts and runs the refresh steps
     func startRefreshSteps() async
+    
+    /// Runs the Periodic Refresh-Steps for the group with the given identity.
+    /// - Parameter group: GroupIdentity of group to run Refresh-Steps for
+    func refreshGroupCalls(in group: GroupIdentity) async
 }

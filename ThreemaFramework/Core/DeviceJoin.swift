@@ -270,7 +270,7 @@ public final class DeviceJoin {
             // $0.distributionLists // Not implemented in iOS
             
             $0.cspHashedNonces = cspNonces
-            // $0.d2DHashedNonces // Out of scope in IOS-3674
+            // $0.d2DHashedNonces // IOS-3978: Send nonces from D2D scope
         }
         
         let edToNdEssentialData = Join_EdToNd.with {
@@ -652,8 +652,8 @@ extension SettingsStoreProtocol {
             $0.unknownContactPolicy = blockUnknown ? .blockUnknown : .allowUnknown
             $0.readReceiptPolicy = sendReadReceipts ? .sendReadReceipt : .dontSendReadReceipt
             $0.typingIndicatorPolicy = sendTypingIndicator ? .sendTypingIndicator : .dontSendTypingIndicator
-            $0.callPolicy = enableThreemaCall ? .allowCall : .denyCall
-            $0.callConnectionPolicy = alwaysRelayCalls ? .requireRelay : .allowDirect
+            $0.o2OCallPolicy = enableThreemaCall ? .allowO2OCall : .denyO2OCall
+            $0.o2OCallConnectionPolicy = alwaysRelayCalls ? .requireRelayedConnection : .allowDirectConnection
             // Screenshot policy doesn't exist
             // Keyboard collection policy doesn't exist
             $0.blockedIdentities.identities = Array(blacklist)

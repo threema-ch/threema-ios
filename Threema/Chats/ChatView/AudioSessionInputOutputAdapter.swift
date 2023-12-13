@@ -120,17 +120,16 @@ enum AudioSessionInputOutputAdapter {
     }
     
     static func resetAudioSession(to category: AVAudioSession.Category?) {
-        guard let category else {
-            return
-        }
-
         guard VoIPCallStateManager.shared.currentCallState() == .idle else {
             return
         }
         
         let audioSession = AVAudioSession.sharedInstance()
+        
         do {
-            try audioSession.setCategory(category)
+            if let category {
+                try audioSession.setCategory(category)
+            }
             try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
         }
         catch {

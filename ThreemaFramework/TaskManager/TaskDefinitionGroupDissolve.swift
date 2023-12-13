@@ -48,7 +48,7 @@ final class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
         "<\(type(of: self))>"
     }
 
-    var toMembers = [ThreemaIdentity]()
+    var toMembers = [String]()
 
     private enum CodingKeys: String, CodingKey {
         case toMembers

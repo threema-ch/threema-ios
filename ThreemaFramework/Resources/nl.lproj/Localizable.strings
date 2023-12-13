@@ -53,7 +53,7 @@
 "error_message_requires_migration_error_description" = "Migratiecontrole mislukt. Herstart de app.";
 
 "error_other_connection_for_same_identity_title" = "Waarschuwing";
-"error_other_connection_for_same_identity_message" = "De server heeft twee of meer verbindingen van verschillende apparaten met dezelfde Threema-ID gedetecteerd.\n\nU kunt dezelfde Threema-ID niet tegelijkertijd op verschillende apparaten gebruiken. Nieuwe berichten worden alleen verzonden naar het apparaat dat als laatste op de server is ingelogd.\n\nAls u overschakelt naar een nieuw apparaat, verwijder dan %@ of schakel het uit op het oude apparaat en herstart het nieuwe apparaat.";
+"error_other_connection_for_same_identity_message" = "De server heeft twee of meer verbindingen van verschillende apparaten met dezelfde Threema-ID gedetecteerd.\n\nDit kan gebeuren als u Threema tegelijkertijd op verschillende apparaten gebruikt zonder deze te koppelen (https://three.ma/md). Nieuwe berichten worden alleen verzonden naar het apparaat dat als laatste aan de server is gekoppeld.\n\nAls u overschakelt naar een nieuw apparaat, verwijder dan %@ of schakel het uit op het oude apparaat en herstart vervolgens het nieuwe apparaat.";
 
 "error_rogue_device_title" = "Er is een verbinding met een ander apparaat gedetecteerd";
 "error_rogue_device_message" = "De server heeft verbinding met een ander apparaat waargenomen dat hetzelfde Threema-ID heeft.\n\nAls u uw Threema-ID in de tussentijd niet op een ander apparaat of met een oudere app-versie heeft gebruikt, neem dan contact op met ondersteuning en stuur indien mogelijk het logbestand.";

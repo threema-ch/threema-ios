@@ -19,18 +19,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 class Participant: ParticipantDescription {
     let participantID: ParticipantID
+
     var mirrorRenderer: Bool {
         false
     }
     
     var type: String {
-        fatalError("Must override")
-    }
-
-    var name: String {
         fatalError("Must override")
     }
 

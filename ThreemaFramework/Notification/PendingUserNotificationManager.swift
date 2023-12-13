@@ -58,6 +58,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
 
     private let userNotificationManager: UserNotificationManagerProtocol
     private let userNotificationCenterManager: UserNotificationCenterManagerProtocol
+    private let pushSettingManager: PushSettingManagerProtocol
     private let entityManager: EntityManager
 
     private static var pendingUserNotifications: [PendingUserNotification]?
@@ -69,10 +70,12 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     required init(
         _ userNotificationManager: UserNotificationManagerProtocol,
         _ userNotificationCenterManager: UserNotificationCenterManagerProtocol,
+        _ pushSettingManager: PushSettingManagerProtocol,
         _ entityManager: EntityManager
     ) {
         self.userNotificationManager = userNotificationManager
         self.userNotificationCenterManager = userNotificationCenterManager
+        self.pushSettingManager = pushSettingManager
         self.entityManager = entityManager
         super.init()
 
@@ -81,9 +84,15 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     
     public convenience init(
         _ userNotificationManager: UserNotificationManagerProtocol,
+        _ pushSettingManager: PushSettingManagerProtocol,
         _ entityManager: EntityManager
     ) {
-        self.init(userNotificationManager, UserNotificationCenterManager(), entityManager)
+        self.init(
+            userNotificationManager,
+            UserNotificationCenterManager(),
+            pushSettingManager,
+            entityManager
+        )
     }
     
     /// Create or update pending user notification for threema push.
@@ -206,22 +215,29 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
             }
 
             // Get notification content
-            if let userNotificationContent = userNotificationManager.userNotificationContent(pendingUserNotification) {
+            if let userNotificationContent = self.userNotificationManager
+                .userNotificationContent(pendingUserNotification) {
                 // Add notification or suppress it
                 var suppress = false
                 var silent = false
                 
                 if let pushSetting = userNotificationContent.pushSetting {
-                    suppress = (!userNotificationContent.isGroupMessage && !pushSetting.canSendPush()) ||
-                        (
-                            userNotificationContent.isGroupMessage && !pushSetting
-                                .canSendPush(for: userNotificationContent.baseMessage) && !pushSetting
-                                .canSendPushForGroupCallStartMessage(
-                                    abstractMessage: pendingUserNotification
-                                        .abstractMessage
-                                )
-                        )
-                    silent = pushSetting.silent
+                    if userNotificationContent.isGroupMessage {
+                        if let baseMessage = userNotificationContent.baseMessage {
+                            suppress = !pushSettingManager.canSendPush(for: baseMessage) ||
+                                !pushSetting
+                                .canSendPushGroupCallStartMessage(for: pendingUserNotification.abstractMessage)
+                        }
+                        else {
+                            suppress = !pushSetting
+                                .canSendPushGroupCallStartMessage(for: pendingUserNotification.abstractMessage)
+                        }
+                    }
+                    else {
+                        suppress = !pushSetting.canSendPush()
+                    }
+
+                    silent = pushSetting.muted
                 }
 
                 if !suppress {
@@ -548,7 +564,9 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     
     fileprivate static func savePendingUserNotifications() {
         do {
-            try FileManager.default.removeItem(atPath: pathPendingUserNotifications)
+            if FileManager.default.fileExists(atPath: pathPendingUserNotifications) {
+                try FileManager.default.removeItem(atPath: pathPendingUserNotifications)
+            }
         }
         catch {
             DDLogError(
@@ -575,7 +593,9 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     
     private static func saveProcessedUserNotifications() {
         do {
-            try FileManager.default.removeItem(atPath: pathProcessedUserNotifications)
+            if FileManager.default.fileExists(atPath: pathProcessedUserNotifications) {
+                try FileManager.default.removeItem(atPath: pathProcessedUserNotifications)
+            }
         }
         catch {
             DDLogError(
@@ -635,24 +655,5 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         }
         
         return pendingUserNotification
-    }
-}
-
-extension FileManager {
-    public func removeItem(at path: String, completion: @escaping (Bool, Error?) -> Void) {
-        DispatchQueue.global(qos: .utility).async {
-            do {
-                try self.removeItem(atPath: path)
-                
-                DispatchQueue.main.async {
-                    completion(true, nil)
-                }
-            }
-            catch {
-                DispatchQueue.main.async {
-                    completion(false, error)
-                }
-            }
-        }
     }
 }

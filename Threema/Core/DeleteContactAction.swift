@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 /// Delete action for a contact
 ///
@@ -76,8 +77,8 @@ class DeleteContactAction: NSObject {
     /// Contact to be deleted with this action
     private let contact: ContactEntity
     
-    private lazy var entityManager = EntityManager()
-    
+    private lazy var businessInjector = BusinessInjector()
+
     /// Create a new contact delete action
     ///
     /// - Parameter contact: Contact to be deleted
@@ -100,7 +101,7 @@ class DeleteContactAction: NSObject {
         completion: CompletionHandler? = nil
     ) {
         // Is contact in any existing group?
-        let groups = entityManager.entityFetcher.groupConversations(for: contact)
+        let groups = businessInjector.entityManager.entityFetcher.groupConversations(for: contact)
         if let groupsCount = groups?.count, groupsCount > 0 {
             showExistingGroupsAlert(for: groupsCount, in: viewController, completion: completion)
             return
@@ -293,23 +294,29 @@ extension DeleteContactAction {
         
         // Delete any PFS sessions
         do {
-            try BusinessInjector().dhSessionStore
-                .deleteAllDHSessions(
-                    myIdentity: BusinessInjector().myIdentityStore.identity,
-                    peerIdentity: contact.identity
-                )
+            try BusinessInjector().dhSessionStore.deleteAllDHSessions(
+                myIdentity: BusinessInjector().myIdentityStore.identity,
+                peerIdentity: contact.identity
+            )
         }
         catch {
             DDLogWarn("Cannot delete PFS sessions: \(error)")
         }
         
         // Remove contact & conversation
-        entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
             tempContactCouldBeExcluded = self.contactCouldBeExcluded
             tempContactIdentity = self.contact.identity
             tempContactDisplayName = self.contact.displayName
             
-            self.entityManager.entityDestroyer.deleteObject(object: self.contact)
+            self.businessInjector.entityManager.entityDestroyer.deleteObject(object: self.contact)
+
+            if let tempContactIdentity {
+                Task {
+                    await self.businessInjector.pushSettingManager
+                        .delete(forContact: ThreemaIdentity(tempContactIdentity))
+                }
+            }
         }
         
         // Recalculate the unread count

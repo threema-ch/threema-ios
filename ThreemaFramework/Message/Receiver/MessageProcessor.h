@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import <PromiseKit/PromiseKit.h>
 #import "AbstractMessage.h"
 #import "MessageProcessorDelegate.h"
     
@@ -27,22 +26,7 @@
 @class Conversation;
 @class ContactEntity;
 
-@protocol MessageProcessorProtocol <NSObject>
-
-/**
- Process incoming message.
-
- @param boxmsg: Incoming Boxed Message
- @param receivedAfterInitialQueueSend: True indicates the message was received before chat server message queue is dry (abstract message will be marked with this flag, to control in app notification)
- @param maxBytesToDecrypt: Max. size in bytes of message to decrypt (will be used is not enough memory available), 0 for no limit
- @param timeoutDownloadThumbnail: Timeout in seconds for downloading thumbnail, set to zero for no timeout
- @return Processed message, if message is null it's NOT processed
-*/
-- (AnyPromise *)processIncomingMessage:(BoxedMessage*)boxmsg receivedAfterInitialQueueSend:(BOOL)receivedAfterInitialQueueSend maxBytesToDecrypt:(int)maxBytesToDecrypt timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail;
-
-@end
-
-@interface MessageProcessor : NSObject<MessageProcessorProtocol>
+@interface MessageProcessor : NSObject
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -53,5 +37,17 @@
  @param nonceGuard: Must be an id<NonceGuardProtocolObjc>, is NSObject because NonceGuard is implemented in Swift (circularity #import not
 */
 - (instancetype)initWith:(id<MessageProcessorDelegate>)messageProcessorDelegate entityManager:(NSObject *)entityManagerObject fsmp:(NSObject *)fsmp nonceGuard:(NSObject *)nonceGuardObject;
+
+/**
+ Process incoming message.
+
+ @param boxedMessage: Incoming Boxed Message
+ @param receivedAfterInitialQueueSend: True indicates the message was received before chat server message queue is dry (abstract message will be marked with this flag, to control in app notification)
+ @param maxBytesToDecrypt: Max. size in bytes of message to decrypt (will be used is not enough memory available), 0 for no limit
+ @param timeoutDownloadThumbnail: Timeout in seconds for downloading thumbnail, set to zero for no timeout
+ @param onCompletion: Returns processed message, if message is null it's NOT processed
+ @param onError: Returns a error
+*/
+- (void)processIncomingBoxedMessage:(BoxedMessage*)boxedMessage receivedAfterInitialQueueSend:(BOOL)receivedAfterInitialQueueSend maxBytesToDecrypt:(int)maxBytesToDecrypt timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail onCompletion:(nonnull void(^)(NSObject * _Nullable))onCompletion onError:(nonnull void(^)(NSError * _Nonnull))onError;
 
 @end

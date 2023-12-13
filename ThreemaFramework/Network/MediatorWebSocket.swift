@@ -66,6 +66,7 @@ import Starscream
             request: URLRequest(url: serverURL),
             certPinner: self
         )
+        socket?.respondToPingWithPong = false
         socket?.callbackQueue = queue
         socket?.delegate = self
     }

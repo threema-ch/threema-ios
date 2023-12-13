@@ -47,11 +47,20 @@ import ThreemaProtocols
         decoded as Any
     }
     
-    override public func body() -> Data! {
+    override public func body() -> Data? {
+        guard let groupCreatorASCII = groupCreator?.data(using: .ascii),
+              let serializedData = try? decoded?.serializedData()
+        else {
+            let message = "Unable to create GroupCallStartMessage body"
+            assertionFailure(message)
+            DDLogError(message)
+            return nil
+        }
+        
         var body = Data()
-        body.append(groupCreator.data(using: .ascii)!)
+        body.append(groupCreatorASCII)
         body.append(groupID)
-        body.append(try! decoded!.serializedData())
+        body.append(serializedData)
         
         return body
     }

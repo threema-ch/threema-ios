@@ -33,28 +33,28 @@ public enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum {
   /// No features available
   case none // = 0
 
-  /// Can handle voice messages.
+  /// Supports voice messages.
   case voiceMessageSupport // = 1
 
-  /// Can handle groups.
+  /// Supports groups.
   case groupSupport // = 2
 
-  /// Can handle polls.
+  /// Supports polls.
   case pollSupport // = 4
 
-  /// Can handle file messages.
+  /// Supports file messages.
   case fileMessageSupport // = 8
 
-  /// Can handle 1:1 audio calls.
+  /// Supports 1:1 audio calls.
   case o2OAudioCallSupport // = 16
 
-  /// Can handle 1:1 video calls.
+  /// Supports 1:1 video calls.
   case o2OVideoCallSupport // = 32
 
-  /// Can handle forward security.
+  /// Supports forward security.
   case forwardSecuritySupport // = 64
 
-  /// Can handle group calls.
+  /// Supports group calls.
   case groupCallSupport // = 128
   case UNRECOGNIZED(Int)
 

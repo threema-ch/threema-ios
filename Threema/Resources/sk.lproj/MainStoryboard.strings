@@ -8,8 +8,8 @@
 /* Class = "UILabel"; text = "Detail"; ObjectID = "5Ca-aK-dv0"; */
 "5Ca-aK-dv0.text" = "Podrobnosti";
 
-/* Class = "UITabBarItem"; title = "My Profile"; ObjectID = "5lj-oy-IYs"; */
-"5lj-oy-IYs.title" = "Môj profil";
+/* Class = "UITabBarItem"; title = "Profile"; ObjectID = "5lj-oy-IYs"; */
+"5lj-oy-IYs.title" = "Profil";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "6On-uo-xuU"; */
 "6On-uo-xuU.text" = "Podrobnosti";
@@ -141,7 +141,7 @@
 "qNO-eF-kmI.text" = "Doručená";
 
 /* Class = "UINavigationItem"; title = "Backup"; ObjectID = "tUV-iz-VQc"; */
-"tUV-iz-VQc.title" = "Export ID";
+"tUV-iz-VQc.title" = "Exportovať ID";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "tr2-Ia-imu"; */
 "tr2-Ia-imu.text" = "Prezývka";

@@ -30,11 +30,11 @@
 
 @property UILabel *pickImageLabel;
 @property UIImageView *imageView;
-@property UIViewController *presentingViewController;
+@property (weak, nonatomic) UIViewController *presentingViewController;
 @property NSData *imageData;
 @property (nonatomic) BOOL canDeleteImage;
 @property (nonatomic) BOOL canChooseImage;
-@property id<EditableAvatarViewDelegate> delegate;
+@property (weak, nonatomic) id<EditableAvatarViewDelegate> delegate;
 
 @property BOOL isReceivedImage;
 

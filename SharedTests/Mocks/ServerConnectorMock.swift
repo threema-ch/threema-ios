@@ -26,7 +26,6 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     var reflectMessageCalls = [Data]()
     var sendMessageCalls = [BoxedMessage]()
     var completedProcessingMessageCalls = [BoxedMessage]()
-    var failedProcessingMessageCalls = [BoxedMessage]()
 
     var reflectMessageClosure: ((_ message: Data) -> Bool)?
 
@@ -146,10 +145,6 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         return connectionState == .loggedIn
     }
     
-    func failedProcessingMessage(_ boxmsg: BoxedMessage, error err: Error) {
-        failedProcessingMessageCalls.append(boxmsg)
-    }
-
     func registerMessageListenerDelegate(delegate: MessageListenerDelegate) {
         messageListenerDelegate = delegate
     }

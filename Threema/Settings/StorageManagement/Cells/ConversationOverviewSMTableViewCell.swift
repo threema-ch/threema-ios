@@ -116,7 +116,7 @@ class ConversationOverviewSMTableViewCell: ThemedCodeStackTableViewCell {
             label.numberOfLines = 0
         }
         
-        label.text = BundleUtil.localizedString(forKey: "messages")
+        label.text = "messages".localized
         
         label.textColor = Colors.textLight
         
@@ -134,7 +134,7 @@ class ConversationOverviewSMTableViewCell: ThemedCodeStackTableViewCell {
             label.numberOfLines = 0
         }
         
-        label.text = BundleUtil.localizedString(forKey: "files")
+        label.text = "files".localized
                 
         return label
     }()
@@ -195,8 +195,8 @@ class ConversationOverviewSMTableViewCell: ThemedCodeStackTableViewCell {
         DispatchQueue.global(qos: .background).async {
             let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.backgroundEntityManager)
             DispatchQueue.main.async {
-                self.messagesLabel.text = "\(messageFetcher.count()) \(BundleUtil.localizedString(forKey: "messages"))"
-                self.storageLabel.text = "\(messageFetcher.mediaCount()) \(BundleUtil.localizedString(forKey: "files"))"
+                self.messagesLabel.text = "\(messageFetcher.count()) \("messages".localized)"
+                self.storageLabel.text = "\(messageFetcher.mediaCount()) \("files".localized)"
             }
             
             AvatarMaker.shared()

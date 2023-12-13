@@ -22,6 +22,7 @@
 #import "BackupIdentityViewController.h"
 #import "UIDefines.h"
 #import "MyIdentityStore.h"
+#import "Threema-Swift.h"
 
 @interface BackupPasswordVerifyViewController ()
 
@@ -63,6 +64,8 @@
     [super viewWillDisappear:animated];
     
     self.passwordField.delegate = nil;
+    
+    [self.passwordField resignFirstResponder];
 }
 
 - (BOOL)shouldAutorotate {

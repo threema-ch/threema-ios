@@ -19,9 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 public enum GroupCallsSystemMessage: Sendable {
-    case groupCallStartedBy(ThreemaID)
+    case groupCallStartedBy(ThreemaIdentity)
     case groupCallStarted
     case groupCallEnded
 }

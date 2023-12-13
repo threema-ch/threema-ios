@@ -314,7 +314,7 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
 
         if let group {
             let backgroundGroupManagerMock = GroupManagerMock()
-            backgroundGroupManagerMock.getGroupReturns = group
+            backgroundGroupManagerMock.getGroupReturns.append(group)
 
             frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),

@@ -50,13 +50,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self;
 }
 
-- (nullable BallotMessage *)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation {
-    return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation];
+- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+    // TODO: (IOS-4254) Remove once resolved
+    DDLogInfo(@"[Ballot] Start Processing BoxBallotCreateMessage for ballot with ID: %@.", [NSString stringWithHexData:boxMessage.ballotId]);
+    return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
 
-- (nullable BallotMessage *)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation {
-    return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation];
+- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+    // TODO: (IOS-4254) Remove once resolved
+    DDLogInfo(@"[Ballot] Start Processing GroupBallotCreateMessage for ballot with ID: %@.", [NSString stringWithHexData:boxMessage.ballotId]);
+    return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
 + (NSString *)decodeCreateBallotTitleFromBox:(BoxBallotCreateMessage *)boxMessage {
@@ -86,7 +90,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [json objectForKey: JSON_KEY_STATE];
 }
 
-- (BallotMessage *)decodeBallotCreateMessage:(AbstractMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation {
+- (void)decodeBallotCreateMessage:(AbstractMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
     NSData *ballotId;
     NSData *jsonData;
@@ -97,53 +101,50 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         ballotId = ((GroupBallotCreateMessage *)boxMessage).ballotId;
         jsonData = ((GroupBallotCreateMessage *)boxMessage).jsonData;
     } else {
-        DDLogError(@"[Ballot] Ballot decode: invalid message type");
-        return nil;
+        onError([ThreemaError threemaError:[NSString stringWithFormat:@"[Ballot] Wrong message type for message (ID %@)", boxMessage.messageId] withCode:ThreemaProtocolErrorMessageProcessingFailed]);
+        return;
     }
     
     /* Create Message in DB */
-    __block BallotMessage *message = (BallotMessage *)[_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil];
-    if (message == nil) {
-        DDLogError(@"[Ballot] Could not find/create ballot message");
-        return message;
-    }
-
-    [_entityManager performSyncBlockAndSafe:^{
-        Ballot *ballot = [_entityManager.entityFetcher ballotForBallotId:ballotId];
-        NSDate *conversationLastUpdate = conversation.lastUpdate;
-        if (ballot != nil) {
-            [self updateExistingBallot:ballot jsonData:jsonData];
-        } else {
-            ballot = [self createNewBallotWithId:ballotId creatorId:boxMessage.fromIdentity jsonData:jsonData];
-        }
-
-        // error parsing data
-        if (ballot == nil) {
-            if (message) {
-                DDLogError(@"[Ballot] Parsing of ballot failed, message will be deleted");
-                [[_entityManager entityDestroyer] deleteObjectWithObject:message];
-                
-                // do not use the conversation function 'updateLastMessageWith', because we are already in a perform block
-                MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
-                 BaseMessage *lastMessage = messageFetcher.lastMessage;
-                
-                if (lastMessage != conversation.lastMessage) {
-                    conversation.lastMessage = lastMessage;
-                }
-                
-                // Set lastUpdate to the old value
-                conversation.lastUpdate = conversationLastUpdate;
+    [_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+        [_entityManager performAsyncBlockAndSafe:^{
+            Ballot *ballot = [_entityManager.entityFetcher ballotForBallotId:ballotId];
+            NSDate *conversationLastUpdate = conversation.lastUpdate;
+            if (ballot != nil) {
+                [self updateExistingBallot:ballot jsonData:jsonData];
+            } else {
+                ballot = [self createNewBallotWithId:ballotId creatorId:boxMessage.fromIdentity jsonData:jsonData];
             }
-            message = nil;
-            return;
-        }
 
-        ballot.modifyDate = [NSDate date];
-        ballot.conversation = conversation;
-        message.ballot = ballot;
-    }];
+            // error parsing data
+            if (ballot == nil) {
+                if (message) {
+                    [[_entityManager entityDestroyer] deleteObjectWithObject:message];
 
-    return message;
+                    // do not use the conversation function 'updateLastMessageWith', because we are already in a perform block
+                    MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
+                     BaseMessage *lastMessage = messageFetcher.lastMessage;
+
+                    if (lastMessage != conversation.lastMessage) {
+                        conversation.lastMessage = lastMessage;
+                    }
+
+                    // Set lastUpdate to the old value
+                    conversation.lastUpdate = conversationLastUpdate;
+                }
+
+                onError([ThreemaError threemaError:[NSString stringWithFormat:@"[Ballot] Parsing of ballot failed, message deleted for message (ID: %@)", boxMessage.messageId] withCode:ThreemaProtocolErrorMessageProcessingFailed]);
+                return;
+            }
+
+            ballot.modifyDate = [NSDate date];
+            ballot.conversation = conversation;
+            ((BallotMessage *)message).ballot = ballot;
+
+            onCompletion(message);
+        }];
+    } onError:onError];
+
 }
 
 

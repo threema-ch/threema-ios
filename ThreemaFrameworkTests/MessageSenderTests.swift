@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import XCTest
 
 @testable import ThreemaFramework
@@ -86,11 +87,6 @@ class MessageSenderTests: XCTestCase {
         for testMessage in testMessages {
             testMessage.fromIdentity = "ECHOECHO"
 
-            var expectedExcludeFromSending = [Data]()
-            if testMessage.noDeliveryReceiptFlagSet() {
-                expectedExcludeFromSending.append(testMessage.messageID)
-            }
-
             let taskManagerMock = TaskManagerMock()
 
             let messageSender = MessageSender(
@@ -111,18 +107,17 @@ class MessageSenderTests: XCTestCase {
 
             wait(for: [expect], timeout: 3)
 
-            let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendDeliveryReceiptsMessage)
-            XCTAssertEqual(task.excludeFromSending, expectedExcludeFromSending)
+            XCTAssertEqual(taskManagerMock.addedTasks.count, testMessage.noDeliveryReceiptFlagSet() ? 0 : 1)
         }
     }
 
     func testSendReadReceipt() async throws {
-        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let expectedMessageID = MockData.generateMessageID()
         let expectedReadDate = Date()
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
@@ -156,7 +151,7 @@ class MessageSenderTests: XCTestCase {
                     return false
                 }
                 return task.receiptType == .read &&
-                    task.toIdentity == expectedThreemaIdentity &&
+                    task.toIdentity == expectedThreemaIdentity.string &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.contains(expectedReadDate)
             }.count
@@ -164,10 +159,10 @@ class MessageSenderTests: XCTestCase {
     }
 
     func testSendReadReceiptDefaultNoReadReceipt() async throws {
-        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
                 conversation: conversation,
@@ -192,15 +187,14 @@ class MessageSenderTests: XCTestCase {
         )
 
         await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
-
         XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
     }
 
     func testSendReadReceiptContactNoReadReceipt() async throws {
-        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
             contactEntity.readReceipt = .doNotSend
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -229,12 +223,12 @@ class MessageSenderTests: XCTestCase {
     }
 
     func testSendReadReceiptContactNoReadReceiptButMultiDeviceActivated() async throws {
-        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let expectedMessageID = MockData.generateMessageID()
         let expectedReadDate = Date()
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
             contactEntity.readReceipt = .doNotSend
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -274,7 +268,7 @@ class MessageSenderTests: XCTestCase {
                     return false
                 }
                 return task.receiptType == .read &&
-                    task.toIdentity == expectedThreemaIdentity &&
+                    task.toIdentity == expectedThreemaIdentity.string &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.contains(expectedReadDate)
             }.count
@@ -282,11 +276,14 @@ class MessageSenderTests: XCTestCase {
     }
 
     func testSendReadReceiptGroup() async throws {
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: "ECHOECHO")
-        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity("ECHOECHO")
+        )
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         let (groupEntity, message) = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
 
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: expectedGroupIdentity.id,
@@ -303,13 +300,13 @@ class MessageSenderTests: XCTestCase {
         }
 
         let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = Group(
+        groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
             groupEntity: groupEntity,
             conversation: message.conversation,
             lastSyncRequest: nil
-        )
+        ))
         let taskManagerMock = TaskManagerMock()
 
         let messageSender = MessageSender(
@@ -327,13 +324,16 @@ class MessageSenderTests: XCTestCase {
     }
 
     func testSendReadReceiptGroupButMultiDeviceActivated() async throws {
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: "ECHOECHO")
-        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(MyIdentityStoreMock().identity)
+        )
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let expectedMessageID = MockData.generateMessageID()
         let expectedReadDate = Date()
 
         let (groupEntity, message) = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
 
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: expectedGroupIdentity.id,
@@ -358,13 +358,13 @@ class MessageSenderTests: XCTestCase {
             deviceGroupKeys: MockData.deviceGroupKeys
         )
         let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = Group(
+        groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: message.conversation,
             lastSyncRequest: nil
-        )
+        ))
         let taskManagerMock = TaskManagerMock()
 
         let messageSender = MessageSender(
@@ -386,7 +386,7 @@ class MessageSenderTests: XCTestCase {
                     return false
                 }
                 print(task.groupID == expectedGroupIdentity.id)
-                print(task.groupCreatorIdentity == expectedGroupIdentity.creator)
+                print(task.groupCreatorIdentity == expectedGroupIdentity.creator.string)
                 print(task.receiptMessageIDs.contains(expectedMessageID))
 
                 return task.receiptType == .read &&
@@ -397,7 +397,7 @@ class MessageSenderTests: XCTestCase {
         )
     }
 
-    func testNotAllwedDonateInteractionForOutgoingMessage() throws {
+    func testNotAllowedDonateInteractionForOutgoingMessage() throws {
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.allowOutgoingDonations = false
 

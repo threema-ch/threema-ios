@@ -19,26 +19,20 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 /// Threema Group Conversation representation used in group calls
-public struct GroupCallsThreemaGroupModel: Sendable {
+public struct GroupCallsThreemaGroupModel: Hashable, Sendable {
     // MARK: - Public Properties
 
-    public let creator: ThreemaID
-    public let groupID: Data
+    public let groupIdentity: GroupIdentity
     public let groupName: String
-    
-    // MARK: - Internal Properties
-
-    let members: Set<ThreemaID>
     
     // MARK: - Lifecycle
 
-    public init(creator: ThreemaID, groupID: Data, groupName: String, members: Set<ThreemaID>) {
-        self.creator = creator
-        self.groupID = groupID
+    public init(groupIdentity: GroupIdentity, groupName: String) {
+        self.groupIdentity = groupIdentity
         self.groupName = groupName
-        self.members = members
     }
 }
 
@@ -46,10 +40,6 @@ public struct GroupCallsThreemaGroupModel: Sendable {
 
 extension GroupCallsThreemaGroupModel: Equatable {
     public static func == (lhs: GroupCallsThreemaGroupModel, rhs: GroupCallsThreemaGroupModel) -> Bool {
-        lhs.groupID == rhs.groupID && lhs.creator.id == rhs.creator.id
+        lhs.groupIdentity == rhs.groupIdentity
     }
 }
-
-// MARK: - Hashable
-
-extension GroupCallsThreemaGroupModel: Hashable { }

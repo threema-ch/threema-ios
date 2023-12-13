@@ -183,7 +183,7 @@ class CollectionContactTests: XCTestCase {
         ]
 
         XCTAssertEqual(expectedIDOrderFirstName.count, sortedContactsFirstName.count)
-        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity))
+        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity.string))
 
         // Run last name order
 
@@ -210,7 +210,7 @@ class CollectionContactTests: XCTestCase {
         ]
 
         XCTAssertEqual(expectedIDOrderLastName.count, sortedContactsLastName.count)
-        XCTAssertEqual(expectedIDOrderLastName, sortedContactsLastName.map(\.identity))
+        XCTAssertEqual(expectedIDOrderLastName, sortedContactsLastName.map(\.identity.string))
     }
     
     func testSortedContactsWithSpecialCharacters() {
@@ -275,6 +275,6 @@ class CollectionContactTests: XCTestCase {
         ]
 
         XCTAssertEqual(expectedIDOrderFirstName.count, sortedContactsFirstName.count)
-        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity))
+        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity.string))
     }
 }

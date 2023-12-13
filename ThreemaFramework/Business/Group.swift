@@ -22,21 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import Intents
-import ThreemaProtocols
-
-public struct GroupIdentity: Equatable {
-    public let id: Data
-    public let creator: String
-
-    init(id: Data, creator: String) {
-        self.id = id
-        self.creator = creator
-    }
-
-    init(identity: Common_GroupIdentity) {
-        self.init(id: identity.groupID.littleEndianData, creator: identity.creatorIdentity)
-    }
-}
+import ThreemaEssentials
 
 /// Business representation of a Threema group
 public class Group: NSObject {
@@ -79,7 +65,7 @@ public class Group: NSObject {
 
         public var identity: String? {
             switch self {
-            case let .contact(contact): return contact.identity
+            case let .contact(contact): return contact.identity.string
             case let .me(identity): return identity
             default: return nil
             }
@@ -134,7 +120,7 @@ public class Group: NSObject {
         }
         self.groupIdentity = GroupIdentity(
             id: groupEntity.groupID,
-            creator: groupEntity.groupCreator ?? myIdentityStore.identity
+            creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
         )
         self.state = GroupState(rawValue: groupEntity.state.intValue)!
         self.name = conversation.groupName
@@ -165,7 +151,7 @@ public class Group: NSObject {
                 }
                 guard self?.groupIdentity == GroupIdentity(
                     id: groupEntity.groupID,
-                    creator: groupEntity.groupCreator ?? myIdentityStore.identity
+                    creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
                 ) else {
                     DDLogError("Group identity mismatch")
                     return
@@ -268,6 +254,12 @@ public class Group: NSObject {
     @objc public private(set) dynamic var willBeDeleted = false
 
     public let groupIdentity: GroupIdentity
+
+    public var pushSetting: PushSetting {
+        let pushSettingManager = PushSettingManager()
+        return pushSettingManager.find(forGroup: groupIdentity)
+    }
+
     @objc public private(set) dynamic var state: GroupState
     @objc public private(set) dynamic var members: Set<Contact>
     public private(set) var lastSyncRequest: Date?
@@ -339,7 +331,7 @@ public class Group: NSObject {
     }
     
     @objc public var groupCreatorIdentity: String {
-        if let identity = conversationContact?.identity {
+        if let identity = conversationContact?.identity.string {
             return identity
         }
         return myIdentityStore.identity
@@ -420,7 +412,7 @@ public class Group: NSObject {
 
     /// All group member identities including me
     @objc public var allMemberIdentities: Set<String> {
-        var identities = Set(members.map(\.identity))
+        var identities = Set(members.map(\.identity.string))
         if state == .active {
             identities.insert(myIdentityStore.identity)
         }
@@ -434,7 +426,7 @@ public class Group: NSObject {
         var identities: [String]!
         identities = members
             .filter { $0.state != kStateInvalid }
-            .map(\.identity)
+            .map(\.identity.string)
         return identities
     }
     

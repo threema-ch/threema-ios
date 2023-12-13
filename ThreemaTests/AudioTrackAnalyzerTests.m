@@ -52,8 +52,15 @@
     AudioTrackAnalyzer *analyzer = [AudioTrackAnalyzer audioTrackAnalyzerFor: file];
     
     NSTimeInterval duration = [analyzer getDuration];
-    XCTAssert(duration < 3.85 + 0.01);
-    XCTAssert(duration > 3.85 - 0.01);
+    if (@available(iOS 17.0, *)) {
+        XCTAssert(duration < 3.75 + 0.01);
+        XCTAssert(duration > 3.75 - 0.01);
+    }
+    else {
+        XCTAssert(duration < 3.85 + 0.01);
+        XCTAssert(duration > 3.85 - 0.01);
+    }
+    
 
     NSArray *result = [analyzer reduceAudioToDecibelLevels: 100];
     // for some odd reason we do are not able to get all audio data from the given audio file

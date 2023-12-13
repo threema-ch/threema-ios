@@ -1,9 +1,5 @@
 /* Localized versions of Info.plist keys */
 
-"New message" = "新しいメッセージ";
-"Scan QR code" = "QRコードをスキャンする";
-"My ID" = "プロフィール";
-
 "NSCameraUsageDescription" = "カメラは写真や動画を撮影してトークで送信したり、QRコードを読み取るときに使われます。";
 "NSContactsUsageDescription" = "連絡先は同期が行われているときに、他のThreemaユーザーを探すために使われます。電話番号やメールアドレスのハッシュは、このためにThreemaのサーバーにアップロードされます。この情報はサーバーには保存されません。";
 "NSLocationWhenInUseUsageDescription" = "位置情報はトークで送信するときや、地図上に自分の位置を表示するときに使われます。";

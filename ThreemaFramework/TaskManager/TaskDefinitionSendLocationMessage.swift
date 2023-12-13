@@ -34,7 +34,7 @@ import Foundation
     @objc init(
         poiAddress: String?,
         messageID: Data,
-        receiverIdentity: ThreemaIdentity?,
+        receiverIdentity: String?,
         group: Group?,
         sendContactProfilePicture: Bool
     ) {

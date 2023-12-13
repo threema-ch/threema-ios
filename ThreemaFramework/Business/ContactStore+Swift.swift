@@ -52,8 +52,14 @@ extension ContactStore {
                 return Promise { seal in seal.fulfill(identities) }
             }
         }
-        .then { identities -> AnyPromise in
-            self.updateFeatureMasks(forIdentities: identities, contactSyncer: mediatorSyncableContacts)
+        .then { identities -> Promise<Void> in
+            Promise { seal in
+                self.updateFeatureMasks(forIdentities: identities, contactSyncer: mediatorSyncableContacts) {
+                    seal.fulfill_()
+                } onError: { error in
+                    seal.reject(error)
+                }
+            }
         }
         .then { _ -> Promise<Void> in
             mediatorSyncableContacts.sync()
@@ -71,6 +77,34 @@ extension ContactStore {
         entityManager.performAndWaitSave {
             contactEntity.state = NSNumber(value: kStateActive)
             mediatorSyncableContacts.updateState(identity: contactEntity.identity, value: contactEntity.state)
+        }
+        mediatorSyncableContacts.syncAsync()
+    }
+}
+
+extension ContactStoreProtocol {
+    public func update(
+        readReceipt: ReadReceipt,
+        for contactEntity: ContactEntity,
+        entityManager: EntityManager
+    ) {
+        let mediatorSyncableContacts = MediatorSyncableContacts()
+        entityManager.performAndWaitSave {
+            contactEntity.readReceipt = readReceipt
+            mediatorSyncableContacts.updateReadReceipt(identity: contactEntity.identity, value: readReceipt)
+        }
+        mediatorSyncableContacts.syncAsync()
+    }
+
+    public func update(
+        typingIndicator: TypingIndicator,
+        for contactEntity: ContactEntity,
+        entityManager: EntityManager
+    ) {
+        let mediatorSyncableContacts = MediatorSyncableContacts()
+        entityManager.performAndWaitSave {
+            contactEntity.typingIndicator = typingIndicator
+            mediatorSyncableContacts.updateTypingIndicator(identity: contactEntity.identity, value: typingIndicator)
         }
         mediatorSyncableContacts.syncAsync()
     }

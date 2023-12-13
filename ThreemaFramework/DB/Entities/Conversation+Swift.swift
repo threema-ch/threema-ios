@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 extension Conversation {
     
@@ -43,21 +44,21 @@ extension Conversation {
     ///   - groupID:
     ///   - creator:
     /// - Returns:
-    public func isEqualTo(groupID: Data, creator: String, myIdentity: String) -> Bool {
+    public func isEqualTo(groupIdentity: GroupIdentity, myIdentity: String) -> Bool {
         
         guard isGroup() else {
             return false
         }
     
-        guard self.groupID == groupID else {
+        guard groupID == groupIdentity.id else {
             return false
         }
     
-        if let id = contact?.identity, id != creator {
+        if let id = contact?.identity, id != groupIdentity.creator.string {
             return false
         }
     
-        if contact == nil, myIdentity != creator {
+        if contact == nil, myIdentity != groupIdentity.creator.string {
             return false
         }
         

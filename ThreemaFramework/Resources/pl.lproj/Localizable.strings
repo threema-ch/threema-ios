@@ -53,7 +53,7 @@
 "error_message_requires_migration_error_description" = "Nieudane sprawdzanie migracji. Ponownie uruchom aplikację.";
 
 "error_other_connection_for_same_identity_title" = "Ostrzeżenie";
-"error_other_connection_for_same_identity_message" = "Serwer wykrył co najmniej dwa połączenia z różnych urządzeń z tym samym identyfikatorem Threema.\n\nNie można używać tego samego identyfikatora Threema na kilku urządzeniach jednocześnie. Nowe wiadomości zostaną przesłane tylko do urządzenia, które ostatnio zalogowało się na serwerze.\n\nJeśli przechodzisz na nowe urządzenie, odinstaluj lub wyłącz %@ na starym urządzeniu, a następnie restartuj nowe.";
+"error_other_connection_for_same_identity_message" = "Serwer wykrył co najmniej dwa połączenia z różnych urządzeń z tym samym identyfikatorem Threema.\n\nMoże się tak zdarzyć, jeśli używasz Threema na kilku urządzeniach jednocześnie bez ich połączenia (ttps://three.ma/md). Nowe wiadomości zostaną przesłane tylko do urządzenia, które ostatnio zalogowało się na serwerze.\n\nJeśli przechodzisz na nowe urządzenie, odinstaluj lub wyłącz %@ na starym urządzeniu, a następnie restartuj nowe.";
 
 "error_rogue_device_title" = "Wykryto połączenie z innego urządzenia";
 "error_rogue_device_message" = "Serwer wykrył połączenie z innego urządzenia z tym samym identyfikatorem Threema.\n\nJeśli nie używasz w tym czasie swojego identyfikatora Threema na innym urządzeniu lub aplikacji w starszej wersji, skontaktuj się z pomocą techniczną i, jeśli to możliwe, prześlij plik rejestru.";

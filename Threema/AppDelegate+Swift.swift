@@ -18,10 +18,63 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import BackgroundTasks
 import Foundation
 import Intents
 
 extension AppDelegate {
+    
+    @objc func registerBackgroundTasks() {
+        // Automatically delete messages in background
+        let taskID = "ch.threema.messageRetention"
+        let deletionTask: (BGTask) -> Void = { task in
+            DDLogNotice("BG Operation with Task \(task.identifier) started")
+            let deletionTask = Task {
+                await BusinessInjector().messageRetentionManager.deleteOldMessages()
+                DDLogNotice("BG Operation for deleting old messages completed")
+                task.setTaskCompleted(success: !Task.isCancelled)
+            }
+            let onCancel = {
+                DDLogNotice("BG Operation for deleting old messages cancelled")
+                deletionTask.cancel()
+            }
+            task.expirationHandler = onCancel
+        }
+        
+        setupTask(with: taskID, operation: deletionTask)
+    }
+    
+    private func setupTask(with id: String, operation: @escaping (BGTask) -> Void) {
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: id,
+            using: DispatchQueue.main,
+            launchHandler: operation
+        )
+
+        BGTaskScheduler.shared.getPendingTaskRequests { tasks in
+            if tasks.contains(where: { $0.identifier == id }) {
+                DDLogNotice("Already got \(id) pending")
+                return
+            }
+            
+            self.scheduleTask(id)
+        }
+    }
+    
+    private func scheduleTask(_ taskID: String) {
+        let request = BGProcessingTaskRequest(identifier: taskID)
+        
+        request.requiresExternalPower = false
+        request.requiresNetworkConnectivity = false
+        
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            DDLogNotice("Submitted background task request: \(taskID)")
+        }
+        catch {
+            DDLogNotice("Error submitting background task request: \(error)")
+        }
+    }
     
     /// Used to handle Siri suggestions in widgets, search or on lock screen
     @objc func handleINSendMessageIntent(userActivity: NSUserActivity) -> Bool {

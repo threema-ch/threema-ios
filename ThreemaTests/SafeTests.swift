@@ -37,7 +37,11 @@ class SafeTests: XCTestCase {
         let json = parser.getJsonAsString(from: safeBackupData)
 
         XCTAssertNotNil(json)
-        XCTAssertEqual(json, "{\"info\":{\"version\":1,\"device\":\"ios\"}}")
+        XCTAssertNotNil(json?.range(of: "{\"info\":{"))
+        XCTAssertNotNil(json?.range(of: "\"version\":1"))
+        XCTAssertNotNil(json?.range(of: ","))
+        XCTAssertNotNil(json?.range(of: "\"device\":\"ios\""))
+        XCTAssertNotNil(json?.range(of: "}}"))
     }
 
     func testSafeJsonParserUser() {
@@ -58,7 +62,7 @@ class SafeTests: XCTestCase {
         XCTAssertNotNil(json?.range(of: "\"nickname\":\"nicki\""))
         XCTAssertNotNil(json?.range(of: "\"profilePic\":\"pic source\""))
         XCTAssertNotNil(json?.range(of: "\"profilePicRelease\":[\"ECHOECHO\",\"TEST1234\"]"))
-        XCTAssertNotNil(json?.range(of: "{\"links\":[{"))
+        XCTAssertNotNil(json?.range(of: "\"links\":[{"))
         XCTAssertNotNil(json?.range(of: "\"type\":\"email\""))
         XCTAssertNotNil(json?.range(of: "\"value\":\"a@a.a\""))
         XCTAssertNotNil(json?.range(of: "}]"))

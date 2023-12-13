@@ -19,11 +19,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import XCTest
+
 @testable import GroupCalls
 @testable import WebRTC
 
 final class ConnectionCtxTests: XCTestCase {
+    
+    fileprivate lazy var creatorIdentity = ThreemaIdentity("ECHOECHO")
+    fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
     
     @GlobalGroupCallActor func testBasicInit() async throws {
         let certificate = RTCCertificate(privateKey: "helloWorld", certificate: "helloWorld", fingerprint: "helloWorld")
@@ -158,11 +163,9 @@ final class ConnectionCtxTests: XCTestCase {
         
         let localParticipant = LocalParticipant(
             participantID: ParticipantID(id: 0),
-            contactModel: ContactModel(identity: "ECHOECHO", nickname: "ECHOECHO"),
             localContext: LocalContext(),
-            threemaID: try! ThreemaID(id: "ECHOECHO"),
-            dependencies: dependencies,
-            localIdentity: try! ThreemaID(id: "ECHOECHO")
+            localContactModel: localContactModel,
+            dependencies: dependencies
         )
         
         let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()
@@ -227,21 +230,18 @@ final class ConnectionCtxTests: XCTestCase {
         
         let localParticipant = LocalParticipant(
             participantID: ParticipantID(id: 0),
-            contactModel: ContactModel(identity: "ECHOECHO", nickname: "ECHOECHO"),
             localContext: LocalContext(),
-            threemaID: try! ThreemaID(id: "ECHOECHO"),
-            dependencies: dependencies,
-            localIdentity: try! ThreemaID(id: "ECHOECHO")
+            localContactModel: localContactModel,
+            dependencies: dependencies
         )
         
         let gck = Data(repeating: 0x01, count: 32)
-        
+        let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
+
         let groupCallDescription = try GroupCallBaseState(
             group: GroupCallsThreemaGroupModel(
-                creator: try! ThreemaID(id: "ECHOECHO"),
-                groupID: Data(),
-                groupName: "ECHOECHO",
-                members: Set([])
+                groupIdentity: groupIdentity,
+                groupName: "ECHOECHO"
             ),
             startedAt: Date(),
             maxParticipants: 100,

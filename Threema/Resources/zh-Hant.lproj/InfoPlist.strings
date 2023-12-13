@@ -1,9 +1,5 @@
 /* Localized versions of Info.plist keys */
 
-"New message" = "新訊息";
-"Scan QR code" = "掃描QR碼";
-"My ID" = "個人檔案";
-
 "NSCameraUsageDescription" = "當您在對話中拍攝照片或視頻時，以及掃描QR碼時，都會取用您的相機。";
 "NSContactsUsageDescription" = "當同步開啟時，聯絡人權限用於尋找其他 Threema 使用者。電話號碼和電子郵件地址的雜湊值將被上傳到 Threema 伺服器上用於此目的，這些訊息都不會儲存在伺服器上。";
 "NSLocationWhenInUseUsageDescription" = "當您在對話中傳送位置時，以及在地圖上顯示自己的位置，都會取用您的位置。";

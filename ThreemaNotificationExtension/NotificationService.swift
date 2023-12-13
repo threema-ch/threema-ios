@@ -21,6 +21,7 @@
 import CallKit
 import CocoaLumberjackSwift
 import PromiseKit
+import ThreemaEssentials
 import ThreemaFramework
 import UserNotifications
 
@@ -152,11 +153,14 @@ class NotificationService: UNNotificationServiceExtension {
                     UserNotificationManager(
                         businessInjector.settingsStore,
                         businessInjector.userSettings,
+                        businessInjector.myIdentityStore,
+                        businessInjector.backgroundPushSettingManager,
                         businessInjector.contactStore,
                         businessInjector.backgroundGroupManager,
                         businessInjector.backgroundEntityManager,
                         businessInjector.licenseStore.getRequiresLicenseKey()
                     ),
+                    businessInjector.backgroundPushSettingManager,
                     businessInjector.backgroundEntityManager
                 )
                 
@@ -231,11 +235,14 @@ class NotificationService: UNNotificationServiceExtension {
                 UserNotificationManager(
                     businessInjector.settingsStore,
                     businessInjector.userSettings,
+                    businessInjector.myIdentityStore,
+                    businessInjector.backgroundPushSettingManager,
                     businessInjector.contactStore,
                     businessInjector.backgroundGroupManager,
                     businessInjector.backgroundEntityManager,
                     businessInjector.licenseStore.getRequiresLicenseKey()
                 ),
+                businessInjector.backgroundPushSettingManager,
                 businessInjector.backgroundEntityManager
             )
             
@@ -617,7 +624,7 @@ extension NotificationService: MessageProcessorDelegate {
                 DDLogNotice("[Push] Message processor finished for message id: \(msgID) found")
                 self.pendingUserNotificationManager?
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
-                    .done { showed in
+                    .done(on: .global(), flags: .inheritQoS) { showed in
                         if showed {
                             self.pendingUserNotificationManager?
                                 .addAsProcessed(pendingUserNotification: pendingUserNotification)
@@ -631,7 +638,11 @@ extension NotificationService: MessageProcessorDelegate {
     }
 
     func readMessage(inConversations: Set<Conversation>?) {
-        // no-op
+        conversationsChangedQueue.async {
+            inConversations?.forEach { conversation in
+                self.conversationsChanged?.insert(conversation.objectID)
+            }
+        }
     }
     
     func incomingMessageFailed(_ message: BoxedMessage) {

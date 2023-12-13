@@ -361,7 +361,8 @@ public struct Join_EssentialData {
 
   /// Threema Work credentials
   ///
-  /// Required for a Threema Work app. Must not be present in a Threema consumer app.
+  /// Required for a Threema Work app. Must not be present in a Threema consumer
+  /// app.
   public var workCredentials: Sync_ThreemaWorkCredentials {
     get {return _storage._workCredentials ?? Sync_ThreemaWorkCredentials()}
     set {_uniqueStorage()._workCredentials = newValue}

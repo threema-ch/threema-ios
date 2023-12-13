@@ -791,7 +791,7 @@ public class WebAbstractMessage: NSObject {
                         if let group {
                             await businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
                         }
-                        else if let identity = contactEntity?.identity {
+                        else if let identity = contactEntity?.threemaIdentity {
                             await businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
                         }
                     }
@@ -799,7 +799,7 @@ public class WebAbstractMessage: NSObject {
                         if let group {
                             await businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
                         }
-                        else if let identity = contactEntity?.identity {
+                        else if let identity = contactEntity?.threemaIdentity {
                             await businessInjector.messageSender.sendUserDecline(for: baseMessage, toIdentity: identity)
                         }
                     }

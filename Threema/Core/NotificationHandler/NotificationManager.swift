@@ -307,17 +307,6 @@ extension NotificationManager {
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil)
     }
-    
-    /// Generate push settings for all groups, will be run once when upgrade app.
-    @objc class func generatePushSettingForAllGroups() {
-        if !UserSettings.shared().pushGroupGenerated {
-            let entityManager = EntityManager()
-            if let allGroupConversations = entityManager.entityFetcher.allGroupConversations() as? [Conversation] {
-                PushSetting.addDefaultSettingForElementsWithoutSetting(in: allGroupConversations)
-                UserSettings.shared().pushGroupGenerated = true
-            }
-        }
-    }
 }
 
 extension NotificationManager {

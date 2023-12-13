@@ -50,7 +50,8 @@ protocol GroupCallContextProtocol: AnyObject {
     func send(_ envelope: Groupcall_ParticipantToSfu.Envelope) throws
     
     // MARK: Media Capture
-    
+
+    // TODO: (IOS-4085) Remove
     var hasVideoCapturer: Bool { get }
     
     func stopVideoCapture() async
@@ -423,13 +424,8 @@ extension GroupCallContext {
         remove: [ParticipantID],
         existingParticipants: Bool
     ) async throws {
-        for participant in remove {
-            participantState.remove(RemoteParticipant(
-                participantID: participant,
-                dependencies: dependencies,
-                groupCallMessageCrypto: groupCallBaseState,
-                isExistingParticipant: true
-            ))
+        for participantID in remove {
+            participantState.remove(participantID)
         }
         
         try await connectionContext.updateCall(call: participantState, remove: Set(remove), add: [])
@@ -576,9 +572,9 @@ extension GroupCallContext {
                 continue
             }
             
-            gcParticipant.identity = identity.id
-            gcParticipant.nickname = identity.nickname
-            
+            gcParticipant.identity = identity.string
+            gcParticipant.nickname = participant.nickname ?? identity.string
+
             var test = Groupcall_CallState.Participant()
             test.threema = gcParticipant
             

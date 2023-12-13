@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     func read(for conversation: Conversation, isAppInBackground: Bool) -> Int
@@ -107,46 +108,36 @@ extension UnreadMessagesProtocolObjc {
         doCalcUnreadMessagesCountOf: Set<Conversation>,
         withPerformBlockAndWait: Bool = true
     ) -> Int {
-        var unreadMessagesCount = 0
-        
-        if withPerformBlockAndWait {
-            entityManager.performAndWaitSave {
-                var conversations = [Conversation]()
-                for conversation in self.entityManager.entityFetcher.allConversations() {
-                    if let conversation = conversation as? Conversation {
-                        conversations.append(conversation)
-                    }
-                }
-                
-                if !conversations.isEmpty {
-                    unreadMessagesCount = self.count(
-                        conversations: conversations,
-                        doCalcUnreadMessagesCountOf: doCalcUnreadMessagesCountOf
-                    )
-                }
-            }
-        }
-        else {
+        let block = {
+            var unreadMessagesCount = 0
             var conversations = [Conversation]()
-            for conversation in entityManager.entityFetcher.allConversations() {
+
+            for conversation in self.entityManager.entityFetcher.allConversations() {
                 if let conversation = conversation as? Conversation {
                     conversations.append(conversation)
                 }
             }
 
             if !conversations.isEmpty {
-                unreadMessagesCount = count(
+                unreadMessagesCount = self.count(
                     conversations: conversations,
                     doCalcUnreadMessagesCountOf: doCalcUnreadMessagesCountOf
                 )
             }
-        }
 
-        return unreadMessagesCount
+            return unreadMessagesCount
+        }
+        
+        if withPerformBlockAndWait {
+            return entityManager.performAndWaitSave(block)
+        }
+        else {
+            return block()
+        }
     }
     
     private func count(conversations: [Conversation], doCalcUnreadMessagesCountOf: Set<Conversation>) -> Int {
-        var unreadMessagesCount = 0
+        var totalCount = 0
 
         for conversation in conversations {
             var count = 0
@@ -159,26 +150,35 @@ extension UnreadMessagesProtocolObjc {
                 count = conversation.unreadMessageCount.intValue
             }
             
-            // Check is conversation marked as unread
+            // Check if conversation marked as unread
             if count == 0,
                conversation.unreadMessageCount == -1 {
                 count = -1
             }
 
             if count != -1 {
-                unreadMessagesCount += count
+                totalCount += count
             }
             else {
-                unreadMessagesCount += 1
+                totalCount += 1
             }
 
             guard conversation.unreadMessageCount.intValue != count else {
+                if count != 0 {
+                    DDLogVerbose(
+                        "Unread message count unchanged (\(count)) for conversation \(conversation.displayName ?? "<nameless conversation>")"
+                    )
+                }
                 continue
             }
             conversation.unreadMessageCount = NSNumber(integerLiteral: count)
+
+            DDLogVerbose(
+                "Unread message count updated (\(count)) for conversation \(conversation.displayName ?? "<nameless conversation>")"
+            )
         }
 
-        return unreadMessagesCount
+        return totalCount
     }
     
     /// Sends read receipts for all unread messages in conversation, for group conversation just update message read.
@@ -232,7 +232,7 @@ extension UnreadMessagesProtocolObjc {
             if let groupEntity = entityManager.entityFetcher.groupEntity(for: conversation) {
                 let groupIdentity = GroupIdentity(
                     id: groupEntity.groupID,
-                    creator: groupEntity.groupCreator ?? MyIdentityStore.shared().identity
+                    creator: ThreemaIdentity(groupEntity.groupCreator ?? MyIdentityStore.shared().identity)
                 )
                 // Send (reflect) read receipt
                 let unreadMessagesLocal = unreadMessages
@@ -241,7 +241,7 @@ extension UnreadMessagesProtocolObjc {
                 }
             }
         }
-        else if let identity = conversation.contact?.identity {
+        else if let identity = conversation.contact?.threemaIdentity {
             // Send read receipt
             let unreadMessagesLocal = unreadMessages
             Task {
@@ -260,6 +260,7 @@ extension UnreadMessagesProtocolObjc {
             for message in messages {
                 message.read = NSNumber(booleanLiteral: true)
                 message.readDate = Date()
+                DDLogVerbose("Message marked as read: \(message.id.hexString)")
             }
         }
     }

@@ -45,11 +45,10 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     
     private weak var singleDetailsViewController: SingleDetailsViewController?
     private weak var tableView: UITableView?
-    private let linkedContactManager: LinkedContactManger
+    private let linkedContactManager: LinkedContactManager
     
-    private lazy var entityManager = EntityManager()
-    private lazy var groupManager = GroupManager()
-    
+    private lazy var businessInjector = BusinessInjector()
+
     var settingsStore = BusinessInjector().settingsStore as! SettingsStore
     private var cancellables = Set<AnyCancellable>()
     
@@ -59,7 +58,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             return MWPhotoBrowserWrapper(
                 for: conversation,
                 in: viewController,
-                entityManager: self.entityManager,
+                entityManager: self.businessInjector.entityManager,
                 delegate: self
             )
         }
@@ -74,7 +73,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         state: SingleDetails.State,
         singleDetailsViewController: SingleDetailsViewController,
         tableView: UITableView,
-        linkedContactManager: LinkedContactManger
+        linkedContactManager: LinkedContactManager
     ) {
         self.singleDetailsViewController = singleDetailsViewController
         self.tableView = tableView
@@ -163,9 +162,9 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             let cell: PublicKeyDetailsTableViewCell = tableView.dequeueCell(for: indexPath)
             return cell
             
-        case let .linkedContact(linkedContactManger):
+        case let .linkedContact(linkedContactManager):
             let linkedContactCell: LinkedContactDetailsTableViewCell = tableView.dequeueCell(for: indexPath)
-            linkedContactCell.linkedContactManger = linkedContactManger
+            linkedContactCell.linkedContactManager = linkedContactManager
             return linkedContactCell
             
         case let .group(group):
@@ -411,8 +410,8 @@ extension SingleDetailsDataSource {
                 return "bell.fill"
             }
             
-            let pushSetting = PushSetting(for: strongSelf.contact)
-            return pushSetting.sfSymbolNameForPushSetting
+            return strongSelf.businessInjector.pushSettingManager.find(forContact: strongSelf.contact.threemaIdentity)
+                .sfSymbolNameForPushSetting
         }
         
         return QuickAction(
@@ -426,7 +425,9 @@ extension SingleDetailsDataSource {
                 return
             }
             
-            let dndViewController = DoNotDisturbViewController(for: strongSelf.contact) { _ in
+            let pushSetting = strongSelf.businessInjector.pushSettingManager
+                .find(forContact: strongSelf.contact.threemaIdentity)
+            let dndViewController = DoNotDisturbViewController(pushSetting: pushSetting) { _ in
                 quickAction.reload()
                 strongSelf.refresh(sections: [.notifications])
             }
@@ -441,7 +442,7 @@ extension SingleDetailsDataSource {
         in viewController: UIViewController,
         for conversation: Conversation
     ) -> [QuickAction] {
-        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+        let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         guard messageFetcher.count() > 0 else {
             return []
         }
@@ -573,8 +574,8 @@ extension SingleDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        entityManager.performBlockAndWait {
-            if self.entityManager.entityFetcher.countBallots(for: conversation) > 0 {
+        businessInjector.entityManager.performBlockAndWait {
+            if self.businessInjector.entityManager.entityFetcher.countBallots(for: conversation) > 0 {
                 quickActions.append(contentsOf: self.ballotsQuickAction(for: conversation, in: viewController))
             }
         }
@@ -583,7 +584,7 @@ extension SingleDetailsDataSource {
     }
     
     private func hasMedia(for conversation: Conversation) -> Bool {
-        entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
+        businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
     }
     
     private func mediaQuickAction(for conversation: Conversation, in viewController: UIViewController) -> QuickAction {
@@ -642,15 +643,14 @@ extension SingleDetailsDataSource {
     private func contentActions(for conversation: Conversation) -> [SingleDetails.Row] {
         var rows = [SingleDetails.Row]()
         
-        if ConversationExporter.canExport(conversation: conversation, entityManager: entityManager) {
+        if ConversationExporter.canExport(conversation: conversation, entityManager: businessInjector.entityManager) {
             let localizedExportConversationActionTitle = BundleUtil.localizedString(forKey: "export_chat")
             
             let exportConversationAction = Details.Action(
                 title: localizedExportConversationActionTitle,
                 imageName: "square.and.arrow.up"
-            ) { [weak self, weak singleDetailsViewController, weak conversation] view in
-                guard let strongSelf = self,
-                      let strongSingleDetailsViewController = singleDetailsViewController,
+            ) { [weak singleDetailsViewController, weak conversation] view in
+                guard let strongSingleDetailsViewController = singleDetailsViewController,
                       let conversation
                 else {
                     return
@@ -692,7 +692,7 @@ extension SingleDetailsDataSource {
             rows.append(.action(exportConversationAction))
         }
         
-        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+        let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         if messageFetcher.count() > 0 {
             let localizedActionTitle = BundleUtil.localizedString(forKey: "messages_delete_all_button")
             
@@ -730,8 +730,8 @@ extension SingleDetailsDataSource {
                         
                         strongSingleDetailsViewController.willDeleteAllMessages()
                         
-                        strongSelf.entityManager.performBlock {
-                            _ = strongSelf.entityManager.entityDestroyer
+                        strongSelf.businessInjector.entityManager.performBlock {
+                            _ = strongSelf.businessInjector.entityManager.entityDestroyer
                                 .deleteMessages(of: conversation)
                             strongSelf.reload(sections: [.contentActions])
                             
@@ -779,7 +779,7 @@ extension SingleDetailsDataSource {
             // Only take the some groups at the beginning
             .prefix(configuration.maxNumberOfGroupsShownInline)
             // Convert `Conversation` to `Group`
-            .compactMap(groupManager.getGroup(conversation:))
+            .compactMap(businessInjector.groupManager.getGroup(conversation:))
             // Convert `Group` to `Row`s
             .map(SingleDetails.Row.group)
     }
@@ -797,11 +797,15 @@ extension SingleDetailsDataSource {
                 return
             }
             
+            let pushSetting = strongSelf.businessInjector.pushSettingManager
+                .find(forContact: strongSelf.contact.threemaIdentity)
             let dndViewController = DoNotDisturbViewController(
-                for: strongSelf.contact,
+                pushSetting: pushSetting,
                 willDismiss: { [weak self, weak singleDetailsViewController] _ in
                     self?.refresh(sections: [.notifications])
+                    self?.reload(sections: [.notifications])
                     singleDetailsViewController?.reloadHeader()
+                    singleDetailsViewController?.tableView.reloadData()
                 }
             )
             
@@ -820,18 +824,21 @@ extension SingleDetailsDataSource {
                     return true
                 }
                 
-                let pushSetting = PushSetting(for: strongSelf.contact)
-                return !pushSetting.silent
+                return !strongSelf.businessInjector.pushSettingManager
+                    .find(forContact: strongSelf.contact.threemaIdentity).muted
             }
         ) { [weak self, weak singleDetailsViewController] isSet in
-            guard let strongSelf = self else {
-                return
+            Task { @MainActor in
+                guard let strongSelf = self else {
+                    return
+                }
+
+                var pushSetting = strongSelf.businessInjector.pushSettingManager
+                    .find(forContact: strongSelf.contact.threemaIdentity)
+                pushSetting.muted = !isSet
+                await strongSelf.businessInjector.pushSettingManager.save(pushSetting: pushSetting, sync: true)
+                singleDetailsViewController?.reloadHeader()
             }
-            
-            let pushSetting = PushSetting(for: strongSelf.contact)
-            pushSetting.silent = !isSet
-            pushSetting.save()
-            singleDetailsViewController?.reloadHeader()
         }
         rows.append(.booleanAction(playSoundBooleanAction))
         
@@ -861,23 +868,21 @@ extension SingleDetailsDataSource {
             }
             
             let action1 = UIAlertAction(title: BundleUtil.localizedString(forKey: "send"), style: .default) { _ in
-                strongSelf.entityManager.performSyncBlockAndSafe {
-                    strongSelf.contact.readReceipt = .send
-                    strongSelf.refresh(sections: [.privacySettings])
-                    
-                    // TODO: Do delta update (IOS-2642)
-                    ContactStore.shared().reflect(strongSelf.contact)
-                }
+                strongSelf.businessInjector.contactStore.update(
+                    readReceipt: .send,
+                    for: strongSelf.contact,
+                    entityManager: strongSelf.businessInjector.entityManager
+                )
+                strongSelf.refresh(sections: [.privacySettings])
             }
             
             let action2 = UIAlertAction(title: BundleUtil.localizedString(forKey: "dont_send"), style: .default) { _ in
-                strongSelf.entityManager.performSyncBlockAndSafe {
-                    strongSelf.contact.readReceipt = .doNotSend
-                    strongSelf.refresh(sections: [.privacySettings])
-                    
-                    // TODO: Do delta update (IOS-2642)
-                    ContactStore.shared().reflect(strongSelf.contact)
-                }
+                strongSelf.businessInjector.contactStore.update(
+                    readReceipt: .doNotSend,
+                    for: strongSelf.contact,
+                    entityManager: strongSelf.businessInjector.entityManager
+                )
+                strongSelf.refresh(sections: [.privacySettings])
             }
             
             let action3 = UIAlertAction(
@@ -887,10 +892,12 @@ extension SingleDetailsDataSource {
                 ),
                 style: .default
             ) { _ in
-                strongSelf.entityManager.performSyncBlockAndSafe {
-                    strongSelf.contact.readReceipt = .default
-                    strongSelf.refresh(sections: [.privacySettings])
-                }
+                strongSelf.businessInjector.contactStore.update(
+                    readReceipt: .default,
+                    for: strongSelf.contact,
+                    entityManager: strongSelf.businessInjector.entityManager
+                )
+                strongSelf.refresh(sections: [.privacySettings])
             }
             
             UIAlertTemplate.showSheet(
@@ -925,17 +932,21 @@ extension SingleDetailsDataSource {
             }
             
             let action1 = UIAlertAction(title: BundleUtil.localizedString(forKey: "send"), style: .default) { _ in
-                strongSelf.entityManager.performSyncBlockAndSafe {
-                    strongSelf.contact.typingIndicator = .send
-                    strongSelf.refresh(sections: [.privacySettings])
-                }
+                strongSelf.businessInjector.contactStore.update(
+                    typingIndicator: .send,
+                    for: strongSelf.contact,
+                    entityManager: strongSelf.businessInjector.entityManager
+                )
+                strongSelf.refresh(sections: [.privacySettings])
             }
             
             let action2 = UIAlertAction(title: BundleUtil.localizedString(forKey: "dont_send"), style: .default) { _ in
-                strongSelf.entityManager.performSyncBlockAndSafe {
-                    strongSelf.contact.typingIndicator = .doNotSend
-                    strongSelf.refresh(sections: [.privacySettings])
-                }
+                strongSelf.businessInjector.contactStore.update(
+                    typingIndicator: .doNotSend,
+                    for: strongSelf.contact,
+                    entityManager: strongSelf.businessInjector.entityManager
+                )
+                strongSelf.refresh(sections: [.privacySettings])
             }
             
             let action3 = UIAlertAction(
@@ -945,10 +956,12 @@ extension SingleDetailsDataSource {
                 ),
                 style: .default
             ) { _ in
-                strongSelf.entityManager.performSyncBlockAndSafe {
-                    strongSelf.contact.typingIndicator = .default
-                    strongSelf.refresh(sections: [.privacySettings])
-                }
+                strongSelf.businessInjector.contactStore.update(
+                    typingIndicator: .default,
+                    for: strongSelf.contact,
+                    entityManager: strongSelf.businessInjector.entityManager
+                )
+                strongSelf.refresh(sections: [.privacySettings])
             }
             
             UIAlertTemplate.showSheet(
@@ -1096,7 +1109,7 @@ extension SingleDetailsDataSource {
             destructive: true,
             boolProvider: { [weak self] in
                 self?.contact.isBlocked ?? false
-            }, action: { [weak self, weak singleDetailsViewController] isSet in
+            }, action: { [weak self] isSet in
                 guard let strongSelf = self
                 else {
                     return
@@ -1195,7 +1208,7 @@ extension SingleDetailsDataSource {
     func showAllGroups(in viewController: UIViewController) {
         
         var groups = sortedGroupMembershipConversations()?
-            .compactMap(groupManager.getGroup(conversation:))
+            .compactMap(businessInjector.groupManager.getGroup(conversation:))
         
         if groups == nil {
             groups = [Group]()

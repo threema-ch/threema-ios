@@ -90,7 +90,7 @@
 "settings" = "Impostazioni";
 "loadMore" = "Carica altro";
 "all" = "Tutto";
-"myIdentity" = "Il mio profilo";
+"myIdentity" = "Profilo";
 "share_id" = "Condividi il tuo Threema ID";
 "close" = "chiudi";
 "threema_id" = "Threema ID";
@@ -148,9 +148,6 @@
 "max_x_minutes" = "Max %d minuti";
 "still_compressed_note" = "Per inviare video molto grandi questi vengono compressi indipendentemente da questa impostazione.";
 
-/* Sound names */
-"push_sound_title" = "Suono push";
-"push_group_sound_title" = "Suono gruppo push";
 /* Sound names */
 "sound_none" = "Muto";
 "sound_default" = "Standard";
@@ -459,6 +456,8 @@
 /* Contacts */
 "pull_to_sync" = "Scorri giù";
 "bad_identity_backup" = "I dati relativi all’ID esportato non sono validi oppure è stata inserita una password errata. Per ripristinare il Threema ID, utilizza la password scelta durante la creazione dell’esportazione. Controlla i dati inseriti e riprova.";
+"pull_to_sync_429_message" = "È stato raggiunto il limite di sincronizzazioni di contatti consentite al giorno. Continua la sincronizzazione domani oppure contatta il servizio assistenza di Threema.";
+"pull_to_sync_429_message_work" = "È stato raggiunto il limite di sincronizzazioni di contatti consentite al giorno. Continua la sincronizzazione domani oppure contatta l'amministratore %@.";
 
 "synchronizing" = "Sincronizzare...";
 
@@ -525,10 +524,10 @@
 "more_information_link_id_work" = "Se indichi il numero di telefono e l'indirizzo e-mail, potremo aiutare i tuoi contatti a trovarti automaticamente su %@, se figuri tra i contatti della loro rubrica. Gli indirizzi e-mail verranno conservati sul nostro server con crittografia unidirezionale (hashing). Salta questo passaggio se desideri utilizzare %@ in modo anonimo.";
 "more_information_pick_nickname" = "Il nickname viene utilizzato nelle notifiche push su alcuni dispositivi o come strumento aggiuntivo di identificazione per gli utenti che non ti hanno in rubrica. Consigliamo di inserire soltanto il nome o uno pseudonimo. Se non imposti il nickname, utilizzeremo il Threema ID come impostazione predefinita.";
 "more_information_sync_contacts" = "%@ renderà anonimi gli indirizzi e-mail e i numeri di telefono e li invierà in modo sicuro ai nostri server. Dopo l'allineamento questi saranno immediatamente cancellati. ";
-"more_information_random_seed" = "Muovendo le dita andrai a creare dati casuali (si parla di \"entropia\") utilizzati per generare la coppia di chiavi associata al nuovo e unico Threema ID.";
+"more_information_random_seed" = "Muovendo il dito, verranno creati dati casuali (si parla di \"entropia\") utilizzati per generare la coppia di chiavi associata al nuovo e univoco Threema ID.";
 "id_confirm_description_work" = "Il Threema ID funziona proprio come un numero di telefono. I tuoi contatti potranno usarlo per raggiungerti.";
 "more_information_link_id" = "Se indichi numero di telefono, potremo aiutare i tuoi amici a trovarti su Threema automaticamente. Queste informazioni verranno conservate in maniera sicura e anonima. Saltando questo passaggio utilizzerai Threema in modo totalmente anonimo.";
-"more_information_confirm_id" = "Hai creato anche una coppia di chiavi. La chiave pubblica è stata trasmessa ai nostri server in modo sicuro. La chiave privata non abbandonerà mai il tuo dispositivo. In questo modo, nessun altro potrà leggere i tuoi messaggi.";
+"more_information_confirm_id" = "È stata creata anche una coppia di chiavi. La chiave pubblica è stata trasmessa ai nostri server in modo sicuro. La chiave privata non uscirà mai dal dispositivo. In questo modo, nessun altro potrà leggere i messaggi.";
 
 "id_confirm_description" = "Il Threema ID funziona proprio come un numero di telefono. I tuoi amici potranno usarlo per raggiungerti.";
 "id_pick_nickname_description_work" = "I tuoi contatti visualizzerano il nickname quando riceveranno un messaggio.";
@@ -586,6 +585,8 @@
 "Done" = "Fine";
 "enter_license_description" = "Inserire le credenziali ricevute dalla propria azienda o organizzazione.";
 "enter_license_onprem_description" = "Threema OnPrem è il messenger autogestito per le imprese. Inserisci le credenziali fornite dalla tua impresa.";
+"enter_license_work_admin_description" = "Hai dimenticato le credenziali? Contatta l'amministratore Threema Work.";
+"enter_license_onprem_admin_description" = "Hai dimenticato le credenziali? Contatta l'amministratore Threema OnPrem.";
 "more_work_info" = "Maggiori informazioni su %@.";
 "Save" = "Salva";
 "enter_license_username_placeholder" = "Nome utente";
@@ -785,6 +786,8 @@
 
 "group_call_error_generic_title" = "Si è verificato un errore";
 "group_call_error_generic_message" = "Se il problema persiste, contatta l'assistenza.";
+"group_call_error_already_in_call_title" = "Altra chiamata attiva";
+"group_call_error_already_in_call_message" = "È possibile partecipare a una sola chiamata alla volta.";
 
 "group_call_accessibility_hide_view" = "Nascondi chiamata di gruppo";
 "group_call_accessibility_enable_camera" = "Attiva fotocamera";
@@ -959,6 +962,7 @@
 "safe_upload_failed" = "Upload fallito";
 "safe_upload_size_exceeded" = "Superate le dimensioni di upload del server";
 "safe_change_password" = "Cambia password";
+"safe_learn_more" = "Ulteriori informazioni";
 "safe_backup_now" = "Esegui backup ora";
 "safe_deactivate" = "Spegni Threema Safe";
 "safe_deactivate_explain" = "Se disabiliti Threema Safe ogni backup esistente sarà eliminato dal server. Continuare?";
@@ -1186,6 +1190,14 @@
 "delete_messages_confirm" = "Vuoi eliminare tutti i messaggi più vecchi di %@ in modo definitivo?";
 "delete_messages_confirm_all" = "Vuoi eliminare tutti i messaggi in modo definitivo?";
 "delete_messages_explain" = "Sono inclusi tutti i tipi di messaggio (messaggi di testo e vocale, multimediale, file, sondaggi, ecc...).";
+"automatic_delete_explain" = "Utilizza la cancellazione automatica per liberare spazio sul disco. I sondaggi aperti e i gruppi di note sono esclusi dalla cancellazione automatica.";
+"automatic_delete_on_confirmation_title" = "Vuoi attivare la cancellazione automatica?";
+"automatic_delete_off_confirmation_title" = "Vuoi disattivare la cancellazione automatica?";
+// Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
+"automatic_delete_confirmation_message_no_immediate_deletion" = "A partire da questo momento, i messaggi più vecchi di %@ verranno cancellati automaticamente. Nota: i sondaggi aperti e i gruppi di note sono esclusi.";
+"automatic_delete_confirmation_message_immediate_deletion" = "%d messaggi verranno cancellati immediatamente e tutti i messaggi più vecchi di %@ verranno cancellati automaticamente da questo momento. Nota: i sondaggi aperti e i gruppi di note sono esclusi.";
+"automatic_delete_on_confirmation_button" = "Attiva cancellazione automatica";
+"automatic_delete_off_confirmation_button" = "Disattiva cancellazione automatica";
 "delete_in_progress" = "Cancella...";
 "one_year_title" = "1 anno";
 "one_year" = "1 anno";
@@ -1198,6 +1210,7 @@
 "one_week_title" = "1 settimana";
 "one_week" = "1 settimana";
 "everything" = "Elimina tutto";
+"forever" = "Per sempre";
 "media_file_not_found" = "Non è stato possibile aprire il file multimediale. È stato cancellato o non è stato scaricato dal server.";
 "older_than" = "Più vecchi di";
 
@@ -1205,10 +1218,11 @@
 "file_not_found_title" = "File non trovato";
 
 "manage_all_conversations" = "Gestisci tutte le chat";
-"manage_media_and_files" = "Gestisci file e media";
-"manage_messages" = "Gestisci messaggi";
+"manage" = "Gestisci";
 "messages" = "Messaggi";
 "files" = "File";
+"automatic_delete" = "Cancellazione automatica";
+"automatic_delete_label" = "Conserva i messaggi";
 
 // Call Settings
 "settings_threema_calls_enable_calls" = "Abilita Chiamate Threema";
@@ -1253,6 +1267,7 @@
 "settings_advanced_other_section_header" = "Altri";
 "settings_advanced_webrtc_diagnostics_title" = "WebRTC Diagnostics";
 "settings_advanced_orphaned_files_cleanup" = "Cancella file abbandonati";
+"settings_advanced_contacts_cleanup" = "Pulizia contatti";
 "settings_advanced_flush_message_queue" = "Scarica coda messaggi";
 
 "settings_advanced_reregister_push_notifications_header_title" = "Notifiche push";
@@ -1269,10 +1284,18 @@
 "sentry_crash_send_description" = "Puoi inviare un rapporto di arresto in modo totalmente anonimo. Fornendo dettagli sulla dinamica dell’arresto puoi aiutare a individuare il problema.";
 "sentry_crash_send_yes" = "Invia rapporto di arresto in modo anonimo.";
 "sentry_crash_send_no" = "Non inviare";
+
 "sentry_crash_comment_placeholder" = "Rapporto arresto";
 
-// My profile
+// Profile
 "profile_share_id_text" = "Il mio Threema ID";
+"profile_share_id" = "Condividi Threema ID";
+"profile_show_qr_code" = "Visualizza codice QR";
+"profile_big_qr_code" = "Codice QR grande";
+"profile_big_qr_code_cover_view" = "Visualizzazione copertina codice QR grande";
+"profile_linked_email" = "Indirizzo email collegato";
+"profile_linked_phone" = "Numero di telefono collegato";
+"profile_id_export" = "Esportazione ID";
 "my_profile_delete_cell_title" = "Cancella ID e dati";
 
 // Delete & Revoke
@@ -1333,6 +1356,20 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "settings_orphaned_files_bin_delete_conformation" = "Vuoi cancellare i file abbandonati? Ciò comporta la perdita irrevocabile dei dati.";
 "settings_orphaned_files_log_title" = "REGISTRARE FILE";
 "settings_orphaned_files_log_all_files_button" = "Registrare file in registro debug";
+
+// Contacts cleanup
+"settings_advanced_contacts_cleanup_stats_title" = "Pulizia contatti";
+"settings_advanced_contacts_cleanup_log_stats" = "Registra contatti duplicati";
+"settings_advanced_contacts_cleanup_unused" = "Rimuovi contatti duplicati";
+"settings_advanced_contacts_cleanup_log_disabled" = "La registrazione è disabilitata.\n\nTorna ad \"Avanzate\", attiva \"Registro di debug\" e riprova.";
+"settings_advanced_contacts_cleanup_submit_logs" = "Torna a \"Impostazioni avanzate\" e condividi il registro con il servizio Assistenza di Threema per un'ulteriore analisi\n\nSuccessivamente, è possibile disattivare \"Registro di debug\".";
+"settings_advanced_contacts_cleanup_stats_logged" = "Le informazioni sono state registrate.\n";
+"settings_advanced_contacts_cleanup_no_duplicates" = "Non sono presenti contatti duplicati.";
+"settings_advanced_contacts_cleanup_error_title" = "Impossibile rimuovere i contatti";
+"settings_advanced_contacts_cleanup_still_used_error" = "Pulizia annullata. Non è stato possibile eliminare %i contatti duplicati poiché nei duplicati sono presenti ancora messaggi o perché risultano membri di un gruppo.\n";
+"settings_advanced_contacts_cleanup_success_title" = "Pulizia contatti completata";
+"settings_advanced_contacts_cleanup_success_exit" = "Esci";
+"settings_advanced_contacts_cleanup_unused_message" = "%i contatti completati sono stati rimossi.\n\nChiudi l'app, riavviala e collega un dispositivo. Se non funziona: ";
 
 // Media Preview
 "loading_video_failed" = "Il video non è stato caricato. Riavvia l’app e riprova.";
@@ -1525,7 +1562,8 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "multi_device_join_failed_app_closed_message" = "Impossibile effettuare il collegamento perché %@ è stato chiuso. Riprova.";
 
 "multi_device_linked_id_missing_title" = "Dispositivi collegati";
-"multi_device_linked_id_missing_message" = "I dispositivi collegati sono stati rimossi. Potrai collegare nuovamente i tuoi dispositivi dopo aver ripristinato o impostato questo dispositivo.";
+"multi_device_linked_id_missing_message" = "I dispositivi collegati sono stati rimossi. Per non perdere i messaggi, ripristinare Threema dal desktop. Sarà possibile collegare nuovamente i dispositivi dopo aver ripristinato o configurato il dispositivo in uso.";
+"multi_device_linked_id_missing_reset_button" = "Ripristina app desktop";
 
 "myprofile_link_email_phone_footer" = "Collegando il tuo indirizzo e-mail o numero di telefono al tuo ID, altre persone possono trovarti automaticamente su %@ se figuri nella loro rubrica.";
 "myprofile_link_email_footer" = "Collegando il tuo indirizzo e-mail al tuo ID, altri utenti possono trovarti automaticamente su %@, se figuri nella loro rubrica.";
@@ -1602,12 +1640,15 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 // In-app notifications
 "notification_copying_succeeded" = "Elemento copiato";
 "notification_copying_failed" = "Impossibile copiare";
+"notification_copying_id_succeeded" = "Threema ID copiato";
 
 "notification_saving_succeeded" = "Elemento salvato";
 "notification_saving_failed" = "Salvataggio non riuscito";
 
 "notification_saving_to_photos_succeeded" = "Aggiungi a foto";
 "notification_saving_to_photos_failed" = "Impossibile aggiungere a foto";
+
+"notification_autosave_failed" = "Salvataggio automatico contenuti multimediali non riuscito";
 
 "notification_sending_failed" = "Invio non riuscito";
 "notification_sending_failed_subtitle_size" = "File troppo grande";
@@ -1729,6 +1770,11 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "accessibility_status_delivered_plus_time" = "Consegnato, %@";
 "accessibility_status_read_plus_time" = "Letto, %@";
 "accessibility_status_failed_plus_time" = "Errore, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Accettato da %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Rifiutato da %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Accettato da %i, rifiutato da %i, %@%@";
+"accessibility_status_group_acknowledged_my_reaction" = "Accetto";
+"accessibility_status_group_declined_my_reaction" = "Rifiuto";
 
 // UIAccessibilityCustomActions
 "accessibility_action_open_link" = "Apri %@";
@@ -1814,3 +1860,8 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nImpossibile eseguire il downgrade dalla versione %d alla versione %d";
 "sqldhsessionstore_unknownError" = "Si è verificato un errore sconosciuto durante il tentativo di migrazione: %@";
+
+// UIApplicationShortcutItems
+"application_shortcut_item_new_message" = "Nuovo messaggio";
+"application_shortcut_item_scan_qr_code" = "Scansiona codice QR";
+"application_shortcut_item_my_id" = "Il mio profilo";

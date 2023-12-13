@@ -55,7 +55,7 @@ extension Collection<Contact> {
         
         // Sort id only contacts just by id
         let sortedIDOnlyContacts = idOnlyContacts.sorted {
-            $0.identity.localizedStandardCompare($1.identity) == .orderedAscending
+            $0.identity.string.localizedStandardCompare($1.identity.string) == .orderedAscending
         }
         
         // Merge sorted contacts
@@ -107,7 +107,7 @@ extension Collection<Contact> {
         
         // Order identical entries by ID. This is a simple helper as this is needed multiple times
         let compareIDs = {
-            lhs.contact.identity.localizedStandardCompare(rhs.contact.identity) == .orderedAscending
+            lhs.contact.identity.string.localizedStandardCompare(rhs.contact.identity.string) == .orderedAscending
         }
         
         // First name checks

@@ -691,6 +691,7 @@ enum MediatorMessageProtocolError: Error {
 
         do {
             if data.count >= MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH {
+                // IOS-3978: Store nonce in D2D scope
                 let nonce = data[0..<MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH]
                 if let decryptedData = NaClCrypto.shared()?
                     .symmetricDecryptData(
@@ -727,6 +728,7 @@ enum MediatorMessageProtocolError: Error {
 
         do {
             let envelopeData = try envelope.serializedData()
+            // IOS-3978: Store nonce in D2D scope
             if let nonce = NaClCrypto.shared()?.randomBytes(Int32(MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH)) {
                 var encryptedMessage = Data(nonce)
                 if let encryptedData = NaClCrypto.shared()?
@@ -875,6 +877,8 @@ enum MediatorMessageProtocolError: Error {
             return .groupText
         case MSGTYPE_GROUP_VIDEO:
             return .groupVideo
+        case MSGTYPE_GROUP_CALL_START:
+            return .groupCallStart
         case MSGTYPE_IMAGE:
             return .deprecatedImage
         case MSGTYPE_LOCATION:

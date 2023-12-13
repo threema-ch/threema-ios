@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-
+// TODO: (IOS-4059) Remove
 protocol NormalParticipantDescription: ParticipantDescription {
-    var identity: String { get }
-    var nickname: String { get }
+    // var identity: String { get }
+    // var nickname: String { get }
 }

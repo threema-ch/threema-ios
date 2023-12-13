@@ -21,6 +21,9 @@
 import CocoaLumberjackSwift
 import Foundation
 
+/// This class helps ensuring database integrity when objects are deleted.
+/// If an integrity violation is detected, the app ends with a fatal error.
+/// In some less severe cases, a warning is logged.
 @objc public class TMAManagedObjectContext: NSManagedObjectContext {
     // MARK: - Overrides
 

@@ -29,12 +29,7 @@ final class TaskExecutionReceiveReflectedMessage: TaskExecution, TaskExecutionPr
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
         }
 
-        let mediatorReflectedProcessor = MediatorReflectedProcessor(
-            frameworkInjector: frameworkInjector,
-            messageProcessorDelegate: frameworkInjector.serverConnector
-        )
-
-        return mediatorReflectedProcessor.process(
+        return frameworkInjector.mediatorReflectedProcessor.process(
             reflectedEnvelope: task.reflectedEnvelope,
             reflectedAt: task.reflectedAt,
             receivedAfterInitialQueueSend: task.receivedAfterInitialQueueSend,

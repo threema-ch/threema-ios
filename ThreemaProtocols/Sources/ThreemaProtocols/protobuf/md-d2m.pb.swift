@@ -417,14 +417,62 @@ public struct D2m_DevicesInfo {
     /// with a random nonce.
     public var encryptedDeviceInfo: Data = Data()
 
+    /// Connection state
+    public var connectionState: D2m_DevicesInfo.AugmentedDeviceInfo.OneOf_ConnectionState? = nil
+
     /// Unix-ish timestamp in milliseconds containing the most recent login
-    /// time of the device.
-    public var lastLoginAt: UInt64 = 0
+    /// time of the device. Only set if device is currently connected.
+    public var connectedSince: UInt64 {
+      get {
+        if case .connectedSince(let v)? = connectionState {return v}
+        return 0
+      }
+      set {connectionState = .connectedSince(newValue)}
+    }
+
+    /// Unix-ish timestamp in milliseconds containing the most recent
+    /// disconnect time of the device. Only set if device is not connected.
+    public var lastDisconnectAt: UInt64 {
+      get {
+        if case .lastDisconnectAt(let v)? = connectionState {return v}
+        return 0
+      }
+      set {connectionState = .lastDisconnectAt(newValue)}
+    }
 
     /// Expiration policy of the device.
     public var deviceSlotExpirationPolicy: D2m_DeviceSlotExpirationPolicy = .volatile
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    /// Connection state
+    public enum OneOf_ConnectionState: Equatable {
+      /// Unix-ish timestamp in milliseconds containing the most recent login
+      /// time of the device. Only set if device is currently connected.
+      case connectedSince(UInt64)
+      /// Unix-ish timestamp in milliseconds containing the most recent
+      /// disconnect time of the device. Only set if device is not connected.
+      case lastDisconnectAt(UInt64)
+
+    #if !swift(>=4.1)
+      public static func ==(lhs: D2m_DevicesInfo.AugmentedDeviceInfo.OneOf_ConnectionState, rhs: D2m_DevicesInfo.AugmentedDeviceInfo.OneOf_ConnectionState) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.connectedSince, .connectedSince): return {
+          guard case .connectedSince(let l) = lhs, case .connectedSince(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.lastDisconnectAt, .lastDisconnectAt): return {
+          guard case .lastDisconnectAt(let l) = lhs, case .lastDisconnectAt(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
 
     public init() {}
   }
@@ -620,6 +668,7 @@ extension D2m_RolePromotedToLeader: @unchecked Sendable {}
 extension D2m_GetDevicesInfo: @unchecked Sendable {}
 extension D2m_DevicesInfo: @unchecked Sendable {}
 extension D2m_DevicesInfo.AugmentedDeviceInfo: @unchecked Sendable {}
+extension D2m_DevicesInfo.AugmentedDeviceInfo.OneOf_ConnectionState: @unchecked Sendable {}
 extension D2m_DropDevice: @unchecked Sendable {}
 extension D2m_DropDeviceAck: @unchecked Sendable {}
 extension D2m_SetSharedDeviceData: @unchecked Sendable {}
@@ -961,7 +1010,8 @@ extension D2m_DevicesInfo.AugmentedDeviceInfo: SwiftProtobuf.Message, SwiftProto
   public static let protoMessageName: String = D2m_DevicesInfo.protoMessageName + ".AugmentedDeviceInfo"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "encrypted_device_info"),
-    2: .standard(proto: "last_login_at"),
+    2: .standard(proto: "connected_since"),
+    4: .standard(proto: "last_disconnect_at"),
     3: .standard(proto: "device_slot_expiration_policy"),
   ]
 
@@ -972,29 +1022,51 @@ extension D2m_DevicesInfo.AugmentedDeviceInfo: SwiftProtobuf.Message, SwiftProto
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.encryptedDeviceInfo) }()
-      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.lastLoginAt) }()
+      case 2: try {
+        var v: UInt64?
+        try decoder.decodeSingularUInt64Field(value: &v)
+        if let v = v {
+          if self.connectionState != nil {try decoder.handleConflictingOneOf()}
+          self.connectionState = .connectedSince(v)
+        }
+      }()
       case 3: try { try decoder.decodeSingularEnumField(value: &self.deviceSlotExpirationPolicy) }()
+      case 4: try {
+        var v: UInt64?
+        try decoder.decodeSingularUInt64Field(value: &v)
+        if let v = v {
+          if self.connectionState != nil {try decoder.handleConflictingOneOf()}
+          self.connectionState = .lastDisconnectAt(v)
+        }
+      }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.encryptedDeviceInfo.isEmpty {
       try visitor.visitSingularBytesField(value: self.encryptedDeviceInfo, fieldNumber: 1)
     }
-    if self.lastLoginAt != 0 {
-      try visitor.visitSingularUInt64Field(value: self.lastLoginAt, fieldNumber: 2)
-    }
+    try { if case .connectedSince(let v)? = self.connectionState {
+      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 2)
+    } }()
     if self.deviceSlotExpirationPolicy != .volatile {
       try visitor.visitSingularEnumField(value: self.deviceSlotExpirationPolicy, fieldNumber: 3)
     }
+    try { if case .lastDisconnectAt(let v)? = self.connectionState {
+      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 4)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: D2m_DevicesInfo.AugmentedDeviceInfo, rhs: D2m_DevicesInfo.AugmentedDeviceInfo) -> Bool {
     if lhs.encryptedDeviceInfo != rhs.encryptedDeviceInfo {return false}
-    if lhs.lastLoginAt != rhs.lastLoginAt {return false}
+    if lhs.connectionState != rhs.connectionState {return false}
     if lhs.deviceSlotExpirationPolicy != rhs.deviceSlotExpirationPolicy {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

@@ -72,7 +72,11 @@ struct GroupCallBaseState {
         self.sfuBaseURL = groupCallStartData.sfuBaseURL
         self.protocolVersion = groupCallStartData.protocolVersion
         
-        self.callID = try GroupCallID(group: group, callStartData: groupCallStartData, dependencies: dependencies)
+        self.callID = try GroupCallID(
+            groupIdentity: group.groupIdentity,
+            callStartData: groupCallStartData,
+            dependencies: dependencies
+        )
         
         self.keys = try GroupCallKeys(gck: groupCallStartData.gck)
         

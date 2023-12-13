@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 class BlobManagerTests: XCTestCase {
@@ -617,9 +619,11 @@ class BlobManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
 
-        let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let expectedGroupCreator: String = myIdentityStoreMock.identity
-        
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+
         let groupManager = GroupManager(
             myIdentityStoreMock,
             contactStoreMock,
@@ -631,8 +635,7 @@ class BlobManagerTests: XCTestCase {
         
         let grp = createOrUpdateDBWait(
             groupManager: groupManager,
-            groupID: expectedGroupID,
-            creator: expectedGroupCreator,
+            groupIdentity: expectedGroupIdentity,
             members: []
         )
         
@@ -640,7 +643,7 @@ class BlobManagerTests: XCTestCase {
         
         let conversation = entityManager.entityFetcher.conversation(
             for: grp!.groupID,
-            creator: grp!.groupIdentity.creator
+            creator: grp!.groupIdentity.creator.string
         )
         
         XCTAssertNotNil(conversation)
@@ -1205,8 +1208,7 @@ class BlobManagerTests: XCTestCase {
     /// Create or update group in DB and wait until finished.
     @discardableResult private func createOrUpdateDBWait(
         groupManager: GroupManagerProtocol,
-        groupID: Data,
-        creator: String,
+        groupIdentity: GroupIdentity,
         members: Set<String>
     ) -> Group? {
         var group: Group?
@@ -1214,8 +1216,7 @@ class BlobManagerTests: XCTestCase {
         let expec = expectation(description: "Group create or update")
 
         groupManager.createOrUpdateDB(
-            groupID: groupID,
-            creator: creator,
+            for: groupIdentity,
             members: members,
             systemMessageDate: Date(),
             sourceCaller: .local

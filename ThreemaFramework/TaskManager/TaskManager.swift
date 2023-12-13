@@ -27,7 +27,7 @@ enum TaskManagerError: Error {
 }
 
 typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
-typealias TaskReceiverNonce = [ThreemaIdentity: Data]
+typealias TaskReceiverNonce = [String: Data]
 
 @objc public final class TaskManager: NSObject, TaskManagerProtocol {
     fileprivate let frameworkInjector: FrameworkInjectorProtocol

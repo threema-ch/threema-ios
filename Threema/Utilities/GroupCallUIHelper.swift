@@ -59,23 +59,23 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
             return
         }
         
-        let pushSettingManager = PushSettingManager(UserSettings.shared(), LicenseStore.requiresLicenseKey())
-        if !pushSettingManager.canMasterDndSendPush() {
+        let businessInjector = BusinessInjector()
+
+        if !businessInjector.pushSettingManager.canMasterDndSendPush() {
             return
         }
         
-        let entityManager = BusinessInjector().entityManager
-        guard entityManager.performAndWait({
-            if let conversation = entityManager.entityFetcher
-                .getManagedObject(by: conversationManagedObjectID) as? Conversation,
-                let pushSetting = pushSettingManager.find(forConversation: conversation) {
-                
-                // We show a notification anyways when notify when mentioned is set to true
-                if !pushSetting.mentions, !pushSetting.canSendPush() {
-                    return false
+        guard businessInjector.entityManager.performAndWait({
+            if let conversation = businessInjector.entityManager.entityFetcher
+                .getManagedObject(by: conversationManagedObjectID) as? Conversation {
+                if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
+                    // We show a notification anyways when notify when mentioned is set to true
+                    if !group.pushSetting.mentioned, !group.pushSetting.canSendPush() {
+                        return false
+                    }
                 }
             }
-            
+
             return true
         }) else {
             return

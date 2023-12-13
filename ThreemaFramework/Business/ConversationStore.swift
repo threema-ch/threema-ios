@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 public protocol ConversationStoreProtocol {
@@ -38,17 +39,20 @@ protocol ConversationStoreInternalProtocol {
 
 public final class ConversationStore: NSObject, ConversationStoreInternalProtocol, ConversationStoreProtocol {
     private let userSettings: UserSettingsProtocol
+    private let pushSettingManager: PushSettingManagerProtocol
     private let groupManager: GroupManagerProtocol
     private let entityManager: EntityManager
     private let taskManager: TaskManagerProtocol?
 
     required init(
         userSettings: UserSettingsProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
         groupManager: GroupManagerProtocol,
         entityManager: EntityManager,
         taskManager: TaskManagerProtocol?
     ) {
         self.userSettings = userSettings
+        self.pushSettingManager = pushSettingManager
         self.groupManager = groupManager
         self.entityManager = entityManager
         self.taskManager = taskManager
@@ -57,6 +61,12 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     @objc convenience init(entityManager: EntityManager) {
         self.init(
             userSettings: UserSettings.shared(),
+            pushSettingManager: PushSettingManager(
+                UserSettings.shared(),
+                GroupManager(entityManager: entityManager),
+                entityManager,
+                LicenseStore.shared().getRequiresLicenseKey()
+            ),
             groupManager: GroupManager(entityManager: entityManager),
             entityManager: entityManager,
             taskManager: TaskManager(frameworkInjector: BusinessInjector())
@@ -155,7 +165,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         let groupIdentity = GroupIdentity(identity: syncGroup.groupIdentity)
         guard let conversation = entityManager.entityFetcher.conversation(
             for: groupIdentity.id,
-            creator: groupIdentity.creator
+            creator: groupIdentity.creator.string
         ) else {
             DDLogError(
                 "Conversation for group (ID: \(groupIdentity.id.hexString) / creator: \(groupIdentity.creator)) not found"
@@ -227,7 +237,12 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
 
         // Sync conversation attribute
         if let contactIdentity {
-            let syncer = MediatorSyncableContacts(userSettings, taskManager, entityManager)
+            let syncer = MediatorSyncableContacts(
+                userSettings,
+                pushSettingManager,
+                taskManager,
+                entityManager
+            )
             if let conversationCategory = attribute as? ConversationCategory {
                 syncer.updateConversationCategory(identity: contactIdentity, value: conversationCategory)
             }
@@ -238,7 +253,12 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         }
         else if let groupIdentity {
             Task {
-                let syncer = MediatorSyncableGroup(userSettings, taskManager, groupManager)
+                let syncer = MediatorSyncableGroup(
+                    userSettings,
+                    pushSettingManager,
+                    taskManager,
+                    groupManager
+                )
                 if let conversationCategory = attribute as? ConversationCategory {
                     await syncer.update(identity: groupIdentity, conversationCategory: conversationCategory)
                 }

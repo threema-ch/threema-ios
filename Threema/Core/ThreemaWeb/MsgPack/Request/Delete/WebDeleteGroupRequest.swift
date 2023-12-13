@@ -58,7 +58,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
                 return
             }
 
-            groupManager.leave(groupID: group.groupID, creator: group.groupCreatorIdentity, toMembers: nil)
+            groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
 
             MessageDraftStore.deleteDraft(for: conversation)
             

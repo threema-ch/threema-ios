@@ -96,8 +96,7 @@ actor GroupCallActor: Sendable {
     /// Use this for ordering calls by call creation time.
     var exactCallStartDate: UInt64?
 
-    let localIdentity: ThreemaID
-    
+    let localContactModel: ContactModel
     var localParticipant: LocalParticipant? = nil
     
     // MARK: Streams
@@ -157,13 +156,14 @@ actor GroupCallActor: Sendable {
     
     /// Task running group call state machine
     private var currentTask: Task<Void, Error>?
-    
+    private var sendCallStartMessageDelayTask: Task<Void, Error>?
+
     private(set) var currentCameraPosition: CameraPosition = .front
     
     // MARK: - Lifecycle
     
     init(
-        localIdentity: ThreemaID,
+        localContactModel: ContactModel,
         groupModel: GroupCallsThreemaGroupModel,
         sfuBaseURL: String,
         gck: Data,
@@ -182,13 +182,13 @@ actor GroupCallActor: Sendable {
             group: groupModel,
             startedAt: Date(),
             // TODO: (IOS-4086) Use actual value from SFU
-            maxParticipants: 16,
+            maxParticipants: 100,
             dependencies: dependencies,
             groupCallStartData: groupCallStartData
         )
         self.actorDelegate = actorDelegate
         self.dependencies = dependencies
-        self.localIdentity = localIdentity
+        self.localContactModel = localContactModel
         
         self.sfuHTTPConnection = SFUHTTPConnection(
             dependencies: dependencies,
@@ -265,7 +265,7 @@ actor GroupCallActor: Sendable {
         }
         
         /// **Leave Call** 4. All other things are cleaned up now, we finish with the actor itself.
-        await leaveCall()
+        await leaveCall(runRefreshSteps: true)
     }
     
     enum PeekResult {
@@ -289,10 +289,6 @@ actor GroupCallActor: Sendable {
     }
     
     func stillRunning() async throws -> PeekResult {
-        DDLogNotice(
-            "[GroupCall] [PeriodicCleanup] Checking call with id \(logIdentifier)"
-        )
-        
         /// **Protocol Step: Periodic Refresh** 3.1. If the user is currently participating in call, abort the peek-call
         /// sub-steps.
         guard state is UnJoined else {
@@ -461,25 +457,40 @@ extension GroupCallActor {
         isNew = true
     }
     
-    public func sendStartMessageWithDelay() async throws {
-        /// **Protocol Step: Group Call Join Steps**
-        /// 7.1 Optionally add an artificial wait period of 2s minus the time elapsed since step 1.
-        // TODO: (IOS-4031) Re-add line below, possibly needs UI changes
-        // try await Task.sleep(seconds: 2)
+    public func sendStartMessageWithDelay() async throws -> Bool {
         guard let startMessage else {
             throw GroupCallError.creationError
         }
+        
+        /// **Protocol Step: Group Call Join Steps**
+        /// 7.1 Optionally add an artificial wait period of 2s minus the time elapsed since step 1. Since we do not have
+        /// the elapsed time, we estimate it to 1.5s.
+        sendCallStartMessageDelayTask = Task {
+            try? await Task.sleep(seconds: 1.5)
+        }
+        try? await sendCallStartMessageDelayTask?.value
+        
+        // We stop sending the start message if call was ended during the delay. To correctly teardown everything, we
+        // first add id to running group calls.
+        if let sendCallStartMessageDelayTask, sendCallStartMessageDelayTask.isCancelled {
+            self.sendCallStartMessageDelayTask = nil
+            await actorDelegate?.addToRunningGroupCalls(groupCall: self)
+            return false
+        }
+        
+        sendCallStartMessageDelayTask = nil
+        
         /// 7.2 Announce (the previously created but not yet sent) call in the associated group by sending it as a
         /// GroupCallStart message.
         let wrappedMessage = WrappedGroupCallStartMessage(
             startMessage: startMessage,
-            creatorID: group.creator,
-            groupID: group.groupID
+            groupIdentity: group.groupIdentity
         )
         try await actorDelegate?.sendStartCallMessage(wrappedMessage)
         try await dependencies.groupCallSystemMessageAdapter.post(.groupCallStarted, in: group)
         
         isNew = false
+        return true
     }
 }
 
@@ -521,7 +532,7 @@ extension GroupCallActor {
     
     func add(_ remoteParticipant: RemoteParticipant) async {
         
-        guard let id = await remoteParticipant.threemaIdentity?.id else {
+        guard let id = await remoteParticipant.threemaIdentity?.string else {
             return
         }
         let (displayName, avatar, idColor) = dependencies.groupCallParticipantInfoFetcher.fetchInfo(id: id)
@@ -563,17 +574,19 @@ extension GroupCallActor {
     
     func beginLeaveCall() {
         /// **Leave Call** 2. To terminate the process loop, we yield `.leave`
-        
         guard currentTask != nil else {
             Task {
                 await viewModel.leaveCall()
             }
             return
         }
+        // We cancel the start message delay task if we were connecting
+        sendCallStartMessageDelayTask?.cancel()
+        
         uiActionContinuation.yield(.leave)
     }
     
-    func leaveCall() async {
+    func leaveCall(runRefreshSteps: Bool = false) async {
         DDLogVerbose("[GroupCall] Teardown: Actor")
         state = UnJoined(groupCallActor: self)
 
@@ -581,6 +594,10 @@ extension GroupCallActor {
         await actorDelegate?.removeFromRunningGroupCalls(groupCall: self)
         
         callLeaveContinuation?.yield()
+        
+        if runRefreshSteps {
+            await actorDelegate?.refreshGroupCalls(in: group.groupIdentity)
+        }
     }
     
     func forceLeaveCall() async {
@@ -612,7 +629,7 @@ extension GroupCallActor {
             case .result:
                 break
             case .error:
-                let msg = "An error occurred while waiting for the call confirmation signal."
+                let msg = "An error occurred while waiting for the leave call confirmation signal."
                 assertionFailure(msg)
                 DDLogError(msg)
             case .timeout:

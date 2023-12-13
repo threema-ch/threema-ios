@@ -43,7 +43,8 @@
 #define PERSISTENCE_KEY_DEVICE_ID @"Threema device ID"
 #define PERSISTENCE_KEY_ONPREM_CONFIG_URL @"Threema OnPrem config URL"
 
-#define LICENSE_CHECK_INTERVAL_S 24*60*60
+#define LICENSE_CHECK_INTERVAL_S 6*60*60
+#define LICENSE_OFFLINE_INTERVAL_S 24*60*60
 #define DEVICE_ID_LENGTH 16
 
 static LicenseStore *singleton;
@@ -116,6 +117,21 @@ static LicenseStore *singleton;
     return YES;
 }
 
+- (BOOL)isWithinOfflineInterval {
+    NSDate *lastCheck = [MyIdentityStore sharedMyIdentityStore].licenseLastCheck;
+    if (lastCheck == nil) {
+        return NO;
+    }
+    
+    NSTimeInterval time = [[NSDate date] timeIntervalSinceDate:lastCheck];
+    if (time > LICENSE_OFFLINE_INTERVAL_S) {
+        return NO;
+    }
+    
+    return YES;
+}
+
+
 - (BOOL)isValid {
     if ([LicenseStore requiresLicenseKey]) {
         if (_didCheckLicense) {
@@ -127,7 +143,7 @@ static LicenseStore *singleton;
             }
             return YES;
         } else if (([AppGroup getCurrentType] == AppGroupTypeNotificationExtension || [AppGroup getCurrentType] == AppGroupTypeShareExtension) && [self isWithinCheckInterval]) {
-            // keep notification or share extension valid for one week
+            // keep notification or share extension valid for one day
             return YES;
         }
         else {
@@ -176,8 +192,8 @@ static LicenseStore *singleton;
             }
             MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
             [mdmSetup applyCompanyMDMWithCachedThreemaMDMSendForce:false];
-            onCompletion(success);
             dispatch_semaphore_signal(_sema);
+            onCompletion(success);
         } onError:^(NSError *error) {
             _errorMessage = error.localizedDescription;
             _error = error;
@@ -188,9 +204,8 @@ static LicenseStore *singleton;
                 _didCheckLicense = NO;
             }
             
-            onCompletion(NO);
-
             dispatch_semaphore_signal(_sema);
+            onCompletion(NO);
         }];
     });
 }

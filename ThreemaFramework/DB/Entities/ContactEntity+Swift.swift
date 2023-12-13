@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Intents
 import IntentsUI
+import ThreemaEssentials
 
 extension ContactEntity {
     /// Is this contact blocked?
@@ -65,5 +66,9 @@ extension ContactEntity {
         h.append((handle, suggestionType))
         
         return h
+    }
+    
+    public var threemaIdentity: ThreemaIdentity {
+        ThreemaIdentity(identity)
     }
 }

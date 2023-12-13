@@ -117,13 +117,13 @@ final class ChatSearchResultsViewController: ThemedViewController {
     
     /// Create a new chat search results controller
     /// - Parameter delegate: Delegate that gets called when a result is selected
-    /// - Parameter entityManger: Entity manager used to fetch messages shown in search results
+    /// - Parameter entityManager: Entity manager used to fetch messages shown in search results
     init(
         delegate: ChatSearchResultsViewControllerDelegate,
-        entityManger: EntityManager
+        entityManager: EntityManager
     ) {
         self.delegate = delegate
-        self.entityManager = entityManger
+        self.entityManager = entityManager
         
         super.init(nibName: nil, bundle: nil)
     }

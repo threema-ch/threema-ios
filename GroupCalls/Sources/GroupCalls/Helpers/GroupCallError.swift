@@ -27,6 +27,10 @@ public protocol GroupCallErrorProtocol {
 }
 
 extension GroupCallErrorProtocol {
+    public var isFatal: Bool {
+        false
+    }
+    
     public var alertTitleKey: String {
         "group_call_error_generic_title"
     }
@@ -34,16 +38,13 @@ extension GroupCallErrorProtocol {
     public var alertMessageKey: String {
         "group_call_error_generic_message"
     }
-    
-    public var isFatal: Bool {
-        false
-    }
 }
 
 // MARK: - Errors
 
 public enum GroupCallError: Error, GroupCallErrorProtocol {
 
+    case alreadyInCall
     case joinError
     case creationError
     case groupNotFound
@@ -74,7 +75,8 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
     
     public var isFatal: Bool {
         switch self {
-        case .joinError, .creationError, .groupNotFound, .invalidThreemaIDLength, .viewModelRetrieveError,
+        case .alreadyInCall, .joinError, .creationError, .groupNotFound, .invalidThreemaIDLength,
+             .viewModelRetrieveError,
              .sendStartMessageError,
              .keyDerivationError,
              .keyRatchetError, .frameCryptoFailure,
@@ -85,6 +87,24 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
             return true
         case .captureError:
             return false
+        }
+    }
+    
+    public var alertTitleKey: String {
+        switch self {
+        case .alreadyInCall:
+            return "group_call_error_already_in_call_title"
+        default:
+            return "group_call_error_generic_title"
+        }
+    }
+    
+    public var alertMessageKey: String {
+        switch self {
+        case .alreadyInCall:
+            return "group_call_error_already_in_call_message"
+        default:
+            return "group_call_error_generic_title"
         }
     }
 }

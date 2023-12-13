@@ -37,7 +37,7 @@
 //   sides for each session)
 // - `2DHK`: 2DH key (current iteration)
 // - `4DHK`: 4DH key (current iteration)
-// - `XDHK`: 2DH or 4DH key (current iteration).
+// - `XDHK`: 2DH or 4DH key (current iteration)
 // - `XDHMK`: 2DH or 4DH message key (current iteration)
 //
 // ## Modes
@@ -352,7 +352,7 @@
 // Note: This is a normative section. The steps will imply that these rules are
 // being applied!
 //
-// Session uniqueness is determined by the following triple:
+// Session uniqueness is determined by the following tuple:
 //
 // - the remote Threema ID,
 // - a session ID.
@@ -498,9 +498,16 @@ public enum CspE2eFs_Version: SwiftProtobuf.Enum {
   /// V1.1
   ///
   /// - Builds on V1.0 with backwards compatibility.
-  /// - If the remote side announced support for V1.1, all 1:1 E2E messages will
-  ///   be encapsulated.
+  /// - If the remote side offered support for V1.1, all local 1:1 E2E messages
+  ///   will be encapsulated.
   case v11 // = 257
+
+  /// V1.2
+  ///
+  /// - Builds on V1.1 with backwards compatibility.
+  /// - If the remote side offered support for V1.2, all local Group E2E messages
+  ///   will be encapsulated.
+  case v12 // = 258
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -512,6 +519,7 @@ public enum CspE2eFs_Version: SwiftProtobuf.Enum {
     case 0: self = .unspecified
     case 256: self = .v10
     case 257: self = .v11
+    case 258: self = .v12
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -521,6 +529,7 @@ public enum CspE2eFs_Version: SwiftProtobuf.Enum {
     case .unspecified: return 0
     case .v10: return 256
     case .v11: return 257
+    case .v12: return 258
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -535,6 +544,7 @@ extension CspE2eFs_Version: CaseIterable {
     .unspecified,
     .v10,
     .v11,
+    .v12,
   ]
 }
 
@@ -733,7 +743,29 @@ public struct CspE2eFs_Accept {
 /// Sent when receiving a `Encapsulated` message that cannot be decrypted (e.g.
 /// because the recipient has lost the session information).
 ///
-/// The peer should discard the FS session and start a new one, if possible.
+/// When creating this variant:
+///
+/// 1. Let `encapsulated` be the `Encapsulated` message that triggers this
+///    reject.
+/// 2. Set `message_id` to `encapsulated.message_id`.`
+/// 3. Set `group_identity` to `encapsulated.group_identity`.
+///
+/// When receiving this variant:
+///
+/// 1. If `group_identity` has not been provided:
+///    1. Lookup the message for `message_id` and let `message` be the result.
+///    2. If `message` is defined, follow the _reject_ logic associated to the
+///       message type.
+/// 2. If `group_identity` has been provided:
+///     1. Run the _Common Group Receive Steps_. If the message has been
+///        discarded, abort these steps.
+///     2. Lookup the message for `message_id` in the group for `group_identity`
+///        and let `message` be the result.
+///     3. If `message` is defined, follow the _reject_ logic associated to the
+///        message type.
+///     4. If `message` is not defined and the user is the creator of the group,
+///        assume that a `group-sync-request` has been received from the sender
+///        and run the associated steps.
 public struct CspE2eFs_Reject {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -741,7 +773,17 @@ public struct CspE2eFs_Reject {
 
   /// Message ID of the `Encapsulated` message that could not be decrypted and
   /// that should be sent again in a new session or without a session.
-  public var rejectedEncapsulatedMessageID: UInt64 = 0
+  public var messageID: UInt64 = 0
+
+  /// The group in which the message has been sent (if any).
+  public var groupIdentity: Common_GroupIdentity {
+    get {return _groupIdentity ?? Common_GroupIdentity()}
+    set {_groupIdentity = newValue}
+  }
+  /// Returns true if `groupIdentity` has been explicitly set.
+  public var hasGroupIdentity: Bool {return self._groupIdentity != nil}
+  /// Clears the value of `groupIdentity`. Subsequent reads from it will return its default value.
+  public mutating func clearGroupIdentity() {self._groupIdentity = nil}
 
   public var cause: CspE2eFs_Reject.Cause = .stateMismatch
 
@@ -791,6 +833,8 @@ public struct CspE2eFs_Reject {
   }
 
   public init() {}
+
+  fileprivate var _groupIdentity: Common_GroupIdentity? = nil
 }
 
 #if swift(>=4.2)
@@ -943,6 +987,19 @@ public struct CspE2eFs_Encapsulated {
   /// The major negotiated version with the _applied_ minor version.
   public var appliedVersion: UInt32 = 0
 
+  /// The group in which the message has been sent.
+  ///
+  /// Required if the inner message type's _kind_ property is _Group_. Must not
+  /// be set for _1:1_.
+  public var groupIdentity: Common_GroupIdentity {
+    get {return _groupIdentity ?? Common_GroupIdentity()}
+    set {_groupIdentity = newValue}
+  }
+  /// Returns true if `groupIdentity` has been explicitly set.
+  public var hasGroupIdentity: Bool {return self._groupIdentity != nil}
+  /// Clears the value of `groupIdentity`. Subsequent reads from it will return its default value.
+  public mutating func clearGroupIdentity() {self._groupIdentity = nil}
+
   /// A message as defined by `e2e.container` (but **without** PKCS#7 padding),
   /// encrypted by:
   ///
@@ -991,6 +1048,8 @@ public struct CspE2eFs_Encapsulated {
   }
 
   public init() {}
+
+  fileprivate var _groupIdentity: Common_GroupIdentity? = nil
 }
 
 #if swift(>=4.2)
@@ -1029,6 +1088,7 @@ extension CspE2eFs_Version: SwiftProtobuf._ProtoNameProviding {
     0: .same(proto: "UNSPECIFIED"),
     256: .same(proto: "V1_0"),
     257: .same(proto: "V1_1"),
+    258: .same(proto: "V1_2"),
   ]
 }
 
@@ -1287,7 +1347,8 @@ extension CspE2eFs_Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 extension CspE2eFs_Reject: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Reject"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "rejected_encapsulated_message_id"),
+    1: .standard(proto: "message_id"),
+    3: .standard(proto: "group_identity"),
     2: .same(proto: "cause"),
   ]
 
@@ -1297,25 +1358,34 @@ extension CspE2eFs_Reject: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularFixed64Field(value: &self.rejectedEncapsulatedMessageID) }()
+      case 1: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
       case 2: try { try decoder.decodeSingularEnumField(value: &self.cause) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._groupIdentity) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.rejectedEncapsulatedMessageID != 0 {
-      try visitor.visitSingularFixed64Field(value: self.rejectedEncapsulatedMessageID, fieldNumber: 1)
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.messageID != 0 {
+      try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 1)
     }
     if self.cause != .stateMismatch {
       try visitor.visitSingularEnumField(value: self.cause, fieldNumber: 2)
     }
+    try { if let v = self._groupIdentity {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: CspE2eFs_Reject, rhs: CspE2eFs_Reject) -> Bool {
-    if lhs.rejectedEncapsulatedMessageID != rhs.rejectedEncapsulatedMessageID {return false}
+    if lhs.messageID != rhs.messageID {return false}
+    if lhs._groupIdentity != rhs._groupIdentity {return false}
     if lhs.cause != rhs.cause {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1378,6 +1448,7 @@ extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     2: .same(proto: "counter"),
     4: .standard(proto: "offered_version"),
     5: .standard(proto: "applied_version"),
+    6: .standard(proto: "group_identity"),
     3: .standard(proto: "encrypted_inner"),
   ]
 
@@ -1392,12 +1463,17 @@ extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       case 3: try { try decoder.decodeSingularBytesField(value: &self.encryptedInner) }()
       case 4: try { try decoder.decodeSingularUInt32Field(value: &self.offeredVersion) }()
       case 5: try { try decoder.decodeSingularUInt32Field(value: &self.appliedVersion) }()
+      case 6: try { try decoder.decodeSingularMessageField(value: &self._groupIdentity) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.dhType != .twodh {
       try visitor.visitSingularEnumField(value: self.dhType, fieldNumber: 1)
     }
@@ -1413,6 +1489,9 @@ extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     if self.appliedVersion != 0 {
       try visitor.visitSingularUInt32Field(value: self.appliedVersion, fieldNumber: 5)
     }
+    try { if let v = self._groupIdentity {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -1421,6 +1500,7 @@ extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     if lhs.counter != rhs.counter {return false}
     if lhs.offeredVersion != rhs.offeredVersion {return false}
     if lhs.appliedVersion != rhs.appliedVersion {return false}
+    if lhs._groupIdentity != rhs._groupIdentity {return false}
     if lhs.encryptedInner != rhs.encryptedInner {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

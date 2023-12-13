@@ -27,9 +27,9 @@ class WebConversationsResponse: WebAbstractMessage {
         
         var conversationArray = [[AnyHashable: Any]]()
 
-        let entityManager = BusinessInjector().entityManager
-        let allConversations = entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
-        
+        let businessInjector = BusinessInjector()
+        let allConversations = businessInjector.entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
+
         let unarchivedConversations = allConversations?
             .filter { $0.conversationVisibility == .default || $0.conversationVisibility == .pinned }
         let archivedConversations = allConversations?.filter { $0.conversationVisibility == .archived }
@@ -45,7 +45,7 @@ class WebConversationsResponse: WebAbstractMessage {
                     index: index,
                     request: conversationRequest,
                     addAvatar: index < 16 ? true : false,
-                    groupManager: GroupManager(entityManager: entityManager),
+                    businessInjector: businessInjector,
                     session: session
                 )
                 conversationArray.append(webConversation.objectDict())
@@ -62,7 +62,7 @@ class WebConversationsResponse: WebAbstractMessage {
                     index: index,
                     request: conversationRequest,
                     addAvatar: index < 16 ? true : false,
-                    groupManager: GroupManager(entityManager: entityManager),
+                    businessInjector: businessInjector,
                     session: session
                 )
                 conversationArray.append(webConversation.objectDict())
@@ -99,13 +99,13 @@ struct WebConversation {
         index: Int,
         request: WebConversationsRequest?,
         addAvatar: Bool,
-        groupManager: GroupManager,
+        businessInjector: BusinessInjectorProtocol,
         session: WCSession
     ) {
         if conversation.isGroup() {
             self.type = "group"
             self.id = conversation.groupID!.hexEncodedString()
-            if let group = groupManager.getGroup(conversation: conversation) {
+            if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
                 let webGroup = WebGroup(group: group)
                 self.receiver = webGroup.objectDict()
             }
@@ -119,7 +119,7 @@ struct WebConversation {
 
         self.position = index
         
-        let messageFetcher = MessageFetcher(for: conversation, with: BusinessInjector().entityManager)
+        let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         self.messageCount = messageFetcher.count()
         
         self.unreadCount = max(0, conversation.unreadMessageCount as! Int)
@@ -159,7 +159,17 @@ struct WebConversation {
             }
         }
 
-        let pushSetting = PushSetting(for: conversation)
+        var pushSetting: PushSetting
+        if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
+            pushSetting = businessInjector.pushSettingManager.find(forGroup: group.groupIdentity)
+        }
+        else if let contactEntity = conversation.contact {
+            pushSetting = businessInjector.pushSettingManager.find(forContact: contactEntity.threemaIdentity)
+        }
+        else {
+            fatalError("No push settings for conversation found")
+        }
+
         self.notifications = WebNotificationSettings(pushSetting: pushSetting)
         
         self.isStarred = conversation.conversationVisibility == .pinned
@@ -243,7 +253,7 @@ struct WebNotificationSoundSetting {
     var mode: String
 
     init(pushSetting: PushSetting) {
-        self.mode = pushSetting.silent ? "muted" : "default"
+        self.mode = pushSetting.muted ? "muted" : "default"
     }
 
     func objectDict() -> [String: Any] {
@@ -260,14 +270,15 @@ struct WebNotificationDndSetting {
         self.until = 0
         self.mode = "off"
 
-        if pushSetting.type == .off {
+        var setting = pushSetting
+        if setting.type == .off {
             self.mode = "on"
         }
-        else if pushSetting.type == .offPeriod {
+        else if setting.type == .offPeriod {
             self.mode = "until"
             self.until = Int(pushSetting.periodOffTillDate?.timeIntervalSince1970 ?? 0)
         }
-        self.mention = pushSetting.mentions
+        self.mention = pushSetting.mentioned
     }
 
     func objectDict() -> [String: Any] {

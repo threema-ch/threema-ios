@@ -30,7 +30,6 @@
 #import "UserSettings.h"
 #import "ThreemaError.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
-#import <PromiseKit/PromiseKit.h>
 #import "NSString+Hex.h"
 
 #ifdef DEBUG
@@ -71,21 +70,22 @@
     return self;
 }
 
-- (void)handleMessageOnCompletion:(void (^)(BOOL))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)handleMessageOnCompletion:(void (^)(BOOL))onCompletion onError:(void(^)(NSError * _Nonnull))onError {
     if ([nonceGuard isProcessedWithMessage:_message] == YES) {
-        onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:@"Message nonce reuse (ID: %@)", _message.messageId] withCode:ThreemaProtocolErrorMessageNonceReuse]);
         return;
     }
 
     if ([_message isKindOfClass:[GroupCreateMessage class]]) {
         GroupCreateMessage *grpCreate = (GroupCreateMessage *)_message;
-        [groupManager createOrUpdateDBObjcWithGroupID:grpCreate.groupId creator:grpCreate.groupCreator members:[[NSSet alloc] initWithArray:grpCreate.groupMembers] systemMessageDate:_message.date sourceCaller:SourceCallerRemote]
-        .thenInBackground(^(Group *group){
-            onCompletion(YES);
-        })
-        .catch(^(NSError *error){
-            onError(error);
-        });
+        [groupManager createOrUpdateDBObjcWithGroupID:grpCreate.groupId creator:grpCreate.groupCreator members:[[NSSet alloc] initWithArray:grpCreate.groupMembers] systemMessageDate:_message.date sourceCaller:SourceCallerRemote completionHandler:^(NSError * _Nullable error) {
+            if (error == nil) {
+                onCompletion(YES);
+            }
+            else {
+                onError(error);
+            }
+        }];
     }
     else {
         Group *grp = [groupManager getGroup:_message.groupId creator:_message.groupCreator];
@@ -150,10 +150,11 @@
  @param toMember: Receiver of GroupCreateMessage
  */
 - (void)sync:(Group *)group toMember:(NSString *)toMember {
-    [groupManager syncObjcWithGroup:group to:[[NSSet alloc] initWithArray:@[toMember]] withoutCreateMessage:NO]
-    .catch(^(NSError *error) {
-        DDLogError(@"Error syncing group: %@", error.localizedDescription);
-    });
+    [groupManager syncObjcWithGroup:group to:[[NSSet alloc] initWithArray:@[toMember]] withoutCreateMessage:NO completionHandler:^(NSError * _Nullable error) {
+        if (error != nil) {
+            DDLogError(@"Error syncing group: %@", error.localizedDescription);
+        }
+    }];
 }
 
 /**

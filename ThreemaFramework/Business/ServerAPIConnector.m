@@ -20,7 +20,6 @@
 
 #include <CommonCrypto/CommonDigest.h>
 
-#import <PromiseKit/PromiseKit.h>
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ServerAPIConnector.h"
 #import "ServerAPIRequest.h"
@@ -220,20 +219,22 @@
             /* Already linked - update address with user provided value, as it is possible that we currently
                only have ***@*** from the server after an ID restore */
             ProfileStore *profileStore = [ProfileStore new];
-            [profileStore syncAndSaveWithEmail:email]
-                .then(^{
+            [profileStore syncAndSaveWithEmail:email completionHandler:^(NSError * _Nullable error) {
+                if (error == nil) {
                     identityStore.linkEmailPending = NO;
                     onCompletion(YES);
-                }).catch(^(NSError *error){
+                }
+                else {
                     onError(error);
-                });
+                }
+            }];
             return;
         }
         
         [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:response forStore:identityStore onCompletion:^(NSDictionary *response) {
             ProfileStore *profileStore = [ProfileStore new];
-            [profileStore syncAndSaveWithEmail:email.length != 0 ? email : nil]
-                .then(^{
+            [profileStore syncAndSaveWithEmail:email.length != 0 ? email : nil completionHandler:^(NSError * _Nullable error) {
+                if (error == nil) {
                     if (email.length == 0) {
                         /* unlink */
                         identityStore.linkEmailPending = NO;
@@ -241,9 +242,11 @@
                         identityStore.linkEmailPending = YES;
                     }
                     onCompletion(NO);
-                }).catch(^(NSError *error){
+                }
+                else {
                     onError(error);
-                });
+                }
+            }];
         } onError:onError];
     } onError:onError];
 }
@@ -313,21 +316,23 @@
         if ([response[@"linked"] boolValue]) {
             /* already linked */
             ProfileStore *profileStore = [ProfileStore new];
-            [profileStore syncAndSaveWithMobileNo:mobileNo]
-                .then(^{
+            [profileStore syncAndSaveWithMobileNo:mobileNo completionHandler:^(NSError * _Nullable error) {
+                if (error == nil) {
                     identityStore.linkMobileNoPending = NO;
                     identityStore.linkMobileNoVerificationId = nil;
                     onCompletion(YES);
-                }).catch(^(NSError *error){
+                }
+                else {
                     onError(error);
-                });
+                }
+            }];
             return;
         }
         
         [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:response forStore:identityStore onCompletion:^(NSDictionary *response) {
             ProfileStore *profileStore = [ProfileStore new];
-            [profileStore syncAndSaveWithMobileNo:mobileNo.length != 0 ? mobileNo : nil]
-                .then(^{
+            [profileStore syncAndSaveWithMobileNo:mobileNo.length != 0 ? mobileNo : nil completionHandler:^(NSError * _Nullable error) {
+                if (error == nil) {
                     if (mobileNo.length == 0) {
                         /* unlink */
                         identityStore.linkMobileNoPending = NO;
@@ -338,9 +343,11 @@
                         identityStore.linkMobileNoStartDate = [NSDate date];
                     }
                     onCompletion(NO);
-                }).catch(^(NSError *error){
+                }
+                else {
                     onError(error);
-                });
+                }
+            }];
         } onError:onError];
     } onError:onError];
 }

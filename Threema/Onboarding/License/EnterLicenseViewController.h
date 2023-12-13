@@ -40,6 +40,7 @@
 @property (weak, nonatomic) IBOutlet UITextField *licensePasswordTextField;
 @property (weak, nonatomic) IBOutlet UITextField *serverTextField;
 @property (weak, nonatomic) IBOutlet ZSWTappableLabel *threemaWorkInfoLabel;
+@property (weak, nonatomic) IBOutlet UILabel *threemaAdminInfoLabel;
 
 @property (weak, nonatomic) IBOutlet UIButton *confirmButton;
 

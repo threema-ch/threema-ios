@@ -512,10 +512,14 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     func startRecording() {
         chatViewTableViewVoiceMessageCellDelegate?.pausePlaying()
         
-        PlayRecordAudioViewController.requestMicrophoneAccess {
+        PlayRecordAudioViewController.requestMicrophoneAccess { [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+
             UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
-            guard let audioRecorder = PlayRecordAudioViewController(in: self.chatViewController) else {
-                guard let chatViewController = self.chatViewController else {
+            guard let audioRecorder = PlayRecordAudioViewController(in: strongSelf.chatViewController) else {
+                guard let chatViewController = strongSelf.chatViewController else {
                     DDLogError("chatViewController should not be nil when calling \(#function)")
                     return
                 }
@@ -526,11 +530,11 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 )
                 return
             }
-            audioRecorder.delegate = self
-            audioRecorder.startRecording(for: self.conversation)
+            audioRecorder.delegate = strongSelf
+            audioRecorder.startRecording(for: strongSelf.conversation)
             
-            self.chatBar.isUserInteractionEnabled = false
-            self.isRecording = true
+            strongSelf.chatBar.isUserInteractionEnabled = false
+            strongSelf.isRecording = true
         }
     }
     
@@ -539,7 +543,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         // Only send typing indicator if the conversation has a contact (equivalent to being a group but we want the
         // identity to not be optional)
         // Do not send false twice in a row
-        if !conversation.isGroup(), let identity = conversation.contact?.identity,
+        if !conversation.isGroup(), let identity = conversation.contact?.threemaIdentity,
            (!startTyping && lastTypingIndicatorState) || startTyping {
             DDLogVerbose("Send typing indicator \(startTyping)")
             businessInjector.messageSender.sendTypingIndicator(typing: startTyping, toIdentity: identity)

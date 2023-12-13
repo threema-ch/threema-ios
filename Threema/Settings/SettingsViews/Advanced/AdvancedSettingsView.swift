@@ -181,7 +181,13 @@ struct AdvancedSettingsView: View {
                 } label: {
                     Text(BundleUtil.localizedString(forKey: "settings_advanced_orphaned_files_cleanup"))
                 }
-                
+
+                NavigationLink {
+                    ContactsCleanupView(settingsStore: settingsVM)
+                } label: {
+                    Text(BundleUtil.localizedString(forKey: "settings_advanced_contacts_cleanup"))
+                }
+
                 Button {
                     flushMessageQueue()
                 } label: {

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "PlayRecordAudioViewController.h"
+#import "BackupIdentityViewController.h"
 #import "SendLocationAction.h"
 #import "MWPhotoBrowser.h"
 #import "MWPhoto.h"
@@ -80,3 +81,7 @@
 #import "FileMessagePreview.h"
 #import "CustomResponderTextView.h"
 #import "IdentityBackupStore.h"
+#import "RevocationKeyHandler.h"
+#import "QRCodeGenerator.h"
+#import "BackupPasswordViewController.h"
+#import "BackupPasswordVerifyViewController.h"

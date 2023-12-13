@@ -59,12 +59,58 @@ extension BaseMessage {
         let dateString = DateFormatter.relativeLongStyleDateShortStyleTime(displayDate)
         
         if messageDisplayState == .none {
-            return dateString
+            if isGroupMessage, let groupReactionString = accessibilityGroupReactionState(with: dateString) {
+                return groupReactionString
+            }
+            else {
+                return dateString
+            }
         }
         else {
             // Style: "Delivered, Today at 15:44."
             return "\(String.localizedStringWithFormat(messageDisplayState.accessibilityLabel, dateString))."
         }
+    }
+    
+    private func accessibilityGroupReactionState(with dateString: String) -> String? {
+        guard messageGroupReactionState != .none else {
+            return nil
+        }
+        
+        let myReactionString: String
+        if isMyReaction(.acknowledged) {
+            myReactionString =
+                "\(BundleUtil.localizedString(forKey: "accessibility_status_group_acknowledged_my_reaction")), "
+        }
+        else if isMyReaction(.declined) {
+            myReactionString =
+                "\(BundleUtil.localizedString(forKey: "accessibility_status_group_declined_my_reaction")), "
+        }
+        else {
+            // We have to use a empty string when there is no own reaction. Otherwise the app will crash because a
+            // string is missing for the localizedString placeholder
+            myReactionString = ""
+        }
+        
+        let ack = groupReactionsCount(of: .acknowledged)
+        let dec = groupReactionsCount(of: .declined)
+        if ack > 0, dec > 0 {
+            let statusString = BundleUtil
+                .localizedString(forKey: "accessibility_status_group_acknowledged_declined_plus_time")
+            return "\(String.localizedStringWithFormat(statusString, ack, dec, myReactionString, dateString))."
+        }
+        else if ack > 0 {
+            let statusString = BundleUtil
+                .localizedString(forKey: "accessibility_status_group_acknowledged_plus_time")
+            return "\(String.localizedStringWithFormat(statusString, ack, myReactionString, dateString))."
+        }
+        else if dec > 0 {
+            let statusString = BundleUtil
+                .localizedString(forKey: "accessibility_status_group_declined_plus_time")
+            return "\(String.localizedStringWithFormat(statusString, dec, myReactionString, dateString))."
+        }
+        
+        return nil
     }
     
     /// Contains the sender.

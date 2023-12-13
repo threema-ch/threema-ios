@@ -28,7 +28,7 @@ class ManageAllConversationsSMTableViewCell: ThemedCodeStackTableViewCell {
         label.font = UIFont.preferredFont(forTextStyle: .body)
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.numberOfLines = 0
-        label.text = BundleUtil.localizedString(forKey: "manage_all_conversations")
+        label.text = "manage_all_conversations".localized
         
         return label
     }()

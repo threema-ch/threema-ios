@@ -20,6 +20,7 @@
 
 import CocoaLumberjack
 import CocoaLumberjackSwift
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 import XCTest
@@ -27,24 +28,36 @@ import XCTest
 
 #if compiler(>=5.8)
     final class GroupCallManagerTests: XCTestCase {
+        
+        fileprivate lazy var creatorIdentity = ThreemaIdentity("OCHEOCHE")
+        fileprivate lazy var localIdentity = ThreemaIdentity("ECHOECHO")
+        fileprivate lazy var localContactModel = ContactModel(identity: localIdentity, nickname: "ECHOECHO")
+        fileprivate lazy var basicGroupIdentity = GroupIdentity(
+            id: Data(repeating: 0x00, count: 8),
+            creator: creatorIdentity
+        )
+        fileprivate lazy var basicGroupModel = GroupCallsThreemaGroupModel(
+            groupIdentity: basicGroupIdentity,
+            groupName: "TESTGROUP"
+        )
+        fileprivate lazy var otherGroupIdentity = GroupIdentity(
+            id: Data(repeating: 0x01, count: 8),
+            creator: creatorIdentity
+        )
+        fileprivate lazy var otherGroupModel = GroupCallsThreemaGroupModel(
+            groupIdentity: otherGroupIdentity,
+            groupName: "TESTGROUP"
+        )
+        
         // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
         func testExample() async throws {
             let expectation = XCTestExpectation(description: "Handle succeeds")
 
             Task.detached {
                 let dependencies = MockDependencies().create()
-                let localIdentity = "ECHOECHO"
-
-                let members: Set<ThreemaID> = [try XCTUnwrap(ThreemaID(id: "ECHOECHO"))]
-                let groupModel = try GroupCallsThreemaGroupModel(
-                    creator: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                    groupID: Data(),
-                    groupName: "ECHOECHO",
-                    members: members
-                )
 
                 let proposedGroupCall = ProposedGroupCall(
-                    groupRepresentation: groupModel,
+                    groupRepresentation: self.basicGroupModel,
                     protocolVersion: 1,
                     gck: Data(repeating: 0x03, count: 40),
                     sfuBaseURL: "sfu.threema.test",
@@ -52,7 +65,10 @@ import XCTest
                     dependencies: dependencies
                 )
 
-                let groupCallManager = GroupCallManager(dependencies: dependencies, localIdentity: localIdentity)
+                let groupCallManager = GroupCallManager(
+                    dependencies: dependencies,
+                    localContactModel: self.localContactModel
+                )
 
                 await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
 
@@ -74,20 +90,14 @@ import XCTest
             let dependencies = MockDependencies().create()
 
             Task.detached {
-                let localIdentity = "ECHOECHO"
 
-                let groupCallManager = GroupCallManager(dependencies: dependencies, localIdentity: localIdentity)
-
-                let members: Set<ThreemaID> = [try XCTUnwrap(ThreemaID(id: "ECHOECHO"))]
-                let groupModel = try GroupCallsThreemaGroupModel(
-                    creator: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                    groupID: Data(),
-                    groupName: "ECHOECHO",
-                    members: members
+                let groupCallManager = GroupCallManager(
+                    dependencies: dependencies,
+                    localContactModel: self.localContactModel
                 )
 
                 let proposedGroupCall1 = ProposedGroupCall(
-                    groupRepresentation: groupModel,
+                    groupRepresentation: self.basicGroupModel,
                     protocolVersion: 1,
                     gck: Data(repeating: 0x03, count: 40),
                     sfuBaseURL: "sfu.threema.test",
@@ -95,7 +105,7 @@ import XCTest
                     dependencies: dependencies
                 )
                 let proposedGroupCall2 = ProposedGroupCall(
-                    groupRepresentation: groupModel,
+                    groupRepresentation: self.basicGroupModel,
                     protocolVersion: 1,
                     gck: Data(repeating: 0x04, count: 40),
                     sfuBaseURL: "sfu.threema.test",
@@ -172,19 +182,14 @@ import XCTest
             Task.detached {
                 let localIdentity = "ECHOECHO"
 
-                let groupCallManager = GroupCallManager(dependencies: dependencies, localIdentity: localIdentity)
-
-                let members: Set<ThreemaID> = [try XCTUnwrap(ThreemaID(id: "ECHOECHO"))]
-                let groupModel = try GroupCallsThreemaGroupModel(
-                    creator: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                    groupID: Data(),
-                    groupName: "ECHOECHO",
-                    members: members
+                let groupCallManager = GroupCallManager(
+                    dependencies: dependencies,
+                    localContactModel: self.localContactModel
                 )
 
                 let proposedGroupCalls = (0..<numberOfCalls).map { i in
                     ProposedGroupCall(
-                        groupRepresentation: groupModel,
+                        groupRepresentation: self.basicGroupModel,
                         protocolVersion: 1,
                         gck: Data(repeating: UInt8(i), count: 40),
                         sfuBaseURL: "sfu.threema.test",
@@ -279,24 +284,14 @@ import XCTest
             let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
             let numberOfCalls = 20
             
-            let localIdentity = "ECHOECHO"
-            
-            let groupCallManager = GroupCallManager(dependencies: dependencies, localIdentity: localIdentity)
-            
-            let members: Set<ThreemaID> = [try XCTUnwrap(ThreemaID(id: "ECHOECHO"))]
-            let groupModel = try GroupCallsThreemaGroupModel(
-                creator: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                groupID: Data(repeating: 0x01, count: 32),
-                groupName: "ECHOECHO",
-                members: members
-            )
+            let groupCallManager = GroupCallManager(dependencies: dependencies, localContactModel: localContactModel)
             
             var groupCalls = Set<GroupCallActor>()
             
             for i in 0..<numberOfCalls {
                 let newCall = try XCTUnwrap(GroupCallActor(
-                    localIdentity: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                    groupModel: groupModel,
+                    localContactModel: localContactModel,
+                    groupModel: otherGroupModel,
                     sfuBaseURL: "https://\(i).test",
                     gck: Data(repeating: UInt8(i), count: 32),
                     dependencies: dependencies
@@ -312,7 +307,7 @@ import XCTest
             let goldChosenCall = groupCalls.randomElement()
             await goldChosenCall?.setExactCallStartDate(UInt64(numberOfCalls + 10))
             
-            let chosenCall = try await groupCallManager.getCurrentlyChosenCall(in: groupModel, from: groupCalls)
+            let chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
             
             await print(
                 "Gold chosen call \(String(describing: goldChosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: goldChosenCall?.exactCallStartDate))"
@@ -336,25 +331,15 @@ import XCTest
             let dependencies = MockDependencies().create()
             let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
             let numberOfCalls = 20
-            
-            let localIdentity = "ECHOECHO"
-            
-            let groupCallManager = GroupCallManager(dependencies: dependencies, localIdentity: localIdentity)
-            
-            let members: Set<ThreemaID> = [try XCTUnwrap(ThreemaID(id: "ECHOECHO"))]
-            let groupModel = try GroupCallsThreemaGroupModel(
-                creator: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                groupID: Data(repeating: 0x01, count: 32),
-                groupName: "ECHOECHO",
-                members: members
-            )
+                        
+            let groupCallManager = GroupCallManager(dependencies: dependencies, localContactModel: localContactModel)
             
             var groupCalls = Set<GroupCallActor>()
             
             for i in 0..<numberOfCalls {
                 let newCall = try XCTUnwrap(GroupCallActor(
-                    localIdentity: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                    groupModel: groupModel,
+                    localContactModel: localContactModel,
+                    groupModel: otherGroupModel,
                     sfuBaseURL: "https://\(i).test",
                     gck: Data(repeating: UInt8(i), count: 32),
                     dependencies: dependencies
@@ -368,7 +353,7 @@ import XCTest
             let goldChosenCall = groupCalls.randomElement()
             await goldChosenCall?.setExactCallStartDate(UInt64(numberOfCalls + 10))
             
-            var chosenCall = try await groupCallManager.getCurrentlyChosenCall(in: groupModel, from: groupCalls)
+            var chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
             
             XCTAssert(goldChosenCall == chosenCall)
             
@@ -376,8 +361,8 @@ import XCTest
             
             for i in numberOfCalls..<newNumberOfCalls {
                 let newCall = try XCTUnwrap(GroupCallActor(
-                    localIdentity: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                    groupModel: groupModel,
+                    localContactModel: localContactModel,
+                    groupModel: otherGroupModel,
                     sfuBaseURL: "https://\(i).test",
                     gck: Data(repeating: UInt8(i), count: 32),
                     dependencies: dependencies
@@ -389,8 +374,8 @@ import XCTest
             }
             
             let newGoldCall = try XCTUnwrap(GroupCallActor(
-                localIdentity: XCTUnwrap(ThreemaID(id: "ECHOECHO")),
-                groupModel: groupModel,
+                localContactModel: localContactModel,
+                groupModel: otherGroupModel,
                 sfuBaseURL: "",
                 gck: Data(repeating: 0x01, count: 32),
                 dependencies: dependencies
@@ -400,7 +385,7 @@ import XCTest
             
             groupCalls.insert(newGoldCall)
             
-            chosenCall = try await groupCallManager.getCurrentlyChosenCall(in: groupModel, from: groupCalls)
+            chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
             
             XCTAssert(newGoldCall == chosenCall)
         }

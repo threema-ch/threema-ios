@@ -43,7 +43,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     }
 
     // Is nil if is a group message
-    var receiverIdentity: ThreemaIdentity?
+    var receiverIdentity: String?
     var groupID: Data?
     var groupCreatorIdentity: String?
     var groupName: String?
@@ -73,7 +73,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         self.sendContactProfilePicture = sendContactProfilePicture
     }
 
-    init(receiverIdentity: ThreemaIdentity?, group: Group?, sendContactProfilePicture: Bool) {
+    init(receiverIdentity: String?, group: Group?, sendContactProfilePicture: Bool) {
         super.init(isPersistent: true)
         self.receiverIdentity = receiverIdentity
         self.groupID = group?.groupID
@@ -85,7 +85,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     }
 
     init(
-        receiverIdentity: ThreemaIdentity?,
+        receiverIdentity: String?,
         groupID: Data?,
         groupCreatorIdentity: String?,
         groupName: String?,

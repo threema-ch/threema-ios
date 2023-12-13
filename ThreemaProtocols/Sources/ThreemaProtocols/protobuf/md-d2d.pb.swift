@@ -465,8 +465,8 @@ public struct D2d_ConversationId {
 ///
 /// When receiving this message:
 ///
-/// 1. Add all `nonces` to the CSP nonce storage, preventing messages from being
-///    replayed.
+/// 1. Add all `nonces` to the CSP nonce storage (discarding any nonces that
+///    already exist in the nonce storage).
 /// 2. If a message with the same `message_id` exists within the associated
 ///    `conversation`, discard the message and abort these steps.
 /// 3. [...]
@@ -634,8 +634,8 @@ public struct D2d_OutgoingMessageUpdate {
 ///
 /// When receiving this message:
 ///
-/// 1. Add `nonce` to the CSP nonce storage, preventing messages from being
-///    replayed.
+/// 1. Add `nonce` to the CSP nonce storage (discard a nonces that already exist
+///    in the nonce storage).
 /// 2. If a message with the same `message_id` exists within the associated
 ///    `conversation`, discard the message and abort these steps.
 /// 3. [...]

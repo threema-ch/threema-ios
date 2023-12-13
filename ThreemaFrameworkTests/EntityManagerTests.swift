@@ -90,7 +90,7 @@ final class EntityManagerTests: XCTestCase {
             XCTAssertEqual(result.sender?.identity, "ECHOECHO")
             XCTAssertEqual(result.conversation?.objectID, conversation?.objectID)
 
-            resultMessage = entityManager.getOrCreateMessage(
+            resultMessage = try? entityManager.getOrCreateMessage(
                 for: abstractMessage,
                 sender: sender,
                 conversation: result.conversation!,
@@ -147,7 +147,7 @@ final class EntityManagerTests: XCTestCase {
             XCTAssertEqual(result.sender?.identity, "ECHOECHO")
             XCTAssertEqual(result.conversation?.objectID, conversation?.objectID)
 
-            resultMessage = entityManager.getOrCreateMessage(
+            resultMessage = try? entityManager.getOrCreateMessage(
                 for: abstractMessage,
                 sender: sender,
                 conversation: result.conversation!,

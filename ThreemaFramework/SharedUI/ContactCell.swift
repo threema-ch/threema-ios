@@ -299,7 +299,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     private func configureContactCell(for contact: Contact) {
         let em = BusinessInjector().entityManager
         em.performBlock {
-            if let contactEntity = em.entityFetcher.contact(for: contact.identity) {
+            if let contactEntity = em.entityFetcher.contact(for: contact.identity.string) {
                 AvatarMaker.shared()
                     .avatar(
                         for: contactEntity,
@@ -313,7 +313,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
                             return
                         }
 
-                        if identity == contact.identity {
+                        if identity == contact.identity.string {
                             DispatchQueue.main.async {
                                 self.avatarImageView.image = avatarImage
                             }
@@ -342,12 +342,12 @@ public final class ContactCell: ThemedCodeTableViewCell {
         
         var nickname = ""
         if let publicNickname = contact.publicNickname,
-           publicNickname != contact.identity {
+           publicNickname != contact.identity.string {
             nickname = publicNickname
         }
         metadataLabel.text = nickname
         
-        identityLabel.text = contact.identity
+        identityLabel.text = contact.identity.string
         
         if contact.isActive {
             containerStack.alpha = 1

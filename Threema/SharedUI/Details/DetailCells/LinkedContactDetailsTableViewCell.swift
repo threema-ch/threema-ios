@@ -24,12 +24,12 @@ import UIKit
 
 class LinkedContactDetailsTableViewCell: ThemedCodeStackTableViewCell {
     
-    var linkedContactManger: LinkedContactManger? {
+    var linkedContactManager: LinkedContactManager? {
         didSet {
-            linkedContactMangerObserverToken?.cancel()
+            linkedContactManagerObserverToken?.cancel()
             
             // Observe changes of linked contact
-            linkedContactMangerObserverToken = linkedContactManger?.observe(with: { [weak self] manager in
+            linkedContactManagerObserverToken = linkedContactManager?.observe(with: { [weak self] manager in
                 self?.labelLabel.text = manager.linkedContactTitle
                 self?.contactNameLabel.text = manager.linkedContactDescription
             })
@@ -38,7 +38,7 @@ class LinkedContactDetailsTableViewCell: ThemedCodeStackTableViewCell {
     
     // MARK: - Private properties
     
-    private var linkedContactMangerObserverToken: LinkedContactManger.ObservationToken?
+    private var linkedContactManagerObserverToken: LinkedContactManager.ObservationToken?
         
     // MARK: Subviews
     
@@ -87,7 +87,7 @@ class LinkedContactDetailsTableViewCell: ThemedCodeStackTableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         
-        linkedContactMangerObserverToken?.cancel()
+        linkedContactManagerObserverToken?.cancel()
     }
     
     override func updateColors() {

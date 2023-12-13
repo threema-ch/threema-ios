@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import PromiseKit
 
 class VideoAssetPreviewItem: VideoPreviewItem {
     private var assetItem: AVAsset?

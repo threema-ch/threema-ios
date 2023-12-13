@@ -98,6 +98,8 @@
 }
 
 - (void)addActionButtons:(UIAlertController * _Nonnull)alertController {
+    // duplicate of ConversationsViewControllerHelper
+    // this code is called when managing groups via the groups list (Contacts tab)
     if ([group isSelfMember]) {
         if ([group isOwnGroup]) {
             [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"dissolve"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
@@ -107,7 +109,10 @@
                 }
             }]];
             [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"group_dissolve_and_delete_button"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
-                [self dissolve];
+                [self dissolve]; 
+                
+                // only the admin can dissolve a group, and since the admin can only ever add
+                // non-hidden contacts as members, there's no need to delete hidden contacts here
                 [self deleteConversationWithDeleteHiddenContacts:NO];
                 if (_onCompletion) {
                     _onCompletion(YES);
@@ -122,7 +127,9 @@
                 }
             }]];
             [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"group_leave_and_delete_button"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
-                [self leave];
+                [self leave]; 
+                
+                // the task added by the previous leave call takes care of deleting hidden contacts
                 [self deleteConversationWithDeleteHiddenContacts:NO];
                 if (_onCompletion) {
                     _onCompletion(YES);
@@ -191,7 +198,8 @@
         [[entityManager entityDestroyer] deleteObjectWithObject:_conversation];
     }];
 
-    // Delete contacts which was unknown group members
+    // Delete the hidden contacts
+    // (only contacts that are not member of any group will be deleted)
     for (NSString *identity in hiddenMembers) {
         [[ContactStore sharedContactStore] deleteContactWithIdentity:identity entityManagerObject:entityManager];
     }

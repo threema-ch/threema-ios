@@ -22,6 +22,7 @@ import Foundation
 import ThreemaFramework
 
 class UserSettingsMock: NSObject, UserSettingsProtocol {
+
     override init() {
         // no-op
     }
@@ -98,8 +99,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var pushSound: String?
     var pushGroupSound: String?
     var pushDecrypt = false
-    var pushSettingsList: NSOrderedSet! = []
-    
+    var pushSettings = [Any]()
     var enableMasterDnd = false
     var masterDndWorkingDays: NSOrderedSet! = []
     var masterDndStartTime: String?
@@ -125,4 +125,6 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var groupCallsDeveloper = false
     
     var groupCallsDebugMessages = false
+    
+    var keepMessagesDays = -1
 }

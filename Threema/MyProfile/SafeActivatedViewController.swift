@@ -66,6 +66,7 @@ class SafeActivatedViewController: ThemedTableViewController {
         backupSizeLabel.text = BundleUtil.localizedString(forKey: "safe_size")
         lastResultLabel.text = BundleUtil.localizedString(forKey: "safe_result")
 
+        explainButton.accessibilityLabel = BundleUtil.localizedString(forKey: "safe_learn_more")
         backupNowButtonLabel.text = BundleUtil.localizedString(forKey: "safe_backup_now")
         changePasswordButtonLabel.text = BundleUtil.localizedString(forKey: "safe_change_password")
         

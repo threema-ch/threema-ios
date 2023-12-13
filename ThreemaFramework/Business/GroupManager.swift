@@ -21,10 +21,12 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 public final class GroupManager: NSObject, GroupManagerProtocol {
     
     public enum GroupError: Error {
+        case creatorIsBlocked(groupIdentity: GroupIdentity)
         case creatorNotFound
         case membersMissing
         case groupConversationNotFound
@@ -98,24 +100,22 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     /// Also sends ballot messages to new members, if necessary.
     ///
     /// - Parameters:
-    ///   - groupID: ID (8 bytes) of the group, unique with creator
-    ///   - creator: Creator (identity) of the group, unique with ID
+    ///   - groupIdentity: Identity of the group
     ///   - members: Members (identity list) of the group
     ///   - systemMessageDate: Date for new system message(s)
     /// - Returns: Group and list of new members (identity)
     /// - Throws: ThreemaError, GroupError.notCreator, TaskManagerError
     public func createOrUpdate(
-        groupID: Data,
-        creator: String,
+        for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date
     ) -> Promise<(Group, Set<String>?)> {
 
-        guard creator.elementsEqual(myIdentityStore.identity) else {
+        guard groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) else {
             return Promise(error: GroupError.notCreator)
         }
         
-        removeUnknownGroupFromAlertList(groupID: groupID, creator: creator)
+        removeUnknownGroupFromAlertList(groupIdentity)
 
         // Is oldMembers nil, means the group is new and there aren't old members
         var oldMembers: [String]?
@@ -123,15 +123,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
         // If group already exists get old and removed members
         entityManager.performBlockAndWait {
-            if let oldConversation = self.getConversation(for: GroupIdentity(id: groupID, creator: creator)) {
+            if let oldConversation = self.getConversation(for: groupIdentity) {
                 oldMembers = oldConversation.members.map(\.identity)
                 removedMembers = oldMembers!.filter { !members.contains($0) }
             }
         }
 
         return createOrUpdateDB(
-            groupID: groupID,
-            creator: creator,
+            for: groupIdentity,
             members: members,
             systemMessageDate: systemMessageDate,
             sourceCaller: .local
@@ -144,7 +143,10 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             self.entityManager.performBlockAndWait {
                 if let oldMembers,
                    let conversation = self
-                   .getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) {
+                   .getConversation(for: GroupIdentity(
+                       id: group.groupID,
+                       creator: group.groupIdentity.creator
+                   )) {
                     newMembers = Set(
                         conversation.members
                             .filter { !oldMembers.contains($0.identity) }
@@ -156,7 +158,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 }
             }
 
-            if creator.elementsEqual(self.myIdentityStore.identity) {
+            if groupIdentity.creator.string.elementsEqual(self.myIdentityStore.identity) {
                 // Send group create message to each active member
                 let task = TaskDefinitionSendGroupCreateMessage(
                     group: group,
@@ -188,70 +190,75 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         completionHandler: @escaping (Group, Set<String>?) -> Void,
         errorHandler: @escaping (Error?) -> Void
     ) {
-        createOrUpdate(groupID: groupID, creator: creator, members: members, systemMessageDate: systemMessageDate)
-            .done { group, newMembers in
-                completionHandler(group, newMembers)
-            }
-            .catch { error in
-                errorHandler(error)
-            }
+        createOrUpdate(
+            for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)),
+            members: members,
+            systemMessageDate: systemMessageDate
+        )
+        .done { group, newMembers in
+            completionHandler(group, newMembers)
+        }
+        .catch { error in
+            errorHandler(error)
+        }
     }
 
     /// Create or update group members in DB.
     /// - Parameters:
-    ///   - groupID: ID (8 bytes) of the group, unique with creator
-    ///   - creator: Creator (identity) of the group, unique with ID
+    ///   - groupIdentity: Identity of the group
     ///   - members: Members (identity list) of the group
     ///   - systemMessageDate: Date for new system message(s), if `nil` no message is posted
     ///   - sourceCaller: Delete member (is hidden contact) only is not `SourceCaller.sync`
     /// - Returns: Created or updated group or is Nil when group is deleted
     /// - Throws: GroupError.contactForCreatorMissing, GroupError.contactForMemberMissing
     public func createOrUpdateDB(
-        groupID: Data,
-        creator: String,
+        for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date?,
         sourceCaller: SourceCaller
     ) -> Promise<Group?> {
-        if !creator.elementsEqual(myIdentityStore.identity) {
+        if !groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) {
             // Record a pseudo sync request so we won't trigger another one if we process
             // messages in this new group while we are still processing the group create
-            recordSendSyncRequest(groupID, creator)
+            recordSendSyncRequest(groupIdentity)
         }
 
         // Am I the creator? Then Conversation.contact and GroupEntity.groupCreator have to be `nil`.
         var creatorContact: ContactEntity?
-        if !creator.elementsEqual(myIdentityStore.identity) {
+        if !groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) {
 
             // If the creator blocked and group not found, then send leave messages to sender and all provided members
-            if userSettings.blacklist.contains(creator),
-               getGroup(groupID, creator: creator) == nil {
+            if userSettings.blacklist.contains(groupIdentity.creator.string),
+               getGroup(groupIdentity.id, creator: groupIdentity.creator.string) == nil {
                 if members.contains(myIdentityStore.identity) {
                     var toMembers = [String](members)
-                    if !toMembers.contains(creator) {
-                        toMembers.append(creator)
+                    if !toMembers.contains(groupIdentity.creator.string) {
+                        toMembers.append(groupIdentity.creator.string)
                     }
 
-                    leave(groupID: groupID, creator: creator, toMembers: toMembers)
+                    leave(groupIdentity: groupIdentity, toMembers: toMembers)
                 }
 
-                return Promise { $0.fulfill(nil) }
+                DDLogWarn(
+                    "Group (\(groupIdentity)) not created, because creator is blocked, i sent group leave messages to its members"
+                )
+                return Promise(error: GroupError.creatorIsBlocked(groupIdentity: groupIdentity))
             }
 
-            creatorContact = entityManager.entityFetcher.contact(for: creator)
+            creatorContact = entityManager.entityFetcher.contact(for: groupIdentity.creator.string)
             guard creatorContact != nil else {
                 return Promise(error: GroupError.contactForCreatorMissing)
             }
         }
 
-        removeUnknownGroupFromAlertList(groupID: groupID, creator: creator)
+        removeUnknownGroupFromAlertList(groupIdentity)
 
         var group: Group?
 
         // Adjust group members and group state
         var allMembers = Set<String>(members)
-        if !allMembers.contains(creator) {
-            allMembers.insert(creator)
+        if !allMembers.contains(groupIdentity.creator.string) {
+            allMembers.insert(groupIdentity.creator.string)
         }
 
         if allMembers.contains(myIdentityStore.identity) {
@@ -275,14 +282,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     self.entityManager.performSyncBlockAndSafe {
                         let conversation: Conversation
                         if let existingConversation = self.entityManager.entityFetcher.conversation(
-                            for: groupID,
-                            creator: creator
+                            for: groupIdentity.id,
+                            creator: groupIdentity.creator.string
                         ) {
                             conversation = existingConversation
                         }
                         else {
                             conversation = self.entityManager.entityCreator.conversation()
-                            conversation.groupID = groupID
+                            conversation.groupID = groupIdentity.id
                             conversation.contact = creatorContact
                             conversation.groupMyIdentity = self.myIdentityStore.identity
                         }
@@ -293,8 +300,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                         }
                         else {
                             groupEntity = self.entityManager.entityCreator.groupEntity()
-                            groupEntity.groupID = groupID
-                            groupEntity.groupCreator = creatorContact != nil ? creator : nil
+                            groupEntity.groupID = groupIdentity.id
+                            groupEntity.groupCreator = creatorContact != nil ? groupIdentity.creator.string : nil
                             groupEntity.state = NSNumber(value: GroupState.active.rawValue)
                             groupNewCreated = true
                         }
@@ -390,7 +397,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                             }
                         }
 
-                        if creator.elementsEqual(self.myIdentityStore.identity) {
+                        if groupIdentity.creator.string.elementsEqual(self.myIdentityStore.identity) {
                             // Check is note group or not anymore
                             if allMembers.count == 1, allMembers.contains(self.myIdentityStore.identity) {
                                 self.postSystemMessage(
@@ -412,8 +419,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
                         let lastSyncRequestSince = Date(timeIntervalSinceNow: TimeInterval(-kGroupSyncRequestInterval))
                         let lastSyncRequest = self.entityManager.entityFetcher.lastGroupSyncRequest(
-                            for: groupID,
-                            groupCreator: creator,
+                            for: groupIdentity.id,
+                            groupCreator: groupIdentity.creator.string,
                             since: lastSyncRequestSince
                         )
 
@@ -435,11 +442,12 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             }
         }
         else {
-            if !creator.elementsEqual(myIdentityStore.identity) {
+            if !groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) {
+                // I'm not member or creator of the group
                 entityManager.performSyncBlockAndSafe {
                     if let groupEntity = self.entityManager.entityFetcher.groupEntity(
-                        for: groupID,
-                        with: creator
+                        for: groupIdentity.id,
+                        with: groupIdentity.creator.string
                     ) {
                         var addSystemMessage = false
 
@@ -449,8 +457,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                         }
 
                         if let conversation = self.entityManager.entityFetcher.conversation(
-                            for: groupID,
-                            creator: creator
+                            for: groupIdentity.id,
+                            creator: groupIdentity.creator.string
                         ) {
                             if addSystemMessage, let systemMessageDate {
                                 self.postSystemMessage(
@@ -464,8 +472,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                             let lastSyncRequestSince =
                                 Date(timeIntervalSinceNow: TimeInterval(-kGroupSyncRequestInterval))
                             let lastSyncRequest = self.entityManager.entityFetcher.lastGroupSyncRequest(
-                                for: groupID,
-                                groupCreator: creator,
+                                for: groupIdentity.id,
+                                groupCreator: groupIdentity.creator.string,
                                 since: lastSyncRequestSince
                             )
 
@@ -477,29 +485,44 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                                 lastSyncRequest: lastSyncRequest?.lastSyncRequest
                             )
                         }
+                        else {
+                            DDLogWarn("Conversation entity for \(groupIdentity) not found")
+                        }
+                    }
+                    else {
+                        DDLogWarn("Group entity for \(groupIdentity) not found")
                     }
                 }
+            }
+            else {
+                DDLogNotice("I'm creator of the group \(groupIdentity) but not member")
             }
 
             return Promise { $0.fulfill(group) }
         }
     }
 
-    /// Objective-c bridge
+    /// Objective-C bridge
     public func createOrUpdateDBObjc(
         groupID: Data,
         creator: String,
         members: Set<String>,
         systemMessageDate: Date?,
-        sourceCaller: SourceCaller
-    ) -> AnyPromise {
-        AnyPromise(createOrUpdateDB(
-            groupID: groupID,
-            creator: creator,
+        sourceCaller: SourceCaller,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        createOrUpdateDB(
+            for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)),
             members: members,
             systemMessageDate: systemMessageDate,
             sourceCaller: sourceCaller
-        ))
+        )
+        .done(on: .global()) { _ in
+            completionHandler(nil)
+        }
+        .catch { error in
+            completionHandler(error)
+        }
     }
     
     /// Individually fetches the contacts with the listed identities from the database or requests them individually
@@ -529,7 +552,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                                nsError.code == 404 {
                                 singleContactSeal.fulfill(.revokedOrInvalid(identity))
                             }
-                            else if let nsError = error as? NSError, nsError.code == kBlockUnknownContactErrorCode {
+                            else if let nsError = error as? NSError,
+                                    nsError.code == ThreemaProtocolError.blockUnknownContact.rawValue {
                                 singleContactSeal.fulfill(.blocked(identity))
                             }
                             else {
@@ -605,25 +629,39 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
     }
     
-    /// Objective-c bridge
-    @objc public func setNameObjc(
+    /// Objective-C bridge
+    public func setNameObjc(
         groupID: Data,
         creator: String,
         name: String?,
         systemMessageDate: Date,
-        send: Bool
-    ) -> AnyPromise {
-        AnyPromise(setName(groupID: groupID, creator: creator, name: name, systemMessageDate: systemMessageDate))
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        setName(groupID: groupID, creator: creator, name: name, systemMessageDate: systemMessageDate)
+            .done(on: .global()) {
+                completionHandler(nil)
+            }
+            .catch { error in
+                completionHandler(error)
+            }
     }
     
-    /// Objective-c bridge
-    @objc @discardableResult public func setNameObjc(
+    /// Objective-C bridge
+    public func setNameObjc(
         group: Group,
         name: String?,
         systemMessageDate: Date,
-        send: Bool
-    ) -> AnyPromise {
-        AnyPromise(setName(group: group, name: name, systemMessageDate: systemMessageDate, send: send))
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        setName(group: group, name: name, systemMessageDate: systemMessageDate, send: send)
+            .done(on: .global()) {
+                completionHandler(nil)
+            }
+            .catch { error in
+                completionHandler(error)
+            }
     }
     
     // MARK: - Set photo
@@ -737,15 +775,22 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
     }
     
-    /// Objective-c bridge
-    @objc @discardableResult public func setPhotoObjc(
+    /// Objective-C bridge
+    public func setPhotoObjc(
         groupID: Data,
         creator: String,
         imageData: Data,
         sentDate: Date,
-        send: Bool
-    ) -> AnyPromise {
-        AnyPromise(setPhoto(groupID: groupID, creator: creator, imageData: imageData, sentDate: sentDate, send: send))
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        setPhoto(groupID: groupID, creator: creator, imageData: imageData, sentDate: sentDate, send: send)
+            .done(on: .global()) {
+                completionHandler(nil)
+            }
+            .catch { error in
+                completionHandler(error)
+            }
     }
     
     // MARK: - Delete photo
@@ -805,9 +850,21 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
     }
     
-    /// Objective-c bridge
-    @objc public func deletePhotoObjc(groupID: Data, creator: String, sentDate: Date, send: Bool) -> AnyPromise {
-        AnyPromise(deletePhoto(groupID: groupID, creator: creator, sentDate: sentDate, send: send))
+    /// Objective-C bridge
+    public func deletePhotoObjc(
+        groupID: Data,
+        creator: String,
+        sentDate: Date,
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        deletePhoto(groupID: groupID, creator: creator, sentDate: sentDate, send: send)
+            .done(on: .global()) {
+                completionHandler(nil)
+            }
+            .catch { error in
+                completionHandler(error)
+            }
     }
     
     // MARK: - Leave
@@ -836,7 +893,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         var currentMembers = [String]()
         var hiddenContacts = [String]()
         entityManager.performBlockAndWait {
-            if let conversation = self.getConversation(for: GroupIdentity(id: groupID, creator: creator)) {
+            if let conversation = self
+                .getConversation(for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator))) {
                 currentMembers = conversation.members.map(\.identity)
                 hiddenContacts = conversation.members.filter(\.isContactHidden).map(\.identity)
             }
@@ -885,7 +943,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 DDLogWarn("Group entity not found")
                 return
             }
-            guard let conversation = self.getConversation(for: GroupIdentity(id: groupID, creator: creator)) else {
+            guard let conversation = self
+                .getConversation(for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator))) else {
                 DDLogWarn("Conversation not found")
                 return
             }
@@ -1062,12 +1121,19 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         )
     }
     
-    @objc public func syncObjc(
+    public func syncObjc(
         group: Group,
         to identities: Set<String>?,
-        withoutCreateMessage: Bool
-    ) -> AnyPromise {
-        AnyPromise(sync(group: group, to: identities, withoutCreateMessage: withoutCreateMessage))
+        withoutCreateMessage: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        sync(group: group, to: identities, withoutCreateMessage: withoutCreateMessage)
+            .done(on: .global()) {
+                completionHandler(nil)
+            }
+            .catch { error in
+                completionHandler(error)
+            }
     }
     
     /// Send sync request for this group, is not already requested in the last 7 days (see `kGroupSyncRequestInterval`).
@@ -1099,7 +1165,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             entityManager: entityManager,
             onCompletion: { _ in
                 if self.entityManager.entityFetcher.contact(for: creator) != nil {
-                    self.recordSendSyncRequest(groupID, creator)
+                    self.recordSendSyncRequest(GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)))
                     self.sendGroupSyncRequest(groupID, creator)
                 }
                 else {
@@ -1143,7 +1209,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // We don't care if the task execution fails eventually as the likelihood is low.
                 
         guard let conversation =
-            getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) else {
+            getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupIdentity.creator))
+        else {
             DDLogWarn("Coversation not found")
             return
         }
@@ -1199,7 +1266,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     // MARK: - Get group / conversation
 
     public func getConversation(for groupIdentity: GroupIdentity) -> Conversation? {
-        entityManager.entityFetcher.conversation(for: groupIdentity.id, creator: groupIdentity.creator)
+        entityManager.entityFetcher.conversation(for: groupIdentity.id, creator: groupIdentity.creator.string)
     }
 
     /// Loads group, conversation and LastGroupSyncRequest from DB.
@@ -1270,7 +1337,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     ///   - creator: Creator of group
     /// - Returns: Members of the group
     @objc func getGroupMembersForClone(_ groupID: Data, creator: String) -> Set<ContactEntity>? {
-        guard let conversation = getConversation(for: GroupIdentity(id: groupID, creator: creator)) else {
+        guard let conversation =
+            getConversation(for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator))) else {
             DDLogError("Group conversation not found")
             return nil
         }
@@ -1359,7 +1427,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             }
             
             guard let conversation =
-                getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) else {
+                getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupIdentity.creator))
+            else {
                 return Promise(error: GroupError.groupConversationNotFound)
             }
 
@@ -1411,7 +1480,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             return Promise()
         }
         guard let conversation =
-            getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) else {
+            getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupIdentity.creator))
+        else {
             return Promise()
         }
         
@@ -1518,12 +1588,12 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
     }
     
-    private func recordSendSyncRequest(_ groupID: Data, _ creator: String) {
+    private func recordSendSyncRequest(_ groupIdentity: GroupIdentity) {
         entityManager.performSyncBlockAndSafe {
             // Record this sync request
             let lastSyncRequest: LastGroupSyncRequest = self.entityManager.entityCreator.lastGroupSyncRequest()
-            lastSyncRequest.groupID = groupID
-            lastSyncRequest.groupCreator = creator
+            lastSyncRequest.groupID = groupIdentity.id
+            lastSyncRequest.groupCreator = groupIdentity.creator.string
             lastSyncRequest.lastSyncRequest = Date()
         }
     }
@@ -1548,7 +1618,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // TODO: Check must be reflect ballot messages to new members???
 
         guard let conversation =
-            getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) else {
+            getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupIdentity.creator))
+        else {
             return
         }
         
@@ -1638,9 +1709,9 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         taskManager.add(taskDefinition: task)
     }
     
-    private func removeUnknownGroupFromAlertList(groupID: Data, creator: String) {
+    private func removeUnknownGroupFromAlertList(_ groupIdentity: GroupIdentity) {
         let unknownGroupAlertList = userSettings.unknownGroupAlertList!
-        let groupDict = ["groupid": groupID, "creator": creator] as [String: AnyHashable]
+        let groupDict = ["groupid": groupIdentity.id, "creator": groupIdentity.creator.string] as [String: AnyHashable]
         if unknownGroupAlertList.map({ $0 as! [String: AnyHashable] == groupDict }).contains(true) {
             unknownGroupAlertList.remove(groupDict)
             userSettings.unknownGroupAlertList = unknownGroupAlertList

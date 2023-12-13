@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 
@@ -30,14 +31,14 @@ final class LocalParticipant: NormalParticipant, Sendable {
     enum Error: Swift.Error {
         case existingPendingMediaKeys
     }
-    
+
+    let threemaIdentity: ThreemaIdentity
+    let nickname: String
     private let localContext: LocalContext
     
     // TODO: (IOS-4059) Move a11y string to NormalParticipant, make `dependencies` private again
     let dependencies: Dependencies
-    
-    private let localIdentity: ThreemaID
-    
+        
     private var mediaKeys: MediaKeys
     private var pendingMediaKeys: MediaKeys?
     private var pendingMediaKeysIsStale = false // TODO: (IOS-4070) Maybe make this part of `MediaKeys`
@@ -49,13 +50,13 @@ final class LocalParticipant: NormalParticipant, Sendable {
     
     init(
         participantID: ParticipantID,
-        contactModel: ContactModel,
         localContext: LocalContext,
-        threemaID: ThreemaID,
-        dependencies: Dependencies,
-        localIdentity: ThreemaID
+        localContactModel: ContactModel,
+        dependencies: Dependencies
     ) {
         self.localContext = localContext
+        self.threemaIdentity = localContactModel.identity
+        self.nickname = localContactModel.nickname
         self.participantType = "LocalParticipant"
         self.dependencies = dependencies
         
@@ -66,11 +67,9 @@ final class LocalParticipant: NormalParticipant, Sendable {
         self.keyPair = KeyPair(publicKey: keys.publicKey, privateKey: keys.privateKey)
         
         self.pcck = self.dependencies.groupCallCrypto.randomBytes(of: 16)
-        self.localIdentity = localIdentity
         
         self.mediaKeys = MediaKeys(dependencies: dependencies)
-        
-        super.init(participantID: participantID, contactModel: contactModel, threemaID: threemaID)
+        super.init(participantID: participantID)
     }
     
     var protocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey {

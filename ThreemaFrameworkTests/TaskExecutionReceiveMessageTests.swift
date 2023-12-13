@@ -177,7 +177,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let groupEntity = GroupEntity(context: databaseMainCnx.current)
-        groupEntity.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        groupEntity.groupID = MockData.generateGroupID()
         groupEntity.groupCreator = nil
 
         let conversation = Conversation(context: databaseMainCnx.current)
@@ -186,13 +186,13 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
         let userSettingsMock = UserSettingsMock()
         let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = Group(
+        groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
-        )
+        ))
         let messageProcessorMock = MessageProcessorMock()
         let messageSenderMock = MessageSenderMock()
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
@@ -208,9 +208,9 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
 
         let expectedTextMessage = GroupTextMessage()
-        expectedTextMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        expectedTextMessage.groupID = groupEntity.groupID
         expectedTextMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
-        expectedTextMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))!
+        expectedTextMessage.nonce = MockData.generateMessageNonce()
         expectedTextMessage.fromIdentity = "ECHOECHO"
         expectedTextMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedTextMessage.text = "Bla bla bla..."
@@ -273,7 +273,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
-                    message: "[0x33] sendIncomingMessageAckToChat (type: groupText; id: \(expectedBoxedMessage.messageID.hexString); groupCreator: \(expectedTextMessage.groupCreator!) - groupId: \(expectedTextMessage.groupID.hexString))"
+                    message: "[0x33] sendIncomingMessageAckToChat (type: groupText; id: \(expectedBoxedMessage.messageID.hexString); groupIdentity: id: \(expectedTextMessage.groupID.hexString) creator: \(expectedTextMessage.groupCreator!))"
                 )
         )
     }
@@ -282,7 +282,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let groupEntity = GroupEntity(context: databaseMainCnx.current)
-        groupEntity.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        groupEntity.groupID = MockData.generateGroupID()
         groupEntity.groupCreator = nil
 
         let conversation = Conversation(context: databaseMainCnx.current)
@@ -291,13 +291,13 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
         let userSettingsMock = UserSettingsMock()
         let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = Group(
+        groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
-        )
+        ))
         let messageProcessorMock = MessageProcessorMock()
         let messageSenderMock = MessageSenderMock()
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
@@ -313,9 +313,9 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
 
         let expectedGroupRenameMessage = GroupRenameMessage()
-        expectedGroupRenameMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        expectedGroupRenameMessage.groupID = groupEntity.groupID
         expectedGroupRenameMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
-        expectedGroupRenameMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))!
+        expectedGroupRenameMessage.nonce = MockData.generateMessageNonce()
         expectedGroupRenameMessage.fromIdentity = "ECHOECHO"
         expectedGroupRenameMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedGroupRenameMessage.name = "New group name"
@@ -373,7 +373,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
-                    message: "[0x33] sendIncomingMessageAckToChat (type: groupName; id: \(expectedBoxedMessage.messageID.hexString); groupCreator: \(expectedGroupRenameMessage.groupCreator!) - groupId: \(expectedGroupRenameMessage.groupID.hexString))"
+                    message: "[0x33] sendIncomingMessageAckToChat (type: groupName; id: \(expectedBoxedMessage.messageID.hexString); groupIdentity: id: \(expectedGroupRenameMessage.groupID.hexString) creator: \(expectedGroupRenameMessage.groupCreator!))"
                 )
         )
 

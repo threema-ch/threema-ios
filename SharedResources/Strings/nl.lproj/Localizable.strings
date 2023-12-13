@@ -90,7 +90,7 @@
 "settings" = "Instellingen";
 "loadMore" = "Meer laden";
 "all" = "Alles";
-"myIdentity" = "Mijn profiel";
+"myIdentity" = "Profiel";
 "share_id" = "Uw Threema ID delen";
 "close" = "sluiten";
 "threema_id" = "Threema ID";
@@ -148,9 +148,6 @@
 "max_x_minutes" = "Max. %d minuten";
 "still_compressed_note" = "Zeer grote video's kunnen ongeacht deze instelling worden gecomprimeerd.";
 
-/* Sound names */
-"push_sound_title" = "Geluid pushbericht";
-"push_group_sound_title" = "Geluid groepspushbericht";
 /* Sound names */
 "sound_none" = "Geen";
 "sound_default" = "Standaard";
@@ -459,6 +456,8 @@
 /* Contacts */
 "pull_to_sync" = "Vegen om te synchroniseren...";
 "bad_identity_backup" = "De gegevens van het ID-exportbestand zijn ongeldig of u hebt het verkeerde wachtwoord ingevoerd. Gebruik het wachtwoord dat u koos toen u het exportbestand uitvoerde om uw Threema ID te herstellen. Controleer de invoer en probeer het opnieuw.";
+"pull_to_sync_429_message" = "De dagelijkse limiet voor toegestane synchronisaties van contacten is bereikt. Ga morgen verder met synchroniseren, of neem contact op met de klantenondersteuning van Threema.";
+"pull_to_sync_429_message_work" = "De dagelijkse limiet voor toegestane synchronisaties van contacten is bereikt. Ga morgen verder met synchroniseren, of neem contact op met de beheerder van %@.";
 
 "synchronizing" = "Synchroniseren...";
 
@@ -525,10 +524,10 @@
 "more_information_link_id_work" = "Als je je e-mailadres en telefoonnummer geeft, kunnen we je contactpersonen helpen je automatisch op %@ te vinden. Deze informatie wordt veilig en anoniem opgeslagen. Als je deze stap overslaat, kun je %@ volledig anoniem gebruiken.";
 "more_information_pick_nickname" = "De nickname wordt gebruikt in de pushberichten op sommige apparaten of als aanvullende identificatiemanier voor gebruikers bij wie je nog niet in het adresboek staat. We raden aan alleen je voornaam te gebruiken. Als je geen nickname instelt, gebruiken we standaard je Threema ID.";
 "more_information_sync_contacts" = "Als je deze optie inschakelt, versleutelt %@ het e-mailadres en de telefoonnummers met eenzijdige versleuteling (hashing) voordat we ze naar de server versturen om te controleren of er passende contactpersonen zijn. We slaan je adresboekgegevens niet op.";
-"more_information_random_seed" = "Door je vingers te bewegen, maak je willekeurige gegevens aan (entropisch) die worden gebruik om een sleutelpaar te genenereren dat wordt gekoppeld aan je nieuwe, unieke Threema ID.";
+"more_information_random_seed" = "Door uw vinger te bewegen, maakt u willekeurige gegevens aan ('entropie' genoemd) die worden gebruikt om een sleutelpaar te genereren dat wordt gekoppeld aan uw nieuwe, unieke Threema ID.";
 "id_confirm_description_work" = "Je Threema ID werkt net als een telefoonnummer. Je contactpersonen kunnen je via dit ID bereiken.";
 "more_information_link_id" = "Door ons je telefoonnummer te geven, kunnen we je vrienden je automatisch op Threema te vinden. Deze informatie wordt veilig en anoniem opgeslagen. Als je deze stap overslaat, kun je Threema volledig anoniem gebruiken.";
-"more_information_confirm_id" = "Je hebt ook een sleutelpaar aangemaakt. De publieke sleutel is veilig verstuurd naar onze servers. De privésleutel blijft altijd op je apparaat. Dit garandeert dat niemand je berichten kan lezen.";
+"more_information_confirm_id" = "U hebt ook een sleutelpaar aangemaakt. De openbare sleutel is veilig verstuurd naar onze servers. De privésleutel wordt altijd op uw apparaten behouden. Dit garandeert dat niemand uw berichten kan lezen.";
 
 "id_confirm_description" = "Je Threema ID werkt net als een telefoonnummer. Je vrienden kunnen je via dit ID bereiken.";
 "id_pick_nickname_description_work" = "Je contactpersonen zien je nickname wanneer ze een bericht ontvangen.";
@@ -586,6 +585,8 @@
 "Done" = "Klaar";
 "enter_license_description" = "Voer de gegevens in die u van uw bedrijf of organisatie heeft ontvangen.";
 "enter_license_onprem_description" = "Threema OnPrem is de zakelijke messenger die bedrijven zelf hosten. Voer de gegevens in die je van je bedrijf of organisatie hebt ontvangen.";
+"enter_license_work_admin_description" = "Bent u uw toegangsgegevens vergeten? Neem contact op met de beheerder van Threema Work.";
+"enter_license_onprem_admin_description" = "Bent u uw toegangsgegevens vergeten? Neem contact op met de beheerder van Threema OnPrem.";
 "more_work_info" = "Meer informatie over %@.";
 "Save" = "Opslaan";
 "enter_license_username_placeholder" = "Gebruikersnaam";
@@ -785,6 +786,8 @@
 
 "group_call_error_generic_title" = "Er is een fout opgetreden";
 "group_call_error_generic_message" = "Neem contact op met de klantenservice als het probleem aanhoudt.";
+"group_call_error_already_in_call_title" = "Andere oproep actief";
+"group_call_error_already_in_call_message" = "Er kan slechts één gesprek per keer worden gevoerd.";
 
 "group_call_accessibility_hide_view" = "Weergave groepsgesprek verbergen";
 "group_call_accessibility_enable_camera" = "Camera inschakelen";
@@ -959,6 +962,7 @@
 "safe_upload_failed" = "Uploaden mislukt";
 "safe_upload_size_exceeded" = "Uploadformaat voor de server overschreden";
 "safe_change_password" = "Wachtwoord wijzigen";
+"safe_learn_more" = "Meer informatie";
 "safe_backup_now" = "Back-up maken";
 "safe_deactivate" = "Threema Safe uitschakelen";
 "safe_deactivate_explain" = "Als u Threema Safe uitschakelt, worden bestaande back-ups van de server verwijderd. Doorgaan?";
@@ -1186,6 +1190,14 @@
 "delete_messages_confirm" = "Wil je permanent alle berichten verwijderen die ouder zijn dan %@?";
 "delete_messages_confirm_all" = "Wil je permanent alle berichten verwijderen?";
 "delete_messages_explain" = "Dit omvat alle berichtsoorten (tekst- en spraakberichten, media, bestanden, polls, enz. worden verwijderd).";
+"automatic_delete_explain" = "Gebruik automatische verwijdering om ruimte vrij te maken op de schijf. Open opiniepeilingen en notitiegroepen zijn uitgesloten van automatische verwijdering.";
+"automatic_delete_on_confirmation_title" = "Automatische verwijdering inschakelen?";
+"automatic_delete_off_confirmation_title" = "Automatische verwijdering uitschakelen?";
+// Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
+"automatic_delete_confirmation_message_no_immediate_deletion" = "Vanaf nu worden berichten ouder dan %@ automatisch verwijderd. Let op: open opiniepeilingen en notitiegroepen zijn uitgesloten.";
+"automatic_delete_confirmation_message_immediate_deletion" = "%d berichten worden onmiddellijk verwijderd en alle berichten ouder dan %@ worden vanaf nu automatisch verwijderd. Let op: open opiniepeilingen en notitiegroepen zijn uitgesloten.";
+"automatic_delete_on_confirmation_button" = "Automatische verwijdering inschakelen";
+"automatic_delete_off_confirmation_button" = "Automatische verwijdering uitschakelen";
 "delete_in_progress" = "Wordt verwijderd...";
 "one_year_title" = "1 jaar";
 "one_year" = "1 jaar";
@@ -1198,6 +1210,7 @@
 "one_week_title" = "1 week";
 "one_week" = "1 week";
 "everything" = "Alles verwijderen";
+"forever" = "Voorgoed";
 "media_file_not_found" = "Kon het mediabestand niet openen. Het was verwijderd of niet van de server gedownload.";
 "older_than" = "Ouder dan";
 
@@ -1205,10 +1218,11 @@
 "file_not_found_title" = "Bestand niet gevonden";
 
 "manage_all_conversations" = "Alle chats beheren";
-"manage_media_and_files" = "Bestanden beheren";
-"manage_messages" = "Berichten beheren";
+"manage" = "Beheren";
 "messages" = "Berichten";
 "files" = "Bestanden";
+"automatic_delete" = "Automatische verwijdering";
+"automatic_delete_label" = "Berichten houden";
 
 // Call Settings
 "settings_threema_calls_enable_calls" = "Threema oproepen inschakelen";
@@ -1253,6 +1267,7 @@
 "settings_advanced_other_section_header" = "Overig";
 "settings_advanced_webrtc_diagnostics_title" = "WebRTC Diagnostics";
 "settings_advanced_orphaned_files_cleanup" = "Zwevende bestanden verwijderen";
+"settings_advanced_contacts_cleanup" = "Contactpersonen opschonen";
 "settings_advanced_flush_message_queue" = "Berichtenwachtrij leegmaken";
 
 "settings_advanced_reregister_push_notifications_header_title" = "Pushberichten";
@@ -1269,10 +1284,18 @@
 "sentry_crash_send_description" = "Je kunt een anoniem crashrapport verzenden. Uitleg over wat de crash heeft veroorzaakt, zal helpen om het onderliggende probleem op te lossen.";
 "sentry_crash_send_yes" = "Anoniem rapport verzenden";
 "sentry_crash_send_no" = "Niet verzenden";
+
 "sentry_crash_comment_placeholder" = "Crashrapport";
 
-// My profile
+// Profile
 "profile_share_id_text" = "Mijn Threema ID";
+"profile_share_id" = "Threema ID delen";
+"profile_show_qr_code" = "QR-code weergeven";
+"profile_big_qr_code" = "Grote QR-code";
+"profile_big_qr_code_cover_view" = "Grote QR-code bedekt de weergave";
+"profile_linked_email" = "Gekoppeld e-mailadres";
+"profile_linked_phone" = "Gekoppeld telefoonnummer";
+"profile_id_export" = "ID-exportbestand";
 "my_profile_delete_cell_title" = "ID en gegevens verwijderen";
 
 // Delete & Revoke
@@ -1333,6 +1356,20 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "settings_orphaned_files_bin_delete_conformation" = "Wilt u de zwevende bestanden permanent verwijderen? Dit kan niet ongedaan worden gemaakt.";
 "settings_orphaned_files_log_title" = "BESTANDEN LOGGEN";
 "settings_orphaned_files_log_all_files_button" = "Bestanden in Debug Log loggen";
+
+// Contacts cleanup
+"settings_advanced_contacts_cleanup_stats_title" = "Contactpersonen opschonen";
+"settings_advanced_contacts_cleanup_log_stats" = "Dubbele contacten loggen";
+"settings_advanced_contacts_cleanup_unused" = "Dubbele contacten verwijderen";
+"settings_advanced_contacts_cleanup_log_disabled" = "Het loggen is uitgeschakeld.\n\nGa terug naar 'Geavanceerd', zet 'Debug log' aan en probeer het opnieuw.";
+"settings_advanced_contacts_cleanup_submit_logs" = "Ga terug naar 'Geavanceerde instellingen' en deel het log met Threema support voor nadere analyse.\n\nDaarna kun je 'Debug log' uitzetten.";
+"settings_advanced_contacts_cleanup_stats_logged" = "De informatie is gelogd.\n";
+"settings_advanced_contacts_cleanup_no_duplicates" = "U hebt geen dubbele contacten.";
+"settings_advanced_contacts_cleanup_error_title" = "Geen contactpersonen verwijderd";
+"settings_advanced_contacts_cleanup_still_used_error" = "Het opschonen is geannuleerd. %i dubbele contacten kunnen niet worden verwijderd omdat de duplicaten nog steeds berichten bevatten of omdat ze lid van een groep zijn.\n";
+"settings_advanced_contacts_cleanup_success_title" = "De contactpersonen zijn opgeschoond";
+"settings_advanced_contacts_cleanup_success_exit" = "Afsluiten";
+"settings_advanced_contacts_cleanup_unused_message" = "Er zijn %i dubbele contacten verwijderd.\n\nSluit de app, herstart deze en koppel vervolgens een apparaat. Indien dit niet werkt: ";
 
 // Media Preview
 "loading_video_failed" = "De video kon niet worden geladen. Herstart de app en probeer het opnieuw.";
@@ -1525,7 +1562,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "multi_device_join_failed_app_closed_message" = "Het koppelen is mislukt omdat %@ is afgesloten. Probeer het opnieuw.";
 
 "multi_device_linked_id_missing_title" = "Gekoppelde apparaten";
-"multi_device_linked_id_missing_message" = "Gekoppelde apparaten zijn verwijderd. Nadat dit apparaat is geconfigureerd of hersteld kunt u uw apparaten opnieuw koppelen.";
+"multi_device_linked_id_missing_message" = "Gekoppelde apparaten zijn verwijderd. Reset Threema voor de desktop nu en voorkom dat u berichten mist. Nadat dit apparaat is geconfigureerd of hersteld, kunt u uw apparaten opnieuw koppelen.";
+"multi_device_linked_id_missing_reset_button" = "De desktop-app resetten";
 
 "myprofile_link_email_phone_footer" = "Als je je e-mailadres of telefoonnummer aan je ID koppelt, kunnen anderen je automatisch op %@ vinden als je in hun adresboek staat.";
 "myprofile_link_email_footer" = "Als je je e-mailadres aan je ID koppelt, kunnen anderen je automatisch op %@ vinden als je e-mailadres in hun adresboek staat.";
@@ -1602,12 +1640,15 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 // In-app notifications
 "notification_copying_succeeded" = "Item gekopieerd";
 "notification_copying_failed" = "Kopiëren is mislukt";
+"notification_copying_id_succeeded" = "De Threema ID is gekopieerd";
 
 "notification_saving_succeeded" = "Item opgeslagen";
 "notification_saving_failed" = "Opslaan mislukt";
 
 "notification_saving_to_photos_succeeded" = "Aan foto's toegevoegd";
 "notification_saving_to_photos_failed" = "Toevoegen aan foto's is mislukt";
+
+"notification_autosave_failed" = "Het automatisch opslaan van media is mislukt";
 
 "notification_sending_failed" = "Verzending mislukt";
 "notification_sending_failed_subtitle_size" = "Het item is te groot";
@@ -1729,6 +1770,11 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_status_delivered_plus_time" = "Afgeleverd, %@";
 "accessibility_status_read_plus_time" = "Gelezen, %@";
 "accessibility_status_failed_plus_time" = "Mislukt, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Overeengekomen door %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Afgewezen door %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Overeengekomen door %i, afgewezen door %i, %@%@";
+"accessibility_status_group_acknowledged_my_reaction" = "Ik ben akkoord gegaan";
+"accessibility_status_group_declined_my_reaction" = "Ik heb het afgewezen";
 
 // UIAccessibilityCustomActions
 "accessibility_action_open_link" = "%@ openen";
@@ -1814,3 +1860,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nNiet afgewaardeerd van versie %d naar versie %d";
 "sqldhsessionstore_unknownError" = "Er is een onverwachte fout opgetreden tijdens een migratiepoging: %@";
+
+// UIApplicationShortcutItems
+"application_shortcut_item_new_message" = "Nieuw bericht";
+"application_shortcut_item_scan_qr_code" = "QR-code scannen";
+"application_shortcut_item_my_id" = "Mijn profiel";

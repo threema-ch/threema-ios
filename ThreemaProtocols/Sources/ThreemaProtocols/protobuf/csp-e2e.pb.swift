@@ -37,12 +37,6 @@ public struct CspE2e_MessageMetadata {
   /// is at least 16 bytes. May be empty if the nickname is long enough.
   public var padding: Data = Data()
 
-  /// Optional nickname associated to the sender's Threema ID.
-  ///
-  /// Recommended to not exceed 32 grapheme clusters. Should not contain
-  /// whitespace characters at the beginning or the end of string.
-  public var nickname: String = String()
-
   /// Unique message ID. Must match the message ID of the outer struct
   /// (i.e. `message-with-metadata-box.message-id`).
   public var messageID: UInt64 = 0
@@ -53,14 +47,36 @@ public struct CspE2e_MessageMetadata {
   /// member.
   public var createdAt: UInt64 = 0
 
+  /// Nickname
+  ///
+  /// Should be sent when the associate message requires _user profile
+  /// distribution_.
+  ///
+  /// When the user cleared its nickname, send an empty string. Do not send the
+  /// user's Threema ID (i.e. process data).
+  ///
+  /// Recommended to not exceed 32 grapheme clusters. Should not contain
+  /// whitespace characters at the beginning or the end of string.
+  public var nickname: String {
+    get {return _nickname ?? String()}
+    set {_nickname = newValue}
+  }
+  /// Returns true if `nickname` has been explicitly set.
+  public var hasNickname: Bool {return self._nickname != nil}
+  /// Clears the value of `nickname`. Subsequent reads from it will return its default value.
+  public mutating func clearNickname() {self._nickname = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
+
+  fileprivate var _nickname: String? = nil
 }
 
 /// Announces and immediately starts a group call.
 ///
 /// **Properties**:
+/// - Kind: Group
 /// - Flags:
 ///   - `0x01`: Send push notification.
 /// - User profile distribution: Yes
@@ -73,13 +89,24 @@ public struct CspE2e_MessageMetadata {
 /// - Delivery receipts:
 ///   - Automatic: N/A
 ///   - Manual: No
+/// - When rejected: N/A¹
 /// - Send to Threema Gateway ID group creator: If capture is enabled
+///
+/// ¹: For the group creator it will be handled as if `group-sync-request` was
+/// received, re-sending a `GroupCallStart` if still ongoing, implicitly
+/// triggered by FS `Reject` receive steps.
 ///
 /// When creating this message to start a call within the group:
 ///
-/// 1. Generate a random GCK and set `gck` appropriately.
-/// 2. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
+/// 1. If the sender or all of the receivers do not have `GROUP_CALL_SUPPORT`,
+///    prevent creation and abort these steps.
+/// 2. Generate a random GCK and set `gck` appropriately.
+/// 3. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
 ///    Server API.
+///
+/// When sending this message:
+///
+/// 1. Omit all receivers that do not have `GROUP_CALL_SUPPORT`.
 ///
 /// When receiving this message:
 ///
@@ -132,6 +159,7 @@ public struct CspE2e_GroupCallStart {
 /// information is provided by a `GroupInvite` URL payload.
 ///
 /// **Properties**:
+/// - Kind: 1:1
 /// - Flags:
 ///   - `0x01`: Send push notification.
 /// - User profile distribution: Yes
@@ -144,6 +172,7 @@ public struct CspE2e_GroupCallStart {
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No
+/// - When rejected: N/A (ignored)
 /// - Send to Threema Gateway ID group creator: N/A
 ///
 /// When receiving this message:
@@ -200,6 +229,7 @@ public struct CspE2e_GroupJoinRequest {
 /// request.
 ///
 /// **Properties**:
+/// - Kind: 1:1
 /// - Flags: None
 /// - User profile distribution: Yes
 /// - Exempt from blocking: Yes
@@ -211,6 +241,7 @@ public struct CspE2e_GroupJoinRequest {
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No
+/// - When rejected: N/A (ignored)
 /// - Send to Threema Gateway ID group creator: N/A
 ///
 /// When receiving this message:
@@ -369,9 +400,9 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   public static let protoMessageName: String = _protobuf_package + ".MessageMetadata"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "padding"),
-    2: .same(proto: "nickname"),
     3: .standard(proto: "message_id"),
     4: .standard(proto: "created_at"),
+    2: .same(proto: "nickname"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -381,7 +412,7 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.padding) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.nickname) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self._nickname) }()
       case 3: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
       case 4: try { try decoder.decodeSingularUInt64Field(value: &self.createdAt) }()
       default: break
@@ -390,12 +421,16 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
-    if !self.nickname.isEmpty {
-      try visitor.visitSingularStringField(value: self.nickname, fieldNumber: 2)
-    }
+    try { if let v = self._nickname {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
+    } }()
     if self.messageID != 0 {
       try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 3)
     }
@@ -407,9 +442,9 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
   public static func ==(lhs: CspE2e_MessageMetadata, rhs: CspE2e_MessageMetadata) -> Bool {
     if lhs.padding != rhs.padding {return false}
-    if lhs.nickname != rhs.nickname {return false}
     if lhs.messageID != rhs.messageID {return false}
     if lhs.createdAt != rhs.createdAt {return false}
+    if lhs._nickname != rhs._nickname {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

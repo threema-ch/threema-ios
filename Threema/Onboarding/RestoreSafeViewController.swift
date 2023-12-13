@@ -254,7 +254,7 @@ extension RestoreSafeViewController {
     
     @objc func restore() {
         
-        let logFile = FileUtility.appDocumentsDirectory?.appendingPathComponent("safe-restore.log")
+        let logFile = LogManager.safeRestoreLogFile
         LogManager.deleteLogFile(logFile)
         LogManager.addFileLogger(logFile)
         DDLogNotice("Threema Safe restore started")

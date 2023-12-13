@@ -109,54 +109,13 @@
 	<string></string>
 	<key>ThreemaWorkVersion</key>
 	<false/>
-	<key>UIApplicationShortcutItems</key>
-	<array>
-		<dict>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeAdd</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>New message</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>ch.threema.newmessage</string>
-			<key>UIApplicationShortcutItemUserInfo</key>
-			<dict>
-				<key>secondShortcutKey1</key>
-				<string>v1</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemIconFile</key>
-			<string>TabBar-Id</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>My ID</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>ch.threema.myid</string>
-			<key>UIApplicationShortcutItemUserInfo</key>
-			<dict>
-				<key>secondShortcutKey1</key>
-				<string>v1</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemIconFile</key>
-			<string>QRScan</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>Scan QR code</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>ch.threema.scanid</string>
-			<key>UIApplicationShortcutItemUserInfo</key>
-			<dict>
-				<key>secondShortcutKey1</key>
-				<string>v1</string>
-			</dict>
-		</dict>
-	</array>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>voip</string>
 		<string>audio</string>
 		<string>fetch</string>
+		<string>processing</string>
 		<string>remote-notification</string>
+		<string>voip</string>
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
@@ -184,6 +143,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>ch.threema.messageRetention</string>
 	</array>
 </dict>
 </plist>

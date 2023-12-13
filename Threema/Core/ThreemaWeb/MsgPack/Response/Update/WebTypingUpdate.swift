@@ -20,14 +20,15 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 class WebTypingUpdate: WebAbstractMessage {
     
-    var id: String
+    var id: ThreemaIdentity
     var isTyping: Bool
     
     override init(message: WebAbstractMessage) {
-        self.id = message.args!["id"] as! String
+        self.id = ThreemaIdentity(message.args!["id"] as! String)
         let data = message.data! as! [AnyHashable: Any?]
         self.isTyping = data["isTyping"] as! Bool
         super.init(
@@ -40,7 +41,7 @@ class WebTypingUpdate: WebAbstractMessage {
         )
     }
     
-    init(identity: String, typing: Bool) {
+    init(identity: ThreemaIdentity, typing: Bool) {
         
         self.id = identity
         self.isTyping = typing

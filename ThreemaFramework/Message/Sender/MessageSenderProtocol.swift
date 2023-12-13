@@ -21,6 +21,7 @@
 import CoreLocation
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 public protocol MessageSenderProtocol {
 

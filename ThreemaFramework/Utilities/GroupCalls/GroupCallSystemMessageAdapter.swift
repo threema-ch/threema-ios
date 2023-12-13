@@ -43,8 +43,8 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             self.businessInjector.backgroundEntityManager.performAsyncBlockAndSafe {
                 guard let conversation = self.businessInjector.backgroundEntityManager.entityFetcher.conversation(
-                    for: groupModel.groupID,
-                    creator: groupModel.creator.id
+                    for: groupModel.groupIdentity.id,
+                    creator: groupModel.groupIdentity.creator.string
                 ) else {
                     continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
                     return
@@ -53,7 +53,7 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
                 switch systemMessage {
                 case let .groupCallStartedBy(threemaID):
                     guard let contact = self.businessInjector.backgroundEntityManager.entityFetcher
-                        .contact(for: threemaID.id) else {
+                        .contact(for: threemaID.string) else {
                         continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
                         return
                     }

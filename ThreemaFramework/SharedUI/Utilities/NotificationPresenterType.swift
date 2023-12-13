@@ -98,6 +98,10 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_copying_succeeded"),
         notificationStyle: .success
     )
+    public static let copyIDSuccess = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_copying_id_succeeded"),
+        notificationStyle: .success
+    )
     public static let copyError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_copying_failed"),
         notificationStyle: .error
@@ -118,6 +122,11 @@ public struct NotificationPresenterType {
     )
     public static let saveToPhotosError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_saving_to_photos_failed"),
+        notificationStyle: .error
+    )
+    
+    public static let autosaveMediaError = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_autosave_failed"),
         notificationStyle: .error
     )
     

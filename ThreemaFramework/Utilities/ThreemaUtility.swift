@@ -186,10 +186,14 @@ public final class ThreemaUtility: NSObject {
     // MARK: - POI
     
     /// Fetches the address given a location if the privacy setting is enabled, else returns coordinate string
-    /// - Parameter location: Location to fetch address for
-    /// - Returns: AnyPromise with address or coordinate string
-    @objc static func fetchAddressObjc(for location: CLLocation) -> AnyPromise {
-        AnyPromise(fetchAddress(for: location))
+    /// - Parameters:
+    /// - location: Location to fetch address for
+    /// - completionHandler: Returns address or coordinate string
+    @objc static func fetchAddressObjc(for location: CLLocation, completionHandler: @escaping (String) -> Void) {
+        fetchAddress(for: location)
+            .done { address in
+                completionHandler(address)
+            }
     }
     
     /// Fetches the address given a location if the privacy setting is enabled, else returns coordinate string

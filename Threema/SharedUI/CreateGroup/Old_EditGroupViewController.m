@@ -31,7 +31,6 @@
 #import "ContactStore.h"
 #import "EntityFetcher.h"
 #import "ImageData.h"
-#import <PromiseKit/PromiseKit.h>
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -179,10 +178,11 @@
         return;
     }
     
-    [groupManager setNameObjcWithGroupID:_group.groupID creator:[[MyIdentityStore sharedMyIdentityStore] identity] name:self.nameTextField.text systemMessageDate:[NSDate date] send:YES]
-        .catch(^(NSError *error) {
+    [groupManager setNameObjcWithGroupID:_group.groupID creator:[[MyIdentityStore sharedMyIdentityStore] identity] name:self.nameTextField.text systemMessageDate:[NSDate date] send:YES completionHandler:^(NSError * _Nullable error) {
+        if (error) {
             DDLogError(@"Set group name failed: %@", error.localizedDescription);
-        });
+        }
+    }];
 }
 
 - (void)saveImage {
@@ -191,16 +191,18 @@
     }
     
     if (_avatarImageData) {
-        [groupManager setPhotoObjcWithGroupID:_group.groupID creator:_group.groupCreatorIdentity imageData:_avatarImageData sentDate:[NSDate date] send:YES]
-        .catch(^(NSError *error) {
-            DDLogError(@"Set group photo failed: %@", error.localizedDescription);
-        });
+        [groupManager setPhotoObjcWithGroupID:_group.groupID creator:_group.groupCreatorIdentity imageData:_avatarImageData sentDate:[NSDate date] send:YES completionHandler:^(NSError * _Nullable error) {
+            if (error) {
+                DDLogError(@"Set group photo failed: %@", error.localizedDescription);
+            }
+        }];
     }
     else {
-        [groupManager deletePhotoObjcWithGroupID:_group.groupID creator:_group.groupCreatorIdentity sentDate:[NSDate date] send:YES]
-        .catch(^(NSError *error) {
-            DDLogError(@"Delete group photo failed: %@", error.localizedDescription);
-        });
+        [groupManager deletePhotoObjcWithGroupID:_group.groupID creator:_group.groupCreatorIdentity sentDate:[NSDate date] send:YES completionHandler:^(NSError * _Nullable error) {
+            if (error != nil) {
+                DDLogError(@"Delete group photo failed: %@", error.localizedDescription);
+            }
+        }];
     }
 }
 

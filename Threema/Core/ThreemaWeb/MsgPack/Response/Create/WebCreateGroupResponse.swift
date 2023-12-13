@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaFramework
 
 class WebCreateGroupResponse: WebAbstractMessage {
@@ -43,8 +44,10 @@ class WebCreateGroupResponse: WebAbstractMessage {
         let groupManager: GroupManagerProtocol = GroupManager()
         
         groupManager.createOrUpdate(
-            groupID: NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.groupIDLength)),
-            creator: MyIdentityStore.shared().identity,
+            for: GroupIdentity(
+                id: NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.groupIDLength)),
+                creator: ThreemaIdentity(MyIdentityStore.shared().identity)
+            ),
             members: Set<String>(groupRequest.members),
             systemMessageDate: Date()
         )

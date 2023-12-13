@@ -52,6 +52,48 @@ public enum ThreemaProtocol {
     static let nonUploadedBlobID = Data(BytesUtility.padding([], pad: 0, length: blobIDLength))
 }
 
+@objc public enum ThreemaProtocolError: Int, Error, CustomStringConvertible {
+    public typealias RawValue = Int
+
+    case badMessage = 667
+    case blockUnknownContact = 666
+    case generalError = 100
+    case messageAlreadyProcessed = 671
+    case messageBlobDecryptionFailed = 673
+    case messageNonceReuse = 674
+    case messageProcessingFailed = 669
+    case pendingGroupMessage = 670
+    case safePasswordEmpty = 672
+    case unknownMessageType = 668
+
+    public var description: String {
+        let rawError = "ThreemaProtocolError(rawValue: \(rawValue))"
+
+        switch self {
+        case .badMessage:
+            return "\(rawError) 'Invalid message format or decryption failure'"
+        case .blockUnknownContact:
+            return "\(rawError) 'Unknown contact is blocked'"
+        case .generalError:
+            return "\(rawError) 'General error'"
+        case .messageAlreadyProcessed:
+            return "\(rawError) 'Message already processed'"
+        case .messageBlobDecryptionFailed:
+            return "\(rawError) 'Blob decryption failure'"
+        case .messageNonceReuse:
+            return "\(rawError) 'Reuse of message nonce'"
+        case .messageProcessingFailed:
+            return "\(rawError) 'Processing of message failed'"
+        case .pendingGroupMessage:
+            return "\(rawError) 'Group not found to process message'"
+        case .safePasswordEmpty:
+            return "\(rawError) 'Threema Safe password is missing'"
+        case .unknownMessageType:
+            return "\(rawError) 'Unknown message type'"
+        }
+    }
+}
+
 extension ForwardSecurityMode {
     public var localizedLabel: String {
         switch self {

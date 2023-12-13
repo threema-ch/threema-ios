@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import PromiseKit
 
 /// Dissolve group reflect group leave message to mediator server is multi device enabled
 /// and send group create messages with empty members to all group members (CSP).

@@ -33,10 +33,11 @@ class WebConversationUpdate: WebAbstractMessage {
     init(conversation: Conversation, objectMode: ObjectMode, session: WCSession) {
         self.mode = objectMode.rawValue
         
-        let entityManager = EntityManager()
+        let businessInjector = BusinessInjector()
         var index = 0
         
-        if let allConversations = entityManager.entityFetcher.allConversationsSorted() as? [Conversation] {
+        if let allConversations = businessInjector.entityManager.entityFetcher
+            .allConversationsSorted() as? [Conversation] {
             let unarchivedConversations = allConversations
                 .filter { $0.conversationVisibility == .default || $0.conversationVisibility == .pinned }
 
@@ -69,7 +70,7 @@ class WebConversationUpdate: WebAbstractMessage {
             index: index,
             request: nil,
             addAvatar: true,
-            groupManager: GroupManager(entityManager: entityManager),
+            businessInjector: businessInjector,
             session: session
         )
         let tmpArgs: [AnyHashable: Any?] = ["mode": mode]

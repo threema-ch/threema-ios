@@ -19,10 +19,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 /// Threema Contact representation used in Group Calls only
-struct ContactModel {
-    /// Threema ID
-    var identity: String
+public struct ContactModel: Sendable {
+    var identity: ThreemaIdentity
     var nickname: String
+    
+    public init(identity: ThreemaIdentity, nickname: String) {
+        self.identity = identity
+        self.nickname = nickname
+    }
 }

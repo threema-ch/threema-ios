@@ -86,12 +86,19 @@ enum {
 /// TODO(ANDR-2452): Remove the forward security state when most of clients support 1.1 anyway
 @property (nonatomic, retain) NSNumber * forwardSecurityState;
 
-// DB Relationships
+// MARK: - DB Relationships
+
 @property (nonatomic, retain, nullable) ImageData * contactImage;
 @property (nonatomic, retain, nullable) NSSet * conversations;
 @property (nonatomic, retain, nullable) NSSet * groupConversations;
 
-// Other Properties
+/// All (group) messages that where rejected by this contact
+///
+/// The inverse is `rejectedBy` of `BaseMessage`.
+@property (nonatomic, retain, nullable) NSSet<BaseMessage *> *rejectedMessages;
+
+// MARK: - Other Properties
+
 @property (readonly) NSString * displayName;
 @property (readonly) NSString * mentionName;
 @property (nonatomic) BOOL isContactHidden;

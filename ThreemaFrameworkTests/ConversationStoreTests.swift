@@ -191,6 +191,7 @@ final class ConversationStoreTests: XCTestCase {
 
         let conversationStore = ConversationStore(
             userSettings: UserSettingsMock(enableMultiDevice: true),
+            pushSettingManager: PushSettingManagerMock(),
             groupManager: GroupManagerMock(),
             entityManager: entityManager,
             taskManager: taskManagerMock

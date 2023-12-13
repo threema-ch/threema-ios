@@ -382,11 +382,12 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         }
 
         if initialConfig.enableThreemaCall != secondConfig.enableThreemaCall {
-            syncSettings.callPolicy = secondConfig.enableThreemaCall ? .allowCall : .denyCall
+            syncSettings.o2OCallPolicy = secondConfig.enableThreemaCall ? .allowO2OCall : .denyO2OCall
         }
 
         if initialConfig.alwaysRelayCalls != secondConfig.alwaysRelayCalls {
-            syncSettings.callConnectionPolicy = secondConfig.alwaysRelayCalls ? .requireRelay : .allowDirect
+            syncSettings.o2OCallConnectionPolicy = secondConfig
+                .alwaysRelayCalls ? .requireRelayedConnection : .allowDirectConnection
         }
 
         if initialConfig.blacklist != secondConfig.blacklist {

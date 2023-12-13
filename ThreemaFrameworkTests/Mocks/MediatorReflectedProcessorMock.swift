@@ -24,6 +24,8 @@ import ThreemaProtocols
 @testable import ThreemaFramework
 
 class MediatorReflectedProcessorMock: MediatorReflectedProcessorProtocol {
+    var error: Error?
+
     func process(
         reflectedEnvelope: D2d_Envelope,
         reflectedAt: Date,
@@ -31,6 +33,9 @@ class MediatorReflectedProcessorMock: MediatorReflectedProcessorProtocol {
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) -> Promise<Void> {
-        Promise()
+        if let error {
+            return Promise(error: error)
+        }
+        return Promise()
     }
 }

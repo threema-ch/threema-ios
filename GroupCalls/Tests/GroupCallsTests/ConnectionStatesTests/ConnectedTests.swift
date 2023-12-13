@@ -20,27 +20,27 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
 @testable import GroupCalls
 
 final class ConnectedTests: XCTestCase {
     
+    fileprivate var closed = false
+    fileprivate lazy var creatorIdentity = ThreemaIdentity("ECHOECHO")
+    fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
+    fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
+    fileprivate lazy var groupModel = GroupCallsThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
+    
     @GlobalGroupCallActor
     func testBasicInit() async {
-        let localThreemaID = try! ThreemaID(id: "ECHOECHO", nickname: nil)
-        let groupModel = GroupCallsThreemaGroupModel(
-            creator: try! ThreemaID(id: "ECHOECHO", nickname: nil),
-            groupID: Data(),
-            groupName: "ECHOECHO",
-            members: Set([])
-        )
         let sfuBaseURL = ""
         let gck = Data(repeating: 0x01, count: 32)
         let dependencies = MockDependencies().create()
         
         let groupCallActor = try! GroupCallActor(
-            localIdentity: localThreemaID,
+            localContactModel: localContactModel,
             groupModel: groupModel,
             sfuBaseURL: sfuBaseURL,
             gck: gck,
@@ -122,19 +122,12 @@ final class ConnectedTests: XCTestCase {
     // TODO: (IOS-3875) Timeout
     @GlobalGroupCallActor
     func testNewParticipantsJoin() async {
-        let localThreemaID = try! ThreemaID(id: "ECHOECHO", nickname: nil)
-        let groupModel = GroupCallsThreemaGroupModel(
-            creator: try! ThreemaID(id: "ECHOECHO", nickname: nil),
-            groupID: Data(),
-            groupName: "ECHOECHO",
-            members: Set([])
-        )
         let sfuBaseURL = ""
         let gck = Data(repeating: 0x01, count: 32)
         let dependencies = MockDependencies().create()
         
         let groupCallActor = try! GroupCallActor(
-            localIdentity: localThreemaID,
+            localContactModel: localContactModel,
             groupModel: groupModel,
             sfuBaseURL: sfuBaseURL,
             gck: gck,
@@ -155,12 +148,12 @@ final class ConnectedTests: XCTestCase {
             groupCallStartData: groupCallStartData
         )
         
-        let groupCallCtx = await MockGroupCallCtx(
+        let groupCallCtx = MockGroupCallCtx(
             dependencies: dependencies,
             groupCallMessageCrypto: groupCallMessageCrypto
         )
         
-        let connected = await Connected(
+        let connected = Connected(
             groupCallActor: groupCallActor,
             groupCallContext: groupCallCtx,
             participantIDs: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -225,20 +218,13 @@ final class ConnectedTests: XCTestCase {
             let outerExpectation = XCTestExpectation(description: "Outer Expectation")
         
             Task.detached {
-                let localThreemaID = try! ThreemaID(id: "ECHOECHO", nickname: nil)
-                let groupModel = GroupCallsThreemaGroupModel(
-                    creator: try! ThreemaID(id: "ECHOECHO", nickname: nil),
-                    groupID: Data(),
-                    groupName: "ECHOECHO",
-                    members: Set([])
-                )
                 let sfuBaseURL = ""
                 let gck = Data(repeating: 0x01, count: 32)
                 let dependencies = MockDependencies().create()
             
                 let groupCallActor = try! GroupCallActor(
-                    localIdentity: localThreemaID,
-                    groupModel: groupModel,
+                    localContactModel: self.localContactModel,
+                    groupModel: self.groupModel,
                     sfuBaseURL: sfuBaseURL,
                     gck: gck,
                     dependencies: dependencies
@@ -251,7 +237,7 @@ final class ConnectedTests: XCTestCase {
                 )
             
                 let groupCallMessageCrypto = try! GroupCallBaseState(
-                    group: groupModel,
+                    group: self.groupModel,
                     startedAt: Date(),
                     maxParticipants: Int.max,
                     dependencies: dependencies,
@@ -305,7 +291,7 @@ final class ConnectedTests: XCTestCase {
                 await Task.yield()
             
                 // Ideally we'd want to avoid this sleep here and use `await fulfillment` instead of `wait`. But we
-                // still need to run the tests on older versions of xcode
+                // still need to run the tests on older versions of Xcode
                 // where that isn't available and the tests fail when not sleeping here. With `await fulfillment` the
                 // tests don't fail.
                 try! await Task.sleep(nanoseconds: 1 * 1000 * 1000)

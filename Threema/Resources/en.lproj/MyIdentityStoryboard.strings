@@ -5,8 +5,8 @@
 /* Class = "UITableViewSection"; footerTitle = "Number: +41 79 123 45 67"; ObjectID = "5HP-W8-nFp"; */
 "5HP-W8-nFp.footerTitle" = "Number: +41 79 123 45 67";
 
-/* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
-"8Pu-jd-SHn.title" = "My Profile";
+/* Class = "UINavigationItem"; title = "Profile"; ObjectID = "8Pu-jd-SHn"; */
+"8Pu-jd-SHn.title" = "Profile";
 
 /* Class = "UINavigationItem"; title = "Link Number"; ObjectID = "ELz-zT-AmB"; */
 "ELz-zT-AmB.title" = "Link Number";

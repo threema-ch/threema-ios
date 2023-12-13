@@ -148,6 +148,7 @@ class ConversationsViewControllerHelper {
     ///   - group: Group to be deleted
     ///   - deleteHiddenContacts: True delete hidden contacts where member of the group
     ///   - entityManager: EntityManager to handle deletion
+    /// - See also: DeleteConversationAction (legacy code)
     private static func deleteConversation(
         conversation: Conversation,
         group: Group?,
@@ -175,6 +176,7 @@ class ConversationsViewControllerHelper {
             entityManager.entityDestroyer.deleteObject(object: conversation)
         }
 
+        // cleanup: try deleting hidden contacts, delete happens iff they are not used elsewhere
         for identity in hiddenContacts {
             ContactStore.shared().deleteContact(identity: identity, entityManagerObject: entityManager)
         }
@@ -255,6 +257,7 @@ class ConversationsViewControllerHelper {
     ///   - entityManager: EntityManager Handling the Deletion
     ///   - singleFunction: If function should only do a single function
     ///   - handler: Handler to execute when action Completes
+    /// - See also: DeleteConversationAction (legacy code)
     private static func handleGroupDeletion(
         of conversation: Conversation,
         owner: UIViewController,
@@ -441,7 +444,7 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
             
-            GroupManager().leave(groupID: group.groupID, creator: group.groupCreatorIdentity, toMembers: nil)
+            GroupManager().leave(groupIdentity: group.groupIdentity, toMembers: nil)
             handler(true)
         }
         return leaveAction
@@ -462,8 +465,9 @@ class ConversationsViewControllerHelper {
             title: BundleUtil.localizedString(forKey: "group_leave_and_delete_button"),
             style: .destructive
         ) { _ in
-            
-            GroupManager().leave(groupID: group.groupID, creator: group.groupCreatorIdentity, toMembers: nil)
+            GroupManager().leave(groupIdentity: group.groupIdentity, toMembers: nil)
+
+            // the task added by the previous leave call takes care of deleting hidden contacts
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: group.conversation,
                 group: group,
@@ -516,11 +520,14 @@ class ConversationsViewControllerHelper {
 
             guard let conversation = entityManager.entityFetcher.conversation(
                 for: group.groupIdentity.id,
-                creator: group.groupIdentity.creator
+                creator: group.groupIdentity.creator.string
             ) else {
                 handler(false)
                 return
             }
+            
+            // only the admin can dissolve a group, and since the admin can only ever add
+            // non-hidden contacts as members, there's no need to delete hidden contacts here
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: conversation,
                 group: group,

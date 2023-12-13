@@ -46,8 +46,8 @@ final class TaskExecutionSettingsSync: TaskExecutionTransaction {
 
         return !(
             task.syncSettings.hasBlockedIdentities
-                || task.syncSettings.hasCallConnectionPolicy
-                || task.syncSettings.hasCallPolicy
+                || task.syncSettings.hasO2OCallConnectionPolicy
+                || task.syncSettings.hasO2OCallPolicy
                 || task.syncSettings.hasContactSyncPolicy
                 || task.syncSettings.hasTypingIndicatorPolicy
                 || task.syncSettings.hasExcludeFromSyncIdentities

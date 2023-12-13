@@ -31,7 +31,6 @@
 #import "UserSettings.h"
 #import "ContactStore.h"
 #import "ContactEntity.h"
-#import <PromiseKit/PromiseKit.h>
 #import "BundleUtil.h"
 #import "AppGroup.h"
 #import "ContactsNavigationController.h"
@@ -99,17 +98,19 @@
 
         if (grp != nil) {
             if (_groupName) {
-                [groupManager setNameObjcWithGroup:grp name:_groupName systemMessageDate:[NSDate date] send:YES]
-                    .catch(^(NSError *error){
+                [groupManager setNameObjcWithGroup:grp name:_groupName systemMessageDate:[NSDate date] send:YES completionHandler:^(NSError * _Nullable error) {
+                    if (error) {
                         DDLogError(@"Set group name failed: %@", [error localizedDescription]);
-                    });
+                    }
+                }];
             }
 
             if (_groupImageData) {
-                [groupManager setPhotoObjcWithGroupID:groupId creator:groupCreator imageData:_groupImageData sentDate:[NSDate date] send:YES]
-                .catch(^(NSError *error){
-                    DDLogError(@"Set group photo failed: %@", [error localizedDescription]);
-                });
+                [groupManager setPhotoObjcWithGroupID:groupId creator:groupCreator imageData:_groupImageData sentDate:[NSDate date] send:YES completionHandler:^(NSError * _Nullable error) {
+                    if (error) {
+                        DDLogError(@"Set group photo failed: %@", [error localizedDescription]);
+                    }
+                }];
             }
             
             UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];

@@ -331,14 +331,14 @@ class TaskDefinitionTests: XCTestCase {
         let expectedToMembers = ["MEMBER04", "MEMBER05"]
         let expectedRemovedMembers = ["MEMBER03", "MEMBER04"]
         let expectedMembers = ["MEMBER01", "MEMBER02"]
-        var expectedNonces = [ThreemaIdentity: Data]()
+        var expectedNonces = [String: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
             groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: "CREATOR01",
+            groupCreatorIdentity: "CREATOR1",
             members: expectedMembers
         )
         let expectedGroup = Group(
@@ -381,14 +381,14 @@ class TaskDefinitionTests: XCTestCase {
     func testTaskDefinitionSendGroupDeletePhotoMessageEncodeDecode() throws {
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
-        var expectedNonces = [ThreemaIdentity: Data]()
+        var expectedNonces = [String: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
             groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: "CREATOR01",
+            groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         )
         let expectedGroup = Group(
@@ -428,11 +428,11 @@ class TaskDefinitionTests: XCTestCase {
 
     func testTaskDefinitionSendGroupLeaveMessageEncodeDecode() throws {
         let expectedGroupID = MockData.generateGroupID()
-        let expectedGroupCreator = "CREATOR01"
+        let expectedGroupCreator = "CREATOR1"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedHiddenContacts = ["MEMBER04"]
-        var expectedNonces = [ThreemaIdentity: Data]()
+        var expectedNonces = [String: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
@@ -467,14 +467,14 @@ class TaskDefinitionTests: XCTestCase {
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedNewName = "New group name"
-        var expectedNonces = [ThreemaIdentity: Data]()
+        var expectedNonces = [String: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
             groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: "CREATOR01",
+            groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         )
         let expectedGroup = Group(
@@ -520,14 +520,14 @@ class TaskDefinitionTests: XCTestCase {
         let expectedSize: UInt32 = 10
         let expectedBlobID = MockData.generateBlobID()
         let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
-        var expectedNonces = [ThreemaIdentity: Data]()
+        var expectedNonces = [String: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
         
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
             groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: "CREATOR01",
+            groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         )
         let expectedGroup = Group(
@@ -773,14 +773,14 @@ class TaskDefinitionTests: XCTestCase {
             MockData.generateMessageID(),
             MockData.generateMessageID(),
         ]
-        var expectedNonces = [ThreemaIdentity: Data]()
+        var expectedNonces = [String: Data]()
         expectedToMembers.forEach { identity in
             expectedNonces[identity] = MockData.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
             groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: "CREATOR01",
+            groupCreatorIdentity: "CREATOR1",
             members: expectedToMembers
         )
         let expectedGroup = Group(

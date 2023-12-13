@@ -21,13 +21,12 @@
 #import <UIKit/UIKit.h>
 #import "ThemedTableViewController.h"
 
-#import "Threema-Swift.h"
 
 @interface BackupIdentityViewController : ThemedTableViewController <UIActivityItemSource>
 
 @property (nonatomic, strong) NSString *backupData;
 
-@property (weak, nonatomic) IBOutlet CopyLabel *identityBackupLabel;
+
 @property (weak, nonatomic) IBOutlet UIImageView *qrImageView;
 @property (weak, nonatomic) IBOutlet UISwitch *phoneBackupSwitch;
 

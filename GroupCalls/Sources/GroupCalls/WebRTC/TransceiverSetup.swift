@@ -24,13 +24,11 @@ import WebRTC
 
 enum TransceiverSetup {
     static func setupTransceiver(_ transceiver: RTCRtpTransceiver) {
-        // TODO: (IOS-4088) Setup Transceiver
         
         var error: NSError?
         transceiver.setDirection(.recvOnly, error: &error)
         
         transceiver.receiver.track?.isEnabled = true
-        transceiver.sender.track?.isEnabled = true
         
         if let error {
             fatalError(error.localizedDescription)
@@ -64,9 +62,8 @@ enum TransceiverSetup {
             param.degradationPreference = NSNumber(value: 3)
             param.encodings = [RTCRtpEncodingParameters]()
             param.encodings = GroupCallSessionDescription.CAMERA_SEND_ENCODINGS.map { $0.toRtcEncoding() }
-            // swiftformat:disable acronyms
+            // swiftformat:disable:next acronyms
             param.transactionId = prevParam.transactionId
-            // swiftformat:enable acronyms
             
             return param
         }()

@@ -19,18 +19,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 public struct GroupCallBannerButtonUpdate: Sendable {
-    public let creator: ThreemaID
-    public let groupID: Data
+    public let groupIdentity: GroupIdentity
     public let numberOfParticipants: Int
     public let startDate: Date
     public let joinState: GroupCallJoinState
     public let hideComponent: Bool
     
     init(actor: GroupCallActor, hideComponent: Bool) async {
-        self.creator = actor.group.creator
-        self.groupID = actor.group.groupID
+        self.groupIdentity = actor.group.groupIdentity
         self.numberOfParticipants = await actor.viewModel.numberOfParticipants
         self.startDate = await actor.viewModel.getCallStartDate()
         self.joinState = await actor.joinState()

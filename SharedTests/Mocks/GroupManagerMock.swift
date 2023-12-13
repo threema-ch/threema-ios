@@ -20,16 +20,46 @@
 
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaFramework
 
 class GroupManagerMock: NSObject, GroupManagerProtocol {
 
     var getConversationReturns: Conversation?
-    var getGroupReturns: Group?
+    var getGroupReturns = [Group]()
 
+    private let myIdentityStore: MyIdentityStoreProtocol
+
+    init(_ myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock()) {
+        self.myIdentityStore = myIdentityStore
+    }
+
+    struct SyncCall {
+        let group: Group
+        let receivers: Set<String>?
+    }
+
+    private(set) var syncCalls = [SyncCall]()
+    
     var unknownGroupCalls = [Data: String]()
-    var sendSyncRequestCalls = [Data: String]()
+    var sendSyncRequestCalls = [GroupIdentity]()
     var periodicSyncIfNeededCalls = [Group]()
+    
+    struct LeaveCall {
+        let groupIdentity: GroupIdentity
+        let receivers: [String]?
+    }
+
+    private(set) var leaveCalls = [LeaveCall]()
+    
+    struct DissolveCall {
+        let groupID: Data
+        let receivers: Set<String>?
+    }
+
+    private(set) var dissolveCalls = [DissolveCall]()
+    
+    // MARK: - Protocol implementation
 
     func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void> {
         Promise()
@@ -56,16 +86,17 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         to members: Set<String>?,
         withoutCreateMessage: Bool
     ) -> Promise<Void> {
-        Promise()
+        syncCalls.append(SyncCall(group: group, receivers: members))
+        
+        return Promise()
     }
 
     func createOrUpdate(
-        groupID: Data,
-        creator: String,
+        for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date
     ) -> Promise<(Group, Set<String>?)> {
-        unknownGroupCalls.removeValue(forKey: groupID)
+        unknownGroupCalls.removeValue(forKey: groupIdentity.id)
         return Promise(error: GroupManager.GroupError.notCreator)
     }
 
@@ -81,8 +112,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     }
 
     @discardableResult func createOrUpdateDB(
-        groupID: Data,
-        creator: String,
+        for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date?,
         sourceCaller: SourceCaller
@@ -90,24 +120,36 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         Promise { $0.fulfill(nil) }
     }
 
-    @discardableResult func createOrUpdateDBObjc(
+    func createOrUpdateDBObjc(
         groupID: Data,
         creator: String,
         members: Set<String>,
         systemMessageDate: Date?,
-        sourceCaller: SourceCaller
-    ) -> AnyPromise {
-        AnyPromise(createOrUpdateDBObjc(
-            groupID: groupID,
-            creator: creator,
+        sourceCaller: SourceCaller,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        createOrUpdateDB(
+            for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)),
             members: members,
             systemMessageDate: systemMessageDate,
             sourceCaller: sourceCaller
-        ))
+        )
+        .done { _ in
+            completionHandler(nil)
+        }
+        .catch { error in
+            completionHandler(error)
+        }
     }
 
-    func deletePhotoObjc(groupID: Data, creator: String, sentDate: Date, send: Bool) -> AnyPromise {
-        AnyPromise(Promise(resolver: { $0.fulfill_() }))
+    func deletePhotoObjc(
+        groupID: Data,
+        creator: String,
+        sentDate: Date,
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        completionHandler(nil)
     }
     
     func getConversation(for groupIdentity: GroupIdentity) -> Conversation? {
@@ -115,15 +157,27 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     }
 
     func getGroup(_ groupID: Data, creator: String) -> Group? {
-        getGroupReturns
+        if creator == myIdentityStore.identity {
+            return getGroupReturns.first(where: { $0.groupIdentity.id == groupID })
+        }
+
+        return getGroupReturns
+            .first(where: { $0.groupIdentity.id == groupID && $0.groupIdentity.creator.string == creator })
     }
     
     func getGroup(conversation: Conversation) -> Group? {
-        getGroupReturns
+        guard let groupID = conversation.groupID else {
+            return nil
+        }
+
+        return getGroup(groupID, creator: conversation.contact?.identity ?? myIdentityStore.identity)
     }
 
     func leave(groupID: Data, creator: String, toMembers: [String]?, systemMessageDate: Date) {
-        // Do nothing
+        leaveCalls.append(LeaveCall(
+            groupIdentity: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)),
+            receivers: toMembers
+        ))
     }
 
     func leaveDB(groupID: Data, creator: String, member: String, systemMessageDate: Date) {
@@ -131,48 +185,56 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     }
 
     func dissolve(groupID: Data, to identities: Set<String>?) {
-        // no-op
+        dissolveCalls.append(DissolveCall(groupID: groupID, receivers: identities))
     }
 
     func unknownGroup(groupID: Data, creator: String) {
         unknownGroupCalls[groupID] = creator
     }
 
-    @discardableResult func setNameObjc(
+    func setNameObjc(
         groupID: Data,
         creator: String,
         name: String?,
         systemMessageDate: Date,
-        send: Bool
-    ) -> AnyPromise {
-        AnyPromise(Promise(resolver: { $0.fulfill_() }))
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        completionHandler(nil)
     }
 
-    @discardableResult func setNameObjc(
+    func setNameObjc(
         group: Group,
         name: String?,
         systemMessageDate: Date,
-        send: Bool
-    ) -> AnyPromise {
-        AnyPromise(Promise(resolver: { $0.fulfill_() }))
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        completionHandler(nil)
     }
 
-    @discardableResult func setPhotoObjc(
+    func setPhotoObjc(
         groupID: Data,
         creator: String,
         imageData: Data,
         sentDate: Date,
-        send: Bool
-    ) -> AnyPromise {
-        AnyPromise(Promise(resolver: { $0.fulfill_() }))
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        completionHandler(nil)
     }
     
-    func syncObjc(group: Group, to members: Set<String>?, withoutCreateMessage: Bool) -> AnyPromise {
-        AnyPromise(Promise(resolver: { $0.fulfill_() }))
+    func syncObjc(
+        group: Group,
+        to members: Set<String>?,
+        withoutCreateMessage: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        completionHandler(nil)
     }
     
     func sendSyncRequest(groupID: Data, creator: String, force: Bool) {
-        sendSyncRequestCalls[groupID] = creator
+        sendSyncRequestCalls.append(GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)))
     }
     
     func periodicSyncIfNeeded(for group: Group) {

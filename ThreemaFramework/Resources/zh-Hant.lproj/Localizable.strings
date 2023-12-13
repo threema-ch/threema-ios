@@ -53,7 +53,7 @@
 "error_message_requires_migration_error_description" = "遷移檢查失敗。請重新啟動應用程式。";
 
 "error_other_connection_for_same_identity_title" = "警告";
-"error_other_connection_for_same_identity_message" = "伺服器檢測到相同的 Threema ID 在兩個或更多的裝置上同時連線。\n\n相同的 Threema ID 不可以在多個裝置上同時使用。新的訊息只會傳送至最新登入的裝置上。\n\n如果您要切換至新裝置，請先在舊裝置上解除安裝或停用 %@，然後重新啟動新裝置。";
+"error_other_connection_for_same_identity_message" = "伺服器檢測到相同的 Threema ID 在兩個或更多的裝置上同時連線。\n\n如果您同時在多個裝置上使用 Threema，而沒有選擇 「連接新裝置」，就會出現錯誤 (https://three.ma/md)。新的訊息只會傳送至最新登入的裝置上。\n\n如果您要切換至新裝置，請先在舊裝置上解除安裝或停用 %@，然後重新啟動新裝置。";
 
 "error_rogue_device_title" = "檢測到來自另一部裝置的連線";
 "error_rogue_device_message" = "伺服器檢測到有人試圖從另一部裝置登入現有的 Threema ID。\n\n如果您之前沒有在其他裝置上登入您的 Threema ID，或者使用舊版本的應用程式，請聯絡支持人員並傳送日誌檔案。";

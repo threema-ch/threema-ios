@@ -86,12 +86,7 @@ import Foundation
         completion: @escaping (Error?) -> Void
     ) {
         guard let key = safeStore.createKey(identity: identity, password: password) else {
-            let error = NSError(
-                domain: "",
-                code: Int(kSafePasswordEmptyErrorCode),
-                userInfo: [NSLocalizedDescriptionKey: "Empty safe password"]
-            )
-            completion(error)
+            completion(ThreemaProtocolError.safePasswordEmpty)
             return
         }
         

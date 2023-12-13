@@ -18,13 +18,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import ThreemaProtocols
 
 extension Common_GroupIdentity {
     static func from(_ groupIdentity: GroupIdentity) -> Common_GroupIdentity {
         Common_GroupIdentity.with {
             $0.groupID = groupIdentity.id.paddedLittleEndian()
-            $0.creatorIdentity = groupIdentity.creator
+            $0.creatorIdentity = groupIdentity.creator.string
         }
     }
 }

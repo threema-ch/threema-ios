@@ -146,7 +146,10 @@ extension Connected {
         DDLogNotice("[GroupCall] Number of initially pending participants \(remoteParticipants.count)")
         
         for pendingParticipant in remoteParticipants {
-            let handshakeMessage = try pendingParticipant.handshakeHelloMessage(for: groupCallActor.localIdentity)
+            let handshakeMessage = try pendingParticipant.handshakeHelloMessage(
+                for: groupCallActor.localContactModel.identity,
+                localNickname: groupCallActor.localContactModel.nickname
+            )
             
             let outer = groupCallContext.outerEnvelope(for: handshakeMessage, to: pendingParticipant)
             
@@ -428,7 +431,6 @@ extension Connected {
     
     private func sendVideoUnmuteMessages(to participant: RemoteParticipant) async throws {
         // Send Video Unmute
-        // TODO: (IOS-4078) We could have already disabled video here. This needs to be handled somehow
         if groupCallContext.hasVideoCapturer {
             DDLogNotice("[GroupCall] Correct Capturer, send unmute")
             let videoUnmuteMessage = try participant.videoUnmuteMessage()

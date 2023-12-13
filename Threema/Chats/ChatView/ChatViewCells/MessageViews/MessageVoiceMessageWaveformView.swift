@@ -24,7 +24,7 @@ import Foundation
 import ThreemaFramework
 import UIKit
 
-protocol MessageVoiceMessageWaveformViewDelegate {
+protocol MessageVoiceMessageWaveformViewDelegate: AnyObject {
     func updateProgress(to progress: CGFloat)
 }
 
@@ -44,7 +44,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     // MARK: - Internal Properties
 
     /// `VoiceMessage` for which the waveform and playback should be calculated
-    var voiceMessage: VoiceMessage? {
+    weak var voiceMessage: VoiceMessage? {
         willSet {
             defer { lastBlobState = newValue?.blobDisplayState }
             
@@ -70,7 +70,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         }
     }
     
-    var delegate: ChatViewTableViewVoiceMessageCellDelegateProtocol? {
+    weak var delegate: ChatViewTableViewVoiceMessageCellDelegateProtocol? {
         didSet {
             guard let voiceMessage else {
                 return
@@ -97,7 +97,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     // MARK: - Private Properties
 
     private var lastBlobState: BlobDisplayState?
-    private var waveformDelegate: MessageVoiceMessageWaveformViewDelegate?
+    private weak var waveformDelegate: MessageVoiceMessageWaveformViewDelegate?
     private var previousBoundsSize: CGSize?
     
     // MARK: - Views
@@ -168,6 +168,11 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     }
     
     private func updateView(with voiceMessage: VoiceMessage?) {
+        guard
+            voiceMessage?.objectID != self.voiceMessage?.objectID else {
+            return
+        }
+        
         guard let audioURL = blobDataURL(for: voiceMessage) else {
             let msg = "URL for blobdata was unexpectedly nil"
             DDLogError(msg)
@@ -179,8 +184,12 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
             await updateWaveformImageViews(with: audioURL, and: voiceMessage?.objectID)
         }
     }
-    
+   
     private func updateWaveformImageViews(with audioURL: URL, and identifier: NSManagedObjectID?) async {
+        guard let identifier else {
+            return
+        }
+        
         /// WaveformImageDrawer returns a generic error if the width used in `Waveform.Configuration` is zero.
         let viewSize = imageView.frame.size
         let viewWidth = viewSize.width
@@ -191,19 +200,25 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         let start = CACurrentMediaTime()
         
         let configuredSize = targetImageSize(from: imageView)
-        
         let completeWaveformConfig = waveformConfig(size: configuredSize, color: Colors.textLight)
         let progressConfig = waveformConfig(size: configuredSize, color: .primary)
-        
+        let analyzer = WaveformAnalyzer(audioAssetURL: audioURL)
+        let sampleCount = Int(completeWaveformConfig.size.width * completeWaveformConfig.scale)
         let waveformDrawer = DSWaveformImage.WaveformImageDrawer()
-        async let maybeFullWaveformImage = waveformDrawer.waveformImage(
-            fromAudioAt: audioURL,
-            with: completeWaveformConfig
+        let waveformRenderer = LinearWaveformRenderer()
+        let samples = await (try? analyzer?.samples(count: sampleCount)) ?? []
+        let image = waveformDrawer.waveformImage(
+            from: samples,
+            with: completeWaveformConfig,
+            renderer: waveformRenderer
         )
-        async let maybeProgressWaveformImage = waveformDrawer.waveformImage(fromAudioAt: audioURL, with: progressConfig)
+        let progressImage = waveformDrawer.waveformImage(
+            from: samples,
+            with: progressConfig,
+            renderer: waveformRenderer
+        )
         
-        guard let image = try? await maybeFullWaveformImage,
-              let progressImage = try? await maybeProgressWaveformImage else {
+        guard let image, let progressImage else {
             let msg = "Could not create waveform from url"
             assertionFailure(msg)
             DDLogError(msg)
@@ -211,14 +226,9 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         }
         
         let renderedEnd = CACurrentMediaTime()
-        
         DDLogVerbose("Rendered Waveform in \(renderedEnd - start)s")
         
         DispatchQueue.main.async {
-            guard identifier == self.voiceMessage?.objectID else {
-                return
-            }
-            
             self.imageView.image = image
             self.progressImageView.image = progressImage
         }

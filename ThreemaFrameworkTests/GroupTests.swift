@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 class GroupTests: XCTestCase {
@@ -167,7 +169,7 @@ class GroupTests: XCTestCase {
 
         // Check group properties before changing
         XCTAssertEqual(group.groupIdentity.id, expectedGroupID)
-        XCTAssertEqual(group.groupIdentity.creator, myIdentityStoreMock.identity)
+        XCTAssertEqual(group.groupIdentity.creator.string, myIdentityStoreMock.identity)
 
         // Change group property `GroupEntity.groupID` in DB
         let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
@@ -177,7 +179,7 @@ class GroupTests: XCTestCase {
 
         // Check changed group properties
         XCTAssertEqual(group.groupIdentity.id, expectedGroupID)
-        XCTAssertEqual(group.groupIdentity.creator, myIdentityStoreMock.identity)
+        XCTAssertEqual(group.groupIdentity.creator.string, myIdentityStoreMock.identity)
         XCTAssertTrue(ddLoggerMock.exists(message: "Group identity mismatch"))
 
         // Change group property `Conversation.groupID` in DB
@@ -187,14 +189,14 @@ class GroupTests: XCTestCase {
 
         // Check changed group properties
         XCTAssertEqual(group.groupIdentity.id, expectedGroupID)
-        XCTAssertEqual(group.groupIdentity.creator, myIdentityStoreMock.identity)
+        XCTAssertEqual(group.groupIdentity.creator.string, myIdentityStoreMock.identity)
         XCTAssertTrue(ddLoggerMock.exists(message: "Group ID mismatch"))
     }
 
     func testSortedMembers() throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: BytesUtility.generateRandomBytes(length: Int(32))!
+            secretKey: MockData.generatePublicKey()
         )
         
         var groupEntity: GroupEntity!
@@ -202,7 +204,7 @@ class GroupTests: XCTestCase {
         
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER01",
                 verificationLevel: 0
             )
@@ -210,7 +212,7 @@ class GroupTests: XCTestCase {
             member01.firstName = "Hans"
             
             let member02 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER02",
                 verificationLevel: 0
             )
@@ -218,46 +220,46 @@ class GroupTests: XCTestCase {
             member02.firstName = "Amy"
 
             let member03 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER03",
                 verificationLevel: 0
             )
             member03.lastName = "Weber"
 
             let member04 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER04",
                 verificationLevel: 0
             )
             member04.firstName = "Fritzli"
             
             let member05 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER05",
                 verificationLevel: 0
             )
             let member06 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER06",
                 verificationLevel: 0
             )
 
             let member07 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER07",
                 verificationLevel: 0
             )
             member07.lastName = "Weber 2"
 
             let member08 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER08",
                 verificationLevel: 0
             )
             member08.firstName = "Fritzli 2"
             
-            let groupID = BytesUtility.generateRandomBytes(length: Int(32))!
-            
+            let groupID = MockData.generateGroupID()
+
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: "MEMBER03")
             conversation = dbPreparer.createConversation(
                 typing: false,
@@ -312,7 +314,7 @@ class GroupTests: XCTestCase {
         for (expectedContactID, actualContact) in zip(expectedOrderFirstName, sortedContactsFirstName) {
             switch actualContact {
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity)
+                XCTAssertEqual(expectedContactID, contact.identity.string)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }
@@ -335,7 +337,7 @@ class GroupTests: XCTestCase {
         for (expectedContactID, actualContact) in zip(expectedOrderLastName, sortedContactsLastName) {
             switch actualContact {
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity)
+                XCTAssertEqual(expectedContactID, contact.identity.string)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }
@@ -345,7 +347,7 @@ class GroupTests: XCTestCase {
     func testSortedMembersWithMe() {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: BytesUtility.generateRandomBytes(length: Int(32))!
+            secretKey: MockData.generatePublicKey()
         )
         
         var groupEntity: GroupEntity!
@@ -353,7 +355,7 @@ class GroupTests: XCTestCase {
         
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER01",
                 verificationLevel: 0
             )
@@ -361,7 +363,7 @@ class GroupTests: XCTestCase {
             member01.lastName = "il"
             
             let member02 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER02",
                 verificationLevel: 0
             )
@@ -369,7 +371,7 @@ class GroupTests: XCTestCase {
             member02.lastName = "ly"
 
             let member03 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER03",
                 verificationLevel: 0
             )
@@ -378,15 +380,15 @@ class GroupTests: XCTestCase {
             member03.publicNickname = "Should not matter"
 
             let member04 = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER04",
                 verificationLevel: 0
             )
             member04.firstName = "Em"
             member04.lastName = "ily"
 
-            let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-            
+            let groupID = MockData.generateGroupID()
+
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: "MEMBER03")
             conversation = dbPreparer.createConversation(
                 typing: false,
@@ -426,7 +428,7 @@ class GroupTests: XCTestCase {
             case .me:
                 XCTAssertEqual(expectedContactID, myIdentityStoreMock.identity)
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity)
+                XCTAssertEqual(expectedContactID, contact.identity.string)
             default:
                 XCTFail("Unexpected contact in sorted contacts: \(actualContact)")
             }
@@ -436,7 +438,7 @@ class GroupTests: XCTestCase {
     func testSortedFirstNameMembersMeCreator() throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: BytesUtility.generateRandomBytes(length: Int(32))!
+            secretKey: MockData.generatePublicKey()
         )
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -446,7 +448,7 @@ class GroupTests: XCTestCase {
         var members = [ContactEntity]()
 
         let member01 = dbPreparer.createContact(
-            publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+            publicKey: MockData.generatePublicKey(),
             identity: "MEMBER01",
             verificationLevel: 0
         )
@@ -455,7 +457,7 @@ class GroupTests: XCTestCase {
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
-            publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+            publicKey: MockData.generatePublicKey(),
             identity: "MEMBER02",
             verificationLevel: 0
         )
@@ -472,14 +474,16 @@ class GroupTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let groupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
         var group: Group?
 
         let expec = expectation(description: "Create group")
 
         groupManager.createOrUpdateDB(
-            groupID: groupID,
-            creator: myIdentityStoreMock.identity,
+            for: groupIdentity,
             members: Set(members.map(\.identity).compactMap { $0 }),
             systemMessageDate: Date(),
             sourceCaller: .local
@@ -517,7 +521,7 @@ class GroupTests: XCTestCase {
             case .me:
                 XCTAssertEqual(expectedContactID, myIdentityStoreMock.identity)
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity)
+                XCTAssertEqual(expectedContactID, contact.identity.string)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }
@@ -527,7 +531,7 @@ class GroupTests: XCTestCase {
     func testSortedLastNameMembersMeCreator() throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: BytesUtility.generateRandomBytes(length: Int(32))!
+            secretKey: MockData.generatePublicKey()
         )
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -538,7 +542,7 @@ class GroupTests: XCTestCase {
         var members = [ContactEntity]()
 
         let member01 = dbPreparer.createContact(
-            publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+            publicKey: MockData.generatePublicKey(),
             identity: "MEMBER01",
             verificationLevel: 0
         )
@@ -547,7 +551,7 @@ class GroupTests: XCTestCase {
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
-            publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+            publicKey: MockData.generatePublicKey(),
             identity: "MEMBER02",
             verificationLevel: 0
         )
@@ -564,14 +568,16 @@ class GroupTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let groupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
         var group: Group?
 
         let expec = expectation(description: "Create group")
 
         groupManager.createOrUpdateDB(
-            groupID: groupID,
-            creator: myIdentityStoreMock.identity,
+            for: groupIdentity,
             members: Set(members.map(\.identity).compactMap { $0 }),
             systemMessageDate: Date(),
             sourceCaller: .local
@@ -610,7 +616,7 @@ class GroupTests: XCTestCase {
             case .me:
                 XCTAssertEqual(expectedContactID, myIdentityStoreMock.identity)
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity)
+                XCTAssertEqual(expectedContactID, contact.identity.string)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }

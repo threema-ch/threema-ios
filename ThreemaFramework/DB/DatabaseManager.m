@@ -223,7 +223,7 @@ BOOL doMigrateInProgress = false;
     
 #ifdef DEBUG
             if ([AppGroup getCurrentType] == AppGroupTypeApp) {
-                [FileUtility logDirectoriesAndFilesWithPath:[FileUtility appDataDirectory] logFileName:@"db-migration-before.log"];
+                [FileUtility logDirectoriesAndFilesWithPath:[FileUtility appDataDirectory] logFileName:LogManager.dbMigrationBeforeLogFilename];
             }
 #endif
     
@@ -355,7 +355,7 @@ BOOL doMigrateInProgress = false;
                 DDLogInfo(@"DB setup time %f s", (endTime - startTime));
     
 #ifdef DEBUG
-                [FileUtility logDirectoriesAndFilesWithPath:[FileUtility appDataDirectory] logFileName:@"db-migration-after.log"];
+                [FileUtility logDirectoriesAndFilesWithPath:[FileUtility appDataDirectory] logFileName:LogManager.dbMigrationAfterLogFilename];
 #endif
 
                 _persistentStoreCoordinator = persistentStoreCoordinator;

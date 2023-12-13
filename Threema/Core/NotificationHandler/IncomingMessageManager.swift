@@ -56,23 +56,29 @@ import ThreemaFramework
             pendingUserNotificationManager: PendingUserNotificationManager(
                 UserNotificationManager(
                     businessInjector.settingsStore,
-                    UserSettings.shared(),
-                    ContactStore.shared(),
+                    businessInjector.userSettings,
+                    businessInjector.myIdentityStore,
+                    businessInjector.pushSettingManager,
+                    businessInjector.contactStore,
                     businessInjector.groupManager,
                     businessInjector.entityManager,
-                    LicenseStore.shared().getRequiresLicenseKey()
+                    businessInjector.licenseStore.getRequiresLicenseKey()
                 ),
+                businessInjector.pushSettingManager,
                 businessInjector.entityManager
             ),
             backgroundPendingUserNotificationManager: PendingUserNotificationManager(
                 UserNotificationManager(
                     businessInjector.settingsStore,
-                    UserSettings.shared(),
-                    ContactStore.shared(),
+                    businessInjector.userSettings,
+                    businessInjector.myIdentityStore,
+                    businessInjector.backgroundPushSettingManager,
+                    businessInjector.contactStore,
                     businessInjector.backgroundGroupManager,
                     businessInjector.backgroundEntityManager,
-                    LicenseStore.shared().getRequiresLicenseKey()
+                    businessInjector.licenseStore.getRequiresLicenseKey()
                 ),
+                businessInjector.backgroundPushSettingManager,
                 businessInjector.backgroundEntityManager
             ),
             businessInjector: businessInjector
@@ -103,6 +109,8 @@ import ThreemaFramework
             self.show(
                 pendingUserNotification: pendingUserNotification,
                 pendingUserNotificationManager: self.pendingUserNotificationManager,
+                pushSettingManager: self.businessInjector.pushSettingManager,
+                groupManager: self.businessInjector.groupManager,
                 entityManager: self.businessInjector.entityManager
             )
         }
@@ -125,6 +133,8 @@ import ThreemaFramework
                     self.show(
                         pendingUserNotification: pendingUserNotification,
                         pendingUserNotificationManager: self.pendingUserNotificationManager,
+                        pushSettingManager: self.businessInjector.pushSettingManager,
+                        groupManager: self.businessInjector.groupManager,
                         entityManager: self.businessInjector.entityManager
                     )
                     .done { _ in
@@ -141,13 +151,15 @@ import ThreemaFramework
     @discardableResult fileprivate func show(
         pendingUserNotification: PendingUserNotification,
         pendingUserNotificationManager manager: PendingUserNotificationManagerProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
+        groupManager: GroupManagerProtocol,
         entityManager: EntityManager
     ) -> Guarantee<Bool> {
         Guarantee { seal in
             if !AppDelegate.shared().active {
                 manager
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
-                    .done { started in
+                    .done(on: .global(), flags: .inheritQoS) { started in
                         if !started {
                             self.notificationManager.updateUnreadMessagesCount()
                         }
@@ -171,14 +183,20 @@ import ThreemaFramework
                 
                 if let message = pendingUserNotification.baseMessage, pendingUserNotification.stage == .final,
                    pendingUserNotification.abstractMessage?.receivedAfterInitialQueueSend == true {
-                    let pushSettingManager = PushSettingManager(
-                        UserSettings.shared(),
-                        LicenseStore.requiresLicenseKey()
-                    )
                     if pushSettingManager.canMasterDndSendPush() {
                         entityManager.performBlock {
-                            let pushSetting = PushSetting(for: message.conversation)
-                            if pushSetting.canSendPush(for: message) {
+                            var pushSetting: PushSetting
+                            if let group = groupManager.getGroup(conversation: message.conversation) {
+                                pushSetting = pushSettingManager.find(forGroup: group.groupIdentity)
+                            }
+                            else if let contactEntity = message.conversation.contact {
+                                pushSetting = pushSettingManager.find(forContact: contactEntity.threemaIdentity)
+                            }
+                            else {
+                                fatalError("No push settings for conversation found")
+                            }
+
+                            if pushSettingManager.canSendPush(for: message) {
                                 let messageObjectID = message.objectID
 
                                 DispatchQueue.main.async {
@@ -190,7 +208,7 @@ import ThreemaFramework
                                     )
                                 }
 
-                                if !pushSetting.silent {
+                                if !pushSetting.muted {
                                     self.notificationManager.playReceivedMessageSound()
                                 }
                             }
@@ -209,7 +227,7 @@ import ThreemaFramework
                 // Start timed user notification, will be removed on stage final anyway
                 manager
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
-                    .done { started in
+                    .done(on: .global(), flags: .inheritQoS) { started in
                         if !started {
                             PendingUserNotificationManager.pendingQueue.sync {
                                 self.notificationManager.updateUnreadMessagesCount()
@@ -248,6 +266,8 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 self.show(
                     pendingUserNotification: pendingUserNotification,
                     pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
+                    pushSettingManager: self.businessInjector.backgroundPushSettingManager,
+                    groupManager: self.businessInjector.backgroundGroupManager,
                     entityManager: self.businessInjector.backgroundEntityManager
                 )
             }
@@ -282,6 +302,8 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                     self.show(
                         pendingUserNotification: pendingUserNotification,
                         pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
+                        pushSettingManager: self.businessInjector.backgroundPushSettingManager,
+                        groupManager: self.businessInjector.backgroundGroupManager,
                         entityManager: self.businessInjector.backgroundEntityManager
                     )
                 }
@@ -315,9 +337,11 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 self.show(
                     pendingUserNotification: pendingUserNotification,
                     pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
+                    pushSettingManager: self.businessInjector.backgroundPushSettingManager,
+                    groupManager: self.businessInjector.backgroundGroupManager,
                     entityManager: self.businessInjector.backgroundEntityManager
                 )
-                .done { showed in
+                .done(on: .global(), flags: .inheritQoS) { showed in
                     if showed {
                         self.backgroundPendingUserNotificationManager
                             .addAsProcessed(pendingUserNotification: pendingUserNotification)

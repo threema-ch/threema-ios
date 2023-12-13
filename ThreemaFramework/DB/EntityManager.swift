@@ -86,7 +86,11 @@ public class EntityManager: NSObject {
     }
     
     // MARK: - General actions
-    
+
+    func isEqualWithCurrentContext(managedObjectContext: NSManagedObjectContext) -> Bool {
+        dbContext.current === managedObjectContext
+    }
+
     @objc public func performAsyncBlockAndSafe(_ block: (() -> Void)?) {
         // perform always runs on the correct queue for `current`
         dbContext.current.perform {
@@ -175,6 +179,16 @@ public class EntityManager: NSObject {
                 else {
                     conversation.lastMessage = nil
                 }
+            }
+        }
+    }
+
+    /// Remove contact entities
+    /// Assumption: the contacts have no messages and no conversations
+    public func cleanupUnusedContacts(_ contacts: [ContactEntity]) {
+        performAndWaitSave {
+            for contact in contacts {
+                self.dbContext.current.delete(contact)
             }
         }
     }
@@ -613,13 +627,47 @@ extension EntityManager {
     ///   - sender: Is only necessary for group message and I'm not the sender
     ///   - conversation: Search or insert message in this conversation
     ///   - thumbnail: Is needed to create deprecated `VideoMessageEntity`, because thumbnail is not optional
-    /// - Returns: Existing or new (unsaved) message from DB or nil if message type isn't supported
+    ///   - onCompletion: Existing or new (unsaved) message from DB
+    ///   - onError: ThreemaProtocolError.messageAlreadyProcessed, TaskExecutionError.messageTypeMismatch
+    @available(*, deprecated, message: "Just for Objective-C calls")
     @objc func getOrCreateMessage(
         for abstractMessage: AbstractMessage,
         sender: ContactEntity?,
         conversation: Conversation,
+        thumbnail: UIImage?,
+        onCompletion: @escaping (BaseMessage) -> Void,
+        onError: @escaping (Error) -> Void
+    ) {
+        do {
+            try onCompletion(
+                getOrCreateMessage(
+                    for: abstractMessage,
+                    sender: sender,
+                    conversation: conversation,
+                    thumbnail: thumbnail
+                )
+            )
+        }
+        catch {
+            onError(error)
+        }
+    }
+
+    /// Looking for existing message in current and in main DB context or creating new message it was not found.
+    ///
+    /// - Parameters:
+    ///   - abstractMessage: Get or create message from DB for that message
+    ///   - sender: Is only necessary for group message and I'm not the sender
+    ///   - conversation: Search or insert message in this conversation
+    ///   - thumbnail: Is needed to create deprecated `VideoMessageEntity`, because thumbnail is not optional
+    /// - Returns: Existing or new (unsaved) message from DB
+    /// - Throws: ThreemaProtocolError.messageAlreadyProcessed, TaskExecutionError.messageTypeMismatch
+    func getOrCreateMessage(
+        for abstractMessage: AbstractMessage,
+        sender: ContactEntity?,
+        conversation: Conversation,
         thumbnail: UIImage?
-    ) -> BaseMessage? {
+    ) throws -> BaseMessage {
         assert(abstractMessage.fromIdentity != nil, "Sender identity is needed to calculating sending direction")
 
         // Get DB objects BaseMessage from particular entity fetcher
@@ -627,11 +675,15 @@ extension EntityManager {
             fetcher.message(with: abstractMessage.messageID, conversation: conversation)
         }
 
-        var message: BaseMessage?
+        return try getOrCreateMessageQueue.sync {
+            var message: BaseMessage?
 
-        getOrCreateMessageQueue.sync {
-            dbContext.current.performAndWait {
+            try dbContext.current.performAndWait {
                 message = getMessage(for: conversation, fetcher: entityFetcher)
+                guard !(message?.delivered.boolValue ?? false) else {
+                    DDLogWarn("Message ID \(abstractMessage.messageID.hexString) already processed")
+                    throw ThreemaProtocolError.messageAlreadyProcessed
+                }
             }
 
             if message == nil, !isMainDBContext {
@@ -648,64 +700,61 @@ extension EntityManager {
                 if let messageObjectID {
                     DDLogNotice("Apply message \(abstractMessage.messageID.hexString) to current DB context")
                     message = dbContext.current.object(with: messageObjectID) as? BaseMessage
+                    guard !(message?.delivered.boolValue ?? false) else {
+                        DDLogWarn("Message ID \(abstractMessage.messageID.hexString) already processed")
+                        throw ThreemaProtocolError.messageAlreadyProcessed
+                    }
                 }
             }
 
-            if message != nil {
+            if let message {
                 // Validate type of existing message
                 if abstractMessage is BoxAudioMessage || abstractMessage is GroupAudioMessage {
                     guard message is AudioMessageEntity else {
-                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
-                        message = nil
-                        return
+                        throw TaskExecutionError
+                            .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
                 else if abstractMessage is BoxBallotCreateMessage || abstractMessage is GroupBallotCreateMessage {
                     guard message is BallotMessage else {
-                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
-                        message = nil
-                        return
+                        throw TaskExecutionError
+                            .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
                 else if abstractMessage is BoxFileMessage || abstractMessage is GroupFileMessage {
                     guard message is FileMessageEntity else {
-                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
-                        message = nil
-                        return
+                        throw TaskExecutionError
+                            .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
                 else if abstractMessage is BoxImageMessage || abstractMessage is GroupImageMessage {
                     guard message is ImageMessage else {
-                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
-                        message = nil
-                        return
+                        throw TaskExecutionError
+                            .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
                 else if abstractMessage is BoxLocationMessage || abstractMessage is GroupLocationMessage {
                     guard message is LocationMessage else {
-                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
-                        message = nil
-                        return
+                        throw TaskExecutionError
+                            .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
                 else if abstractMessage is BoxTextMessage || abstractMessage is GroupTextMessage {
                     guard message is TextMessage else {
-                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
-                        message = nil
-                        return
+                        throw TaskExecutionError
+                            .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
                 else if abstractMessage is BoxVideoMessage || abstractMessage is GroupVideoMessage {
                     guard message is VideoMessageEntity else {
-                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
-                        message = nil
-                        return
+                        throw TaskExecutionError
+                            .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
             }
             else {
                 // Create new message and save it to DB (without applying sender and conversation)
-                performAndWaitSave {
+                try performAndWaitSave {
                     if let amsg = abstractMessage as? BoxAudioMessage {
                         message = self.entityCreator.audioMessageEntity(fromBox: amsg)
                     }
@@ -767,22 +816,27 @@ extension EntityManager {
                             (message as? VideoMessageEntity)?.thumbnail = imageData
                         }
                         else {
-                            fatalError("Create video message failed because of missing thumbnail")
+                            fatalError("Create video message failed, because of missing thumbnail")
                         }
                     }
 
-                    message?.conversation = conversation
+                    guard let message else {
+                        DDLogWarn("Unkonown message type (ID: \(abstractMessage.messageID.hexString))")
+                        throw ThreemaProtocolError.unknownMessageType
+                    }
+
+                    message.conversation = conversation
 
                     let isOutgoingMessage = abstractMessage.fromIdentity == self.myIdentityStore.identity
-                    message?.isOwn = NSNumber(booleanLiteral: isOutgoingMessage)
+                    message.isOwn = NSNumber(booleanLiteral: isOutgoingMessage)
 
                     conversation.lastMessage = message
                     conversation.lastUpdate = .now
                 }
             }
-        }
 
-        return message
+            return message!
+        }
     }
 
     private func groupConversation(forMessage message: AbstractGroupMessage, fetcher: EntityFetcher) -> Conversation? {

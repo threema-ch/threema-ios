@@ -46,7 +46,7 @@
 - (IBAction)sendButtonPressed:(id)sender;
 - (IBAction)speedButtonPressed:(id)sender;
 
-@property (strong, nonatomic) IBOutlet PlayRecordAudioView *audioView;
+@property (weak, nonatomic) IBOutlet PlayRecordAudioView *audioView;
 @property (weak, nonatomic) id<PlayRecordAudioDelegate> delegate;
 
 @end

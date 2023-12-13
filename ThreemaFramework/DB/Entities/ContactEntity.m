@@ -63,6 +63,7 @@ static NSString *fieldFeatureLevel = @"featureLevel";
 @dynamic createdAt;
 @dynamic profilePictureBlobID;
 @dynamic forwardSecurityState;
+@dynamic rejectedMessages;
 
 // TODO: This will only be used after IOS-1495 has been merged and database model v30 has been actived.
 //@dynamic abFirstName;
@@ -256,6 +257,12 @@ static NSString *fieldFeatureLevel = @"featureLevel";
     return TypingIndicatorDefault;
 }
 
+// This calls KVO observers of `typingIndicator` if any of the provided key paths are called
+// https://nshipster.com/key-value-observing/#automatic-property-notifications
++ (NSSet *)keyPathsForValuesAffectingTypingIndicator {
+    return [NSSet setWithObjects:fieldTypingIndicators, nil];
+}
+
 - (void)setTypingIndicator:(TypingIndicator)typingIndicator {
     [self willChangeValueForKey:fieldTypingIndicators];
     [self setPrimitiveValue:[NSNumber numberWithInt:(int)typingIndicator] forKey:fieldTypingIndicators];
@@ -274,6 +281,12 @@ static NSString *fieldFeatureLevel = @"featureLevel";
         }
     }
     return ReadReceiptDefault;
+}
+
+// This calls KVO observers of `readReceipt` if any of the provided key paths are called
+// https://nshipster.com/key-value-observing/#automatic-property-notifications
++ (NSSet *)keyPathsForValuesAffectingReadReceipt {
+    return [NSSet setWithObjects:fieldReadReceipts, nil];
 }
 
 - (void)setReadReceipt:(ReadReceipt)readReceipt {

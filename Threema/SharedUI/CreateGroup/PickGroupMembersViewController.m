@@ -27,7 +27,6 @@
 #import "UserSettings.h"
 #import "LicenseStore.h"
 #import "GroupPhotoSender.h"
-#import <PromiseKit/PromiseKit.h>
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -109,10 +108,6 @@ typedef enum : NSUInteger {
         self.navigationItem.titleView = self.segmentControl;
     } else {
         self.title = [BundleUtil localizedStringForKey:@"members"];
-    }
-    
-    if ([LicenseStore requiresLicenseKey] && [[WorkContactTableDataSource workContactTableDataSource] numberOfSectionsInTableView:self.tableView] > 0) {
-        _mode = ModeWorkContact;
     }
     
     self.segmentControl.selectedSegmentIndex = _mode;
@@ -273,10 +268,11 @@ typedef enum : NSUInteger {
             // Sync only new members
             // This is logic that should move to the GroupManager in the future
             if (grp != nil && newMembers != nil) {
-                [groupManager syncObjcWithGroup:grp to:nil withoutCreateMessage:YES]
-                .catch(^(NSError *error) {
-                    DDLogError(@"Error syncing group: %@", error.localizedDescription);
-                });
+                [groupManager syncObjcWithGroup:grp to:nil withoutCreateMessage:YES completionHandler:^(NSError * _Nullable error){
+                    if (error != nil) {
+                        DDLogError(@"Error syncing group: %@", error.localizedDescription);
+                    }
+                }];
             }
         } errorHandler:^(NSError * _Nullable error) {
             DDLogError(@"Could not update group members: %@", error.localizedDescription);

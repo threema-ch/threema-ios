@@ -50,6 +50,7 @@ final class ConnectionContext<
     fileprivate var audioTrack: RTCAudioTrack?
     fileprivate var audioSource: RTCAudioSource?
     fileprivate var videoTrack: RTCVideoTrack?
+    // TODO: (IOS-4085) Make non optional, is initialized all the time anyways
     var videoCapturer: RTCCameraVideoCapturer?
     
     // MARK: WebRTC Connection
@@ -690,18 +691,12 @@ extension ConnectionContext {
         let audioConstrains = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         audioSource = PeerConnectionContext.peerConnectionFactory.audioSource(with: audioConstrains)
         
-        // TODO: Wat
         guard let audioSource else {
             fatalError("We assigned audioSource above, this doesn't happen")
         }
         
         // swiftformat:disable:next acronyms
-        let audioTrack = PeerConnectionContext.peerConnectionFactory.audioTrack(with: audioSource, trackId: "gcAudio0")
-        
-        // TODO: (IOS-4078) Auto mute after 3 participants
-        audioTrack.isEnabled = false
-        
-        return audioTrack
+        return PeerConnectionContext.peerConnectionFactory.audioTrack(with: audioSource, trackId: "gcAudio0")
     }
     
     private func createVideoTrack() -> RTCVideoTrack {

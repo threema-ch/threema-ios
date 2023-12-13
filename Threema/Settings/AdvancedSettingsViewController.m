@@ -57,7 +57,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
     
     self.orphanedFilesCleanupLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_orphaned_files_cleanup"];
-    
+
+    self.contactsCleanupLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_contacts_cleanup"];
+
     self.reregisterPushNotificationsLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_reregister_notifications_label"];
     
     self.resetFSDBLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_reset_fs_db_label"];
@@ -260,7 +262,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self presentViewController:actionSheet animated:YES completion:nil];
         
     }
-    else if (indexPath.section == 4 && indexPath.row == 1) {
+    else if (indexPath.section == 3 && indexPath.row == 1) {
         DDLogWarn(@"Manually flushing outgoing task queue.");
         [TaskManager flushWithQueueType:TaskQueueTypeOutgoing];
         TaskManager *tm = [TaskManager new];

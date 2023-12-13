@@ -47,8 +47,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     private weak var groupDetailsViewController: GroupDetailsViewController?
     private weak var tableView: UITableView?
     
-    private lazy var entityManager = EntityManager()
-    private lazy var groupManger = GroupManager()
+    private lazy var businessInjector = BusinessInjector()
     private lazy var mdmSetup = MDMSetup(setup: false)
     
     private lazy var photoBrowserWrapper: MWPhotoBrowserWrapper? = {
@@ -56,7 +55,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
             return MWPhotoBrowserWrapper(
                 for: conversation,
                 in: viewController,
-                entityManager: self.entityManager,
+                entityManager: self.businessInjector.entityManager,
                 delegate: self
             )
         }
@@ -344,8 +343,7 @@ extension GroupDetailsDataSource {
                 return "bell.fill"
             }
             
-            let pushSetting = PushSetting(for: strongSelf.conversation)
-            return pushSetting.sfSymbolNameForPushSetting
+            return strongSelf.group.pushSetting.sfSymbolNameForPushSetting
         }
         
         return QuickAction(
@@ -359,7 +357,7 @@ extension GroupDetailsDataSource {
                 return
             }
             
-            let dndViewController = DoNotDisturbViewController(for: strongSelf.group) { _ in
+            let dndViewController = DoNotDisturbViewController(pushSetting: strongSelf.group.pushSetting) { _ in
                 quickAction.reload()
                 strongSelf.refresh(sections: [.notifications])
             }
@@ -375,7 +373,7 @@ extension GroupDetailsDataSource {
         in viewController: UIViewController,
         for conversation: Conversation
     ) -> QuickAction? {
-        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+        let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         guard messageFetcher.count() > 0 else {
             return nil
         }
@@ -397,7 +395,7 @@ extension GroupDetailsDataSource {
     
     private func groupCallQuickAction(in viewController: UIViewController) -> QuickAction? {
         // Only show call icon if group calls are enabled
-        guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls,
+        guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls, !group.isNoteGroup,
               group.isSelfMember else {
             return nil
         }
@@ -405,7 +403,7 @@ extension GroupDetailsDataSource {
         // Can we synchronously test here if this contact supports calls (without updating the
         // feature mask) instead of checking when the action is actually triggered?
         let quickAction = QuickAction(
-            imageName: "threema.phone.and.person.3.fill",
+            imageName: "threema.phone.fill",
             title: BundleUtil.localizedString(forKey: "group_call_title"),
             accessibilityIdentifier: "GroupDetailsDataSourceGroupCallQuickActionButton"
         ) { _ in
@@ -438,8 +436,8 @@ extension GroupDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        entityManager.performBlockAndWait {
-            if self.entityManager.entityFetcher.countBallots(for: self.conversation) > 0 {
+        businessInjector.entityManager.performBlockAndWait {
+            if self.businessInjector.entityManager.entityFetcher.countBallots(for: self.conversation) > 0 {
                 quickActions.append(contentsOf: self.ballotsQuickAction(for: self.conversation, in: viewController))
             }
         }
@@ -448,7 +446,7 @@ extension GroupDetailsDataSource {
     }
     
     private func hasMedia(for conversation: Conversation) -> Bool {
-        entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
+        businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
     }
     
     private func mediaQuickAction(for conversation: Conversation, in viewController: UIViewController) -> QuickAction {
@@ -589,7 +587,7 @@ extension GroupDetailsDataSource {
     private var contentActions: [GroupDetails.Row] {
         var rows = [GroupDetails.Row]()
         
-        if ConversationExporter.canExport(conversation: conversation, entityManager: entityManager) {
+        if ConversationExporter.canExport(conversation: conversation, entityManager: businessInjector.entityManager) {
             let localizedExportConversationTitle = BundleUtil.localizedString(forKey: "export_chat")
             
             let exportConversationAction = Details.Action(
@@ -638,7 +636,7 @@ extension GroupDetailsDataSource {
             rows.append(.action(exportConversationAction))
         }
         
-        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+        let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         if messageFetcher.count() > 0 {
             let localizedActionTitle = BundleUtil.localizedString(forKey: "messages_delete_all_button")
             
@@ -675,8 +673,8 @@ extension GroupDetailsDataSource {
                         
                         strongGroupDetailsViewController.willDeleteAllMessages()
                         
-                        strongSelf.entityManager.performBlock {
-                            _ = strongSelf.entityManager.entityDestroyer
+                        strongSelf.businessInjector.entityManager.performBlock {
+                            _ = strongSelf.businessInjector.entityManager.entityDestroyer
                                 .deleteMessages(of: strongSelf.conversation)
                             strongSelf.reload(sections: [.contentActions])
                             
@@ -708,7 +706,7 @@ extension GroupDetailsDataSource {
                 }
                 
                 let dndViewController = DoNotDisturbViewController(
-                    for: strongSelf.group,
+                    pushSetting: strongSelf.group.pushSetting,
                     willDismiss: { [weak self, weak groupDetailsViewController] _ in
                         self?.refresh(sections: [.notifications])
                         groupDetailsViewController?.reloadHeader()
@@ -730,18 +728,19 @@ extension GroupDetailsDataSource {
                     return true
                 }
             
-                let pushSetting = PushSetting(for: strongSelf.conversation)
-                return !pushSetting.silent
+                return !strongSelf.group.pushSetting.muted
             }
         ) { [weak self, weak groupDetailsViewController] isSet in
-            guard let strongSelf = self else {
-                return
+            Task { @MainActor in
+                guard let strongSelf = self else {
+                    return
+                }
+
+                var pushSetting = strongSelf.group.pushSetting
+                pushSetting.muted = !isSet
+                await strongSelf.businessInjector.pushSettingManager.save(pushSetting: pushSetting, sync: true)
+                groupDetailsViewController?.reloadHeader()
             }
-            
-            let pushSetting = PushSetting(for: strongSelf.conversation)
-            pushSetting.silent = !isSet
-            pushSetting.save()
-            groupDetailsViewController?.reloadHeader()
         }
         rows.append(.booleanAction(playSoundBooleanAction))
         
@@ -762,7 +761,7 @@ extension GroupDetailsDataSource {
                     return
                 }
                 
-                strongSelf.groupManger.sync(group: strongSelf.group)
+                strongSelf.businessInjector.groupManager.sync(group: strongSelf.group)
                     .done {
                         NotificationPresenterWrapper.shared.present(type: .groupSyncSuccess)
                     }
@@ -855,7 +854,7 @@ extension GroupDetailsDataSource {
                     of: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
                     cell: cell,
-                    entityManager: strongSelf.entityManager,
+                    entityManager: strongSelf.businessInjector.entityManager,
                     singleFunction: .leaveDissolve
                 ) { _ in
                     DDLogVerbose("Left group")
@@ -884,7 +883,7 @@ extension GroupDetailsDataSource {
                     of: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
                     cell: cell,
-                    entityManager: strongSelf.entityManager,
+                    entityManager: strongSelf.businessInjector.entityManager,
                     singleFunction: .leaveDissolve
                 ) { _ in
                     DDLogVerbose("Group was deleted")
@@ -913,7 +912,7 @@ extension GroupDetailsDataSource {
                 of: strongSelf.group.conversation,
                 owner: strongGroupDetailsViewController,
                 cell: cell,
-                entityManager: strongSelf.entityManager,
+                entityManager: strongSelf.businessInjector.entityManager,
                 singleFunction: .delete
             ) { _ in
                 DDLogVerbose("Group was deleted")

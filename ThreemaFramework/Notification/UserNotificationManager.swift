@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 public protocol UserNotificationManagerProtocol {
     func userNotificationContent(_ pendingUserNotification: PendingUserNotification) -> UserNotificationContent?
@@ -36,6 +37,8 @@ public protocol UserNotificationManagerProtocol {
 public class UserNotificationManager: UserNotificationManagerProtocol {
     private let settingsStore: SettingsStoreProtocol
     private let userSettings: UserSettingsProtocol
+    private let myIdentityStore: MyIdentityStoreProtocol
+    private let pushSettingManager: PushSettingManagerProtocol
     private let contactStore: ContactStoreProtocol
     private let groupManager: GroupManagerProtocol
     private let entityManager: EntityManager
@@ -44,6 +47,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     public init(
         _ settingsStore: SettingsStoreProtocol,
         _ userSettings: UserSettingsProtocol,
+        _ myIdentityStore: MyIdentityStoreProtocol,
+        _ pushSettingManager: PushSettingManagerProtocol,
         _ contactStore: ContactStoreProtocol,
         _ groupManager: GroupManagerProtocol,
         _ entityManager: EntityManager,
@@ -51,6 +56,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     ) {
         self.settingsStore = settingsStore
         self.userSettings = userSettings
+        self.myIdentityStore = myIdentityStore
+        self.pushSettingManager = pushSettingManager
         self.contactStore = contactStore
         self.groupManager = groupManager
         self.entityManager = entityManager
@@ -99,7 +106,6 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             }
         }
         
-        let pushSettingManager = PushSettingManager(userSettings, isWorkApp)
         if !pushSettingManager.canMasterDndSendPush() {
             return nil
         }
@@ -120,22 +126,27 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         
         // Set push setting
         if !userNotificationContent.isGroupMessage {
-            userNotificationContent.pushSetting = pushSettingManager.find(forIdentity: userNotificationContent.senderID)
+            userNotificationContent.pushSetting = pushSettingManager
+                .find(forContact: ThreemaIdentity(userNotificationContent.senderID))
         }
-        else if let baseMessage = pendingUserNotification.baseMessage {
+        else if let baseMessage = pendingUserNotification.baseMessage,
+                let groupID = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation)?.groupID {
             userNotificationContent.baseMessage = baseMessage
-            userNotificationContent.groupID = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation)?
-                .groupID.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
+            userNotificationContent.groupID = groupID.base64EncodedString()
             userNotificationContent.groupCreator = entityManager.entityFetcher
                 .groupEntity(for: baseMessage.conversation)?.groupCreator ?? MyIdentityStore.shared().identity
-            userNotificationContent.pushSetting = pushSettingManager.find(forConversation: baseMessage.conversation)
+            userNotificationContent.pushSetting = pushSettingManager
+                .find(forGroup: GroupIdentity(
+                    id: groupID,
+                    creator: ThreemaIdentity(userNotificationContent.groupCreator!)
+                ))
         }
-        else if let groupCallMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage,
-                let groupConversation = entityManager.entityFetcher.conversation(
-                    for: groupCallMessage.groupID,
-                    creator: groupCallMessage.groupCreator
-                ) {
-            userNotificationContent.pushSetting = pushSettingManager.find(forConversation: groupConversation)
+        else if let groupCallMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {
+            userNotificationContent.pushSetting = pushSettingManager
+                .find(forGroup: GroupIdentity(
+                    id: groupCallMessage.groupID,
+                    creator: ThreemaIdentity(groupCallMessage.groupCreator)
+                ))
         }
             
         let notificationType = settingsStore.notificationType

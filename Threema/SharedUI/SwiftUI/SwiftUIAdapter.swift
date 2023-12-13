@@ -54,4 +54,8 @@ import SwiftUI
         hostingController.navigationItem.largeTitleDisplayMode = .never
         return hostingController
     }
+    
+    @objc static func createProfileView() -> UIViewController {
+        ProfileView().createProfileViewController()
+    }
 }

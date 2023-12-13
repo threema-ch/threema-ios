@@ -5,8 +5,8 @@
 /* Class = "UITableViewSection"; footerTitle = "Number: +41 79 123 45 67"; ObjectID = "5HP-W8-nFp"; */
 "5HP-W8-nFp.footerTitle" = "Číslo: +41 79 123 45 67";
 
-/* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
-"8Pu-jd-SHn.title" = "Môj profil";
+/* Class = "UINavigationItem"; title = "Profile"; ObjectID = "8Pu-jd-SHn"; */
+"8Pu-jd-SHn.title" = "Profil";
 
 /* Class = "UINavigationItem"; title = "Link Number"; ObjectID = "ELz-zT-AmB"; */
 "ELz-zT-AmB.title" = "Prepojiť číslo";
@@ -69,7 +69,7 @@
 "o3l-bU-add.placeholder" = "Prezývka";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your email address to your ID lets other people find you on Threema automatically if they have your email in their address book."; ObjectID = "qQD-Gd-ca9"; */
-"qQD-Gd-ca9.footerTitle" = "Prepojenie e‑mailu s vaším ID pomáha ostatným automaticky vás nájsť na Threeme, ak majú váš e-mail vo svojom adresári.";
+"qQD-Gd-ca9.footerTitle" = "Prepojenie vašej emailovej adresy s vaším ID umožňuje ostatným ľuďom automaticky vás nájsť v službe Threema, ak majú váš email vo svojom adresári.";
 
 /* Class = "UINavigationItem"; title = "Enter code"; ObjectID = "tGC-WP-fBC"; */
 "tGC-WP-fBC.title" = "Zadajte kód";

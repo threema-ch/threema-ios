@@ -76,6 +76,7 @@ NSString * const MDM_KEY_SAFE_SERVER_USERNAME = @"th_safe_server_username"; // S
 NSString * const MDM_KEY_SAFE_SERVER_PASSWORD = @"th_safe_server_password"; // String
 NSString * const MDM_KEY_SAFE_RESTORE_ENABLE = @"th_safe_restore_enable"; // Bool
 NSString * const MDM_KEY_SAFE_RESTORE_ID = @"th_safe_restore_id"; // String 8
+NSString * const MDM_KEY_KEEP_MESSAGE_DAYS = @"th_keep_messages_days"; // Int
 
 NSString * const MDM_KEY_SAFE_PASSWORD_PATTERN = @"th_safe_password_pattern"; // String
 NSString * const MDM_KEY_SAFE_PASSWORD_MESSAGE = @"th_safe_password_message"; // String
@@ -247,6 +248,11 @@ static NSDictionary *_mdmCacheSetup;
 - (NSString *)safePasswordMessage {
     NSString *safePasswordMessage = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_PASSWORD_MESSAGE];
     return [safePasswordMessage isKindOfClass:[NSString class]] ? safePasswordMessage : nil;
+}
+
+- (NSNumber *)keepMessagesDays {
+    NSString *keepMessagesDays = [self getMdmConfigurationValueForKey:MDM_KEY_KEEP_MESSAGE_DAYS];
+    return [keepMessagesDays isKindOfClass:[NSNumber class]] ? keepMessagesDays : nil;
 }
 
 // MARK: Threema Safe status

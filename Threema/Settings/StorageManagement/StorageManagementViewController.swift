@@ -46,14 +46,14 @@ final class StorageManagementViewController: ThemedCodeModernGroupedTableViewCon
     private class DataSource: UITableViewDiffableDataSource<Section, Row> {
         typealias SupplementaryProvider = (UITableView, Section) -> String?
         
-        let headerProvider: SupplementaryProvider
-        let footerProvider: SupplementaryProvider
+        let headerProvider: SupplementaryProvider?
+        let footerProvider: SupplementaryProvider?
         
         init(
             tableView: UITableView,
             cellProvider: @escaping UITableViewDiffableDataSource<Section, Row>.CellProvider,
-            headerProvider: @escaping SupplementaryProvider,
-            footerProvider: @escaping SupplementaryProvider
+            headerProvider: SupplementaryProvider? = nil,
+            footerProvider: SupplementaryProvider? = nil
         ) {
             self.headerProvider = headerProvider
             self.footerProvider = footerProvider
@@ -71,12 +71,12 @@ final class StorageManagementViewController: ThemedCodeModernGroupedTableViewCon
         
         override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
             let section = snapshot().sectionIdentifiers[section]
-            return headerProvider(tableView, section)
+            return headerProvider?(tableView, section)
         }
         
         override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
             let section = snapshot().sectionIdentifiers[section]
-            return footerProvider(tableView, section)
+            return footerProvider?(tableView, section)
         }
     }
         
@@ -103,38 +103,8 @@ final class StorageManagementViewController: ThemedCodeModernGroupedTableViewCon
                 cell.setupConversation(conversation, businessInjector: businessInjector)
                 return cell
             }
-        },
-        headerProvider: { [weak self] _, _ -> String? in
-            guard let strongSelf = self else {
-                return nil
-            }
-        
-            return nil
-        
-        },
-        footerProvider: { [weak self] _, section -> String? in
-            guard let strongSelf = self else {
-                return nil
-            }
-        
-            switch section {
-            default:
-                return nil
-            }
         }
     )
-    
-    private var mediaOlderThanOption = OlderThanOption.oneYear
-    private var messageOlderThanOption = OlderThanOption.oneYear
-    
-    enum OlderThanOption: Int, CaseIterable {
-        case oneYear = 0
-        case sixMonths
-        case threeMonths
-        case oneMonth
-        case oneWeek
-        case everything
-    }
         
     // MARK: - Lifecycle
         
@@ -164,7 +134,7 @@ extension StorageManagementViewController {
     private func configureNavigationBar() {
         navigationItem.largeTitleDisplayMode = .never
         
-        navigationBarTitle = BundleUtil.localizedString(forKey: "storage_management")
+        navigationBarTitle = "storage_management".localized
     }
     
     private func configureTableView() {
@@ -186,16 +156,16 @@ extension StorageManagementViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         
         snapshot.appendSections([.storage])
-        snapshot.appendItems([.storage(label: BundleUtil.localizedString(forKey: "storage_total"), type: .total)])
+        snapshot.appendItems([.storage(label: "storage_total".localized, type: .total)])
         snapshot
             .appendItems([.storage(
-                label: BundleUtil.localizedString(forKey: "storage_total_in_use"),
+                label: "storage_total_in_use".localized,
                 type: .totalInUse
             )])
         snapshot
-            .appendItems([.storage(label: BundleUtil.localizedString(forKey: "storage_total_free"), type: .totalFree)])
+            .appendItems([.storage(label: "storage_total_free".localized, type: .totalFree)])
         snapshot.appendItems([.storage(label: String(
-            format: BundleUtil.localizedString(forKey: "storage_threema"),
+            format: "storage_threema".localized,
             ThreemaApp.currentName
         ), type: .threema)])
         
@@ -242,16 +212,35 @@ extension StorageManagementViewController: UITableViewDelegate {
             return
         }
         
+        func push(_ content: StorageManagementConversationView) {
+            let hostedVC = UIHostingController(rootView: content)
+            hostedVC.navigationItem.title = "storage_management".localized
+            navigationController?.pushViewController(hostedVC, animated: true)
+        }
+        
         if case let .conversation(conversation: conversation, businessInjector: businessInjector) = row {
-            let storageManagementConversationViewController = StorageManagementConversationViewController(
-                conversation: conversation,
-                businessInjector: businessInjector
+            push(
+                .init(
+                    businessInjector: businessInjector,
+                    model: .init(
+                        conversation: conversation,
+                        businessInjector: businessInjector
+                    )
+                )
             )
-            navigationController?.pushViewController(storageManagementConversationViewController, animated: true)
         }
         if case .manageAllConversations = row {
-            let storageManagementConversationViewController = StorageManagementConversationViewController()
-            navigationController?.pushViewController(storageManagementConversationViewController, animated: true)
+            push(
+                .init(
+                    // swiftformat:disable:next redundantSelf
+                    businessInjector: self.businessInjector,
+                    model: .init(
+                        conversation: nil,
+                        // swiftformat:disable:next redundantSelf
+                        businessInjector: self.businessInjector
+                    )
+                )
+            )
         }
     }
 }

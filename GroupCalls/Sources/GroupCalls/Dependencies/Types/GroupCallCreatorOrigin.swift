@@ -19,10 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 /// Used to post system messages
 public enum GroupCallCreatorOrigin {
     case db
     case local
-    case remote(ThreemaID)
+    case remote(ThreemaIdentity)
 }

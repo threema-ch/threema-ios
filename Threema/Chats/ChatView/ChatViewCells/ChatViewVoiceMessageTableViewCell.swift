@@ -83,15 +83,15 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     
     // MARK: - Private Properties
     
-    private var userSettings = BusinessInjector().userSettings
+    private weak var userSettings = BusinessInjector().userSettings
     
     private var showsRemaining: Bool {
         set {
-            userSettings.voiceMessagesShowTimeRemaining = newValue
+            userSettings?.voiceMessagesShowTimeRemaining = newValue
             updateMessageMetadataFileSizeLabel(voiceMessage: voiceMessageAndNeighbors?.message)
         }
         get {
-            userSettings.voiceMessagesShowTimeRemaining
+            userSettings?.voiceMessagesShowTimeRemaining ?? false
         }
     }
     
@@ -161,7 +161,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         return stackView
     }()
     
-    private lazy var waveformView: MessageVoiceMessageWaveformView = {
+    private lazy var waveformView: MessageVoiceMessageWaveformView = { [weak self] in
         let view = MessageVoiceMessageWaveformView(waveformDelegate: self)
         view.translatesAutoresizingMaskIntoConstraints = false
         
@@ -174,8 +174,8 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     }()
     
     private lazy var micIconOrPlaybackSpeedButton: MessageVoiceMessageSpeedButton = {
-        let button = MessageVoiceMessageSpeedButton(action: { themedButton in
-            guard let speedIconButton = themedButton as? MessageVoiceMessageSpeedButton else {
+        let button = MessageVoiceMessageSpeedButton(action: { [weak self] themedButton in
+            guard let self, let speedIconButton = themedButton as? MessageVoiceMessageSpeedButton else {
                 let msg = "Wrong kind of button"
                 assertionFailure(msg)
                 DDLogError(msg)
@@ -316,8 +316,10 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     
     // MARK: - Internal Views
     
-    lazy var stateButton: MessageVoiceMessageStateButton = {
-        let button = MessageVoiceMessageStateButton(action: self.stateButtonAction)
+    lazy var stateButton: MessageVoiceMessageStateButton = { [weak self] in
+        let button = MessageVoiceMessageStateButton(action: { button in
+            self?.stateButtonAction(button)
+        })
         button.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([

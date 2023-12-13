@@ -21,6 +21,7 @@
 import CoreLocation
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaFramework
 
 class MessageSenderMock: NSObject, MessageSenderProtocol {
@@ -77,15 +78,15 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         return Promise()
     }
 
-    func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaFramework.ThreemaIdentity) async {
+    func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaEssentials.ThreemaIdentity) async {
         // no-op
     }
 
-    func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: ThreemaFramework.GroupIdentity) async {
+    func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: ThreemaEssentials.GroupIdentity) async {
         // no-op
     }
 
-    func sendUserAck(for message: BaseMessage, toIdentity: ThreemaFramework.ThreemaIdentity) async {
+    func sendUserAck(for message: BaseMessage, toIdentity: ThreemaEssentials.ThreemaIdentity) async {
         // no-op
     }
 
@@ -93,7 +94,7 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         // no-op
     }
 
-    func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaFramework.ThreemaIdentity) async {
+    func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaEssentials.ThreemaIdentity) async {
         // no-op
     }
 
@@ -101,7 +102,7 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         // no-op
     }
 
-    func sendTypingIndicator(typing: Bool, toIdentity: ThreemaFramework.ThreemaIdentity) {
+    func sendTypingIndicator(typing: Bool, toIdentity: ThreemaEssentials.ThreemaIdentity) {
         // no-op
     }
 

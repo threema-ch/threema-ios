@@ -261,7 +261,9 @@ public class DHSession: CustomStringConvertible, Equatable {
             
             // There should be no 4DH versions in this state
             if current4DHVersions != nil {
-                DDLogError("[ForwardSecurity] getOutgoingAppliedVersion: Unexpected current4DHVersions in L20 state")
+                DDLogError(
+                    "[ForwardSecurity] getOutgoingAppliedVersion: Unexpected current4DHVersions in \(tempState) state"
+                )
             }
 
             // TODO(ANDR-2452): We don't save the remote `Init` version range at the moment and simply
@@ -275,7 +277,7 @@ public class DHSession: CustomStringConvertible, Equatable {
             // We expect 4DH versions to be available in these states
             guard let current4DHVersions else {
                 DDLogError(
-                    "[ForwardSecurity] getOutgoingAppliedVersion: Missing current4DHVersions in state \(tempState)"
+                    "[ForwardSecurity] getOutgoingAppliedVersion: Missing current4DHVersions in \(tempState) state"
                 )
                 return .v10
             }

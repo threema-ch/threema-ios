@@ -22,6 +22,7 @@ import Foundation
 @testable import ThreemaFramework
 
 class BusinessInjectorMock: FrameworkInjectorProtocol {
+
     // MARK: BusinessInjectorProtocol
 
     var backgroundEntityManager: EntityManager
@@ -29,6 +30,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var backgroundGroupManager: GroupManagerProtocol
 
     var backgroundUnreadMessages: UnreadMessagesProtocol
+
+    var backgroundPushSettingManager: ThreemaFramework.PushSettingManagerProtocol
 
     var contactStore: ContactStoreProtocol
 
@@ -54,9 +57,13 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     
     var settingsStore: SettingsStoreProtocol
     
+    var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
+
     // MARK: BusinessInternalInjectorProtocol
 
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol
+
+    var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol
 
     var messageProcessor: MessageProcessorProtocol
     
@@ -73,11 +80,14 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var nonceGuard: NonceGuardProtocol
 
     var blobUploader: BlobUploaderProtocol
+    
+    var messageRetentionManager: any MessageRetentionManagerModelProtocol
 
     init(
         backgroundEntityManager: EntityManager,
         backgroundGroupManager: GroupManagerProtocol = GroupManagerMock(),
         backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
+        backgroundPushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
         contactStore: ContactStoreProtocol = ContactStoreMock(),
         conversationStore: ConversationStoreProtocol & ConversationStoreInternalProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
@@ -90,15 +100,19 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         userSettings: UserSettingsProtocol = UserSettingsMock(),
         settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol = SettingsStoreMock(),
         serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
+        pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
         mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
+        mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessorMock(),
         messageProcessor: MessageProcessorProtocol = MessageProcessorMock(),
         userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManagerMock(),
         nonceGuard: NonceGuardProtocol = NonceGuardMock(),
-        blobUploader: BlobUploaderProtocol = BlobUploaderMock()
+        blobUploader: BlobUploaderProtocol = BlobUploaderMock(),
+        messageRetentionManager: MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock()
     ) {
         self.backgroundEntityManager = backgroundEntityManager
         self.backgroundGroupManager = backgroundGroupManager
         self.backgroundUnreadMessages = backgroundUnreadMessages
+        self.backgroundPushSettingManager = backgroundPushSettingManager
         self.contactStore = contactStore
         self.conversationStore = conversationStore
         self.entityManager = entityManager
@@ -110,7 +124,9 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.unreadMessages = unreadMessages
         self.userSettings = userSettings
         self.serverConnector = serverConnector
+        self.pushSettingManager = pushSettingManager
         self.mediatorMessageProtocol = mediatorMessageProtocol
+        self.mediatorReflectedProcessor = mediatorReflectedProcessor
         self.messageProcessor = messageProcessor
         self.dhSessionStore = InMemoryDHSessionStore()
         self.fsmp = ForwardSecurityMessageProcessor(
@@ -124,6 +140,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.userNotificationCenterManager = userNotificationCenterManager
         self.nonceGuard = nonceGuard
         self.blobUploader = blobUploader
+        self.messageRetentionManager = messageRetentionManager
     }
 
     class DummySender: ForwardSecurityMessageSenderProtocol {

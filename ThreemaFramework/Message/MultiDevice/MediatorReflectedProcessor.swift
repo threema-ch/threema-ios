@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 import SwiftProtobuf
+import ThreemaEssentials
 import ThreemaProtocols
 
 enum MediatorReflectedProcessorError: Error {
@@ -33,11 +34,11 @@ enum MediatorReflectedProcessorError: Error {
     case createContactFailed(identity: String)
     case doNotAckIncomingVoIPMessage
     case downloadFailed(message: String)
-    case groupCreateFailed(groupID: String, groupCreatorIdentity: String)
+    case groupCreateFailed(groupIdentity: GroupIdentity)
     case groupNotFound(message: String)
-    case groupToCreateAlreadyExists(identity: GroupIdentity)
-    case groupToDeleteNotExists(identity: GroupIdentity)
-    case groupToUpdateNotExists(identity: GroupIdentity)
+    case groupToCreateAlreadyExists(groupIdentity: GroupIdentity)
+    case groupToDeleteNotExists(groupIdentity: GroupIdentity)
+    case groupToUpdateNotExists(groupIdentity: GroupIdentity)
     case conversationNotFound(message: String)
     case messageDecodeFailed(message: String)
     case messageNotProcessed(message: String)
@@ -112,7 +113,7 @@ protocol MediatorReflectedProcessorProtocol {
             return processor.process(outgoingMessageUpdate: outgoingMessageUpdate, reflectedAt: reflectedAt)
         case let .outgoingMessage(outgoingMessage):
             return Promise<AbstractMessage> { seal in
-                let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjector)
+                let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: self.frameworkInjector)
                 try seal.fulfill(decoder.decode(outgoingMessage: outgoingMessage))
             }
             .then { abstractMessage -> Promise<Void> in
@@ -130,17 +131,20 @@ protocol MediatorReflectedProcessorProtocol {
                 return try processor.process(outgoingMessage: outgoingMessage, abstractMessage: abstractMessage)
                     .then {
                         self.frameworkInjector.nonceGuard.processed(nonces: outgoingMessage.nonces)
+                        return Promise()
                     }
             }
 
         case let .incomingMessage(incomingMessage):
             return Promise<AbstractMessage> { seal in
-                guard !frameworkInjector.nonceGuard.isProcessed(nonce: incomingMessage.nonce) else {
+                guard try !frameworkInjector.nonceGuard.isProcessed(d2dIncomingMessage: incomingMessage) else {
                     throw MediatorReflectedProcessorError
-                        .messageWontProcessed(message: "Message nonce already processed")
+                        .messageWontProcessed(
+                            message: "Nonce of message \(incomingMessage.loggingDescription) already processed"
+                        )
                 }
 
-                let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjector)
+                let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: self.frameworkInjector)
                 try seal.fulfill(
                     decoder.decode(
                         incomingMessage: incomingMessage,
@@ -164,6 +168,7 @@ protocol MediatorReflectedProcessorProtocol {
                 return try processor.process(incomingMessage: incomingMessage, abstractMessage: abstractMessage)
                     .then {
                         self.frameworkInjector.nonceGuard.processed(nonce: incomingMessage.nonce)
+                        return Promise()
                     }
             }
         case let .userProfileSync(userProfileSync):

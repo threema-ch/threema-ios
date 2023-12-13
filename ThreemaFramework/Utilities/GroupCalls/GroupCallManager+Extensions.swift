@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
+import ThreemaEssentials
 
 extension GroupCallManager {
     public func getGroupModel(for groupConversationManagedObjectID: NSManagedObjectID) async
@@ -45,16 +46,11 @@ extension GroupCallManager {
                     return
                 }
                 
-                let groupCreatorID: String = group.groupCreatorIdentity
-                let groupCreatorNickname: String? = group.groupCreatorNickname
-                let groupID = group.groupID
-                let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
+                let groupIdentity = group.groupIdentity
                 
                 let groupModel = GroupCallsThreemaGroupModel(
-                    creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
-                    groupID: groupID,
-                    groupName: group.name ?? "",
-                    members: Set(members)
+                    groupIdentity: groupIdentity,
+                    groupName: group.name ?? ""
                 )
                 
                 continuation.resume(returning: groupModel)

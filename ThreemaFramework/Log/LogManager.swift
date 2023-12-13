@@ -27,7 +27,15 @@ import Foundation
     @objc public static let validationLogFile: URL? = FileUtility.appDataDirectory?
         .appendingPathComponent("validation_log.txt")
     @objc public static let debugLogFile: URL? = FileUtility.appDataDirectory?.appendingPathComponent("debug_log.txt")
-    
+    @objc public static let dbMigrationLogFile: URL? = FileUtility.appDataDirectory?
+        .appendingPathComponent("db-migration.log")
+    public static let safeRestoreLogFile: URL? = FileUtility.appDataDirectory?
+        .appendingPathComponent("safe-restore.log")
+
+    // Only used for debug
+    @objc public static let dbMigrationBeforeLogFilename = "db-migration-before.log"
+    @objc public static let dbMigrationAfterLogFilename = "db-migration-after.log"
+            
     /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels
     /// like in <CocoaLumberjack/DDLog.h>
     public enum DDLogLevelCustom: UInt {

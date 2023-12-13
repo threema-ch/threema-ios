@@ -211,27 +211,27 @@ class MessagePermissionTests: XCTestCase {
         var group: Group!
 
         dbPreparer.save {
-            let dbGroup = dbPreparer.createGroupEntity(
+            let groupEntity = dbPreparer.createGroupEntity(
                 groupID: groupID,
                 groupCreator: nil
             )
             let dbConversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
-                    dbConversation.groupID = dbGroup.groupID
+                    dbConversation.groupID = groupEntity.groupID
                     dbConversation.groupMyIdentity = oldGroupMyIdentity
                 }
 
             group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(),
-                groupEntity: dbGroup,
+                groupEntity: groupEntity,
                 conversation: dbConversation,
                 lastSyncRequest: nil
             )
         }
 
-        let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = group
+        let groupManagerMock = GroupManagerMock(myIdentityStoreMock)
+        groupManagerMock.getGroupReturns.append(group)
 
         let mp = MessagePermission(
             myIdentityStore: myIdentityStoreMock,
@@ -242,7 +242,7 @@ class MessagePermissionTests: XCTestCase {
 
         let result = mp.canSend(
             groudID: groupID,
-            groupCreatorIdentity: oldGroupMyIdentity
+            groupCreatorIdentity: myIdentityStoreMock.identity
         )
 
         XCTAssertFalse(result.isAllowed)
@@ -251,7 +251,7 @@ class MessagePermissionTests: XCTestCase {
 
     func testCanSendToGroupNoMembers() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
 
         var group: Group!
 
@@ -282,7 +282,7 @@ class MessagePermissionTests: XCTestCase {
         }
 
         let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = group
+        groupManagerMock.getGroupReturns.append(group)
 
         let mp = MessagePermission(
             myIdentityStore: myIdentityStoreMock,
@@ -325,7 +325,7 @@ class MessagePermissionTests: XCTestCase {
         }
 
         let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = group
+        groupManagerMock.getGroupReturns.append(group)
 
         let mp = MessagePermission(
             myIdentityStore: myIdentityStoreMock,
@@ -342,7 +342,7 @@ class MessagePermissionTests: XCTestCase {
 
     func testCanSendToGroupDidLeaveGroup() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
         let groupMember = "MEMBER01"
 
         var conversation: Conversation!
@@ -387,7 +387,7 @@ class MessagePermissionTests: XCTestCase {
         }
 
         let groupManagerMock = GroupManagerMock()
-        groupManagerMock.getGroupReturns = group
+        groupManagerMock.getGroupReturns.append(group)
 
         let mp = MessagePermission(
             myIdentityStore: myIdentityStoreMock,

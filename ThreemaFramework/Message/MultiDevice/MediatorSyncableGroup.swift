@@ -19,10 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 actor MediatorSyncableGroup {
     private let userSettings: UserSettingsProtocol
+    private let pushSettingManager: PushSettingManagerProtocol
     private let taskManager: TaskManagerProtocol
     private let groupManager: GroupManagerProtocol
 
@@ -30,10 +32,12 @@ actor MediatorSyncableGroup {
 
     init(
         _ userSettings: UserSettingsProtocol,
+        _ pushSettingManager: PushSettingManagerProtocol,
         _ taskManager: TaskManagerProtocol,
         _ groupManager: GroupManagerProtocol
     ) {
         self.userSettings = userSettings
+        self.pushSettingManager = pushSettingManager
         self.taskManager = taskManager
         self.groupManager = groupManager
     }
@@ -41,6 +45,7 @@ actor MediatorSyncableGroup {
     init() {
         self.init(
             UserSettings.shared(),
+            PushSettingManager(),
             TaskManager(),
             GroupManager()
         )
@@ -51,72 +56,27 @@ actor MediatorSyncableGroup {
             return
         }
 
-        guard let group = groupManager.getGroup(identity.id, creator: identity.creator) else {
+        guard let group = groupManager.getGroup(identity.id, creator: identity.creator.string) else {
             return
         }
 
-        update(identity: identity, members: Set(group.allActiveMemberIdentitiesWithoutCreator), state: group.state)
-
+        // update(identity: identity, createdAt: nil) -> TODO: IOS-2825
+        update(identity: identity, conversationCategory: group.conversationCategory)
+        update(identity: identity, conversationVisibility: group.conversationVisibility)
+        update(identity: identity, members: Set(group.allActiveMemberIdentitiesWithoutCreator))
         update(identity: identity, name: group.name)
 
+        var pushSetting = pushSettingManager.find(forGroup: identity)
+        updateNotificationSound(identity: identity, isMuted: pushSetting.muted)
+        updateNotificationTrigger(
+            identity: identity,
+            type: pushSetting.type,
+            expiresAt: pushSetting.periodOffTillDate,
+            mentioned: pushSetting.mentioned
+        )
+
         update(identity: identity, profilePicture: group.profilePicture)
-
-        update(identity: identity, conversationCategory: group.conversationCategory)
-
-        update(identity: identity, conversationVisibility: group.conversationVisibility)
-
-        // TODO: IOS-2825
-//        Sync_Group.createdAt
-//        Sync_Group.notificationSoundPolicyOverride
-//        Sync_Group.notificationTriggerPolicyOverride
-    }
-
-    func update(identity: GroupIdentity, members: Set<String>, state: GroupState) {
-        guard userSettings.enableMultiDevice else {
-            return
-        }
-
-        var sGroup = getSyncGroup(identity: identity)
-
-        sGroup.memberIdentities.identities = Array(members)
-
-        switch state {
-        case .active:
-            sGroup.userState = .member
-        case .forcedLeft:
-            sGroup.userState = .kicked
-        case .left:
-            sGroup.userState = .left
-        case .requestedSync:
-            sGroup.clearUserState()
-        }
-        setSyncGroup(syncGroup: sGroup)
-    }
-
-    func update(identity: GroupIdentity, name: String?) {
-        guard userSettings.enableMultiDevice else {
-            return
-        }
-
-        var sGroup = getSyncGroup(identity: identity)
-        if let name {
-            sGroup.name = name
-        }
-        else {
-            sGroup.clearName()
-        }
-        setSyncGroup(syncGroup: sGroup)
-    }
-
-    func update(identity: GroupIdentity, profilePicture: Data?) {
-        guard userSettings.enableMultiDevice else {
-            return
-        }
-
-        let sGroup = getSyncGroup(identity: identity)
-        setSyncGroup(syncGroup: sGroup)
-        task?.profilePicture = profilePicture != nil ? .updated : .removed
-        task?.image = profilePicture
+        update(identity: identity, state: group.state)
     }
 
     func update(identity: GroupIdentity, conversationCategory: ConversationCategory?) {
@@ -124,15 +84,9 @@ actor MediatorSyncableGroup {
             return
         }
 
-        var sGroup = getSyncGroup(identity: identity)
-        if let conversationCategory,
-           let category = Sync_ConversationCategory(rawValue: conversationCategory.rawValue) {
-            sGroup.conversationCategory = category
-        }
-        else {
-            sGroup.clearConversationCategory()
-        }
-        setSyncGroup(syncGroup: sGroup)
+        var sGroup = getSyncGroup(identity)
+        sGroup.update(conversationCategory: conversationCategory)
+        setSyncGroup(sGroup)
     }
 
     func update(identity: GroupIdentity, conversationVisibility: ConversationVisibility?) {
@@ -140,24 +94,98 @@ actor MediatorSyncableGroup {
             return
         }
 
-        var sGroup = getSyncGroup(identity: identity)
-        if let conversationVisibility,
-           let visibility = Sync_ConversationVisibility(rawValue: conversationVisibility.rawValue) {
-            sGroup.conversationVisibility = visibility
-        }
-        else {
-            sGroup.clearConversationVisibility()
-        }
-        setSyncGroup(syncGroup: sGroup)
+        var sGroup = getSyncGroup(identity)
+        sGroup.update(conversationVisibility: conversationVisibility)
+        setSyncGroup(sGroup)
     }
 
-    func deleteAndSync(identity: GroupIdentity) {
+    func update(identity: GroupIdentity, createdAt: Date?) {
         guard userSettings.enableMultiDevice else {
             return
         }
 
-        let sGroup = getSyncGroup(identity: identity)
-        setSyncGroup(syncGroup: sGroup)
+        var sGroup = getSyncGroup(identity)
+        sGroup.update(createdAt: createdAt)
+        setSyncGroup(sGroup)
+    }
+
+    func update(identity: GroupIdentity, members: Set<String>) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var sGroup = getSyncGroup(identity)
+        sGroup.memberIdentities.identities = Array(members)
+        setSyncGroup(sGroup)
+    }
+
+    func update(identity: GroupIdentity, name: String?) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var sGroup = getSyncGroup(identity)
+        sGroup.update(name: name)
+        setSyncGroup(sGroup)
+    }
+
+    func update(identity: GroupIdentity, profilePicture: Data?) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        let sGroup = getSyncGroup(identity)
+        setSyncGroup(sGroup)
+        task?.profilePicture = profilePicture != nil ? .updated : .removed
+        task?.image = profilePicture
+    }
+
+    func update(identity: GroupIdentity, state: GroupState) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var sGroup = getSyncGroup(identity)
+        sGroup.update(state: state)
+        setSyncGroup(sGroup)
+    }
+
+    func updateNotificationSound(identity: GroupIdentity, isMuted: Bool?) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var sGroup = getSyncGroup(identity)
+        sGroup.update(notificationSoundIsMuted: isMuted)
+        setSyncGroup(sGroup)
+    }
+
+    func updateNotificationTrigger(
+        identity: GroupIdentity,
+        type: PushSetting.PushSettingType?,
+        expiresAt: Date?,
+        mentioned: Bool
+    ) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var sGroup = getSyncGroup(identity)
+        sGroup.update(
+            notificationTriggerType: type,
+            notificationTriggerExpiresAt: expiresAt,
+            notificationTriggerMentioned: mentioned
+        )
+        setSyncGroup(sGroup)
+    }
+
+    func deleteAndSync(_ identity: GroupIdentity) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        let sGroup = getSyncGroup(identity)
+        setSyncGroup(sGroup)
 
         sync(syncAction: .delete)
     }
@@ -171,10 +199,10 @@ actor MediatorSyncableGroup {
 
     // MARK: Private functions
 
-    private func getSyncGroup(identity: GroupIdentity) -> Sync_Group {
+    private func getSyncGroup(_ identity: GroupIdentity) -> Sync_Group {
         if let task,
            task.syncGroup.groupIdentity.groupID == identity.id.paddedLittleEndian(),
-           task.syncGroup.groupIdentity.creatorIdentity == identity.creator {
+           task.syncGroup.groupIdentity.creatorIdentity == identity.creator.string {
             return task.syncGroup
         }
         else {
@@ -184,7 +212,7 @@ actor MediatorSyncableGroup {
         }
     }
 
-    private func setSyncGroup(syncGroup: Sync_Group) {
+    private func setSyncGroup(_ syncGroup: Sync_Group) {
         if task == nil {
             task = TaskDefinitionGroupSync(syncGroup: syncGroup, syncAction: .update)
         }

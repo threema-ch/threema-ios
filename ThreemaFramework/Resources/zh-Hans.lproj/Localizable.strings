@@ -53,7 +53,7 @@
 "error_message_requires_migration_error_description" = "迁移检查失败。请重启应用程序。";
 
 "error_other_connection_for_same_identity_title" = "警告";
-"error_other_connection_for_same_identity_message" = "服务器检测到相同的 Threema ID 在两个或更多的设备上同时连接。\n\n相同的 Threema ID 不可以在多个设备上同时使用。新的消息只会发送到最新登录的设备上。\n\n如果您要切换到新设备，请先在旧设备上卸载或禁用 %@，然后重启新设备。";
+"error_other_connection_for_same_identity_message" = "服务器检测到相同的 Threema ID 在两个或更多的设备上同时连接。\n\n如果您同时在多个设备上使用 Threema，而没有选择 “连接新设备” ，就会出现错误 (https://three.ma/md)。新的消息只会发送到最新登录的设备上。\n\n如果您要切换到新设备，请先在旧设备上卸载或禁用 %@，然后重启新设备。";
 
 "error_rogue_device_title" = "检测到来自另一台设备的连接";
 "error_rogue_device_message" = "服务器检测到有人试图从另一台设备登录现有的 Threema ID。\n\n如果您之前没有在其他设备上登录您的 Threema ID，或者使用旧版本的应用程序，请联系支持人员并发送日志文件。";

@@ -1,9 +1,5 @@
 /* Localized versions of Info.plist keys */
 
-"New message" = "Nieuw bericht";
-"Scan QR code" = "QR-code scannen";
-"My ID" = "Mijn profiel";
-
 "NSCameraUsageDescription" = "Je camera wordt gebruikt wanneer je een foto neemt of een video opneemt en deze verstuurt via chat, en wanneer je QR-codes scant.";
 "NSContactsUsageDescription" = "Contactpersonen worden gebruikt om andere Threema-gebruikers te vinden wanneer synchronisatie is ingeschakeld. Hiervoor worden hashes van telefoonnummers en e-mailadressen geüpload naar een Threema-server. Deze informatie wordt niet opgeslagen op de servers.";
 "NSLocationWhenInUseUsageDescription" = "Je locatie wordt gebruikt wanneer je deze verstuurd via chat en om je locatie op kaarten weer te geven.";

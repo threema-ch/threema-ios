@@ -72,6 +72,9 @@ typedef enum : NSUInteger {
 
 - (ContactEntity *)contactForId:(NSString *)identity error:(NSError **)error;
 
+// the data model allows multiple contacts for the same ID (although this is not actually supported)
+- (NSArray *)allContactsForID:(NSString *)identity;
+
 - (NSArray *)allContacts;
 
 - (NSArray *)contactsFilteredByWords:(NSArray *)searchWords forContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
@@ -144,6 +147,11 @@ typedef enum : NSUInteger {
 
 - (BOOL)isNonceAlreadyInDB:(NSData *)nonce NS_SWIFT_NAME(isNonceAlreadyInDB(nonce:));
 
+
+- (nullable NSArray<GroupEntity *> *)groupEntitiesForGroupId:(nonnull NSData *)groupId
+    NS_SWIFT_NAME(groupEntities(for:))
+    DEPRECATED_MSG_ATTRIBUTE("This is deprecated, is needed for Push Settings migration. DO NOT USE THIS!");
+
 - (GroupEntity *)groupEntityForGroupId:(NSData *)groupId groupCreator:(NSString *)groupCreator NS_SWIFT_NAME(groupEntity(for:with:));
 
 - (nullable GroupEntity *)groupEntityForConversation:(nonnull Conversation *)conversation;
@@ -184,6 +192,10 @@ typedef enum : NSUInteger {
 - (NSInteger)countUnreadMessagesForConversation:(Conversation *)conversation;
 
 - (NSInteger)countMessagesForContactWithIdentity:(nonnull NSString *)identity;
+
+- (NSInteger)countMessagesForContact:(nonnull ContactEntity *)contact;
+
+- (NSInteger)countMessagesForContactInConversation:(nonnull ContactEntity *)contact forConversation:(Conversation *)conversation;
 
 - (NSFetchedResultsController *)fetchedResultsControllerForContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 

@@ -148,9 +148,6 @@
 "still_compressed_note" = "Per pudair tramtter videos fitg gronds vegnan els cumprimids independentamain da questa configuraziun.";
 
 /* Sound names */
-"push_sound_title" = "Tun da push";
-"push_group_sound_title" = "Tun da push da las gruppas";
-/* Sound names */
 "sound_none" = "Senza tun";
 "sound_default" = "Standard";
 "sound_silent" = "Mo vibrar";
@@ -456,7 +453,6 @@
 /* Contacts */
 "pull_to_sync" = "Trair giu per sincronisar";
 "bad_identity_backup" = "Il backup da l’ID è nunvalaivel u che ti has endatà in pled-clav fallà. Utilisescha il pled-clav che ti has tschernì per crear il backup per restaurar tia ID da Threema. P.pl. controllar tias endataziuns ed empruvar anc ina giada.";
-
 "synchronizing" = "Sincronisar ...";
 
 "no_contacts_syncon" = "Ti n’has anc nagins contacts. La sincronisaziun è activada, sco ch’i para n’han però anc nagins da tes contacts installà Threema (als envida!).";
@@ -1077,9 +1073,10 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "sentry_crash_send_description" = "Vuls ti trametter in rapport da sbagls anonimisà, uschia che nus pudain curreger il problem?";
 "sentry_crash_send_yes" = "Trametter in rapport";
 "sentry_crash_send_no" = "Betg trametter";
+
 "sentry_crash_comment_placeholder" = "Rapport da collaps";
 
-// My profile
+// Profile
 "profile_share_id_text" = "Mia ID da Threema";
 // File message
 "optional_caption" = "Text opziunal";

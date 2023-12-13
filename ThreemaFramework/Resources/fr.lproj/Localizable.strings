@@ -53,7 +53,7 @@
 "error_message_requires_migration_error_description" = "Échec de vérification de migration. Veuillez redémarrer l’application.";
 
 "error_other_connection_for_same_identity_title" = "Avertissement";
-"error_other_connection_for_same_identity_message" = "Le serveur a détecté deux connexions ou plus depuis des appareils différents avec le même ID Threema.\n\nIl n’est pas possible d’utiliser le même ID Threema sur plusieurs appareils en même temps. Les nouveaux messages ne sont transmis qu’à l’appareil ayant effectué la dernière connexion au serveur.\n\nSi vous allez passer à un nouvel appareil, veuillez désinstaller ou désactiver %@ sur l’ancien appareil puis redémarrer le nouvel appareil.";
+"error_other_connection_for_same_identity_message" = "Le serveur a détecté deux connexions ou plus depuis des appareils différents avec le même ID Threema.\n\Cela peut arriver si vous utilisez Threema sur plusieurs appareils simultanément sans les associer (https://three.ma/md). Les nouveaux messages ne sont transmis qu'à l'appareil qui s'est connecté en dernier au serveur.\n\nSi vous allez passer à un nouvel appareil, veuillez désinstaller ou désactiver %@ sur l’ancien appareil puis redémarrer le nouvel appareil.";
 
 "error_rogue_device_title" = "Une connexion à partir d'un autre appareil a été détectée.";
 "error_rogue_device_message" = "Le serveur a détecté une connexion provenant d\'un autre appareil doté du même identifiant Threema.\n\nSi vous n\'avez pas utilisé votre identifiant Threema sur un autre appareil ou avec une version moins récente de l\'application entre-temps, veuillez contacter l\'assistance et envoyer le fichier journal si possible.";

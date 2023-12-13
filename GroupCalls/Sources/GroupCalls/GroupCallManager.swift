@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Combine
 import CryptoKit
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 
@@ -43,18 +44,21 @@ public final actor GroupCallManager {
     }
     
     // MARK: - Private Properties
-    
-    private var currentlyRunningGroupCalls = Set<GroupCallActor>()
-    
-    private var currentlyJoiningOrJoinedCall: GroupCallActor?
-    
+
     private let dependencies: Dependencies
+    private let localContactModel: ContactModel
     
-    private let localIdentity: ThreemaID
+    private var isCurrentlyJoiningOrJoinedCall = false
+    private var groupsWithCurrentlyRunningGroupCalls = [GroupIdentity: Set<GroupCallActor>]()
+    private var currentlyJoiningOrJoinedCall: GroupCallActor? {
+        didSet {
+            isCurrentlyJoiningOrJoinedCall = currentlyJoiningOrJoinedCall != nil
+        }
+    }
     
-    var periodicCallCheckTask: Task<Void, Never>?
-    var currentCallCheckTask: Task<Void, Error>?
-    
+    private var periodicCallCheckTask: Task<Void, Never>?
+    private var isPeriodicRefreshRunning = false
+
     // MARK: - Delegation
     
     private weak var databaseDelegate: GroupCallManagerDatabaseDelegateProtocol?
@@ -71,12 +75,10 @@ public final actor GroupCallManager {
     
     public init(
         dependencies: Dependencies,
-        localIdentity: String
+        localContactModel: ContactModel
     ) {
         self.dependencies = dependencies
-        
-        // TODO: (IOS-4124) Do not force unwrap here
-        self.localIdentity = try! ThreemaID(id: localIdentity, nickname: nil)
+        self.localContactModel = localContactModel
     }
     
     // MARK: - Update Functions
@@ -96,15 +98,13 @@ public final actor GroupCallManager {
         startPeriodicCheckIfNeeded()
         
         let groupModel = GroupCallsThreemaGroupModel(
-            creator: proposedGroupCall.groupRepresentation.creator,
-            groupID: proposedGroupCall.groupRepresentation.groupID,
-            groupName: proposedGroupCall.groupRepresentation.groupName,
-            members: proposedGroupCall.groupRepresentation.members
+            groupIdentity: proposedGroupCall.groupRepresentation.groupIdentity,
+            groupName: proposedGroupCall.groupRepresentation.groupName
         )
         
         do {
             let newGroupCall = try GroupCallActor(
-                localIdentity: localIdentity,
+                localContactModel: localContactModel,
                 groupModel: groupModel,
                 sfuBaseURL: proposedGroupCall.sfuBaseURL,
                 gck: proposedGroupCall.gck,
@@ -112,11 +112,9 @@ public final actor GroupCallManager {
                 dependencies: dependencies
             )
             
-            // TODO: (IOS-3857) Logging
-            DDLogNotice("[GroupCall] Add call \(newGroupCall.logIdentifier)")
-            currentlyRunningGroupCalls.insert(newGroupCall)
+            addGroupCall(newGroupCall)
             
-            try await checkCallsStillRunning()
+            try await refreshRunningGroupCalls(in: groupModel.groupIdentity)
             
             switch creatorOrigin {
             case let .remote(threemaID):
@@ -136,7 +134,7 @@ public final actor GroupCallManager {
             
             // TODO: (IOS-3857) Logging
             DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] After adding \(newGroupCall.logIdentifier). We have currently \(currentlyRunningGroupCalls.count) calls running"
+                "[GroupCall] [PeriodicCleanup] After adding \(newGroupCall.logIdentifier). We have currently \(groupsWithCurrentlyRunningGroupCalls.keys.count) groups with running calls"
             )
         }
         catch let error as GroupCallSystemMessageAdapterError {
@@ -153,14 +151,20 @@ public final actor GroupCallManager {
     ///   - localIdentity: ThreemaID of the local identity
     public func createOrJoinCall(
         in group: GroupCallsThreemaGroupModel,
-        with intent: GroupCallUserIntent,
-        localIdentity: ThreemaID
+        with intent: GroupCallUserIntent
     ) async throws {
         
         // If we already are in a call in this group, we return to just show the view
-        if group == currentlyJoiningOrJoinedCall?.group {
+        guard currentlyJoiningOrJoinedCall?.group != group else {
             return
         }
+        
+        // If user tries to create call for another group, but another call is running, throw.
+        guard !isCurrentlyJoiningOrJoinedCall else {
+            throw GroupCallError.alreadyInCall
+        }
+        
+        isCurrentlyJoiningOrJoinedCall = true
         
         /// **Protocol Step: Create or Join (1.)**
         /// 1. Let intent be the user's intent, i.e. to either only join or create or join a group call.
@@ -173,7 +177,8 @@ public final actor GroupCallManager {
         
         /// 3. Run the Group Call Refresh Steps for the respective group and let call be the result.
         startPeriodicCheckIfNeeded()
-        var runningOrCreatedCall = try await getCurrentlyChosenCall(in: group, from: currentlyRunningGroupCalls)
+        let callsInGroup = groupsWithCurrentlyRunningGroupCalls[group.groupIdentity]
+        var runningOrCreatedCall = try await getCurrentlyChosenCall(from: callsInGroup)
         
         /// 4. If call is undefined and intent is to only join, abort these steps and notify the user that no group call
         /// is running / the group call is no longer running.
@@ -183,7 +188,7 @@ public final actor GroupCallManager {
             }
             /// 5. If call is undefined, create (but don't send) a GroupCallStart message, apply it to call and mark
             /// call as new.
-            runningOrCreatedCall = try await createCall(in: group, token: refreshedToken, localIdentity: localIdentity)
+            runningOrCreatedCall = try await createCall(in: group, token: refreshedToken)
         }
         
         currentlyJoiningOrJoinedCall = runningOrCreatedCall
@@ -206,52 +211,45 @@ public final actor GroupCallManager {
     
     // MARK: - Private functions
     
-    private func hasRunningGroupCalls(in proposedGroupCall: ProposedGroupCall) async -> Bool {
-        !(groupCalls(in: proposedGroupCall.groupRepresentation).filter { groupCallActor in
-            guard groupCallActor.protocolVersion == proposedGroupCall.protocolVersion else {
-                return false
-            }
-            
-            guard let proposedCallID = try? GroupCallID(
-                group: proposedGroupCall.groupRepresentation,
-                callStartData: GroupCallStartData(
-                    protocolVersion: proposedGroupCall.protocolVersion,
-                    gck: proposedGroupCall.gck,
-                    sfuBaseURL: proposedGroupCall.sfuBaseURL
-                ),
-                dependencies: dependencies
-            ) else {
-                DDLogError("[GroupCall] Could not calculate GroupCallID")
-                return false
-            }
-            
-            guard groupCallActor.callID == proposedCallID else {
-                return false
-            }
-            
-            guard groupCallActor.sfuBaseURL == proposedGroupCall.sfuBaseURL else {
-                return false
-            }
-            // TODO: (IOS-3857) Logging
-            DDLogNotice("[GroupCall] We already have calls running in \(proposedGroupCall.hexCallID)")
-            
-            return true
-        }.isEmpty)
+    private func addGroupCall(_ call: GroupCallActor) {
+        // TODO: (IOS-3857) Logging
+        DDLogNotice("[GroupCall] Add call \(call.logIdentifier)")
+        if var existingCallsInGroup = groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] {
+            existingCallsInGroup.insert(call)
+            groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] = existingCallsInGroup
+        }
+        else {
+            groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] = Set(arrayLiteral: call)
+        }
+    }
+    
+    private func removeGroupCall(_ call: GroupCallActor) {
+        guard var existingCallsInGroup = groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] else {
+            DDLogNotice("[GroupCall] Removing call with \(call.logIdentifier) failed, not found.")
+            return
+        }
+        DDLogNotice("[GroupCall] Removing call with \(call.logIdentifier)")
+
+        existingCallsInGroup.remove(call)
+        if existingCallsInGroup.isEmpty {
+            groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] = nil
+            return
+        }
+        groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] = existingCallsInGroup
     }
     
     private func groupCalls(in group: GroupCallsThreemaGroupModel) -> [GroupCallActor] {
-        currentlyRunningGroupCalls.filter { $0.group == group }
+        Array(groupsWithCurrentlyRunningGroupCalls[group.groupIdentity] ?? [])
     }
     
     private func createCall(
         in group: GroupCallsThreemaGroupModel,
-        token: SFUToken,
-        localIdentity: ThreemaID
+        token: SFUToken
     ) async throws -> GroupCallActor {
         let gck = dependencies.groupCallCrypto.randomBytes(of: 32)
         
         let createdCall = try GroupCallActor(
-            localIdentity: localIdentity,
+            localContactModel: localContactModel,
             groupModel: group,
             sfuBaseURL: token.sfuBaseURL,
             gck: gck,
@@ -272,7 +270,7 @@ public final actor GroupCallManager {
     
     private func showIncomingGroupCallNotification(
         groupModel: GroupCallsThreemaGroupModel,
-        senderThreemaID: ThreemaID
+        senderThreemaID: ThreemaIdentity
     ) {
         Task.detached {
             await self.singletonDelegate?.showIncomingGroupCallNotification(
@@ -284,8 +282,8 @@ public final actor GroupCallManager {
 }
 
 extension GroupCallManager {
-    public func getCallID(in groupModel: GroupCallsThreemaGroupModel) -> String {
-        currentlyRunningGroupCalls.filter { $0.group == groupModel }.first!.callID.bytes.hexEncodedString()
+    public func getCallID(in groupModel: GroupCallsThreemaGroupModel) -> String? {
+        groupsWithCurrentlyRunningGroupCalls[groupModel.groupIdentity]?.first?.callID.bytes.hexEncodedString()
     }
 }
 
@@ -298,7 +296,7 @@ extension GroupCallManager {
         periodicCallCheckTask = Task { [weak self] in
             while let self {
                 do {
-                    try await self.checkCallsStillRunning()
+                    try await self.runPeriodicRefresh()
                     try await Task.sleep(seconds: 10)
                 }
                 catch {
@@ -319,164 +317,187 @@ extension GroupCallManager {
         startPeriodicCheckIfNeeded()
     }
     
-    private func checkCallsStillRunning() async throws {
-        DDLogNotice("[GroupCall] [PeriodicCleanup] \(#function)")
-        
-        if let currentCallCheckTask {
-            DDLogNotice("[GroupCall] [PeriodicCleanup] \(#function) Skip")
-            try await currentCallCheckTask.value
-            
+    private func runPeriodicRefresh() async throws {
+        // We create a refresh task for each of the groups that have at least one running group call in them, and run
+        // them concurrently.
+        guard !isPeriodicRefreshRunning else {
+            DDLogNotice("[GroupCall] [PeriodicCleanup] Refresh already running, skip.")
             return
         }
         
-        // MARK: Group Call Refresh Steps
+        DDLogNotice("[GroupCall] [PeriodicCleanup] Refresh started.")
+        isPeriodicRefreshRunning = true
+        
+        await withThrowingTaskGroup(of: Void.self) { group in
+            for groupIdentity in groupsWithCurrentlyRunningGroupCalls.keys {
+                group.addTask {
+                    try await self.refreshRunningGroupCalls(in: groupIdentity)
+                }
+            }
+        }
+        
+        isPeriodicRefreshRunning = false
+        DDLogNotice("[GroupCall] [PeriodicCleanup] Refresh ended.")
+    }
+    
+    private func refreshRunningGroupCalls(in group: GroupIdentity) async throws {
+        /// **Protocol Step: Periodic Refresh (1.)**
+        /// 1. Let `running` (`currentlyRunningGroupCalls`) be the list of group calls that are currently considered
+        /// running within the group.
+        
+        /// **Protocol Step: Periodic Refresh (2.)**
+        /// 2. Let `calls` (`currentCalls`) be a copy of `running` (`currentlyRunningGroupCalls`). Reset the
+        /// _token-refreshed_ mark of each `call` of `calls` (or simply scope it to the execution of these steps).
+        ///
+        /// *Note:* Resetting the _token-refreshed_ mark is not needed, since we refresh the token anyways each time
+        /// before making any API call if it will expire soon.
+        guard let currentCalls = groupsWithCurrentlyRunningGroupCalls[group], !currentCalls.isEmpty else {
+            return
+        }
+        DDLogNotice(
+            "[GroupCall] [PeriodicCleanup] Refreshing calls in group with identity \(group.id.hexEncodedString()), number of currently running calls: \(currentCalls.count)."
+        )
 
-        currentCallCheckTask = Task {
-            defer { self.currentCallCheckTask = nil }
-            DDLogNotice("[GroupCall] [PeriodicCleanup] \(#function) Start")
-            defer { DDLogNotice("[GroupCall] [PeriodicCleanup] \(#function) Finished") }
-            
-            /// **Protocol Step: Periodic Refresh (1.)**
-            /// 1. Let `running` (`currentlyRunningGroupCalls`) be the list of group calls that are currently considered
-            /// running within the group.
-            
-            /// **Protocol Step: Periodic Refresh (2.)**
-            /// 2. Let `calls` (`currentCalls`) be a copy of `running` (`currentlyRunningGroupCalls`). Reset the
-            /// _token-refreshed_ mark of each `call` of `calls` (or simply scope it to the execution of these steps).
-            ///
-            /// *Note:* Resetting the _token-refreshed_ mark is not needed, since we refresh the token anyways each time
-            /// before making any API call if it will expire soon.
-            let currentCalls = Array(currentlyRunningGroupCalls)
-            
+        await withThrowingTaskGroup(of: Void.self) { group in
             /// **Protocol Step: Periodic Refresh (3.)**
             /// 3. For each `call` of `calls` (`currentCalls`), run the following steps (labelled _peek-call_)
             /// concurrently and wait for them to return:
-            // TODO: (IOS-4047) Run these steps concurrently
-            for currentlyRunningGroupCall in currentCalls {
-                // Check if we have been cancelled
-                guard !Task.isCancelled else {
-                    currentCallCheckTask = nil
-                    return
+            for call in currentCalls {
+                group.addTask {
+                    await self.peekCall(call)
                 }
+            }
+        }
+        
+        /// **Protocol Step: Periodic Refresh** 3.7. (`call` is kept in `calls` and in `running`
+        /// (`currentlyRunningGroupCalls`).
+        
+        /// **Protocol Step: Periodic Refresh (4.)**
+        /// 4. If `running` (`currentlyRunningGroupCalls`) is empty, cancel the timer to periodically re-run the
+        /// _Group Call Refresh Steps_ of this group. Otherwise, restart or schedule the timer to re-run the _Group
+        /// Call Refresh Steps_ of this group in 10s.
+        guard let currentCalls = groupsWithCurrentlyRunningGroupCalls[group], !currentCalls.isEmpty else {
+            DDLogNotice(
+                "[GroupCall] [PeriodicCleanup] There are no more calls running in group with identity \(group.id.hexEncodedString())."
+            )
+            return
+        }
+        
+        // The full task will be tried to rerun by `GroupCallManager` after 10s or wait for the current running task
+        // if it hasn't completed
+        if let actor = try await getCurrentlyChosenCall(from: currentCalls) {
+            let buttonAndBannerUpdate = await GroupCallBannerButtonUpdate(actor: actor, hideComponent: false)
+            
+            singletonDelegate?
+                .updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: buttonAndBannerUpdate)
+        }
+        
+        DDLogNotice(
+            "[GroupCall] [PeriodicCleanup] Refresh completed for calls running in group with identity \(group.id.hexEncodedString()), there are still \(currentCalls.count) calls running."
+        )
+    }
+    
+    private func peekCall(_ groupCall: GroupCallActor) async {
+        // Check if we have been cancelled
+        guard !Task.isCancelled else {
+            return
+        }
+
+        DDLogNotice("[GroupCall] [PeriodicCleanup] Peeking call: \(groupCall.logIdentifier.prefix(5))")
+        do {
+            /// **Protocol Step: Periodic Refresh (3.1. - 3.4.)**
+            switch try await periodicRefresh(for: groupCall) {
+            case .keep:
+                return
+                
+            case .remove:
+                await remove(groupCall)
                 
                 do {
-                    /// **Protocol Step: Periodic Refresh (3.1. - 3.4.)**
-                    switch try await periodicRefresh(for: currentlyRunningGroupCall) {
-                    case .keep:
-                        continue
-                        
-                    case .remove:
-                        await remove(currentlyRunningGroupCall)
-                        
-                        do {
-                            let group = currentlyRunningGroupCall.group
-                            try await dependencies.groupCallSystemMessageAdapter.post(.groupCallEnded, in: group)
-                        }
-                        catch {
-                            if let error = error as? GroupCallSystemMessageAdapterError {
-                                DDLogError(
-                                    "[GroupCall] An error occurred when attempting to post a system message, error: \(error)"
-                                )
-                            }
-                        }
-                        continue
-                        
-                    // TODO: (IOS-4070) This should probably not exist, we should retry in periodic refresh directly, for legibility.
-                    case .retry:
-                        /// **Protocol Step: Periodic Refresh** 3.3.1. Refresh the SFU Token. If the SFU Token refresh
-                        /// fails or does not yield an SFU Token within 10s, remove call from calls and abort the
-                        /// peek-call sub-steps.
-                        let task = Task {
-                            try await dependencies.httpHelper.sfuCredentials()
-                        }
-                        
-                        switch try await Task.timeout(task, 10) {
-                        case let .error(error):
-                            await remove(currentlyRunningGroupCall)
-                            if let error {
-                                throw error
-                            }
-                            
-                        case .timeout:
-                            await remove(currentlyRunningGroupCall)
-                            
-                        case .result:
-                            /// **Protocol Step: Periodic Refresh** 3.3.3. Restart the peek-call sub-steps for this
-                            /// call.
-                            switch try await periodicRefresh(for: currentlyRunningGroupCall) {
-                            case .remove, .retry:
-                                await remove(currentlyRunningGroupCall)
-                            case .keep:
-                                await currentlyRunningGroupCall.resetFailedCounter()
-                                continue
-                            }
-                        }
-                    }
+                    let group = groupCall.group
+                    try await dependencies.groupCallSystemMessageAdapter.post(.groupCallEnded, in: group)
                 }
                 catch {
-                    // Any relevant network errors have already been handled by the peek steps
-                    DDLogError("[GroupCall] An error occurred, removing call: \(error)")
-                    await remove(currentlyRunningGroupCall)
-                    continue
+                    if let error = error as? GroupCallSystemMessageAdapterError {
+                        DDLogError(
+                            "[GroupCall] An error occurred when attempting to post a system message, error: \(error)"
+                        )
+                    }
                 }
-                
-                /// **Protocol Step: Periodic Refresh** 3.5 Reset the call's failed counter to 0.
-                await currentlyRunningGroupCall.resetFailedCounter()
-                
-                /// **Protocol Step: Periodic Refresh** 3.6. If the protocol version of the call is not supported,
-                /// remove call from calls, log a warning that a group call with an unsupported version is currently
-                /// running and abort the peek-call sub-steps.
-                
-                if currentlyRunningGroupCall.protocolVersion > ProtocolDefines.protocolVersion {
-                    DDLogWarn(
-                        "[GroupCall] Protocol version of currently running group call (\(currentlyRunningGroupCall.protocolVersion)) is not the same as supported version (\(ProtocolDefines.protocolVersion))."
-                    )
-                    await remove(currentlyRunningGroupCall)
-                }
-            }
-                
-            /// **Protocol Step: Periodic Refresh** 3.7. (`call` is kept in `calls` and in `running`
-            /// (`currentlyRunningGroupCalls`).
-            
-            /// **Protocol Step: Periodic Refresh (4.)**
-            /// 4. If `running` (`currentlyRunningGroupCalls`) is empty, cancel the timer to periodically re-run the
-            /// _Group Call Refresh Steps_ of this group. Otherwise, restart or schedule the timer to re-run the _Group
-            /// Call Refresh Steps_ of this group in 10s.
-            guard !currentlyRunningGroupCalls.isEmpty else {
                 return
-            }
-            
-            // The full task will be tried to rerun by `GroupCallManager` after 10s or wait for the current running task
-            // if it hasn't completed
-            
-            for group in Set(currentCalls.map(\.group)) {
-                // TODO: (IOS-4047) We could speed this up with a task group
-                if let actor = try await getCurrentlyChosenCall(in: group, from: Set(currentCalls)) {
+                
+            // TODO: (IOS-4070) This should probably not exist, we should retry in periodic refresh directly, for legibility.
+            case .retry:
+                /// **Protocol Step: Periodic Refresh** 3.3.1. Refresh the SFU Token. If the SFU Token refresh
+                /// fails or does not yield an SFU Token within 10s, remove call from calls and abort the
+                /// peek-call sub-steps.
+                let task = Task {
+                    try await dependencies.httpHelper.sfuCredentials()
+                }
+                
+                switch try await Task.timeout(task, 10) {
+                case let .error(error):
+                    await remove(groupCall)
+                    if let error {
+                        throw error
+                    }
                     
-                    let buttonAndBannerUpdate = await GroupCallBannerButtonUpdate(actor: actor, hideComponent: false)
+                case .timeout:
+                    await remove(groupCall)
                     
-                    singletonDelegate?
-                        .updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: buttonAndBannerUpdate)
+                case .result:
+                    /// **Protocol Step: Periodic Refresh** 3.3.3. Restart the peek-call sub-steps for this
+                    /// call.
+                    switch try await periodicRefresh(for: groupCall) {
+                    case .remove, .retry:
+                        await remove(groupCall)
+                    case .keep:
+                        await groupCall.resetFailedCounter()
+                        return
+                    }
                 }
             }
-            
-            DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] \(#function) We have currently \(currentlyRunningGroupCalls.count) calls running"
+        }
+        catch {
+            // Any relevant network errors have already been handled by the peek steps
+            // The peek might be cancelled due to a new one starting, but we do not want to remove the call in this
+            // case.
+            if !(error is CancellationError) {
+                assertionFailure("[GroupCall] An error occurred, removing call: \(error)")
+                DDLogError("[GroupCall] An error occurred, removing call: \(error)")
+                await remove(groupCall)
+            }
+            return
+        }
+        
+        /// **Protocol Step: Periodic Refresh** 3.5 Reset the call's failed counter to 0.
+        await groupCall.resetFailedCounter()
+        
+        /// **Protocol Step: Periodic Refresh** 3.6. If the protocol version of the call is not supported,
+        /// remove call from calls, log a warning that a group call with an unsupported version is currently
+        /// running and abort the peek-call sub-steps.
+        
+        if groupCall.protocolVersion > ProtocolDefines.protocolVersion {
+            DDLogWarn(
+                "[GroupCall] Protocol version of currently running group call (\(groupCall.protocolVersion)) is not the same as supported version (\(ProtocolDefines.protocolVersion))."
             )
+            await remove(groupCall)
         }
     }
     
-    private func remove(_ groupCallActor: GroupCallActor) async {
-        await groupCallActor.leaveCall()
-        await groupCallActor.teardown()
-        currentlyRunningGroupCalls.remove(groupCallActor)
+    private func remove(_ call: GroupCallActor) async {
+        await call.leaveCall()
+        await call.teardown()
+        removeGroupCall(call)
+        
+        try? await refreshRunningGroupCalls(in: call.group.groupIdentity)
         
         guard let databaseDelegate else {
             DDLogError("[GroupCalls] [Peek Steps] We do not have a database delegate set")
             return
         }
         
-        databaseDelegate.removeFromStoredCalls(groupCallActor.proposedGroupCall)
+        databaseDelegate.removeFromStoredCalls(call.proposedGroupCall)
     }
     
     private nonisolated func periodicRefresh(for groupCallActor: GroupCallActor) async throws -> PeriodicRefreshResult {
@@ -533,12 +554,13 @@ extension GroupCallManager {
     
     @discardableResult
     internal func getCurrentlyChosenCall(
-        in group: GroupCallsThreemaGroupModel,
-        from currentCalls: Set<GroupCallActor>
+        from currentCalls: Set<GroupCallActor>?
     ) async throws -> GroupCallActor? {
         var currentlyChosenCall: GroupCallActor?
         
-        let thisGroupGroupCalls = currentCalls.filter { $0.group == group }
+        guard let thisGroupGroupCalls = currentCalls else {
+            return nil
+        }
         
         /// **Protocol Step: Periodic Refresh** 5. Let chosen-call be any call of calls with the highest started_at
         /// value (i.e. the most recently created call) as provided by the peek result.
@@ -649,6 +671,7 @@ extension GroupCallManager {
         /// the `chosen-call`.
         if wasJoiningCall {
             assert(!wasParticipatingInCall)
+            DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.logIdentifier.prefix(5))")
             try await currentlyChosenCall.join(intent: .join)
             currentlyJoiningOrJoinedCall = currentlyChosenCall
             let viewController = await GroupCallViewController(
@@ -662,6 +685,7 @@ extension GroupCallManager {
         /// exit the running group call and run the _Group Call Join Steps_ asynchronously with the `intent` to _only
         /// join_ `chosen-call`.
         else if wasParticipatingInCall {
+            DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.logIdentifier.prefix(5))")
             assert(!wasJoiningCall)
             try await currentlyChosenCall.join(intent: .join)
             currentlyJoiningOrJoinedCall = currentlyChosenCall
@@ -686,7 +710,7 @@ extension GroupCallManager: GroupCallActorManagerDelegate {
     }
     
     func addToRunningGroupCalls(groupCall: GroupCallActor) async {
-        currentlyRunningGroupCalls.insert(groupCall)
+        addGroupCall(groupCall)
     }
 
     func removeFromRunningGroupCalls(groupCall: GroupCallActor) async {
@@ -702,5 +726,9 @@ extension GroupCallManager: GroupCallActorManagerDelegate {
     
     func sendStartCallMessage(_ wrappedMessage: WrappedGroupCallStartMessage) async throws {
         try await singletonDelegate?.sendStartCallMessage(wrappedMessage)
+    }
+    
+    func refreshGroupCalls(in group: GroupIdentity) async {
+        try? await refreshRunningGroupCalls(in: group)
     }
 }

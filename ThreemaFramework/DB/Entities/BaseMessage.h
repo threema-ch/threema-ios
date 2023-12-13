@@ -93,6 +93,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nonatomic, retain) NSNumber *read;
 @property (nonatomic, retain) NSNumber *userack;
 
+/// Set if sending failed (this includes rejected by FS)
 @property (nullable, nonatomic, retain) NSNumber *sendFailed;
 
 @property (nonatomic, retain) NSString *webRequestId NS_SWIFT_NAME(webRequestID);
@@ -102,6 +103,12 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 @property (nonatomic, retain) Conversation *conversation;
 @property (nullable, nonatomic, retain) ContactEntity *sender;
+
+/// Contacts that rejected this message
+///
+/// This is only set for group messages.
+/// The inverse is `rejectedMessages` in `ContactEntity`.
+@property (nullable, nonatomic, retain) NSSet<ContactEntity *> *rejectedBy;
 
 @property (nonatomic, retain) NSNumber *forwardSecurityMode;
 

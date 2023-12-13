@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 /// A Group Call ID as described by the protocol
 struct GroupCallID: Sendable {
@@ -30,11 +31,11 @@ struct GroupCallID: Sendable {
     // MARK: - Lifecycle
 
     init(
-        group: GroupCallsThreemaGroupModel,
+        groupIdentity: GroupIdentity,
         callStartData: GroupCallStartData,
         dependencies: Dependencies
     ) throws {
-        guard let creatorID = group.creator.id.data(using: .utf8) else {
+        guard let creatorID = groupIdentity.creator.string.data(using: .utf8) else {
             let msg = "Could not encode group creator ID"
             assertionFailure(msg)
             DDLogError(msg)
@@ -42,7 +43,7 @@ struct GroupCallID: Sendable {
             throw GroupCallError.encryptionFailure
         }
         
-        let groupID = group.groupID
+        let groupID = groupIdentity.id
         
         let protocolVersion = Data(repeating: UInt8(callStartData.protocolVersion), count: 1)
         

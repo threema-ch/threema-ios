@@ -34,8 +34,8 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             "\(LoggingTag.receiveIncomingMessageFromChat.hexString) \(LoggingTag.receiveIncomingMessageFromChat) \(task.message.loggingDescription)"
         )
         
-        return frameworkInjector.messageProcessor.processIncomingMessage(
-            task.message,
+        return frameworkInjector.messageProcessor.processIncoming(
+            boxedMessage: task.message,
             receivedAfterInitialQueueSend: task.receivedAfterInitialQueueSend,
             maxBytesToDecrypt: task.maxBytesToDecrypt,
             timeoutDownloadThumbnail: task.timeoutDownloadThumbnail

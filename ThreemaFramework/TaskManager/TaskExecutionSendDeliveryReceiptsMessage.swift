@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import PromiseKit
 import ThreemaProtocols
 
 /// Reflect `DeliveryReceiptMessage` (or `D2d_IncomingMessageUpdate` for read sync) for 1-1 messages

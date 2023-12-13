@@ -122,20 +122,23 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
     __block MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
     ContactStore *contactStore = [ContactStore sharedContactStore];
-    [contactStore updateFeatureMasksForContacts:unsupportedContacts.allObjects contactSyncer:mediatorSyncableContacts]
-        .then(^{
-            return [mediatorSyncableContacts syncObjc];
-        })
-        .then(^{
-            // reread feature mask
-            NSSet *unsupportedContacts2Run = [FeatureMask filterContactsWithUnsupportedFeatureMask:featureMask fromContacts:unsupportedContacts];
+    [contactStore updateFeatureMasksForContacts:unsupportedContacts.allObjects contactSyncer:mediatorSyncableContacts onCompletion:^{
+        [mediatorSyncableContacts syncObjcWithCompletionHandler:^(NSError * _Nullable error) {
+            if (error == nil) {
+                // reread feature mask
+                NSSet *unsupportedContacts2Run = [FeatureMask filterContactsWithUnsupportedFeatureMask:featureMask fromContacts:unsupportedContacts];
 
-            onCompletion(unsupportedContacts2Run.allObjects);
-        })
-        .catch(^(NSError *error){
-            // always run onCompletion
-            onCompletion(unsupportedContacts.allObjects);
-        });
+                onCompletion(unsupportedContacts2Run.allObjects);
+            }
+            else {
+                // always run onCompletion
+                onCompletion(unsupportedContacts.allObjects);
+            }
+        }];
+    } onError:^(NSError * _Nonnull error) {
+        // always run onCompletion
+        onCompletion(unsupportedContacts.allObjects);
+    }];
 }
 
 @end

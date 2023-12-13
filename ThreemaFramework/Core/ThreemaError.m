@@ -19,11 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ThreemaError.h"
+#import "ThreemaFramework/ThreemaFramework-swift.h"
 
 @implementation ThreemaError
 
 + (NSError*)threemaError:(NSString*)message {
-    return [self threemaError:message withCode:kGeneralErrorCode];
+    return [self threemaError:message withCode:ThreemaProtocolErrorGeneralError];
 }
 
 + (NSError*)threemaError:(NSString*)message withCode:(NSInteger)code {

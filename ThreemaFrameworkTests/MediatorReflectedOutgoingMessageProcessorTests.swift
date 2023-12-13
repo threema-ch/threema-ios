@@ -73,6 +73,8 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupAudioMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
+        expectedAbstractMessage.groupID = MockData.generateGroupID()
+        expectedAbstractMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.nonce = MockData.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
@@ -121,6 +123,8 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupImageMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
+        expectedAbstractMessage.groupID = MockData.generateGroupID()
+        expectedAbstractMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.nonce = MockData.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
@@ -170,6 +174,8 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupVideoMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
+        expectedAbstractMessage.groupID = MockData.generateGroupID()
+        expectedAbstractMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.nonce = MockData.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
@@ -299,11 +305,11 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
 
     func testProcessGroupTextMessage() throws {
         // Initialize test data and mocks
-        let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let groupID = MockData.generateGroupID()
         var group: Group!
         dbPreparer.save {
             let groupCreator = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER01",
                 verificationLevel: 0
             )
@@ -382,7 +388,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
 
     private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) throws -> D2d_Envelope {
         let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
-        return try mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
+        var envelope = try mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),
             messageID: abstractMessage.messageID.littleEndian(),
@@ -390,6 +396,19 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
             createdAt: abstractMessage.date,
             nonce: abstractMessage.nonce
         )
+
+        if let abstractGroupMessage = abstractMessage as? AbstractGroupMessage {
+            var groupIdentity = Common_GroupIdentity()
+            groupIdentity.groupID = try abstractGroupMessage.groupID.littleEndian()
+            groupIdentity.creatorIdentity = abstractGroupMessage.groupCreator
+
+            envelope.outgoingMessage.conversation.group = groupIdentity
+        }
+        else {
+            envelope.outgoingMessage.conversation.contact = abstractMessage.toIdentity
+        }
+
+        return envelope
     }
 
     private func setUpMocks(group: Group?)
@@ -397,7 +416,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
 
         if let group {
             let backgroundGroupManagerMock = GroupManagerMock()
-            backgroundGroupManagerMock.getGroupReturns = group
+            backgroundGroupManagerMock.getGroupReturns.append(group)
 
             frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),

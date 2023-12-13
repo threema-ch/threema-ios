@@ -53,7 +53,7 @@
 "error_message_requires_migration_error_description" = "Migrationsüberprüfung fehlgeschlagen. Bitte starten Sie die App neu.";
 
 "error_other_connection_for_same_identity_title" = "Warnung";
-"error_other_connection_for_same_identity_message" = "Der Server hat zwei oder mehr Verbindungen von verschiedenen Geräten mit der gleichen Threema-ID erkannt.\n\nEs ist nicht möglich, eine Threema-ID auf mehreren Geräten gleichzeitig zu verwenden. Neue Nachrichten werden nur an das Gerät übermittelt, welches sich zuletzt beim Server angemeldet hat.\n\nFalls Sie auf ein neues Gerät wechseln, deinstallieren oder deaktivieren Sie bitte %@ auf dem alten Gerät und starten Sie anschliessend das neue Gerät neu.";
+"error_other_connection_for_same_identity_message" = "Der Server hat zwei oder mehr Verbindungen von verschiedenen Geräten mit der gleichen Threema-ID erkannt.\n\nDies kann passieren, wenn Threema auf mehreren Geräten gleichzeitig verwendet wird, ohne dass diese miteinander verknüpft sind (https://three.ma/md). Neue Nachrichten werden nur an das Gerät übermittelt, welches sich zuletzt mit dem Server verbunden hat.\n\nFalls Sie auf ein neues Gerät wechseln, deinstallieren oder deaktivieren Sie bitte %@ auf dem alten Gerät und starten Sie anschliessend das neue Gerät neu.";
 
 "error_rogue_device_title" = "Verbindung von anderem Gerät erkannt";
 "error_rogue_device_message" = "Der Server hat eine Verbindung von einem anderen Gerät mit derselben Threema-ID erkannt.\n\nWenn Sie Ihre Threema-ID in der Zwischenzeit nicht auf einem anderen Gerät oder mit einer älteren App-Version genutzt haben, kontaktieren Sie bitte den Support und senden Sie falls möglich die Logdatei mit.";

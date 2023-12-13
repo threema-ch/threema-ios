@@ -80,6 +80,15 @@
       }
     },
     {
+      "identity" : "promisekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mxcl/PromiseKit",
+      "state" : {
+        "revision" : "cb70b070cde06837cd10a1febdf6105c1a3bb348",
+        "version" : "8.1.1"
+      }
+    },
+    {
       "identity" : "punycodeswift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gumob/PunycodeSwift",
@@ -93,8 +102,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ruslanskorb/RSKImageCropper.git",
       "state" : {
-        "revision" : "a21b28b90c08d3be9f392b36e872514cb74888a0",
-        "version" : "3.0.2"
+        "revision" : "0cbf9cbb77b6763c80eb4d44673395acf5a8d93c",
+        "version" : "4.0.0"
       }
     },
     {
@@ -182,8 +191,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/datatheorem/TrustKit",
       "state" : {
-        "revision" : "714fd3fcdcada5b107d91bf6caaaefb00f792730",
-        "version" : "1.6.5"
+        "revision" : "5718ba8720b4dafc5360aebfbc9762e2d5f2615e",
+        "version" : "3.0.3"
       }
     },
     {

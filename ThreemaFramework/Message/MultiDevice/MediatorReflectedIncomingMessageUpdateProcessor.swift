@@ -20,6 +20,7 @@
 
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 class MediatorReflectedIncomingMessageUpdateProcessor {
@@ -38,15 +39,15 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                 for item in incomingMessageUpdate.updates {
                     switch item.update {
                     case .read:
-                        var senderIdentity: String?
+                        var senderIdentity: ThreemaIdentity?
                         var senderGroupIdentity: GroupIdentity?
                         if !item.conversation.contact.isEmpty {
-                            senderIdentity = item.conversation.contact
+                            senderIdentity = ThreemaIdentity(item.conversation.contact)
                         }
                         else if item.conversation.group.groupID > 0 {
                             senderGroupIdentity = GroupIdentity(
                                 id: item.conversation.group.groupID.littleEndianData,
-                                creator: item.conversation.group.creatorIdentity
+                                creator: ThreemaIdentity(item.conversation.group.creatorIdentity)
                             )
                         }
 
@@ -82,7 +83,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
             let conversation: Conversation
             if let senderIdentity,
                let contactConversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                   for: senderIdentity,
+                   for: senderIdentity.string,
                    createIfNotExisting: false
                ) {
                 conversation = contactConversation
@@ -90,7 +91,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
             else if let senderGroupIdentity,
                     let groupConversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
                         for: senderGroupIdentity.id,
-                        creator: senderGroupIdentity.creator
+                        creator: senderGroupIdentity.creator.string
                     ) {
                 conversation = groupConversation
             }
@@ -119,7 +120,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
 
                 // If it is a read receipt of a reflected incoming message, then remove all notifications of this
                 // message
-                let identity: ThreemaIdentity? = message.sender?.identity ?? message.conversation.contact?.identity
+                let identity: String? = message.sender?.identity ?? message.conversation.contact?.identity
                 if let key = PendingUserNotificationKey.key(identity: identity, messageID: message.id) {
                     DDLogNotice("Removing notifications from \(#function)")
                     self.frameworkInjector.userNotificationCenterManager.remove(

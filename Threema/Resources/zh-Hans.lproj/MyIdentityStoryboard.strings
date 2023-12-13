@@ -5,7 +5,7 @@
 /* Class = "UITableViewSection"; footerTitle = "Number: +41 79 123 45 67"; ObjectID = "5HP-W8-nFp"; */
 "5HP-W8-nFp.footerTitle" = "电话号码： +41 79 123 45 67";
 
-/* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
+/* Class = "UINavigationItem"; title = "Profile"; ObjectID = "8Pu-jd-SHn"; */
 "8Pu-jd-SHn.title" = "个人资料";
 
 /* Class = "UINavigationItem"; title = "Link Number"; ObjectID = "ELz-zT-AmB"; */

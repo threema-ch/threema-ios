@@ -73,9 +73,9 @@ final class ParticipantStateActor {
         return true
     }
     
-    func remove(_ participant: RemoteParticipant) {
-        pendingParticipants.removeAll(where: { $0.participantID == participant.participantID })
-        participants.removeAll(where: { $0.participantID == participant.participantID })
+    func remove(_ participantID: ParticipantID) {
+        pendingParticipants.removeAll(where: { $0.participantID == participantID })
+        participants.removeAll(where: { $0.participantID == participantID })
     }
     
     func setRemoteContext(participantID: ParticipantID, remoteContext: RemoteContext) {

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import PromiseKit
 
 @objc public class PromiseKitConfiguration: NSObject {
     @objc public static func configurePromiseKit() {

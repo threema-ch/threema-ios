@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import PromiseKit
 
 public protocol PreviewItemProtocol {
     associatedtype PreviewType: Any

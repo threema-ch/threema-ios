@@ -28,7 +28,6 @@
 #import "UIDefines.h"
 #import "AvatarMaker.h"
 #import "TextStyleUtils.h"
-#import "PushSetting.h"
 #import "Threema-Swift.h"
 
 #ifdef DEBUG
@@ -66,19 +65,12 @@
         EntityManager *entityManager = [EntityManager new];
         [entityManager performBlock:^{
             BaseMessage *message = [[entityManager entityFetcher] existingObjectWithID:messageObjectID];
-            ContactEntity *contact = message.sender;
-            if (contact == nil) {
-                contact = message.conversation.contact;
-            }
-            
+
             // don't show toast for suppressed group ids
-            if (contact != nil) {
-                PushSetting *pushSetting = [PushSetting pushSettingForContact:contact];
-                if (![pushSetting canSendPushForBaseMessage:message]) {
-                    return;
-                }
+            if (![PushSettingManagerObjc canSendPushFor:message]) {
+                return;
             }
-            
+
             /* No toast if disabled, a system message or passcode showing */
             if (![UserSettings sharedUserSettings].inAppPreview ||
                 [message isKindOfClass:[SystemMessage class]] || [AppDelegate sharedAppDelegate].isAppLocked)

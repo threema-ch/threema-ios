@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Intents
+import ThreemaEssentials
 import ThreemaFramework
 
 protocol VoIPCallServiceDelegate: AnyObject {
@@ -218,10 +219,13 @@ class VoIPCallService: NSObject {
     
     private var audioRouteChangeObserver: NSObjectProtocol?
 
+    private let businessInjector: BusinessInjectorProtocol
+
     required init(
         businessInjector: BusinessInjectorProtocol,
         peerConnectionClient: VoIPCallPeerConnectionClientProtocol
     ) {
+        self.businessInjector = businessInjector
         self.voIPCallSender = VoIPCallSender(
             messageSender: businessInjector.messageSender,
             myIdentityStore: businessInjector.myIdentityStore
@@ -617,7 +621,7 @@ extension VoIPCallService {
                 DDLogNotice(
                     "VoipCallService: [cid=\(offer.callID.callID)]: Start add callID to CallHistory"
                 )
-                await CallHistoryManager(identity: contactIdentity, businessInjector: BusinessInjector())
+                await CallHistoryManager(identity: contactIdentity, businessInjector: businessInjector)
                     .store(callID: offer.callID.callID, date: Date())
                 DDLogNotice(
                     "VoipCallService: [cid=\(offer.callID.callID)]: End add callID to CallHistory"
@@ -625,27 +629,24 @@ extension VoIPCallService {
             }
         }
         
-        if UserSettings.shared().enableThreemaCall {
+        if businessInjector.userSettings.enableThreemaCall {
             var appRunsInBackground = false
             DispatchQueue.main.sync {
                 appRunsInBackground = AppDelegate.shared().isAppInBackground()
             }
-            
-            let pushSettingManager = PushSettingManager(UserSettings.shared(), LicenseStore.requiresLicenseKey())
-            
-            let entityManager = BusinessInjector().entityManager
-            
+
             DDLogNotice(
                 "VoipCallService: [cid=\(offer.callID.callID)]: Update lastUpdate for conversation"
             )
-            entityManager.performSyncBlockAndSafe {
-                if let conversation = entityManager.entityFetcher.conversation(forIdentity: offer.contactIdentity) {
+            businessInjector.entityManager.performSyncBlockAndSafe {
+                if let conversation = self.businessInjector.entityManager.entityFetcher
+                    .conversation(forIdentity: offer.contactIdentity) {
                     conversation.lastUpdate = Date.now
                 }
             }
 
-            if state == .idle {
-                if !pushSettingManager.canMasterDndSendPush() {
+            if state == .idle, !NavigationBarPromptHandler.isGroupCallActive {
+                if !businessInjector.pushSettingManager.canMasterDndSendPush() {
                     DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Master DND active, reject the call")
                     contactIdentity = offer.contactIdentity
                     let action = VoIPCallUserAction(
@@ -710,8 +711,8 @@ extension VoIPCallService {
                         
                         /// Make sure that the connection is not prematurely disconnected when the app is put into the
                         /// background
-                        ServerConnector.shared().connectWait(initiator: .threemaCall)
-                        
+                        self.businessInjector.serverConnector.connectWait(initiator: .threemaCall)
+
                         DDLogNotice(
                             "VoipCallService: [cid=\(offer.callID.callID)]: Send ringing message"
                         )
@@ -809,7 +810,7 @@ extension VoIPCallService {
                 )
                 if contactIdentity == offer.contactIdentity, state == .incomingRinging {
                     DDLogNotice("Threema call: handleOfferMessage -> same contact as the current call")
-                    if !pushSettingManager.canMasterDndSendPush(), appRunsInBackground {
+                    if !businessInjector.pushSettingManager.canMasterDndSendPush(), appRunsInBackground {
                         DDLogNotice(
                             "Threema call: handleOfferMessage -> Master DND active -> reject call from \(String(describing: offer.contactIdentity))"
                         )
@@ -870,8 +871,8 @@ extension VoIPCallService {
                             key: kAppVoIPBackgroundTask,
                             timeout: Int(kAppVoIPBackgroundTaskTime)
                         ) {
-                            ServerConnector.shared().connect(initiator: .threemaCall)
-                            
+                            self.businessInjector.serverConnector.connect(initiator: .threemaCall)
+
                             self.callKitManager?.timeoutCall()
                             let action = VoIPCallUserAction(
                                 action: .rejectTimeout,
@@ -1160,6 +1161,13 @@ extension VoIPCallService {
     /// - parameter action: VoIPCallUserAction
     /// - parameter completion: Completion block
     private func startCallAsInitiator(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
+        
+        guard !NavigationBarPromptHandler.isGroupCallActive else {
+            showCallActiveAlert()
+            completion()
+            return
+        }
+        
         if UserSettings.shared().enableThreemaCall {
             RTCAudioSession.sharedInstance().useManualAudio = true
             if state == .idle {
@@ -1178,7 +1186,7 @@ extension VoIPCallService {
                         
                         self.contactIdentity = action.contactIdentity
                         self.createPeerConnectionForInitiator(action: action, completion: completion)
-                        ServerConnector.shared().connect(initiator: .threemaCall)
+                        self.businessInjector.serverConnector.connect(initiator: .threemaCall)
                     }
                     else {
                         DispatchQueue.main.async {
@@ -1200,6 +1208,7 @@ extension VoIPCallService {
                 DDLogWarn(
                     "VoipCallService: [cid=\(action.callID?.callID ?? 0)]: Wrong state (\(state.description())) to start call as initiator"
                 )
+                showCallActiveAlert()
                 completion()
             }
         }
@@ -1217,10 +1226,10 @@ extension VoIPCallService {
     private func acceptIncomingCall(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
         createPeerConnectionForIncomingCall {
             RTCAudioSession.sharedInstance().useManualAudio = true
-            if self.state == .incomingRinging {
+            if self.state == .incomingRinging, !NavigationBarPromptHandler.isGroupCallActive {
                 /// Make sure that the connection is not prematurely disconnected when the app is put into the
                 /// background
-                ServerConnector.shared().connect(initiator: .threemaCall)
+                self.businessInjector.serverConnector.connect(initiator: .threemaCall)
                 self.state = .sendAnswer
                 self.presentCallViewController()
                 
@@ -1563,7 +1572,7 @@ extension VoIPCallService {
                     repeats: false,
                     block: { _ in
                         if self.state == .idle {
-                            ServerConnector.shared().disconnect(initiator: .threemaCall)
+                            self.businessInjector.serverConnector.disconnect(initiator: .threemaCall)
                         }
                     }
                 )
@@ -1621,6 +1630,20 @@ extension VoIPCallService {
                     completion: completion
                 )
             }
+        }
+    }
+    
+    private func showCallActiveAlert() {
+        Task { @MainActor in
+            guard let vc = UIApplication.shared.windows.first?.rootViewController else {
+                return
+            }
+            
+            UIAlertTemplate.showAlert(
+                owner: vc,
+                title: BundleUtil.localizedString(forKey: "group_call_error_already_in_call_title"),
+                message: BundleUtil.localizedString(forKey: "group_call_error_already_in_call_message")
+            )
         }
     }
     
@@ -1790,8 +1813,7 @@ extension VoIPCallService {
                 playSound(soundURL: soundURL, loops: -1)
             }
         case .rejected, .rejectedBusy, .rejectedTimeout, .rejectedOffHours, .rejectedUnknown, .rejectedDisabled:
-            let pushSettingManager = PushSettingManager(UserSettings.shared(), LicenseStore.requiresLicenseKey())
-            if !pushSettingManager.canMasterDndSendPush() || !isCallInitiator() {
+            if !businessInjector.pushSettingManager.canMasterDndSendPush() || !isCallInitiator() {
                 // do not play sound if dnd mode is active and user is not the call initiator
                 audioPlayer?.stop()
             }
@@ -2111,7 +2133,8 @@ extension VoIPCallService {
                   self.callDurationTime == 0 else {
                 return
             }
-            let pushSetting = PushSetting(forThreemaID: identity)
+
+            let pushSetting = self.businessInjector.pushSettingManager.find(forContact: ThreemaIdentity(identity))
             let canSendPush = pushSetting.canSendPush()
             
             guard canSendPush else {
@@ -2121,7 +2144,7 @@ extension VoIPCallService {
             let notification = UNMutableNotificationContent()
             notification.categoryIdentifier = "CALL"
             
-            if UserSettings.shared().pushSound != "none", !pushSetting.silent {
+            if self.businessInjector.userSettings.pushSound != "none", !pushSetting.muted {
                 notification.sound = UNNotificationSound(
                     named: UNNotificationSoundName(
                         rawValue: UserSettings
@@ -2130,14 +2153,11 @@ extension VoIPCallService {
                 )
             }
             
-            let businessInjector = BusinessInjector()
-            let entityManager = businessInjector.entityManager
-            let settingsStore = businessInjector.settingsStore
-            let notificationType = settingsStore.notificationType
+            let notificationType = self.businessInjector.settingsStore.notificationType
             var contact: ContactEntity?
             
-            entityManager.performSyncBlockAndSafe {
-                contact = entityManager.entityFetcher.contact(for: self.contactIdentity)
+            self.businessInjector.entityManager.performSyncBlockAndSafe {
+                contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.contactIdentity)
             }
             guard let contact else {
                 return
@@ -2164,8 +2184,8 @@ extension VoIPCallService {
             
             if case .complete = notificationType,
                let interaction = IntentCreator(
-                   userSettings: businessInjector.userSettings,
-                   entityManager: entityManager
+                   userSettings: self.businessInjector.userSettings,
+                   entityManager: self.businessInjector.entityManager
                ).inSendMessageIntentInteraction(
                    for: identity,
                    direction: .incoming

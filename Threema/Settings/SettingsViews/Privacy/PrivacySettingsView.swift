@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import Combine
 import SwiftUI
 
 struct PrivacySettingsView: View {
@@ -32,7 +33,11 @@ struct PrivacySettingsView: View {
     
     @State private var readReceipts: SettingValueOption = .doSend
     @State private var typingIndicators: SettingValueOption = .doSend
-    
+
+    // Needed for refreshing after MD sync
+    @State var observeSendReadReceipt: AnyCancellable?
+    @State var observeSendTypingIndicator: AnyCancellable?
+
     let mdmSetup = MDMSetup(setup: false)
     let interactionFAQURLString = BundleUtil.object(forInfoDictionaryKey: "ThreemaInteractionInfo") as! String
 
@@ -146,7 +151,13 @@ struct PrivacySettingsView: View {
         .disabled(settingsVM.isSyncing)
         
         .onAppear {
-            setUpValues()
+            observeSendReadReceipt = settingsVM.$sendReadReceipts.sink { newValue in
+                readReceipts = newValue ? .doSend : .dontSend
+            }
+            observeSendTypingIndicator = settingsVM.$sendTypingIndicator.sink { newValue in
+                typingIndicators = newValue ? .doSend : .dontSend
+            }
+            intermediaryHidePrivate = settingsVM.hidePrivateChats
             updateContactsFooter()
         }
         .alert(isPresented: $settingsVM.syncFailed, content: {
@@ -177,12 +188,6 @@ struct PrivacySettingsView: View {
         }
         
         contactsFooterText = footerText
-    }
-    
-    private func setUpValues() {
-        readReceipts = settingsVM.sendReadReceipts ? .doSend : .dontSend
-        typingIndicators = settingsVM.sendTypingIndicator ? .doSend : .dontSend
-        intermediaryHidePrivate = settingsVM.hidePrivateChats
     }
     
     private func hidePrivateChatsChanged(_ hide: Bool) {
@@ -270,7 +275,7 @@ private struct PickerAndButtonView: View {
     @ObservedObject var settingsVM: SettingsStore
     @State var showResetAlert = false
     @Binding var selectionType: SettingValueOption
-    
+
     var body: some View {
         Form {
             Section(header: Text("default_setting")) {
@@ -286,7 +291,7 @@ private struct PickerAndButtonView: View {
                 selectionType = newValue
                 didSelect(newValue)
             }
-            
+
             Section(footer: Text(BundleUtil.localizedString(forKey: "settings_privacy_TIRR_reset_footer"))) {
                 Button {
                     showResetAlert = true
@@ -318,7 +323,7 @@ private struct PickerAndButtonView: View {
         )
         .navigationTitle(optionType.navigationTitle)
     }
-    
+
     private func didSelect(_ newOption: SettingValueOption) {
         switch optionType {
         case .readReceipt:

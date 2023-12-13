@@ -96,16 +96,17 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeBoxUpdateExtistingBallot() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
-        
+
         let expectedResults = [
             ["Choice 1", "Choice 2", [
                 "d": "Testtitle",
                 "t": 0,
                 "s": 0,
-                "c": [["i": 2_222_222, "n": "Choice 1", "o": 0], ["i": 2_222_223, "n": "Choice 2", "o": 1]],
+                "c": [["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
+                      ["i": 2_222_223, "n": "Choice 2", "o": 1]],
                 "o": 0,
                 "a": 0,
-            ]],
+            ] as [String: Any]] as [Any],
             [
                 "Choice 1",
                 "Choice 2",
@@ -113,20 +114,21 @@ class MessageDecoderTests: XCTestCase {
                     "d": "Testtitle 2",
                     "t": 0,
                     "s": 0,
-                    "c": [["i": 2_222_224, "n": "Choice 3", "o": 0], ["i": 2_222_225, "n": "Choice 4", "o": 1]],
+                    "c": [["i": 2_222_224, "n": "Choice 3", "o": 0] as [String: Any],
+                          ["i": 2_222_225, "n": "Choice 4", "o": 1]],
                     "o": 0,
                     "a": 0,
-                ],
+                ] as [String: Any],
             ],
         ]
-        
+
         let (_, conversation) = createConversation()
         let ballotMessageDecoder =
             BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock))
-        
+
         for result in expectedResults {
             let msg = newBoxBallotCreateMessage(result[2])
-            
+
             let boxBallotCreateMessage = try XCTUnwrap(
                 MessageDecoder.decode(
                     MSGTYPE_BALLOT_CREATE,
@@ -135,27 +137,42 @@ class MessageDecoderTests: XCTestCase {
             )
             boxBallotCreateMessage.fromIdentity = "ECHOECHO"
 
-            let ballotMessage = ballotMessageDecoder!.decodeCreateBallot(
+            let expect = expectation(description: "Decode and create ballot")
+
+            var ballotMessage: BallotMessage?
+            ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
-                conversation: conversation
+                conversation: conversation,
+                onCompletion: { message in
+                    ballotMessage = message
+                    expect.fulfill()
+                },
+                onError: { error in
+                    XCTFail("\(error)")
+                    expect.fulfill()
+                }
             )
+
+            wait(for: [expect], timeout: 3)
+
             checkBallotResult(ballotMessage: ballotMessage, result: result)
         }
     }
-    
+
     func testDecodeBoxCloseExistingBallot() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
-        
+
         let expectedResults = [
             ["Choice 1", "Choice 2", 0, [
                 "d": "Testtitle",
                 "t": 0,
                 "s": 0,
-                "c": [["i": 2_222_222, "n": "Choice 1", "o": 0], ["i": 2_222_223, "n": "Choice 2", "o": 1]],
+                "c": [["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
+                      ["i": 2_222_223, "n": "Choice 2", "o": 1]],
                 "o": 0,
                 "a": 0,
-            ]],
+            ] as [String: Any]] as [Any],
             [
                 "Choice 1",
                 "Choice 2",
@@ -164,20 +181,21 @@ class MessageDecoderTests: XCTestCase {
                     "d": "Testtitle",
                     "t": 0,
                     "s": 1,
-                    "c": [["i": 2_222_222, "n": "Choice 1", "o": 0], ["i": 2_222_223, "n": "Choice 2", "o": 1]],
+                    "c": [["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
+                          ["i": 2_222_223, "n": "Choice 2", "o": 1]],
                     "o": 0,
                     "a": 1,
-                ],
+                ] as [String: Any],
             ],
         ]
-        
+
         let (_, conversation) = createConversation()
         let ballotMessageDecoder =
             BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock))
-        
+
         for result in expectedResults {
             let msg = newBoxBallotCreateMessage(result[3])
-            
+
             let boxBallotCreateMessage = try XCTUnwrap(
                 MessageDecoder.decode(
                     MSGTYPE_BALLOT_CREATE,
@@ -186,21 +204,34 @@ class MessageDecoderTests: XCTestCase {
             )
             boxBallotCreateMessage.fromIdentity = "ECHOECHO"
 
-            let ballotMessage = ballotMessageDecoder!.decodeCreateBallot(
+            let expect = expectation(description: "Decode and create ballot")
+
+            var ballotMessage: BallotMessage?
+            ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
-                conversation: conversation
+                conversation: conversation,
+                onCompletion: { message in
+                    ballotMessage = message
+                    expect.fulfill()
+                },
+                onError: { error in
+                    XCTFail("\(error)")
+                    expect.fulfill()
+                }
             )
-            
+
+            wait(for: [expect], timeout: 3)
+
             XCTAssertEqual(ballotMessage?.ballotState, result[2] as? NSNumber)
-            
+
             checkBallotResult(ballotMessage: ballotMessage, result: result)
         }
     }
-    
+
     func testDecodeBoxCloseWrongExistingBallot() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
-        
+
         let expectedResults = [
             // Initial Message
             [
@@ -217,7 +248,7 @@ class MessageDecoderTests: XCTestCase {
                             "i": 2_222_222,
                             "n": "Choice 1",
                             "o": 0,
-                        ],
+                        ] as [String: Any],
                         [
                             "i": 2_222_223,
                             "n": "Choice 2",
@@ -226,8 +257,8 @@ class MessageDecoderTests: XCTestCase {
                     ],
                     "o": 0,
                     "a": 0,
-                ],
-            ],
+                ] as [String: Any],
+            ] as [Any],
             // Result Message
             [
                 "Choice 4", // Expected Result
@@ -243,7 +274,7 @@ class MessageDecoderTests: XCTestCase {
                             "i": 2_222_222,
                             "n": "Choice 3",
                             "o": 1,
-                        ],
+                        ] as [String: Any],
                         [
                             "i": 2_222_223,
                             "n": "Choice 4",
@@ -252,14 +283,14 @@ class MessageDecoderTests: XCTestCase {
                     ],
                     "o": 0,
                     "a": 1,
-                ],
+                ] as [String: Any],
             ],
         ]
-        
+
         let (_, conversation) = createConversation()
         let ballotMessageDecoder =
             BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock))
-        
+
         // Initial Incoming Ballot Message
         let initialResult = expectedResults[0]
         let initialMessage = newBoxBallotCreateMessage(initialResult[4])
@@ -272,25 +303,39 @@ class MessageDecoderTests: XCTestCase {
         )
         boxBallotCreateInitialMessage.fromIdentity = "ECHOECHO"
 
-        let ballotInitialMessage: BallotMessage? = ballotMessageDecoder!.decodeCreateBallot(
+        let expectInitial = expectation(description: "Decode and create initial ballot")
+
+        var ballotInitialMessage: BallotMessage?
+        ballotMessageDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateInitialMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { message in
+                ballotInitialMessage = message
+                expectInitial.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expectInitial.fulfill()
+            }
         )
-        
+
+        wait(for: [expectInitial], timeout: 3)
+
         // Check Initial Choices exist
         let initialChoicesSet = (ballotInitialMessage?.ballot.choices!)! as NSSet
         let initialChoicesArray = initialChoicesSet.allObjects as! [BallotChoice]
-        let initialChoicesSorted = initialChoicesArray.sorted { $0.orderPosition.intValue <= $1.orderPosition.intValue }
-        
+        let initialChoicesSorted = initialChoicesArray.sorted { $0.orderPosition.intValue <= $1.orderPosition.intValue
+        }
+
         // Most Voted
         let inititalChoice1 = initialChoicesSorted.first!
         // Less Voted
         let inititalChoice2 = initialChoicesSorted.last!
-        
+
         XCTAssertEqual(inititalChoice1.name, initialResult[0] as? String)
         XCTAssertEqual(inititalChoice2.name, initialResult[1] as? String)
-        
+
         // Closing Ballot Message With different Results
         let differentResult = expectedResults[1]
         let resultMessage = newBoxBallotCreateMessage(differentResult[4])
@@ -303,22 +348,33 @@ class MessageDecoderTests: XCTestCase {
         )
         boxBallotCreateResultMessage.fromIdentity = "ECHOECHO"
 
-        ballotMessageDecoder!.decodeCreateBallot(
+        let expect = expectation(description: "Decode and create ballot")
+
+        ballotMessageDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateResultMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { _ in
+                expect.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expect.fulfill()
+            }
         )
-        
+
+        wait(for: [expect], timeout: 3)
+
         // Check Results Message Overrides Initial (Local) Message
         let resultChoicesSet = (ballotInitialMessage?.ballot.choices!)! as NSSet
         let resultChoicesArray = resultChoicesSet.allObjects as! [BallotChoice]
         let resultChoicesSorted = resultChoicesArray.sorted { $0.orderPosition.intValue <= $1.orderPosition.intValue }
-        
+
         // Most Voted
         let resultChoice1 = resultChoicesSorted.first!
         // Less Voted
         let resultChoice2 = resultChoicesSorted.last!
-     
+
         XCTAssertEqual(resultChoice1.name, differentResult[0] as? String)
         XCTAssertEqual(resultChoice2.name, differentResult[1] as? String)
     }

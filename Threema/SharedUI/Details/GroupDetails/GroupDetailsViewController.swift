@@ -153,6 +153,13 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
             object: nil
         )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(refreshDoNotDisturb),
+            name: Notification.Name(kNotificationChangedPushSetting),
+            object: nil
+        )
+
         observeGroup(\.name) { [weak self] in
             self?.navigationBarTitle = self?.group.name
             self?.updateHeader(animated: false)
@@ -383,6 +390,17 @@ extension GroupDetailsViewController {
     func reloadHeader() {
         headerView.reloadQuickActions()
         updateHeaderLayout()
+    }
+
+    @objc private func refreshDoNotDisturb(_ notification: Notification) {
+        guard let pushSetting = notification.object as? PushSetting,
+              pushSetting.groupIdentity == self.group.groupIdentity else {
+            return
+        }
+
+        DispatchQueue.main.async {
+            self.dataSource.refresh(sections: [.notifications])
+        }
     }
 }
 

@@ -65,7 +65,7 @@ protocol MessageStoreProtocol {
         reflectedAt: Date
     ) throws
 
-    func save(groupCreateMessage amsg: GroupCreateMessage) -> Promise<Void>
+    func save(groupCreateMessage amsg: GroupCreateMessage) throws -> Promise<Void>
 
     func save(groupDeletePhotoMessage amsg: GroupDeletePhotoMessage) -> Promise<Void>
 
@@ -104,7 +104,7 @@ protocol MessageStoreProtocol {
         createdAt: Date,
         reflectedAt: Date,
         isOutgoing: Bool
-    ) throws
+    ) throws -> Promise<Void>
 
     func save(groupBallotVoteMessage: GroupBallotVoteMessage) throws
 
@@ -147,7 +147,7 @@ protocol MessageStoreProtocol {
         createdAt: Date,
         reflectedAt: Date,
         isOutgoing: Bool
-    ) throws
+    ) throws -> Promise<Void>
 
     func save(ballotVoteMessage: BoxBallotVoteMessage) throws
     

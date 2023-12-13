@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Photos
+import PromiseKit
 
 open class ImagePreviewItem: MediaPreviewItem {
     public typealias PreviewType = Data

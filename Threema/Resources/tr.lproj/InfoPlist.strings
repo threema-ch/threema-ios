@@ -1,9 +1,5 @@
 /* Localized versions of Info.plist keys */
 
-"New message" = "Yeni mesaj";
-"Scan QR code" = "Kare kodunu tara";
-"My ID" = "Profilim";
-
 "NSCameraUsageDescription" = "Bir fotoğraf veya video çekip sohbete gönderdiğinizde, ayrıca kare kodlarını taramak için kameranız kullanılır.";
 "NSContactsUsageDescription" = "Kişiler, eşitleme açıkken diğer Threema kullanıcılarını bulmak için kullanılır. Telefon numaralarının ve e-posta adreslerinin karma değerleri bu amaçla bir Threema sunucusuna yüklenecektir. Bu bilgiler sunucularda saklanmaz.";
 "NSLocationWhenInUseUsageDescription" = "Konumunuz, sohbette gönderdiğinizde ve haritada kendi lokasyonunuzu görüntülemek için kullanılır.";

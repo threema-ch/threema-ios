@@ -148,9 +148,6 @@
 "still_compressed_note" = "Baliteke bideo oso handiak konprimitzea ezarpen hau kontuan hartu gabe.";
 
 /* Sound names */
-"push_sound_title" = "Jakinarazpen automatikoaren soinua";
-"push_group_sound_title" = "Taldearen jakinarazpen automatikoaren soinua";
-/* Sound names */
 "sound_none" = "Bat ere ez";
 "sound_default" = "Lehenetsia";
 "sound_silent" = "Bibrazioa bakarrik";
@@ -456,7 +453,6 @@
 /* Contacts */
 "pull_to_sync" = "Zabaldu";
 "bad_identity_backup" = "Esportatutako IDaren datuak ez dira baliozkoak edo sartutako pasahitza ez da zuzena. Threemaren ID berrezartzeko, erabili esportazioa sortzean aukeratu zenuen pasahitza. Egiaztatu sartutako datuak eta saiatu berriro.";
-
 "synchronizing" = "Sinkronizatu...";
 
 "no_contacts_syncon" = "Oraindik ez duzu harremanik. Sinkronizazioa aktibatu da, baina badirudi zure kontaktuetako batek ere ez duela Threema instalatuta (gonbidatu).";
@@ -1163,11 +1159,8 @@ Bi aldeetako aplikazioa PFSrekin bateragarria bada gaitu daiteke aukera.";
 "file_not_found_title" = "Fitxategia ez da aurkitu";
 
 "manage_all_conversations" = "Txat guztiak administratu";
-"manage_media_and_files" = "Artxiboak antolatu";
-"manage_messages" = "Mezuak antolatu";
 "messages" = "Mezuak";
 "files" = "Artxiboak";
-
 // Call Settings
 "settings_threema_calls_enable_calls" = "Threema ahotsa aktibatu";
 "settings_threema_calls_always_relay_calls" = "Transmititu deia beti";
@@ -1195,9 +1188,10 @@ Bi aldeetako aplikazioa PFSrekin bateragarria bada gaitu daiteke aukera.";
 "sentry_crash_send_description" = "Blokeatzeko txosten anonimoa bidal dezakezu. Blokeoa zerk eraman zuen azaltzen duten xehetasunek azpiko arazoari heltzen lagunduko dute.";
 "sentry_crash_send_yes" = "Txosten Anonimoa Bidali";
 "sentry_crash_send_no" = "Ez bidali";
+
 "sentry_crash_comment_placeholder" = "Arazoaren Txostena";
 
-// My profile
+// Profile
 "profile_share_id_text" = "Nire Threemaren IDa";
 // File message
 "optional_caption" = "Izenburua";
@@ -1428,7 +1422,6 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 // In-app notifications
 "notification_copying_succeeded" = "Kopiatutako elementua";
 "notification_copying_failed" = "Errorea kopiatzerakoan";
-
 "notification_saving_succeeded" = "Gordetako elementua";
 "notification_saving_failed" = "Errorea gordetzerakoan";
 
@@ -1527,7 +1520,6 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "accessibility_status_delivered_plus_time" = "Entregatuta, %@";
 "accessibility_status_read_plus_time" = "Irakurrita, %@";
 "accessibility_status_failed_plus_time" = "Akatsekin, %@";
-
 // UIAccessibilityCustomActions
 "accessibility_action_open_link" = "Ireki %@";
 "accessibility_action_call_phone" = "%@-eri deitu";

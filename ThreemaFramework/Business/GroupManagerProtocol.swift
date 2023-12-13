@@ -20,17 +20,24 @@
 
 import Foundation
 import PromiseKit
+import ThreemaEssentials
+
+/// Receivers of control message for group changes
+public enum GroupManagerProtocolReceivers {
+    /// All members
+    case all
+    /// A selected set of members
+    case members([ThreemaIdentity])
+}
 
 public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
     func createOrUpdate(
-        groupID: Data,
-        creator: String,
+        for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date
     ) -> Promise<(Group, Set<String>?)>
     @discardableResult func createOrUpdateDB(
-        groupID: Data,
-        creator: String,
+        for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date?,
         sourceCaller: SourceCaller
@@ -72,6 +79,29 @@ extension GroupManagerProtocol {
     }
 }
 
+// Convenience functions for GroupIdentity type
+extension GroupManagerProtocol {
+    public func group(for groupIdentity: GroupIdentity) -> Group? {
+        getGroup(groupIdentity.id, creator: groupIdentity.creator.string)
+    }
+    
+    public func leave(groupWith groupIdentity: GroupIdentity, inform receivers: GroupManagerProtocolReceivers) {
+        let members: [String]?
+        switch receivers {
+        case .all:
+            members = nil
+        case let .members(list):
+            members = list.map(\.string)
+        }
+        
+        leave(groupIdentity: groupIdentity, toMembers: members)
+    }
+    
+    public func sendSyncRequest(for groupIdentity: GroupIdentity) {
+        sendSyncRequest(groupID: groupIdentity.id, creator: groupIdentity.creator.string)
+    }
+}
+
 @objc public protocol GroupManagerProtocolObjc {
     func createOrUpdateObjc(
         groupID: Data,
@@ -86,27 +116,51 @@ extension GroupManagerProtocol {
         creator: String,
         members: Set<String>,
         systemMessageDate: Date?,
-        sourceCaller: SourceCaller
-    ) -> AnyPromise
-    func deletePhotoObjc(groupID: Data, creator: String, sentDate: Date, send: Bool) -> AnyPromise
+        sourceCaller: SourceCaller,
+        completionHandler: @escaping (Error?) -> Void
+    )
+    func deletePhotoObjc(
+        groupID: Data,
+        creator: String,
+        sentDate: Date,
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    )
     func getGroup(_ groupID: Data, creator: String) -> Group?
     func getGroup(conversation: Conversation) -> Group?
     func leave(groupID: Data, creator: String, toMembers: [String]?, systemMessageDate: Date)
     func leaveDB(groupID: Data, creator: String, member: String, systemMessageDate: Date)
     func dissolve(groupID: Data, to identities: Set<String>?)
     func unknownGroup(groupID: Data, creator: String)
-    @discardableResult func setNameObjc(
+    func setNameObjc(
         groupID: Data,
         creator: String,
         name: String?,
         systemMessageDate: Date,
-        send: Bool
-    ) -> AnyPromise
-    @discardableResult func setNameObjc(group: Group, name: String?, systemMessageDate: Date, send: Bool)
-        -> AnyPromise
-    @discardableResult func setPhotoObjc(groupID: Data, creator: String, imageData: Data, sentDate: Date, send: Bool)
-        -> AnyPromise
-    func syncObjc(group: Group, to identities: Set<String>?, withoutCreateMessage: Bool) -> AnyPromise
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    )
+    func setNameObjc(
+        group: Group,
+        name: String?,
+        systemMessageDate: Date,
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    )
+    func setPhotoObjc(
+        groupID: Data,
+        creator: String,
+        imageData: Data,
+        sentDate: Date,
+        send: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    )
+    func syncObjc(
+        group: Group,
+        to identities: Set<String>?,
+        withoutCreateMessage: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    )
     func sendSyncRequest(groupID: Data, creator: String, force: Bool)
     func periodicSyncIfNeeded(for group: Group)
 }
@@ -130,8 +184,13 @@ extension GroupManagerProtocolObjc {
         )
     }
     
-    public func leave(groupID: Data, creator: String, toMembers: [String]?) {
-        leave(groupID: groupID, creator: creator, toMembers: toMembers, systemMessageDate: Date())
+    public func leave(groupIdentity: GroupIdentity, toMembers: [String]?) {
+        leave(
+            groupID: groupIdentity.id,
+            creator: groupIdentity.creator.string,
+            toMembers: toMembers,
+            systemMessageDate: Date()
+        )
     }
 
     public func dissolve(groupID: Data, to identities: Set<String>?) {

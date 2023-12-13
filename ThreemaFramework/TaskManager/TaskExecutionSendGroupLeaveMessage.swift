@@ -22,8 +22,9 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-/// Reflect group leave message to mediator server is multi device enbaled
+/// Reflect group leave message to mediator server is multi device enabled
 /// and send it to group members (CSP).
+/// Additionally, clean up hidden contacts of group (if they are unused after leave+delete of the group).
 final class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendGroupLeaveMessage else {
@@ -80,6 +81,7 @@ final class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProt
             return when(fulfilled: sendMessages)
         }
         .then { _ -> Promise<Void> in
+            // cleanup: try deleting hidden contacts, delete happens iff they are not used elsewhere
             for identity in task.hiddenContacts {
                 self.frameworkInjector.contactStore.deleteContact(
                     identity: identity,

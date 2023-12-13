@@ -1,9 +1,5 @@
 /* Localized versions of Info.plist keys */
 
-"New message" = "Nov messadi";
-"Scan QR code" = "Scannar il code QR";
-"My ID" = "Mes profil";
-
 "NSCameraUsageDescription" = "La camera vegn duvrada per far fotos/videos e trametter en in chat e per scannar codes QR.";
 "NSContactsUsageDescription" = "Ils contacts vegnan duvrads per chattar auters utilisaders da Threema, sche la sincronisaziun è activada.";
 "NSLocationWhenInUseUsageDescription" = "Il lieu vegn duvrà, sche ti al tramettas en in chat e per mussar tia atgna posiziun sin la charta.";

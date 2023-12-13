@@ -90,7 +90,7 @@
 "settings" = "Settings";
 "loadMore" = "Load more";
 "all" = "All";
-"myIdentity" = "My Profile";
+"myIdentity" = "Profile";
 "share_id" = "Share your Threema ID";
 "close" = "close";
 "threema_id" = "Threema ID";
@@ -148,9 +148,6 @@
 "max_x_minutes" = "Max. %d minutes";
 "still_compressed_note" = "Very large videos may be compressed regardless of this setting.";
 
-/* Sound names */
-"push_sound_title" = "Push Sound";
-"push_group_sound_title" = "Push Group Sound";
 /* Sound names */
 "sound_none" = "None";
 "sound_default" = "Default";
@@ -459,6 +456,8 @@
 /* Contacts */
 "pull_to_sync" = "Pull to synchronize...";
 "bad_identity_backup" = "The ID export data is invalid or you have entered the wrong password. Use the password you chose when you created the export in order to restore your Threema ID. Please check your input and try again.";
+"pull_to_sync_429_message" = "The limit of allowed contact syncs per day has been reached. Please continue syncing tomorrow, or contact Threema’s customer support.";
+"pull_to_sync_429_message_work" = "The limit of allowed contact syncs per day has been reached. Please continue syncing tomorrow, or contact your %@ administrator.";
 
 "synchronizing" = "Synchronizing...";
 
@@ -525,10 +524,10 @@
 "more_information_link_id_work" = "By giving us your phone number and email address, we can help your contacts find you automatically on %@. These information will be stored in a secure and anonymous way. If you skip this step, you will use %@ completely anonymously.";
 "more_information_pick_nickname" = "The nickname is used in push notifications on some devices or as an additional means of identifying you to users who do not yet have you in their address book. We recommend providing only your first name or a pseudonym. If you don’t set a nickname, we’ll use your Threema ID by default.";
 "more_information_sync_contacts" = "If you enable this option, %@ one-way encrypts (hashes) email addresses and phone numbers before sending them to the server to look for matching contacts. We do not store any address book data.";
-"more_information_random_seed" = "By moving your fingers, you create random data (called entropy) that is used to generate the key pair associated with your new unique Threema ID.";
+"more_information_random_seed" = "By moving your finger, you create random data (called “entropy”) that is used to generate the key pair associated with your new unique Threema ID.";
 "id_confirm_description_work" = "Your Threema ID works just like a phone number. Your contacts can reach you through this ID.";
 "more_information_link_id" = "By giving us your phone number, we can help your friends find you automatically on Threema. This information will be stored in a secure and anonymous way. If you skip this step, you will use Threema completely anonymously.";
-"more_information_confirm_id" = "You also created a key pair. The public key has been securely transmitted to our servers. The private key never leaves your device. This ensures that nobody else can read your messages.";
+"more_information_confirm_id" = "You also created a key pair. The public key has been securely transmitted to our servers. The private key never leaves your devices. This ensures that nobody else can read your messages.";
 
 "id_confirm_description" = "Your Threema ID works just like a phone number. Your friends can reach you through this ID.";
 "id_pick_nickname_description_work" = "Your contacts will see your nickname when they receive a message.";
@@ -586,6 +585,8 @@
 "Done" = "Done";
 "enter_license_description" = "Threema Work is the messenger for companies. Please enter the credentials provided by your company.";
 "enter_license_onprem_description" = "Threema OnPrem is the self-hosted messenger for companies. Please enter the credentials provided by your company";
+"enter_license_work_admin_description" = "Forgot your credentials? Please contact your Threema Work administrator.";
+"enter_license_onprem_admin_description" = "Forgot your credentials? Please contact your Threema OnPrem administrator.";
 "more_work_info" = "Learn more about %@.";
 "Save" = "Save";
 "enter_license_username_placeholder" = "Username";
@@ -785,6 +786,8 @@
 
 "group_call_error_generic_title" = "An error occurred";
 "group_call_error_generic_message" = "If the issue persists, please contact customer support.";
+"group_call_error_already_in_call_title" = "Other Call active";
+"group_call_error_already_in_call_message" = "Only one call can be joined at any given moment.";
 
 "group_call_accessibility_hide_view" = "Hide group call view";
 "group_call_accessibility_enable_camera" = "Enable camera";
@@ -959,6 +962,7 @@
 "safe_upload_failed" = "Upload failed";
 "safe_upload_size_exceeded" = "Server’s upload size exceeded";
 "safe_change_password" = "Change Password";
+"safe_learn_more" = "Learn more";
 "safe_backup_now" = "Backup Now";
 "safe_deactivate" = "Turn off Threema Safe";
 "safe_deactivate_explain" = "If you disable Threema Safe, any existing backups will be deleted on the server. Continue?";
@@ -1187,6 +1191,14 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "delete_messages_confirm" = "Do you want to permanently delete all messages older than %@?";
 "delete_messages_confirm_all" = "Do you want to permanently delete all messages?";
 "delete_messages_explain" = "Messages of any kind will be deleted: text and voice messages, media, files, polls, etc.";
+"automatic_delete_explain" = "Use automatic deletion of messages and media to free up disk space. Open polls and note groups are excluded from automatic deletion.";
+"automatic_delete_on_confirmation_title" = "Turn on automatic deletion?";
+"automatic_delete_off_confirmation_title" = "Turn off automatic deletion?";
+// Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
+"automatic_delete_confirmation_message_no_immediate_deletion" = "Starting now messages older than %@ will be automatically deleted. Note: Open polls and note groups are excluded.";
+"automatic_delete_confirmation_message_immediate_deletion" = "%d messages will be deleted immediately and all messages older than %@ will be automatically deleted from now on. Note: Open polls and note groups are excluded.";
+"automatic_delete_on_confirmation_button" = "Turn On Automatic Deletion";
+"automatic_delete_off_confirmation_button" = "Turn Off Automatic Deletion";
 "delete_in_progress" = "Deleting …";
 "one_year_title" = "1 Year";
 "one_year" = "1 year";
@@ -1199,6 +1211,7 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "one_week_title" = "1 Week";
 "one_week" = "1 week";
 "everything" = "Delete All";
+"forever" = "Forever";
 "media_file_not_found" = "Could not open media file. It was deleted or not downloaded from the server.";
 "older_than" = "Older Than";
 
@@ -1206,10 +1219,11 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "file_not_found_title" = "File Not Found";
 
 "manage_all_conversations" = "Manage All Chats";
-"manage_media_and_files" = "Manage Files";
-"manage_messages" = "Manage Messages";
+"manage" = "Manage";
 "messages" = "Messages";
 "files" = "Files";
+"automatic_delete" = "Automatic Deletion";
+"automatic_delete_label" = "Keep Messages";
 
 // Call Settings
 "settings_threema_calls_enable_calls" = "Enable Threema Calls";
@@ -1254,6 +1268,7 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_advanced_other_section_header" = "Other";
 "settings_advanced_webrtc_diagnostics_title" = "WebRTC Diagnostics";
 "settings_advanced_orphaned_files_cleanup" = "Delete Orphaned Files";
+"settings_advanced_contacts_cleanup" = "Contacts Cleanup";
 "settings_advanced_flush_message_queue" = "Flush Message Queue";
 
 "settings_advanced_reregister_push_notifications_header_title" = "Push Notifications";
@@ -1270,10 +1285,18 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "sentry_crash_send_description" = "You can submit an anonymous crash report. Details explaining what lead to the crash will help to address the underlying problem.";
 "sentry_crash_send_yes" = "Send Anonymous Report";
 "sentry_crash_send_no" = "Don’t Send";
+
 "sentry_crash_comment_placeholder" = "Crash Report";
 
-// My profile
+// Profile
 "profile_share_id_text" = "My Threema ID";
+"profile_share_id" = "Share Threema ID";
+"profile_show_qr_code" = "Show QR Code";
+"profile_big_qr_code" = "Big QR Code";
+"profile_big_qr_code_cover_view" = "Big QR Code Cover View";
+"profile_linked_email" = "Linked Email";
+"profile_linked_phone" = "Linked Phone Number";
+"profile_id_export" = "ID Export";
 "my_profile_delete_cell_title" = "Remove ID and Data";
 
 // Delete & Revoke
@@ -1334,6 +1357,20 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "settings_orphaned_files_bin_delete_conformation" = "Would you like to permanently delete the orphaned files? This action cannot be undone.";
 "settings_orphaned_files_log_title" = "LOG FILES";
 "settings_orphaned_files_log_all_files_button" = "Log Files into Debug Log";
+
+// Contacts cleanup
+"settings_advanced_contacts_cleanup_stats_title" = "Contacts Cleanup";
+"settings_advanced_contacts_cleanup_log_stats" = "Log Duplicate Contacts";
+"settings_advanced_contacts_cleanup_unused" = "Remove Duplicate Contacts";
+"settings_advanced_contacts_cleanup_log_disabled" = "Logging is disabled.\n\nPlease go back to “Advanced,” turn on “Debug Log,” and try again.";
+"settings_advanced_contacts_cleanup_submit_logs" = "Please go back to “Advanced Settings,” and share the log with Threema Support for further analysis.\n\nAfter that, you may turn off “Debug Log.”";
+"settings_advanced_contacts_cleanup_stats_logged" = "Information has been logged.\n\n";
+"settings_advanced_contacts_cleanup_no_duplicates" = "You have no duplicate contacts.";
+"settings_advanced_contacts_cleanup_error_title" = "Unable to remove contacts";
+"settings_advanced_contacts_cleanup_still_used_error" = "Clean up cancelled. %i duplicate contacts can not be removed because the duplicates still have messages or because they are member of a group.\n\n";
+"settings_advanced_contacts_cleanup_success_title" = "Contact cleanup successful";
+"settings_advanced_contacts_cleanup_success_exit" = "Exit";
+"settings_advanced_contacts_cleanup_unused_message" = "%i duplicate contacts were removed.\n\nPlease exit the app, restart it, and link a device. If it does not work: ";
 
 // Media Preview
 "loading_video_failed" = "Could not load the video. Please restart the app and try again.";
@@ -1526,7 +1563,8 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "multi_device_join_failed_app_closed_message" = "Linking failed because %@ was closed. Please try again.";
 
 "multi_device_linked_id_missing_title" = "Linked Devices";
-"multi_device_linked_id_missing_message" = "Linked devices have been removed. You can link your devices again after restoring or setting up this device.";
+"multi_device_linked_id_missing_message" = "Linked devices have been removed. To avoid missing out on messages, reset Threema for Desktop now. You can link your devices again after restoring or setting up this device.";
+"multi_device_linked_id_missing_reset_button" = "Reset Desktop App";
 
 "myprofile_link_email_phone_footer" = "Linking your email address or phone number to your ID lets other people find you on %@ automatically if they have you in their address book.";
 "myprofile_link_email_footer" = "Linking your email address to your ID lets other users find you on %@ automatically if they have your email in their address book.";
@@ -1603,12 +1641,15 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 // In-app notifications
 "notification_copying_succeeded" = "Item Copied";
 "notification_copying_failed" = "Copying Failed";
+"notification_copying_id_succeeded" = "Threema ID Copied";
 
 "notification_saving_succeeded" = "Item Saved";
 "notification_saving_failed" = "Saving Failed";
 
 "notification_saving_to_photos_succeeded" = "Added to Photos";
 "notification_saving_to_photos_failed" = "Adding to Photos Failed";
+
+"notification_autosave_failed" = "Autosaving Media Failed";
 
 "notification_sending_failed" = "Sending Failed";
 "notification_sending_failed_subtitle_size" = "Item too large";
@@ -1730,6 +1771,11 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "accessibility_status_delivered_plus_time" = "Delivered, %@";
 "accessibility_status_read_plus_time" = "Read, %@";
 "accessibility_status_failed_plus_time" = "Failed, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Agreed by %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Declined by %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Agreed by %i, declined by %i, %@%@";
+"accessibility_status_group_acknowledged_my_reaction" = "I agreed";
+"accessibility_status_group_declined_my_reaction" = "I declined";
 
 // UIAccessibilityCustomActions
 "accessibility_action_open_link" = "Open %@";
@@ -1815,3 +1861,8 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nCould not downgrade from version %d to version %d";
 "sqldhsessionstore_unknownError" = "An unknown error occurred when attempting a migration: %@";
+
+// UIApplicationShortcutItems
+"application_shortcut_item_new_message" = "New message";
+"application_shortcut_item_scan_qr_code" = "Scan QR code";
+"application_shortcut_item_my_id" = "My Profile";

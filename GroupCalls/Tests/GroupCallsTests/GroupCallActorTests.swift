@@ -19,22 +19,23 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import XCTest
 @testable import GroupCalls
 
 final class GroupCallActorTests: XCTestCase {
+    
+    fileprivate lazy var creatorIdentity = ThreemaIdentity("ECHOECHO")
+    fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
+    fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
+    fileprivate lazy var groupModel = GroupCallsThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
+    
     func testBasicInit() throws {
         let dependencies = MockDependencies().create()
         let gck = Data(repeating: 0x01, count: 32)
-        
         let groupCallActor = try! GroupCallActor(
-            localIdentity: try! ThreemaID(id: "ECHOECHO"),
-            groupModel: GroupCallsThreemaGroupModel(
-                creator: try! ThreemaID(id: "ECHOECHO"),
-                groupID: Data(),
-                groupName: "ECHOECHO",
-                members: Set([])
-            ),
+            localContactModel: localContactModel,
+            groupModel: groupModel,
             sfuBaseURL: "",
             gck: gck,
             dependencies: dependencies
@@ -43,15 +44,11 @@ final class GroupCallActorTests: XCTestCase {
     
     func testBasicStillRunning() async throws {
         let dependencies = MockDependencies().create()
+        let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
 
         let groupCallActor = try! GroupCallActor(
-            localIdentity: try! ThreemaID(id: "ECHOECHO"),
-            groupModel: GroupCallsThreemaGroupModel(
-                creator: try! ThreemaID(id: "ECHOECHO"),
-                groupID: Data(),
-                groupName: "ECHOECHO",
-                members: Set([])
-            ),
+            localContactModel: localContactModel,
+            groupModel: groupModel,
             sfuBaseURL: "",
             gck: Data(repeating: 0x01, count: 32),
             dependencies: dependencies
@@ -70,13 +67,8 @@ final class GroupCallActorTests: XCTestCase {
         let gck = Data(repeating: 0x01, count: 32)
 
         let groupCallActor = try! GroupCallActor(
-            localIdentity: try! ThreemaID(id: "ECHOECHO"),
-            groupModel: GroupCallsThreemaGroupModel(
-                creator: try! ThreemaID(id: "ECHOECHO"),
-                groupID: Data(),
-                groupName: "ECHOECHO",
-                members: Set([])
-            ),
+            localContactModel: localContactModel,
+            groupModel: groupModel,
             sfuBaseURL: "",
             gck: gck,
             dependencies: dependencies
@@ -93,13 +85,8 @@ final class GroupCallActorTests: XCTestCase {
         let gck = Data(repeating: 0x01, count: 32)
 
         let groupCallActor = try GroupCallActor(
-            localIdentity: ThreemaID(id: "ECHOECHO"),
-            groupModel: GroupCallsThreemaGroupModel(
-                creator: ThreemaID(id: "ECHOECHO"),
-                groupID: Data(),
-                groupName: "ECHOECHO",
-                members: Set([])
-            ),
+            localContactModel: localContactModel,
+            groupModel: groupModel,
             sfuBaseURL: "",
             gck: gck,
             startMessageReceiveDate: .now,
@@ -113,15 +100,11 @@ final class GroupCallActorTests: XCTestCase {
         let dependencies = MockDependencies().create()
 
         let gck = Data(repeating: 0x01, count: 32)
+        let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
 
         let groupCallActor = try! GroupCallActor(
-            localIdentity: try! ThreemaID(id: "ECHOECHO"),
-            groupModel: GroupCallsThreemaGroupModel(
-                creator: try! ThreemaID(id: "ECHOECHO"),
-                groupID: Data(),
-                groupName: "ECHOECHO",
-                members: Set([])
-            ),
+            localContactModel: localContactModel,
+            groupModel: groupModel,
             sfuBaseURL: "",
             gck: gck,
             startMessageReceiveDate: Date.distantPast,

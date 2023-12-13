@@ -670,7 +670,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
-                    message: "Do not sending message to invalid identity Optional(\"MEMBER04\") ((type: groupText; id: \(messageID.hexString); groupCreator: \(group.groupCreatorIdentity) - groupId: \(group.groupID.hexString)))"
+                    message: "Do not sending message to invalid identity Optional(\"MEMBER04\") ((type: groupText; id: \(messageID.hexString); groupIdentity: id: \(group.groupID.hexString) creator: \(group.groupCreatorIdentity)))"
                 )
         )
         XCTAssertNil(expectError)

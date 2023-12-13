@@ -54,6 +54,9 @@ extension MessageDecoder {
             if msg is AbstractGroupMessage {
                 throw BadMessageError.unexpectedGroupMessageEncapsulated
             }
+        case .v12:
+            // Starting with V1.2 we also support group messages
+            break
         case .UNRECOGNIZED:
             DDLogError("Unhandled FS version when decapsulating: \(appliedVersion)")
             throw BadMessageError.invalidFSVersion

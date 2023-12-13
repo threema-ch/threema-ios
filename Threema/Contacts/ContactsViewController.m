@@ -1082,9 +1082,14 @@ typedef enum : NSUInteger {
                     [UIAlertTemplate showOpenSettingsAlertWithOwner:self noAccessAlertType:NoAccessAlertTypeContacts];
                 }
             } onError:^(NSError *error) {
-                [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:^(UIAlertAction * _Nonnull okAction) {
-                    [self updateWorkDataAndEndRefreshing:sender];
-                }];
+                if (error.code == 429) {
+                    [self show429ErrorMessage: sender];
+                }
+                else {
+                    [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:^(UIAlertAction * _Nonnull okAction) {
+                        [self updateWorkDataAndEndRefreshing:sender];
+                    }];
+                }
             }];
         } else {
             [[ContactStore sharedContactStore] synchronizeAddressBookForceFullSync:YES ignoreMinimumInterval:YES onCompletion:^(BOOL addressBookAccessGranted) {
@@ -1097,6 +1102,20 @@ typedef enum : NSUInteger {
         self.segmentedControl.userInteractionEnabled = YES;
         [sender endRefreshing];
         [self.rfControl endRefreshing];
+    }
+}
+
+- (void)show429ErrorMessage:(UIRefreshControl *)sender {
+    if ([LicenseStore requiresLicenseKey]) {
+        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message_work"], ThreemaAppObjc.appName];
+        [UIAlertTemplate showAlertWithOwner:self title:nil message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
+            [self updateWorkDataAndEndRefreshing:sender];
+        }];
+    }
+    else {
+        [UIAlertTemplate showAlertWithOwner:self title:nil message:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message"] actionOk:^(UIAlertAction * _Nonnull okAction) {
+            [self updateWorkDataAndEndRefreshing:sender];
+        }];
     }
 }
 

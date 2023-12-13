@@ -45,6 +45,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         let pendingManager1 = PendingUserNotificationManager(
             UserNotificationManagerMock(),
             UserNotificationCenterManagerMock(),
+            PushSettingManagerMock(),
             EntityManager()
         )
         let pendingNotification1 = pendingManager1.pendingUserNotification(
@@ -60,6 +61,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         let pendingManager2 = PendingUserNotificationManager(
             UserNotificationManagerMock(),
             UserNotificationCenterManagerMock(),
+            PushSettingManagerMock(),
             EntityManager()
         )
         let pendingNotification2 = pendingManager2.pendingUserNotification(
@@ -90,6 +92,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         let pendingManager = PendingUserNotificationManager(
             UserNotificationManagerMock(returnUserNotificationContent: expectedUserNotificationContent),
             UserNotificationCenterManagerMock(returnFireDate: Date()),
+            PushSettingManagerMock(),
             EntityManager()
         )
         let pendingNotification = pendingManager.pendingUserNotification(
@@ -145,6 +148,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         let pendingManager = PendingUserNotificationManager(
             UserNotificationManagerMock(returnUserNotificationContent: expectedUserNotificationContent),
             userNotificationCenterManagerMock,
+            PushSettingManagerMock(),
             EntityManager()
         )
         let pendingNotification = pendingManager.pendingUserNotification(

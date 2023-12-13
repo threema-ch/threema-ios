@@ -67,8 +67,10 @@
     
     if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_description"];
+        _threemaAdminInfoLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_admin_description"];
     } else {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"enter_license_description"];
+        _threemaAdminInfoLabel.text = [BundleUtil localizedStringForKey:@"enter_license_work_admin_description"];
     }
     
     [_confirmButton setTitle:[BundleUtil localizedStringForKey:@"next"] forState:UIControlStateNormal];
@@ -91,6 +93,7 @@
     _serverTextField.text = _licenseStore.onPremConfigUrl;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateLicenseText) name:kNotificationLicenseMissing object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(confirmLicenseCheck) name:kNotificationLicenseCheckSuccess object:nil];
     
     UITapGestureRecognizer *mainTapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMainView:)];
     mainTapGesture.cancelsTouchesInView = false;

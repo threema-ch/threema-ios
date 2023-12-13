@@ -18,7 +18,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 class MediatorReflectedGroupSyncProcessor {
@@ -49,13 +52,13 @@ class MediatorReflectedGroupSyncProcessor {
 
             guard self.frameworkInjector.backgroundGroupManager.getGroup(
                 groupIdentity.id,
-                creator: groupIdentity.creator
+                creator: groupIdentity.creator.string
             ) != nil
             else {
                 seal
                     .reject(
                         MediatorReflectedProcessorError
-                            .groupToDeleteNotExists(identity: groupIdentity)
+                            .groupToDeleteNotExists(groupIdentity: groupIdentity)
                     )
                 return
             }
@@ -74,13 +77,13 @@ class MediatorReflectedGroupSyncProcessor {
 
             guard self.frameworkInjector.backgroundGroupManager.getGroup(
                 groupIdentity.id,
-                creator: groupIdentity.creator
+                creator: groupIdentity.creator.string
             ) == nil
             else {
                 seal
                     .reject(
                         MediatorReflectedProcessorError
-                            .groupToCreateAlreadyExists(identity: groupIdentity)
+                            .groupToCreateAlreadyExists(groupIdentity: groupIdentity)
                     )
                 return
             }
@@ -101,13 +104,13 @@ class MediatorReflectedGroupSyncProcessor {
 
             guard self.frameworkInjector.backgroundGroupManager.getGroup(
                 groupIdentity.id,
-                creator: groupIdentity.creator
+                creator: groupIdentity.creator.string
             ) != nil
             else {
                 seal
                     .reject(
                         MediatorReflectedProcessorError
-                            .groupToUpdateNotExists(identity: groupIdentity)
+                            .groupToUpdateNotExists(groupIdentity: groupIdentity)
                     )
                 return
             }
@@ -147,8 +150,7 @@ class MediatorReflectedGroupSyncProcessor {
                 return Promise<Group?> { seal in
                     if syncGroup.hasMemberIdentities {
                         self.frameworkInjector.backgroundGroupManager.createOrUpdateDB(
-                            groupID: groupIdentity.id,
-                            creator: groupIdentity.creator,
+                            for: groupIdentity,
                             members: Set<String>(syncGroup.memberIdentities.identities),
                             systemMessageDate: Date(),
                             sourceCaller: .sync
@@ -163,63 +165,86 @@ class MediatorReflectedGroupSyncProcessor {
                     else {
                         let group = self.frameworkInjector.backgroundGroupManager.getGroup(
                             groupIdentity.id,
-                            creator: groupIdentity.creator
+                            creator: groupIdentity.creator.string
                         )
                         seal.fulfill(group)
                     }
                 }
                 .then { group -> Promise<Void> in
-                    guard let group else {
-                        throw MediatorReflectedProcessorError.groupNotFound(message: "\(groupIdentity)")
-                    }
+                    Promise { seal in
+                        guard let group else {
+                            seal.reject(MediatorReflectedProcessorError.groupNotFound(message: "\(groupIdentity)"))
+                            return
+                        }
 
-                    if syncGroup.hasUserState, syncGroup.userState == .left {
-                        self.frameworkInjector.backgroundGroupManager.leaveDB(
-                            groupID: groupIdentity.id,
-                            creator: groupIdentity.creator,
-                            member: self.frameworkInjector.myIdentityStore.identity,
-                            systemMessageDate: Date()
-                        )
-                    }
-
-                    if syncGroup.hasName {
-                        return self.frameworkInjector.backgroundGroupManager.setName(
-                            groupID: groupIdentity.id,
-                            creator: groupIdentity.creator,
-                            name: syncGroup.name,
-                            systemMessageDate: Date(),
-                            send: false
-                        )
-                    }
-
-                    if syncGroup.hasProfilePicture {
-                        switch syncGroup.profilePicture.image {
-                        case .removed:
-                            return self.frameworkInjector.backgroundGroupManager.deletePhoto(
+                        if syncGroup.hasUserState, syncGroup.userState == .left {
+                            self.frameworkInjector.backgroundGroupManager.leaveDB(
                                 groupID: groupIdentity.id,
-                                creator: groupIdentity.creator,
-                                sentDate: Date(),
+                                creator: groupIdentity.creator.string,
+                                member: self.frameworkInjector.myIdentityStore.identity,
+                                systemMessageDate: Date()
+                            )
+                        }
+
+                        if syncGroup.hasName {
+                            self.frameworkInjector.backgroundGroupManager.setName(
+                                groupID: groupIdentity.id,
+                                creator: groupIdentity.creator.string,
+                                name: syncGroup.name,
+                                systemMessageDate: Date(),
                                 send: false
                             )
-                        case .updated:
-                            if let imageData = profilePicture {
-                                return self.frameworkInjector.backgroundGroupManager.setPhoto(
+                            .catch { error in
+                                DDLogError("Changing of reflected group name failed: \(error)")
+                            }
+                        }
+
+                        if syncGroup.hasProfilePicture {
+                            switch syncGroup.profilePicture.image {
+                            case .removed:
+                                self.frameworkInjector.backgroundGroupManager.deletePhoto(
                                     groupID: groupIdentity.id,
-                                    creator: groupIdentity.creator,
-                                    imageData: imageData,
+                                    creator: groupIdentity.creator.string,
                                     sentDate: Date(),
                                     send: false
                                 )
+                                .catch { error in
+                                    DDLogError("Removing of reflected group profile picture failed: \(error)")
+                                }
+                            case .updated:
+                                if let imageData = profilePicture {
+                                    self.frameworkInjector.backgroundGroupManager.setPhoto(
+                                        groupID: groupIdentity.id,
+                                        creator: groupIdentity.creator.string,
+                                        imageData: imageData,
+                                        sentDate: Date(),
+                                        send: false
+                                    )
+                                    .catch { error in
+                                        DDLogError("Changing of reflected group profile picture failed: \(error)")
+                                    }
+                                }
+                            case .none:
+                                break
                             }
-                        case .none:
-                            break
+                        }
+
+                        // Save on main thread (main DB context), otherwise observer of `Conversation` will not be
+                        // called
+                        self.frameworkInjector.conversationStoreInternal.updateConversation(withGroup: syncGroup)
+
+                        Task {
+                            var pushSetting = self.frameworkInjector.pushSettingManager
+                                .find(forGroup: group.groupIdentity)
+                            pushSetting.update(syncGroup: syncGroup)
+                            await self.frameworkInjector.pushSettingManager.save(
+                                pushSetting: pushSetting,
+                                sync: false
+                            )
+
+                            seal.fulfill_()
                         }
                     }
-
-                    // Save on main thread (main DB context), otherwise observer of `Conversation` will not be called
-                    self.frameworkInjector.conversationStoreInternal.updateConversation(withGroup: syncGroup)
-
-                    return Promise()
                 }
             }
     }

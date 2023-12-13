@@ -31,6 +31,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
 
     var backgroundUnreadMessages: UnreadMessagesProtocol
 
+    var backgroundPushSettingManager: ThreemaFramework.PushSettingManagerProtocol
+
     var contactStore: ContactStoreProtocol
 
     var conversationStore: ConversationStoreProtocol
@@ -54,11 +56,16 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
     var settingsStore: SettingsStoreProtocol
 
     var serverConnector: ServerConnectorProtocol
+    
+    var messageRetentionManager: any MessageRetentionManagerModelProtocol
         
+    var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
+
     init(
         backgroundEntityManager: EntityManager,
         backgroundGroupManager: GroupManagerProtocol = GroupManagerMock(),
         backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
+        backgroundPushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
         contactStore: ContactStoreProtocol = ContactStoreMock(),
         conversationStore: ConversationStoreProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
@@ -70,11 +77,14 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         unreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
         userSettings: UserSettingsProtocol = UserSettingsMock(),
         settingsStore: SettingsStoreProtocol = SettingsStoreMock(),
-        serverConnector: ServerConnectorProtocol = ServerConnectorMock()
+        serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
+        messageRetentionManager: any MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
+        pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock()
     ) {
         self.backgroundEntityManager = backgroundEntityManager
         self.backgroundGroupManager = backgroundGroupManager
         self.backgroundUnreadMessages = backgroundUnreadMessages
+        self.backgroundPushSettingManager = backgroundPushSettingManager
         self.contactStore = contactStore
         self.conversationStore = conversationStore
         self.entityManager = entityManager
@@ -87,5 +97,7 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         self.userSettings = userSettings
         self.settingsStore = settingsStore
         self.serverConnector = serverConnector
+        self.messageRetentionManager = messageRetentionManager
+        self.pushSettingManager = pushSettingManager
     }
 }

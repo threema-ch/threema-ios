@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 class MediatorReflectedContactSyncProcessor {
@@ -96,6 +97,11 @@ class MediatorReflectedContactSyncProcessor {
             }
 
             self.frameworkInjector.backgroundEntityManager.entityDestroyer.deleteObject(object: contact)
+
+            let threemaIdentity = ThreemaIdentity(contact.identity)
+            Task {
+                await self.frameworkInjector.pushSettingManager.delete(forContact: threemaIdentity)
+            }
         }
 
         if let internalError {
@@ -212,99 +218,48 @@ class MediatorReflectedContactSyncProcessor {
             }
             .then { (userDefinedProfilePicture: Data?, contactDefinedProfilePicture: Data?) -> Promise<Void> in
                 Promise { seal in
-                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe { [self] in
-                        guard let contact = frameworkInjector.backgroundEntityManager.entityFetcher
-                            .contact(for: syncContact.identity) else {
-                            seal.reject(MediatorReflectedProcessorError.contactNotFound(identity: syncContact.identity))
-                            return
-                        }
+                    Task {
+                        let identity = await self.frameworkInjector.backgroundEntityManager
+                            .performSave { [self] () -> ThreemaIdentity? in
+                                guard let contactEntity = frameworkInjector.backgroundEntityManager.entityFetcher
+                                    .contact(for: syncContact.identity) else {
+                                    seal
+                                        .reject(
+                                            MediatorReflectedProcessorError
+                                                .contactNotFound(identity: syncContact.identity)
+                                        )
+                                    return nil
+                                }
 
-                        if syncContact.hasUserDefinedProfilePicture {
-                            switch syncContact.userDefinedProfilePicture.image {
-                            case .removed:
-                                contact.imageData = nil
-                            case .updated:
-                                contact.imageData = userDefinedProfilePicture
-                            case .none:
-                                break
+                                contactEntity.update(
+                                    syncContact: syncContact,
+                                    userDefinedProfilePicture: userDefinedProfilePicture,
+                                    contactDefinedProfilePicture: contactDefinedProfilePicture,
+                                    entityManager: frameworkInjector.backgroundEntityManager,
+                                    contactStore: frameworkInjector.contactStore
+                                )
+
+                                // Save on main thread (main DB context), otherwise observer of `Conversation` will not
+                                // be
+                                // called
+                                frameworkInjector.conversationStoreInternal.updateConversation(withContact: syncContact)
+
+                                return contactEntity.threemaIdentity
                             }
-                        }
 
-                        if syncContact.hasContactDefinedProfilePicture {
-                            switch syncContact.contactDefinedProfilePicture.image {
-                            case .removed:
-                                contact.contactImage = nil
-                            case .updated:
-                                let dbImageData = frameworkInjector.backgroundEntityManager.entityCreator
-                                    .imageData()
-                                contact.contactImage = dbImageData
-                                contact.contactImage?.data = contactDefinedProfilePicture
-                            case .none:
-                                break
-                            }
-                        }
+                        // If `contactEntity` is nil means promise is rejected
+                        if let identity {
+                            var pushSetting = self.frameworkInjector.pushSettingManager
+                                .find(forContact: identity)
+                            pushSetting.update(syncContact: syncContact)
+                            await self.frameworkInjector.pushSettingManager.save(
+                                pushSetting: pushSetting,
+                                sync: false
+                            )
 
-                        if syncContact.hasVerificationLevel {
-                            contact.verificationLevel = NSNumber(integerLiteral: syncContact.verificationLevel.rawValue)
+                            seal.fulfill_()
                         }
-
-                        if syncContact.hasFeatureMask {
-                            contact.featureMask = NSNumber(value: syncContact.featureMask)
-                        }
-
-                        if syncContact.hasNickname {
-                            contact.publicNickname = syncContact.nicknameNullable
-                        }
-
-                        if syncContact.hasFirstName {
-                            contact.firstName = syncContact.firstNameNullable
-                        }
-
-                        if syncContact.hasLastName {
-                            contact.lastName = syncContact.lastNameNullable
-                        }
-
-                        if syncContact.hasIdentityType {
-                            switch syncContact.identityType {
-                            case .regular:
-                                break
-                            case .work:
-                                frameworkInjector.contactStore
-                                    .addAsWork(identities: NSOrderedSet(array: [contact.identity]), contactSyncer: nil)
-                            case .UNRECOGNIZED:
-                                break
-                            }
-                        }
-
-                        if syncContact.hasWorkVerificationLevel {
-                            switch syncContact.workVerificationLevel {
-                            case .none:
-                                contact.workContact = false
-                            case .workSubscriptionVerified:
-                                contact.workContact = true
-                            case .UNRECOGNIZED:
-                                break
-                            }
-                        }
-
-                        if syncContact.hasSyncState {
-                            contact.importedStatus = ImportedStatus(rawValue: syncContact.syncState.rawValue)!
-                        }
-
-                        if syncContact.hasCreatedAt {
-                            contact.createdAt = syncContact.createdAtNullable?.date
-                        }
-
-                        if syncContact.hasAcquaintanceLevel {
-                            contact.isContactHidden = syncContact.acquaintanceLevel == .group
-                        }
-
-                        // Save on main thread (main DB context), otherwise observer of `Conversation` will not be
-                        // called
-                        frameworkInjector.conversationStoreInternal.updateConversation(withContact: syncContact)
                     }
-
-                    seal.fulfill_()
                 }
             }
     }

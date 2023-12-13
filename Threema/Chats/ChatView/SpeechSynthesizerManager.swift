@@ -18,29 +18,83 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
-/// This exists to avoid an issue where `AVSpeechSynthesizer` wouldn't speak anything because it was immediately
-/// deallocated in iOS 16.0 and later after the function exits
-class SpeechSynthesizerManger: NSObject {
-    private var synth: AVSpeechSynthesizer?
+/// For the text to speech function. The audio session is handled by the class itself.
+class SpeechSynthesizerManager: NSObject {
+    private lazy var synth = {
+        let speechSynthesizer = AVSpeechSynthesizer()
+        speechSynthesizer.delegate = self
+        return speechSynthesizer
+    }()
     
+    private var prevAudioSessionCategory: AVAudioSession.Category?
+    private var currentUtterance: AVSpeechUtterance?
+        
     func speak(_ text: String) {
+        if synth.isSpeaking {
+            synth.stopSpeaking(at: .immediate)
+            currentUtterance = nil
+        }
+        
+        setupAudioSession()
+        
         let utterance = AVSpeechUtterance(string: text)
-        synth = AVSpeechSynthesizer()
-        synth?.delegate = self
-        synth?.speak(utterance)
+        synth.speak(utterance)
+
+        currentUtterance = utterance
+    }
+    
+    private func setupAudioSession() {
+        let audioSession = AVAudioSession.sharedInstance()
+        if prevAudioSessionCategory == nil {
+            prevAudioSessionCategory = audioSession.category
+        }
+        do {
+            try audioSession.setCategory(
+                .playback,
+                mode: .voicePrompt
+            )
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        }
+        catch {
+            DDLogError("SpeechSynthesizerManager can't set audio session category \(error.localizedDescription)")
+        }
+    }
+    
+    private func resetAudioSession() {
+        if let prevAudioSessionCategory {
+            let audioSession = AVAudioSession.sharedInstance()
+
+            do {
+                try audioSession.setCategory(
+                    prevAudioSessionCategory
+                )
+                try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+            }
+            catch {
+                DDLogError("SpeechSynthesizerManager can't set audio session category \(error.localizedDescription)")
+            }
+            self.prevAudioSessionCategory = nil
+        }
     }
 }
 
 // MARK: - AVSpeechSynthesizerDelegate
 
-extension SpeechSynthesizerManger: AVSpeechSynthesizerDelegate {
+extension SpeechSynthesizerManager: AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        synth = nil
+        if currentUtterance == utterance {
+            currentUtterance = nil
+            resetAudioSession()
+        }
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        synth = nil
+        if currentUtterance == utterance {
+            currentUtterance = nil
+            resetAudioSession()
+        }
     }
 }

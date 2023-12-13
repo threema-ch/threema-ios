@@ -20,8 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
-
-public typealias ThreemaIdentity = String
+import ThreemaEssentials
 
 /// Business representation of a Threema Contact
 public class Contact: NSObject {
@@ -44,7 +43,8 @@ public class Contact: NSObject {
     ///
     /// - Parameter contactEntity: Core Data object
     @objc public init(contactEntity: ContactEntity) {
-        self.identity = contactEntity.identity
+        self.identity = ThreemaIdentity(contactEntity.identity)
+        self.objcIdentity = contactEntity.identity
         self.publicKey = contactEntity.publicKey
         self.publicNickname = contactEntity.publicNickname
         self.firstName = contactEntity.firstName
@@ -64,7 +64,8 @@ public class Contact: NSObject {
                 DDLogError("Wrong type, should be ContactEntity")
                 return
             }
-            guard self?.identity == contactEntity.identity, self?.publicKey == contactEntity.publicKey else {
+            guard self?.identity == ThreemaIdentity(contactEntity.identity),
+                  self?.publicKey == contactEntity.publicKey else {
                 DDLogError("Identity or public key mismatch")
                 return
             }
@@ -103,7 +104,8 @@ public class Contact: NSObject {
     /// This can be used to detect deletion in KVO-observers
     public private(set) dynamic var willBeDeleted = false
 
-    @objc public private(set) dynamic var identity: ThreemaIdentity
+    @objc(identity) public private(set) dynamic var objcIdentity: String
+    public private(set) dynamic var identity: ThreemaIdentity
     public private(set) var publicKey: Data
     @objc public private(set) dynamic var firstName: String?
     @objc public private(set) dynamic var lastName: String?
@@ -118,12 +120,12 @@ public class Contact: NSObject {
     @objc public dynamic var displayName: String {
         var value = String(ContactUtil.name(fromFirstname: firstName, lastname: lastName) ?? "")
 
-        if value.isEmpty, let publicNickname, publicNickname != identity {
+        if value.isEmpty, let publicNickname, publicNickname != identity.string {
             value = "~\(publicNickname)"
         }
 
         if value.isEmpty {
-            value = identity
+            value = identity.string
         }
 
         switch state {
@@ -152,7 +154,7 @@ public class Contact: NSObject {
             #keyPath(lastName),
             #keyPath(publicNickname),
             #keyPath(state),
-            #keyPath(identity),
+            #keyPath(objcIdentity),
         ]
     }
 
@@ -252,7 +254,7 @@ public class Contact: NSObject {
             let businessInjector = BusinessInjector()
             guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
                 myIdentity: MyIdentityStore.shared().identity,
-                peerIdentity: identity
+                peerIdentity: identity.string
             ) else {
                 return .noSession
             }
@@ -287,7 +289,7 @@ public class Contact: NSObject {
             let businessInjector = BusinessInjector()
             guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
                 myIdentity: MyIdentityStore.shared().identity,
-                peerIdentity: identity
+                peerIdentity: identity.string
             ) else {
                 return .none
             }
@@ -345,11 +347,5 @@ extension Set<Contact> {
                 }
                 return equal
             })
-    }
-}
-
-extension ThreemaIdentity {
-    var isValid: Bool {
-        count == ThreemaProtocol.identityLength
     }
 }

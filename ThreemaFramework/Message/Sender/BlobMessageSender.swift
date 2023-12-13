@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 public class BlobMessageSender {
     
@@ -59,7 +60,7 @@ public class BlobMessageSender {
 
                 group = self.businessInjector.groupManager.getGroup(conversation: message.conversation)
                 if group == nil {
-                    receiverIdentity = message.conversation.contact?.identity
+                    receiverIdentity = message.conversation.contact?.threemaIdentity
                 }
             }
 
@@ -80,7 +81,7 @@ public class BlobMessageSender {
 
         let taskDefinition = TaskDefinitionSendBaseMessage(
             messageID: messageID,
-            receiverIdentity: receiverIdentity,
+            receiverIdentity: receiverIdentity?.string,
             group: group,
             sendContactProfilePicture: true
         )

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import PromiseKit
 import ThreemaProtocols
 @testable import ThreemaFramework
 
@@ -160,8 +161,8 @@ class MessageStoreMock: MessageStoreProtocol {
         createdAt: Date,
         reflectedAt: Date,
         isOutgoing: Bool
-    ) throws {
-        // no-op
+    ) throws -> Promise<Void> {
+        Promise()
     }
 
     func save(groupBallotVoteMessage: GroupBallotVoteMessage) throws {
@@ -218,8 +219,8 @@ class MessageStoreMock: MessageStoreProtocol {
         createdAt: Date,
         reflectedAt: Date,
         isOutgoing: Bool
-    ) throws {
-        // no-op
+    ) throws -> Promise<Void> {
+        Promise()
     }
 
     func save(ballotVoteMessage: BoxBallotVoteMessage) throws {

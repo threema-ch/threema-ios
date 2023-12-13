@@ -79,7 +79,10 @@ class NonceGuardTests: XCTestCase {
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
-        XCTAssertTrue(ddLoggerMock.exists(message: "Message nonce is nil or empty"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "Nonce of message \(expectedIncomingMessage.loggingDescription) is empty")
+        )
     }
 
     func testIsProcessedReflected() throws {
@@ -115,17 +118,7 @@ class NonceGuardTests: XCTestCase {
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         let nonceGuard = NonceGuard(entityManager: entityManager)
 
-        let expect = expectation(description: "nonce guard processed")
-
         try nonceGuard.processed(message: expectedIncomingMessage)
-            .done { _ in
-                expect.fulfill()
-            }
-            .catch { error in
-                XCTFail("\(error)")
-            }
-
-        wait(for: [expect], timeout: 3)
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
     }
@@ -139,7 +132,13 @@ class NonceGuardTests: XCTestCase {
             try nonceGuard.processed(message: expectedIncomingMessage),
             "Message nonce is nil"
         ) { error in
-            XCTAssertEqual(error as? NonceGuard.NonceGuardError, .messageNonceIsNil)
+            if case NonceGuard.NonceGuardError
+                .messageNonceIsNil(
+                    message: "Can't store nonce of message \(expectedIncomingMessage.loggingDescription)"
+                ) = error { }
+            else {
+                XCTFail("Wrong error message")
+            }
         }
     }
 
@@ -150,17 +149,7 @@ class NonceGuardTests: XCTestCase {
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         let nonceGuard = NonceGuard(entityManager: entityManager)
 
-        let expect = expectation(description: "nonce guard processed")
-
         try nonceGuard.processed(message: expectedIncomingMessage)
-            .done { _ in
-                expect.fulfill()
-            }
-            .catch { error in
-                XCTFail("\(error)")
-            }
-
-        wait(for: [expect], timeout: 3)
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
     }
@@ -168,26 +157,16 @@ class NonceGuardTests: XCTestCase {
     func testDoNotStoreSameNonceTwice() throws {
         let nonce = MockData.generateMessageNonce()
         
-        let entityManger = EntityManager(databaseContext: dbMainCnx)
-        let nonceGuard = NonceGuard(entityManager: entityManger)
+        let entityManager = EntityManager(databaseContext: dbMainCnx)
+        let nonceGuard = NonceGuard(entityManager: entityManager)
         
-        let expect = expectation(description: "nonce guard processed")
-
         nonceGuard.processed(nonces: [nonce, nonce])
-            .done { _ in
-                expect.fulfill()
-            }
-            .catch { error in
-                XCTFail("\(error)")
-            }
-        
-        wait(for: [expect], timeout: 3)
 
-        let matchedDBNonces = entityManger.entityFetcher.allNonces()?.filter {
+        let matchedDBNonces = entityManager.entityFetcher.allNonces()?.filter {
             $0.nonce == nonce
         }
         
-        XCTAssertTrue(entityManger.entityFetcher.isNonceAlreadyInDB(nonce: nonce))
+        XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: nonce))
         XCTAssertEqual(1, matchedDBNonces?.count)
     }
 }

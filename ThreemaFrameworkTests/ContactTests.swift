@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
@@ -46,7 +47,7 @@ class ContactTests: XCTestCase {
     }
 
     func testSaveAndImplicitReload() throws {
-        let expectedIdentity = "MEMBER01"
+        let expectedIdentity = ThreemaIdentity("MEMBER01")
         let expectedPublicKey = MockData.generatePublicKey()
 
         // Setup initial contact entity in DB
@@ -55,7 +56,7 @@ class ContactTests: XCTestCase {
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
-                identity: expectedIdentity,
+                identity: expectedIdentity.string,
                 verificationLevel: kVerificationLevelUnverified
             )
             contactEntity.publicNickname = "fritzberg"
@@ -91,7 +92,7 @@ class ContactTests: XCTestCase {
 
         // Check changed contact properties
 
-        XCTAssertEqual(expectedIdentity, contactEntity.identity)
+        XCTAssertEqual(expectedIdentity, contactEntity.threemaIdentity)
         XCTAssertEqual(expectedPublicKey, contact.publicKey)
         XCTAssertEqual("fritzlibergli", contact.publicNickname)
         XCTAssertEqual("Fritzli", contact.firstName)
@@ -101,7 +102,7 @@ class ContactTests: XCTestCase {
     }
 
     func testIdentityMismatch() throws {
-        let expectedIdentity = "MEMBER01"
+        let expectedIdentity = ThreemaIdentity("MEMBER01")
         let expectedPublicKey = MockData.generatePublicKey()
 
         // Setup initial contact entity in DB
@@ -110,7 +111,7 @@ class ContactTests: XCTestCase {
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
-                identity: expectedIdentity,
+                identity: expectedIdentity.string,
                 verificationLevel: kVerificationLevelUnverified
             )
         }

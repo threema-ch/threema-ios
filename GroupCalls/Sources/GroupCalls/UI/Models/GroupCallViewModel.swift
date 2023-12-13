@@ -35,9 +35,17 @@ public final class GroupCallViewModel: Sendable {
     
     @Published var snapshotPublisher = Snapshot()
 
-    var ownAudioMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.audio {
+    private(set) var ownAudioMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.audio {
         didSet {
+            guard oldValue != ownAudioMuteState else {
+                return
+            }
+            
             toolBarDelegate?.updateToggleAudioButton()
+            
+            guard AVAudioSession.sharedInstance().recordPermission == .granted else {
+                return
+            }
             
             switch ownAudioMuteState {
             case .changing:
@@ -52,9 +60,17 @@ public final class GroupCallViewModel: Sendable {
         }
     }
     
-    var ownVideoMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.video {
+    private(set) var ownVideoMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.video {
         didSet {
+            guard oldValue != ownAudioMuteState else {
+                return
+            }
+            
             toolBarDelegate?.updateToggleVideoButton()
+            
+            guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
+                return
+            }
             
             switch ownVideoMuteState {
             case .changing:
@@ -103,10 +119,10 @@ public final class GroupCallViewModel: Sendable {
     // MARK: - Public functions
 
     public func getCallStartDate() async -> Date {
-        guard let milisecondsSinceStart = await groupCallActor?.exactCallStartDate else {
+        guard let millisecondsSinceStart = await groupCallActor?.exactCallStartDate else {
             return .now
         }
-        return Date(timeIntervalSince1970: TimeInterval(milisecondsSinceStart / 1000))
+        return Date(timeIntervalSince1970: TimeInterval(millisecondsSinceStart / 1000))
     }
     
     func participant(for participantID: ParticipantID) -> ViewModelParticipant? {
@@ -130,62 +146,30 @@ public final class GroupCallViewModel: Sendable {
     }
         
     func toggleOwnVideo() async {
-        switch AVCaptureDevice.authorizationStatus(for: .video) {
-        case .authorized:
-            let currentState = ownVideoMuteState
-            ownVideoMuteState = .changing
-
-            switch currentState {
-            case .changing:
-                break
-            case .muted:
-                await groupCallActor?.toggleOwnVideo(false)
-            case .unmuted:
-                await groupCallActor?.toggleOwnVideo(true)
-            }
-            
-        case .denied, .restricted:
-            await viewDelegate?.showRecordVideoPermissionAlert()
-            
-        case .notDetermined:
-            await AVCaptureDevice.requestAccess(for: .video)
-            await toggleOwnVideo()
-            
-        @unknown default:
-            #if DEBUG
-                fatalError()
-            #endif
+        let currentState = ownVideoMuteState
+        ownVideoMuteState = .changing
+        
+        switch currentState {
+        case .changing:
+            break
+        case .muted:
+            await groupCallActor?.toggleOwnVideo(false)
+        case .unmuted:
+            await groupCallActor?.toggleOwnVideo(true)
         }
     }
         
     func toggleOwnAudio() async {
-        switch AVAudioSession.sharedInstance().recordPermission {
-        case .granted:
-            let currentState = ownAudioMuteState
-            ownAudioMuteState = .changing
-            
-            switch currentState {
-            case .changing:
-                break
-                
-            case .muted:
-                await groupCallActor?.toggleOwnAudio(false)
-                
-            case .unmuted:
-                await groupCallActor?.toggleOwnAudio(true)
-            }
-            
-        case .denied:
-            await viewDelegate?.showRecordAudioPermissionAlert()
-            
-        case .undetermined:
-            await AVAudioSession.sharedInstance().requestRecordPermission()
-            await toggleOwnAudio()
-            
-        @unknown default:
-            #if DEBUG
-                fatalError()
-            #endif
+        let currentState = ownAudioMuteState
+        ownAudioMuteState = .changing
+        
+        switch currentState {
+        case .changing:
+            break
+        case .muted:
+            await groupCallActor?.toggleOwnAudio(false)
+        case .unmuted:
+            await groupCallActor?.toggleOwnAudio(true)
         }
     }
         
@@ -252,19 +236,11 @@ public final class GroupCallViewModel: Sendable {
             self.localParticipant = localParticipant
             await add(localParticipant)
             
-        case let .audioMuteChange(state):
-            // TODO: (IOS-4078) Check if local participant exists
-            ownAudioMuteState = state
-            localParticipant?.audioMuteState = state == .muted ? .muted : .unmuted
-            await publishSnapshot(reconfigure: [localParticipant!.participantID])
+        case let .audioMuteChange(newState):
+            await handleOwnAudioMuteStateChange(newState: newState)
            
-        case let .videoMuteChange(state):
-            // TODO: (IOS-4078) Check if local participant exists
-            ownVideoMuteState = state
-            if let localParticipant {
-                localParticipant.videoMuteState = state == .muted ? .muted : .unmuted
-                await publishSnapshot(reconfigure: [localParticipant.participantID])
-            }
+        case let .videoMuteChange(newState):
+            await handleOwnVideoMuteStateChange(newState: newState)
 
         case let .videoCameraChange(position):
             if let localParticipant {
@@ -314,6 +290,68 @@ public final class GroupCallViewModel: Sendable {
         participantsList.removeAll(where: { $0.participantID == participantID })
         
         await publishSnapshot()
+    }
+    
+    private func handleOwnVideoMuteStateChange(newState: OwnMuteState) async {
+        guard let localParticipant else {
+            return
+        }
+        
+        guard ownVideoMuteState != newState else {
+            return
+        }
+        
+        // Check if we have permission
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .notDetermined:
+            await AVCaptureDevice.requestAccess(for: .video)
+            await handleOwnVideoMuteStateChange(newState: newState)
+            
+        case .restricted, .denied:
+            await viewDelegate?.showRecordVideoPermissionAlert()
+            ownVideoMuteState = .muted
+            
+        case .authorized:
+            ownVideoMuteState = newState
+            localParticipant.videoMuteState = newState == .muted ? .muted : .unmuted
+            await publishSnapshot(reconfigure: [localParticipant.participantID])
+            
+        @unknown default:
+            #if DEBUG
+                fatalError()
+            #endif
+        }
+    }
+    
+    private func handleOwnAudioMuteStateChange(newState: OwnMuteState) async {
+        guard let localParticipant else {
+            return
+        }
+        
+        guard ownAudioMuteState != newState else {
+            return
+        }
+        
+        // Check if we have permission
+        switch AVAudioSession.sharedInstance().recordPermission {
+        case .undetermined:
+            await AVAudioSession.sharedInstance().requestRecordPermission()
+            await handleOwnAudioMuteStateChange(newState: newState)
+            
+        case .denied:
+            await viewDelegate?.showRecordAudioPermissionAlert()
+            ownAudioMuteState = .muted
+            
+        case .granted:
+            ownAudioMuteState = newState
+            localParticipant.audioMuteState = newState == .muted ? .muted : .unmuted
+            await publishSnapshot(reconfigure: [localParticipant.participantID])
+            
+        @unknown default:
+            #if DEBUG
+                fatalError()
+            #endif
+        }
     }
     
     private func handleMuteStateChange(for participantID: ParticipantID, change: ParticipantStateChange) {

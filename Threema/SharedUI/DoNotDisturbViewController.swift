@@ -41,14 +41,16 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     private enum Row: Hashable {
         case activeDNDInfo
         case turnOffDNDButton
-        case periodButton(duration: PeriodOffTime)
+        case periodButton(duration: PushSetting.PeriodOffTime)
         case foreverButton
         case notifyWhenMentionedSetting
         case notificationPlaySoundSetting
     }
         
     // MARK: - Properties
-    
+
+    private lazy var businessInjector = BusinessInjector()
+
     private lazy var dataSource = TableViewDiffableSimpleHeaderAndFooterDataSource<Section, Row>(
         tableView: tableView,
         cellProvider: { [weak self] tableView, indexPath, row -> UITableViewCell? in
@@ -92,26 +94,40 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
                 notifyWhenMentionedSettingCell.textLabel?.text = BundleUtil
                     .localizedString(forKey: "doNotDisturb_mention")
             
-                notifyWhenMentionedSettingCell.isOn = self?.pushSetting.mentions ?? false
+                notifyWhenMentionedSettingCell.isOn = self?.pushSetting.mentioned ?? false
                 notifyWhenMentionedSettingCell.valueDidChange = { [weak self] isOn in
-                    self?.pushSetting.mentions = isOn
-                    self?.pushSetting.save()
-                    self?.updateContent()
+                    Task { @MainActor in
+                        self?.pushSetting.mentioned = isOn
+                        if let pushSetting = self?.pushSetting {
+                            await self?.businessInjector.pushSettingManager.save(
+                                pushSetting: pushSetting,
+                                sync: true
+                            )
+                        }
+                        self?.updateContent()
+                    }
                 }
             
                 return notifyWhenMentionedSettingCell
                 
             case .notificationPlaySoundSetting:
-                let notificationPlaySoundSettingCell: NotifyWhenMentionedSettingCell = tableView
+                let notificationPlaySoundSettingCell: NotificationPlaySoundSettingCell = tableView
                     .dequeueCell(for: indexPath)
 
                 notificationPlaySoundSettingCell.textLabel?.text = BundleUtil
                     .localizedString(forKey: "notification_sound_title")
 
-                notificationPlaySoundSettingCell.isOn = !(self?.pushSetting.silent ?? false)
+                notificationPlaySoundSettingCell.isOn = !(self?.pushSetting.muted ?? false)
                 notificationPlaySoundSettingCell.valueDidChange = { [weak self] isOn in
-                    self?.pushSetting.silent = !isOn
-                    self?.pushSetting.save()
+                    Task { @MainActor in
+                        self?.pushSetting.muted = !isOn
+                        if let pushSetting = self?.pushSetting {
+                            await self?.businessInjector.pushSettingManager.save(
+                                pushSetting: pushSetting,
+                                sync: true
+                            )
+                        }
+                    }
                 }
 
                 return notificationPlaySoundSettingCell
@@ -140,7 +156,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             case .activeDND:
                 return strongSelf.offHoursDescription
             case .notifyWhenMentionedSetting:
-                if strongSelf.pushSetting.mentions {
+                if strongSelf.pushSetting.mentioned {
                     return BundleUtil.localizedString(forKey: "doNotDisturb_mention_footer_on")
                 }
                 else {
@@ -187,61 +203,55 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     }()
     
     /// The main data provider here
-    private let pushSetting: PushSetting
-    
+    private var pushSetting: PushSetting
+
     private let willDismiss: ((PushSetting) -> Void)?
 
-    private var isGroup = false
+    private var isGroup: Bool {
+        pushSetting.groupIdentity != nil
+    }
 
     // MARK: - Lifecycle
     
-    /// New DND view controller for a conversation
+    /// New DND view controller for a contact or group
     ///
     /// - Parameters:
-    ///   - conversation: The settings of this conversation are shown and can be changed (usable for single chats and
-    ///                   groups)
+    ///   - pushSetting: The settings of a contact or group are shown and can be changed
     ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is
     ///                  dismissed
-    @objc init(for conversation: Conversation, willDismiss: ((PushSetting) -> Void)? = nil) {
-        self.pushSetting = PushSetting(for: conversation)
+    init(pushSetting: PushSetting, willDismiss: ((PushSetting) -> Void)? = nil) {
+        self.pushSetting = pushSetting
         self.willDismiss = willDismiss
-        
-        self.isGroup = conversation.isGroup()
-        
+
         super.init()
-    }
-    
-    /// New DND view controller for a contact
-    ///
-    /// - Parameters:
-    ///   - contact: The settings of this contact are shown and can be changed
-    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is
-    ///                  dismissed
-    init(for contact: ContactEntity, willDismiss: ((PushSetting) -> Void)? = nil) {
-        self.pushSetting = PushSetting(for: contact)
-        self.willDismiss = willDismiss
-        
-        super.init()
-    }
-    
-    /// New DND view controller for a group conversation
-    ///
-    /// - Parameters:
-    ///   - group: The settings of this group are shown and can be changed
-    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is
-    ///                  dismissed
-    convenience init(for group: Group, willDismiss: ((PushSetting) -> Void)? = nil) {
-        self.init(for: group.conversation, willDismiss: willDismiss)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name(kNotificationChangedPushSetting),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let newPushSetting = notification.object as? PushSetting {
+                if let identity = newPushSetting.identity, self.pushSetting.identity == identity {
+                    self.pushSetting = newPushSetting
+                    self.updateContent()
+                }
+                else if let groupIdentity = newPushSetting.groupIdentity,
+                        self.pushSetting.groupIdentity == groupIdentity {
+                    self.pushSetting = newPushSetting
+                    self.updateContent()
+                }
+            }
+        }
+
         configureNavigationBar()
         configureTableView()
         registerCells()
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -251,7 +261,12 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        pushSetting.save()
+        NotificationCenter.default.removeObserver(
+            self,
+            name: NSNotification.Name(kNotificationChangedPushSetting),
+            object: nil
+        )
+
         willDismiss?(pushSetting)
     }
 }
@@ -306,7 +321,7 @@ extension DoNotDisturbViewController {
         }
         
         snapshot.appendSections([.selectPeriod])
-        snapshot.appendItems(PeriodOffTime.allCases.map { .periodButton(duration: $0) })
+        snapshot.appendItems(PushSetting.PeriodOffTime.allCases.map { .periodButton(duration: $0) })
         snapshot.appendItems([.foreverButton])
         
         if isGroup {
@@ -319,7 +334,8 @@ extension DoNotDisturbViewController {
         
         snapshot.appendSections([.notificationPlaySoundSetting])
         snapshot.appendItems([.notificationPlaySoundSetting])
-        
+        snapshot.reloadSections([.notificationPlaySoundSetting])
+
         dataSource.apply(snapshot)
     }
 }
@@ -364,13 +380,18 @@ extension DoNotDisturbViewController: UITableViewDelegate {
         }
         else if case let .periodButton(duration: duration) = row {
             pushSetting.type = .offPeriod
-            pushSetting.periodOffTime = duration
+            pushSetting.setPeriodOffTime(duration)
         }
         else if row == .foreverButton {
             pushSetting.type = .off
         }
-        
-        dismiss()
+
+        Task { @MainActor in
+            await businessInjector.pushSettingManager.save(pushSetting: pushSetting, sync: true)
+
+            dismiss()
+        }
+
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }

@@ -118,7 +118,7 @@
             [connection cancel];
             
             [ActivityIndicatorProxy stopActivity];
-            _onError([ThreemaError threemaError:@"User cancelled download" withCode:kErrorCodeUserCancelled]);
+            _onError([ThreemaError threemaError:@"User cancelled download"]);
             
             return;
         }

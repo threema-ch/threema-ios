@@ -133,7 +133,7 @@ final class MessageReceiver {
                 devices.append(DeviceInfo(
                     deviceID: item.key,
                     label: label,
-                    lastLoginAt: Date(millisecondsSince1970: item.value.lastLoginAt),
+                    lastLoginAt: Date(millisecondsSince1970: item.value.lastDisconnectAt),
                     badge: badge,
                     platform: platform,
                     platformDetails: platformDetails

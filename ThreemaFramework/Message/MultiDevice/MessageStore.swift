@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 class MessageStore: MessageStoreProtocol {
@@ -47,7 +48,7 @@ class MessageStore: MessageStoreProtocol {
 
         let (conversation, _) = try conversationSender(forMessage: audioMessage, isOutgoing: false)
 
-        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+        guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
             for: audioMessage,
             sender: nil,
             conversation: conversation,
@@ -137,7 +138,7 @@ class MessageStore: MessageStoreProtocol {
 
         let (conversation, _) = try conversationSender(forMessage: textMessage, isOutgoing: isOutgoing)
 
-        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+        guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
             for: textMessage,
             sender: nil,
             conversation: conversation,
@@ -213,6 +214,7 @@ class MessageStore: MessageStoreProtocol {
                             with: messageID,
                             conversation: conversation
                         ) {
+
                         if deliveryReceiptMessage.receiptType == .received {
                             DDLogNotice("Message ID \(msg.id.hexString) has been received by recipient")
                             self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
@@ -225,6 +227,8 @@ class MessageStore: MessageStoreProtocol {
                             self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
                                 msg.read = true
                                 msg.readDate = createdAt
+                                
+                                DDLogVerbose("Message marked as read: \(msg.id.hexString)")
 
                                 messageReadConversations.insert(msg.conversation)
                             }
@@ -299,7 +303,7 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.senderNotFound(identity: senderIdentity)
         }
 
-        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+        guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
             for: groupAudioMessage,
             sender: sender,
             conversation: conversation,
@@ -318,36 +322,29 @@ class MessageStore: MessageStoreProtocol {
         messageProcessorDelegate.incomingMessageFinished(groupAudioMessage, isPendingGroup: false)
     }
 
-    func save(groupCreateMessage amsg: GroupCreateMessage) -> Promise<Void> {
+    func save(groupCreateMessage amsg: GroupCreateMessage) throws -> Promise<Void> {
         // Validate members, all members must be known contacts, otherwise device is not in sync
-        var internalError: Error?
-        frameworkInjector.entityManager.performAndWait {
+        try frameworkInjector.entityManager.performAndWait {
             for identity in (amsg.groupMembers as! [String])
                 .filter({ $0 != self.frameworkInjector.myIdentityStore.identity }) {
                 guard self.frameworkInjector.entityManager.entityFetcher.contact(for: identity) != nil else {
-                    DDLogWarn("Unknown group member, device not in sync anymore")
-                    internalError = MediatorReflectedProcessorError.contactNotFound(identity: identity)
-                    return
+                    DDLogWarn("Unknown group member \(identity), device not in sync anymore")
+                    throw MediatorReflectedProcessorError.contactNotFound(identity: identity)
                 }
             }
         }
-        if let internalError {
-            return Promise(error: internalError)
-        }
+
+        let groupIdentity = GroupIdentity(id: amsg.groupID, creator: ThreemaIdentity(amsg.groupCreator))
 
         return frameworkInjector.backgroundGroupManager.createOrUpdateDB(
-            groupID: amsg.groupID,
-            creator: amsg.groupCreator,
+            for: groupIdentity,
             members: Set<String>(amsg.groupMembers.map { $0 as! String }),
             systemMessageDate: amsg.date,
             sourceCaller: .sync
         )
         .then { group -> Promise<Void> in
             guard group != nil else {
-                throw MediatorReflectedProcessorError.groupCreateFailed(
-                    groupID: "\(amsg.groupID?.hexString ?? "-")",
-                    groupCreatorIdentity: "\(amsg.groupCreator ?? "-")"
-                )
+                throw MediatorReflectedProcessorError.groupCreateFailed(groupIdentity: groupIdentity)
             }
             self.changedConversationAndGroupEntity(groupID: amsg.groupID, groupCreatorIdentity: amsg.groupCreator)
             return Promise()
@@ -488,7 +485,7 @@ class MessageStore: MessageStoreProtocol {
         return Promise { seal in
             messageProcessorDelegate.incomingMessageStarted(imageMessage)
 
-            guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
                 for: imageMessage,
                 sender: nil,
                 conversation: conversation,
@@ -581,7 +578,7 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
         }
 
-        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+        guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
             for: groupLocationMessage,
             sender: sender,
             conversation: conversation,
@@ -625,51 +622,58 @@ class MessageStore: MessageStoreProtocol {
         createdAt: Date,
         reflectedAt: Date,
         isOutgoing: Bool
-    ) throws {
-        if !isOutgoing {
-            messageProcessorDelegate.incomingMessageStarted(groupBallotCreateMessage)
-        }
+    ) throws -> Promise<Void> {
+        Promise { seal in
+            if !isOutgoing {
+                messageProcessorDelegate.incomingMessageStarted(groupBallotCreateMessage)
+            }
 
-        let (conversation, sender) = try conversationSender(
-            forMessage: groupBallotCreateMessage,
-            isOutgoing: isOutgoing
-        )
-
-        guard isOutgoing || (!isOutgoing && sender != nil) else {
-            throw MediatorReflectedProcessorError.senderNotFound(identity: groupBallotCreateMessage.fromIdentity)
-        }
-
-        guard let msg = frameworkInjector.backgroundEntityManager.performAndWaitSave({
-            let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
-            let msg = decoder?.decodeCreateBallot(
-                fromGroupBox: groupBallotCreateMessage,
-                sender: sender,
-                conversation: conversation
+            let (conversation, sender) = try conversationSender(
+                forMessage: groupBallotCreateMessage,
+                isOutgoing: isOutgoing
             )
 
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-            msg?.date = createdAt
-            if !isOutgoing {
-                msg?.deliveryDate = reflectedAt
-                msg?.remoteSentDate = createdAt
-            }
-            else {
-                msg?.remoteSentDate = reflectedAt
+            guard isOutgoing || (!isOutgoing && sender != nil) else {
+                throw MediatorReflectedProcessorError.senderNotFound(identity: groupBallotCreateMessage.fromIdentity)
             }
 
-            return msg
-        }) else {
-            throw MediatorReflectedProcessorError
-                .messageNotProcessed(message: "Could not find/create ballot message in DB")
-        }
+            let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
+            decoder?.decodeCreateBallot(
+                fromGroupBox: groupBallotCreateMessage,
+                sender: sender,
+                conversation: conversation, onCompletion: { msg in
+                    Task {
+                        await self.frameworkInjector.backgroundEntityManager.performSave {
+                            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
+                            msg.date = createdAt
+                            if !isOutgoing {
+                                msg.deliveryDate = reflectedAt
+                                msg.remoteSentDate = createdAt
+                            }
+                            else {
+                                msg.remoteSentDate = reflectedAt
+                            }
+                        }
 
-        if !isOutgoing {
-            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-            messageProcessorDelegate.incomingMessageFinished(groupBallotCreateMessage, isPendingGroup: false)
-        }
-        else {
-            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
-            messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                        if !isOutgoing {
+                            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                            self.messageProcessorDelegate.incomingMessageFinished(
+                                groupBallotCreateMessage,
+                                isPendingGroup: false
+                            )
+                        }
+                        else {
+                            self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+                            self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                        }
+
+                        seal.fulfill_()
+                    }
+                },
+                onError: { error in
+                    seal.reject(error)
+                }
+            )
         }
     }
 
@@ -780,7 +784,7 @@ class MessageStore: MessageStoreProtocol {
             throw MediatorReflectedProcessorError.senderNotFound(identity: groupTextMessage.fromIdentity)
         }
 
-        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+        guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
             for: groupTextMessage,
             sender: sender,
             conversation: conversation,
@@ -792,6 +796,7 @@ class MessageStore: MessageStoreProtocol {
         frameworkInjector.backgroundEntityManager.performAndWaitSave {
             msg.date = createdAt
             if !isOutgoing {
+                msg.delivered = true
                 msg.deliveryDate = reflectedAt
                 msg.remoteSentDate = createdAt
             }
@@ -839,7 +844,7 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageStarted(videoMessage)
 
             // Save message first and after try download thumbnail
-            guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
                 for: videoMessage,
                 sender: sender,
                 conversation: conversation,
@@ -922,7 +927,7 @@ class MessageStore: MessageStoreProtocol {
 
         let (conversation, _) = try conversationSender(forMessage: locationMessage, isOutgoing: isOutgoing)
 
-        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+        guard let msg = try frameworkInjector.backgroundEntityManager.getOrCreateMessage(
             for: locationMessage,
             sender: nil,
             conversation: conversation,
@@ -934,6 +939,7 @@ class MessageStore: MessageStoreProtocol {
         frameworkInjector.backgroundEntityManager.performAndWaitSave {
             msg.date = createdAt
             msg.remoteSentDate = isOutgoing ? reflectedAt : createdAt
+            msg.delivered = true
         }
 
         // Caution this is async
@@ -959,41 +965,53 @@ class MessageStore: MessageStoreProtocol {
         createdAt: Date,
         reflectedAt: Date,
         isOutgoing: Bool
-    ) throws {
-        if !isOutgoing {
-            messageProcessorDelegate.incomingMessageStarted(ballotCreateMessage)
-        }
+    ) throws -> Promise<Void> {
+        Promise { seal in
+            if !isOutgoing {
+                messageProcessorDelegate.incomingMessageStarted(ballotCreateMessage)
+            }
 
-        let (conversation, sender) = try conversationSender(forMessage: ballotCreateMessage, isOutgoing: isOutgoing)
+            let (conversation, sender) = try conversationSender(forMessage: ballotCreateMessage, isOutgoing: isOutgoing)
 
-        guard isOutgoing || (!isOutgoing && sender != nil) else {
-            throw MediatorReflectedProcessorError.senderNotFound(identity: ballotCreateMessage.fromIdentity)
-        }
+            guard isOutgoing || (!isOutgoing && sender != nil) else {
+                throw MediatorReflectedProcessorError.senderNotFound(identity: ballotCreateMessage.fromIdentity)
+            }
 
-        guard let msg = frameworkInjector.backgroundEntityManager.performAndWaitSave({
             let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
-            let msg = decoder?.decodeCreateBallot(
+            decoder?.decodeCreateBallot(
                 fromBox: ballotCreateMessage,
                 sender: sender,
-                conversation: conversation
+                conversation: conversation,
+                onCompletion: { msg in
+                    Task {
+                        await self.frameworkInjector.backgroundEntityManager.performSave {
+                            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
+                            msg.date = createdAt
+                            msg.remoteSentDate = isOutgoing ? reflectedAt : createdAt
+
+                            if !isOutgoing {
+                                self.messageProcessorDelegate.incomingMessageChanged(
+                                    msg,
+                                    fromIdentity: conversationIdentity
+                                )
+                                self.messageProcessorDelegate.incomingMessageFinished(
+                                    ballotCreateMessage,
+                                    isPendingGroup: false
+                                )
+                            }
+                            else {
+                                self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+                                self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                            }
+                        }
+
+                        seal.fulfill_()
+                    }
+                },
+                onError: { error in
+                    seal.reject(error)
+                }
             )
-
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-            msg?.date = createdAt
-            msg?.remoteSentDate = isOutgoing ? reflectedAt : createdAt
-
-            return msg
-        }) else {
-            throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create ballot message")
-        }
-
-        if !isOutgoing {
-            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
-            messageProcessorDelegate.incomingMessageFinished(ballotCreateMessage, isPendingGroup: false)
-        }
-        else {
-            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
-            messageProcessorDelegate.changedManagedObjectID(msg.objectID)
         }
     }
 
@@ -1019,7 +1037,7 @@ class MessageStore: MessageStoreProtocol {
     ) throws -> Promise<Void> {
         Promise { seal in
             Task {
-                try await self.frameworkInjector.entityManager.performSave {
+                await self.frameworkInjector.entityManager.performSave {
                     
                     guard let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
                         for: groupCallStartMessage.groupID,

@@ -42,6 +42,8 @@
 
 - (BOOL)isWithinCheckInterval;
 
+- (BOOL)isWithinOfflineInterval;
+
 - (void)performLicenseCheckWithCompletion:(nonnull void(^)(BOOL success))onCompletion;
 
 /**

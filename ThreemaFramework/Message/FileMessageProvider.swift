@@ -134,6 +134,8 @@ public protocol ThumbnailDisplayMessage: BaseMessage & FileMessageProvider & Com
     /// Aspect ratio of (thumbnail) image (heigh/width)
     var heightToWidthAspectRatio: Double { get }
     
+    var assetResourceTypeForAutosave: PHAssetResourceType? { get }
+    
     /// Creates a `SaveMediaItem` that can be saved to photos using `AlbumManager`
     /// - Parameter forAutosave: If the created item is used to auto save
     /// - Returns: `SaveMediaItem` to be used in AlbumManager`

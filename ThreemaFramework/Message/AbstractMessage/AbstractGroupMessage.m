@@ -124,7 +124,7 @@
 #pragma mark - LoggingDescriptionProtocol
 
 - (NSString * _Nonnull)loggingDescription {
-    return [NSString stringWithFormat:@"(type: %@; id: %@; groupCreator: %@ - groupId: %@)", [MediatorMessageProtocol getTypeDescriptionWithType:self.type], [NSString stringWithHexData:self.messageId], groupCreator, [NSString stringWithHexData:groupId]];
+    return [NSString stringWithFormat:@"(type: %@; id: %@; groupIdentity: id: %@ creator: %@)", [MediatorMessageProtocol getTypeDescriptionWithType:self.type], [NSString stringWithHexData:self.messageId], [NSString stringWithHexData:groupId], groupCreator];
 }
 
 #pragma mark - NSSecureCoding

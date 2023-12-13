@@ -560,7 +560,7 @@ public struct Groupcall_SfuHttpRequest {
   ///
   /// 1. Use `POST` as method.
   /// 2. Set the `Authorization` header to `ThreemaSfuToken <sfu-token>`.
-  /// 3. Set the encoded `SfuHttpRequest.Join` message as body.
+  /// 3. Set the encoded `SfuHttpRequest.Peek` message as body.
   ///
   /// When receiving this request:
   ///

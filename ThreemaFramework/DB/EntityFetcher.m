@@ -198,6 +198,10 @@
     }
 }
 
+- (NSArray *)allContactsForID:(NSString *)identity {
+    return [self allEntitiesNamed:@"Contact" sortedBy: nil withPredicate: @"identity == %@", identity];
+}
+
 - (NSArray *)allContacts {
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate:nil];
 }
@@ -320,6 +324,7 @@
     if (allIdentities.count != distinctIdentities.count) {
         NSMutableSet *duplicates = [NSMutableSet set];
         for (NSString *identity in distinctIdentities) {
+            
             NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF = %@", identity];
             if ([allIdentities filteredArrayUsingPredicate:predicate].count > 1) {
                 [duplicates addObject:[identity valueForKey:@"identity"]];
@@ -450,6 +455,14 @@
     return [self countEntityNamed:@"Message" withPredicate:@"sender.identity == %@", identity];
 }
 
+- (NSInteger)countMessagesForContact:(nonnull ContactEntity *)contact {
+    return [self countEntityNamed:@"Message" withPredicate:@"sender == %@", contact];
+}
+
+- (NSInteger)countMessagesForContactInConversation:(nonnull ContactEntity *)contact forConversation:(Conversation *)conversation {
+    return [self countEntityNamed:@"Message" withPredicate:@"sender == %@ AND conversation == %@", contact, conversation];
+}
+
 - (NSArray *)imageMessagesForConversation:(Conversation *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     return [self allEntitiesNamed:@"ImageMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@", conversation];
@@ -513,6 +526,14 @@
     result = [self singleEntityNamed:@"Nonce" withPredicate:@"nonce == %@ OR nonce == %@", nonce, hashedNonce];
     
     return result != nil;
+}
+
+/**
+ @param groupId: ID of the group
+ @returns All group entities for given groupID
+ */
+- (NSArray<GroupEntity*> *)groupEntitiesForGroupId:(NSData *)groupId {
+    return [self allEntitiesNamed:@"Group" sortedBy:nil withPredicate:@"groupId == %@", groupId];
 }
 
 /**

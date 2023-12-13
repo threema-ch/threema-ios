@@ -53,7 +53,7 @@ public struct ProposedGroupCall: Sendable {
         self.dependencies = dependencies
         self.startMessageReceiveDate = startMessageReceiveDate
         self.hexCallID = (try? GroupCallID(
-            group: groupRepresentation,
+            groupIdentity: groupRepresentation.groupIdentity,
             callStartData: GroupCallStartData(protocolVersion: protocolVersion, gck: gck, sfuBaseURL: sfuBaseURL),
             dependencies: dependencies
         ).bytes.hexEncodedString()) ?? "Unknown CallID"

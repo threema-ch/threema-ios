@@ -25,8 +25,9 @@ import XCTest
 private enum TestData {
     static let testSessionID = DHSessionID()
     static let testEphemeralPublicKey = Data(
-        BytesUtility
-            .toBytes(hexString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!
+        BytesUtility.toBytes(
+            hexString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+        )!
     )
     static let testDhType = CspE2eFs_Encapsulated.DHType.fourdh
     static let testCounter = UInt64(1)
@@ -188,7 +189,7 @@ class ForwardSecurityDataRejectTests: XCTestCase {
             $0.sessionID = TestData.testSessionID.value
             $0.content = CspE2eFs_Envelope.OneOf_Content
                 .reject(CspE2eFs_Reject.with {
-                    $0.rejectedEncapsulatedMessageID = TestData.testMessageIDUInt64
+                    $0.messageID = TestData.testMessageIDUInt64
                     $0.cause = TestData.testCause
                 })
         }

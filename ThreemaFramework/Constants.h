@@ -60,6 +60,7 @@
 #define kNotificationBatchDeletedOldMessages @"ThreemaBatchDeletedOldMessages"
 
 #define kNotificationShowGroup @"ThreemaShowGroup"
+#define kNotificationShowSafeSetup @"ThreemaShowSafeSetup"
 
 #define kNotificationMessagesCountChanged @"ThreemaUnreadMessagesCountChanged"
 
@@ -68,6 +69,7 @@
 #define kNotificationIdentityAvatarChanged @"ThreemaIdentityAvatarChanged"
 
 #define kNotificationLicenseMissing @"ThreemaLicenseMissing"
+#define kNotificationLicenseCheckSuccess @"ThreemaLicenseCeckSuccess"
 
 #define kNotificationWallpaperChanged @"ThreemaWallpaperChanged"
 #define kNotificationColorThemeChanged @"ThreemaColorThemeChanged"
@@ -98,7 +100,7 @@
 #define kNotificationAddressbookSyncronized @"AddressbookSyncronized"
 #define kNotificationRefreshContactSortIndices @"RefreshContactSortIndices"
 #define kNotificationChangedHidePrivateChat @"ChangedHidePrivateChat"
-#define kNotificationChangedPushSettingsList @"ChangedPushSettingsList"
+#define kNotificationChangedPushSetting @"ChangedPushSetting"
 
 #define kVoIPCallStartRinging @"ThreemaVoIPCallStartRinging"
 #define kVoIPCallStatusChanged @"ThreemaVoIPCallStatusChanged"

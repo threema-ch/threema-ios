@@ -38,7 +38,7 @@ class ForwardSecurityDataReject: ForwardSecurityData {
         var pb = CspE2eFs_Envelope()
         pb.sessionID = sessionID.value
         var pbReject = CspE2eFs_Reject()
-        pbReject.rejectedEncapsulatedMessageID = rejectedMessageID.withUnsafeBytes {
+        pbReject.messageID = rejectedMessageID.withUnsafeBytes {
             $0.load(as: UInt64.self)
         }
         pbReject.cause = cause

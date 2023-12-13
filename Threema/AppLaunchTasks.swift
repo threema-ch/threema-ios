@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaFramework
 
 class AppLaunchTasks: NSObject {
 
@@ -61,7 +62,9 @@ class AppLaunchTasks: NSObject {
             // All other tasks runs in a background thread
             Task {
                 await self.checkLastMessageOfAllConversations()
-
+                await businessInjector.messageRetentionManager.deleteOldMessages()
+                NotificationManager().updateUnreadMessagesCount()
+                
                 AppLaunchTasks.isRunningQueue.async {
                     AppLaunchTasks.isRunning = false
                 }
@@ -88,9 +91,9 @@ class AppLaunchTasks: NSObject {
                     conversation.lastMessage = nil
                     continue
                 }
-
+                
                 if conversation.lastMessage != effectiveLastMessage {
-                    DDLogWarn(
+                    DDLogNotice(
                         "Assigned last message \(conversation.lastMessage?.id.hexString ?? "nil") did not equal effective last message \(effectiveLastMessage.id.hexString)"
                     )
                     conversation.lastMessage = effectiveLastMessage

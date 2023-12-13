@@ -211,7 +211,7 @@ struct WebGroup {
         self.disabled = false
         self.members = group.members.filter { member -> Bool in
             member.state != kStateInvalid
-        }.map(\.identity)
+        }.map(\.identity.string)
         // Add myself to members list if isSelfMember
         if group.isSelfMember {
             members.append(MyIdentityStore.shared().identity)

@@ -42,7 +42,7 @@ import UIKit
     
     /// Tries to save media to the Photos app on device. Requests for access if not yet granted.
     /// - Parameter item: SaveMediaItem created from ThumbnailDisplayMessage to be saved
-    public func save(_ item: SaveMediaItem, showNotifications: Bool = true) {
+    public func save(_ item: SaveMediaItem, showNotifications: Bool = true, autosave: Bool = false) {
         
         defer {
             FileUtility.delete(at: item.url)
@@ -57,6 +57,9 @@ import UIKit
             if showNotifications {
                 NotificationPresenterWrapper.shared.present(type: .saveToPhotosError)
             }
+            if autosave {
+                NotificationPresenterWrapper.shared.present(type: .autosaveMediaError)
+            }
             
             return
         }
@@ -64,18 +67,28 @@ import UIKit
         // If we can load the Threema Album we save the media there, else we just save to photos
         if let threemaMediaCollection = threemaMediaCollection() {
             DDLogNotice("[AlbumManager] Saving to Threema Media album.")
-            saveToAlbum(item, collection: threemaMediaCollection, showNotifications: showNotifications)
+            saveToAlbum(
+                item,
+                collection: threemaMediaCollection,
+                showNotifications: showNotifications,
+                autosave: autosave
+            )
         }
         else {
             DDLogNotice("[AlbumManager] Threema Media album could not be fetched/created. Saving to default photos.")
-            saveToPhotos(item, showNotifications: showNotifications)
+            saveToPhotos(item, showNotifications: showNotifications, autosave: autosave)
         }
     }
     
     // MARK: - Private Functions
     
     /// Save to Threema Media album
-    private func saveToAlbum(_ item: SaveMediaItem, collection: PHAssetCollection, showNotifications: Bool) {
+    private func saveToAlbum(
+        _ item: SaveMediaItem,
+        collection: PHAssetCollection,
+        showNotifications: Bool,
+        autosave: Bool = false
+    ) {
         do {
             try PHPhotoLibrary.shared().performChangesAndWait {
                 // Create asset creation request with options
@@ -103,6 +116,9 @@ import UIKit
             if showNotifications {
                 NotificationPresenterWrapper.shared.present(type: .saveToPhotosError)
             }
+            if autosave {
+                NotificationPresenterWrapper.shared.present(type: .autosaveMediaError)
+            }
             
             DDLogError(
                 "[AlbumManager] Could not save media to Threema Media album. Error: \(error.localizedDescription)"
@@ -111,7 +127,7 @@ import UIKit
     }
     
     /// Save to general photos
-    private func saveToPhotos(_ item: SaveMediaItem, showNotifications: Bool) {
+    private func saveToPhotos(_ item: SaveMediaItem, showNotifications: Bool, autosave: Bool = false) {
         do {
             try PHPhotoLibrary.shared().performChangesAndWait {
                 self.phAssetCreationRequest(for: item)
@@ -126,6 +142,9 @@ import UIKit
         catch {
             if showNotifications {
                 NotificationPresenterWrapper.shared.present(type: .saveToPhotosError)
+            }
+            if autosave {
+                NotificationPresenterWrapper.shared.present(type: .autosaveMediaError)
             }
             
             DDLogError(

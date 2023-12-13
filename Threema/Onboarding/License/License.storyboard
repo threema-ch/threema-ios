@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PEi-Qh-1Aa">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PEi-Qh-1Aa">
     <device id="retina6_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -17,10 +17,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xIP-dM-3tW">
-                                <rect key="frame" x="0.0" y="44" width="428" height="848"/>
+                                <rect key="frame" x="0.0" y="47" width="428" height="845"/>
                                 <subviews>
-                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="center" spacing="35" translatesAutoresizingMaskIntoConstraints="NO" id="0jz-NY-pVE">
-                                        <rect key="frame" x="16" y="16" width="396" height="533"/>
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="center" spacing="25" translatesAutoresizingMaskIntoConstraints="NO" id="0jz-NY-pVE">
+                                        <rect key="frame" x="16" y="16" width="396" height="541.66666666666663"/>
                                         <subviews>
                                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="ThreemaWorkWhite" translatesAutoresizingMaskIntoConstraints="NO" id="CNQ-yI-SPU">
                                                 <rect key="frame" x="121.66666666666666" y="0.0" width="152.99999999999997" height="18"/>
@@ -30,7 +30,7 @@
                                                 </constraints>
                                             </imageView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="u9G-06-KIo">
-                                                <rect key="frame" x="8.6666666666666572" y="52.999999999999993" width="379" height="76.333333333333314"/>
+                                                <rect key="frame" x="4.3333333333333428" y="42.999999999999993" width="387.66666666666663" height="76.333333333333314"/>
                                                 <string key="text">The Messenger for Organizations.
 
 Please enter your credentials. If you do not know your credentials, please contact your administrator.</string>
@@ -39,7 +39,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="crj-cC-LdC">
-                                                <rect key="frame" x="30" y="164.33333333333334" width="336" height="136.00000000000003"/>
+                                                <rect key="frame" x="30" y="144.33333333333334" width="336" height="136.00000000000003"/>
                                                 <subviews>
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="y62-zU-oeM">
                                                         <rect key="frame" x="0.0" y="0.0" width="36" height="136"/>
@@ -92,10 +92,10 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                                 </constraints>
                                                             </view>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Bk0-d6-F9y">
-                                                                <rect key="frame" x="0.0" y="47.999999999999972" width="300" height="40"/>
+                                                                <rect key="frame" x="0.0" y="48" width="300" height="40"/>
                                                                 <subviews>
                                                                     <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Password" clearsOnBeginEditing="YES" adjustsFontSizeToFit="NO" minimumFontSize="16" translatesAutoresizingMaskIntoConstraints="NO" id="D61-wT-Sck">
-                                                                        <rect key="frame" x="5" y="5" width="290" height="30"/>
+                                                                        <rect key="frame" x="5" y="4.9999999999999716" width="290" height="30"/>
                                                                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                                                         <color key="tintColor" red="0.24705882370000001" green="0.90196079019999997" blue="0.41176471110000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                         <accessibility key="accessibilityConfiguration" identifier="licenseUsername"/>
@@ -140,45 +140,51 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                 </subviews>
                                             </stackView>
                                             <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="bBd-xE-XOD">
-                                                <rect key="frame" x="10.666666666666657" y="335.33333333333331" width="375" height="33.666666666666686"/>
+                                                <rect key="frame" x="17.333333333333343" y="305.33333333333331" width="361.33333333333326" height="40.333333333333314"/>
                                                 <subviews>
                                                     <activityIndicatorView opaque="NO" contentMode="scaleToFill" style="white" translatesAutoresizingMaskIntoConstraints="NO" id="tXT-2U-dGh">
-                                                        <rect key="frame" x="0.0" y="7" width="20" height="20"/>
+                                                        <rect key="frame" x="0.0" y="10.333333333333371" width="20" height="20"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="20" id="cLo-ez-4aQ"/>
                                                             <constraint firstAttribute="width" constant="20" id="ow7-a2-oMh"/>
                                                         </constraints>
                                                     </activityIndicatorView>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="750" verticalHuggingPriority="750" image="Checkbox" translatesAutoresizingMaskIntoConstraints="NO" id="hLW-NW-G3V">
-                                                        <rect key="frame" x="30" y="7" width="20" height="20"/>
+                                                        <rect key="frame" x="30" y="10.333333333333371" width="20" height="20"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="20" id="K2K-HM-fMK"/>
                                                             <constraint firstAttribute="width" constant="20" id="faw-gf-r36"/>
                                                         </constraints>
                                                     </imageView>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" text="kasd fkja lksdj fkla sld fljaslkd fölajs askjd jfkajsökdf jklaj södf jaöls" lineBreakMode="tailTruncation" numberOfLines="5" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3uW-Qr-9ab">
-                                                        <rect key="frame" x="60" y="0.0" width="315" height="33.666666666666664"/>
+                                                        <rect key="frame" x="60" y="0.0" width="301.33333333333331" height="40.333333333333336"/>
                                                         <fontDescription key="fontDescription" style="UICTFontTextStyleCallout"/>
                                                         <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                         <nil key="highlightedColor"/>
                                                     </label>
                                                 </subviews>
                                             </stackView>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Learn more about Threema Work" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="38G-SM-x81" customClass="ZSWTappableLabel">
-                                                <rect key="frame" x="75" y="404" width="246" height="20"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Forgot your credentials? Please contact your Threema Work administrator." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="38G-SM-x81">
+                                                <rect key="frame" x="0.0" y="370.66666666666669" width="396" height="38.333333333333314"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Learn more about Threema Work" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="y1s-MQ-fL9" customClass="ZSWTappableLabel">
+                                                <rect key="frame" x="76.333333333333329" y="434" width="243.66666666666669" height="19.333333333333314"/>
                                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
                                                 <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1Lb-6f-5Ku">
-                                                <rect key="frame" x="30" y="459" width="336" height="0.0"/>
+                                                <rect key="frame" x="30" y="478.33333333333337" width="336" height="0.0"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" id="12z-vS-B2l"/>
                                                 </constraints>
                                             </view>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="If you are a private user, please tap here to download Threema." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ILs-iF-94n" customClass="ZSWTappableLabel">
-                                                <rect key="frame" x="1" y="494" width="394" height="39"/>
+                                                <rect key="frame" x="38.666666666666657" y="503.33333333333331" width="318.66666666666674" height="38.333333333333314"/>
                                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
                                                 <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
@@ -188,7 +194,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                                             <constraint firstItem="crj-cC-LdC" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="0jz-NY-pVE" secondAttribute="leading" constant="16" id="U9P-M0-otP"/>
                                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="crj-cC-LdC" secondAttribute="trailing" constant="16" id="auu-Er-Ps8"/>
                                         </constraints>
-                                        <variation key="heightClass=regular-widthClass=compact" spacing="35"/>
+                                        <variation key="heightClass=regular-widthClass=compact" spacing="25"/>
                                         <variation key="heightClass=regular-widthClass=regular" spacing="60"/>
                                     </stackView>
                                 </subviews>
@@ -225,8 +231,9 @@ Please enter your credentials. If you do not know your credentials, please conta
                         <outlet property="licensePasswordTextField" destination="D61-wT-Sck" id="6fG-J6-Qvc"/>
                         <outlet property="licenseUsernameTextField" destination="CJH-1B-fdo" id="4Kf-h9-rl6"/>
                         <outlet property="stackView" destination="0jz-NY-pVE" id="nfg-CM-UId"/>
+                        <outlet property="threemaAdminInfoLabel" destination="38G-SM-x81" id="agh-T0-Rh4"/>
                         <outlet property="threemaAppLinkLabel" destination="ILs-iF-94n" id="7Q8-Aa-YWE"/>
-                        <outlet property="threemaWorkInfoLabel" destination="38G-SM-x81" id="fsh-fQ-viY"/>
+                        <outlet property="threemaWorkInfoLabel" destination="y1s-MQ-fL9" id="Gsw-GN-cCJ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kRq-Sh-tbn" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -235,11 +242,11 @@ Please enter your credentials. If you do not know your credentials, please conta
         </scene>
     </scenes>
     <designables>
-        <designable name="38G-SM-x81">
-            <size key="intrinsicContentSize" width="246" height="20"/>
-        </designable>
         <designable name="ILs-iF-94n">
-            <size key="intrinsicContentSize" width="469" height="20"/>
+            <size key="intrinsicContentSize" width="465.66666666666669" height="19.333333333333332"/>
+        </designable>
+        <designable name="y1s-MQ-fL9">
+            <size key="intrinsicContentSize" width="243.66666666666666" height="19.333333333333332"/>
         </designable>
     </designables>
     <resources>

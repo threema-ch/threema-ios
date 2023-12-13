@@ -41,6 +41,7 @@
 @dynamic flags;
 @dynamic forwardSecurityMode;
 @dynamic groupDeliveryReceipts;
+@dynamic rejectedBy;
 
 - (NSString*)logText {
     return nil;

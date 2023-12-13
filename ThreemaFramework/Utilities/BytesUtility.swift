@@ -135,9 +135,3 @@ public enum BytesUtility {
         }
     }
 }
-
-extension Data {
-    public var hexString: String {
-        BytesUtility.toHexString(data: self)
-    }
-}

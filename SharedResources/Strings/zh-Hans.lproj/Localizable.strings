@@ -149,9 +149,6 @@
 "still_compressed_note" = "就算设置为未压缩，体积非常大的视频都有可能被压缩。";
 
 /* Sound names */
-"push_sound_title" = "推送音效";
-"push_group_sound_title" = "推送群组音效";
-/* Sound names */
 "sound_none" = "无声音";
 "sound_default" = "默认";
 "sound_silent" = "仅振动";
@@ -459,6 +456,8 @@
 /* Contacts */
 "pull_to_sync" = "下拉以同步...";
 "bad_identity_backup" = "ID 导出数据无效，或者您输入了错误的密码。请使用您创建导出时选择的密码来恢复您的 Threema ID。請檢查您的輸入，再試一次。";
+"pull_to_sync_429_message" = "已达到每天允许的联系人同步数量上限。 请到明天继续同步，或联系 Threema 的客户支持。";
+"pull_to_sync_429_message_work" = "已达到每天允许的联系人同步数量上限。 请到明天继续同步，或联系您的 %@ 管理员。";
 
 "synchronizing" = "正在同步...";
 
@@ -525,7 +524,7 @@
 "more_information_link_id_work" = "向我们提供您的电话号码和电子邮件地址，以帮助您的联系人在 %@ 上自动找到您。这些消息将以安全且匿名的方式存储。如果您跳过此步骤，则完全匿名使用 %@。";
 "more_information_pick_nickname" = "昵称用于设备的推送通知。当对方未保存您的电话号码在他的通讯录时。昵称可以方便对方分辨您的身份。我们建议只提供您的名字或假名。如果您不设置昵称，我们将默认使用您的 Threema ID 作为昵称。";
 "more_information_sync_contacts" = "如果启用此选项，%@ 会先将电子邮件地址和电话号码单向加密（使用散列函数），然后再将其发送到服务器以查找匹配的联系人。我们不存储任何通讯录数据。";
-"more_information_random_seed" = "您可以移动手指创建随机数据（称为熵），生成与 Threema ID 关联的唯一的新密钥对。";
+"more_information_random_seed" = "您可以移动手指创建随机数据（称为 “熵” (entropy)），生成与 Threema ID 关联的唯一的新密钥对。";
 "id_confirm_description_work" = "您的 Threema ID 就像电话号码一样。您的联系人可以通过这个ID联系您。";
 "more_information_link_id" = "向我们提供您的电话号码和电子邮件地址，以帮助您的联系人在 Threema 上自动找到您。这些消息将以安全且匿名的方式存储。 如果您跳过此步骤，则完全匿名使用 Threema。";
 "more_information_confirm_id" = "您还创建了一个密钥对。公钥已安全地传输到我们的服务器，私钥永远不会离开您的设备，这样可以确保没有其他人可以阅读您的消息。";
@@ -586,6 +585,8 @@
 "Done" = "完成";
 "enter_license_description" = "Threema Work 是专为公司而设的即时通讯工具。请输入贵公司或组织提供的凭证。";
 "enter_license_onprem_description" = "Threema OnPrem 是专为公司而设的即时通讯工具。请输入贵公司或组织提供的凭证。";
+"enter_license_work_admin_description" = "忘记了您的凭证？请联系您的 Threema Work 管理员。";
+"enter_license_onprem_admin_description" = "忘记了您的凭证？请联系您的 Threema OnPrem 管理员。";
 "more_work_info" = "了解更多关于 %@ 的信息。";
 "Save" = "保存";
 "enter_license_username_placeholder" = "用户名";
@@ -652,7 +653,7 @@
 "group_member_self_added" = "您已添加到群组";
 "group_member_self_removed" = "您已从群组中被移除";
 "group_member_self_left" = "您已退出群组";
-"group_member_creator_left" = "*此群组成为孤立群组*\n由于群组创建者已离开群组，管理员职位为空缺。其余成员应该克隆该群组（点击群组详细信息）以成为新的管理员。";
+"group_member_creator_left" = "*此群组成为孤立群组*\n由于群组创建者已离开群组，管理员职位现在为空缺。其余成员应该克隆该群组（点击群组详细信息）以成为新的管理员。";
 "system_message_group_avatar_changed" = "群组头像已改变";
 
 /* accessibility labels */
@@ -785,6 +786,8 @@
 
 "group_call_error_generic_title" = "发生错误";
 "group_call_error_generic_message" = "如果问题仍然存在，请联系我们的客户支持。";
+"group_call_error_already_in_call_title" = "其他通话进行中";
+"group_call_error_already_in_call_message" = "在任何时候，您都只能加入一个通话，不可同时加入其他通话。";
 
 "group_call_accessibility_hide_view" = "隐藏群组通话视图";
 "group_call_accessibility_enable_camera" = "启用摄像头";
@@ -842,7 +845,7 @@
 "group_leave_and_delete_button" = "离开并删除群组";
 
 "group_dissolve_sheet_title" = "解散 “%@”？";
-"group_dissolve_sheet_message" = "如果您只是解散群组，没有人可以再向此群组发送新信息，并且无法再对群组进行管理，而解散的群组仍然可以被克隆。";
+"group_dissolve_sheet_message" = "如果您只是解散群组，没有人可以再向此群组发送新消息，并且无法再对群组进行管理，而解散的群组仍然可以被克隆。";
 
 "group_dissolve_delete_sheet_title" = "解散并删除 “%@”？";
 "group_dissolve_delete_sheet_message" = "如果您删除群组，没有人可以再向该群组发送新消息，并且无法再对群组进行管理，而在此设备上的聊天记录将被删除。";
@@ -959,6 +962,7 @@
 "safe_upload_failed" = "上传失败";
 "safe_upload_size_exceeded" = "超出服务器的上传最大限制";
 "safe_change_password" = "更改密码";
+"safe_learn_more" = "了解更多";
 "safe_backup_now" = "立即备份";
 "safe_deactivate" = "关闭 Threema Safe";
 "safe_deactivate_explain" = "如果您禁用 Threema Safe，任何现有的备份都将在服务器上被删除。是否继续？";
@@ -1062,7 +1066,7 @@
 "settings_list_support_title" = "支持";
 "settings_list_privacy_policy_title" = "隐私政策";
 "settings_list_license_title" = "许可证";
-"settings_advanced" = "高级";
+"settings_advanced" = "高级设置";
 "settings_threema_work" = "Threema Work";
 "settings_threema_work_subtitle" = "企业的安全通信解决方案";
 "settings_feedback" = "测试版反馈";
@@ -1187,6 +1191,14 @@
 "delete_messages_confirm" = "您要永久删除所有早于%@的消息吗？";
 "delete_messages_confirm_all" = "您要永久删除所有消息吗？";
 "delete_messages_explain" = "任何类型的消息都将被删除：文字和语音消息、媒体、文件、投票等。";
+"automatic_delete_explain" = "使用自动删除功能可以释放磁盘空间。公开投票和私人收藏的消息不会被自动删除。";
+"automatic_delete_on_confirmation_title" = "打开自动删除？";
+"automatic_delete_off_confirmation_title" = "关闭自动删除？";
+// Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
+"automatic_delete_confirmation_message_no_immediate_deletion" = "从现在开始，早于%@的消息将被自动删除。注意：公开投票和私人收藏的消息不会被自动删除。";
+"automatic_delete_confirmation_message_immediate_deletion" = "%d条消息将被立即删除，所有早于%@的消息将从现在开始会自动删除。注意：公开投票和私人收藏的消息不会被自动删除。";
+"automatic_delete_on_confirmation_button" = "打开自动删除";
+"automatic_delete_off_confirmation_button" = "关闭自动删除";
 "delete_in_progress" = "删除中…";
 "one_year_title" = "1年";
 "one_year" = "1年";
@@ -1199,6 +1211,7 @@
 "one_week_title" = "1星期";
 "one_week" = "1星期";
 "everything" = "删除所有";
+"forever" = "永远";
 "media_file_not_found" = "无法打开媒体文件。该文件已被删除或未从服务器下载。";
 "older_than" = "早于";
 
@@ -1206,10 +1219,11 @@
 "file_not_found_title" = "未找到文件";
 
 "manage_all_conversations" = "管理所有会话";
-"manage_media_and_files" = "管理文件";
-"manage_messages" = "管理消息";
+"manage" = "管理";
 "messages" = "消息";
 "files" = "文件";
+"automatic_delete" = "自动删除";
+"automatic_delete_label" = "保留消息";
 
 // Call Settings
 "settings_threema_calls_enable_calls" = "启用 Threema 通话";
@@ -1254,6 +1268,7 @@
 "settings_advanced_other_section_header" = "其他";
 "settings_advanced_webrtc_diagnostics_title" = "WebRTC 诊断";
 "settings_advanced_orphaned_files_cleanup" = "删除孤立文件";
+"settings_advanced_contacts_cleanup" = "联系人清理";
 "settings_advanced_flush_message_queue" = "刷新消息队列";
 
 "settings_advanced_reregister_push_notifications_header_title" = "推送通知";
@@ -1270,10 +1285,18 @@
 "sentry_crash_send_description" = "您可以提交匿名崩溃报告。请您详细解释导致崩溃原因，将有助于解决根本问题。";
 "sentry_crash_send_yes" = "发送匿名报告";
 "sentry_crash_send_no" = "请勿发送";
+
 "sentry_crash_comment_placeholder" = "崩溃报告";
 
-// My profile
+// Profile
 "profile_share_id_text" = "我的 Threema ID";
+"profile_share_id" = "分享 Threema ID";
+"profile_show_qr_code" = "显示二维码";
+"profile_big_qr_code" = "大型二维码";
+"profile_big_qr_code_cover_view" = "大型二维码封面视图";
+"profile_linked_email" = "已链接电子邮件";
+"profile_linked_phone" = "已链接电话号码";
+"profile_id_export" = "ID导出";
 "my_profile_delete_cell_title" = "移除ID和数据";
 
 // Delete & Revoke
@@ -1334,6 +1357,20 @@
 "settings_orphaned_files_bin_delete_conformation" = "您要永久删除孤立文件吗？ 此操作无法撤消。";
 "settings_orphaned_files_log_title" = "日志文件";
 "settings_orphaned_files_log_all_files_button" = "将日志文件记录到调试日志中";
+
+// Contacts cleanup
+"settings_advanced_contacts_cleanup_stats_title" = "联系人清理";
+"settings_advanced_contacts_cleanup_log_stats" = "记录重复的联系人";
+"settings_advanced_contacts_cleanup_unused" = "删除重复的联系人";
+"settings_advanced_contacts_cleanup_log_disabled" = "调试日志记录已禁用。\n\n请先返回 “高级设置”，再打开 \"调试日志\"，然后重试。";
+"settings_advanced_contacts_cleanup_submit_logs" = "请返回 “高级设置”，并将调试日志分享到 Threema 支持，以进行进一步分析。\n\n之后，您可以关闭 “调试日志”。";
+"settings_advanced_contacts_cleanup_stats_logged" = "信息已被记录。\n";
+"settings_advanced_contacts_cleanup_no_duplicates" = "您没有重复的联系人。";
+"settings_advanced_contacts_cleanup_error_title" = "无法删除联系人";
+"settings_advanced_contacts_cleanup_still_used_error" = "已取消清理重复的联系人。由于您与重复的联系人仍然有消息来往，或者联系人仍然是某个群组的成员，所以无法删除%i个重复的联系人。\n";
+"settings_advanced_contacts_cleanup_success_title" = "联系人清理成功";
+"settings_advanced_contacts_cleanup_success_exit" = "退出";
+"settings_advanced_contacts_cleanup_unused_message" = "已删除 %i 个重复的联系人。\n\n请先退出此应用程序，再重启，然后链接设备。如果还不行： ";
 
 // Media Preview
 "loading_video_failed" = "无法加载视频。请重新启动应用程序并再次尝试。";
@@ -1482,7 +1519,7 @@
 "multi_device_new_linked_device_remove_all_title" = "移除所有已链接的设备？";
 "multi_device_new_linked_device_remove_all_error_title" = "移除所有已链接设备失败";
 "multi_device_new_linked_device_error_message" = "请检查您的互联网连接并重试。";
-"multi_device_new_linked_device_instructions" = "在添加新设备之前，请下载%@桌面版的当前测试版并打开：\n%@";
+"multi_device_new_linked_device_instructions" = "在添加新设备之前，请下载 %@ 电脑版的当前测试版并打开：\n%@";
 "multi_device_linked_duplicate_contacts_desc" = "由于通讯录存在重复的联系人 (%@)，您无法链接此设备。请联系我们的支持人员。（“设置” → “支持”）。";
 "multi_device_new_linked_own_identity_in_contacts_title" = "将自己的 Threema ID 成为通讯录中的联系人";
 "multi_device_new_linked_own_identity_in_contacts_message" = "通讯录中存在与您的 Threema ID 相同的联系人。请删除他以添加新设备。";
@@ -1526,7 +1563,8 @@
 "multi_device_join_failed_app_closed_message" = "由于 %@ 已关闭，链接失败。请稍后重试。";
 
 "multi_device_linked_id_missing_title" = "已链接的设备";
-"multi_device_linked_id_missing_message" = "之前已链接的设备已被删除。当您恢复或设置好此设备后，您可以再次链接您的设备。";
+"multi_device_linked_id_missing_message" = "之前已链接的设备已被移除。为避免错过消息，请立即重置 Threema 电脑版。当您恢复或设置好此设备后，您可以再次链接您的设备。";
+"multi_device_linked_id_missing_reset_button" = "重置电脑版应用程序";
 
 "myprofile_link_email_phone_footer" = "将您的电子邮件地址或电话号码与您的ID链接，如果其他人的通讯录中有保存您的资料，他们将在 %@ 上自动找到您。";
 "myprofile_link_email_footer" = "将您的电子邮件地址与您的ID链接，如果其他人的通讯录中有保存您的电子邮件地址，他们将在 %@ 上自动找到您。";
@@ -1603,12 +1641,15 @@
 // In-app notifications
 "notification_copying_succeeded" = "项目已复制";
 "notification_copying_failed" = "复制失败";
+"notification_copying_id_succeeded" = "Threema ID 已复制";
 
 "notification_saving_succeeded" = "项目已保存";
 "notification_saving_failed" = "保存失败";
 
 "notification_saving_to_photos_succeeded" = "已添加到相簿";
 "notification_saving_to_photos_failed" = "添加到相簿失败";
+
+"notification_autosave_failed" = "自动保存媒体失败";
 
 "notification_sending_failed" = "发送失败";
 "notification_sending_failed_subtitle_size" = "项目体积太大";
@@ -1730,6 +1771,11 @@
 "accessibility_status_delivered_plus_time" = "已送达, %@";
 "accessibility_status_read_plus_time" = "已阅读, %@";
 "accessibility_status_failed_plus_time" = "失败, %@";
+"accessibility_status_group_acknowledged_plus_time" = "%i 同意，%@%@";
+"accessibility_status_group_declined_plus_time" = "%i 拒绝，%@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "%i 同意，%i 拒绝，%@%@";
+"accessibility_status_group_acknowledged_my_reaction" = "我同意";
+"accessibility_status_group_declined_my_reaction" = "我拒绝";
 
 // UIAccessibilityCustomActions
 "accessibility_action_open_link" = "打开 %@";
@@ -1815,3 +1861,8 @@
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n无法从 %d 版本降级到 %d 版本";
 "sqldhsessionstore_unknownError" = "尝试迁移时发生未知错误：%@";
+
+// UIApplicationShortcutItems
+"application_shortcut_item_new_message" = "新消息";
+"application_shortcut_item_scan_qr_code" = "扫描二维码";
+"application_shortcut_item_my_id" = "个人资料";

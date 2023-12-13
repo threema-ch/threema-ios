@@ -19,24 +19,26 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import XCTest
+
 @testable import GroupCalls
 
 final class JoiningTests: XCTestCase {
+    
+    fileprivate lazy var creatorIdentity = ThreemaIdentity("ECHOECHO")
+    fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
+    fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
+    fileprivate lazy var groupModel = GroupCallsThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
+    
     func testBasicInit() async {
-        let localThreemaID = try! ThreemaID(id: "ECHOECHO")
-        let groupModel = GroupCallsThreemaGroupModel(
-            creator: try! ThreemaID(id: "ECHOECHO"),
-            groupID: Data(),
-            groupName: "ECHOECHO",
-            members: Set([])
-        )
+
         let sfuBaseURL = ""
         let gck = Data(count: 32)
         let dependencies = MockDependencies().create()
         
         let groupCallActor = try! GroupCallActor(
-            localIdentity: localThreemaID,
+            localContactModel: localContactModel,
             groupModel: groupModel,
             sfuBaseURL: sfuBaseURL,
             gck: gck,
@@ -54,13 +56,6 @@ final class JoiningTests: XCTestCase {
     }
     
     func testEndOn404() async {
-        let localThreemaID = try! ThreemaID(id: "ECHOECHO")
-        let groupModel = GroupCallsThreemaGroupModel(
-            creator: try! ThreemaID(id: "ECHOECHO"),
-            groupID: Data(),
-            groupName: "ECHOECHO",
-            members: Set([])
-        )
         let sfuBaseURL = ""
         let gck = Data(repeating: 0x01, count: 32)
         
@@ -69,7 +64,7 @@ final class JoiningTests: XCTestCase {
         let dependencies = MockDependencies().with(mockHTTPClient).create()
         
         let groupCallActor = try! GroupCallActor(
-            localIdentity: localThreemaID,
+            localContactModel: localContactModel,
             groupModel: groupModel,
             sfuBaseURL: sfuBaseURL,
             gck: gck,

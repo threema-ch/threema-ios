@@ -8,7 +8,7 @@
 /* Class = "UILabel"; text = "Detail"; ObjectID = "5Ca-aK-dv0"; */
 "5Ca-aK-dv0.text" = "Detagl";
 
-/* Class = "UITabBarItem"; title = "My Profile"; ObjectID = "5lj-oy-IYs"; */
+/* Class = "UITabBarItem"; title = "Profile"; ObjectID = "5lj-oy-IYs"; */
 "5lj-oy-IYs.title" = "Mes profil";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "6On-uo-xuU"; */

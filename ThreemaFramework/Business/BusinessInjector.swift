@@ -43,10 +43,18 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         entityManager: backgroundEntityManager
     )
 
+    public lazy var backgroundPushSettingManager: PushSettingManagerProtocol = PushSettingManager(
+        userSettings,
+        backgroundGroupManager,
+        backgroundEntityManager,
+        licenseStore.getRequiresLicenseKey()
+    )
+
     public lazy var contactStore: ContactStoreProtocol = ContactStore.shared()
 
     public lazy var conversationStore: any ConversationStoreProtocol = ConversationStore(
         userSettings: userSettings,
+        pushSettingManager: pushSettingManager,
         groupManager: groupManager,
         entityManager: entityManager,
         taskManager: TaskManager(frameworkInjector: self)
@@ -82,6 +90,9 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     public lazy var unreadMessages: UnreadMessagesProtocol = UnreadMessages(
         entityManager: entityManager
     )
+    
+    public lazy var messageRetentionManager: MessageRetentionManagerModelProtocol =
+        MessageRetentionManagerModel(businessInjector: self)
 
     @objc public lazy var userSettings: UserSettingsProtocol = UserSettings.shared()
 
@@ -95,6 +106,13 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     
     public lazy var serverConnector: ServerConnectorProtocol = ServerConnector.shared()
 
+    public lazy var pushSettingManager: PushSettingManagerProtocol = PushSettingManager(
+        userSettings,
+        groupManager,
+        entityManager,
+        licenseStore.getRequiresLicenseKey()
+    )
+
     // MARK: BusinessInternalInjectorProtocol
 
     private var mediatorReflectedProcessorInstance: MediatorReflectedProcessorProtocol?
@@ -107,6 +125,11 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     lazy var mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocol(
         deviceGroupKeys: self
             .serverConnector.deviceGroupKeys
+    )
+
+    lazy var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessor(
+        frameworkInjector: self,
+        messageProcessorDelegate: serverConnector
     )
     
     var messageProcessor: MessageProcessorProtocol {

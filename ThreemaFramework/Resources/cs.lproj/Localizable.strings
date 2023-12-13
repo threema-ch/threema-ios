@@ -53,7 +53,7 @@
 "error_message_requires_migration_error_description" = "Kontrola migrace se nezdařila. Restartujte prosím aplikaci.";
 
 "error_other_connection_for_same_identity_title" = "Varování";
-"error_other_connection_for_same_identity_message" = "Server odhalil dvě nebo více připojení z různých zařízení se stejným Threema ID.\n\nNení možné používat stejné Threema ID na více zařízeních zároveň. Nové zprávy jsou posílány pouze na zařízení, které se k serveru přihlásilo jako poslední.\n\nPokud přecházíte na nové zařízení, odinstalujte nebo deaktivujte %@ na starém zařízení a poté nový přístroj restartujte.";
+"error_other_connection_for_same_identity_message" = "Server odhalil dvě nebo více připojení z různých zařízení se stejným Threema ID.\nK tomu může dojít, pokud používáte aplikaci Threema na více zařízeních zároveň, aniž byste je propojili (https://three.ma/md). Nové zprávy jsou posílány pouze na zařízení, které se k serveru připojilo jako poslední.\n\nPokud přecházíte na nové zařízení, odinstalujte nebo deaktivujte %@ na starém zařízení a poté nový přístroj restartujte.";
 
 "error_rogue_device_title" = "Detekováno připojení z jiného zařízení";
 "error_rogue_device_message" = "Server zjistil připojení z jiného zařízení s totožným Threema ID.\n\nPokud jste mezitím nepoužili vaše Threema ID na jiném zařízení nebo se starší verzí aplikace, potom prosím kontaktujte podporu a odešlete soubor se záznamem, pokud je to možné.";

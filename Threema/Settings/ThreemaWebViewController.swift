@@ -511,14 +511,12 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
 
         // Don't enable Threema Web until all contacts have a non-nil feature mask
         if let identities = ContactStore.shared().contactsWithFeatureMaskNil(), !identities.isEmpty {
-            ContactStore.shared().updateFeatureMasks(forIdentities: identities)
-                .done { _ in
-                    scannedCodeHandler()
-                }
-                .catch { error in
-                    DDLogError("Update feature mask failed: \(error)")
-                    scannedCodeHandler()
-                }
+            ContactStore.shared().updateFeatureMasks(forIdentities: identities) {
+                scannedCodeHandler()
+            } onError: { error in
+                DDLogError("Update feature mask failed: \(error)")
+                scannedCodeHandler()
+            }
         }
         else {
             scannedCodeHandler()

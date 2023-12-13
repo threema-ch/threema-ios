@@ -21,20 +21,19 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 protocol NonceGuardProtocol: NonceGuardProtocolObjc {
-    func isProcessed(nonce: Data) -> Bool
-    func processed(nonce: Data) -> Promise<Void>
-    func processed(nonces: [Data]) -> Promise<Void>
+    func isProcessed(d2dIncomingMessage message: D2d_IncomingMessage) throws -> Bool
+    func processed(nonce: Data)
+    func processed(nonces: [Data])
+    func processed(message: AbstractMessage) throws
+    func processed(boxedMessage: BoxedMessage) throws
 }
 
 @objc
 protocol NonceGuardProtocolObjc {
     func isProcessed(message: AbstractMessage) -> Bool
-    @discardableResult
-    func processed(message: AbstractMessage) throws -> AnyPromise
-    @discardableResult
-    func processed(boxedMessage: BoxedMessage) throws -> AnyPromise
 }
 
 /// A message with the same nonce should only be processed once.
@@ -42,8 +41,8 @@ protocol NonceGuardProtocolObjc {
 /// This should prevent processing messages that malicious several times sent.
 class NonceGuard: NSObject, NonceGuardProtocol {
 
-    enum NonceGuardError: Int, Error {
-        case messageNonceIsNil = 0
+    enum NonceGuardError: Error {
+        case messageNonceIsNil(message: String)
     }
 
     private let entityManager: EntityManager
@@ -63,7 +62,7 @@ class NonceGuard: NSObject, NonceGuardProtocol {
     @objc
     func isProcessed(message: AbstractMessage) -> Bool {
         guard let nonce = message.nonce, !nonce.isEmpty else {
-            DDLogError("Message nonce is nil or empty")
+            DDLogError("Nonce of message \(message.loggingDescription) is empty")
             return true
         }
 
@@ -71,67 +70,59 @@ class NonceGuard: NSObject, NonceGuardProtocol {
     }
 
     /// Check if message nonce is already processed.
-    /// - Parameter nonce: Message nonce
+    /// - Parameter message: D2D incoming message
     /// - Returns: True nonce is already in DB
-    func isProcessed(nonce: Data) -> Bool {
-        guard !nonce.isEmpty else {
-            DDLogWarn("Message nonce is empty")
-            return false
+    func isProcessed(d2dIncomingMessage message: D2d_IncomingMessage) throws -> Bool {
+        guard !message.nonce.isEmpty else {
+            throw NonceGuardError.messageNonceIsNil(message: "Nonce of message \(message.loggingDescription) is empty")
         }
 
-        return entityManager.isMessageNonceAlreadyInDB(nonce: nonce)
+        return entityManager.isMessageNonceAlreadyInDB(nonce: message.nonce)
     }
 
     /// Incoming message nonce will be stored in DB.
     ///
-    /// - Parameter message: Store nonce of the Message
+    /// - Parameter message: Store nonce of the message
     /// - Throws: NonceGuardError.messageNonceIsNull
-    @objc
-    @discardableResult
-    func processed(message: AbstractMessage) throws -> AnyPromise {
+    func processed(message: AbstractMessage) throws {
         guard let nonce = message.nonce else {
-            throw NonceGuardError.messageNonceIsNil
+            throw NonceGuardError
+                .messageNonceIsNil(message: "Can't store nonce of message \(message.loggingDescription)")
         }
 
-        return AnyPromise(processed(nonce: nonce))
+        processed(nonce: nonce)
     }
 
     /// Outgoing message nonce will be stored in DB.
     ///
     /// - Parameter message: Store nonce of the message
     /// - Throws: NonceGuardError.messageNonceIsNull
-    @objc
-    @discardableResult
-    func processed(boxedMessage: BoxedMessage) throws -> AnyPromise {
-        guard let nonce = boxedMessage.nonce else {
-            throw NonceGuardError.messageNonceIsNil
+    func processed(boxedMessage message: BoxedMessage) throws {
+        guard let nonce = message.nonce else {
+            throw NonceGuardError
+                .messageNonceIsNil(message: "Can't store nonce of message \(message.loggingDescription)")
         }
 
-        return AnyPromise(processed(nonce: nonce))
+        processed(nonce: nonce)
     }
 
     /// Nonce will be stored in DB.
     /// - Parameter nonce: Message nonce
-    func processed(nonce: Data) -> Promise<Void> {
+    func processed(nonce: Data) {
         processed(nonces: [nonce])
     }
 
     /// Nonces will be stored in DB.
     /// - Parameter nonce: Message nonces
-    func processed(nonces: [Data]) -> Promise<Void> {
-        Promise { seal in
-            Task {
-                await self.entityManager.performSave {
-                    for nonce in nonces {
-                        guard !self.entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
-                            DDLogError("Nonce is already in DB")
-                            continue
-                        }
-                        
-                        self.entityManager.entityCreator.nonce(with: NonceHasher.hashedNonce(nonce))
-                    }
-                    seal.fulfill_()
+    func processed(nonces: [Data]) {
+        entityManager.performAndWaitSave {
+            for nonce in nonces {
+                guard !self.entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
+                    DDLogError("Nonce is already in DB")
+                    continue
                 }
+
+                self.entityManager.entityCreator.nonce(with: NonceHasher.hashedNonce(nonce))
             }
         }
     }

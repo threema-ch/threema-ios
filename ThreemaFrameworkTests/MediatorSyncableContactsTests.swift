@@ -44,6 +44,7 @@ class MediatorSyncableContactsTests: XCTestCase {
 
         let mediatorSyncableContacts = MediatorSyncableContacts(
             UserSettingsMock(enableMultiDevice: true),
+            PushSettingManagerMock(),
             taskManagerMock,
             EntityManager(databaseContext: databaseBackgroundCnx, myIdentityStore: MyIdentityStoreMock())
         )
@@ -76,6 +77,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             
             let mediatorSyncableContacts = MediatorSyncableContacts(
                 UserSettingsMock(enableMultiDevice: true),
+                PushSettingManagerMock(),
                 taskManagerMock,
                 EntityManager(databaseContext: databaseBackgroundCnx)
             )
@@ -114,6 +116,7 @@ class MediatorSyncableContactsTests: XCTestCase {
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
             UserSettingsMock(enableMultiDevice: true),
+            PushSettingManagerMock(),
             taskManagerMock,
             EntityManager(databaseContext: databaseBackgroundCnx)
         )
@@ -139,7 +142,7 @@ class MediatorSyncableContactsTests: XCTestCase {
         
         wait(for: [expec], timeout: 6)
     }
-    
+
     func testIntegrationWithTaskExecution() {
         let userSettingsMock = UserSettingsMock(enableMultiDevice: true)
 
@@ -196,6 +199,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             let taskManagerMock = TaskManagerMock()
             let mediatorSyncableContacts = MediatorSyncableContacts(
                 userSettingsMock,
+                PushSettingManagerMock(),
                 taskManagerMock,
                 EntityManager(databaseContext: databaseBackgroundCnx)
             )
@@ -223,50 +227,30 @@ class MediatorSyncableContactsTests: XCTestCase {
 
                         for delta in contactUpdateTask.deltaSyncContacts {
 
-                            XCTAssertTrue(delta.syncContact.hasPublicKey, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasCreatedAt, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasFirstName, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasLastName, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasNickname, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasVerificationLevel, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasWorkVerificationLevel, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasIdentityType, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasAcquaintanceLevel, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasActivityState, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasFeatureMask, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasSyncState, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasReadReceiptPolicyOverride, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasTypingIndicatorPolicyOverride, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasNotificationTriggerPolicyOverride, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasNotificationSoundPolicyOverride, "\(test.name)")
-                            XCTAssertFalse(delta.syncContact.hasUserDefinedProfilePicture, "\(test.name)")
                             XCTAssertFalse(delta.syncContact.hasContactDefinedProfilePicture, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasConversationCategory, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasConversationVisibility, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasCreatedAt, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasFeatureMask, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasFirstName, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasIdentityType, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasLastName, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasNickname, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasNotificationSoundPolicyOverride, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasNotificationTriggerPolicyOverride, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasPublicKey, "\(test.name)")
+                            XCTAssertFalse(delta.syncContact.hasUserDefinedProfilePicture, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasReadReceiptPolicyOverride, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasSyncState, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasTypingIndicatorPolicyOverride, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasVerificationLevel, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasWorkVerificationLevel, "\(test.name)")
 
                             XCTAssertEqual(
-                                delta.syncContact.identity,
-                                test.output.delta.syncContact.identity,
-                                "\(test.name)"
-                            )
-                            XCTAssertEqual(
-                                delta.syncContact.publicKey,
-                                test.output.delta.syncContact.publicKey,
-                                "\(test.name)"
-                            )
-                            XCTAssertEqual(
-                                delta.syncContact.nickname,
-                                test.output.delta.syncContact.nickname,
-                                "\(test.name)"
-                            )
-                            XCTAssertEqual(
-                                delta.syncContact.firstName,
-                                test.output.delta.syncContact.firstName,
-                                "\(test.name)"
-                            )
-                            XCTAssertEqual(
-                                delta.syncContact.lastName,
-                                test.output.delta.syncContact.lastName,
+                                delta.syncContact.acquaintanceLevel,
+                                test.output.delta.syncContact.acquaintanceLevel,
                                 "\(test.name)"
                             )
                             XCTAssertEqual(
@@ -274,7 +258,11 @@ class MediatorSyncableContactsTests: XCTestCase {
                                 test.output.delta.syncContact.activityState,
                                 "\(test.name)"
                             )
-                            XCTAssertEqual(delta.syncContact.featureMask, test.output.delta.syncContact.featureMask)
+                            XCTAssertEqual(
+                                delta.contactProfilePicture,
+                                test.output.delta.contactProfilePicture,
+                                "\(test.name)"
+                            )
                             XCTAssertEqual(
                                 delta.syncContact.conversationCategory,
                                 test.output.delta.syncContact.conversationCategory,
@@ -286,34 +274,63 @@ class MediatorSyncableContactsTests: XCTestCase {
                                 "\(test.name)"
                             )
                             XCTAssertEqual(
+                                delta.syncContact.createdAt,
+                                test.output.delta.syncContact.createdAt,
+                                "\(test.name)"
+                            )
+                            XCTAssertEqual(delta.syncContact.featureMask, test.output.delta.syncContact.featureMask)
+                            XCTAssertEqual(
+                                delta.syncContact.firstName,
+                                test.output.delta.syncContact.firstName,
+                                "\(test.name)"
+                            )
+                            XCTAssertEqual(
+                                delta.syncContact.identity,
+                                test.output.delta.syncContact.identity,
+                                "\(test.name)"
+                            )
+                            XCTAssertEqual(
                                 delta.syncContact.identityType,
                                 test.output.delta.syncContact.identityType,
                                 "\(test.name)"
                             )
+                            XCTAssertEqual(
+                                delta.syncContact.lastName,
+                                test.output.delta.syncContact.lastName,
+                                "\(test.name)"
+                            )
+                            XCTAssertEqual(
+                                delta.syncContact.nickname,
+                                test.output.delta.syncContact.nickname,
+                                "\(test.name)"
+                            )
+                            XCTAssertEqual(
+                                delta.syncContact.notificationSoundPolicyOverride,
+                                test.output.delta.syncContact.notificationSoundPolicyOverride
+                            )
+                            XCTAssertEqual(
+                                delta.syncContact.notificationTriggerPolicyOverride,
+                                test.output.delta.syncContact.notificationTriggerPolicyOverride
+                            )
+                            XCTAssertEqual(
+                                delta.syncContact.publicKey,
+                                test.output.delta.syncContact.publicKey,
+                                "\(test.name)"
+                            )
+                            XCTAssertEqual(delta.profilePicture, test.output.delta.profilePicture, "\(test.name)")
                             XCTAssertEqual(
                                 delta.syncContact.syncState,
                                 test.output.delta.syncContact.syncState,
                                 "\(test.name)"
                             )
                             XCTAssertEqual(
+                                delta.syncContact.typingIndicatorPolicyOverride,
+                                test.output.delta.syncContact.typingIndicatorPolicyOverride,
+                                "\(test.name)"
+                            )
+                            XCTAssertEqual(
                                 delta.syncContact.verificationLevel,
                                 test.output.delta.syncContact.verificationLevel,
-                                "\(test.name)"
-                            )
-                            XCTAssertEqual(
-                                delta.syncContact.createdAt,
-                                test.output.delta.syncContact.createdAt,
-                                "\(test.name)"
-                            )
-                            XCTAssertEqual(
-                                delta.syncContact.acquaintanceLevel,
-                                test.output.delta.syncContact.acquaintanceLevel,
-                                "\(test.name)"
-                            )
-                            XCTAssertEqual(delta.profilePicture, test.output.delta.profilePicture, "\(test.name)")
-                            XCTAssertEqual(
-                                delta.contactProfilePicture,
-                                test.output.delta.contactProfilePicture,
                                 "\(test.name)"
                             )
                         }
@@ -332,17 +349,14 @@ class MediatorSyncableContactsTests: XCTestCase {
     }
     
     func testReadReceiptPolicyOverrideDefault() throws {
-        let expectedPolicy = Sync_Contact.ReadReceiptPolicyOverride.with {
-            $0.default = Common_Unit()
-        }
-        
         let contactEntity = getMinimalContact()
         contactEntity.readReceipt = .default
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
             UserSettingsMock(),
+            PushSettingManagerMock(),
             TaskManagerMock(),
-            EntityManager()
+            EntityManager(databaseContext: databaseBackgroundCnx)
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -351,24 +365,19 @@ class MediatorSyncableContactsTests: XCTestCase {
                 .first(where: { $0.syncContact.identity == contactEntity.identity })
         )
         
-        XCTAssertEqual(
-            deltaSyncContact.syncContact.readReceiptPolicyOverride,
-            expectedPolicy
-        )
+        XCTAssertTrue(deltaSyncContact.syncContact.hasReadReceiptPolicyOverride)
+        XCTAssertEqual(deltaSyncContact.syncContact.readReceiptPolicyOverride.override, .default(Common_Unit()))
     }
     
     func testReadReceiptPolicyOverrideOverrideDoNotSend() throws {
-        let expectedPolicy = Sync_Contact.ReadReceiptPolicyOverride.with {
-            $0.override = .policy(.dontSendReadReceipt)
-        }
-        
         let contactEntity = getMinimalContact()
         contactEntity.readReceipt = .doNotSend
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
             UserSettingsMock(),
+            PushSettingManagerMock(),
             TaskManagerMock(),
-            EntityManager()
+            EntityManager(databaseContext: databaseBackgroundCnx)
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -376,23 +385,21 @@ class MediatorSyncableContactsTests: XCTestCase {
             allSyncableContacts
                 .first(where: { $0.syncContact.identity == contactEntity.identity })
         )
-        
+
+        XCTAssertTrue(deltaSyncContact.syncContact.hasReadReceiptPolicyOverride)
         XCTAssertEqual(
-            deltaSyncContact.syncContact.readReceiptPolicyOverride,
-            expectedPolicy
+            deltaSyncContact.syncContact.readReceiptPolicyOverride.override,
+            .policy(.dontSendReadReceipt)
         )
     }
     
     func testReadReceiptPolicyOverrideSend() throws {
-        let expectedPolicy = Sync_Contact.ReadReceiptPolicyOverride.with {
-            $0.override = .policy(.sendReadReceipt)
-        }
-        
         let contactEntity = getMinimalContact()
         contactEntity.readReceipt = .send
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
             UserSettingsMock(),
+            PushSettingManagerMock(),
             TaskManagerMock(),
             EntityManager()
         )
@@ -403,9 +410,10 @@ class MediatorSyncableContactsTests: XCTestCase {
                 .first(where: { $0.syncContact.identity == contactEntity.identity })
         )
         
+        XCTAssertTrue(deltaSyncContact.syncContact.hasReadReceiptPolicyOverride)
         XCTAssertEqual(
-            deltaSyncContact.syncContact.readReceiptPolicyOverride,
-            expectedPolicy
+            deltaSyncContact.syncContact.readReceiptPolicyOverride.override,
+            .policy(.sendReadReceipt)
         )
     }
 
@@ -416,122 +424,22 @@ class MediatorSyncableContactsTests: XCTestCase {
         from contact: ContactEntity,
         userSettings: UserSettingsProtocol
     ) -> DeltaSyncContact {
-        let conversation = contact.conversations!.first as? Conversation
-        
         var delta = DeltaSyncContact(syncContact: Sync_Contact(), syncAction: .update)
-        delta.syncContact.identity = contact.identity
-        delta.syncContact.publicKey = contact.publicKey
 
-        if let firstName = contact.firstName {
-            delta.syncContact.firstName = firstName
-        }
-        else {
-            delta.syncContact.clearFirstName()
-        }
-
-        if let lastName = contact.lastName {
-            delta.syncContact.lastName = lastName
-        }
-        else {
-            delta.syncContact.clearLastName()
-        }
+        delta.syncContact.update(contact: contact, pushSetting: PushSetting(identity: contact.threemaIdentity))
 
         let workIdentities = userSettings.workIdentities ?? NSOrderedSet(array: [String]())
-        delta.syncContact.identityType = workIdentities.contains(contact.identity) ? .work : .regular
-        delta.syncContact.workVerificationLevel = contact.workContact.boolValue ? .workSubscriptionVerified : .none
-
-        if let nickname = contact.publicNickname {
-            delta.syncContact.nickname = nickname
-        }
-        else {
-            delta.syncContact.clearNickname()
-        }
-
-        if let createAt = contact.createdAt {
-            delta.syncContact.createdAt = UInt64(createAt.millisecondsSince1970)
-        }
-        else {
-            delta.syncContact.clearCreatedAt()
-        }
-
-        delta.syncContact.verificationLevel = Sync_Contact
-            .VerificationLevel(rawValue: Int(truncating: contact.verificationLevel))!
-
-        switch contact.state?.intValue {
-        case kStateActive:
-            delta.syncContact.activityState = .active
-        case kStateInactive:
-            delta.syncContact.activityState = .inactive
-        case kStateInvalid:
-            delta.syncContact.activityState = .invalid
-        default:
-            delta.syncContact.clearActivityState()
-        }
-
-        delta.syncContact.featureMask = contact.featureMask.uint64Value
-
-        switch contact.importedStatus {
-        case .initial:
-            delta.syncContact.syncState = .initial
-        case .imported:
-            delta.syncContact.syncState = .imported
-        case .custom:
-            delta.syncContact.syncState = .custom
-        }
-
-        if let visibility = conversation?.conversationVisibility {
-            switch visibility {
-            case .archived:
-                delta.syncContact.conversationVisibility = .archived
-            default:
-                delta.syncContact.conversationVisibility = conversation?.marked.boolValue ?? false ? .pinned : .normal
-            }
-        }
-        else {
-            delta.syncContact.conversationVisibility = conversation?.marked.boolValue ?? false ? .pinned : .normal
-        }
-
-        if let category = conversation?.conversationCategory {
-            switch category {
-            case .default:
-                delta.syncContact.conversationCategory = .default
-            case .private:
-                delta.syncContact.conversationCategory = .protected
-            default:
-                delta.syncContact.conversationCategory = .protected
-            }
-        }
-        else {
-            delta.syncContact.clearConversationCategory()
-        }
-
-        if let category = conversation?.conversationCategory {
-            switch category {
-            case .private:
-                delta.syncContact.conversationCategory = .protected
-            case .default:
-                delta.syncContact.conversationCategory = .default
-            @unknown default:
-                // Show an alert with a sync error
-                print("Conversation category has a unknown value")
-            }
-        }
-        else {
-            delta.syncContact.conversationCategory = .default
-        }
-
-        delta.syncContact.notificationSoundPolicyOverride.default = Common_Unit()
-        delta.syncContact.notificationTriggerPolicyOverride.default = Common_Unit()
-        delta.syncContact.typingIndicatorPolicyOverride.default = Common_Unit()
-        delta.syncContact.readReceiptPolicyOverride.default = Common_Unit()
-        delta.syncContact.acquaintanceLevel = contact.isContactHidden ? .group : .direct
-        delta.syncContact.createdAt = UInt64(contact.createdAt?.millisecondsSince1970 ?? 0)
+        delta.syncContact.update(identityType: workIdentities.contains(contact.identity) ? .work : .regular)
 
         delta.profilePicture = contact.imageData != nil ? .updated : .removed
         delta.contactProfilePicture = contact.contactImage?.data != nil ? .updated : .removed
         delta.image = contact.imageData
         delta.contactImage = contact.contactImage?.data
-        
+
+        if let conversation = contact.conversations!.first as? Conversation {
+            delta.syncContact.update(conversation: conversation)
+        }
+
         return delta
     }
     
@@ -571,6 +479,8 @@ class MediatorSyncableContactsTests: XCTestCase {
             contact.lastName = "Appleseed"
             contact.imageData = setProfilePicture ? imageData : nil
             contact.contactImage = setContactProfilePicture ? contactImage : nil
+            contact.readReceipt = .send
+            contact.typingIndicator = .default
             contact.workContact = NSNumber(booleanLiteral: isWorkContact)
         }
         return contact
@@ -579,8 +489,8 @@ class MediatorSyncableContactsTests: XCTestCase {
     private func getMinimalContact() -> ContactEntity {
         var contact: ContactEntity!
         databasePreparer.save {
-            let publicKey = BytesUtility.generateRandomBytes(length: 32)!
-            let identity = SwiftUtils.pseudoRandomString(length: 7)
+            let publicKey = MockData.generatePublicKey()
+            let identity = SwiftUtils.pseudoRandomString(length: 8)
             let verificationLevel = 0
 
             contact = databasePreparer.createContact(

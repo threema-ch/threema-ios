@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
@@ -51,6 +52,8 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             SettingsStoreMock(),
             userSettingsMock,
+            MyIdentityStoreMock(),
+            PushSettingManagerMock(),
             ContactStoreMock(),
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
@@ -78,6 +81,8 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             SettingsStoreMock(),
             userSettingsMock,
+            MyIdentityStoreMock(),
+            PushSettingManagerMock(),
             ContactStoreMock(),
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
@@ -103,6 +108,8 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             SettingsStoreMock(),
             UserSettingsMock(),
+            MyIdentityStoreMock(),
+            PushSettingManagerMock(),
             ContactStoreMock(),
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
@@ -128,6 +135,8 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             SettingsStoreMock(),
             UserSettingsMock(),
+            MyIdentityStoreMock(),
+            PushSettingManagerMock(),
             ContactStoreMock(),
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
@@ -159,6 +168,8 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 settingStoreMock,
                 UserSettingsMock(),
+                MyIdentityStoreMock(),
+                PushSettingManagerMock(),
                 ContactStoreMock(),
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),
@@ -209,6 +220,13 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 SettingsStoreMock(),
                 userSettingsMock,
+                MyIdentityStoreMock(),
+                PushSettingManager(
+                    userSettingsMock,
+                    GroupManagerMock(),
+                    EntityManager(databaseContext: databaseCnx),
+                    testData["isWorkApp"]!
+                ),
                 ContactStoreMock(),
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),
@@ -228,7 +246,7 @@ class UserNotificationManagerTests: XCTestCase {
 
     func testUserNotificationContentBlockUnknownWithKnownContact() throws {
         let expectedMessageID = "94c605d0e3150619"
-        let expectedSenderID = "0S9AE6CP"
+        let expectedSenderID = ThreemaIdentity("0S9AE6CP")
         let expectedFromName = "red99"
         let expectedTitle: String? = "red99"
         let expectedBody = "Message"
@@ -250,16 +268,16 @@ class UserNotificationManagerTests: XCTestCase {
         let entityManager = EntityManager(databaseContext: databaseCnx)
         databasePreparer.createContact(
             publicKey: Data([1]),
-            identity: expectedSenderID,
+            identity: expectedSenderID.string,
             verificationLevel: 0,
             nickname: expectedFromName
         )
-        let contact = entityManager.entityFetcher.contact(for: expectedSenderID)
+        let contact = entityManager.entityFetcher.contact(for: expectedSenderID.string)
         let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
 
-        let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
+        let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID.string)\(expectedMessageID)")
         pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
-            "from": expectedSenderID,
+            "from": expectedSenderID.string,
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
@@ -268,6 +286,8 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             settingsStoreMock,
             userSettingsMock,
+            MyIdentityStoreMock(),
+            PushSettingManagerMock(),
             contactStoreMock,
             GroupManagerMock(),
             entityManager,
@@ -276,7 +296,7 @@ class UserNotificationManagerTests: XCTestCase {
         let result = userNotificationManager.userNotificationContent(pendingUserNotification)
 
         XCTAssertEqual(result?.messageID, expectedMessageID)
-        XCTAssertEqual(result?.senderID, expectedSenderID)
+        XCTAssertEqual(result?.senderID, expectedSenderID.string)
         XCTAssertEqual(result?.fromName, expectedFromName)
         XCTAssertEqual(result?.title, expectedTitle)
         XCTAssertEqual(result?.body, expectedBody)
@@ -286,7 +306,8 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
         XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
         XCTAssertEqual(result?.groupID, expectedGroupID)
-        XCTAssertNil(result?.pushSetting)
+        XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
+        XCTAssertEqual(result?.pushSetting?.type, .on)
     }
 
     func testUserNotificationContentBaseMessageFlags() throws {
@@ -342,6 +363,8 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 SettingsStoreMock(),
                 UserSettingsMock(),
+                MyIdentityStoreMock(),
+                PushSettingManagerMock(),
                 ContactStoreMock(),
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),
@@ -355,7 +378,7 @@ class UserNotificationManagerTests: XCTestCase {
 
     func testUserNotificationContentPushSettingSendPushSingleChat() throws {
         let expectedMessageID = "94c605d0e3150619"
-        let expectedSenderID = "0S9AE6CP"
+        let expectedSenderID = ThreemaIdentity("0S9AE6CP")
         let expectedFromName = "0S9AE6CP"
         let expectedTitle: String? = "0S9AE6CP"
         let expectedBody = "Message"
@@ -368,23 +391,18 @@ class UserNotificationManagerTests: XCTestCase {
 
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blockUnknown = false
-        
+
         let settingsStoreMock = SettingsStoreMock()
         settingsStoreMock.notificationType = .restrictive
         settingsStoreMock.pushShowPreview = true
 
-        userSettingsMock.pushSettingsList = [[
-            "identity": expectedSenderID,
-            "type": "\(PushSettingType.off.rawValue)",
-            "periodOffTime": "\(PeriodOffTime.time1Day.rawValue)",
-            "periodOffTillDate": nil,
-            "silent": false,
-            "mentions": false,
-        ]]
+        var pushSetting = PushSetting(identity: expectedSenderID, groupIdentity: nil, _type: .off)
+        pushSetting.setPeriodOffTime(.time1Day)
+        userSettingsMock.pushSettings = [try JSONEncoder().encode(pushSetting)]
 
         let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
         pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
-            "from": expectedSenderID,
+            "from": expectedSenderID.string,
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
@@ -393,6 +411,13 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             settingsStoreMock,
             userSettingsMock,
+            MyIdentityStoreMock(),
+            PushSettingManager(
+                userSettingsMock,
+                GroupManagerMock(),
+                EntityManager(databaseContext: databaseCnx),
+                false
+            ),
             ContactStoreMock(),
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
@@ -401,7 +426,7 @@ class UserNotificationManagerTests: XCTestCase {
         let result = userNotificationManager.userNotificationContent(pendingUserNotification)
 
         XCTAssertEqual(result?.messageID, expectedMessageID)
-        XCTAssertEqual(result?.senderID, expectedSenderID)
+        XCTAssertEqual(result?.senderID, expectedSenderID.string)
         XCTAssertEqual(result?.fromName, expectedFromName)
         XCTAssertEqual(result?.title, expectedTitle)
         XCTAssertEqual(result?.body, expectedBody)
@@ -422,11 +447,11 @@ class UserNotificationManagerTests: XCTestCase {
     }
 
     func testUserNotificationContentPushSettingSendPushGroupChat() throws {
-        let groupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreator = "CREATOR1"
+        let groupID: Data = MockData.generateGroupID()
+        let groupCreator = ThreemaIdentity("CREATOR1")
 
         let expectedMessageID = "94c605d0e3150619"
-        let expectedSenderID = "0S9AE6CP"
+        let expectedSenderID = ThreemaIdentity("0S9AE6CP")
         let expectedFromName = "red99"
         let expectedTitle: String? = "This is a group text"
         let expectedBody = "red99: This is a group message"
@@ -435,37 +460,40 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedCmd = "newgroupmsg"
         let expectedCategoryIdentifier = "GROUP"
         let expectedIsGroupMessage = true
-        let expectedGroupID: String? = groupID.base64EncodedString()
+        let expectedGroupIdentity = GroupIdentity(id: groupID, creator: groupCreator)
 
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blockUnknown = false
         userSettingsMock.pushDecrypt = true
-        userSettingsMock.pushSettingsList = [[
-            "identity": groupID.hexString,
-            "type": "\(PushSettingType.off.rawValue)",
-            "periodOffTime": "\(PeriodOffTime.time1Day.rawValue)",
-            "periodOffTillDate": nil,
-            "silent": false,
-            "mentions": false,
-        ]]
+
+        var pushSetting = PushSetting(identity: nil, groupIdentity: expectedGroupIdentity, _type: .off)
+        pushSetting.setPeriodOffTime(.time1Day)
+        userSettingsMock.pushSettings = [try JSONEncoder().encode(pushSetting)]
 
         let settingsStoreMock = SettingsStoreMock()
         settingsStoreMock.pushShowPreview = true
         settingsStoreMock.notificationType = .restrictive
-        
+
         // Create message for mocking
         var textMessage: TextMessage!
         databasePreparer.save {
+            let contactGroupCreator = databasePreparer.createContact(
+                publicKey: MockData.generatePublicKey(),
+                identity: groupCreator.string,
+                verificationLevel: 0,
+                nickname: groupCreator.string
+            )
             let contact = databasePreparer.createContact(
-                publicKey: Data([1]),
-                identity: expectedSenderID,
+                publicKey: MockData.generatePublicKey(),
+                identity: expectedSenderID.string,
                 verificationLevel: 0,
                 nickname: expectedFromName
             )
-            let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
+            let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator.string)
             databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.groupID = group.groupID
+                    conversation.contact = contactGroupCreator
                     conversation.groupName = expectedTitle
 
                     textMessage = self.databasePreparer.createTextMessage(
@@ -486,16 +514,25 @@ class UserNotificationManagerTests: XCTestCase {
 
         let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
         pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
-            "from": expectedSenderID,
+            "from": expectedSenderID.string,
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
         ])
         pendingUserNotification.baseMessage = textMessage
 
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            EntityManager(databaseContext: databaseCnx),
+            false
+        )
+
         let userNotificationManager = UserNotificationManager(
             settingsStoreMock,
             userSettingsMock,
+            MyIdentityStoreMock(),
+            pushSettingManager,
             ContactStoreMock(),
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
@@ -504,7 +541,7 @@ class UserNotificationManagerTests: XCTestCase {
         let result = userNotificationManager.userNotificationContent(pendingUserNotification)
 
         XCTAssertEqual(result?.messageID, expectedMessageID)
-        XCTAssertEqual(result?.senderID, expectedSenderID)
+        XCTAssertEqual(result?.senderID, expectedSenderID.string)
         XCTAssertEqual(result?.fromName, expectedFromName)
         XCTAssertEqual(result?.title, expectedTitle)
         XCTAssertEqual(result?.body, expectedBody)
@@ -513,11 +550,11 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(result?.cmd, expectedCmd)
         XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
         XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
-        XCTAssertEqual(result?.groupID, expectedGroupID)
+        XCTAssertEqual(result?.groupID, expectedGroupIdentity.id.base64EncodedString())
 
         if let pushSetting = result?.pushSetting {
             XCTAssertFalse(pushSetting.canSendPush())
-            XCTAssertFalse(pushSetting.canSendPush(for: result?.baseMessage))
+            XCTAssertFalse(try pushSettingManager.canSendPush(for: XCTUnwrap(result?.baseMessage)))
         }
         else {
             XCTFail("Push setting is missing")
@@ -527,7 +564,7 @@ class UserNotificationManagerTests: XCTestCase {
 
     func testUserNotificationContentPushOnly() throws {
         let expectedMessageID = "94c605d0e3150619"
-        let expectedSenderID = "0S9AE6CP"
+        let expectedSenderID = ThreemaIdentity("0S9AE6CP")
         let expectedFromName = "0S9AE6CP"
         let expectedTitle: String? = "0S9AE6CP"
         let expectedBody = "Message"
@@ -543,7 +580,7 @@ class UserNotificationManagerTests: XCTestCase {
 
         let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
         pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
-            "from": expectedSenderID,
+            "from": expectedSenderID.string,
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
@@ -552,6 +589,8 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             SettingsStoreMock(),
             userSettingsMock,
+            MyIdentityStoreMock(),
+            PushSettingManagerMock(),
             ContactStoreMock(),
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
@@ -560,7 +599,7 @@ class UserNotificationManagerTests: XCTestCase {
         let result = userNotificationManager.userNotificationContent(pendingUserNotification)
 
         XCTAssertEqual(result?.messageID, expectedMessageID)
-        XCTAssertEqual(result?.senderID, expectedSenderID)
+        XCTAssertEqual(result?.senderID, expectedSenderID.string)
         XCTAssertEqual(result?.fromName, expectedFromName)
         XCTAssertEqual(result?.title, expectedTitle)
         XCTAssertEqual(result?.body, expectedBody)
@@ -570,7 +609,8 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
         XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
         XCTAssertEqual(result?.groupID, expectedGroupID)
-        XCTAssertNil(result?.pushSetting)
+        XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
+        XCTAssertEqual(result?.pushSetting?.type, .on)
     }
 
     func testUserNotificationContentPushWithAbstractMessage() throws {
@@ -608,7 +648,7 @@ class UserNotificationManagerTests: XCTestCase {
 
         for testData in testsData {
             let expectedMessageID = "94c605d0e3150619"
-            let expectedSenderID = "0S9AE6CP"
+            let expectedSenderID = ThreemaIdentity("0S9AE6CP")
             let expectedAttachmentName: String? = nil
             let expectedAttachmentURL: URL? = nil
             let expectedCmd = "newmsg"
@@ -621,7 +661,7 @@ class UserNotificationManagerTests: XCTestCase {
             databasePreparer.save {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
-                    identity: expectedSenderID,
+                    identity: expectedSenderID.string,
                     verificationLevel: 0,
                     nickname: "red99"
                 )
@@ -654,7 +694,7 @@ class UserNotificationManagerTests: XCTestCase {
             pendingUserNotification
                 .threemaPushNotification =
                 try ThreemaPushNotification(from: [
-                    "from": expectedSenderID,
+                    "from": expectedSenderID.string,
                     "messageId": expectedMessageID,
                     "voip": false,
                     "cmd": expectedCmd,
@@ -664,6 +704,8 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
+                MyIdentityStoreMock(),
+                PushSettingManagerMock(),
                 contactStoreMock,
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),
@@ -672,7 +714,7 @@ class UserNotificationManagerTests: XCTestCase {
             let result = userNotificationManager.userNotificationContent(pendingUserNotification)
 
             XCTAssertEqual(result?.messageID, expectedMessageID)
-            XCTAssertEqual(result?.senderID, expectedSenderID)
+            XCTAssertEqual(result?.senderID, expectedSenderID.string)
             XCTAssertEqual(result?.fromName, testData["expectedFromName"] as? String)
             XCTAssertEqual(result?.title, testData["expectedTitle"] as? String)
             XCTAssertEqual(result?.body, testData["expectedBody"] as? String)
@@ -683,7 +725,8 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, expectedGroupID)
             XCTAssertNil(result?.baseMessage)
-            XCTAssertNil(result?.pushSetting)
+            XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
+            XCTAssertEqual(result?.pushSetting?.type, .on)
         }
     }
 
@@ -788,13 +831,13 @@ class UserNotificationManagerTests: XCTestCase {
 
             let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
             
-            groupManagerMock.getGroupReturns = Group(
+            groupManagerMock.getGroupReturns.append(Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
-            )
+            ))
 
             // Create abstract group message for mocking
             let message = GroupTextMessage()
@@ -817,6 +860,8 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
+                MyIdentityStoreMock(),
+                PushSettingManagerMock(),
                 contactStoreMock,
                 groupManagerMock,
                 EntityManager(databaseContext: databaseCnx),
@@ -894,13 +939,13 @@ class UserNotificationManagerTests: XCTestCase {
 
         let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
 
-        groupManagerMock.getGroupReturns = Group(
+        groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
-        )
+        ))
 
         // Create abstract group message for mocking
         let message = GroupTextMessage()
@@ -922,6 +967,8 @@ class UserNotificationManagerTests: XCTestCase {
         let userNotificationManager = UserNotificationManager(
             SettingsStoreMock(),
             userSettingsMock,
+            MyIdentityStoreMock(),
+            PushSettingManagerMock(),
             contactStoreMock,
             groupManagerMock,
             EntityManager(databaseContext: databaseCnx),
@@ -967,7 +1014,7 @@ class UserNotificationManagerTests: XCTestCase {
 
         for testData in testsData {
             let expectedMessageID = "94c605d0e3150619"
-            let expectedSenderID = "0S9AE6CP"
+            let expectedSenderID = ThreemaIdentity("0S9AE6CP")
             let expectedAttachmentName: String? = nil
             let expectedAttachmentURL: URL? = nil
             let expectedCmd = "newmsg"
@@ -981,7 +1028,7 @@ class UserNotificationManagerTests: XCTestCase {
             databasePreparer.save {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
-                    identity: expectedSenderID,
+                    identity: expectedSenderID.string,
                     verificationLevel: 0,
                     nickname: "red99"
                 )
@@ -1027,7 +1074,7 @@ class UserNotificationManagerTests: XCTestCase {
             pendingUserNotification
                 .threemaPushNotification =
                 try ThreemaPushNotification(from: [
-                    "from": expectedSenderID,
+                    "from": expectedSenderID.string,
                     "messageId": expectedMessageID,
                     "voip": false,
                     "cmd": expectedCmd,
@@ -1037,6 +1084,8 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
+                MyIdentityStoreMock(),
+                PushSettingManagerMock(),
                 contactStoreMock,
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),
@@ -1045,7 +1094,7 @@ class UserNotificationManagerTests: XCTestCase {
             let result = userNotificationManager.userNotificationContent(pendingUserNotification)
 
             XCTAssertEqual(result?.messageID, expectedMessageID)
-            XCTAssertEqual(result?.senderID, expectedSenderID)
+            XCTAssertEqual(result?.senderID, expectedSenderID.string)
             XCTAssertEqual(result?.fromName, testData["expectedFromName"] as? String)
             XCTAssertEqual(result?.title, testData["expectedTitle"] as? String)
             XCTAssertEqual(result?.body, testData["expectedBody"] as? String)
@@ -1056,13 +1105,14 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, expectedGroupID)
             XCTAssertNil(result?.baseMessage)
-            XCTAssertNil(result?.pushSetting)
+            XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
+            XCTAssertEqual(result?.pushSetting?.type, .on)
         }
     }
 
     func testUserNotificationContentPushWithBaseMessageGroup() throws {
-        let groupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreator = "CREATOR1"
+        let groupID = MockData.generateGroupID()
+        let groupCreator = ThreemaIdentity("CREATOR1")
 
         let testsData = [
             [
@@ -1071,7 +1121,7 @@ class UserNotificationManagerTests: XCTestCase {
                 "expectedFromName": "Hans Muster",
                 "expectedTitle": "Hans Muster",
                 "expectedBody": "Group message",
-                "expectedGroupId": nil,
+                "expectedGroupId": groupID.base64EncodedString(),
             ],
             [
                 "pushShowNickname": true,
@@ -1079,7 +1129,7 @@ class UserNotificationManagerTests: XCTestCase {
                 "expectedFromName": "red99",
                 "expectedTitle": "red99",
                 "expectedBody": "Group message",
-                "expectedGroupId": nil,
+                "expectedGroupId": groupID.base64EncodedString(),
             ],
             [
                 "pushShowNickname": false,
@@ -1108,10 +1158,16 @@ class UserNotificationManagerTests: XCTestCase {
             let expectedCategoryIdentifier = "GROUP"
             let expectedIsGroupMessage = true
 
-            // Create base message in group cnversation for mocking
+            // Create base message in group conversation for mocking
             var contact: ContactEntity!
             var message: TextMessage!
             databasePreparer.save {
+                let contactGroupCreator = databasePreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: groupCreator.string,
+                    verificationLevel: 0,
+                    nickname: groupCreator.string
+                )
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: expectedSenderID,
@@ -1120,10 +1176,16 @@ class UserNotificationManagerTests: XCTestCase {
                 )
                 contact.firstName = "Hans"
                 contact.lastName = "Muster"
-                let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
+
+                let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator.string)
                 databasePreparer
-                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                    .createConversation(
+                        typing: false,
+                        unreadMessageCount: 0,
+                        visibility: .default
+                    ) { conversation in
                         conversation.groupID = group.groupID
+                        conversation.contact = contactGroupCreator
                         conversation.groupName = "This is a group test"
 
                         message = self.databasePreparer.createTextMessage(
@@ -1172,6 +1234,8 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
+                MyIdentityStoreMock(),
+                PushSettingManagerMock(),
                 contactStoreMock,
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),
@@ -1191,7 +1255,8 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, testData["expectedGroupId"] as? String)
             XCTAssertNotNil(result?.baseMessage)
-            XCTAssertNil(result?.pushSetting)
+            XCTAssertEqual(result?.pushSetting?.groupIdentity, GroupIdentity(id: groupID, creator: groupCreator))
+            XCTAssertEqual(result?.pushSetting?.type, .on)
         }
     }
 
@@ -1354,6 +1419,8 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
+                MyIdentityStoreMock(),
+                PushSettingManagerMock(),
                 ContactStoreMock(),
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),

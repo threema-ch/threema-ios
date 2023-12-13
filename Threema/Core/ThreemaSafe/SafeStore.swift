@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Gzip
+import ThreemaEssentials
 import ThreemaFramework
 
 @objc class SafeStore: NSObject {
@@ -291,10 +292,15 @@ import ThreemaFramework
             concatURL.append(contentsOf: "@")
             concatURL.append(contentsOf: url[String.Index(utf16Offset: httpProtocol.count, in: httpProtocol)...])
             
-            return URL(string: String(concatURL))
+            url = String(concatURL)
         }
-
-        return URL(string: url)
+        
+        if #available(iOS 17.0, *) {
+            return URL(string: url, encodingInvalidCharacters: false)
+        }
+        else {
+            return URL(string: url)
+        }
     }
     
     /// Extract and return server url, user and password from https://user:password@host.com
@@ -906,8 +912,10 @@ import ThreemaFramework
                    let members = bGroup.members {
                     
                     groupManager.createOrUpdateDB(
-                        groupID: Data(BytesUtility.toBytes(hexString: groupID)!),
-                        creator: groupCreator.uppercased(),
+                        for: GroupIdentity(
+                            id: Data(BytesUtility.toBytes(hexString: groupID)!),
+                            creator: ThreemaIdentity(groupCreator)
+                        ),
                         members: Set<String>(members.map { $0.uppercased() }),
                         systemMessageDate: nil,
                         sourceCaller: .local

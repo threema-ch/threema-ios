@@ -72,7 +72,7 @@ enum ChatViewConfiguration {
         /// Call bar button item symbol name
         static let callSymbolName = "threema.phone"
         /// Group call bar button item symbol name
-        static let groupCallSymbolName = "threema.phone.and.person.3"
+        static let groupCallSymbolName = "threema.phone"
         
         /// Custom ballot bar button item shown in group chats
         enum BallotButton {

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Intents
+import PromiseKit
 
 public class IntentCreator {
     

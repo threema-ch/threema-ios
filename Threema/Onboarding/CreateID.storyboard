@@ -1,135 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="mOf-hy-rmq">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="5S6-nU-Kbv">
     <device id="retina5_9" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Splash View Controller-->
-        <scene sceneID="o1X-Ig-PSP">
-            <objects>
-                <viewController id="mOf-hy-rmq" customClass="SplashViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="er9-1X-RRV"/>
-                        <viewControllerLayoutGuide type="bottom" id="iCk-iL-CZ7"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="v8r-4c-pes">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="B4n-jn-TLQ">
-                                <rect key="frame" x="0.0" y="-1" width="375" height="812"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                <subviews>
-                                    <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="EEk-Ys-NPF">
-                                        <rect key="frame" x="43" y="477" width="280" height="220"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                        <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Let's get started" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="mIm-Qb-6tD">
-                                                <rect key="frame" x="0.0" y="12" width="280" height="34"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="28"/>
-                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Threema protects your privacy more rigorously than any other messenger. Find out more in our Privacy Policy." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Wae-Hi-ElV" customClass="ZSWTappableLabel">
-                                                <rect key="frame" x="0.0" y="88" width="280" height="118"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
-                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                <nil key="highlightedColor"/>
-                                                <connections>
-                                                    <outlet property="tapDelegate" destination="mOf-hy-rmq" id="gMW-Id-VFw"/>
-                                                </connections>
-                                            </label>
-                                        </subviews>
-                                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </view>
-                                    <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BgE-RK-0BU">
-                                        <rect key="frame" x="65" y="629" width="280" height="168"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                        <subviews>
-                                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vn1-kE-7Yd">
-                                                <rect key="frame" x="0.0" y="28" width="280" height="36"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                <color key="backgroundColor" red="0.2470588235" green="0.90196078430000004" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                                <state key="normal" title="Setup Threema">
-                                                    <color key="titleColor" red="0.13725490200000001" green="0.0" blue="0.1019607843" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                </state>
-                                                <connections>
-                                                    <action selector="setupAction:" destination="mOf-hy-rmq" eventType="touchUpInside" id="w6v-b7-D36"/>
-                                                </connections>
-                                            </button>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Neu bei Threema?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="A92-tb-6qY">
-                                                <rect key="frame" x="0.0" y="0.0" width="280" height="21"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                <nil key="textColor"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
-                                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cJL-rI-nJM">
-                                                <rect key="frame" x="1" y="124" width="279" height="36"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                <color key="backgroundColor" red="0.207775712" green="0.91067373750000002" blue="0.34047716859999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                                <state key="normal" title="Restore from backup">
-                                                    <color key="titleColor" red="0.14953044060000001" green="0.1128500476" blue="0.1428669393" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                </state>
-                                                <connections>
-                                                    <action selector="restoreAction:" destination="mOf-hy-rmq" eventType="touchUpInside" id="L66-M1-y25"/>
-                                                </connections>
-                                            </button>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Zurück bei Threema?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ysc-C4-keD">
-                                                <rect key="frame" x="1" y="95" width="279" height="21"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                <nil key="textColor"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
-                                        </subviews>
-                                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </view>
-                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Threema" translatesAutoresizingMaskIntoConstraints="NO" id="ZFc-jA-mpp">
-                                        <rect key="frame" x="108" y="26" width="153" height="18"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    </imageView>
-                                </subviews>
-                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
-                            </view>
-                            <view contentMode="scaleAspectFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="g2H-Gl-Liy" customClass="WizardBackgroundView" customModule="ThreemaFramework">
-                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                            </view>
-                        </subviews>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                    </view>
-                    <nil key="simulatedStatusBarMetrics"/>
-                    <nil key="simulatedTopBarMetrics"/>
-                    <nil key="simulatedBottomBarMetrics"/>
-                    <connections>
-                        <outlet property="bgView" destination="g2H-Gl-Liy" id="Lep-5e-9vx"/>
-                        <outlet property="containerView" destination="B4n-jn-TLQ" id="VoJ-0i-M5N"/>
-                        <outlet property="controlsView" destination="BgE-RK-0BU" id="Ixt-E6-q3w"/>
-                        <outlet property="mainContentView" destination="B4n-jn-TLQ" id="eFh-PT-41J"/>
-                        <outlet property="privacyPolicyInfo" destination="Wae-Hi-ElV" id="l6L-8X-ynS"/>
-                        <outlet property="privacyView" destination="EEk-Ys-NPF" id="j8Y-ys-iDW"/>
-                        <outlet property="restoreButton" destination="cJL-rI-nJM" id="NKI-EH-wmr"/>
-                        <outlet property="restoreTitleLabel" destination="ysc-C4-keD" id="5Yg-9Q-p7U"/>
-                        <outlet property="setupButton" destination="vn1-kE-7Yd" id="hfR-zG-EbB"/>
-                        <outlet property="setupTitleLabel" destination="A92-tb-6qY" id="kb2-1o-bjc"/>
-                        <outlet property="threemaLogoView" destination="ZFc-jA-mpp" id="sRC-9k-WKf"/>
-                        <outlet property="welcomeLabel" destination="mIm-Qb-6tD" id="6IS-9b-AfM"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="AcB-z5-4C2" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="-637.68115942028987" y="-2235.326086956522"/>
-        </scene>
         <!--Parallax Page View Controller-->
         <scene sceneID="crb-7E-Lpy">
             <objects>
@@ -307,7 +185,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="yql-tb-8lS">
-                                <rect key="frame" x="47.666666666666657" y="84.000000000000028" width="280" height="355.66666666666674"/>
+                                <rect key="frame" x="47.666666666666657" y="90.000000000000028" width="280" height="355.66666666666674"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Restore ID Backup" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ixG-cg-ozL">
                                         <rect key="frame" x="0.0" y="0.0" width="280" height="33.666666666666664"/>
@@ -485,7 +363,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="top" axis="vertical" spacing="35" translatesAutoresizingMaskIntoConstraints="NO" id="MyQ-AN-C56">
-                                <rect key="frame" x="47.666666666666657" y="84.000000000000028" width="280" height="391.66666666666674"/>
+                                <rect key="frame" x="47.666666666666657" y="90.000000000000028" width="280" height="391.66666666666674"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="35" translatesAutoresizingMaskIntoConstraints="NO" id="FFD-0I-auJ">
                                         <rect key="frame" x="0.0" y="0.0" width="280" height="326.66666666666669"/>
@@ -602,7 +480,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="30" translatesAutoresizingMaskIntoConstraints="NO" id="qIx-bu-osx">
-                                <rect key="frame" x="47.666666666666657" y="84" width="280" height="331.33333333333331"/>
+                                <rect key="frame" x="47.666666666666657" y="90" width="280" height="331.33333333333331"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="35" translatesAutoresizingMaskIntoConstraints="NO" id="0lH-OE-C22">
                                         <rect key="frame" x="0.0" y="0.0" width="280" height="271.33333333333331"/>
@@ -709,7 +587,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalCentering" alignment="center" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="v9l-PO-Jze">
-                                <rect key="frame" x="27.666666666666657" y="84" width="320" height="347"/>
+                                <rect key="frame" x="27.666666666666657" y="90" width="320" height="347"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="top" axis="vertical" distribution="equalSpacing" alignment="center" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="7a2-CP-Kp2">
                                         <rect key="frame" x="17.666666666666657" y="0.0" width="284.66666666666674" height="298"/>
@@ -1567,7 +1445,6 @@
                                         </state>
                                         <connections>
                                             <action selector="selectedCountryAction:" destination="Plt-XP-QwS" eventType="touchUpInside" id="GQ9-aJ-OuQ"/>
-                                            <action selector="setupAction:" destination="mOf-hy-rmq" eventType="touchUpInside" id="xtE-OS-aGE"/>
                                             <action selector="yesAction:" destination="blh-oJ-0Sw" eventType="touchUpInside" id="lbg-Fj-tk5"/>
                                         </connections>
                                     </button>
@@ -1980,7 +1857,6 @@
                                         </state>
                                         <connections>
                                             <action selector="finishAction:" destination="NJg-nK-5E4" eventType="touchUpInside" id="2SV-Zl-7QC"/>
-                                            <action selector="setupAction:" destination="mOf-hy-rmq" eventType="touchUpInside" id="AXy-Th-jKA"/>
                                         </connections>
                                     </button>
                                 </subviews>
@@ -2018,6 +1894,144 @@
             </objects>
             <point key="canvasLocation" x="4385.6000000000004" y="-2283.0584707646181"/>
         </scene>
+        <!--Splash View Controller-->
+        <scene sceneID="r5N-Kj-2ZG">
+            <objects>
+                <viewController id="5S6-nU-Kbv" customClass="SplashViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="oi6-x5-WfD"/>
+                        <viewControllerLayoutGuide type="bottom" id="TZa-gz-wL9"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uUR-ut-Opv">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xSL-wQ-7zA">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                                <subviews>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Threema" translatesAutoresizingMaskIntoConstraints="NO" id="5lj-Ts-KGj">
+                                        <rect key="frame" x="111" y="74" width="153" height="18"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="153" id="R41-a5-Nd7"/>
+                                            <constraint firstAttribute="height" constant="18" id="ehl-mW-Ru8"/>
+                                        </constraints>
+                                    </imageView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="251" ambiguous="YES" axis="vertical" spacing="50" translatesAutoresizingMaskIntoConstraints="NO" id="eEn-Cf-gGP">
+                                        <rect key="frame" x="40" y="291" width="295" height="141"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Let's get started" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="1Vr-Bu-ZL5">
+                                                <rect key="frame" x="0.0" y="0.0" width="295" height="33.666666666666664"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="28"/>
+                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Threema protects your privacy more rigorously than any other messenger. Find out more in our Privacy Policy." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yTm-wo-Xsa" customClass="ZSWTappableLabel">
+                                                <rect key="frame" x="0.0" y="83.666666666666671" width="295" height="57.333333333333329"/>
+                                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
+                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                <nil key="highlightedColor"/>
+                                                <connections>
+                                                    <outlet property="tapDelegate" destination="5S6-nU-Kbv" id="Ix3-4y-Jfg"/>
+                                                </connections>
+                                            </label>
+                                        </subviews>
+                                    </stackView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="251" axis="vertical" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="gXb-0p-uYr">
+                                        <rect key="frame" x="40" y="637.33333333333337" width="295" height="134.66666666666663"/>
+                                        <subviews>
+                                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="VpV-E5-lrj">
+                                                <rect key="frame" x="0.0" y="0.0" width="295" height="57.333333333333336"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Neu bei Threema?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MH4-iy-8DS">
+                                                        <rect key="frame" x="0.0" y="0.0" width="295" height="20.333333333333332"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                        <nil key="textColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <button opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="251" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Xbz-au-h8y">
+                                                        <rect key="frame" x="0.0" y="25.333333333333258" width="295" height="32"/>
+                                                        <color key="backgroundColor" red="0.2470588235" green="0.90196078430000004" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                                        <state key="normal" title="Setup Threema">
+                                                            <color key="titleColor" red="0.13725490200000001" green="0.0" blue="0.1019607843" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                        </state>
+                                                        <connections>
+                                                            <action selector="setupAction:" destination="5S6-nU-Kbv" eventType="touchUpInside" id="gDw-0Z-tEH"/>
+                                                        </connections>
+                                                    </button>
+                                                </subviews>
+                                            </stackView>
+                                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="F4M-es-adS">
+                                                <rect key="frame" x="0.0" y="77.333333333333258" width="295" height="57.333333333333343"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Zurück bei Threema?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AO2-yA-Flu">
+                                                        <rect key="frame" x="0.0" y="0.0" width="295" height="20.333333333333332"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                        <nil key="textColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <button opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="251" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uLh-Z3-bb1">
+                                                        <rect key="frame" x="0.0" y="25.333333333333371" width="295" height="32"/>
+                                                        <color key="backgroundColor" red="0.207775712" green="0.91067373750000002" blue="0.34047716859999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                                        <state key="normal" title="Restore from backup">
+                                                            <color key="titleColor" red="0.14953044060000001" green="0.1128500476" blue="0.1428669393" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                        </state>
+                                                        <connections>
+                                                            <action selector="restoreAction:" destination="5S6-nU-Kbv" eventType="touchUpInside" id="uzB-xY-AdE"/>
+                                                        </connections>
+                                                    </button>
+                                                </subviews>
+                                            </stackView>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstItem="5lj-Ts-KGj" firstAttribute="centerX" secondItem="xSL-wQ-7zA" secondAttribute="centerX" id="1dC-EU-UDQ"/>
+                                    <constraint firstAttribute="bottom" secondItem="gXb-0p-uYr" secondAttribute="bottom" constant="40" id="ZAb-we-xnE"/>
+                                    <constraint firstItem="eEn-Cf-gGP" firstAttribute="leading" secondItem="xSL-wQ-7zA" secondAttribute="leading" constant="40" id="cFt-BL-abl"/>
+                                    <constraint firstAttribute="trailing" secondItem="eEn-Cf-gGP" secondAttribute="trailing" constant="40" id="cpQ-E8-M4G"/>
+                                    <constraint firstItem="gXb-0p-uYr" firstAttribute="leading" secondItem="xSL-wQ-7zA" secondAttribute="leading" constant="40" id="eOd-rZ-FDW"/>
+                                    <constraint firstAttribute="trailing" secondItem="gXb-0p-uYr" secondAttribute="trailing" constant="40" id="pm0-VG-d0R"/>
+                                    <constraint firstItem="5lj-Ts-KGj" firstAttribute="top" secondItem="xSL-wQ-7zA" secondAttribute="topMargin" constant="16" id="x5p-oA-cTi"/>
+                                </constraints>
+                            </view>
+                            <view contentMode="scaleAspectFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SEI-AD-D7Z" customClass="WizardBackgroundView" customModule="ThreemaFramework">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="xSL-wQ-7zA" firstAttribute="top" secondItem="uUR-ut-Opv" secondAttribute="top" id="IuO-TT-f1x"/>
+                            <constraint firstAttribute="trailing" secondItem="xSL-wQ-7zA" secondAttribute="trailing" id="aT6-rX-gfl"/>
+                            <constraint firstItem="xSL-wQ-7zA" firstAttribute="leading" secondItem="uUR-ut-Opv" secondAttribute="leading" id="jPI-iv-6MP"/>
+                            <constraint firstAttribute="bottom" secondItem="xSL-wQ-7zA" secondAttribute="bottom" id="ry8-JH-0HK"/>
+                        </constraints>
+                    </view>
+                    <nil key="simulatedStatusBarMetrics"/>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <nil key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="bgView" destination="SEI-AD-D7Z" id="brE-YA-ig4"/>
+                        <outlet property="containerView" destination="xSL-wQ-7zA" id="B3M-3V-Syv"/>
+                        <outlet property="controlStackView" destination="gXb-0p-uYr" id="kFX-zy-3cx"/>
+                        <outlet property="infoStackView" destination="eEn-Cf-gGP" id="fHF-6q-5Dn"/>
+                        <outlet property="mainContentView" destination="xSL-wQ-7zA" id="zfF-LG-92H"/>
+                        <outlet property="privacyPolicyInfo" destination="yTm-wo-Xsa" id="Ie5-mr-GNy"/>
+                        <outlet property="restoreButton" destination="uLh-Z3-bb1" id="i3V-nc-d1h"/>
+                        <outlet property="restoreTitleLabel" destination="AO2-yA-Flu" id="QBr-4W-O7N"/>
+                        <outlet property="setupButton" destination="Xbz-au-h8y" id="Vbp-o8-oKz"/>
+                        <outlet property="setupTitleLabel" destination="MH4-iy-8DS" id="jTh-qc-tWX"/>
+                        <outlet property="threemaLogoView" destination="5lj-Ts-KGj" id="k07-Od-x2e"/>
+                        <outlet property="welcomeLabel" destination="1Vr-Bu-ZL5" id="K3M-zX-7VR"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cYF-5i-aqI" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1492" y="-2236"/>
+        </scene>
     </scenes>
     <designables>
         <designable name="3Jz-R0-gym">
@@ -2050,9 +2064,6 @@
         <designable name="VK4-qi-068">
             <size key="intrinsicContentSize" width="42" height="29"/>
         </designable>
-        <designable name="Wae-Hi-ElV">
-            <size key="intrinsicContentSize" width="813.33333333333337" height="19.333333333333332"/>
-        </designable>
         <designable name="ZVJ-Bl-eFc">
             <size key="intrinsicContentSize" width="46" height="30"/>
         </designable>
@@ -2073,6 +2084,9 @@
         </designable>
         <designable name="wJ2-qG-fpf">
             <size key="intrinsicContentSize" width="30" height="29"/>
+        </designable>
+        <designable name="yTm-wo-Xsa">
+            <size key="intrinsicContentSize" width="813.33333333333337" height="19.333333333333332"/>
         </designable>
         <designable name="yiM-UT-SNh">
             <size key="intrinsicContentSize" width="42" height="29"/>

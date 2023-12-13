@@ -33,6 +33,7 @@
 
 @interface BackupIdentityViewController ()
 
+@property (weak, nonatomic) IBOutlet CopyLabel *identityBackupLabel;
 @end
 
 @implementation BackupIdentityViewController {

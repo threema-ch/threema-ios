@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import CryptoKit
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 
@@ -77,17 +78,12 @@ struct Connecting: GroupCallState {
         )
         
         let localParticipantID = ParticipantID(id: joinResponse.participantID)
-        
-        // TODO: (IOS-4080) Fetch actual local contact
-        let localContactModel = ContactModel(identity: "Test", nickname: "test")
-        
+                
         let localParticipant = LocalParticipant(
             participantID: localParticipantID,
-            contactModel: localContactModel,
             localContext: LocalContext(),
-            threemaID: groupCallActor.localIdentity,
-            dependencies: self.groupCallActor.dependencies,
-            localIdentity: groupCallActor.localIdentity
+            localContactModel: self.groupCallActor.localContactModel,
+            dependencies: self.groupCallActor.dependencies
         )
         
         self.groupCallContext = try GroupCallContext(
@@ -141,13 +137,16 @@ struct Connecting: GroupCallState {
             throw GroupCallError.serializationFailure
         }
         
-        /// **Protocol Step: Group Call Join Steps** 6. If the hello.participants contains less than 4 items, set the
-        /// initial capture state of the microphone to on.
-        // TODO: (IOS-4078) See above
+        // swiftformat:disable:next acronyms
+        let participantIDs = envelope.participantIds
         
-        // swiftformat:disable acronyms
-        DDLogNotice("[GroupCall] Added participants \(envelope.participantIds)")
-        // swiftformat:enable acronyms
+        /// **Protocol Step: Group Call Join Steps** 6. If the hello.participants contains less than 4 items, set the
+        /// initial capture state of the microphone to on. We only do this if the microphone access was granted.
+        
+        // swiftformat:disable:next acronyms
+        if envelope.participantIds.count < 4, AVAudioSession.sharedInstance().recordPermission == .granted {
+            await groupCallActor.toggleOwnAudio(false)
+        }
         
         guard !Task.isCancelled else {
             return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
@@ -155,15 +154,15 @@ struct Connecting: GroupCallState {
         
         /// **Protocol Step: Group Call Join Steps** 7. If call is marked as new:
         if await groupCallActor.isNew {
-            try await groupCallActor.sendStartMessageWithDelay()
+            if try await !groupCallActor.sendStartMessageWithDelay() {
+                return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
+            }
         }
         
         return Connected(
             groupCallActor: groupCallActor,
             groupCallContext: groupCallContext,
-            // swiftformat:disable acronyms
-            participantIDs: envelope.participantIds
-            // swiftformat:enable acronyms
+            participantIDs: participantIDs
         )
     }
     

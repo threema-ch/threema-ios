@@ -70,8 +70,8 @@ class DHSessionTests: XCTestCase {
         XCTAssertNotNil(initiatorDHSession.myRatchet2DH)
         XCTAssertNotNil(responderDHSession.peerRatchet2DH)
         XCTAssertEqual(
-            initiatorDHSession.myRatchet2DH!.currentEncryptionKey,
-            responderDHSession.peerRatchet2DH!.currentEncryptionKey
+            initiatorDHSession.myRatchet2DH?.currentEncryptionKey,
+            responderDHSession.peerRatchet2DH?.currentEncryptionKey
         )
     }
     
@@ -182,7 +182,7 @@ class DHSessionTests: XCTestCase {
         
         var remoteVersion = CspE2eFs_VersionRange()
         remoteVersion.min = UInt32(CspE2eFs_Version.v11.rawValue)
-        remoteVersion.max = 0x0102
+        remoteVersion.max = 0x0103
         
         let negotiatedVersion = try mySession.negotiateMajorAndMinorVersion(
             from: localVersion,
@@ -192,7 +192,7 @@ class DHSessionTests: XCTestCase {
         XCTAssertEqual(negotiatedVersion, goldValue)
     }
     
-    func testNegotiateMajorAndMinorWithValidUpgrad3() throws {
+    func testNegotiateMajorAndMinorWithValidUpgrade3() throws {
         let mySession = DHSession(
             peerIdentity: bobIdentityStore.identity,
             peerPublicKey: bobIdentityStore.publicKey,
@@ -217,6 +217,31 @@ class DHSessionTests: XCTestCase {
         XCTAssertEqual(negotiatedVersion, goldValue)
     }
     
+    func testNegotiateMajorAndMinorWithValidUpgrade4() throws {
+        let mySession = DHSession(
+            peerIdentity: bobIdentityStore.identity,
+            peerPublicKey: bobIdentityStore.publicKey,
+            identityStore: aliceIdentityStore
+        )
+        
+        let goldValue = CspE2eFs_Version.v12
+        
+        var localVersion = CspE2eFs_VersionRange()
+        localVersion.min = UInt32(CspE2eFs_Version.v10.rawValue)
+        localVersion.max = UInt32(CspE2eFs_Version.v12.rawValue)
+        
+        var remoteVersion = CspE2eFs_VersionRange()
+        remoteVersion.min = UInt32(CspE2eFs_Version.v10.rawValue)
+        remoteVersion.max = UInt32(CspE2eFs_Version.v12.rawValue)
+        
+        let negotiatedVersion = try mySession.negotiateMajorAndMinorVersion(
+            from: localVersion,
+            and: remoteVersion
+        )
+        
+        XCTAssertEqual(negotiatedVersion, goldValue)
+    }
+    
     func testNegotiateMajorAndMinorWithInvalidUpgrade1() throws {
         let mySession = DHSession(
             peerIdentity: bobIdentityStore.identity,
@@ -226,11 +251,11 @@ class DHSessionTests: XCTestCase {
         
         var localVersion = CspE2eFs_VersionRange()
         localVersion.min = 0x0100
-        localVersion.max = 0x0103
+        localVersion.max = 0x0104
         
         var remoteVersion = CspE2eFs_VersionRange()
         remoteVersion.min = 0x0100
-        remoteVersion.max = 0x0102
+        remoteVersion.max = 0x0103
         
         do {
             _ = try mySession.negotiateMajorAndMinorVersion(
@@ -407,14 +432,30 @@ class DHSessionTests: XCTestCase {
     
     func testImplementation() {
         var i = 0
-        for offeredVersion in [CspE2eFs_Version.v10, CspE2eFs_Version.v11, CspE2eFs_Version.UNRECOGNIZED(258)] {
+        for offeredVersion in [
+            CspE2eFs_Version.v10,
+            CspE2eFs_Version.v11,
+            CspE2eFs_Version.v12,
+            CspE2eFs_Version.UNRECOGNIZED(258),
+        ] {
             for rawAppliedVersion in [
                 CspE2eFs_Version.v10,
                 CspE2eFs_Version.v11,
+                CspE2eFs_Version.v12,
                 CspE2eFs_Version.UNRECOGNIZED(258),
             ] {
-                for local in [CspE2eFs_Version.v10, CspE2eFs_Version.v11, CspE2eFs_Version.UNRECOGNIZED(258)] {
-                    for remote in [CspE2eFs_Version.v10, CspE2eFs_Version.v11, CspE2eFs_Version.UNRECOGNIZED(258)] {
+                for local in [
+                    CspE2eFs_Version.v10,
+                    CspE2eFs_Version.v11,
+                    CspE2eFs_Version.v12,
+                    CspE2eFs_Version.UNRECOGNIZED(258),
+                ] {
+                    for remote in [
+                        CspE2eFs_Version.v10,
+                        CspE2eFs_Version.v11,
+                        CspE2eFs_Version.v12,
+                        CspE2eFs_Version.UNRECOGNIZED(258),
+                    ] {
                         i += 1
                         let current4DHVersions = DHVersions(local: local, remote: remote)
                         innerTestImplementation(

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 /// Protocol that allows delegation from the `GroupCallManager` to the `GlobalGroupCallsManagerSingleton`
@@ -39,6 +40,6 @@ public protocol GroupCallManagerSingletonDelegate: AnyObject {
     ///   - senderThreemaID: The threema id of the sender
     nonisolated func showIncomingGroupCallNotification(
         groupModel: GroupCallsThreemaGroupModel,
-        senderThreemaID: ThreemaID
+        senderThreemaID: ThreemaIdentity
     )
 }

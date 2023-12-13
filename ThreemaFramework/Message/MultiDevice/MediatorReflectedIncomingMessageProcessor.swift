@@ -284,7 +284,7 @@ class MediatorReflectedIncomingMessageProcessor {
     private func process(
         groupCreateMessage amsg: GroupCreateMessage
     ) throws -> Promise<Void> {
-        messageStore.save(groupCreateMessage: amsg)
+        try messageStore.save(groupCreateMessage: amsg)
     }
 
     private func process(

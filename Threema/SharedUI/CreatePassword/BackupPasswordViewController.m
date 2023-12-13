@@ -61,6 +61,8 @@
     
     self.passwordField.delegate = nil;
     
+    [self.passwordField resignFirstResponder];
+    
     [[NSNotificationCenter defaultCenter] removeObserver:UIApplicationDidEnterBackgroundNotification];
 }
 

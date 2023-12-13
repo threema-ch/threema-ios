@@ -29,8 +29,9 @@
 
 @property (weak, nonatomic) IBOutlet UIView *containerView;
 
-@property (weak, nonatomic) IBOutlet UIView *privacyView;
-@property (weak, nonatomic) IBOutlet UIView *controlsView;
+@property (weak, nonatomic) IBOutlet UIStackView *infoStackView;
+@property (weak, nonatomic) IBOutlet UIStackView *controlStackView;
+
 @property (weak, nonatomic) IBOutlet UILabel *welcomeLabel;
 @property (weak, nonatomic) IBOutlet UIButton *setupButton;
 @property (weak, nonatomic) IBOutlet UIButton *restoreButton;

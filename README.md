@@ -40,7 +40,7 @@ Commits are signed using PGP. See [SECURITY.md](SECURITY.md) for more informatio
 
 While the source code for Threema for iOS is published under an open source license, Threema is still a paid app. To run the app in combination with our official server infrastructure, you must have bought a license on the App Store.
 
-The app uses two different license check types, depending on the target app:
+The app uses three different license check types, depending on the target app:
 
 ### App Store Licensing
 
@@ -68,7 +68,7 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (14.3.1) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (15.0.1) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
 ### 1. Install Dependencies
 

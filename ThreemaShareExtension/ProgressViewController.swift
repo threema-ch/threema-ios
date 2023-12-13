@@ -72,7 +72,7 @@ class ProgressViewController: UIViewController {
         blurView!.autoresizingMask = .flexibleWidth
         blurView!.autoresizingMask = .flexibleHeight
         
-        visualEffectsView!.removeFromSuperview()
+        visualEffectsView?.removeFromSuperview()
         
         visualEffectsView = nil
         

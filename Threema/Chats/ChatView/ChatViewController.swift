@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Combine
 import GroupCalls
 import OSLog
+import ThreemaEssentials
 import ThreemaFramework
 import UIKit
 import WebRTC
@@ -570,16 +571,9 @@ final class ChatViewController: ThemedViewController {
             return nil
         }
         
-        let groupCreatorID: String = group.groupCreatorIdentity
-        let groupCreatorNickname: String? = group.groupCreatorNickname
-        let groupID = group.groupID
-        let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
-        
         return GroupCallsThreemaGroupModel(
-            creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
-            groupID: groupID,
-            groupName: group.name ?? "",
-            members: Set(members)
+            groupIdentity: group.groupIdentity,
+            groupName: group.name ?? ""
         )
     }()
     
@@ -798,9 +792,7 @@ final class ChatViewController: ThemedViewController {
         Task {
             if let lastUpdate = await GlobalGroupCallsManagerSingleton.shared
                 .globalGroupCallObserver.getCurrentItem(), conversation.isEqualTo(
-                    groupID: lastUpdate.groupID,
-                    creator: lastUpdate.creator.id,
-                    myIdentity: self.businessInjector.myIdentityStore.identity
+                    groupIdentity: lastUpdate.groupIdentity, myIdentity: self.businessInjector.myIdentityStore.identity
                 ) {
                 groupCallBannerView.updateBannerState(lastUpdate)
             }
@@ -820,8 +812,7 @@ final class ChatViewController: ThemedViewController {
                         return
                     }
                     isEqual = tempConversation.isEqualTo(
-                        groupID: update.groupID,
-                        creator: update.creator.id,
+                        groupIdentity: update.groupIdentity,
                         myIdentity: strongSelf.businessInjector.myIdentityStore.identity
                     )
                 }
@@ -1085,7 +1076,9 @@ extension ChatViewController {
             navigationItem.rightBarButtonItems = nil
             
             if conversation.isGroup() {
-                if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
+                if let group = businessInjector.groupManager.getGroup(conversation: conversation),
+                   ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls,
+                   group.isSelfMember, !group.isNoteGroup {
                     // TODO: IOS-3745 This should be somewhat dynamic
                     navigationItem.rightBarButtonItem = groupCallBarButtonItem
                 }

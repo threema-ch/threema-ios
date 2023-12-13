@@ -491,21 +491,17 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
                 firstname: directoryContact.first,
                 lastname: directoryContact.last,
                 acquaintanceLevel: .direct
-            )
-            .done { contact in
+            ) { contactEntity in
                 // show chat
-                if let contact {
-                    self.navigationController?.dismiss(animated: true, completion: {
-                        let info = [kKeyContact: contact, kKeyForceCompose: true] as [String: Any]
-                        NotificationCenter.default.post(
-                            name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                            object: nil,
-                            userInfo: info
-                        )
-                    })
-                }
-            }
-            .catch { error in
+                self.navigationController?.dismiss(animated: true, completion: {
+                    let info = [kKeyContact: contactEntity, kKeyForceCompose: true] as [String: Any]
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                        object: nil,
+                        userInfo: info
+                    )
+                })
+            } onError: { error in
                 DDLogError("Add work contact failed \(error)")
             }
         }

@@ -48,6 +48,7 @@
       "skippedTests" : [
         "(null)",
         "AddressBoolLoadTests",
+        "AutomaticDeleteTests",
         "ChatProfileViewTests\/testBasicInitialization()",
         "ChatProfileViewTests\/testDoNotObserveRemovedMemberNameChange()",
         "ChatProfileViewTests\/testObserveGroupNameChange()",

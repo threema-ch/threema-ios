@@ -32,7 +32,7 @@ import Foundation
 /// 3. Get display text for the button managing the linking. (`linkedContactTitle` & `linkedContactDescription`)
 /// 4. Open the edit screen. The system contact edit screen when a linked contact exists, the provided screen otherwise.
 ///   (`editContact(in:provider:)`)
-class LinkedContactManger: NSObject {
+class LinkedContactManager: NSObject {
     
     // MARK: - Private properties
     
@@ -54,7 +54,7 @@ class LinkedContactManger: NSObject {
         }
     }
     
-    private var observers = [UUID: (LinkedContactManger) -> Void]()
+    private var observers = [UUID: (LinkedContactManager) -> Void]()
 
     /// Keep track of the view controller we presented on if we need custom dismissal
     private var lastViewControllerPresentedOn: UIViewController?
@@ -154,7 +154,7 @@ class LinkedContactManger: NSObject {
 // - https://www.swiftbysundell.com/articles/observers-in-swift-part-2/#the-best-of-both-worlds
 // - https://www.swiftbysundell.com/articles/published-properties-in-swift/#just-a-backport-away
 
-extension LinkedContactManger {
+extension LinkedContactManager {
     
     /// Token handed out when registering an observing closure
     class ObservationToken {
@@ -180,11 +180,11 @@ extension LinkedContactManger {
     /// The closure is removed if `cancel()` is called on the token or when the token is deallocated.
     ///
     /// - Parameters:
-    ///     - closure: Closure to be called on `LinkedContactManger` changes and during registration
+    ///     - closure: Closure to be called on `LinkedContactManager` changes and during registration
     ///     - callOnCreation: Should the closure be called when the observer is created?
     /// - Returns: Token to invalidate registration (either by calling `cancel()` or deallocating the token)
     func observe(
-        with closure: @escaping (LinkedContactManger) -> Void,
+        with closure: @escaping (LinkedContactManager) -> Void,
         callOnCreation: Bool = true
     ) -> ObservationToken {
         if callOnCreation {
@@ -209,7 +209,7 @@ extension LinkedContactManger {
 
 // MARK: - Shared
 
-extension LinkedContactManger {
+extension LinkedContactManager {
     private func requestAccess(authorized: @escaping () -> Void, denied: (() -> Void)? = nil) {
         cnContactStore.requestAccess(for: .contacts) { granted, error in
             if granted {
@@ -294,7 +294,7 @@ extension CNContactViewController {
 //
 //    * = Alert or sheet
 
-extension LinkedContactManger {
+extension LinkedContactManager {
     
     /// Manage linking of contact to a `CNContact`
     ///
@@ -485,9 +485,9 @@ extension LinkedContactManger {
     }
 }
 
-// MARK: - LinkedContactManger + CNContactPickerDelegate
+// MARK: - LinkedContactManager + CNContactPickerDelegate
 
-extension LinkedContactManger: CNContactPickerDelegate {
+extension LinkedContactManager: CNContactPickerDelegate {
     
     // No need to dismiss the picker in our code (also when canceled). This is done automatically by the system.
     
@@ -525,7 +525,7 @@ extension LinkedContactManger: CNContactPickerDelegate {
 //                                      │ (no access)      │ (restricted)
 //                                      └─ ─── ─── ─── ──┘ └─ ─── ─── ─── ──┘
 
-extension LinkedContactManger {
+extension LinkedContactManager {
     
     /// Title for linkend contact presentation in UI
     var linkedContactTitle: String {
@@ -634,7 +634,7 @@ extension LinkedContactManger {
 //
 //    * = Alert or screen
 
-extension LinkedContactManger {
+extension LinkedContactManager {
     
     /// Allow lazy loading of app edit contact screen
     /// - Parameter contact: Contact to edit
@@ -825,9 +825,9 @@ extension LinkedContactManger {
     }
 }
 
-// MARK: - LinkedContactManger + CNContactViewControllerDelegate
+// MARK: - LinkedContactManager + CNContactViewControllerDelegate
 
-extension LinkedContactManger: CNContactViewControllerDelegate {
+extension LinkedContactManager: CNContactViewControllerDelegate {
     func contactViewController(_ viewController: CNContactViewController, didCompleteWith contact: CNContact?) {
         // Hide view controller when editing of CNContact is completed ("Done" or "Cancel")
         viewController.dismiss(animated: true)

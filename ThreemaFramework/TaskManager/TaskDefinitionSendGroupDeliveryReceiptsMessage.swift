@@ -48,8 +48,8 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
         "<\(type(of: self))>"
     }
 
-    let fromMember: ThreemaIdentity
-    let toMembers: [ThreemaIdentity]
+    let fromMember: String
+    let toMembers: [String]
     let receiptType: ReceiptType
     private let receiptTypeValue: UInt8
     let receiptMessageIDs: [Data]
@@ -69,8 +69,8 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
     
     @objc init(
         group: Group,
-        from: ThreemaIdentity,
-        to: [ThreemaIdentity],
+        from: String,
+        to: [String],
         receiptType: ReceiptType,
         receiptMessageIDs: [Data],
         receiptReadDates: [Date]

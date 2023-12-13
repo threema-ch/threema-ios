@@ -38,7 +38,7 @@
   static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
 typedef void (^CompletionBlock)(BaseMessage *message);
-typedef void (^ErrorBlock)(NSError *err);
+typedef void (^ErrorBlock)(NSError * _Nonnull);
 
 @interface FileMessageDecoder ()
 
@@ -59,7 +59,7 @@ typedef void (^ErrorBlock)(NSError *err);
     EntityManager *entityManager;
 }
 
-+ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError *))onError {
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
@@ -69,7 +69,7 @@ typedef void (^ErrorBlock)(NSError *err);
     [decoder decodeMessageFromBox:message];
 }
 
-+ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError *))onError {
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
@@ -117,7 +117,7 @@ typedef void (^ErrorBlock)(NSError *err);
 
 #pragma mark - private
 
-+ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
++ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError * _Nonnull))onError sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
     FileMessageDecoder *decoder = [[FileMessageDecoder alloc] init];
     decoder.onCompletion = onCompletion;
     decoder.onError = onError;
@@ -148,10 +148,9 @@ typedef void (^ErrorBlock)(NSError *err);
 - (void)handleMessage:(AbstractMessage *)message {
     _boxMessage = message;
 
-    FileMessageEntity *fileMessageEntity = [self createDBMessage];
-    if (fileMessageEntity) {
-        [self fetchThumbnail:fileMessageEntity];
-    }
+    [self createDBMessageWithCompletionInternal:^(FileMessageEntity *message) {
+        [self fetchThumbnail:message];
+    } onErrorInternal:_onError];
 }
 
 - (BOOL)prepareJson:(NSData *)data {
@@ -246,57 +245,59 @@ typedef void (^ErrorBlock)(NSError *err);
     }
 }
 
-- (FileMessageEntity *)createDBMessage {
-    __block FileMessageEntity *fileMessageEntity = (FileMessageEntity *)[entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil];
+- (void)createDBMessageWithCompletionInternal:(void(^ _Nonnull)(FileMessageEntity * _Nonnull))onCompletionInternal onErrorInternal:(void(^ _Nonnull)(NSError * _Nonnull))onErrorInternal{
+    [entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+        [entityManager performAsyncBlockAndSafe:^{
+            FileMessageEntity *fileMessageEntity = (FileMessageEntity*)message;
 
-    [entityManager performSyncBlockAndSafe:^{
-        GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
-        Group *group = [groupManager getGroupWithConversation:_conversation];
+            GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
+            Group *group = [groupManager getGroupWithConversation:_conversation];
 
-        // Blob origin for download
-        BOOL isOutgoingMessage = [_boxMessage.fromIdentity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]];
-        BOOL isLocalOrigin = (group && group.isNoteGroup) || (isReflectedMessage && isOutgoingMessage);
-        fileMessageEntity.blobOrigin = isLocalOrigin ? BlobOriginLocal : BlobOriginPublic;
+            // Blob origin for download
+            BOOL isOutgoingMessage = [_boxMessage.fromIdentity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]];
+            BOOL isLocalOrigin = (group && group.isNoteGroup) || (isReflectedMessage && isOutgoingMessage);
+            fileMessageEntity.blobOrigin = isLocalOrigin ? BlobOriginLocal : BlobOriginPublic;
 
-        NSString *blobHex = [_json objectForKey: JSON_FILE_KEY_FILE_BLOB];
-        fileMessageEntity.blobId = [blobHex decodeHex];
-        
-        NSString *thumbnailBlobHex = [_json objectForKey: JSON_FILE_KEY_THUMBNAIL_BLOB];
-        if (thumbnailBlobHex) {
-            fileMessageEntity.blobThumbnailId = [thumbnailBlobHex decodeHex];
-        }
-        
-        NSString *encryptionKeyHex = [_json objectForKey: JSON_FILE_KEY_ENCRYPTION_KEY];
-        fileMessageEntity.encryptionKey = [encryptionKeyHex decodeHex];
-        
-        fileMessageEntity.mimeType = [_json objectForKey: JSON_FILE_KEY_MIMETYPE];
-        
-        fileMessageEntity.fileSize = [_json objectForKey: JSON_FILE_KEY_FILESIZE];
-        
-        NSNumber *type = [_json objectForKey: JSON_FILE_KEY_TYPE];
-        if (type == nil) {
-            type = [_json objectForKey: JSON_FILE_KEY_TYPE_DEPRECATED];
-            if (type == nil) {
-                fileMessageEntity.type = @0;
+            NSString *blobHex = [_json objectForKey: JSON_FILE_KEY_FILE_BLOB];
+            fileMessageEntity.blobId = [blobHex decodeHex];
+
+            NSString *thumbnailBlobHex = [_json objectForKey: JSON_FILE_KEY_THUMBNAIL_BLOB];
+            if (thumbnailBlobHex) {
+                fileMessageEntity.blobThumbnailId = [thumbnailBlobHex decodeHex];
             }
-        } else {
-            fileMessageEntity.type = type;
-        }
-        
-        NSString *filename = [_json objectForKey: JSON_FILE_KEY_FILENAME];
-        if (filename) {
-            fileMessageEntity.fileName = filename;
-        }
-        
-        NSString *caption = [_json objectForKey: JSON_FILE_KEY_DESCRIPTION];
-        if (caption) {
-            fileMessageEntity.caption = caption;
-        }
-        
-        fileMessageEntity.json = [[NSString alloc] initWithData:_jsonData encoding:NSUTF8StringEncoding];
-    }];
 
-    return fileMessageEntity;
+            NSString *encryptionKeyHex = [_json objectForKey: JSON_FILE_KEY_ENCRYPTION_KEY];
+            fileMessageEntity.encryptionKey = [encryptionKeyHex decodeHex];
+
+            fileMessageEntity.mimeType = [_json objectForKey: JSON_FILE_KEY_MIMETYPE];
+
+            fileMessageEntity.fileSize = [_json objectForKey: JSON_FILE_KEY_FILESIZE];
+
+            NSNumber *type = [_json objectForKey: JSON_FILE_KEY_TYPE];
+            if (type == nil) {
+                type = [_json objectForKey: JSON_FILE_KEY_TYPE_DEPRECATED];
+                if (type == nil) {
+                    fileMessageEntity.type = @0;
+                }
+            } else {
+                fileMessageEntity.type = type;
+            }
+
+            NSString *filename = [_json objectForKey: JSON_FILE_KEY_FILENAME];
+            if (filename) {
+                fileMessageEntity.fileName = filename;
+            }
+
+            NSString *caption = [_json objectForKey: JSON_FILE_KEY_DESCRIPTION];
+            if (caption) {
+                fileMessageEntity.caption = caption;
+            }
+
+            fileMessageEntity.json = [[NSString alloc] initWithData:_jsonData encoding:NSUTF8StringEncoding];
+
+            onCompletionInternal(fileMessageEntity);
+        }];
+    } onError:onErrorInternal];
 }
 
 - (void)updateDBMessageWithThumbnail:(nullable NSData *)thumbnailData objectID:(nonnull NSManagedObjectID *)objectID {

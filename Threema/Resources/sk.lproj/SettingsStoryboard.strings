@@ -84,7 +84,7 @@
 "SQX-77-CzT.title" = "Ochrana osobných údajov";
 
 /* Class = "UILabel"; text = "Add exclusion..."; ObjectID = "Sow-GN-gms"; */
-"Sow-GN-gms.text" = "Pridať vylúčenie...";
+"Sow-GN-gms.text" = "Pridať ID...";
 
 /* Class = "UILabel"; text = "Show gallery preview"; ObjectID = "TyO-Dl-3LV"; */
 "TyO-Dl-3LV.text" = "Zobrazovať náhľad galérie";

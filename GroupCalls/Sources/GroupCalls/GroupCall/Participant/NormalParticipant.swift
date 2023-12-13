@@ -19,24 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-
-// TODO: IOS-4059 Clean this up if not needed in the end
+import ThreemaEssentials
+// TODO: (IOS-4059) Clean this up if not needed in the end, was this intended to differentiate future guest participants? Remove otherwise, use Participant only.
 class NormalParticipant: Participant, NormalParticipantDescription, Sendable {
-    let contactModel: ContactModel
-    let identity: String
-    let nickname: String
-    
-    init(participantID: ParticipantID, contactModel: ContactModel, threemaID: ThreemaID) {
-        self.contactModel = contactModel
-        // TODO: (IOS-4059) Implement
-//        self.identity = contactModel.identity
-//        self.nickname = contactModel.publicNickName ?? contactModel.identity
-        self.identity = threemaID.id
-        self.nickname = threemaID.id
+   
+    override init(participantID: ParticipantID) {
         super.init(participantID: participantID)
-    }
-    
-    override var name: String {
-        ""
     }
 }

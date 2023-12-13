@@ -19,12 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import UIKit
 
+// TODO: (IOS-4059) Remove, integrate into Participant Directly
 public class ViewModelParticipant {
     
     let participantID: ParticipantID
-    let threemaID: ThreemaID
+    var threemaIdentity: ThreemaIdentity
     
     let name: String
     let avatar: UIImage?
@@ -38,10 +40,12 @@ public class ViewModelParticipant {
     var videoMuteState: MuteState = .muted
     
     init(remoteParticipant: RemoteParticipant, name: String?, avatar: UIImage?, idColor: UIColor) async {
-        let threemaID = await remoteParticipant.threemaIdentity!
         self.participantID = await remoteParticipant.getID()
-        self.name = name ?? threemaID.id
-        self.threemaID = threemaID
+        // TODO: (IOS-4059) Remove force unwrap
+        let identity = await remoteParticipant.threemaIdentity!
+        self.threemaIdentity = identity
+        
+        self.name = await remoteParticipant.nickname ?? identity.string
         self.avatar = avatar
         self.idColor = idColor
         self.localParticipant = nil
@@ -49,10 +53,10 @@ public class ViewModelParticipant {
     }
     
     init(localParticipant: LocalParticipant, name: String?, avatar: UIImage?, idColor: UIColor) async {
-        let threemaID = try! ThreemaID(id: localParticipant.identity)
         self.participantID = localParticipant.participantID
-        self.name = name ?? threemaID.id
-        self.threemaID = threemaID
+        self.threemaIdentity = localParticipant.threemaIdentity
+        
+        self.name = localParticipant.nickname
         self.avatar = avatar
         self.idColor = idColor
         self.localParticipant = localParticipant
@@ -91,7 +95,8 @@ public class ViewModelParticipant {
 
 extension ViewModelParticipant: Equatable {
     public static func == (lhs: ViewModelParticipant, rhs: ViewModelParticipant) -> Bool {
-        lhs.participantID == rhs.participantID && lhs.threemaID == rhs.threemaID && lhs.name == rhs.name && lhs
+        lhs.participantID == rhs.participantID && lhs.threemaIdentity == rhs.threemaIdentity && lhs.name == rhs
+            .name && lhs
             .avatar == rhs.avatar && lhs
             .idColor == rhs.idColor && lhs.audioMuteState == rhs.audioMuteState && lhs.videoMuteState == rhs
             .videoMuteState

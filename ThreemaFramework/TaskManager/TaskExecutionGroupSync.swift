@@ -20,6 +20,8 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
@@ -138,13 +140,13 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
         let groupIdentity = GroupIdentity(
             id: task.syncGroup.groupIdentity.groupID.littleEndianData,
-            creator: task.syncGroup.groupIdentity.creatorIdentity
+            creator: ThreemaIdentity(task.syncGroup.groupIdentity.creatorIdentity)
         )
 
         guard task.syncAction != .delete else {
             guard let groupEntity = frameworkInjector.entityManager.entityFetcher.groupEntity(
                 for: groupIdentity.id,
-                with: groupIdentity.creator
+                with: groupIdentity.creator.string
             ) else {
                 return true
             }
@@ -153,7 +155,7 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
         guard let group = frameworkInjector.backgroundGroupManager.getGroup(
             groupIdentity.id,
-            creator: groupIdentity.creator
+            creator: groupIdentity.creator.string
         ) else {
             DDLogWarn("Group was deleted. Do not sync")
             return false

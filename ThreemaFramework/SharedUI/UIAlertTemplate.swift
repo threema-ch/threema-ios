@@ -27,18 +27,28 @@ import Foundation
         message: String?,
         actionOk: ((UIAlertAction) -> Void)? = nil
     ) {
+        showAlert(owner: owner, title: title, message: message, titleOk: nil, actionOk: actionOk)
+    }
+    
+    @objc public static func showAlert(
+        owner: UIViewController,
+        title: String?,
+        message: String?,
+        titleOk: String? = nil,
+        actionOk: ((UIAlertAction) -> Void)? = nil
+    ) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        
+        let ok = titleOk ?? BundleUtil.localizedString(forKey: "ok")
         alert
             .addAction(UIAlertAction(
-                title: BundleUtil.localizedString(forKey: "ok"),
+                title: ok,
                 style: .default,
                 handler: actionOk
             ))
         
         owner.present(alert, animated: true)
     }
-    
+        
     @objc public static func showAlert(
         owner: UIViewController,
         title: String?,
@@ -99,6 +109,30 @@ import Foundation
         popOver?.sourceRect = popOverSource.bounds
         popOver?.permittedArrowDirections = .any
         owner.present(confirm, animated: true)
+    }
+    
+    public static func showConfirm(
+        title: String,
+        message: String? = nil,
+        titleOk: String,
+        on viewController: UIViewController,
+        action: @escaping () -> Void
+    ) {
+        guard let view = viewController.view else {
+            return
+        }
+        
+        showConfirm(
+            owner: viewController,
+            popOverSource: view,
+            title: title,
+            message: message,
+            titleOk: titleOk,
+            actionOk: { _ in
+                action()
+            },
+            titleCancel: "cancel".localized
+        )
     }
     
     /// Show an action sheet

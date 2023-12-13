@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Combine
 import Foundation
+import PromiseKit
 import ThreemaFramework
 
 protocol UnreadMessagesStateManagerDelegate: AnyObject {

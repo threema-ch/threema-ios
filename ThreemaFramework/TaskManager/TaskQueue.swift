@@ -173,37 +173,35 @@ final class TaskQueue {
                         self.done(item: item)
                     }
                     .catch(on: .global()) { error in
-                        if (error as NSError).code == kBlockUnknownContactErrorCode ||
-                            (error as NSError).code == kBadMessageErrorCode ||
-                            (error as NSError).code == kUnknownMessageTypeErrorCode ||
-                            (error as NSError).code == kMessageAlreadyProcessedErrorCode ||
-                            (error as NSError).code == kMessageBlobDecryptionErrorCode {
+                        if (error as NSError).code == ThreemaProtocolError.badMessage.rawValue ||
+                            (error as NSError).code == ThreemaProtocolError.blockUnknownContact.rawValue ||
+                            (error as NSError).code == ThreemaProtocolError.messageAlreadyProcessed.rawValue ||
+                            (error as NSError).code == ThreemaProtocolError.messageBlobDecryptionFailed.rawValue ||
+                            (error as NSError).code == ThreemaProtocolError.messageNonceReuse.rawValue ||
+                            (error as NSError).code == ThreemaProtocolError.unknownMessageType.rawValue {
+
                             if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {
-                                self.frameworkInjector.serverConnector.failedProcessingMessage(
-                                    task.message,
-                                    error: error
-                                )
+                                DDLogNotice("\(task) discard incoming message: \(error)")
+
+                                try? self.frameworkInjector.nonceGuard.processed(boxedMessage: task.message)
+                                self.frameworkInjector.serverConnector.completedProcessingMessage(task.message)
+                            }
+                            else {
+                                DDLogWarn("\(item.taskDefinition) \(error)")
                             }
                             self.done(item: item)
                         }
-                        else if (error as NSError).code == kPendingGroupMessageErrorCode {
+                        else if case ThreemaProtocolError.pendingGroupMessage = error {
                             // Means processed message is pending group message
-                            DDLogWarn("\(item.taskDefinition) group not found for incoming message: \(error)")
-                            self.done(item: item)
-                        }
-                        else if case MediatorReflectedProcessorError.messageWontProcessed(message: _) = error,
-                                let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                            DDLogWarn("\(item.taskDefinition) incoming message wont processed: \(error)")
-                            try? self.ackReflectedMessage(reflectID: task.reflectID)
-                            
+                            DDLogWarn("\(item.taskDefinition) \(error)")
                             self.done(item: item)
                         }
                         else if case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage = error {
-                            DDLogWarn("\(item.taskDefinition) incoming VoIP message wont not ack: \(error)")
+                            DDLogWarn("\(item.taskDefinition) \(error)")
                             self.done(item: item)
                         }
                         else if case TaskExecutionError.conversationNotFound(for: _) = error {
-                            DDLogError("\(item.taskDefinition) message processing failed: \(error)")
+                            DDLogError("\(item.taskDefinition) failed: \(error)")
                             self.done(item: item)
                         }
                         else if case TaskExecutionError.createAbstractMessageFailed = error {
@@ -216,15 +214,25 @@ final class TaskQueue {
                         }
                         else if let transactionError = error as? TaskExecutionTransactionError,
                                 transactionError == .shouldSkip {
-                            DDLogNotice("\(item.taskDefinition) skipped")
+                            DDLogNotice("\(item.taskDefinition) skipped: \(error)")
                             self.done(item: item)
                         }
                         else if case TaskExecutionError.invalidContact(message: _) = error {
-                            DDLogNotice("\(item.taskDefinition) skipped. As the contact is invalid: \(error)")
+                            DDLogWarn("\(item.taskDefinition) \(error)")
                             self.done(item: item)
                         }
                         else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                            DDLogWarn("\(item.taskDefinition) discard incoming reflected message: \(error)")
+                            DDLogNotice("\(item.taskDefinition) discard reflected message: \(error)")
+
+                            switch task.reflectedEnvelope.content {
+                            case let .incomingMessage(incomingMessage):
+                                self.frameworkInjector.nonceGuard.processed(nonce: incomingMessage.nonce)
+                            case let .outgoingMessage(outgoingMessage):
+                                self.frameworkInjector.nonceGuard.processed(nonces: outgoingMessage.nonces)
+                            default:
+                                DDLogInfo("No nonces to save for reflect ID: \(task.reflectID.hexString)")
+                            }
+
                             try? self.ackReflectedMessage(reflectID: task.reflectID)
                             
                             self.done(item: item)

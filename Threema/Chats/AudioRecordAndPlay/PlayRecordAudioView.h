@@ -33,7 +33,7 @@
 
 @interface PlayRecordAudioView : UIView
 
-@property id<PlayRecordAudioViewDelegate> delegate;
+@property (weak, nonatomic) id<PlayRecordAudioViewDelegate> delegate;
 
 @property (weak, nonatomic) IBOutlet UIButton *playPauseStopButton;
 @property (weak, nonatomic) IBOutlet UIButton *recordButton;

@@ -113,7 +113,7 @@ final class ChatSearchController: NSObject {
     
     private lazy var chatSearchResultsViewController = ChatSearchResultsViewController(
         delegate: self,
-        entityManger: entityManager
+        entityManager: entityManager
     )
     
     private lazy var searchController: UISearchController = {
@@ -224,15 +224,15 @@ final class ChatSearchController: NSObject {
     /// Create a new chat search controller
     /// - Parameter conversation: Conversation to search messages in
     /// - Parameter delegate: Delegate that gets updated during the use of the search controller
-    /// - Parameter entityManger: Entity manager used for search and to fetch results messages
+    /// - Parameter entityManager: Entity manager used for search and to fetch results messages
     init(
         for conversation: Conversation,
         delegate: ChatSearchControllerDelegate,
-        entityManger: EntityManager = EntityManager()
+        entityManager: EntityManager = EntityManager()
     ) {
         self.conversation = conversation
         self.delegate = delegate
-        self.entityManager = entityManger
+        self.entityManager = entityManager
         
         // We setup a private background context to allow offloading the majority of the search results fetching
         // onto a background thread.
@@ -374,6 +374,7 @@ extension ChatSearchController: UISearchBarDelegate {
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
+        searchController.isActive = false
         currentResultOffset = nil
         filteredMessageObjectIDs = []
         delegate?.chatSearchControllerHideSearch()

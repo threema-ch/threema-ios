@@ -26,7 +26,6 @@
 #import "MyIdentityStore.h"
 #import "AvatarMaker.h"
 #import "ValidationLogger.h"
-#import "PushSetting.h"
 #import "EntityCreator.h"
 #import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
@@ -53,7 +52,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize syncExclusionList;
 @synthesize blacklist;
 @synthesize workIdentities;
-@synthesize pushSettingsList;
+@synthesize pushSettings;
 @synthesize sendTypingIndicator;
 @synthesize blockUnknown;
 @synthesize enablePoi;
@@ -64,7 +63,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize inAppVibrate;
 @synthesize inAppPreview;
 @synthesize pushSound;
-@synthesize pushGroupGenerated;
 @synthesize pushGroupSound;
 @synthesize notificationType;
 @synthesize pushDecrypt;
@@ -148,11 +146,14 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize groupCallsDebugMessages;
 
+@synthesize keepMessagesDays;
+
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
 /// - `PushShowNickname`
 /// - `NewChatViewActive`
 /// - `GroupCallsDeveloper`
+/// - `NewProfileActive`
 
 static UserSettings *instance;
 
@@ -185,11 +186,6 @@ static UserSettings *instance;
             [self setVoIPSound:@"threema_best"];
         }
         
-        NSMutableOrderedSet *tmpNoPushIdentities = [NSMutableOrderedSet orderedSetWithArray:[defaults arrayForKey:@"NoPushIdentities"]];
-        if (tmpNoPushIdentities.array.count > 0) {
-            [self pushSettingsMigration:tmpNoPushIdentities];
-        }
-        
         BOOL defaultDarkTheme = NO;
         BOOL defaultUseSystemTheme = true;
         BOOL defaultWorkInfoShown = false;
@@ -206,7 +202,7 @@ static UserSettings *instance;
                                         [NSArray array], @"SyncExclusionList",
                                         [NSArray array], @"Blacklist",
                                         [NSArray array], @"WorkIdentities",
-                                        [NSArray array], @"PushSettingsList",
+                                        [NSArray array], @"PushSettings",
                                         [NSNumber numberWithBool:YES], @"SendTypingIndicator",
                                         [NSNumber numberWithBool:YES], @"InAppSounds",
                                         [NSNumber numberWithBool:YES], @"InAppVibrate",
@@ -225,7 +221,6 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"SortOrderFirstName",
                                         [NSNumber numberWithBool:YES], @"DisplayOrderFirstName",
                                         @"default", @"PushSound",
-                                        [NSNumber numberWithBool:NO], @"PushGroupGenerated",
                                         @"default", @"PushGroupSound",
                                         [NSNumber numberWithBool:YES], @"PushDecrypt",
                                         [NSNumber numberWithInt:1], @"NotificationType",
@@ -269,6 +264,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"BlockCommunication",
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                         [NSNumber numberWithBool:NO], @"GroupCallsDebugMessages",
+                                        @-1, @"KeepMessagesDays",
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
@@ -287,7 +283,7 @@ static UserSettings *instance;
     blacklist = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"Blacklist"]];
     allowOutgoingDonations = [defaults boolForKey:@"AllowOutgoingDonations"];
     workIdentities = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"WorkIdentities"]];
-    pushSettingsList = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"PushSettingsList"]];
+    pushSettings = [defaults arrayForKey:@"PushSettings"];
     sendTypingIndicator = [defaults boolForKey:@"SendTypingIndicator"];
     blockUnknown = [defaults boolForKey:@"BlockUnknown"];
     enablePoi = [defaults boolForKey:@"EnablePOI"];
@@ -297,7 +293,6 @@ static UserSettings *instance;
     inAppVibrate = [defaults boolForKey:@"InAppVibrate"];
     inAppPreview = [defaults boolForKey:@"InAppPreview"];
     pushSound = [defaults stringForKey:@"PushSound"];
-    pushGroupGenerated = [defaults boolForKey:@"PushGroupGenerated"];
     pushGroupSound = [defaults stringForKey:@"PushGroupSound"];
     pushDecrypt = [defaults boolForKey:@"PushDecrypt"];
     notificationType = [defaults objectForKey: @"NotificationType"];
@@ -357,6 +352,7 @@ static UserSettings *instance;
     allowSeveralLinkedDevices = [defaults boolForKey:@"AllowSeveralLinkedDevices"];
     
     groupCallsDebugMessages = [defaults boolForKey:@"GroupCallsDebugMessages"];
+    keepMessagesDays = [defaults integerForKey:@"KeepMessagesDays"];
 
     safeConfig = [defaults dataForKey:@"SafeConfig"];
     safeIntroShown = [defaults boolForKey:@"SafeIntroShown"];
@@ -395,12 +391,6 @@ static UserSettings *instance;
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
     newSettingsActive = [defaults boolForKey:@"NewSettingsActive"];
-}
-
-- (void)pushSettingsMigration:(NSOrderedSet *)tmpNoPushIdentities {
-    [PushSetting addPushSettingsForNoPushIdentities:tmpNoPushIdentities];
-    [defaults removeObjectForKey:@"NoPushIdentities"];
-    [defaults synchronize];
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -442,11 +432,10 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setPushSettingsList:(NSOrderedSet *)newPushSettingsList {
-    pushSettingsList = newPushSettingsList;
-    [defaults setObject:pushSettingsList.array forKey:@"PushSettingsList"];
+- (void)setPushSettings:(NSArray *)newPushSettings {
+    pushSettings = newPushSettings;
+    [defaults setObject:pushSettings forKey:@"PushSettings"];
     [defaults synchronize];
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationChangedPushSettingsList object:nil];
 }
 
 - (void)setSendTypingIndicator:(BOOL)newSendTypingIndicator {
@@ -506,12 +495,6 @@ static UserSettings *instance;
 - (void)setPushSound:(NSString *)newPushSound {
     pushSound = newPushSound;
     [defaults setObject:pushSound forKey:@"PushSound"];
-    [defaults synchronize];
-}
-
-- (void)setPushGroupGenerated:(BOOL)newPushGroupGenerated {
-    pushGroupGenerated = newPushGroupGenerated;
-    [defaults setBool:newPushGroupGenerated forKey:@"PushGroupGenerated"];
     [defaults synchronize];
 }
 
@@ -778,6 +761,12 @@ static UserSettings *instance;
 - (void)setGroupCallsDebugMessages:(BOOL)newGroupCallsDebugMessages {
     groupCallsDebugMessages = newGroupCallsDebugMessages;
     [defaults setBool:groupCallsDebugMessages forKey:@"GroupCallsDebugMessages"];
+    [defaults synchronize];
+}
+
+- (void)setKeepMessagesDays:(NSInteger)newKeepMessagesDays {
+    keepMessagesDays = newKeepMessagesDays;
+    [defaults setInteger:keepMessagesDays forKey:@"KeepMessagesDays"];
     [defaults synchronize];
 }
 

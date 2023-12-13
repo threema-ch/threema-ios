@@ -82,11 +82,9 @@ class Old_CompanyDirectoryContactCell: UITableViewCell {
             firstname: contact.first,
             lastname: contact.last,
             acquaintanceLevel: .direct
-        )
-        .done { _ in
+        ) { _ in
             self.setupCell()
-        }
-        .catch { error in
+        } onError: { error in
             DDLogError("Add work contact failed \(error)")
             self.setupCell()
         }

@@ -25,12 +25,54 @@ import ThreemaProtocols
 extension Sync_Group {
     static func from(group: Group) -> Sync_Group {
         var syncGroup = Sync_Group()
-        
+
         syncGroup.update(state: group.state)
-        
+
         return syncGroup
     }
-    
+
+    mutating func update(conversationCategory: ConversationCategory?) {
+        if let conversationCategory,
+           let category = Sync_ConversationCategory(rawValue: conversationCategory.rawValue) {
+            self.conversationCategory = category
+        }
+        else if hasConversationCategory {
+            clearConversationCategory()
+        }
+    }
+
+    mutating func update(conversationVisibility: ConversationVisibility?) {
+        if let conversationVisibility,
+           let visibility = Sync_ConversationVisibility(rawValue: conversationVisibility.rawValue) {
+            self.conversationVisibility = visibility
+        }
+        else if hasConversationVisibility {
+            clearConversationVisibility()
+        }
+    }
+
+    mutating func update(createdAt: Date?) {
+        if let createdAt {
+            self.createdAt = createdAt.millisecondsSince1970.littleEndian
+        }
+        else if hasCreatedAt {
+            clearCreatedAt()
+        }
+    }
+
+    mutating func update(members: Set<String>) {
+        memberIdentities.identities = Array(members)
+    }
+
+    mutating func update(name: String?) {
+        if let name {
+            self.name = name
+        }
+        else if hasName {
+            clearName()
+        }
+    }
+
     mutating func update(state: GroupState) {
         switch state {
         case .active:
@@ -42,6 +84,44 @@ extension Sync_Group {
         case .requestedSync:
             // No state to sync
             break
+        }
+    }
+
+    mutating func update(notificationSoundIsMuted: Bool?) {
+        if let notificationSoundIsMuted {
+            notificationSoundPolicyOverride
+                .override = notificationSoundIsMuted ? .policy(.muted) : .default(Common_Unit())
+        }
+        else if hasNotificationSoundPolicyOverride {
+            clearNotificationSoundPolicyOverride()
+        }
+    }
+
+    mutating func update(
+        notificationTriggerType: PushSetting.PushSettingType?,
+        notificationTriggerExpiresAt: Date?,
+        notificationTriggerMentioned: Bool
+    ) {
+        if let notificationTriggerType {
+            switch notificationTriggerType {
+            case .on:
+                notificationTriggerPolicyOverride.override = .default(Common_Unit())
+            case .offPeriod:
+                if let notificationTriggerExpiresAt {
+                    var triggerPolicy = Sync_Group.NotificationTriggerPolicyOverride.Policy()
+                    triggerPolicy.expiresAt = notificationTriggerExpiresAt.millisecondsSince1970.littleEndian
+                    triggerPolicy.policy = notificationTriggerMentioned ? .mentioned : .never
+                    notificationTriggerPolicyOverride.override = .policy(triggerPolicy)
+                }
+            case .off:
+                var triggerPolicy = Sync_Group.NotificationTriggerPolicyOverride.Policy()
+                triggerPolicy.clearExpiresAt()
+                triggerPolicy.policy = notificationTriggerMentioned ? .mentioned : .never
+                notificationTriggerPolicyOverride.override = .policy(triggerPolicy)
+            }
+        }
+        else if hasNotificationTriggerPolicyOverride {
+            clearNotificationTriggerPolicyOverride()
         }
     }
 }

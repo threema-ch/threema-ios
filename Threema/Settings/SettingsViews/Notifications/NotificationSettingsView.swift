@@ -120,7 +120,7 @@ struct NotificationSettingsView: View {
                     )
                 } label: {
                     HStack {
-                        Text(BundleUtil.localizedString(forKey: "push_sound_title"))
+                        Text(BundleUtil.localizedString(forKey: "settings_notifications_push_sound"))
                         Spacer()
                         Text(BundleUtil.localizedString(forKey: "sound_\(settingsVM.pushSound)"))
                             .foregroundColor(.secondary)
@@ -130,11 +130,11 @@ struct NotificationSettingsView: View {
                 NavigationLink {
                     SoundPickerView(
                         selection: $settingsVM.pushGroupSound,
-                        title: BundleUtil.localizedString(forKey: "push_group_sound_title")
+                        title: BundleUtil.localizedString(forKey: "settings_notifications_push_groupsound")
                     )
                 } label: {
                     HStack {
-                        Text(BundleUtil.localizedString(forKey: "push_group_sound_title"))
+                        Text(BundleUtil.localizedString(forKey: "settings_notifications_push_groupsound"))
                         Spacer()
                         Text(BundleUtil.localizedString(forKey: "sound_\(settingsVM.pushGroupSound)"))
                             .foregroundColor(.secondary)

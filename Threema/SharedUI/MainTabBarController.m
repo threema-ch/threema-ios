@@ -25,7 +25,6 @@
 #import "ContactsViewController.h"
 
 #import "ModalNavigationController.h"
-#import "MyIdentityViewController.h"
 #import "PortraitNavigationController.h"
 
 #import "MWPhotoBrowser.h"
@@ -55,7 +54,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @property UINavigationController *settingsNavigationController;
 
-@property MyIdentityViewController *myIdentityViewController;
 @property SettingsViewController *settingsViewController;
 
 /// Covering view to hide private chat
@@ -99,6 +97,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [vcs addObject:settingsVC];
         self.viewControllers = vcs;
     }
+    
+    [self setupProfileView];
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -126,7 +127,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _contactsNavigationController = nil;
     _conversationsNavigationController = nil;
     
-    _myIdentityViewController = nil;
     _settingsViewController = nil;
 }
 
@@ -135,6 +135,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return NO;
     }
     return YES;
+}
+
+-(void)setupProfileView {
+    // Setup Profile Tab
+    NSMutableArray *vcs = [[NSMutableArray alloc]initWithArray:self.viewControllers];
+    UIViewController *profileVC = SwiftUIAdapter.createProfileView;
+    ThemedNavigationController *navC = [[ThemedNavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
+    [navC pushViewController:profileVC animated:false];
+    navC.tabBarItem.image = [UIImage systemImageNamed:@"person.crop.rectangle.fill"];
+    [navC.tabBarItem setTitle:[BundleUtil localizedStringForKey:@"myIdentity"]];
+    [navC.navigationItem setTitle:[BundleUtil localizedStringForKey:@"myIdentity"]];
+    [vcs insertObject:navC atIndex:2];
+    self.viewControllers = vcs;
 }
 
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
@@ -283,11 +296,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showMyIdentity {
-    if (_myIdentityViewController == nil) {
-        _myIdentityViewController = (MyIdentityViewController *)[self loadMyIdentityControllerNamed:@"myIdentityViewController"];
-    }
-    
-    [self showModal:_myIdentityViewController];
+    [self showModal: SwiftUIAdapter.createProfileView];
+    return;
 }
 
 - (void)showSettings {
@@ -323,9 +333,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [storyboard instantiateViewControllerWithIdentifier:viewControllerName];
 }
 
-- (UIViewController *)loadMyIdentityControllerNamed:(NSString *)viewControllerName {
-    UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
-    return [storyboard instantiateViewControllerWithIdentifier:viewControllerName];
+- (UIViewController *)loadMyIdentityController {
+    return SwiftUIAdapter.createProfileView;
 }
 
 - (void)showModal:(UIViewController *)viewController {
@@ -567,12 +576,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)showSafeSetup:(NSNotification*)notification {
     // switch to My Identity tab and show Threema Safe settings/setup
     [self setSelectedIndex:kMyIdentityTabBarIndex];
-    
-    UINavigationController *myIdentityNavigation = [[self viewControllers] objectAtIndex:kMyIdentityTabBarIndex];
-    MyIdentityViewController *myIdentity = [[myIdentityNavigation viewControllers] objectAtIndex:0];
-    if (myIdentity != nil) {
-        [myIdentity showSafeSetup];
-    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowSafeSetup object:nil userInfo:nil];
 }
 
 - (void)hideModal {
@@ -621,9 +625,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (SYSTEM_IS_IPAD) {
         [_settingsViewController refresh];
         [Colors updateWithNavigationBar:_settingsViewController.navigationController.navigationBar];
-        
-        [_myIdentityViewController refresh];
-        [Colors updateWithNavigationBar:_myIdentityViewController.navigationController.navigationBar];
         
         [_singleDetailViewController refresh];
         [Colors updateWithNavigationBar:_singleDetailViewController.navigationController.navigationBar];

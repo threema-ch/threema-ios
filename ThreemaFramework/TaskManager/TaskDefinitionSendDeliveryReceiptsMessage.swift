@@ -49,8 +49,8 @@ final class TaskDefinitionSendDeliveryReceiptsMessage: TaskDefinitionSendMessage
         "<\(type(of: self))>"
     }
 
-    let fromIdentity: ThreemaIdentity
-    let toIdentity: ThreemaIdentity
+    let fromIdentity: String
+    let toIdentity: String
     let receiptType: ReceiptType
     private let receiptTypeValue: UInt8
     let receiptMessageIDs: [Data]
@@ -71,8 +71,8 @@ final class TaskDefinitionSendDeliveryReceiptsMessage: TaskDefinitionSendMessage
     }
 
     @objc init(
-        fromIdentity: ThreemaIdentity,
-        toIdentity: ThreemaIdentity,
+        fromIdentity: String,
+        toIdentity: String,
         receiptType: ReceiptType,
         receiptMessageIDs: [Data],
         receiptReadDates: [Date],

@@ -224,7 +224,7 @@ class NotificationResponse: NSObject {
                 }
             }
             else {
-                guard let identity = conversation.contact?.identity else {
+                guard let identity = conversation.contact?.threemaIdentity else {
                     self.sendThumbUpError()
                     self.finishResponse()
                     return
@@ -304,11 +304,11 @@ class NotificationResponse: NSObject {
                 Task {
                     await self.businessInjector.messageSender.sendReadReceipt(
                         for: [baseMessage],
-                        toIdentity: contact.identity
+                        toIdentity: contact.threemaIdentity
                     )
                     await self.businessInjector.messageSender.sendUserDecline(
                         for: baseMessage,
-                        toIdentity: contact.identity
+                        toIdentity: contact.threemaIdentity
                     )
                     self.updateMessageAsRead(for: baseMessage)
                     self.finishResponse()
@@ -344,7 +344,7 @@ class NotificationResponse: NSObject {
                     Task { @MainActor in
                         await self.businessInjector.messageSender.sendReadReceipt(
                             for: [baseMessage],
-                            toIdentity: contact.identity
+                            toIdentity: contact.threemaIdentity
                         )
                         self.updateMessageAsRead(for: baseMessage)
                         self.sendUserText(
@@ -542,6 +542,7 @@ class NotificationResponse: NSObject {
         businessInjector.entityManager.performSyncBlockAndSafe {
             message.read = NSNumber(booleanLiteral: true)
             message.readDate = Date()
+            DDLogVerbose("Message marked as read: \(message.id.hexString)")
         }
         notificationManager.updateUnreadMessagesCount(baseMessage: message)
     }

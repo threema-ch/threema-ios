@@ -20,6 +20,7 @@
 
 import XCTest
 
+import ThreemaEssentials
 @testable import Threema
 @testable import ThreemaFramework
 
@@ -55,7 +56,38 @@ class DBLoadTests: XCTestCase {
 
         XCTAssertNotNil(databasePath)
     }
-    
+
+    /// Generate duplicate contacts of each existing contact,
+    /// it's useful to test "Setting - Advanced - Contacts Cleanup"
+    func testGenerateDuplicateContacts() throws {
+        let em = EntityManager()
+        em.performAndWaitSave {
+            if let identities = (em.entityFetcher.allContacts() as? [ContactEntity])?.map(\.identity) {
+                identities.forEach { identity in
+
+                    if let contactsForIdentity = em.entityFetcher.allContacts(forID: identity) as? [ContactEntity],
+                       contactsForIdentity.count == 1,
+                       let contact = contactsForIdentity.first {
+
+                        print("Create duplicate contact for \(identity)")
+                        let duplicateContact = em.entityCreator.contact()
+                        duplicateContact?.identity = identity
+                        duplicateContact?.publicKey = contact.publicKey
+                        duplicateContact?.verificationLevel = contact.verificationLevel
+                        duplicateContact?.workContact = contact.workContact
+                        duplicateContact?.forwardSecurityState = contact.forwardSecurityState
+                        duplicateContact?.featureMask = contact.featureMask
+                        duplicateContact?.isContactHidden = contact.isContactHidden
+                        duplicateContact?.typingIndicator = contact.typingIndicator
+                        duplicateContact?.readReceipt = contact.readReceipt
+                        duplicateContact?.importedStatus = contact.importedStatus
+                        duplicateContact?.publicNickname = contact.publicNickname
+                    }
+                }
+            }
+        }
+    }
+
     /// Add 10000 messages (./Resources/test_texts.json) to ECHOECHO for testing.
     func testLoadTextMessages() throws {
         let testBundle = Bundle(for: DBLoadTests.self)
@@ -1227,8 +1259,7 @@ class DBLoadTests: XCTestCase {
         
         let createOrUpdate1Expectation = expectation(description: "Create or update 1")
         groupManager.createOrUpdate(
-            groupID: group.groupID,
-            creator: MyIdentityStore.shared().identity,
+            for: group.groupIdentity,
             members: Set(memberIDsToAddAndRemove),
             systemMessageDate: Date()
         )
@@ -1243,8 +1274,7 @@ class DBLoadTests: XCTestCase {
         
         let createOrUpdate2Expectation = expectation(description: "Create or update 2")
         groupManager.createOrUpdate(
-            groupID: group.groupID,
-            creator: MyIdentityStore.shared().identity,
+            for: group.groupIdentity,
             members: [],
             systemMessageDate: Date()
         )
@@ -1367,8 +1397,10 @@ class DBLoadTests: XCTestCase {
     private func createGroup(named: String, with members: [String], entityManager: EntityManager) throws -> Group {
         let groupManager: GroupManagerProtocol = GroupManager(entityManager: entityManager)
             
-        let groupID = try XCTUnwrap(BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength))
-        let groupCreator = try XCTUnwrap(MyIdentityStore.shared().identity)
+        let groupIdentity = try GroupIdentity(
+            id: XCTUnwrap(BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)),
+            creator: ThreemaIdentity(XCTUnwrap(MyIdentityStore.shared().identity))
+        )
 
         // Creation
         
@@ -1376,8 +1408,7 @@ class DBLoadTests: XCTestCase {
         let groupExpectation = expectation(description: "Create or update group")
         
         groupManager.createOrUpdate(
-            groupID: groupID,
-            creator: groupCreator,
+            for: groupIdentity,
             members: Set(members),
             systemMessageDate: Date()
         )

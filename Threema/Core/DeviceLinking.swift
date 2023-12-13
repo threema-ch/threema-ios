@@ -26,7 +26,7 @@ import ThreemaFramework
 @available(
     *,
     deprecated,
-    message: "Only use for old linking wizard. If not available move functionality to `MultiDeviceManger`"
+    message: "Only use for old linking wizard. If not available move functionality to `MultiDeviceManager`"
 )
 class DeviceLinking: NSObject {
     private let businessInjector: BusinessInjectorProtocol

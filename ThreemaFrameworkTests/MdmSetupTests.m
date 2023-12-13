@@ -877,6 +877,22 @@
     XCTAssertFalse([mdmSetup isSafeRestorePasswordPreset]);
 }
 
+- (void)testKeepMessageDays {
+    [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
+    
+    // Company-MDM
+    id keysCompanyMdm[] = { MDM_KEY_KEEP_MESSAGE_DAYS };
+    NSNumber *keep_message_days = [[NSNumber alloc] initWithInt:10];
+    id objectsCompanyMdm[] = { keep_message_days };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    
+    XCTAssertEqual(keep_message_days, [mdmSetup keepMessagesDays]);
+}
+
 - (void)testBackupForce {
     [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
     
@@ -1226,8 +1242,8 @@
 }
 
 - (NSDictionary*)getAllMdmParameters:(BOOL)isThreemaMdm  {
-    id keysMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS,  MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
-    id objectsMdm[] = { @"tester", @"test1234", @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category", @"linked@email.com", @"111", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"threema.ch", @"1", @"1"};
+    id keysMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS,  MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_KEEP_MESSAGE_DAYS};
+    id objectsMdm[] = { @"tester", @"test1234", @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category", @"linked@email.com", @"111", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"threema.ch", @"1", @"1", @"7"};
     
     NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
     NSMutableDictionary *mdm = [NSMutableDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];

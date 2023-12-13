@@ -69,12 +69,17 @@
         textView.text = [TextStyleUtils makeMentionsStringForText:caption];
         
         CGFloat maxHeight = 200.0;
-        CGSize textSize = [textView.text boundingRectWithSize:CGSizeMake(self.frame.size.width, maxHeight)
+        CGSize textSize = [textView.text boundingRectWithSize:CGSizeMake(rect.size.width, maxHeight)
                                                       options:NSStringDrawingUsesLineFragmentOrigin
                                                    attributes:@{NSFontAttributeName:textView.font}
                                                       context:nil].size;
-        CGSize size = CGSizeMake(textSize.width, textSize.height);
+        CGFloat calcHeight = textSize.height;
         
+        if (textSize.height <= textView.font.lineHeight) {
+            calcHeight = textView.font.lineHeight + 16;
+            textView.scrollEnabled = false;
+        }
+        CGSize size = CGSizeMake(textSize.width, calcHeight);
         
         if (view == nil) {
             textView.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y + 2.0, self.frame.size.width, size.height);

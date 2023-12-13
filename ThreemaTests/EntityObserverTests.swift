@@ -40,7 +40,7 @@ class EntityObserverTests: XCTestCase {
 
     func testWithoutBusinessAbstraction() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
 
         let dbPreparer = DatabasePreparer(context: mainCnx)
         dbPreparer.save {
@@ -123,7 +123,7 @@ class EntityObserverTests: XCTestCase {
     // TODO: (IOS-3875) Reenable this test
     func testBusinessAbstraction() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
 
         let dbPreparer = DatabasePreparer(context: mainCnx)
         dbPreparer.save {
@@ -193,7 +193,7 @@ class EntityObserverTests: XCTestCase {
 
     func testBusinessAbstractionDeleteManagedObject() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
 
         let dbPreparer = DatabasePreparer(context: mainCnx)
         dbPreparer.save {
@@ -245,7 +245,7 @@ class EntityObserverTests: XCTestCase {
 
     func testBusinessAbstractionDeleteManagedObjectOnPrivateContext() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
 
         let dbPreparer = DatabasePreparer(context: backgroundCnx)
         dbPreparer.save {
@@ -298,7 +298,7 @@ class EntityObserverTests: XCTestCase {
 
     func testBusinessAbstractionChangeManagedObjectOnDifferentContext() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
 
         let dbPreparer = DatabasePreparer(context: mainCnx)
         dbPreparer.save {
@@ -361,7 +361,7 @@ class EntityObserverTests: XCTestCase {
     // TODO: (IOS-3875) Reenable this test
     func testBusinessAbstractionChangeManagedObjectOnPrivateContext() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = "CREATOR01"
+        let groupCreatorIdentity = "CREATOR1"
 
         let dbPreparer = DatabasePreparer(context: backgroundCnx)
         dbPreparer.save {

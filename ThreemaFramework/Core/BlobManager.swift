@@ -288,44 +288,6 @@ public actor BlobManager: BlobManagerProtocol {
             return
         }
         
-        // We filter out legacy image entities here
-        let em = entityManager
-        var imageMessageEntity: ImageMessageEntity?
-        em.performSyncBlockAndSafe {
-            if let message = em.entityFetcher.existingObject(with: objectID) as? ImageMessageEntity {
-                message.blobError = false
-                message.blobProgress = 0
-                imageMessageEntity = message
-            }
-        }
-        
-        if let imageMessageEntity,
-           let identityStore = MyIdentityStore.shared(),
-           imageMessageEntity.blobEncryptionKey == nil,
-           let contact = imageMessageEntity.conversation.contact,
-           let blobID = imageMessageEntity.blobIdentifier {
-            
-            let processor = ImageMessageProcessor(
-                blobDownloader: blobDownloader,
-                myIdentityStore: identityStore,
-                userSettings: userSettings,
-                entityManager: em
-            )
-            _ = processor.downloadImage(
-                imageMessageID: imageMessageEntity.id,
-                in: imageMessageEntity.conversation.objectID,
-                imageBlobID: blobID,
-                origin: imageMessageEntity.blobOrigin,
-                imageBlobEncryptionKey: imageMessageEntity.encryptionKey,
-                imageBlobNonce: imageMessageEntity.imageNonce,
-                senderPublicKey: contact.publicKey,
-                maxBytesToDecrypt: Int.max
-            )
-            return
-        }
-        
-        // Was not legacy image message
-        
         try await BlobManager.state.addActiveObjectID(objectID)
         BlobManager.activeState.hasActiveSyncs = true
         
@@ -400,6 +362,12 @@ public actor BlobManager: BlobManagerProtocol {
         // Differentiate between incoming and outgoing
         if case let .incoming(incomingThumbnailState) = thumbnailState,
            case let .incoming(incomingDataState) = blobDataState {
+            // Check is legacy image message
+            if await isLegacyImageMessage(objectID: objectID) {
+                try await downloadLegacyImageMessage(objectID: objectID, with: incomingDataState)
+                return
+            }
+
             // We don't do this in parallel for now to make everything testable
             try await syncIncomingThumbnail(of: objectID, with: incomingThumbnailState)
             try await syncIncomingData(of: objectID, with: incomingDataState)
@@ -683,20 +651,29 @@ public actor BlobManager: BlobManagerProtocol {
                 guard let fetchedMessage = em.entityFetcher.existingObject(with: objectID) as? ThumbnailDisplayMessage
                 else {
                     DDLogInfo("[BlobManager] ThumbnailDisplayMessage of media to be autosaved not found.")
+                    
+                    NotificationPresenterWrapper.shared.present(type: .autosaveMediaError)
                     return
                 }
                 
+                // If message should not be autosaved at all we simply return.
+                guard fetchedMessage.assetResourceTypeForAutosave != nil else {
+                    return
+                }
+                
+                // If message belongs to private chat we simply return too.
                 guard fetchedMessage.conversation.conversationCategory != .private else {
-                    DDLogInfo("[BlobManager] Skip autosave, because message is from private chat.")
                     return
                 }
                 
                 guard let saveMediaItem = fetchedMessage.createSaveMediaItem(forAutosave: true) else {
                     DDLogInfo("[BlobManager] Getting SaveMediaItem to auto-save failed.")
+                    
+                    NotificationPresenterWrapper.shared.present(type: .autosaveMediaError)
                     return
                 }
                 
-                AlbumManager.shared.save(saveMediaItem, showNotifications: false)
+                AlbumManager.shared.save(saveMediaItem, showNotifications: false, autosave: true)
             }
         }
     }
@@ -1086,6 +1063,89 @@ extension BlobManager: BlobManagerDelegate {
             }
 
             blobData.blobProgress = NSNumber(value: progress.fractionCompleted)
+        }
+    }
+}
+
+extension BlobManager {
+
+    private func isLegacyImageMessage(objectID: NSManagedObjectID) async -> Bool {
+        let em = entityManager
+        return await em.perform {
+            em.entityFetcher.existingObject(with: objectID) is ImageMessageEntity
+        }
+    }
+
+    private func downloadLegacyImageMessage(objectID: NSManagedObjectID, with state: IncomingBlobState) async throws {
+        // We return directly if the data is already downloaded and fully processed
+        guard state != .processed else {
+            return
+        }
+
+        let em = entityManager
+
+        let (
+            messageID,
+            conversationObjectID,
+            blobID,
+            blobOrigin,
+            encryptionKey,
+            imageNonce,
+            publicKey,
+            isAlreadyDownloaded
+        ) = try await em.performSave {
+            guard let message = em.entityFetcher.existingObject(with: objectID) as? ImageMessageEntity,
+                  let messageID = message.id,
+                  let conversationObjectID = message.conversation?.objectID,
+                  let blobID = message.blobIdentifier,
+                  let imageNonce = message.imageNonce,
+                  let publicKey = message.conversation.contact?.publicKey else {
+
+                throw BlobManagerError.cryptographyFailed
+            }
+
+            message.blobError = false
+            message.blobProgress = 0
+
+            return (
+                messageID,
+                conversationObjectID,
+                blobID,
+                message.blobOrigin,
+                message.encryptionKey,
+                imageNonce,
+                publicKey,
+                message.blobEncryptionKey != nil
+            )
+        }
+
+        guard !isAlreadyDownloaded else {
+            return
+        }
+
+        try await withCheckedThrowingContinuation { continuation in
+            let processor = ImageMessageProcessor(
+                blobDownloader: self.blobDownloader,
+                myIdentityStore: MyIdentityStore.shared(),
+                userSettings: self.userSettings,
+                entityManager: em
+            )
+            processor.downloadImage(
+                imageMessageID: messageID,
+                in: conversationObjectID,
+                imageBlobID: blobID,
+                origin: blobOrigin,
+                imageBlobEncryptionKey: encryptionKey,
+                imageBlobNonce: imageNonce,
+                senderPublicKey: publicKey,
+                maxBytesToDecrypt: Int.max
+            )
+            .done(on: .global(), flags: .inheritQoS) {
+                continuation.resume()
+            }
+            .catch(on: .global(), flags: .inheritQoS) { error in
+                continuation.resume(throwing: error)
+            }
         }
     }
 }

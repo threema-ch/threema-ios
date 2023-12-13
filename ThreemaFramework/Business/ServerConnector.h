@@ -99,7 +99,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)sendMessage:(BoxedMessage*)message;
 
 - (BOOL)completedProcessingMessage:(BoxedMessage *)boxmsg;
-- (void)failedProcessingMessage:(BoxedMessage *)boxmsg error:(NSError *)err;
 
 @end
 
@@ -127,8 +126,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removePushToken;
 
 - (void)removeVoIPPushToken;
-
-- (void)sendPushAllowedIdentities;
 
 - (void)clearDeviceCookieChangedIndicator;
 

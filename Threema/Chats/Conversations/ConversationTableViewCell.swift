@@ -420,7 +420,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private var group: Group?
-    
+
     private(set) var navigationController: UINavigationController?
     
     private var groupCallGroupModel: GroupCallsThreemaGroupModel?
@@ -544,13 +544,13 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     public func updateLastMessagePreview() {
         updateAccessibility()
-        
+
         guard let conversation else {
             previewLabel.attributedText = nil
             dateDraftLabel.text = nil
             return
         }
-        
+
         // Show lock icon for private chats
         guard conversation.conversationCategory != .private else {
             previewLabel
@@ -708,8 +708,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                             return
                         }
                         isEqual = tempConversation.isEqualTo(
-                            groupID: update.groupID,
-                            creator: update.creator.id,
+                            groupIdentity: update.groupIdentity,
                             myIdentity: strongSelf.businessInjector.myIdentityStore.identity
                         )
                     }
@@ -727,7 +726,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private func updateGroupCallButton(_ update: GroupCallBannerButtonUpdate?) {
         
         guard let update,
-              update.groupID == conversation?.groupID else {
+              update.groupIdentity.id == conversation?.groupID else {
             hideUpdateGroupCallButton()
             return
         }
@@ -926,15 +925,15 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         updateIconStackView()
     }
     
-    private func updateDndImage() {
-        guard let conversation else {
+    private func updateDndImage(with newPushSetting: PushSetting? = nil) {
+        guard let conversation, conversation.contact != nil || group != nil else {
             dndImageView.image = nil
             dndImageView.isHidden = true
             updateIconStackView()
             return
         }
         
-        let pushSetting = PushSetting(for: conversation)
+        let pushSetting = newPushSetting ?? getPushSetting()
         let iconConfig = traitCollection.preferredContentSizeCategory.isAccessibilityCategory ?
             Configuration.iconsAccessibilityConfiguration
             : Configuration.iconsConfiguration
@@ -967,35 +966,35 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateAccessibility() {
-        guard let conversation else {
+        guard let conversation, conversation.contact != nil || group != nil else {
             return
         }
-        
+
         var accessibilityText = "\(nameLabel.text ?? ""). "
-        
-        let pushSetting = PushSetting(for: conversation)
+
+        var pushSetting = getPushSetting()
         if pushSetting.type == .on,
-           pushSetting.silent {
+           pushSetting.muted {
             accessibilityText +=
                 "\(BundleUtil.localizedString(forKey: "notification_sound_header")) \(BundleUtil.localizedString(forKey: "doNotDisturb_off")). "
         }
         else if pushSetting.type == .off,
-                !pushSetting.mentions {
+                !pushSetting.mentioned {
             accessibilityText +=
                 "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_on")). "
         }
         else if pushSetting.type == .off,
-                pushSetting.mentions {
+                pushSetting.mentioned {
             accessibilityText +=
                 "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_on")), \(BundleUtil.localizedString(forKey: "doNotDisturb_mention")). "
         }
         else if pushSetting.type == .offPeriod,
-                !pushSetting.mentions {
+                !pushSetting.mentioned {
             accessibilityText +=
                 "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)). "
         }
         else if pushSetting.type == .offPeriod,
-                pushSetting.mentions {
+                pushSetting.mentioned {
             accessibilityText +=
                 "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)), \(BundleUtil.localizedString(forKey: "doNotDisturb_mention"))"
         }
@@ -1083,26 +1082,52 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             }
         }
     }
-    
+
+    private func getPushSetting() -> PushSetting {
+        if let group {
+            return group.pushSetting
+        }
+        else if let contact = conversation?.contact {
+            return businessInjector.pushSettingManager.find(forContact: contact.threemaIdentity)
+        }
+        else {
+            fatalError("No push settings for conversation found")
+        }
+    }
+
     // MARK: Observers
     
     private func registerGlobalObservers() {
         NotificationCenter.default.addObserver(
-            forName: NSNotification.Name(rawValue: kNotificationChangedPushSettingsList),
+            forName: NSNotification.Name(rawValue: kNotificationChangedPushSetting),
             object: nil,
-            queue: nil
-        ) { [weak self] _ in
-            guard let strongSelf = self else {
+            queue: .main
+        ) { [weak self] notification in
+            guard let strongSelf = self, let pushSetting = notification.object as? PushSetting else {
                 return
             }
-            
-            strongSelf.updateDndImage()
+
+            if let group = strongSelf.group {
+                guard pushSetting.groupIdentity == group.groupIdentity else {
+                    return
+                }
+            }
+            else if let contact = strongSelf.conversation?.contact {
+                guard pushSetting.identity == contact.threemaIdentity else {
+                    return
+                }
+            }
+            else {
+                return
+            }
+
+            strongSelf.updateDndImage(with: pushSetting)
         }
-                
+
         NotificationCenter.default.addObserver(
             forName: NSNotification.Name(rawValue: kNotificationUpdateDraftForCell),
             object: nil,
-            queue: nil
+            queue: .main
         ) { [weak self] notification in
             guard let strongSelf = self else {
                 return
@@ -1118,7 +1143,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         NotificationCenter.default.addObserver(
             forName: UIContentSizeCategory.didChangeNotification,
             object: nil,
-            queue: nil
+            queue: .main
         ) { [weak self] _ in
             guard let strongSelf = self else {
                 return
@@ -1423,7 +1448,8 @@ extension ConversationTableViewCell {
             // checking on
             // another thread will cause CD concurrency issues.
             .receive(on: DispatchQueue.main)
-            .filter { [weak self] in self?.currentConversationIsEqualTo(group: $0.groupID, $0.creator.id) ?? false
+            .filter { [weak self] in
+                self?.currentConversationIsEqualTo(group: $0.groupIdentity.id, $0.groupIdentity.creator.string) ?? false
             }
             .debounce(for: .milliseconds(Configuration.debounceInMilliseconds), scheduler: DispatchQueue.main)
             .sink(receiveValue: { [weak self] _ in

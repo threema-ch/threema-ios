@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Intents
 
-// Consist of sender identity (`ThreemaIdentity`) and the ID of the message
+// Consist of sender identity (`String`) and the ID of the message
 typealias PendingUserNotificationKey = String
 
 public class PendingUserNotification: NSObject, NSCoding {
@@ -176,8 +176,8 @@ extension PendingUserNotificationKey {
         key(identity: boxedMessage.fromIdentity, messageID: boxedMessage.messageID)
     }
 
-    static func key(identity: ThreemaIdentity?, messageID: Data?) -> PendingUserNotificationKey? {
-        guard let identity, identity.isValid, let messageID else {
+    static func key(identity: String?, messageID: Data?) -> PendingUserNotificationKey? {
+        guard let identity, let messageID else {
             return nil
         }
 

@@ -90,8 +90,8 @@
 	<string>Your photo library is used when you pick an image from it and send it in a chat.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
-        <string>INStartAudioCallIntent</string>
-        <string>INSendMessageIntent</string>
+		<string>INStartAudioCallIntent</string>
+		<string>INSendMessageIntent</string>
 	</array>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
@@ -101,54 +101,13 @@
 	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>
 	<string></string>
-	<key>UIApplicationShortcutItems</key>
-	<array>
-		<dict>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeCompose</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>New message</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>ch.threema.newmessage</string>
-			<key>UIApplicationShortcutItemUserInfo</key>
-			<dict>
-				<key>secondShortcutKey1</key>
-				<string>v1</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemIconFile</key>
-			<string>TabBar-Id</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>My ID</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>ch.threema.myid</string>
-			<key>UIApplicationShortcutItemUserInfo</key>
-			<dict>
-				<key>secondShortcutKey1</key>
-				<string>v1</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemIconFile</key>
-			<string>QRScan</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>Scan QR code</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>ch.threema.scanid</string>
-			<key>UIApplicationShortcutItemUserInfo</key>
-			<dict>
-				<key>secondShortcutKey1</key>
-				<string>v1</string>
-			</dict>
-		</dict>
-	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>voip</string>
 		<string>audio</string>
 		<string>fetch</string>
 		<string>remote-notification</string>
+		<string>processing</string>
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
@@ -226,46 +185,50 @@
 			</dict>
 		</dict>
 	</dict>
-    <key>CFBundleIcons~ipad</key>
-    <dict>
-        <key>CFBundlePrimaryIcon</key>
-        <dict>
-            <key>CFBundleIconFiles</key>
-            <array>
-                <string>AppIcon</string>
-            </array>
-        </dict>
-        <key>CFBundleAlternateIcons</key>
-        <dict>
-            <key>icon_2013_march</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>icon_2013_march</string>
-                </array>
-            </dict>
-            <key>icon_2013_september</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>icon_2013_september</string>
-                </array>
-            </dict>
-            <key>icon_2019</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>icon_2019_consumer</string>
-                </array>
-            </dict>
-            <key>icon_10_years</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>icon_10_years</string>
-                </array>
-            </dict>
-        </dict>
-    </dict>
+	<key>CFBundleIcons~ipad</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+		</dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>icon_2013_march</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_2013_march</string>
+				</array>
+			</dict>
+			<key>icon_2013_september</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_2013_september</string>
+				</array>
+			</dict>
+			<key>icon_2019</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_2019_consumer</string>
+				</array>
+			</dict>
+			<key>icon_10_years</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_10_years</string>
+				</array>
+			</dict>
+		</dict>
+	</dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>ch.threema.messageRetention</string>
+	</array>
 </dict>
 </plist>

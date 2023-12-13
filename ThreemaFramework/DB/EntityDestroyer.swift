@@ -42,35 +42,35 @@ import Foundation
     ///   - conversation: Conversation
     /// - Returns:
     ///   Count of deleted media files
+    public func deleteMedias(olderThan: Date?, for conversationID: NSManagedObjectID?) async -> Int? {
+        await existingObjectPerform(for: conversationID) {
+            self.deleteMedias(olderThan: olderThan, for: $0)
+        }
+    }
+    
+    /// Delete media files of audio, file, image and video messages.
+    ///
+    /// - Parameters:
+    ///   - olderThan: All message older than that date will be deleted
+    ///   - conversation: Conversation
+    /// - Returns:
+    ///   Count of deleted media files
     public func deleteMedias(olderThan: Date?, for conversation: Conversation? = nil) -> Int? {
         var deletedObjects = 0
-        if let count = deleteMediasOf(
-            messageType: AudioMessageEntity.self,
-            olderThan: olderThan,
-            conversation: conversation
-        ) {
-            deletedObjects += count
-        }
-        if let count = deleteMediasOf(
-            messageType: FileMessageEntity.self,
-            olderThan: olderThan,
-            conversation: conversation
-        ) {
-            deletedObjects += count
-        }
-        if let count = deleteMediasOf(
-            messageType: ImageMessageEntity.self,
-            olderThan: olderThan,
-            conversation: conversation
-        ) {
-            deletedObjects += count
-        }
-        if let count = deleteMediasOf(
-            messageType: VideoMessageEntity.self,
-            olderThan: olderThan,
-            conversation: conversation
-        ) {
-            deletedObjects += count
+        var mediaMessageTypes = [
+            AudioMessageEntity.self,
+            FileMessageEntity.self,
+            ImageMessageEntity.self,
+            VideoMessageEntity.self,
+        ]
+        mediaMessageTypes.forEach {
+            if let count = deleteMediasOf(
+                messageType: $0,
+                olderThan: olderThan,
+                conversation: conversation
+            ) {
+                deletedObjects += count
+            }
         }
         
         return deletedObjects
@@ -261,6 +261,73 @@ import Foundation
         return nil
     }
 
+    /// Delete all kind of messages.
+    ///
+    /// - Parameters:
+    ///    - olderThan: All message older than that date will be deleted
+    ///    - conversation: Conversation
+    ///
+    /// - Returns:
+    ///    Count of deleted messages
+    public func deleteMessages(olderThan: Date?, for conversationID: NSManagedObjectID?) async -> Int? {
+        await existingObjectPerform(for: conversationID) {
+            self.deleteMessages(olderThan: olderThan, for: $0)
+        }
+    }
+    
+    /// Delete all kind of messages.
+    ///
+    /// - Parameters:
+    ///    - olderThan: All message older than that date will be deleted
+    ///    - conversations: Conversation
+    public func deleteMessagesForMessageRetention(olderThan: Date, for conversationsIDs: [NSManagedObjectID]) async {
+        await objCnx.perform {
+            let conversations = conversationsIDs
+                .compactMap { try? self.objCnx.existingObject(with: $0) as? Conversation }
+            let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
+            fetchMessages.predicate = NSPredicate(
+                format: "conversation IN %@ AND date < %@",
+                conversations,
+                olderThan as NSDate
+            )
+            self.messageRetentionDelete(with: fetchMessages)
+        }
+    }
+    
+    /// Fetch number of messages to be deleted for message retention
+    ///
+    /// Open ballots are excluded.
+    /// - Parameters:
+    ///   - olderThan: All message older than that date will be counted
+    ///   - conversations: conversations affected by the filter and counting
+    /// - Returns: the number of messages filtered. Returns 0 if there are no messages to be deleted and if the fetch
+    /// fails
+    public func messagesToBeDeleted(olderThan: Date, for conversationsIDs: [NSManagedObjectID]) async -> Int {
+        await objCnx.perform {
+            let conversations = conversationsIDs
+                .compactMap { try? self.objCnx.existingObject(with: $0) as? Conversation }
+            guard !conversations.isEmpty else {
+                return 0
+            }
+            
+            let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
+            fetchMessages.predicate = NSPredicate(
+                format: "conversation IN %@ AND date < %@",
+                conversations,
+                olderThan as NSDate
+            )
+            let messages = (try? self.objCnx.fetch(fetchMessages)) as? [BaseMessage] ?? []
+            // Currently we want to keep open Ballots excluded from deletion
+            let filtered = messages.filter { message in
+                guard let ballotMessage = message as? BallotMessage else {
+                    return true
+                }
+                return ballotMessage.ballot.isClosed()
+            }
+            return filtered.count
+        }
+    }
+
     /// Delete all kind of messages within conversation.
     ///
     /// - Parameters:
@@ -351,11 +418,12 @@ import Foundation
             var filesInDB = [String]()
             do {
                 let fetchRequests: [NSFetchRequest<NSManagedObject>] = [
-                    NSFetchRequest<NSManagedObject>(entityName: "AudioData"),
-                    NSFetchRequest<NSManagedObject>(entityName: "FileData"),
-                    NSFetchRequest<NSManagedObject>(entityName: "ImageData"),
-                    NSFetchRequest<NSManagedObject>(entityName: "VideoData"),
+                    "AudioData",
+                    "FileData",
+                    "ImageData",
+                    "VideoData",
                 ]
+                .map { NSFetchRequest<NSManagedObject>(entityName: $0) }
                 
                 for fetchRequest in fetchRequests {
                     try autoreleasepool {
@@ -439,6 +507,61 @@ import Foundation
     }
     
     // MARK: - Private helper methods
+    
+    /// Asynchronously performs a block with an existing managed object of type `TMAManagedObject` if available.
+    ///
+    /// - Parameters:
+    ///   - id: The `NSManagedObjectID` of the object to fetch.
+    ///   - block: The block to execute with the fetched object. The block receives an optional `TMAManagedObject`.
+    /// - Returns: The result of the block of type `R`.
+    private func existingObjectPerform<T: TMAManagedObject, Result>(
+        for id: NSManagedObjectID?,
+        with block: @escaping (T?) -> (Result)
+    ) async -> Result {
+        await objCnx.perform {
+            guard let id, let object = try? self.objCnx.existingObject(with: id) as? T else {
+                return block(nil)
+            }
+            return block(object)
+        }
+    }
+    
+    /// Used to Delete the Messages according to the Retention Policy.
+    /// Currently all but Open Polls are affected.
+    ///
+    /// - Parameter fetchRequest: fetchRequest to be used to fetch the messages
+    private func messageRetentionDelete(with fetchRequest: NSFetchRequest<NSFetchRequestResult>) {
+        do {
+            try Task.checkCancellation()
+
+            let messages = try (objCnx.fetch(fetchRequest)) as? [BaseMessage] ?? []
+            // Currently we want to keep open Ballots excluded from deletion
+            let filtered = messages.compactMap { ($0 as? BallotMessage)?.ballot.isClosed() ?? true ? $0 : nil }
+            
+            guard !filtered.isEmpty else {
+                return
+            }
+            
+            nullifyConversationLastMessage(for: filtered)
+            
+            let batch = NSBatchDeleteRequest(objectIDs: filtered.map(\.objectID))
+            batch.resultType = .resultTypeObjectIDs
+            try Task.checkCancellation()
+            
+            if let deleteResult = try objCnx.execute(batch) as? NSBatchDeleteResult,
+               let deletedIDs = deleteResult.result as? [NSManagedObjectID], !deletedIDs.isEmpty {
+                DDLogNotice("[Message Retention]: Deleted \(deletedIDs.count) messages")
+            }
+            
+            NotificationCenter.default.post(
+                name: NSNotification.Name(kNotificationBatchDeletedOldMessages),
+                object: nil
+            )
+        }
+        catch {
+            DDLogError("Could not delete messages: \(error)")
+        }
+    }
     
     private func getMediaMetaInfo(
         messageType: (some Any)
@@ -586,11 +709,6 @@ import Foundation
             batch.resultType = NSBatchDeleteRequestResultType.resultTypeObjectIDs
             let deleteResult = try objCnx.execute(batch) as? NSBatchDeleteResult
             if let deletedIDs = deleteResult?.result as? [NSManagedObjectID], !deletedIDs.isEmpty {
-                let dbManager = DatabaseManager()
-                dbManager.refreshDirtyObjectIDs([NSDeletedObjectsKey: deletedIDs], into: objCnx)
-                
-                deleteExternalFiles(list: deleteFilenames)
-                                
                 return deletedIDs.count
             }
             

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import OSLog
+import ThreemaEssentials
 import ThreemaFramework
 
 /// Migrate app to a new version
@@ -153,6 +154,10 @@ import ThreemaFramework
                 try migrateTo5_6()
                 migratedTo = .v5_6
             }
+            if migratedTo < .v5_7 {
+                try migrateTo5_7()
+                migratedTo = .v5_7
+            }
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
@@ -194,8 +199,6 @@ import ThreemaFramework
 
         MessageDraftStore.cleanupDrafts()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyDeletedOldDrafts")
-
-        NotificationManager.generatePushSettingForAllGroups()
 
         entityManager.performSyncBlockAndSafe {
             let unreadMessages = UnreadMessages(entityManager: self.entityManager)
@@ -416,5 +419,141 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "5.6 migration")
         DDLogNotice("[AppMigration] App migration to version 5.6 successfully finished")
+    }
+
+    /// Migrate to version 5.7:
+    /// - Migrate push settings dictionary to new type struct `PushSetting`
+    private func migrateTo5_7() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.7 started")
+        os_signpost(.begin, log: osPOILog, name: "5.7 migration")
+
+        var newPushSettings = [PushSetting]()
+
+        let applyPushSetting: (NSDictionary, PushSetting) -> PushSetting = { dic, pushSetting -> PushSetting in
+            var pushSettingChanged = pushSetting
+
+            if let value = dic["type"] as? Int,
+               let type = PushSetting.PushSettingType(rawValue: value) {
+                pushSettingChanged.type = type
+            }
+
+            if let value = dic["periodOffTillDate"] as? Date {
+                pushSettingChanged.periodOffTillDate = value
+            }
+
+            if let value = dic["silent"] as? Bool {
+                pushSettingChanged.muted = value
+            }
+
+            if let value = dic["mentions"] as? Bool {
+                pushSettingChanged.mentioned = value
+            }
+
+            return pushSettingChanged
+        }
+
+        // Migrate `UserSettings.noPushIdentities` and `UserSettings.pushSettingsList`
+        let noPushIdentities = AppGroup.userDefaults().array(forKey: "NoPushIdentities") as? [String]
+        var pushSettingList = AppGroup.userDefaults().array(forKey: "PushSettingsList")
+
+        let pushSettingListIdentities = pushSettingList?.compactMap { item in
+            if let dic = item as? NSDictionary,
+               let identity = dic["identity"] as? String {
+                return identity
+            }
+            return nil
+        }
+
+        noPushIdentities?.filter { item in
+            if item.count == 8 {
+                return !(
+                    pushSettingListIdentities?.filter { $0.count == 8 }
+                        .compactMap { $0.uppercased() }
+                        .contains(item.uppercased()) ?? false
+                )
+            }
+            else if let item = BytesUtility.toBytes(hexString: item) {
+                return !(
+                    pushSettingListIdentities?.filter { $0.count > 8 }
+                        .compactMap { BytesUtility.toBytes(hexString: $0) }
+                        .contains(item) ?? false
+                )
+            }
+            else {
+                return false
+            }
+        }.forEach { identity in
+            let dic = ["identity": identity, "type": 1] // `PushSettingType.off`
+            pushSettingList?.append(dic)
+        }
+
+        pushSettingList?.forEach { item in
+            if let dic = item as? NSDictionary,
+               let identity = dic["identity"] as? String {
+
+                businessInjector.entityManager.performAndWait {
+                    // The 'old' push setting identity, could be a Threema ID or a Group ID
+                    var contactEntity: ContactEntity?
+                    if identity.count == 8 {
+                        contactEntity = self.businessInjector.entityManager.entityFetcher.contact(for: identity)
+                    }
+
+                    // Looking for contact or group for given push setting identity,
+                    // if contact or group not found then push setting will discarded
+                    if let contactEntity {
+                        let pushSetting = applyPushSetting(
+                            dic,
+                            self.businessInjector.pushSettingManager.find(forContact: contactEntity.threemaIdentity)
+                        )
+                        newPushSettings.removeAll { item in
+                            item.identity == pushSetting.identity
+                        }
+                        newPushSettings.append(pushSetting)
+                    }
+                    else if let bytesGroupID = BytesUtility.toBytes(hexString: identity) {
+                        let groupID = Data(bytesGroupID)
+                        self.businessInjector.entityManager.performAndWait {
+                            if let groupEntities = self.businessInjector.entityManager.entityFetcher
+                                .groupEntities(for: groupID) {
+                                groupEntities.forEach { groupEntity in
+                                    if let group = self.businessInjector.groupManager.getGroup(
+                                        groupEntity.groupID,
+                                        creator: groupEntity.groupCreator ?? self.businessInjector.myIdentityStore
+                                            .identity
+                                    ) {
+
+                                        let pushSetting = applyPushSetting(
+                                            dic,
+                                            self.businessInjector.pushSettingManager.find(forGroup: group.groupIdentity)
+                                        )
+                                        newPushSettings.removeAll { item in
+                                            item.groupIdentity == pushSetting.groupIdentity
+                                        }
+                                        newPushSettings.append(pushSetting)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        let jsonEncoder = JSONEncoder()
+        let newPushSettingsEncoded = try newPushSettings.map { item in
+            try jsonEncoder.encode(item)
+        }
+
+        businessInjector.userSettings.pushSettings = newPushSettingsEncoded
+
+        AppGroup.userDefaults().removeObject(forKey: "NoPushIdentities")
+        AppGroup.userDefaults().removeObject(forKey: "PushSettingsList")
+
+        // Old migration task, generate push setting for all groups, is not necessary anymore.
+        // Delete corresponding user setting
+        AppGroup.userDefaults().removeObject(forKey: "PushGroupGenerated")
+
+        os_signpost(.end, log: osPOILog, name: "5.7 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.7 successfully finished")
     }
 }

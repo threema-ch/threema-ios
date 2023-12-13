@@ -48,7 +48,7 @@ import ThreemaProtocols
         case let .reject(reject):
             return try ForwardSecurityDataReject(
                 sessionID: sessionID,
-                rejectedMessageID: withUnsafeBytes(of: reject.rejectedEncapsulatedMessageID) { Data($0) },
+                rejectedMessageID: withUnsafeBytes(of: reject.messageID) { Data($0) },
                 cause: reject.cause
             )
         case let .encapsulated(message):

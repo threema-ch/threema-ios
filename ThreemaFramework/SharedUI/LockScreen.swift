@@ -63,7 +63,7 @@ final class LockScreen: NSObject, JKLLockScreenViewControllerDelegate, JKLLockSc
     fileprivate var enteredCorrectly: (() -> Void)?
     private var enteredIncorrectly: (() -> Void)?
     fileprivate var unlockCancelled: (() -> Void)?
-    private var didDismissAfterSuccess: (() -> Void)?
+    fileprivate var didDismissAfterSuccess: (() -> Void)?
     
     private let isLockScreenController: Bool
     
@@ -162,14 +162,30 @@ struct LockScreenView: UIViewControllerRepresentable {
     /// Lock screen view was canceled. A sheet will be dismissed automatically
     let cancelled: (() -> Void)?
     
+    /// Lock screen view was dismissed with correct code
+    let didDismissAfterSuccess: (() -> Void)?
+    
+    init(codeEnteredCorrectly: (() -> Void)?, cancelled: (() -> Void)?, didDismissAfterSuccess: (() -> Void)? = { }) {
+        self.codeEnteredCorrectly = codeEnteredCorrectly
+        self.cancelled = cancelled
+        self.didDismissAfterSuccess = didDismissAfterSuccess
+    }
+    
     // enteredIncorrectly doesn't seem to work at all (the delegate is not called)
     // didDismissAfterSuccess doesn't work as expected when a biometric authentication is used
     
     private let lockScreen = LockScreen(isLockScreenController: false)
     
     func makeUIViewController(context: Context) -> some UIViewController {
-        lockScreen.enteredCorrectly = codeEnteredCorrectly
-        lockScreen.unlockCancelled = cancelled
+        lockScreen.enteredCorrectly = {
+            codeEnteredCorrectly?()
+        }
+        lockScreen.unlockCancelled = {
+            cancelled?()
+        }
+        lockScreen.didDismissAfterSuccess = {
+            didDismissAfterSuccess?()
+        }
         return lockScreen.passCodeViewController
     }
     

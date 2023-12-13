@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 enum TaskExecutionError: Error {
@@ -30,6 +31,7 @@ enum TaskExecutionError: Error {
     case multiDeviceNotRegistered
     case makeBoxOfMessageFailed
     case messageReceiverBlockedOrUnknown
+    case messageTypeMismatch(message: String?)
     case missingGroupInformation
     case missingMessageInformation
     case missingMessageNonce
@@ -485,18 +487,18 @@ class TaskExecution: NSObject {
         }
 
         // Get message receivers for this task
-        var identities: Set<ThreemaIdentity>
+        var identities: Set<String>
         if let task = task as? TaskDefinitionSendAbstractMessage {
-            identities = Set<ThreemaIdentity>([task.message.toIdentity])
+            identities = Set<String>([task.message.toIdentity])
         }
         else if let task = task as? TaskDefinitionSendDeliveryReceiptsMessage {
-            identities = Set<ThreemaIdentity>([task.toIdentity])
+            identities = Set<String>([task.toIdentity])
         }
         else if let task = task as? TaskDefinitionGroupDissolve {
-            identities = Set<ThreemaIdentity>(task.toMembers)
+            identities = Set<String>(task.toMembers)
         }
         else if let task = task as? TaskDefinitionSendGroupCallStartMessage {
-            identities = Set<ThreemaIdentity>(task.toMembers)
+            identities = Set<String>(task.toMembers)
         }
         else if let task = task as? TaskDefinitionSendGroupCreateMessage {
             identities = Set(task.toMembers)
@@ -507,19 +509,19 @@ class TaskExecution: NSObject {
             }
         }
         else if let task = task as? TaskDefinitionSendGroupDeletePhotoMessage {
-            identities = Set<ThreemaIdentity>(task.toMembers)
+            identities = Set<String>(task.toMembers)
         }
         else if let task = task as? TaskDefinitionSendGroupDeliveryReceiptsMessage {
-            identities = Set<ThreemaIdentity>(task.toMembers)
+            identities = Set<String>(task.toMembers)
         }
         else if let task = task as? TaskDefinitionSendGroupLeaveMessage {
-            identities = Set<ThreemaIdentity>(task.toMembers)
+            identities = Set<String>(task.toMembers)
         }
         else if let task = task as? TaskDefinitionSendGroupRenameMessage {
-            identities = Set<ThreemaIdentity>(task.toMembers)
+            identities = Set<String>(task.toMembers)
         }
         else if let task = task as? TaskDefinitionSendGroupSetPhotoMessage {
-            identities = Set<ThreemaIdentity>(task.toMembers)
+            identities = Set<String>(task.toMembers)
         }
         else if let task = task as? TaskDefinitionSendMessage {
             if task.isGroupMessage {
@@ -550,7 +552,7 @@ class TaskExecution: NSObject {
     ///
     /// - Parameter identities: Message nonces for receivers
     /// - Throws: `TaskExecutionError.missingMessageNonce` if task doesn't support nonces
-    private func generateMessageNonces(for identities: Set<ThreemaIdentity>) throws {
+    private func generateMessageNonces(for identities: Set<String>) throws {
         guard var taskNonce = taskDefinition as? TaskDefinitionSendMessageNonceProtocol else {
             throw TaskExecutionError.missingMessageNonce
         }
@@ -565,7 +567,7 @@ class TaskExecution: NSObject {
             excludeReceivers = taskSend.messageAlreadySentTo
         }
 
-        excludeReceivers.forEach { (key: ThreemaIdentity, value: Data) in
+        excludeReceivers.forEach { (key: String, value: Data) in
             taskNonce.nonces[key] = value
         }
 
@@ -591,7 +593,7 @@ class TaskExecution: NSObject {
     /// - Parameter identity: Receiver of the message
     /// - Returns: Message nonce for a receiver
     /// - Throws: `TaskExecutionError.missingMessageNonce` if task doesn't support nonces
-    private func messageNonce(for identity: ThreemaIdentity) throws -> Data {
+    private func messageNonce(for identity: String) throws -> Data {
         guard let taskNonce = taskDefinition as? TaskDefinitionSendMessageNonceProtocol else {
             throw TaskExecutionError.missingMessageNonce
         }
@@ -764,7 +766,10 @@ class TaskExecution: NSObject {
                 guard let groupID = task.groupID,
                       let groupCreatorIdentity = task.groupCreatorIdentity,
                       frameworkInjector.backgroundGroupManager
-                      .getConversation(for: GroupIdentity(id: groupID, creator: groupCreatorIdentity)) != nil else {
+                      .getConversation(for: GroupIdentity(
+                          id: groupID,
+                          creator: ThreemaIdentity(groupCreatorIdentity)
+                      )) != nil else {
                     msg.fromIdentity = fromIdentity
                     msg.toIdentity = toIdentity
                     msg.date = message.date
@@ -882,7 +887,11 @@ class TaskExecution: NSObject {
             guard let groupID = task.groupID,
                   let groupCreatorIdentity = task.groupCreatorIdentity,
                   frameworkInjector.backgroundGroupManager
-                  .getConversation(for: GroupIdentity(id: groupID, creator: groupCreatorIdentity)) != nil else {
+                  .getConversation(for: GroupIdentity(
+                      id: groupID,
+                      creator: ThreemaIdentity(groupCreatorIdentity)
+                  )) !=
+                  nil else {
                 msg.fromIdentity = fromIdentity
                 msg.toIdentity = toIdentity
                 return msg
@@ -910,8 +919,8 @@ class TaskExecution: NSObject {
     ///   - receiptMessageIDs: Receipt for message IDs
     /// - Returns: Abstract message
     func getDeliveryReceiptMessage(
-        _ fromIdentity: ThreemaIdentity,
-        _ toIdentity: ThreemaIdentity,
+        _ fromIdentity: String,
+        _ toIdentity: String,
         _ receiptType: ReceiptType,
         _ receiptMessageIDs: [Data]
     ) -> DeliveryReceiptMessage {
@@ -933,10 +942,10 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupCreateMessage(
         _ groupID: Data,
-        _ groupCreatorIdentity: ThreemaIdentity,
-        _ fromIdentity: ThreemaIdentity,
-        _ toIdentity: ThreemaIdentity,
-        _ groupMembers: [ThreemaIdentity]
+        _ groupCreatorIdentity: String,
+        _ fromIdentity: String,
+        _ toIdentity: String,
+        _ groupMembers: [String]
     ) -> GroupCreateMessage {
         
         let msg = GroupCreateMessage()
@@ -957,9 +966,9 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupLeaveMessage(
         _ groupID: Data,
-        _ groupCreatorIdentity: ThreemaIdentity,
-        _ fromIdentity: ThreemaIdentity,
-        _ toMember: ThreemaIdentity
+        _ groupCreatorIdentity: String,
+        _ fromIdentity: String,
+        _ toMember: String
     ) -> GroupLeaveMessage {
         let msg = GroupLeaveMessage()
         msg.groupID = groupID
@@ -979,9 +988,9 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupRenameMessage(
         _ groupID: Data,
-        _ groupCreatorIdentity: ThreemaIdentity,
-        _ fromIdentity: ThreemaIdentity,
-        _ toMember: ThreemaIdentity,
+        _ groupCreatorIdentity: String,
+        _ fromIdentity: String,
+        _ toMember: String,
         _ name: String?
     ) -> GroupRenameMessage {
         let msg = GroupRenameMessage()
@@ -1005,9 +1014,9 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupSetPhotoMessage(
         _ groupID: Data,
-        _ groupCreatorIdentity: ThreemaIdentity,
-        _ fromIdentity: ThreemaIdentity,
-        _ toMember: ThreemaIdentity,
+        _ groupCreatorIdentity: String,
+        _ fromIdentity: String,
+        _ toMember: String,
         _ size: UInt32,
         _ blobID: Data?,
         _ encryptionKey: Data?
@@ -1032,9 +1041,9 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupDeletePhotoMessage(
         _ groupID: Data,
-        _ groupCreatorIdentity: ThreemaIdentity,
-        _ fromIdentity: ThreemaIdentity,
-        _ toMember: ThreemaIdentity
+        _ groupCreatorIdentity: String,
+        _ fromIdentity: String,
+        _ toMember: String
     ) -> GroupDeletePhotoMessage {
         let msg = GroupDeletePhotoMessage()
         msg.groupID = groupID
@@ -1056,9 +1065,9 @@ class TaskExecution: NSObject {
     /// - Returns: Abstract message
     func getGroupDeliveryReceiptMessage(
         _ groupID: Data,
-        _ groupCreatorIdentity: ThreemaIdentity,
-        _ fromIdentity: ThreemaIdentity,
-        _ toIdentity: ThreemaIdentity,
+        _ groupCreatorIdentity: String,
+        _ fromIdentity: String,
+        _ toIdentity: String,
         _ receiptType: ReceiptType,
         _ receiptMessageIDs: [Data]
     ) -> GroupDeliveryReceiptMessage {

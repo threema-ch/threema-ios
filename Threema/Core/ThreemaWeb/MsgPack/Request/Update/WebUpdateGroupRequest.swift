@@ -112,8 +112,7 @@ class WebUpdateGroupRequest: WebAbstractMessage {
             }
     
             groupManager.createOrUpdate(
-                groupID: group.groupID,
-                creator: group.groupCreatorIdentity,
+                for: group.groupIdentity,
                 members: Set<String>(members),
                 systemMessageDate: Date()
             )

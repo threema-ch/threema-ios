@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
 
 @testable import ThreemaFramework
@@ -136,7 +137,8 @@ class GroupMessageProcessorTests: XCTestCase {
             let userSettingsMock = UserSettingsMock()
             let groupManagerMock: GroupManagerProtocolObjc = GroupManagerMock()
 
-            (test[1] as! AbstractGroupMessage).nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
+            (test[1] as! AbstractGroupMessage).nonce = MockData.generateMessageNonce()
+            (test[1] as! AbstractGroupMessage).groupID = MockData.generateGroupID()
             (test[1] as! AbstractGroupMessage).groupCreator = test[2] as? String
             (test[1] as! AbstractGroupMessage).fromIdentity = test[3] as? String
 
@@ -178,18 +180,14 @@ class GroupMessageProcessorTests: XCTestCase {
     }
 
     func testHandleMessageGroupExistsIamMember() throws {
-        let expectedMember01 = "MEMBER01"
-        let expectedMember02 = "MEMBER02"
-        let expectedMember03 = "MEMBER03"
+        let expectedMember01 = ThreemaIdentity("MEMBER01")
+        let expectedMember02 = ThreemaIdentity("MEMBER02")
+        let expectedMember03 = ThreemaIdentity("MEMBER03")
 
         // prepare test db
 
         [expectedMember01, expectedMember02, expectedMember03].forEach { member in
-            databasePreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: member,
-                verificationLevel: 0
-            )
+            databasePreparer.createContact(identity: member.string)
         }
 
         // 0: test description
@@ -207,7 +205,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Group found all good, group chat message can be processed",
                 GroupTextMessage(),
-                expectedMember01,
+                expectedMember01.string,
                 false,
                 false,
                 false,
@@ -233,7 +231,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Do nothing, sender is creator of the group",
                 GroupRequestSyncMessage(),
-                expectedMember01,
+                expectedMember01.string,
                 false,
                 false,
                 false,
@@ -244,7 +242,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Do nothing, because received GroupRequestSyncMessage form member but i'm not creator",
                 GroupRequestSyncMessage(),
-                expectedMember02,
+                expectedMember02.string,
                 false,
                 false,
                 false,
@@ -257,7 +255,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Member left the group",
                 GroupLeaveMessage(),
-                expectedMember02,
+                expectedMember02.string,
                 false,
                 true,
                 false,
@@ -270,7 +268,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Creator left the group",
                 GroupLeaveMessage(),
-                expectedMember01,
+                expectedMember01.string,
                 false,
                 true,
                 false,
@@ -299,18 +297,16 @@ class GroupMessageProcessorTests: XCTestCase {
                 GroupPhotoSenderMock()
             )
 
-            let expectedGroupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-            let expectedCreator = expectedMember01
+            let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedMember01)
 
             let group = try XCTUnwrap(createOrUpdateDBWait(
                 groupManager: groupManager,
-                groupID: expectedGroupID,
-                creator: expectedCreator,
+                groupIdentity: expectedGroupIdentity,
                 members: Set<String>([
                     myIdentityStoreMock.identity,
-                    expectedMember01,
-                    expectedMember02,
-                    expectedMember03,
+                    expectedMember01.string,
+                    expectedMember02.string,
+                    expectedMember03.string,
                 ])
             ))
 
@@ -318,8 +314,8 @@ class GroupMessageProcessorTests: XCTestCase {
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
-            message.groupID = expectedGroupID
-            message.groupCreator = expectedCreator
+            message.groupID = expectedGroupIdentity.id
+            message.groupCreator = expectedGroupIdentity.creator.string
             message.fromIdentity = test[2] as? String
             message.toIdentity = myIdentityStoreMock.identity
 
@@ -389,19 +385,15 @@ class GroupMessageProcessorTests: XCTestCase {
     func testHandleMessageGroupExistsIamCreator() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let expectedMember01 = "MEMBER01"
-        let expectedMember02 = "MEMBER02"
-        let expectedMember03 = "MEMBER03"
-        let expectedCreator = myIdentityStoreMock.identity
+        let expectedMember01 = ThreemaIdentity("MEMBER01")
+        let expectedMember02 = ThreemaIdentity("MEMBER02")
+        let expectedMember03 = ThreemaIdentity("MEMBER03")
+        let expectedCreator = ThreemaIdentity(myIdentityStoreMock.identity)
 
         // prepare test db
 
         [expectedMember01, expectedMember02, expectedMember03].forEach { member in
-            databasePreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: member,
-                verificationLevel: 0
-            )
+            databasePreparer.createContact(identity: member.string)
         }
 
         // 0: test description
@@ -419,7 +411,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Group found all good, process group message",
                 GroupTextMessage(),
-                expectedMember01,
+                expectedMember01.string,
                 false,
                 false,
                 false,
@@ -443,7 +435,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Do nothing, sender is creator of the group",
                 GroupRequestSyncMessage(),
-                expectedCreator,
+                expectedCreator.string,
                 false,
                 false,
                 false,
@@ -469,7 +461,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Sync this group, because answer regular GroupRequestSyncMessage from member",
                 GroupRequestSyncMessage(),
-                expectedMember02,
+                expectedMember02.string,
                 false,
                 false,
                 true,
@@ -482,7 +474,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Member left the group",
                 GroupLeaveMessage(),
-                expectedMember02,
+                expectedMember02.string,
                 false,
                 true,
                 false,
@@ -495,7 +487,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Creator left the group",
                 GroupLeaveMessage(),
-                expectedCreator,
+                expectedCreator.string,
                 false,
                 true,
                 false,
@@ -523,21 +515,20 @@ class GroupMessageProcessorTests: XCTestCase {
                 GroupPhotoSenderMock()
             )
 
-            let expectedGroupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+            let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedCreator)
 
             let group = try XCTUnwrap(createOrUpdateDBWait(
                 groupManager: groupManager,
-                groupID: expectedGroupID,
-                creator: expectedCreator,
-                members: Set<String>([expectedMember01, expectedMember02, expectedMember03])
+                groupIdentity: expectedGroupIdentity,
+                members: Set<String>([expectedMember01.string, expectedMember02.string, expectedMember03.string])
             ))
 
             XCTAssertNotNil(group)
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
-            message.groupID = expectedGroupID
-            message.groupCreator = expectedCreator
+            message.groupID = expectedGroupIdentity.id
+            message.groupCreator = expectedGroupIdentity.creator.string
             message.fromIdentity = test[2] as? String
             message.toIdentity = myIdentityStoreMock.identity
 
@@ -610,11 +601,7 @@ class GroupMessageProcessorTests: XCTestCase {
         let expectedMember03 = "MEMBER03"
 
         [expectedMember01, expectedMember02, expectedMember03].forEach { member in
-            databasePreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: member,
-                verificationLevel: 0
-            )
+            databasePreparer.createContact(identity: member)
         }
 
         // 0: test description
@@ -662,22 +649,23 @@ class GroupMessageProcessorTests: XCTestCase {
                 GroupPhotoSenderMock()
             )
 
-            let expectedGroupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-            let expectedCreator = myIdentityStoreMock.identity
+            let expectedGroupIdentity = GroupIdentity(
+                id: MockData.generateGroupID(),
+                creator: ThreemaIdentity(myIdentityStoreMock.identity)
+            )
 
             let group = try XCTUnwrap(createOrUpdateDBWait(
                 groupManager: groupManager,
-                groupID: expectedGroupID,
-                creator: expectedCreator,
+                groupIdentity: expectedGroupIdentity,
                 members: Set<String>([expectedMember01, expectedMember02, expectedMember03])
             ))
 
             XCTAssertEqual(.active, group.state)
 
             groupManager.leaveDB(
-                groupID: expectedGroupID,
-                creator: expectedCreator,
-                member: expectedCreator,
+                groupID: expectedGroupIdentity.id,
+                creator: expectedGroupIdentity.creator.string,
+                member: expectedGroupIdentity.creator.string,
                 systemMessageDate: Date()
             )
 
@@ -685,8 +673,8 @@ class GroupMessageProcessorTests: XCTestCase {
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
-            message.groupID = expectedGroupID
-            message.groupCreator = expectedCreator
+            message.groupID = expectedGroupIdentity.id
+            message.groupCreator = expectedGroupIdentity.creator.string
             message.fromIdentity = (test[2] as! String)
             message.toIdentity = myIdentityStoreMock.identity
 
@@ -732,8 +720,7 @@ class GroupMessageProcessorTests: XCTestCase {
     /// Create or update group in DB and wait until finished.
     @discardableResult private func createOrUpdateDBWait(
         groupManager: GroupManagerProtocol,
-        groupID: Data,
-        creator: String,
+        groupIdentity: GroupIdentity,
         members: Set<String>
     ) -> Group? {
         var group: Group?
@@ -741,8 +728,7 @@ class GroupMessageProcessorTests: XCTestCase {
         let expec = expectation(description: "Group create or update")
 
         groupManager.createOrUpdateDB(
-            groupID: groupID,
-            creator: creator,
+            for: groupIdentity,
             members: members,
             systemMessageDate: Date(),
             sourceCaller: .local

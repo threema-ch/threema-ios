@@ -22,6 +22,7 @@ import AVFoundation
 import CocoaLumberjackSwift
 import Foundation
 import SwiftProtobuf
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 
@@ -43,7 +44,9 @@ final class RemoteParticipant: Participant {
         case muteStateChanged(RemoteParticipant, ParticipantStateChange)
         case rekeyReceived(RemoteParticipant, MediaKeys)
     }
-    
+
+    // TODO: (IOS-4059) Have a mute state on Participant, only yield .participantChanged and retrieve current value in UIUpdate
+
     // MARK: - Private Variables
     
     private let groupCallMessageCrypto: GroupCallMessageCryptoProtocol
@@ -78,17 +81,14 @@ final class RemoteParticipant: Participant {
     // TODO: (IOS-4059) Move a11y string to NormalParticipant, make `dependencies` private again
     let dependencies: Dependencies
 
-    private(set) var threemaIdentity: ThreemaID?
+    // TODO: (IOS-4059) Would be nice if this wasn't optional so we could move it to the parent class.
+    private(set) var threemaIdentity: ThreemaIdentity?
+    private(set) var nickname: String?
         
     var needsPostHandshakeRekey = false
 
     var isHandshakeCompleted: Bool {
         handshakeState == .done
-    }
-    
-    var newMediaKeys: [Groupcall_ParticipantToParticipant.MediaKey] {
-        // TODO: (IOS-4089) This shouldn't return all we have used ever
-        mediaKeys ?? [Groupcall_ParticipantToParticipant.MediaKey]()
     }
     
     // MARK: - Lifecycle
@@ -142,10 +142,10 @@ final class RemoteParticipant: Participant {
             ///    1. Respond by sending a `Hello` message, immediately followed by an `Auth` message.
             ///    2. Set the participant's _handshake state_ to `await-auth` and abort these steps.
 
-            let helloMessage = try handshakeHelloMessage(for: ThreemaID(
-                id: localParticipant.identity,
-                nickname: localParticipant.nickname
-            ))
+            let helloMessage = try handshakeHelloMessage(
+                for: localParticipant.threemaIdentity,
+                localNickname: localParticipant.nickname
+            )
             
             let mediaKeys = [
                 localParticipant.protocolMediaKeys,
@@ -301,12 +301,12 @@ extension RemoteParticipant {
 // MARK: - Handshake Messages
 
 extension RemoteParticipant {
-    func handshakeHelloMessage(for localIdentity: ThreemaID) throws -> Data {
+    func handshakeHelloMessage(for localIdentity: ThreemaIdentity, localNickname: String) throws -> Data {
         DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
         let helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello.with {
-            $0.identity = localIdentity.id
-            $0.nickname = localIdentity.nickname
+            $0.identity = localIdentity.string
+            $0.nickname = localNickname
             $0.pck = keyPair.publicKey
             $0.pcck = pcck
         }
@@ -364,7 +364,7 @@ extension RemoteParticipant {
         
         let innerNonce = dependencies.groupCallCrypto.randomBytes(of: groupCallMessageCrypto.symmetricNonceLength)
         
-        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.id) else {
+        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.string) else {
             // TODO: (IOS-4124) We need should throw here or attempt to fetch the contact.
             // This should be handled by the app, a new contact can join a group call iff it has previously joined the
             // group
@@ -439,7 +439,8 @@ extension RemoteParticipant {
         
         pckRemote = helloMessage.pck
         pcckRemote = helloMessage.pcck
-        threemaIdentity = try ThreemaID(id: helloMessage.identity, nickname: helloMessage.nickname)
+        threemaIdentity = ThreemaIdentity(helloMessage.identity)
+        nickname = helloMessage.nickname
     }
     
     private func handleAuth(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
@@ -462,7 +463,7 @@ extension RemoteParticipant {
         let innerNonce = innerData[0..<groupCallMessageCrypto.symmetricNonceLength]
         let ciphertext = innerData.advanced(by: Int(groupCallMessageCrypto.symmetricNonceLength))
         
-        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.id) else {
+        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.string) else {
             // TODO: (IOS-4124) We need should throw here or attempt to fetch the contact.
             fatalError()
         }
@@ -754,7 +755,7 @@ extension RemoteParticipant: RemoteParticipantProtocol {
         return participantID
     }
     
-    func setIdentityRemote(id: ThreemaID) {
+    func setIdentityRemote(id: ThreemaIdentity) {
         threemaIdentity = id
     }
     

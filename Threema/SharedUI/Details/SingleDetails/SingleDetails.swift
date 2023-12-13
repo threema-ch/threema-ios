@@ -48,7 +48,7 @@ enum SingleDetails {
         case verificationLevel(contact: ContactEntity)
         case publicKey
         
-        case linkedContact(_ linkedContactManger: LinkedContactManger)
+        case linkedContact(_ linkedContactManager: LinkedContactManager)
         
         // Groups
         case group(_ group: Group)

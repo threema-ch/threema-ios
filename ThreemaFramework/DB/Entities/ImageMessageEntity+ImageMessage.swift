@@ -101,6 +101,10 @@ extension ImageMessageEntity: ImageMessage {
         return url
     }
     
+    public var assetResourceTypeForAutosave: PHAssetResourceType? {
+        .photo
+    }
+    
     public func createSaveMediaItem(forAutosave: Bool) -> AlbumManager.SaveMediaItem? {
         guard let url = temporaryBlobDataURL() else {
             return nil

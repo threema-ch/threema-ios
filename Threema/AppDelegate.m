@@ -169,6 +169,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return YES;
     }
     
+    [self registerBackgroundTasks];
+    
     [PromiseKitConfiguration configurePromiseKit];
     
     shouldLoadUIForEnterForeground = false;
@@ -342,6 +344,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)launchPhase2 {
     /* migration phase */
+    NSURL *logFile = [LogManager dbMigrationLogFile];
+    [LogManager deleteLogFile:logFile];
+    [LogManager addFileLogger:logFile];
+
     if (databaseImported == false) {
         WizardBackgroundView *migrationBgView = [[WizardBackgroundView alloc] initWithFrame:self.window.frame];
         migrationBgView.contentMode = UIViewContentModeScaleAspectFill;
@@ -412,6 +418,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             return;
         });
     }
+
+    NSURL *logFile = [LogManager dbMigrationLogFile];
+    [LogManager removeFileLogger:logFile];
 
     AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
     [appLaunchTasks runLaunchEventDidFinishLaunching];
@@ -735,7 +744,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         }
         [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
             if (error) {
-                if ([error code] == kSafePasswordEmptyErrorCode) {
+                if ([error code] == ThreemaProtocolErrorSafePasswordEmpty) {
                     // password was empty
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [LaunchModalManager.shared checkLaunchModals];
@@ -1107,6 +1116,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     dispatch_async(dispatch_get_main_queue(), ^{
         notificationManager.firstPushHandled = false;
     });
+    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    application.shortcutItems = [UIApplicationShortcutItemProvider itemsFor:mdmSetup];
     
     [self showLockScreen];
 }

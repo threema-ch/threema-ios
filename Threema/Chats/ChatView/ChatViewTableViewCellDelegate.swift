@@ -346,7 +346,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                 return
             }
         }
-        let identity = contact?.identity
+        let identity = contact?.threemaIdentity
 
         Task { @MainActor in
             if ack {

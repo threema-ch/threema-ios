@@ -23,25 +23,25 @@ import PromiseKit
 @testable import ThreemaFramework
 
 class MessageProcessorMock: NSObject, MessageProcessorProtocol {
-    var processIncomingMessageCalls = [BoxedMessage]()
+    var processIncomingBoxedMessageCalls = [BoxedMessage]()
     
     var abstractMessage: AbstractMessage?
     var error: Error?
 
-    func processIncomingMessage(
-        _ boxmsg: BoxedMessage!,
+    func processIncoming(
+        boxedMessage: BoxedMessage,
         receivedAfterInitialQueueSend: Bool,
         maxBytesToDecrypt: Int32,
         timeoutDownloadThumbnail: Int32
-    ) -> AnyPromise! {
-        processIncomingMessageCalls.append(boxmsg)
+    ) -> Promise<AbstractMessageAndPFSSession?> {
+        processIncomingBoxedMessageCalls.append(boxedMessage)
 
         if let abstractMessage {
-            return AnyPromise(Promise { $0.fulfill(AbstractMessageAndPFSSession(message: abstractMessage)) })
+            return Promise { $0.fulfill(AbstractMessageAndPFSSession(message: abstractMessage)) }
         }
         else if let error {
-            return AnyPromise(Promise<AbstractMessage>(error: error))
+            return Promise<AbstractMessageAndPFSSession?>(error: error)
         }
-        return AnyPromise(Promise())
+        return Promise { $0.fulfill(nil) }
     }
 }

@@ -73,7 +73,6 @@
 #import "BoxVoIPCallRingingMessage.h"
 #import "NonceHasher.h"
 #import "ServerConnector.h"
-#import <PromiseKit/PromiseKit.h>
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "NSString+Hex.h"
 #import "NaClCrypto.h"
@@ -118,100 +117,102 @@ static NSMutableOrderedSet *pendingGroupMessages;
     return self;
 }
 
-- (AnyPromise *)processIncomingMessage:(BoxedMessage*)boxmsg receivedAfterInitialQueueSend:(BOOL)receivedAfterInitialQueueSend maxBytesToDecrypt:(int)maxBytesToDecrypt timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
+- (void)processIncomingBoxedMessage:(BoxedMessage*)boxedMessage receivedAfterInitialQueueSend:(BOOL)receivedAfterInitialQueueSend maxBytesToDecrypt:(int)maxBytesToDecrypt timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail onCompletion:(nonnull void (^)(NSObject * _Nullable message))onCompletion onError:(nonnull void (^)(NSError * _Nonnull error))onError {
 
     self->maxBytesToDecrypt = maxBytesToDecrypt;
     self->timeoutDownloadThumbnail = timeoutDownloadThumbnail;
 
-    return [AnyPromise promiseWithAdapterBlock:^(PMKAdapter  _Nonnull adapter) {
-        [messageProcessorDelegate beforeDecode];
+    [messageProcessorDelegate beforeDecode];
 
-        ContactAcquaintanceLevel acquaintanceLevel = boxmsg.flags & MESSAGE_FLAG_GROUP ? ContactAcquaintanceLevelGroup : ContactAcquaintanceLevelDirect;
+    ContactAcquaintanceLevel acquaintanceLevel = boxedMessage.flags & MESSAGE_FLAG_GROUP ? ContactAcquaintanceLevelGroup : ContactAcquaintanceLevelDirect;
 
-        [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxmsg.fromIdentity acquaintanceLevel:acquaintanceLevel entityManager:entityManager onCompletion:^(NSData *publicKey) {
-            NSAssert(!([NSThread isMainThread] == YES), @"Should not running in main thread");
+    [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxedMessage.fromIdentity acquaintanceLevel:acquaintanceLevel entityManager:entityManager onCompletion:^(NSData *publicKey) {
+        NSAssert(!([NSThread isMainThread] == YES), @"Should not running in main thread");
 
-            [entityManager performBlock:^{
-                AbstractMessage *amsg = [MessageDecoder decodeFromBoxed:boxmsg withPublicKey:publicKey];
-                if (amsg == nil) {
-                    // Can't process message at this time, try it later
-                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
-                    adapter(nil, [ThreemaError threemaError:@"Bad message format or decryption error" withCode:kBadMessageErrorCode]);
-                    return;
+        [entityManager performBlock:^{
+            AbstractMessage *amsg = [MessageDecoder decodeFromBoxed:boxedMessage withPublicKey:publicKey];
+            if (amsg == nil) {
+                // Can't process message at this time, try it later
+                [messageProcessorDelegate incomingMessageFailed:boxedMessage];
+                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Bad message format or decryption error (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorBadMessage]);
+                return;
+            }
+
+            if ([amsg isKindOfClass: [UnknownTypeMessage class]]) {
+                // Can't process message at this time, try it later
+                [messageProcessorDelegate incomingMessageFailed:boxedMessage];
+                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType]);
+                return;
+            }
+
+            /* blacklisted? */
+            if ([self isBlacklisted:amsg]) {
+                DDLogWarn(@"Ignoring message from blocked ID %@", boxedMessage.fromIdentity);
+
+                // Do not process message, send server ack
+                [messageProcessorDelegate incomingMessageFailed:boxedMessage];
+                onCompletion(nil);
+                return;
+            }
+
+            // Validation logging
+            if ([amsg isContentValid] == NO) {
+                NSString *errorDescription = @"Ignore invalid content";
+                if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
+                    [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:errorDescription];
+                } else {
+                    [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:errorDescription];
                 }
 
-                if ([amsg isKindOfClass: [UnknownTypeMessage class]]) {
-                    // Can't process message at this time, try it later
-                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
-                    adapter(nil, [ThreemaError threemaError:@"Unknown message type" withCode:kUnknownMessageTypeErrorCode]);
-                    return;
-                }
-
-                /* blacklisted? */
-                if ([self isBlacklisted:amsg]) {
-                    DDLogWarn(@"Ignoring message from blocked ID %@", boxmsg.fromIdentity);
-
-                    // Do not process message, send server ack
-                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
-                    adapter(nil, nil);
-                    return;
-                }
-
-                // Validation logging
-                if ([amsg isContentValid] == NO) {
-                    NSString *errorDescription = @"Ignore invalid content";
+                // Do not process message, send server ack
+                [messageProcessorDelegate incomingMessageFailed:boxedMessage];
+                onCompletion(nil);
+                return;
+            } else {
+                if ([nonceGuard isProcessedWithMessage:amsg]) {
+                    NSString *errorDescription = @"Nonce already in database";
                     if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:errorDescription];
+                        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:errorDescription];
                     } else {
                         [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:errorDescription];
                     }
 
                     // Do not process message, send server ack
-                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
-                    adapter(nil, nil);
+                    [messageProcessorDelegate incomingMessageFailed:boxedMessage];
+                    onCompletion(nil);
                     return;
                 } else {
-                    if ([nonceGuard isProcessedWithMessage:amsg]) {
-                        NSString *errorDescription = @"Nonce already in database";
-                        if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                            [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:errorDescription];
-                        } else {
-                            [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:errorDescription];
-                        }
-
-                        // Do not process message, send server ack
-                        [messageProcessorDelegate incomingMessageFailed:boxmsg];
-                        adapter(nil, nil);
-                        return;
+                    if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
+                        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:nil];
                     } else {
-                        if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                            [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:nil];
-                        } else {
-                            [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:nil];
-                        }
+                        [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:nil];
                     }
                 }
+            }
 
-                amsg.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend;
+            amsg.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend;
 
-                [self processIncomingAbstractMessage:amsg onCompletion:^(AbstractMessage *processedMsg, NSObject *pfsSession) {
-                    // Message successfully processed
-                    AbstractMessageAndPFSSession *combi = [[AbstractMessageAndPFSSession alloc] initWithSession:pfsSession message:processedMsg];
-                    adapter(combi, nil);
-                } onError:^(NSError *error) {
-                    // Failed to process message, try it later
-                    adapter(nil, error);
-                }];
+            [self processIncomingAbstractMessage:amsg onCompletion:^(AbstractMessage *processedMsg, NSObject *pfsSession) {
+                // Message successfully processed
+                AbstractMessageAndPFSSession *combi = [[AbstractMessageAndPFSSession alloc] initWithSession:pfsSession message:processedMsg];
+                onCompletion(combi);
+            } onError:^(NSError * _Nullable error) {
+                if (error) {
+                    onError(error);
+                }
+                else {
+                    onCompletion(nil);
+                }
             }];
-        } onError:^(NSError *error) {
-            [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:@"PublicKey from Threema-ID not found"];
-            // Failed to process message, try it later
-            adapter(nil, error);
         }];
+    } onError:^(NSError *error) {
+        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:@"PublicKey from Threema-ID not found"];
+        // Failed to process message, try it later
+        onError(error);
     }];
 }
 
-- (void)processIncomingAbstractMessage:(AbstractMessage*)amsg onCompletion:(void(^)(AbstractMessage *processedMsg, NSObject *pfsSession))onCompletion onError:(void(^)(NSError *err))onError {
+- (void)processIncomingAbstractMessage:(AbstractMessage*)amsg onCompletion:(void(^)(AbstractMessage * _Nullable, NSObject * _Nullable))onCompletion onError:(void(^)(NSError * _Nullable))onError {
     
     if ([amsg isContentValid] == NO) {
         DDLogInfo(@"Ignore invalid content, message ID %@ from %@", amsg.messageId, amsg.fromIdentity);
@@ -220,7 +221,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
     }
     
     if ([nonceGuard isProcessedWithMessage:amsg]) {
-        DDLogInfo(@"Message nonce for %@ already in database", amsg.messageId);
+        DDLogWarn(@"Nonce of message %@ already processed", amsg.loggingDescription);
         onCompletion(nil, nil);
         return;
     }
@@ -332,7 +333,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
             processAbstractMessageBlock(amsg, nil);
         }
     } @catch (NSException *exception) {
-        NSError *error = [ThreemaError threemaError:exception.description withCode:kMessageProcessingErrorCode];
+        NSError *error = [ThreemaError threemaError:exception.description withCode:ThreemaProtocolErrorMessageProcessingFailed];
         onError(error);
     } @catch (NSError *error) {
         onError(error);
@@ -377,15 +378,11 @@ Process incoming message.
     }
 
     if ([amsg isKindOfClass:[BoxTextMessage class]]) {
-        TextMessage *message = (TextMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
-        if (message == nil) {
-            onError([ThreemaError threemaError:@"Could not find/create text message"]);
-            return;
-        }
-
-        [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
-            onCompletion(nil);
-        }];
+        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+            [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+                onCompletion(nil);
+            }];
+        } onError:onError];
     } else if ([amsg isKindOfClass:[BoxImageMessage class]]) {
         [self processIncomingImageMessage:(BoxImageMessage *)amsg sender:sender conversation:conversation onCompletion:^{
             onCompletion(nil);
@@ -395,28 +392,20 @@ Process incoming message.
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[BoxLocationMessage class]]) {
-        LocationMessage *message = (LocationMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
-        if (message == nil) {
-            onError([ThreemaError threemaError:@"Could not find/create location message"]);
-            return;
-        }
-
-        [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
-            [self resolveAddressFor:message]
-                .thenInBackground(^{
-                onCompletion(nil);
-            });
-        }];
+        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+            LocationMessage *locationMessage = (LocationMessage *)message;
+            [self finalizeMessage:locationMessage inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+                [self resolveAddressFor:locationMessage onCompletion:^{
+                    onCompletion(nil);
+                }];
+            }];
+        } onError:onError];
     } else if ([amsg isKindOfClass:[BoxAudioMessage class]]) {
-        AudioMessageEntity *message = (AudioMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
-        if (message == nil) {
-            onError([ThreemaError threemaError:@"Could not find/create audio message"]);
-            return;
-        }
-
-        [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
-            onCompletion(nil);
-        }];
+        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+            [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+                onCompletion(nil);
+            }];
+        } onError:onError];
     } else if ([amsg isKindOfClass:[DeliveryReceiptMessage class]]) {
         [self processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)amsg onCompletion:^{
             onCompletion(nil);
@@ -426,14 +415,12 @@ Process incoming message.
         onCompletion(nil);
     } else if ([amsg isKindOfClass:[BoxBallotCreateMessage class]]) {
         BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-        BallotMessage *ballotMessage = [decoder decodeCreateBallotFromBox:(BoxBallotCreateMessage *)amsg sender:sender conversation:conversation];
-        if (ballotMessage == nil) {
-            onError([ThreemaError threemaError:@"Could not find/create audio message"]);
-            return;
-        }
-
-        [self finalizeMessage:ballotMessage inConversation:conversation fromBoxMessage:amsg onCompletion:^{
-            onCompletion(nil);
+        [decoder decodeCreateBallotFromBox:(BoxBallotCreateMessage *)amsg sender:sender conversation:conversation onCompletion:^(BallotMessage *message) {
+            [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+                onCompletion(nil);
+            }];
+        } onError:^(NSError *error) {
+            onError(error);
         }];
     } else if ([amsg isKindOfClass:[BoxBallotVoteMessage class]]) {
         // TODO: This could be generate duplicate system messages, if message will processed multiple (race condition)
@@ -459,7 +446,7 @@ Process incoming message.
     } else if ([amsg isKindOfClass:[ContactDeletePhotoMessage class]]) {
         [self processIncomingContactDeletePhotoMessage:(ContactDeletePhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
-        } onError:onError];
+        }];
     } else if ([amsg isKindOfClass:[ContactRequestPhotoMessage class]]) {
         [self processIncomingContactRequestPhotoMessage:(ContactRequestPhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
@@ -481,7 +468,7 @@ Process incoming message.
     }
 }
 
-- (void)processIncomingGroupMessage:(AbstractGroupMessage * _Nonnull)amsg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * error))onError {
+- (void)processIncomingGroupMessage:(AbstractGroupMessage * _Nonnull)amsg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
     GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
     GroupMessageProcessor *groupProcessor = [[GroupMessageProcessor alloc] initWithMessage:amsg myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] groupManager:groupManager entityManager:entityManager nonceGuard:(NSObject*)nonceGuard];
@@ -502,7 +489,7 @@ Process incoming message.
                     }
                 });
                 [messageProcessorDelegate pendingGroup:amsg];
-                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Group not found for this message %@", amsg.messageId]  withCode:kPendingGroupMessageErrorCode]);
+                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Group not found for this message (ID: %@)", amsg.messageId]  withCode:ThreemaProtocolErrorPendingGroupMessage]);
                 return;
             } else {
                 if ([amsg isKindOfClass:[GroupCreateMessage class]]) {
@@ -540,75 +527,62 @@ Process incoming message.
 
         if ([amsg isKindOfClass:[GroupRenameMessage class]]) {
             GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
-            [groupManager setNameObjcWithGroupID:amsg.groupId creator:amsg.groupCreator name:((GroupRenameMessage *)amsg).name systemMessageDate:amsg.date send:YES]
-                .thenInBackground(^{
+            [groupManager setNameObjcWithGroupID:amsg.groupId creator:amsg.groupCreator name:((GroupRenameMessage *)amsg).name systemMessageDate:amsg.date send:YES completionHandler:^(NSError * _Nullable error) {
+                if (error == nil) {
                     [self changedConversationAndGroupEntityWithGroupID:amsg.groupId groupCreatorIdentity:amsg.groupCreator];
                     onCompletion();
-                }).catch(^(NSError *error){
+                }
+                else {
                     onError(error);
-                });
+                }
+            }];
         } else if ([amsg isKindOfClass:[GroupSetPhotoMessage class]]) {
             [self processIncomingGroupSetPhotoMessage:(GroupSetPhotoMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupDeletePhotoMessage class]]) {
             GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
-            [groupManager deletePhotoObjcWithGroupID:amsg.groupId creator:amsg.groupCreator sentDate:[amsg date] send:NO]
-                .thenInBackground(^{
+            [groupManager deletePhotoObjcWithGroupID:amsg.groupId creator:amsg.groupCreator sentDate:[amsg date] send:NO completionHandler:^(NSError * _Nullable error) {
+                if (error == nil) {
                     [self changedConversationAndGroupEntityWithGroupID:amsg.groupId groupCreatorIdentity:amsg.groupCreator];
                     onCompletion();
-                })
-                .catch(^(NSError *error){
+                }
+                else {
                     onError(error);
-                });
-        } else if ([amsg isKindOfClass:[GroupTextMessage class]]) {
-            TextMessage *message = (TextMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
-            if (message == nil) {
-                onError([ThreemaError threemaError:@"Could not find/create text message"]);
-                return;
-            }
-
-            [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
-        } else if ([amsg isKindOfClass:[GroupLocationMessage class]]) {
-            LocationMessage *message = (LocationMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
-            if (message == nil) {
-                onError([ThreemaError threemaError:@"Could not find/create location message"]);
-                return;
-            }
-
-            [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:^{
-                [self resolveAddressFor:message]
-                    .thenInBackground(^{
-                    onCompletion();
-                });
+                }
             }];
+        } else if ([amsg isKindOfClass:[GroupTextMessage class]]) {
+            BOOL isMessageAlreadyProcessed = NO;
+            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+            } onError:onError];
+        } else if ([amsg isKindOfClass:[GroupLocationMessage class]]) {
+            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:^{
+                    [self resolveAddressFor:(LocationMessage*)message onCompletion:onCompletion];
+                }];
+            } onError:onError];
         } else if ([amsg isKindOfClass:[GroupImageMessage class]]) {
             [self processIncomingImageMessage:(GroupImageMessage *)amsg sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupVideoMessage class]]) {
             [self processIncomingVideoMessage:(GroupVideoMessage*)amsg sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupAudioMessage class]]) {
-            AudioMessageEntity *message = (AudioMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
-            if (message == nil) {
-                onError([ThreemaError threemaError:@"Could not find/create audio message"]);
-                return;
-            }
-
-            [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+            } onError:onError];
         } else if ([amsg isKindOfClass:[GroupBallotCreateMessage class]]) {
             BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-            BallotMessage *message = [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg sender:sender conversation:conversation];
-            if (message == nil) {
-                onError([ThreemaError threemaError:@"Could not find/create ballot message"]);
-                return;
-            }
-            
-            [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+            [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg sender:sender conversation:conversation onCompletion:^(BallotMessage *message) {
+                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+            } onError:^(NSError *error) {
+                onError(error);
+            }];
         } else if ([amsg isKindOfClass:[GroupBallotVoteMessage class]]) {
             // TODO: This could be generate duplicate system messages, if message will processed multiple (race condition)
             [self processIncomingGroupBallotVoteMessage:(GroupBallotVoteMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupFileMessage class]]) {
             [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
                 [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
-            } onError:^(NSError *err) {
-                onError(err);
+            } onError:^(NSError *error) {
+                onError(error);
             }];
         } else if ([amsg isKindOfClass:[GroupDeliveryReceiptMessage class]]) {
             [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
@@ -659,7 +633,7 @@ Process incoming message.
     [manager autoSyncBlobsFor:message.objectID];
 }
 
-- (void)processIncomingImageMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingImageMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
     NSAssert([amsg isKindOfClass:[BoxImageMessage class]] || [amsg isKindOfClass:[GroupImageMessage class]], @"Abstract message type should be BoxImageMessage or GroupImageMessage");
     
@@ -669,42 +643,34 @@ Process incoming message.
     }
 
     BOOL isGroupMessage = [amsg isKindOfClass:[GroupImageMessage class]];
+    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+        ImageMessageEntity *imageMessageEntity = (ImageMessageEntity*)message;
 
-    ImageMessageEntity *msg = (ImageMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
-    if (msg == nil) {
-        onError([ThreemaError threemaError:@"Create image message failed"]);
-        return;
-    }
+        [messageProcessorDelegate incomingMessageChanged:imageMessageEntity fromIdentity:[sender identity]];
 
-    if (conversation == nil) {
-        onError([ThreemaError threemaError:@"Parameter 'conversation' should be not nil"]);
-        return;
-    }
+        dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-    [messageProcessorDelegate incomingMessageChanged:msg fromIdentity:[sender identity]];
+        // An ImageMessage never has a local blob because all note group cabable devices send everything as FileMessage
+        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
+        BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
+        ImageMessageProcessor *processor = [[ImageMessageProcessor alloc] initWithBlobDownloader:blobDownloader myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
+        [processor downloadImageWithImageMessageID:imageMessageEntity.id in:conversation.objectID imageBlobID:imageMessageEntity.imageBlobId origin:BlobOriginPublic imageBlobEncryptionKey:imageMessageEntity.encryptionKey imageBlobNonce:imageMessageEntity.imageNonce senderPublicKey:sender.publicKey maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:timeoutDownloadThumbnail completion:^(NSError *error) {
 
-    dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+            if (error != nil) {
+                DDLogError(@"Could not process image message %@", error);
+            }
 
-    // An ImageMessage never has a local blob because all note group cabable devices send everything as FileMessage
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
-    BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
-    ImageMessageProcessor *processor = [[ImageMessageProcessor alloc] initWithBlobDownloader:blobDownloader myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
-    [processor downloadImageWithImageMessageID:msg.id in:conversation.objectID imageBlobID:msg.imageBlobId origin:BlobOriginPublic imageBlobEncryptionKey:msg.encryptionKey imageBlobNonce:msg.imageNonce senderPublicKey:sender.publicKey maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:timeoutDownloadThumbnail completion:^(NSError *error) {
-
-        if (error != nil) {
-            DDLogError(@"Could not process image message %@", error);
-        }
-
-        if (isGroupMessage == NO) {
-            [self finalizeMessage:msg inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
-        }
-        else {
-            [self finalizeGroupMessage:msg inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
-        }
-    }];
+            if (isGroupMessage == NO) {
+                [self finalizeMessage:imageMessageEntity inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
+            }
+            else {
+                [self finalizeGroupMessage:imageMessageEntity inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
+            }
+        }];
+    } onError:onError];
 }
 
-- (void)processIncomingVideoMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingVideoMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
     NSAssert([amsg isKindOfClass:[BoxVideoMessage class]] || [amsg isKindOfClass:[GroupVideoMessage class]], @"Abstract message type should be BoxVideoMessage or GroupVideoMessage");
     
@@ -713,73 +679,66 @@ Process incoming message.
         return;
     }
 
-    if (conversation == nil) {
-        onError([ThreemaError threemaError:@"Parameter 'conversation' should be not nil"]);
-        return;
-    }
-    
-    VideoMessageEntity *msg = (VideoMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:[UIImage imageNamed:@"Video"]];
-    if (msg == nil) {
-        onError([ThreemaError threemaError:@"Create video message failed"]);
-        return;
-    }
+    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:[UIImage imageNamed:@"Video"] onCompletion:^(BaseMessage *message) {
+        VideoMessageEntity *videoMessageEntity = (VideoMessageEntity *)message;
 
-    [messageProcessorDelegate incomingMessageChanged:msg fromIdentity:[sender identity]];
+        [messageProcessorDelegate incomingMessageChanged:videoMessageEntity fromIdentity:[sender identity]];
 
-    BOOL isGroupMessage = [amsg isKindOfClass:[GroupVideoMessage class]];
+        BOOL isGroupMessage = [amsg isKindOfClass:[GroupVideoMessage class]];
 
-    NSData *thumbnailBlobId;
-    if (isGroupMessage == NO) {
-        BoxVideoMessage *videoMessage = (BoxVideoMessage *)amsg;
-        thumbnailBlobId = [videoMessage thumbnailBlobId];
-    }
-    else {
-        GroupVideoMessage *videoMessage = (GroupVideoMessage *)amsg;
-        thumbnailBlobId = [videoMessage thumbnailBlobId];
-    }
-
-    dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-
-    // A VideoMessage never has a local blob because all note group capable devices send everything as FileMessage
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
-    BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
-    VideoMessageProcessor *processor = [[VideoMessageProcessor alloc] initWithBlobDownloader:blobDownloader userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
-    [processor downloadVideoThumbnailWithVideoMessageID:msg.id in:conversation.objectID thumbnailBlobID:thumbnailBlobId origin:BlobOriginPublic maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:self->timeoutDownloadThumbnail completion:^(NSError *error) {
-
-        if (error != nil) {
-            DDLogError(@"Error while downloading video thumbnail: %@", error);
-        }
-
+        NSData *thumbnailBlobId;
         if (isGroupMessage == NO) {
-            [self finalizeMessage:msg inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
+            BoxVideoMessage *videoMessage = (BoxVideoMessage *)amsg;
+            thumbnailBlobId = [videoMessage thumbnailBlobId];
         }
         else {
-            [self finalizeGroupMessage:msg inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
+            GroupVideoMessage *videoMessage = (GroupVideoMessage *)amsg;
+            thumbnailBlobId = [videoMessage thumbnailBlobId];
         }
-    }];
+
+        dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+        // A VideoMessage never has a local blob because all note group capable devices send everything as FileMessage
+        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
+        BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
+        VideoMessageProcessor *processor = [[VideoMessageProcessor alloc] initWithBlobDownloader:blobDownloader userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
+        [processor downloadVideoThumbnailWithVideoMessageID:videoMessageEntity.id in:conversation.objectID thumbnailBlobID:thumbnailBlobId origin:BlobOriginPublic maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:self->timeoutDownloadThumbnail completion:^(NSError *error) {
+
+            if (error != nil) {
+                DDLogError(@"Error while downloading video thumbnail: %@", error);
+            }
+
+            if (isGroupMessage == NO) {
+                [self finalizeMessage:videoMessageEntity inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
+            }
+            else {
+                [self finalizeGroupMessage:videoMessageEntity inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
+            }
+        }];
+    } onError:onError];
 }
 
-- (AnyPromise*)resolveAddressFor:(LocationMessage*)message {
+- (void)resolveAddressFor:(LocationMessage*)message onCompletion:(void(^ _Nonnull)(void))onCompletion {
     // Reverse geocoding (only necessary if there is no POI adress) /
     if (message.poiAddress != nil) {
-        return [AnyPromise promiseWithResolverBlock:^(PMKResolver _Nonnull resolver) {
-            resolver(nil);
-        }];
+        onCompletion();
+        return;
     }
 
     // It should not result in a different address if we initialize the location with accuracies or not
     __block CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(message.latitude.doubleValue, message.longitude.doubleValue) altitude:0 horizontalAccuracy:message.accuracy.doubleValue verticalAccuracy:-1 timestamp:[NSDate date]];
 
-    return [ThreemaUtility fetchAddressObjcFor:location]
-        .thenInBackground(^(NSString *address){
-            [entityManager performSyncBlockAndSafe:^{
-                if ([message wasDeleted]) {
-                    return;
-                }
+    [ThreemaUtility fetchAddressObjcFor:location completionHandler:^(NSString * _Nonnull address) {
+        [entityManager performSyncBlockAndSafe:^{
+            if ([message wasDeleted]) {
+                return;
+            }
 
-                message.poiAddress = address;
-            }];
-        });
+            message.poiAddress = address;
+        }];
+
+        onCompletion();
+    }];
 }
 
 - (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
@@ -884,13 +843,15 @@ Process incoming message.
 
     // Download profile picture blob
     [self syncLoadBlobID:msg.blobId encryptionKey:msg.encryptionKey origin:BlobOriginPublic onCompletion:^(NSData * _Nonnull imageData) {
-        [groupManager setPhotoObjcWithGroupID:msg.groupId creator:msg.groupCreator imageData:imageData sentDate:msg.date send:NO]
-            .thenInBackground(^{
+        [groupManager setPhotoObjcWithGroupID:msg.groupId creator:msg.groupCreator imageData:imageData sentDate:msg.date send:NO completionHandler:^(NSError * _Nullable error) {
+            if (error == nil) {
                 [self changedConversationAndGroupEntityWithGroupID:msg.groupId groupCreatorIdentity:msg.groupCreator];
                 onCompletion();
-            }).catch(^(NSError *error){
+            }
+            else {
                 onError(error);
-            });
+            }
+        }];
     } onError:^(NSError *error) {
         if (error.code == 404) {
             onCompletion();
@@ -902,13 +863,14 @@ Process incoming message.
 }
 
 - (void)processIncomingGroupBallotVoteMessage:(GroupBallotVoteMessage*)msg onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *err))onError {
-    
+    // TODO: (IOS-4254) Remove once resolved
+    DDLogInfo(@"[Ballot] Start Processing GroupBallotVoteMessage in ballot with ID: %@.", [NSString stringWithHexData:msg.ballotId]);
     /* Create Message in DB */
     BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
     
     [entityManager performAsyncBlockAndSafe:^{
         if ([decoder decodeVoteFromGroupBox: msg] == NO) {
-            onError([ThreemaError threemaError:@"Error processing ballot vote"]);
+            onError([ThreemaError threemaError:[NSString stringWithFormat: @"[Ballot] Error processing ballot vote in ballot with ID: %@.", [NSString stringWithHexData:msg.ballotId]]]);
             return;
         }
 
@@ -918,14 +880,15 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingBallotVoteMessage:(BoxBallotVoteMessage*)msg onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *err))onError {
-    
+- (void)processIncomingBallotVoteMessage:(BoxBallotVoteMessage*)msg onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError * _Nonnull))onError {
+    // TODO: (IOS-4254) Remove once resolved
+    DDLogInfo(@"[Ballot] Start Processing BoxBallotVoteMessage in ballot with ID %@.", [NSString stringWithHexData:msg.ballotId]);
     /* Create Message in DB */
     BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
     [entityManager performAsyncBlockAndSafe:^{
         
         if ([decoder decodeVoteFromBox: msg] == NO) {
-            onError([ThreemaError threemaError:@"Error parsing json for ballot vote"]);
+            onError([ThreemaError threemaError:[NSString stringWithFormat: @"[Ballot] Error parsing json for ballot vote in ballot with ID: %@.", [NSString stringWithHexData:msg.ballotId]]]);
             return;
         }
                 
@@ -978,7 +941,7 @@ Process incoming message.
     }
 }
 
-- (void)processIncomingContactSetPhotoMessage:(ContactSetPhotoMessage *)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingContactSetPhotoMessage:(ContactSetPhotoMessage *)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
 
     // Download profile picture blob
     [self syncLoadBlobID:msg.blobId encryptionKey:msg.encryptionKey origin:BlobOriginPublic onCompletion:^(NSData *imageData) {
@@ -1002,7 +965,7 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingContactDeletePhotoMessage:(ContactDeletePhotoMessage *)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingContactDeletePhotoMessage:(ContactDeletePhotoMessage *)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
     [[ContactStore sharedContactStore] deleteProfilePicture:msg.fromIdentity shouldReflect:YES];
     [self changedContactWithIdentity:msg.fromIdentity];
     onCompletion();
@@ -1014,7 +977,7 @@ Process incoming message.
 }
 
 
-- (void)processIncomingVoIPCallOfferMessage:(BoxVoIPCallOfferMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingVoIPCallOfferMessage:(BoxVoIPCallOfferMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     VoIPCallOfferMessage *message = [VoIPCallMessageDecoder decodeVoIPCallOfferFrom:msg];
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for voip call offer"]);
@@ -1026,7 +989,7 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingVoIPCallAnswerMessage:(BoxVoIPCallAnswerMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingVoIPCallAnswerMessage:(BoxVoIPCallAnswerMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     VoIPCallAnswerMessage *message = [VoIPCallMessageDecoder decodeVoIPCallAnswerFrom:msg];
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for ballot vote"]);
@@ -1038,7 +1001,7 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingVoIPCallIceCandidatesMessage:(BoxVoIPCallIceCandidatesMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingVoIPCallIceCandidatesMessage:(BoxVoIPCallIceCandidatesMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     VoIPCallIceCandidatesMessage *message = [VoIPCallMessageDecoder decodeVoIPCallIceCandidatesFrom:msg];
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for ice candidates"]);
@@ -1050,7 +1013,7 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingVoIPCallHangupMessage:(BoxVoIPCallHangupMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingVoIPCallHangupMessage:(BoxVoIPCallHangupMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     VoIPCallHangupMessage *message = [VoIPCallMessageDecoder decodeVoIPCallHangupFrom:msg contactIdentity:msg.fromIdentity];
     
     if (message == nil) {
@@ -1063,7 +1026,7 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     VoIPCallRingingMessage *message = [VoIPCallMessageDecoder decodeVoIPCallRingingFrom:msg contactIdentity:msg.fromIdentity];
 
     if (message == nil) {
@@ -1114,7 +1077,7 @@ Process incoming message.
         // Decrypt blob data
         NSData *imageData = [[NaClCrypto sharedCrypto] symmetricDecryptData:data withKey:encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_1 length:sizeof(kNonce_1) freeWhenDone:NO]];
         if (imageData == nil) {
-            onError([ThreemaError threemaError:@"Image blob decryption failed" withCode:kMessageBlobDecryptionErrorCode]);
+            onError([ThreemaError threemaError:@"Image blob decryption failed" withCode:ThreemaProtocolErrorMessageBlobDecryptionFailed]);
             return;
         }
 

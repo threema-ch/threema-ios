@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import CoreLocation
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 public final class MessageSender: NSObject, MessageSenderProtocol {
     private let serverConnector: ServerConnectorProtocol
@@ -232,7 +233,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     self.groupManager.periodicSyncIfNeeded(for: group)
                 }
                 else {
-                    receiverIdentity = message.conversation.contact?.identity
+                    receiverIdentity = message.conversation.contact?.threemaIdentity
                 }
 
                 conversation = message.conversation
@@ -249,7 +250,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendBaseMessage(
                 messageID: messageID,
-                receiverIdentity: receiverIdentity,
+                receiverIdentity: receiverIdentity?.string,
                 group: group,
                 sendContactProfilePicture: false
             )
@@ -275,7 +276,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 self.groupManager.periodicSyncIfNeeded(for: group)
             }
             else {
-                receiverIdentity = ballot.conversation.contact?.identity
+                receiverIdentity = ballot.conversation.contact?.threemaIdentity
             }
 
             let conversation = ballot.conversation
@@ -291,7 +292,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendBallotVoteMessage(
                 ballotID: ballotID,
-                receiverIdentity: receiverIdentity,
+                receiverIdentity: receiverIdentity?.string,
                 group: group,
                 sendContactProfilePicture: false
             )
@@ -319,7 +320,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             var receiverIdentity: ThreemaIdentity?
             let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
             if group == nil {
-                receiverIdentity = baseMessage.conversation.contact?.identity
+                receiverIdentity = baseMessage.conversation.contact?.threemaIdentity
             }
             return (messageID, receiverIdentity, group)
         }
@@ -332,7 +333,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendBaseMessage(
                 messageID: messageID,
-                receiverIdentity: receiverIdentity,
+                receiverIdentity: receiverIdentity?.string,
                 group: group,
                 sendContactProfilePicture: false
             )
@@ -341,17 +342,9 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     public func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void> {
         Promise { seal in
-            guard let messageID = abstractMessage.messageID else {
+            guard let messageID = abstractMessage.messageID, !abstractMessage.noDeliveryReceiptFlagSet() else {
                 seal.fulfill_()
                 return
-            }
-
-            var excludeFromSending = [Data]()
-            if abstractMessage.noDeliveryReceiptFlagSet() {
-                DDLogWarn(
-                    "Exclude from sending receipt (noDeliveryReceiptFlagSet) for message ID: \(messageID.hexString)"
-                )
-                excludeFromSending.append(messageID)
             }
 
             let task = TaskDefinitionSendDeliveryReceiptsMessage(
@@ -360,7 +353,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 receiptType: .received,
                 receiptMessageIDs: [messageID],
                 receiptReadDates: [Date](),
-                excludeFromSending: excludeFromSending
+                excludeFromSending: [Data]()
             )
             taskManager.add(taskDefinition: task) { _, error in
                 if let error {
@@ -380,7 +373,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     public func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaIdentity) async {
         let doSendReadReceipt = await entityManager.perform {
             // Is multi device not activated and not sending read receipt to contact, then nothing is to do
-            let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity)
+            let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity.string)
             return !(!self.doSendReadReceipt(to: contactEntity) && !self.userSettings.enableMultiDevice)
         }
 
@@ -403,7 +396,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
-        guard let group = groupManager.getGroup(toGroupIdentity.id, creator: toGroupIdentity.creator) else {
+        guard let group = groupManager.getGroup(toGroupIdentity.id, creator: toGroupIdentity.creator.string) else {
             DDLogError("Group not found for \(toGroupIdentity)")
             return
         }
@@ -435,9 +428,9 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         await sendReceipt(for: [message], receiptType: .decline, toGroup: toGroup)
     }
 
-    @objc public func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) {
+    public func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) {
         guard entityManager.performAndWait({
-            guard let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity) else {
+            guard let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity.string) else {
                 return false
             }
 
@@ -451,7 +444,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
         let typingIndicatorMessage = TypingIndicatorMessage()
         typingIndicatorMessage.typing = typing
-        typingIndicatorMessage.toIdentity = toIdentity
+        typingIndicatorMessage.toIdentity = toIdentity.string
 
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
@@ -613,7 +606,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     continue
                 }
 
-                if toIdentity != contactEntity.identity {
+                if toIdentity != contactEntity.threemaIdentity {
                     DDLogError("Bad from identity encountered while sending receipt")
                 }
                 else {
@@ -656,7 +649,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
                             let taskSendDeliveryReceipts = TaskDefinitionSendDeliveryReceiptsMessage(
                                 fromIdentity: self.myIdentityStore.identity,
-                                toIdentity: toIdentity,
+                                toIdentity: toIdentity.string,
                                 receiptType: receiptType,
                                 receiptMessageIDs: receiptMessageIDs,
                                 receiptReadDates: receiptReadDates,

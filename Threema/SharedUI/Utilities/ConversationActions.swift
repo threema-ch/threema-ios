@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import PromiseKit
 
 class ConversationActions: NSObject {
     private let businessInjector: BusinessInjectorProtocol

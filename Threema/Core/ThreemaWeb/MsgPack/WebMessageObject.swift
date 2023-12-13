@@ -398,8 +398,12 @@ class WebMessageObject: NSObject {
             audio = webAudio.objectDict()
         }
         else {
+            guard let name = fileMessageEntity.fileName, let size = fileMessageEntity.fileSize?.intValue,
+                  let mimeType = fileMessageEntity.mimeType else {
+                return
+            }
             type = "file"
-            let webFile = WebFile(fileMessageEntity)
+            let webFile = WebFile(name: name, size: size, mimeType: mimeType)
             file = webFile.objectDict()
         }
     }
@@ -733,10 +737,10 @@ struct WebFile {
     var type: String
     var inApp: Bool
     
-    init(_ fileMessageEntity: FileMessageEntity) {
-        self.name = fileMessageEntity.fileName!
-        self.size = fileMessageEntity.fileSize!.intValue
-        self.type = fileMessageEntity.mimeType!
+    init(name: String, size: Int, mimeType: String) {
+        self.name = mimeType
+        self.size = size
+        self.type = mimeType
         self.inApp = false
     }
     

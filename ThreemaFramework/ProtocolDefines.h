@@ -141,11 +141,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PLTYPE_INCOMING_MESSAGE_ACK 0x82
 #define PLTYPE_UNBLOCK_INCOMING_MESSAGES 0x03
 #define PLTYPE_PUSH_NOTIFICATION_TOKEN 0x20
-#define PLTYPE_PUSH_ALLOWED_IDENTITIES 0x21
-#define PLTYPE_PUSH_SOUND 0x22
-#define PLTYPE_PUSH_GROUP_SOUND 0x23
 #define PLTYPE_VOIP_PUSH_NOTIFICATION_TOKEN 0x24
-#define PLTYPE_PUSH_OVERRIDE_TIMEOUT 0x31
 #define PLTYPE_QUEUE_SEND_COMPLETE 0xd0
 #define PLTYPE_DEVICE_COOKIE_CHANGE_INDICATION 0xd2
 #define PLTYPE_CLEAR_DEVICE_COOKIE_CHANGE_INDICATION 0xd3
@@ -169,17 +165,6 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PUSHFILTER_TYPE_NONE            0
 #define PUSHFILTER_TYPE_ALLOW_LISTED	1
 #define PUSHFILTER_TYPE_BLOCK_LISTED	2
-
-#define kGeneralErrorCode               100
-#define kErrorCodeUserCancelled         300
-#define kBlockUnknownContactErrorCode   666
-#define kBadMessageErrorCode            667
-#define kUnknownMessageTypeErrorCode    668
-#define kMessageProcessingErrorCode     669
-#define kPendingGroupMessageErrorCode   670
-#define kMessageAlreadyProcessedErrorCode 671
-#define kSafePasswordEmptyErrorCode 672
-#define kMessageBlobDecryptionErrorCode 673
 
 #define kJPEGCompressionQualityLow 0.8
 #define kJPEGCompressionQualityHigh 0.99

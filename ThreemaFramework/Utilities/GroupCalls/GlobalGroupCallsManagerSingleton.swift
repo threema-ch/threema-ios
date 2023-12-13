@@ -83,9 +83,15 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         self.dependencies = dependencies
         self.businessInjector = businessInjector
         
+        let identity = ThreemaIdentity(businessInjector.myIdentityStore.identity)
+        let localContactModel = ContactModel(
+            identity: identity,
+            nickname: businessInjector.myIdentityStore.pushFromName ?? identity.string
+        )
+        
         self.groupCallManager = GroupCallManager(
             dependencies: dependencies,
-            localIdentity: businessInjector.myIdentityStore.identity
+            localContactModel: localContactModel
         )
         
         super.init()
@@ -147,18 +153,9 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
                         return nil
                     }
                     
-                    let groupCreatorID: String = creatorIdentity
-                    let groupCreatorNickname: String? = group.groupCreatorNickname
-                    let groupID = group.groupID
-                    let members = group.members
-                        .compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
-
-                    // TODO: (IOS-4124) Remove force-unwrapped try
                     let groupModel = GroupCallsThreemaGroupModel(
-                        creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
-                        groupID: groupID,
-                        groupName: group.name ?? "",
-                        members: Set(members)
+                        groupIdentity: group.groupIdentity,
+                        groupName: group.name ?? ""
                     )
                     
                     var startMessage = CspE2e_GroupCallStart()
@@ -270,15 +267,17 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             dependencies: dependencies
         )
         
-        await saveGroupCallStartMessage(
-            for: convRawMessage,
-            with: receiveDate,
-            creatorID: groupModel.creator,
-            groupID: groupModel.groupID
+        let wrappedMessage = WrappedGroupCallStartMessage(
+            startMessage: convRawMessage,
+            groupIdentity: groupModel.groupIdentity
         )
         
-        // TODO: (IOS-4124) Remove force-unwrapped try
-        let senderThreemaID: GroupCallCreatorOrigin = .remote(try! ThreemaID(id: senderIdentity, nickname: nil))
+        await saveGroupCallStartMessage(
+            for: wrappedMessage,
+            with: receiveDate
+        )
+        
+        let senderThreemaID: GroupCallCreatorOrigin = .remote(ThreemaIdentity(senderIdentity))
         
         await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: senderThreemaID)
     }
@@ -293,30 +292,21 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             return
         }
         
-        Task {
+        guard !NavigationBarPromptHandler.isCallActiveInBackground else {
+            uiDelegate?.showAlert(for: GroupCallError.alreadyInCall)
+            return
+        }
+                
+        Task(priority: .userInitiated) {
             do {
-                let groupCreatorID: String = group.groupCreatorIdentity
-                let groupCreatorNickname: String? = group.groupCreatorNickname
-                let groupID = group.groupID
-                let members = group.members.compactMap { try? ThreemaID(id: $0.identity, nickname: $0.publicNickname) }
-                
-                // TODO: (IOS-4124) Remove force-unwrapped try
                 let groupModel = GroupCallsThreemaGroupModel(
-                    creator: try! ThreemaID(id: groupCreatorID, nickname: groupCreatorNickname),
-                    groupID: groupID,
-                    groupName: group.name ?? "",
-                    members: Set(members)
-                )
-                
-                let myIdentity = try ThreemaID(
-                    id: MyIdentityStore.shared().identity,
-                    nickname: MyIdentityStore.shared().pushFromName
+                    groupIdentity: group.groupIdentity,
+                    groupName: group.name ?? ""
                 )
                 
                 try await groupCallManager.createOrJoinCall(
                     in: groupModel,
-                    with: intent,
-                    localIdentity: myIdentity
+                    with: intent
                 )
                 
                 showGroupCallViewController()
@@ -331,18 +321,6 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         }
     }
     
-    // MARK: - Private functions
-
-    private func getCallID(in groupModel: GroupCallsThreemaGroupModel) async -> String {
-        await groupCallManager.getCallID(in: groupModel)
-    }
-    
-    public func groupCallViewController(for viewModel: GroupCallViewModel) -> UIViewController {
-        GroupCallViewController(viewModel: viewModel, dependencies: dependencies)
-    }
-
-    // MARK: - UI
-                
     public func showGroupCallViewController() {
         Task {
             guard let uiDelegate else {
@@ -356,12 +334,14 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
     }
     
     // MARK: - Private functions
-
+    
+    private func getCallID(in groupModel: GroupCallsThreemaGroupModel) async -> String? {
+        await groupCallManager.getCallID(in: groupModel)
+    }
+    
     private func saveGroupCallStartMessage(
-        for convRawMessage: CspE2e_GroupCallStart,
-        with receiveDate: Date = Date.now,
-        creatorID: ThreemaID,
-        groupID: Data
+        for wrappedMessage: WrappedGroupCallStartMessage,
+        with receiveDate: Date = Date.now
     ) async {
         guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
@@ -370,8 +350,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         let addedObject: NSManagedObjectID? = await currentBusinessInjector.backgroundEntityManager.performSave {
             
             guard let groupEntity = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.groupEntity(
-                for: groupID,
-                with: creatorID.id
+                for: wrappedMessage.groupIdentity.id,
+                with: wrappedMessage.groupIdentity.creator.string
             ) else {
                 DDLogError("[GroupCall] Could not find group entity for group call message.")
                 return nil
@@ -382,9 +362,9 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             // Setup group call
             let groupCallEntity = self.currentBusinessInjector.backgroundEntityManager.entityCreator.groupCallEntity()
             groupCallEntity?.group = groupEntity
-            groupCallEntity?.gck = convRawMessage.gck
-            groupCallEntity?.protocolVersion = NSNumber(value: convRawMessage.protocolVersion)
-            groupCallEntity?.sfuBaseURL = convRawMessage.sfuBaseURL
+            groupCallEntity?.gck = wrappedMessage.startMessage.gck
+            groupCallEntity?.protocolVersion = NSNumber(value: wrappedMessage.startMessage.protocolVersion)
+            groupCallEntity?.sfuBaseURL = wrappedMessage.startMessage.sfuBaseURL
             groupCallEntity?.startMessageReceiveDate = receiveDate
             
             DDLogNotice("[GroupCall] [DB] Saved group call to database.")
@@ -460,13 +440,7 @@ extension GlobalGroupCallsManagerSingleton {
             )
             
             try! await Task.sleep(seconds: 1)
-        
-            let myIdentity = try! ThreemaID(
-                id: MyIdentityStore.shared().identity,
-                nickname: MyIdentityStore.shared().pushFromName
-            )
-            
-            try! await groupCallManager.createOrJoinCall(in: groupModel, with: .createOrJoin, localIdentity: myIdentity)
+            try! await groupCallManager.createOrJoinCall(in: groupModel, with: .createOrJoin)
         }
     #endif
 
@@ -508,7 +482,10 @@ extension GlobalGroupCallsManagerSingleton {
         dict["sfuBaseUrl"] = startMessage.sfuBaseURL
         
         let callInfoString = Data(try! JSONSerialization.data(withJSONObject: dict)).base64EncodedString()
-        let callIDString = await GlobalGroupCallsManagerSingleton.shared.getCallID(in: groupModel)
+        guard let callIDString = await GlobalGroupCallsManagerSingleton.shared.getCallID(in: groupModel) else {
+            assertionFailure("Could not retrieve CallID for Debug Call.")
+            return
+        }
         
         businessInjector.backgroundEntityManager.performBlockAndWait {
             let conversation = businessInjector.backgroundEntityManager.entityFetcher
@@ -558,7 +535,7 @@ extension GlobalGroupCallsManagerSingleton {
         let taskDefinition = TaskDefinitionSendGroupCallStartMessage(
             group: group,
             from: frameworkInjector.myIdentityStore.identity,
-            to: group.members.map(\.identity),
+            to: group.members.map(\.identity.string),
             groupCallStartMessage: message,
             sendContactProfilePicture: true
         )
@@ -586,15 +563,16 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProt
                         return nil
                     }
                     
-                    guard groupCallEntity.group.groupID == proposedGroupCall.groupRepresentation.groupID else {
+                    guard groupCallEntity.group.groupID == proposedGroupCall.groupRepresentation.groupIdentity.id else {
                         return nil
                     }
                     
                     let remoteAdminsAreEqual = groupCallEntity.group.groupCreator == proposedGroupCall
-                        .groupRepresentation.creator.id
+                        .groupRepresentation.groupIdentity.creator.string
                     let localAdminsAreEqual = (
                         groupCallEntity.group.groupCreator == nil && proposedGroupCall
-                            .groupRepresentation.creator.id == self.businessInjector.myIdentityStore.identity
+                            .groupRepresentation.groupIdentity.creator.string == self.businessInjector.myIdentityStore
+                            .identity
                     )
                     
                     guard remoteAdminsAreEqual || localAdminsAreEqual else {
@@ -634,24 +612,20 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
     
     public func sendStartCallMessage(_ wrappedMessage: WrappedGroupCallStartMessage) async throws {
         guard let group = businessInjector.groupManager.getGroup(
-            wrappedMessage.groupID,
-            creator: wrappedMessage.creatorID.id
+            wrappedMessage.groupIdentity.id,
+            creator: wrappedMessage.groupIdentity.creator.string
         ) else {
             return
         }
             
-        await saveGroupCallStartMessage(
-            for: wrappedMessage.startMessage,
-            creatorID: wrappedMessage.creatorID,
-            groupID: wrappedMessage.groupID
-        )
+        await saveGroupCallStartMessage(for: wrappedMessage)
             
         try await sendGroupCallStartMessage(wrappedMessage.startMessage, to: group)
     }
     
     public func showIncomingGroupCallNotification(
         groupModel: GroupCalls.GroupCallsThreemaGroupModel,
-        senderThreemaID: ThreemaID
+        senderThreemaID: ThreemaIdentity
     ) {
         guard let uiDelegate else {
             DDLogError("[GroupCall] Could not show GroupCallViewController, uiDelegate is nil.")
@@ -660,8 +634,8 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
         
         currentBusinessInjector.backgroundEntityManager.performBlock {
             guard let conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.conversation(
-                for: groupModel.groupID,
-                creator: groupModel.creator.id
+                for: groupModel.groupIdentity.id,
+                creator: groupModel.groupIdentity.creator.string
             ) else {
                 return
             }
@@ -672,13 +646,13 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
                     title: BundleUtil.localizedString(forKey: "private_message_label"),
                     body: " ",
                     contactImage: AvatarMaker.shared().unknownGroupImage()!,
-                    identifier: groupModel.groupID.hexString
+                    identifier: groupModel.groupIdentity.id.hexString
                 )
                 return
             }
             
             guard let contact = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
-                .contact(for: senderThreemaID.id) else {
+                .contact(for: senderThreemaID.string) else {
                 return
             }
             
@@ -694,7 +668,7 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
                     title: title ?? "",
                     body: body,
                     contactImage: conversationImage ?? AvatarMaker.shared().unknownGroupImage()!,
-                    identifier: groupModel.groupID.hexString
+                    identifier: groupModel.groupIdentity.id.hexString
                 )
             }
         }

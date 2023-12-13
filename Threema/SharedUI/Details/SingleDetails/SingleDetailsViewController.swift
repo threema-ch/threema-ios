@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import UIKit
 
 final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewController {
-    
+
     // MARK: - Private properties
     
     private let state: SingleDetails.State
@@ -70,7 +70,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     )
     
     private let contact: ContactEntity
-    private lazy var linkedContactManager = LinkedContactManger(for: contact)
+    private lazy var linkedContactManager = LinkedContactManager(for: contact)
     private lazy var publicKeyView = PublicKeyView(for: contact)
     
     private let displayStyle: DetailsDisplayStyle
@@ -139,7 +139,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         displayStyle: DetailsDisplayStyle = .default
     ) {
         let em = EntityManager()
-        self.init(for: em.entityFetcher.contact(for: contact.identity), displayStyle: displayStyle)
+        self.init(for: em.entityFetcher.contact(for: contact.identity.string), displayStyle: displayStyle)
     }
 
     override func viewDidLoad() {
@@ -234,6 +234,22 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             object: nil
         )
         
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(refreshDoNotDisturb),
+            name: Notification.Name(kNotificationChangedPushSetting),
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name(kNotificationIncomingSettingsSynchronization),
+            object: nil,
+            queue: .main
+        ) { _ in
+            self.dataSource.refresh(sections: [.privacySettings])
+            self.dataSource.reload(sections: [.privacySettings])
+        }
+
         observeContact(\.imageData) { [weak self] in
             self?.updateHeader(animated: false)
         }
@@ -253,6 +269,16 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         observeContact(\.featureMask) { [weak self] in
             self?.dataSource.reload(sections: [.fsActions])
         }
+
+        observeContact(\.readReceipt) { [weak self] in
+            self?.dataSource.refresh(sections: [.privacySettings])
+            self?.dataSource.reload(sections: [.privacySettings])
+        }
+
+        observeContact(\.typingIndicator) { [weak self] in
+            self?.dataSource.refresh(sections: [.privacySettings])
+            self?.dataSource.reload(sections: [.privacySettings])
+        }
     }
     
     private func removeObservers() {
@@ -263,6 +289,28 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         // Remove them so we don't reference old observers
         observers.removeAll()
+
+        NotificationCenter.default.removeObserver(self, name: UIContentSizeCategory.didChangeNotification, object: nil)
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(kNotificationShowProfilePictureChanged),
+            object: nil
+        )
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(kNotificationNavigationBarColorShouldChange),
+            object: nil
+        )
+        NotificationCenter.default.removeObserver(
+            self,
+            name: NSNotification.Name(kNotificationChangedPushSetting),
+            object: nil
+        )
+        NotificationCenter.default.removeObserver(
+            self,
+            name: NSNotification.Name(kNotificationIncomingSettingsSynchronization),
+            object: nil
+        )
     }
     
     /// Helper to add observers to the `contact` property
@@ -352,6 +400,18 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         }
         else {
             navigationBarTitleAppearanceOffset = 140
+        }
+    }
+
+    @objc private func refreshDoNotDisturb(_ notification: Notification) {
+        DispatchQueue.main.async {
+            guard let pushSetting = notification.object as? PushSetting,
+                  pushSetting.identity == self.contact.threemaIdentity else {
+                return
+            }
+
+            self.dataSource.refresh(sections: [.notifications])
+            self.dataSource.reload(sections: [.notifications])
         }
     }
 }

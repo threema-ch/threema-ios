@@ -142,7 +142,7 @@ extension Sync_TypingIndicatorPolicy: CaseIterable {
 
 #endif  // swift(>=4.2)
 
-/// Notificatoun sound policy.
+/// Notification sound policy.
 public enum Sync_NotificationSoundPolicy: SwiftProtobuf.Enum {
   public typealias RawValue = Int
 
@@ -277,11 +277,13 @@ extension Sync_ConversationCategory: CaseIterable {
 
 #endif  // swift(>=4.2)
 
-/// Mobile device management parameters shared across Threema Work devices.
+/// Application configuration parameters shared across Threema Work devices.
 ///
 /// See [mdm-parameters.md](./md-parameters.md) for documentation of possible
 /// parameter values and associated steps to apply when a parameter has been set
 /// for the first time, modified, or removed.
+///
+/// Note: MDM parameters are always transmitted fully, not as delta updates.
 public struct Sync_MdmParameters {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -304,7 +306,8 @@ public struct Sync_MdmParameters {
   public enum ParameterPrecedence: SwiftProtobuf.Enum {
     public typealias RawValue = Int
 
-    /// On conflict, parameters defined by Threema App Configuration take precedence
+    /// On conflict, parameters defined by Threema App Configuration take
+    /// precedence
     case threema // = 0
 
     /// On conflict, parameters defined by an external MDM take precedence
@@ -350,6 +353,15 @@ public struct Sync_MdmParameters {
       set {value = .stringValue(newValue)}
     }
 
+    /// Integer parameter
+    public var integerValue: UInt64 {
+      get {
+        if case .integerValue(let v)? = value {return v}
+        return 0
+      }
+      set {value = .integerValue(newValue)}
+    }
+
     /// Boolean parameter
     public var booleanValue: Bool {
       get {
@@ -364,6 +376,8 @@ public struct Sync_MdmParameters {
     public enum OneOf_Value: Equatable {
       /// String parameter
       case stringValue(String)
+      /// Integer parameter
+      case integerValue(UInt64)
       /// Boolean parameter
       case booleanValue(Bool)
 
@@ -375,6 +389,10 @@ public struct Sync_MdmParameters {
         switch (lhs, rhs) {
         case (.stringValue, .stringValue): return {
           guard case .stringValue(let l) = lhs, case .stringValue(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.integerValue, .integerValue): return {
+          guard case .integerValue(let l) = lhs, case .integerValue(let r) = rhs else { preconditionFailure() }
           return l == r
         }()
         case (.booleanValue, .booleanValue): return {
@@ -405,14 +423,16 @@ extension Sync_MdmParameters.ParameterPrecedence: CaseIterable {
 
 #endif  // swift(>=4.2)
 
-/// Threema Work credentials.
+/// Threema Work credentials for authentication towards Work APIs.
 public struct Sync_ThreemaWorkCredentials {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// Work username.
   public var username: String = String()
 
+  /// Work password.
   public var password: String = String()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -2074,23 +2094,41 @@ public struct Sync_Settings {
   /// Clears the value of `typingIndicatorPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearTypingIndicatorPolicy() {self._typingIndicatorPolicy = nil}
 
-  public var callPolicy: Sync_Settings.CallPolicy {
-    get {return _callPolicy ?? .allowCall}
-    set {_callPolicy = newValue}
+  public var o2OCallPolicy: Sync_Settings.O2oCallPolicy {
+    get {return _o2OCallPolicy ?? .allowO2OCall}
+    set {_o2OCallPolicy = newValue}
   }
-  /// Returns true if `callPolicy` has been explicitly set.
-  public var hasCallPolicy: Bool {return self._callPolicy != nil}
-  /// Clears the value of `callPolicy`. Subsequent reads from it will return its default value.
-  public mutating func clearCallPolicy() {self._callPolicy = nil}
+  /// Returns true if `o2OCallPolicy` has been explicitly set.
+  public var hasO2OCallPolicy: Bool {return self._o2OCallPolicy != nil}
+  /// Clears the value of `o2OCallPolicy`. Subsequent reads from it will return its default value.
+  public mutating func clearO2OCallPolicy() {self._o2OCallPolicy = nil}
 
-  public var callConnectionPolicy: Sync_Settings.CallConnectionPolicy {
-    get {return _callConnectionPolicy ?? .allowDirect}
-    set {_callConnectionPolicy = newValue}
+  public var o2OCallConnectionPolicy: Sync_Settings.O2oCallConnectionPolicy {
+    get {return _o2OCallConnectionPolicy ?? .allowDirectConnection}
+    set {_o2OCallConnectionPolicy = newValue}
   }
-  /// Returns true if `callConnectionPolicy` has been explicitly set.
-  public var hasCallConnectionPolicy: Bool {return self._callConnectionPolicy != nil}
-  /// Clears the value of `callConnectionPolicy`. Subsequent reads from it will return its default value.
-  public mutating func clearCallConnectionPolicy() {self._callConnectionPolicy = nil}
+  /// Returns true if `o2OCallConnectionPolicy` has been explicitly set.
+  public var hasO2OCallConnectionPolicy: Bool {return self._o2OCallConnectionPolicy != nil}
+  /// Clears the value of `o2OCallConnectionPolicy`. Subsequent reads from it will return its default value.
+  public mutating func clearO2OCallConnectionPolicy() {self._o2OCallConnectionPolicy = nil}
+
+  public var o2OCallVideoPolicy: Sync_Settings.O2oCallVideoPolicy {
+    get {return _o2OCallVideoPolicy ?? .allowVideo}
+    set {_o2OCallVideoPolicy = newValue}
+  }
+  /// Returns true if `o2OCallVideoPolicy` has been explicitly set.
+  public var hasO2OCallVideoPolicy: Bool {return self._o2OCallVideoPolicy != nil}
+  /// Clears the value of `o2OCallVideoPolicy`. Subsequent reads from it will return its default value.
+  public mutating func clearO2OCallVideoPolicy() {self._o2OCallVideoPolicy = nil}
+
+  public var groupCallPolicy: Sync_Settings.GroupCallPolicy {
+    get {return _groupCallPolicy ?? .allowGroupCall}
+    set {_groupCallPolicy = newValue}
+  }
+  /// Returns true if `groupCallPolicy` has been explicitly set.
+  public var hasGroupCallPolicy: Bool {return self._groupCallPolicy != nil}
+  /// Clears the value of `groupCallPolicy`. Subsequent reads from it will return its default value.
+  public mutating func clearGroupCallPolicy() {self._groupCallPolicy = nil}
 
   public var screenshotPolicy: Sync_Settings.ScreenshotPolicy {
     get {return _screenshotPolicy ?? .allowScreenshot}
@@ -2210,70 +2248,142 @@ public struct Sync_Settings {
 
   }
 
-  /// Threema Call policy
+  /// Threema 1:1 Call policy
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum CallPolicy: SwiftProtobuf.Enum {
+  public enum O2oCallPolicy: SwiftProtobuf.Enum {
     public typealias RawValue = Int
 
-    /// Allow creating/receiving Threema Calls
-    case allowCall // = 0
+    /// Allow creating/receiving Threema 1:1 Calls
+    case allowO2OCall // = 0
 
-    /// Denied from creating/receiving any Threema Calls
-    case denyCall // = 1
+    /// Denied from creating/receiving any Threema 1:1 Calls
+    case denyO2OCall // = 1
     case UNRECOGNIZED(Int)
 
     public init() {
-      self = .allowCall
+      self = .allowO2OCall
     }
 
     public init?(rawValue: Int) {
       switch rawValue {
-      case 0: self = .allowCall
-      case 1: self = .denyCall
+      case 0: self = .allowO2OCall
+      case 1: self = .denyO2OCall
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
 
     public var rawValue: Int {
       switch self {
-      case .allowCall: return 0
-      case .denyCall: return 1
+      case .allowO2OCall: return 0
+      case .denyO2OCall: return 1
       case .UNRECOGNIZED(let i): return i
       }
     }
 
   }
 
-  /// Threema Call connection policy
+  /// Threema 1:1 Call connection policy.
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum CallConnectionPolicy: SwiftProtobuf.Enum {
+  ///
+  /// Note: This is only relevant for 1:1 calls.
+  public enum O2oCallConnectionPolicy: SwiftProtobuf.Enum {
     public typealias RawValue = Int
 
-    /// Allow direct (peer-to-peer) connections for Threema Calls
-    case allowDirect // = 0
+    /// Allow direct (peer-to-peer) connections for Threema 1:1 Calls
+    case allowDirectConnection // = 0
 
-    /// Require relayed connections for Threema Calls
-    case requireRelay // = 1
+    /// Require relayed connections for Threema 1:1 Calls
+    case requireRelayedConnection // = 1
     case UNRECOGNIZED(Int)
 
     public init() {
-      self = .allowDirect
+      self = .allowDirectConnection
     }
 
     public init?(rawValue: Int) {
       switch rawValue {
-      case 0: self = .allowDirect
-      case 1: self = .requireRelay
+      case 0: self = .allowDirectConnection
+      case 1: self = .requireRelayedConnection
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
 
     public var rawValue: Int {
       switch self {
-      case .allowDirect: return 0
-      case .requireRelay: return 1
+      case .allowDirectConnection: return 0
+      case .requireRelayedConnection: return 1
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+  }
+
+  /// Threema 1:1 Call video (stream) policy.
+  ///
+  /// Required towards a new device. Optional otherwise.
+  public enum O2oCallVideoPolicy: SwiftProtobuf.Enum {
+    public typealias RawValue = Int
+
+    /// Allow sending and receiving video streams in Threema 1:1 Calls.
+    case allowVideo // = 0
+
+    /// Reject and don't send video streams in Threema 1:1 Calls.
+    case denyVideo // = 1
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .allowVideo
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .allowVideo
+      case 1: self = .denyVideo
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .allowVideo: return 0
+      case .denyVideo: return 1
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+  }
+
+  /// Threema Group Call policy
+  ///
+  /// Required towards a new device. Optional otherwise.
+  public enum GroupCallPolicy: SwiftProtobuf.Enum {
+    public typealias RawValue = Int
+
+    /// Allow creating/receiving Threema Group Calls
+    case allowGroupCall // = 0
+
+    /// Denied from creating/receiving any Threema Group Calls
+    case denyGroupCall // = 1
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .allowGroupCall
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .allowGroupCall
+      case 1: self = .denyGroupCall
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .allowGroupCall: return 0
+      case .denyGroupCall: return 1
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -2356,8 +2466,10 @@ public struct Sync_Settings {
   fileprivate var _unknownContactPolicy: Sync_Settings.UnknownContactPolicy? = nil
   fileprivate var _readReceiptPolicy: Sync_ReadReceiptPolicy? = nil
   fileprivate var _typingIndicatorPolicy: Sync_TypingIndicatorPolicy? = nil
-  fileprivate var _callPolicy: Sync_Settings.CallPolicy? = nil
-  fileprivate var _callConnectionPolicy: Sync_Settings.CallConnectionPolicy? = nil
+  fileprivate var _o2OCallPolicy: Sync_Settings.O2oCallPolicy? = nil
+  fileprivate var _o2OCallConnectionPolicy: Sync_Settings.O2oCallConnectionPolicy? = nil
+  fileprivate var _o2OCallVideoPolicy: Sync_Settings.O2oCallVideoPolicy? = nil
+  fileprivate var _groupCallPolicy: Sync_Settings.GroupCallPolicy? = nil
   fileprivate var _screenshotPolicy: Sync_Settings.ScreenshotPolicy? = nil
   fileprivate var _keyboardDataCollectionPolicy: Sync_Settings.KeyboardDataCollectionPolicy? = nil
   fileprivate var _blockedIdentities: Common_Identities? = nil
@@ -2382,19 +2494,35 @@ extension Sync_Settings.UnknownContactPolicy: CaseIterable {
   ]
 }
 
-extension Sync_Settings.CallPolicy: CaseIterable {
+extension Sync_Settings.O2oCallPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.CallPolicy] = [
-    .allowCall,
-    .denyCall,
+  public static var allCases: [Sync_Settings.O2oCallPolicy] = [
+    .allowO2OCall,
+    .denyO2OCall,
   ]
 }
 
-extension Sync_Settings.CallConnectionPolicy: CaseIterable {
+extension Sync_Settings.O2oCallConnectionPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.CallConnectionPolicy] = [
-    .allowDirect,
-    .requireRelay,
+  public static var allCases: [Sync_Settings.O2oCallConnectionPolicy] = [
+    .allowDirectConnection,
+    .requireRelayedConnection,
+  ]
+}
+
+extension Sync_Settings.O2oCallVideoPolicy: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  public static var allCases: [Sync_Settings.O2oCallVideoPolicy] = [
+    .allowVideo,
+    .denyVideo,
+  ]
+}
+
+extension Sync_Settings.GroupCallPolicy: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  public static var allCases: [Sync_Settings.GroupCallPolicy] = [
+    .allowGroupCall,
+    .denyGroupCall,
   ]
 }
 
@@ -2462,8 +2590,10 @@ extension Sync_DistributionList: @unchecked Sendable {}
 extension Sync_Settings: @unchecked Sendable {}
 extension Sync_Settings.ContactSyncPolicy: @unchecked Sendable {}
 extension Sync_Settings.UnknownContactPolicy: @unchecked Sendable {}
-extension Sync_Settings.CallPolicy: @unchecked Sendable {}
-extension Sync_Settings.CallConnectionPolicy: @unchecked Sendable {}
+extension Sync_Settings.O2oCallPolicy: @unchecked Sendable {}
+extension Sync_Settings.O2oCallConnectionPolicy: @unchecked Sendable {}
+extension Sync_Settings.O2oCallVideoPolicy: @unchecked Sendable {}
+extension Sync_Settings.GroupCallPolicy: @unchecked Sendable {}
 extension Sync_Settings.ScreenshotPolicy: @unchecked Sendable {}
 extension Sync_Settings.KeyboardDataCollectionPolicy: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
@@ -2562,6 +2692,7 @@ extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._Me
   public static let protoMessageName: String = Sync_MdmParameters.protoMessageName + ".Parameter"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "string_value"),
+    3: .standard(proto: "integer_value"),
     2: .standard(proto: "boolean_value"),
   ]
 
@@ -2587,6 +2718,14 @@ extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._Me
           self.value = .booleanValue(v)
         }
       }()
+      case 3: try {
+        var v: UInt64?
+        try decoder.decodeSingularUInt64Field(value: &v)
+        if let v = v {
+          if self.value != nil {try decoder.handleConflictingOneOf()}
+          self.value = .integerValue(v)
+        }
+      }()
       default: break
       }
     }
@@ -2605,6 +2744,10 @@ extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._Me
     case .booleanValue?: try {
       guard case .booleanValue(let v)? = self.value else { preconditionFailure() }
       try visitor.visitSingularBoolField(value: v, fieldNumber: 2)
+    }()
+    case .integerValue?: try {
+      guard case .integerValue(let v)? = self.value else { preconditionFailure() }
+      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
     }()
     case nil: break
     }
@@ -3837,8 +3980,10 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     2: .standard(proto: "unknown_contact_policy"),
     3: .standard(proto: "read_receipt_policy"),
     4: .standard(proto: "typing_indicator_policy"),
-    5: .standard(proto: "call_policy"),
-    6: .standard(proto: "call_connection_policy"),
+    5: .standard(proto: "o2o_call_policy"),
+    6: .standard(proto: "o2o_call_connection_policy"),
+    12: .standard(proto: "o2o_call_video_policy"),
+    11: .standard(proto: "group_call_policy"),
     7: .standard(proto: "screenshot_policy"),
     8: .standard(proto: "keyboard_data_collection_policy"),
     9: .standard(proto: "blocked_identities"),
@@ -3855,12 +4000,14 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
       case 2: try { try decoder.decodeSingularEnumField(value: &self._unknownContactPolicy) }()
       case 3: try { try decoder.decodeSingularEnumField(value: &self._readReceiptPolicy) }()
       case 4: try { try decoder.decodeSingularEnumField(value: &self._typingIndicatorPolicy) }()
-      case 5: try { try decoder.decodeSingularEnumField(value: &self._callPolicy) }()
-      case 6: try { try decoder.decodeSingularEnumField(value: &self._callConnectionPolicy) }()
+      case 5: try { try decoder.decodeSingularEnumField(value: &self._o2OCallPolicy) }()
+      case 6: try { try decoder.decodeSingularEnumField(value: &self._o2OCallConnectionPolicy) }()
       case 7: try { try decoder.decodeSingularEnumField(value: &self._screenshotPolicy) }()
       case 8: try { try decoder.decodeSingularEnumField(value: &self._keyboardDataCollectionPolicy) }()
       case 9: try { try decoder.decodeSingularMessageField(value: &self._blockedIdentities) }()
       case 10: try { try decoder.decodeSingularMessageField(value: &self._excludeFromSyncIdentities) }()
+      case 11: try { try decoder.decodeSingularEnumField(value: &self._groupCallPolicy) }()
+      case 12: try { try decoder.decodeSingularEnumField(value: &self._o2OCallVideoPolicy) }()
       default: break
       }
     }
@@ -3883,10 +4030,10 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     try { if let v = self._typingIndicatorPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 4)
     } }()
-    try { if let v = self._callPolicy {
+    try { if let v = self._o2OCallPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 5)
     } }()
-    try { if let v = self._callConnectionPolicy {
+    try { if let v = self._o2OCallConnectionPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 6)
     } }()
     try { if let v = self._screenshotPolicy {
@@ -3901,6 +4048,12 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     try { if let v = self._excludeFromSyncIdentities {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
     } }()
+    try { if let v = self._groupCallPolicy {
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 11)
+    } }()
+    try { if let v = self._o2OCallVideoPolicy {
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 12)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -3909,8 +4062,10 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     if lhs._unknownContactPolicy != rhs._unknownContactPolicy {return false}
     if lhs._readReceiptPolicy != rhs._readReceiptPolicy {return false}
     if lhs._typingIndicatorPolicy != rhs._typingIndicatorPolicy {return false}
-    if lhs._callPolicy != rhs._callPolicy {return false}
-    if lhs._callConnectionPolicy != rhs._callConnectionPolicy {return false}
+    if lhs._o2OCallPolicy != rhs._o2OCallPolicy {return false}
+    if lhs._o2OCallConnectionPolicy != rhs._o2OCallConnectionPolicy {return false}
+    if lhs._o2OCallVideoPolicy != rhs._o2OCallVideoPolicy {return false}
+    if lhs._groupCallPolicy != rhs._groupCallPolicy {return false}
     if lhs._screenshotPolicy != rhs._screenshotPolicy {return false}
     if lhs._keyboardDataCollectionPolicy != rhs._keyboardDataCollectionPolicy {return false}
     if lhs._blockedIdentities != rhs._blockedIdentities {return false}
@@ -3934,17 +4089,31 @@ extension Sync_Settings.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding 
   ]
 }
 
-extension Sync_Settings.CallPolicy: SwiftProtobuf._ProtoNameProviding {
+extension Sync_Settings.O2oCallPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_CALL"),
-    1: .same(proto: "DENY_CALL"),
+    0: .same(proto: "ALLOW_O2O_CALL"),
+    1: .same(proto: "DENY_O2O_CALL"),
   ]
 }
 
-extension Sync_Settings.CallConnectionPolicy: SwiftProtobuf._ProtoNameProviding {
+extension Sync_Settings.O2oCallConnectionPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_DIRECT"),
-    1: .same(proto: "REQUIRE_RELAY"),
+    0: .same(proto: "ALLOW_DIRECT_CONNECTION"),
+    1: .same(proto: "REQUIRE_RELAYED_CONNECTION"),
+  ]
+}
+
+extension Sync_Settings.O2oCallVideoPolicy: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "ALLOW_VIDEO"),
+    1: .same(proto: "DENY_VIDEO"),
+  ]
+}
+
+extension Sync_Settings.GroupCallPolicy: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "ALLOW_GROUP_CALL"),
+    1: .same(proto: "DENY_GROUP_CALL"),
   ]
 }
 

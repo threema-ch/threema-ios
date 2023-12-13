@@ -26,6 +26,8 @@ import UIKit
 struct ChatViewMessageActionProvider {
  
     // MARK: - MessageAction
+    
+    static let speechSynthesizerManager = SpeechSynthesizerManager()
 
     /// Intermediary struct used to create actions for ContextMenu- and UIAccessibilityCustomActions
     public struct MessageAction {
@@ -156,7 +158,7 @@ struct ChatViewMessageActionProvider {
     /// - Returns: MessageAction
     public static func speakAction(text: String) -> MessageAction {
         MessageAction(title: BundleUtil.localizedString(forKey: "speak"), image: UIImage(systemName: "waveform")) {
-            SpeechSynthesizerManger().speak(text)
+            speechSynthesizerManager.speak(text)
         }
     }
     

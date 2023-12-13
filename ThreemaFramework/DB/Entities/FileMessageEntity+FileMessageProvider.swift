@@ -150,7 +150,7 @@ extension FileMessageEntity: ThumbnailDisplayMessage {
         }
     }
     
-    private var assetResourceTypeForAutosave: PHAssetResourceType? {
+    public var assetResourceTypeForAutosave: PHAssetResourceType? {
         switch fileMessageType {
         case .image, .animatedImage:
             return .photo

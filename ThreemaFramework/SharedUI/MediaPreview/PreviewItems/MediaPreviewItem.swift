@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import PromiseKit
 
 protocol MediaPreviewItemProtocol: PreviewItemProtocol {
     var thumbnail: Promise<UIImage> { get }

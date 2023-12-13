@@ -99,6 +99,10 @@ extension VideoMessageEntity: VideoMessage {
         return url
     }
     
+    public var assetResourceTypeForAutosave: PHAssetResourceType? {
+        .video
+    }
+    
     public func createSaveMediaItem(forAutosave: Bool) -> AlbumManager.SaveMediaItem? {
         guard let url = temporaryBlobDataURL() else {
             return nil

@@ -6,7 +6,7 @@
  */
 
 "need_to_start_app_first_title" = "Aplikace %@ není dosud nastavena";
-"need_to_start_app_first_message" = "Nejprve spusťte aplikaci %@.";
+"need_to_start_app_first_message" = "Nejdříve spusťte aplikaci %@.";
 
 "cannot_connect_title" = "Není spojení";
 "cannot_connect_message" = "Nefunkční připojení k Internetu, proveďte nápravu, prosím.";

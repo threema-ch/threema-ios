@@ -53,7 +53,7 @@ import Foundation
 
     @objc init(
         messageID: Data,
-        receiverIdentity: ThreemaIdentity?,
+        receiverIdentity: String?,
         group: Group?,
         sendContactProfilePicture: Bool
     ) {

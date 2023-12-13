@@ -30,6 +30,7 @@
 @property (weak, nonatomic) IBOutlet UISwitch *proximityMonitoringSwitch;
 @property (weak, nonatomic) IBOutlet UITableViewCell *flushMessageQueueCell;
 @property (weak, nonatomic) IBOutlet UILabel *orphanedFilesCleanupLabel;
+@property (weak, nonatomic) IBOutlet UILabel *contactsCleanupLabel;
 @property (weak, nonatomic) IBOutlet UILabel *reregisterPushNotificationsLabel;
 @property (weak, nonatomic) IBOutlet UILabel *resetFSDBLabel;
 

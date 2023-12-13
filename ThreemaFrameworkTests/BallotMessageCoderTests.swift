@@ -59,58 +59,90 @@ class BallotMessageCoderTests: XCTestCase {
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
 
         // Decode:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+        let expect = expectation(description: "Decode and create ballot")
+
+        var decodedBallot: Ballot?
+        ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { message in
+                decodedBallot = message.ballot
+                expect.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expect.fulfill()
+            }
         )
-        let decodedBallot = ballotMessage?.ballot
-        
+
+        wait(for: [expect], timeout: 3)
+
         // Assert:
         XCTAssertEqual(decodedBallot?.ballotDisplayMode, BallotDisplayMode.summary)
     }
     
     func testBallotEncodingDisplayModeNotSpecified() throws {
         // Goal: Test that DisplayMode is List, when nothing is specified
-        
+
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
-        
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+            for: Data([1]),
+            creator:
+            "ECHOECHO"
+        ))
+
         // Create Ballot
         let ballot = createLocalBallot()
         ballot.addChoices(createChoices())
-        
+
         // Act:
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
 
         // Decode:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+        let expect = expectation(description: "Decode and create ballot")
+
+        var decodedBallot: Ballot?
+        ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { message in
+                decodedBallot = message.ballot
+                expect.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expect.fulfill()
+            }
         )
-        let decodedBallot = ballotMessage?.ballot
-        
+
+        wait(for: [expect], timeout: 3)
+
         // Assert:
         XCTAssertEqual(decodedBallot?.ballotDisplayMode, BallotDisplayMode.list)
     }
-    
+
     func testBallotEncodingChoicesTotalVotesNotSet() throws {
         // Goal: Test that Choices have no value for totalVotes after Encoding
-        
+
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
-        
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+            for: Data([1]),
+            creator:
+            "ECHOECHO"
+        ))
+
         // Create Ballot
         let ballot = createLocalBallot()
         ballot.addChoices(createChoices())
-        
+
         // Act:
         // Add TotalVotes to Choices
         for choice in ballot.choices {
@@ -124,17 +156,29 @@ class BallotMessageCoderTests: XCTestCase {
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
         entityManager.entityDestroyer.deleteObject(object: ballot)
-        
+
         // Decode:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+        let expect = expectation(description: "Decode and create ballot")
+
+        var decodedBallot: Ballot?
+        ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { message in
+                decodedBallot = message.ballot
+                expect.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expect.fulfill()
+            }
         )
-        let decodedBallot = ballotMessage?.ballot
-        
+
+        wait(for: [expect], timeout: 3)
+
         // Assert:
-        for choice in decodedBallot!.choices {
+        for choice in try XCTUnwrap(decodedBallot).choices {
             guard let choice = choice as? BallotChoice else {
                 XCTFail("Choice must be BallotChoice")
                 return
@@ -142,15 +186,19 @@ class BallotMessageCoderTests: XCTestCase {
             XCTAssertEqual(choice.totalVotes, nil)
         }
     }
-    
+
     // MARK: - Decoding
-    
+
     func testDecodeMessageCreateBallot() throws {
         // Goal: Test Decoding of incoming message without existing Ballot
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+            for: Data([1]),
+            creator:
+            "ECHOECHO"
+        ))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
             "BallotCoderTests_testDecodeMessageCreateBallot",
@@ -159,15 +207,28 @@ class BallotMessageCoderTests: XCTestCase {
         boxBallotCreateMessage.ballotID = "BMD_1".data(using: String.Encoding.ascii)
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
-        
+
         // Act:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+        let expect = expectation(description: "Decode and create ballot")
+
+        var decodedBallot: Ballot?
+        ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { message in
+                decodedBallot = message.ballot
+                expect.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expect.fulfill()
+            }
         )
-        let ballot = ballotMessage?.ballot
-        guard let choices = ballot?.choicesSortedByOrder() as? [BallotChoice] else {
+
+        wait(for: [expect], timeout: 3)
+
+        guard let choices = decodedBallot?.choicesSortedByOrder() as? [BallotChoice] else {
             XCTFail("Could not decode choices")
             return
         }
@@ -175,16 +236,16 @@ class BallotMessageCoderTests: XCTestCase {
         let choice1 = choices[1]
         let results0: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
         let results1: [BallotResult] = (Array(choice1.result) as? [BallotResult])!
-        
+
         // Assert:
         // Ballot
-        XCTAssertEqual(ballot?.title, "Test Ballot ListMode")
-        XCTAssertEqual(ballot?.state, 0)
-        XCTAssertEqual(ballot?.assessmentType, 1)
-        XCTAssertEqual(ballot?.type, 1)
-        XCTAssertEqual(ballot?.choicesType, 0)
-        XCTAssertEqual(ballot?.ballotDisplayMode, .list)
-        
+        XCTAssertEqual(decodedBallot?.title, "Test Ballot ListMode")
+        XCTAssertEqual(decodedBallot?.state, 0)
+        XCTAssertEqual(decodedBallot?.assessmentType, 1)
+        XCTAssertEqual(decodedBallot?.type, 1)
+        XCTAssertEqual(decodedBallot?.choicesType, 0)
+        XCTAssertEqual(decodedBallot?.ballotDisplayMode, .list)
+
         // Choices
         XCTAssertEqual(choices.count, 4)
         // Choice 0
@@ -193,7 +254,7 @@ class BallotMessageCoderTests: XCTestCase {
         XCTAssertEqual(choice0.orderPosition, 1)
         XCTAssertEqual(choice0.totalVotes, nil)
         XCTAssertEqual(results0.count, 3)
-        
+
         for result in results0 {
             switch result.participantID {
             case "ECHOECHO":
@@ -206,14 +267,14 @@ class BallotMessageCoderTests: XCTestCase {
                 XCTFail("Unexpected Participant Id")
             }
         }
-        
+
         // Choice 1
         XCTAssertEqual(choice1.id, 2)
         XCTAssertEqual(choice1.name, "desc2")
         XCTAssertEqual(choice1.orderPosition, 2)
         XCTAssertEqual(choice1.totalVotes, nil)
         XCTAssertEqual(results1.count, 3)
-        
+
         for result in results1 {
             switch result.participantID {
             case "ECHOECHO":
@@ -227,14 +288,18 @@ class BallotMessageCoderTests: XCTestCase {
             }
         }
     }
-    
+
     func testDecodeMessageCreateNoResult() throws {
         // Goal: Creating a message with no results must not crash
-        
+
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+            for: Data([1]),
+            creator:
+            "ECHOECHO"
+        ))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
             "BallotCoderTests_testDecodeMessageCreateNoResult",
@@ -243,38 +308,56 @@ class BallotMessageCoderTests: XCTestCase {
         boxBallotCreateMessage.ballotID = "BMD_1".data(using: String.Encoding.ascii)
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
-        
+
         // Act:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+        let expect = expectation(description: "Decode and create ballot")
+
+        var decodedBallot: Ballot?
+        ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { message in
+                decodedBallot = message.ballot
+                expect.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expect.fulfill()
+            }
         )
-        let ballot = ballotMessage?.ballot
-        guard let choices = ballot?.choicesSortedByOrder() as? [BallotChoice] else {
+
+        wait(for: [expect], timeout: 3)
+
+        guard let choices = decodedBallot?.choicesSortedByOrder() as? [BallotChoice] else {
             XCTFail("Could not decode choices")
             return
         }
         let choice0 = choices[0]
         let choice1 = choices[1]
-        
+
         // Assert:
         XCTAssertEqual(choice0.id, 1)
         XCTAssertEqual(choice0.name, "desc1")
         XCTAssertEqual(choice0.orderPosition, 1)
-        
+
         XCTAssertEqual(choice1.id, 2)
         XCTAssertEqual(choice1.name, "desc2")
         XCTAssertEqual(choice1.orderPosition, 2)
     }
-    
+
     func testDecodeMessageSummaryModeSetsTotalVotesOfChoices() throws {
-        // Goal: If incoming ballot has summary display mode, its choices must have values for totalVotes, no values for participants and no values for participants votes
-        
+        // Goal: If incoming ballot has summary display mode, its choices must have values for totalVotes, no values
+        // for participants and no values for participants votes
+
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+            for: Data([1]),
+            creator:
+            "ECHOECHO"
+        ))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
             "BallotCoderTests_testDecodeMessageSummaryModeSetsTotalVotesOfChoices",
@@ -283,15 +366,28 @@ class BallotMessageCoderTests: XCTestCase {
         boxBallotCreateMessage.ballotID = "BMD_1".data(using: String.Encoding.ascii)
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
-        
+
         // Act:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+        let expect = expectation(description: "Decode and create ballot")
+
+        var decodedBallot: Ballot?
+        ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
-            conversation: conversation
+            conversation: conversation,
+            onCompletion: { message in
+                decodedBallot = message.ballot
+                expect.fulfill()
+            },
+            onError: { error in
+                XCTFail("\(error)")
+                expect.fulfill()
+            }
         )
-        let ballot = ballotMessage?.ballot
-        guard let choices = ballot?.choicesSortedByOrder() as? [BallotChoice] else {
+
+        wait(for: [expect], timeout: 3)
+
+        guard let choices = decodedBallot?.choicesSortedByOrder() as? [BallotChoice] else {
             XCTFail("Could not decode choices")
             return
         }
@@ -299,20 +395,20 @@ class BallotMessageCoderTests: XCTestCase {
         let choice1 = choices[1]
         let choice2 = choices[2]
         let choice3 = choices[3]
-        
+
         let results0: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
         let results1: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
         let results2: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
         let results3: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
 
         // Assert:
-        XCTAssertEqual(ballot?.participants.isEmpty, true)
-        
+        XCTAssertEqual(decodedBallot?.participants.isEmpty, true)
+
         XCTAssertEqual(choice0.totalVotes, 500)
         XCTAssertEqual(choice1.totalVotes, 100)
         XCTAssertEqual(choice2.totalVotes, 0)
         XCTAssertEqual(choice3.totalVotes, 1)
-        
+
         XCTAssertEqual(results0.isEmpty, true)
         XCTAssertEqual(results1.isEmpty, true)
         XCTAssertEqual(results2.isEmpty, true)

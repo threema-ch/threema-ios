@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
@@ -293,8 +294,8 @@ class DatabasePreparer {
 
     func createGroup(
         groupID: Data,
-        groupCreatorIdentity: ThreemaIdentity,
-        members: [ThreemaIdentity]
+        groupCreatorIdentity: String,
+        members: [String]
     ) throws -> (ContactEntity, GroupEntity, Conversation) {
         save {
             let contactEntity = createContact(identity: groupCreatorIdentity)

@@ -21,6 +21,7 @@
 import CallKit
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 final class VoIPCallKitManager: NSObject {
     
@@ -29,7 +30,7 @@ final class VoIPCallKitManager: NSObject {
     private var uuid: UUID?
     private(set) var callerName: String?
     private var answerAction: CXAnswerCallAction?
-    
+
     override init() {
         self.provider = CXProvider(configuration: VoIPCallKitManager.providerConfiguration(for: nil))
         self.callController = CXCallController()
@@ -46,8 +47,9 @@ final class VoIPCallKitManager: NSObject {
         providerConfiguration.includesCallsInRecents = UserSettings.shared().includeCallsInRecents
         
         if let identity = contactIdentity {
-            let pushSetting = PushSetting(forThreemaID: identity)
-            if pushSetting.canSendPush(), pushSetting.silent == false {
+            let pushSettingManager = PushSettingManager()
+            let pushSetting = pushSettingManager.find(forContact: ThreemaIdentity(identity))
+            if pushSetting.canSendPush(), pushSetting.muted == false {
                 let voIPSound = UserSettings.shared()?.voIPSound
                 if voIPSound != "default" {
                     providerConfiguration.ringtoneSound = "\(voIPSound!).caf"
@@ -234,7 +236,7 @@ extension VoIPCallKitManager {
         do {
             try audioSession.setCategory(
                 .playAndRecord,
-                mode: .spokenAudio,
+                mode: .voiceChat,
                 options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
             try audioSession.setActive(true)

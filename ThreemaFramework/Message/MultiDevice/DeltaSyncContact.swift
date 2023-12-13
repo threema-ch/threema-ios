@@ -89,19 +89,4 @@ struct DeltaSyncContact: Codable {
         try container.encode(contactImageBlobID, forKey: .contactImageBlobID)
         try container.encode(contactImageEncryptionKey, forKey: .contactImageEncryptionKey)
     }
-    
-    // TODO: Starting here: implement one code path for all transformations (IOS-3869)
-    
-    mutating func with(contact: ContactEntity) {
-        updateFirstName(name: contact.firstName)
-    }
-    
-    mutating func updateFirstName(name: String?) {
-        if let name {
-            syncContact.firstName = name
-        }
-        else {
-            syncContact.clearFirstName()
-        }
-    }
 }

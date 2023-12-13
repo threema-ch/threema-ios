@@ -424,6 +424,7 @@ struct pktExtension {
             // TODO: Remove comment IOS-3558
             DDLogNotice(@"LicenseStore perform check.");
             if (success) {
+                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseCheckSuccess object:nil];
                 [self _connect];
             } else {
                 // don't show license warning for connection errors
@@ -432,7 +433,7 @@ struct pktExtension {
                     // License check failed permanently; need to inform user and ask for new license username/password
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
                 }
-                else if ([licenseStore.error.domain hasPrefix:@"NSURL"] == YES && licenseStore.error.code == -1009 && ![[LicenseStore sharedLicenseStore] isWithinCheckInterval]) {
+                else if ([licenseStore.error.domain hasPrefix:@"NSURL"] == YES && licenseStore.error.code == -1009 && ![[LicenseStore sharedLicenseStore] isWithinOfflineInterval]) {
                     // License check failed because we don't have network connection. WithinCheckInterval for license failed, show license screen
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
                 }
@@ -867,26 +868,6 @@ struct pktExtension {
     return YES;
 }
 
-- (void)failedProcessingMessage:(BoxedMessage *)boxmsg error:(NSError *)err {
-    if (err.code == kBlockUnknownContactErrorCode) {
-        DDLogVerbose(@"Message %@ processing error due to block contacts - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
-        [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
-    } else if (err.code == kBadMessageErrorCode) {
-        DDLogVerbose(@"Message %@ processing error due to bad message format or decryption failure - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
-        [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
-    } else if (err.code == kMessageAlreadyProcessedErrorCode) {
-        DDLogVerbose(@"Message %@ processing error due to message is already in DB. Probably processed by Notification Extension - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
-        [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
-    } else if (err.code == kMessageBlobDecryptionErrorCode) {
-        DDLogVerbose(@"Message %@ processing error due blob decryption failure - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
-        [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
-    } else if (err.code == kMessageProcessingErrorCode) {
-        DDLogError(@"Message %@ processing error due to being unable to handle message: %@", [NSString stringWithHexData:boxmsg.messageId], err);
-   } else {
-        DDLogInfo(@"Could not process incoming message %@: %@", [NSString stringWithHexData:boxmsg.messageId], err);
-    }
-}
-
 - (void)reconnectAfterDelay {
     // Never reconnect for the notification extension
     if (!autoReconnect || [AppGroup getCurrentType] == AppGroupTypeNotificationExtension) {
@@ -1166,41 +1147,8 @@ struct pktExtension {
     });
 }
 
-- (void)sendPushAllowedIdentities {
-    if ([self shouldRegisterPush] == NO) {
-        return;
-    }
-    
-    // Disable filter by allowing all IDs; we filter pushes in our own logic now
-    NSData *iddata = [NSData dataWithBytes:"\0" length:1];
-    
-    DDLogVerbose(@"Sending allowed identities: %@", iddata);
-    [self sendPayloadWithType:PLTYPE_PUSH_ALLOWED_IDENTITIES data:iddata];
-}
-
 - (void)clearDeviceCookieChangedIndicator {
     [self sendPayloadWithType:PLTYPE_CLEAR_DEVICE_COOKIE_CHANGE_INDICATION data:[NSData data]];
-}
-
-- (void)sendPushSound{
-    if ([self shouldRegisterPush] == NO) {
-        return;
-    }
-    
-    NSString *pushSound = @"";
-    DDLogInfo(@"Sending push sound: %@", pushSound);
-    [self sendPayloadWithType:PLTYPE_PUSH_SOUND data:[pushSound dataUsingEncoding:NSASCIIStringEncoding]];
-}
-
-- (void)sendPushGroupSound {
-    if ([self shouldRegisterPush] == NO) {
-        return;
-    }
-    
-    NSString *pushGroupSound = @"";
-    
-    DDLogInfo(@"Sending push group sound: %@", pushGroupSound);
-    [self sendPayloadWithType:PLTYPE_PUSH_GROUP_SOUND data:[pushGroupSound dataUsingEncoding:NSASCIIStringEncoding]];
 }
 
 #pragma mark - Nonces and encryption
@@ -1466,9 +1414,6 @@ struct pktExtension {
             [serverConnectorConnectionState loggedInChatServer];
 
             [self sendPushToken];
-            [self sendPushAllowedIdentities];
-            [self sendPushSound];
-            [self sendPushGroupSound];
             
             // Remove VoIP push token (since min OS version is iOS 15 or above)
             [self removeVoIPPushToken];

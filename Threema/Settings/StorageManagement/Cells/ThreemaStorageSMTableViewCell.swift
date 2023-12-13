@@ -114,36 +114,44 @@ class ThreemaStorageSMTableViewCell: ThemedCodeStackTableViewCell {
     }
     
     private func calcStorage() {
-        let deviceStorage = DeviceUtility.getStorageSize()
-        
-        switch storageType {
-        case .total:
-            valueLabel.text = ByteCountFormatter.string(
-                fromByteCount: deviceStorage.totalSize ?? 0,
-                countStyle: ByteCountFormatter.CountStyle.file
-            )
-        case .totalFree:
-            valueLabel.text = ByteCountFormatter.string(
-                fromByteCount: deviceStorage.totalFreeSize ?? 0,
-                countStyle: ByteCountFormatter.CountStyle.file
-            )
-        case .totalInUse:
-            valueLabel.text = ByteCountFormatter.string(
-                fromByteCount: (deviceStorage.totalSize ?? 0) - (deviceStorage.totalFreeSize ?? 0),
-                countStyle: ByteCountFormatter.CountStyle.file
-            )
-        case .threema:
-            calcThreemaStorage()
-        case .none:
-            valueLabel.text = "-"
-        }
-    }
-    
-    private func calcThreemaStorage() {
+        valueLabel.text = ""
         contentStack.removeArrangedSubview(valueLabel)
         contentStack.addArrangedSubview(activityIndicator)
         activityIndicator.startAnimating()
         
+        DispatchQueue.global(qos: .background).async {
+            let deviceStorage = DeviceUtility.getStorageSize()
+            DispatchQueue.main.async {
+                switch self.storageType {
+                case .total:
+                    self.valueLabel.text = ByteCountFormatter.string(
+                        fromByteCount: deviceStorage.totalSize ?? 0,
+                        countStyle: ByteCountFormatter.CountStyle.file
+                    )
+                case .totalFree:
+                    self.valueLabel.text = ByteCountFormatter.string(
+                        fromByteCount: deviceStorage.totalFreeSize ?? 0,
+                        countStyle: ByteCountFormatter.CountStyle.file
+                    )
+                case .totalInUse:
+                    self.valueLabel.text = ByteCountFormatter.string(
+                        fromByteCount: (deviceStorage.totalSize ?? 0) - (deviceStorage.totalFreeSize ?? 0),
+                        countStyle: ByteCountFormatter.CountStyle.file
+                    )
+                case .threema:
+                    self.calcThreemaStorage()
+                case .none:
+                    self.valueLabel.text = "-"
+                }
+                
+                self.activityIndicator.stopAnimating()
+                self.contentStack.removeArrangedSubview(self.activityIndicator)
+                self.contentStack.addArrangedSubview(self.valueLabel)
+            }
+        }
+    }
+    
+    private func calcThreemaStorage() {
         DispatchQueue.global(qos: .background).async {
             var dbSize: Int64 = 0
             var appSize: Int64 = 0
@@ -167,11 +175,6 @@ class ThreemaStorageSMTableViewCell: ThemedCodeStackTableViewCell {
                     fromByteCount: appSize,
                     countStyle: ByteCountFormatter.CountStyle.file
                 )
-                
-                self.activityIndicator.stopAnimating()
-                
-                self.contentStack.removeArrangedSubview(self.activityIndicator)
-                self.contentStack.addArrangedSubview(self.valueLabel)
             }
         }
     }

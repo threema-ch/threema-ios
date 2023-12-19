@@ -182,7 +182,6 @@ class RootNavigationController: UINavigationController {
         
         previewViewController.initWithMedia(
             dataArray: data,
-            delegate: self,
             completion: { [weak self] data, sendAsFile, captions in
                 guard let dataItems = data as? [URL] else {
                     let err = "Invalid format for data items from media preview"

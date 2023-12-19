@@ -44,19 +44,25 @@ public class ViewModelParticipant {
         // TODO: (IOS-4059) Remove force unwrap
         let identity = await remoteParticipant.threemaIdentity!
         self.threemaIdentity = identity
+       
+        if let name {
+            self.name = name
+        }
+        else {
+            self.name = await remoteParticipant.nickname ?? identity.string
+        }
         
-        self.name = await remoteParticipant.nickname ?? identity.string
         self.avatar = avatar
         self.idColor = idColor
         self.localParticipant = nil
         self.dependencies = remoteParticipant.dependencies
     }
     
-    init(localParticipant: LocalParticipant, name: String?, avatar: UIImage?, idColor: UIColor) async {
+    init(localParticipant: LocalParticipant, name: String, avatar: UIImage?, idColor: UIColor) async {
         self.participantID = localParticipant.participantID
         self.threemaIdentity = localParticipant.threemaIdentity
         
-        self.name = localParticipant.nickname
+        self.name = name
         self.avatar = avatar
         self.idColor = idColor
         self.localParticipant = localParticipant

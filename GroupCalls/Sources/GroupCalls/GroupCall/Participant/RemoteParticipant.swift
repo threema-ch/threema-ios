@@ -440,7 +440,7 @@ extension RemoteParticipant {
         pckRemote = helloMessage.pck
         pcckRemote = helloMessage.pcck
         threemaIdentity = ThreemaIdentity(helloMessage.identity)
-        nickname = helloMessage.nickname
+        nickname = helloMessage.nickname != "" ? helloMessage.nickname : helloMessage.identity
     }
     
     private func handleAuth(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {

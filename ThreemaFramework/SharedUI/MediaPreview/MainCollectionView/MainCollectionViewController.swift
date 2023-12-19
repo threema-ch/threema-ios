@@ -31,14 +31,14 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
         case ImageConversionFailed
     }
     
-    var delegate: MediaPreviewViewController
+    weak var delegate: MediaPreviewViewController?
     
     init(delegate: MediaPreviewViewController) {
         self.delegate = delegate
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        delegate.mediaData.count
+        delegate?.mediaData.count ?? 0
     }
     
     func collectionView(
@@ -72,13 +72,13 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
         var cell: UICollectionViewCell?
-        if delegate.mediaData[indexPath.item] is VideoPreviewItem {
+        if delegate?.mediaData[indexPath.item] is VideoPreviewItem {
             cell = prepareVideoItem(indexPath: indexPath, collectionView: collectionView)
         }
-        else if delegate.mediaData[indexPath.item] is ImagePreviewItem {
+        else if delegate?.mediaData[indexPath.item] is ImagePreviewItem {
             cell = prepareImageCell(indexPath: indexPath, collectionView: collectionView)
         }
-        else if delegate.mediaData[indexPath.item] is DocumentPreviewItem {
+        else if delegate?.mediaData[indexPath.item] is DocumentPreviewItem {
             cell = prepareDocumentCell(indexPath: indexPath, collectionView: collectionView)
         }
         else {
@@ -90,7 +90,7 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
     }
     
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        guard let indexPath = delegate.getCurrentlyVisibleItem() else {
+        guard let indexPath = delegate?.getCurrentlyVisibleItem() else {
             return
         }
         
@@ -107,6 +107,9 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        guard let delegate else {
+            return
+        }
         let section = delegate.currentItem.section
         let size = delegate.largeCollectionView.frame.width
         let items = scrollView.contentOffset.x / size
@@ -130,7 +133,7 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
         }
         DispatchQueue.main.async {
             if cell.indexPath == indexPath {
-                guard let item = self.delegate.mediaData[indexPath.item] as? DocumentPreviewItem else {
+                guard let item = self.delegate?.mediaData[indexPath.item] as? DocumentPreviewItem else {
                     return
                 }
                 cell.loadDocument(item)
@@ -152,11 +155,12 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
         cell.addAccessibilityLabels()
         cell.showLoadingScreen()
         
-        guard let item = delegate.mediaData[indexPath.item] as? ImagePreviewItem else {
+        guard let item = delegate?.mediaData[indexPath.item] as? ImagePreviewItem else {
             fatalError("Cannot display an ImageCell for a non-image item")
         }
         
-        if delegate.memoryConstrained {
+        if let delegate,
+           delegate.memoryConstrained {
             handleMemoryConstrainedImageItem(item: item, cell: cell)
         }
         else {
@@ -224,7 +228,7 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
         cell.addAccessibilityLabels()
         cell.showLoadingScreen()
         
-        let videoItem = delegate.mediaData[indexPath.item] as! VideoPreviewItem
+        let videoItem = delegate?.mediaData[indexPath.item] as! VideoPreviewItem
         videoItem.item.done { url in
             let asset: AVAsset = AVURLAsset(url: url)
             

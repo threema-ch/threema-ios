@@ -76,11 +76,11 @@ class MediaPreviewFlowLayout: UICollectionViewFlowLayout {
             return
         }
         
-        guard let selection = collectionView.delegate.getCurrentlyVisibleItem() else {
+        guard let selection = collectionView.delegate?.getCurrentlyVisibleItem() else {
             return
         }
         
-        guard let largeCollectionView = collectionView.delegate.largeCollectionView else {
+        guard let largeCollectionView = collectionView.delegate?.largeCollectionView else {
             return
         }
         

@@ -30,6 +30,6 @@ public protocol GroupCallParticipantInfoFetcherProtocol {
     
     /// Fetches data needed to create a `ViewModelParticipant` for the local Threema-ID
     /// - Parameters:
-    /// - Returns: Optional display name, optional avatar and IDColor
-    func fetchInfoForLocalIdentity() -> (displayName: String?, avatar: UIImage?, color: UIColor)
+    /// - Returns: Optional avatar and IDColor
+    func fetchInfoForLocalIdentity() -> (avatar: UIImage?, color: UIColor)
 }

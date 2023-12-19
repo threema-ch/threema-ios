@@ -518,11 +518,11 @@ extension GroupCallActor {
     func add(_ localParticipant: LocalParticipant) async {
         self.localParticipant = localParticipant
         
-        let (displayName, avatar, idColor) = dependencies.groupCallParticipantInfoFetcher.fetchInfoForLocalIdentity()
+        let (avatar, idColor) = dependencies.groupCallParticipantInfoFetcher.fetchInfoForLocalIdentity()
 
         let viewModelParticipant = await ViewModelParticipant(
             localParticipant: localParticipant,
-            name: displayName,
+            name: dependencies.groupCallBundleUtil.localizedString(for: "me"),
             avatar: avatar,
             idColor: idColor
         )

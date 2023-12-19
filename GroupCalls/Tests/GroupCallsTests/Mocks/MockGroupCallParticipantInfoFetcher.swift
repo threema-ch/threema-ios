@@ -31,7 +31,7 @@ extension MockGroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPr
         (id, UIImage(systemName: "person.fill"), .red)
     }
     
-    func fetchInfoForLocalIdentity() -> (displayName: String?, avatar: UIImage?, color: UIColor) {
-        ("TESTTEST", UIImage(systemName: "person.fill"), .red)
+    func fetchInfoForLocalIdentity() -> (avatar: UIImage?, color: UIColor) {
+        (UIImage(systemName: "person.fill"), .red)
     }
 }

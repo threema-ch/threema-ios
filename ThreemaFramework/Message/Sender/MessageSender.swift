@@ -638,9 +638,14 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         var receiptReadDates = [Date]()
 
                         for key in keys {
-                            receiptMessageIDs.append(key)
-                            if let readDate = msgIDAndReadDate[key] as? Date {
-                                receiptReadDates.append(readDate)
+                            if receiptType == .read {
+                                if let readDate = msgIDAndReadDate[key] as? Date {
+                                    receiptMessageIDs.append(key)
+                                    receiptReadDates.append(readDate)
+                                }
+                            }
+                            else {
+                                receiptMessageIDs.append(key)
                             }
                         }
 

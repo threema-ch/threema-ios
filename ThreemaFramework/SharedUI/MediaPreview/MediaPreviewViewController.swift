@@ -391,7 +391,6 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     
     @objc public func initWithMedia(
         dataArray: [Any],
-        delegate: Any,
         completion: (([Any], Bool, [String]) -> Void)?,
         itemDelegate: MediaPreviewURLDataProcessor
     ) {
@@ -449,9 +448,12 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             message = BundleUtil.localizedString(forKey: "one_media_item_could_not_be_processed")
         }
         
-        UIAlertTemplate.showAlert(owner: self, title: title, message: message, actionOk: { _ in
-            if self.mediaData.isEmpty {
-                self.backButtonPressed()
+        UIAlertTemplate.showAlert(owner: self, title: title, message: message, actionOk: { [weak self] _ in
+            guard let strongSelf = self else {
+                return
+            }
+            if strongSelf.mediaData.isEmpty {
+                strongSelf.backButtonPressed()
             }
         })
     }
@@ -527,8 +529,9 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
                 }
             }
             DispatchQueue.main.async {
-                progressViewHandler.hideHud {
-                    self.completion?(returnVal, sendAsFile, captions)
+                progressViewHandler.hideHud { [weak self] in
+                    self?.completion?(returnVal, sendAsFile, captions)
+                    self?.itemDelegate = nil
                 }
             }
         }
@@ -621,8 +624,11 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
                     .ImageSendOptions(sendAsFile: mediaData[0].sendAsFile, imageQuality: "")
             )
         
-        present(moreOptionsNavigationController, animated: true, completion: {
-            (moreOptionsNavigationController.children.first as? MediaShareOptionsViewController)?.delegate = self
+        present(moreOptionsNavigationController, animated: true, completion: { [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+            (moreOptionsNavigationController.children.first as? MediaShareOptionsViewController)?.delegate = strongSelf
         })
     }
     
@@ -697,17 +703,17 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             }
             else {
                 self.textField.text = self.mediaData[index].caption
-                let fadeOut = UIViewPropertyAnimator(duration: 0.2, curve: .easeOut, animations: {
-                    self.textField.textColor = self.textField.backgroundColor
-                    self.textField.tintColor = .clear
-                    self.textField.text = ""
+                let fadeOut = UIViewPropertyAnimator(duration: 0.2, curve: .easeOut, animations: { [weak self] in
+                    self?.textField.textColor = self?.textField.backgroundColor
+                    self?.textField.tintColor = .clear
+                    self?.textField.text = ""
                 })
                 
-                let fadeIn = UIViewPropertyAnimator(duration: 0.2, curve: .easeOut, animations: {
-                    self.textField.textColor = textColor
-                    self.textField.tintColor = tintColor
+                let fadeIn = UIViewPropertyAnimator(duration: 0.2, curve: .easeOut, animations: { [weak self] in
+                    self?.textField.textColor = textColor
+                    self?.textField.tintColor = tintColor
                     let index = indexPath.item
-                    self.textField.text = self.mediaData[index].caption
+                    self?.textField.text = self?.mediaData[index].caption
                 })
                 
                 fadeOut.addCompletion { _ in
@@ -780,15 +786,16 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
                 animations: {
                     self.view.layoutIfNeeded()
                 },
-                completion: { _ in
-                    guard self.largeCollectionView.numberOfSections > 0,
-                          self.largeCollectionView.numberOfItems(inSection: 0) > 0 else {
+                completion: { [weak self] _ in
+                    guard let strongSelf = self,
+                          strongSelf.largeCollectionView.numberOfSections > 0,
+                          strongSelf.largeCollectionView.numberOfItems(inSection: 0) > 0 else {
                         return
                     }
-                    guard let currentlyVisibleItem = self.getCurrentlyVisibleItem() else {
+                    guard let currentlyVisibleItem = strongSelf.getCurrentlyVisibleItem() else {
                         return
                     }
-                    self.largeCollectionView.scrollToItem(
+                    strongSelf.largeCollectionView.scrollToItem(
                         at: currentlyVisibleItem,
                         at: .centeredHorizontally,
                         animated: false

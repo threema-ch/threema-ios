@@ -200,7 +200,7 @@ extension ProfileView {
                     from: "CreatePassword"
                 )
                 .wrappedModalNavigationView(
-                    delegate: model.delegateHandler.createPassword(for: .revocationKey)
+                    delegate: model.delegateHandler.revocationKey
                 )
         }
         
@@ -211,7 +211,7 @@ extension ProfileView {
                     from: "CreatePassword"
                 )
                 .wrappedModalNavigationView(
-                    delegate: model.delegateHandler.createPassword(for: .exportID)
+                    delegate: model.delegateHandler.exportID
                 )
         }
         

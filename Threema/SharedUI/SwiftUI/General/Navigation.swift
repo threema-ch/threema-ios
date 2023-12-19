@@ -102,10 +102,10 @@ struct LockedButtonNavigationLink<Content: View>: View {
             label()
         }
         .sheet(isPresented: $showLockscreen) {
-            LockScreenView { } cancelled: { } didDismissAfterSuccess: {
+            LockScreenView {
                 action()
-            }
-            .ignoresSafeArea(edges: .bottom)
+            } cancelled: { } didDismissAfterSuccess: { }
+                .ignoresSafeArea(edges: .bottom)
         }
     }
 }

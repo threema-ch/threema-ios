@@ -408,7 +408,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     NSSet *excludedIds = [NSSet setWithArray:userSettings.syncExclusionList];
     NSMutableArray *allIdentities = [NSMutableArray new];
 
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         dispatch_group_t dispatchGroup = dispatch_group_create();
 
         for (NSDictionary *identityData in identities) {
@@ -579,6 +579,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
     if ([contact importedStatus] != ImportedStatusInitial && !forceImport) {
         DDLogInfo(@"Contact already imported. Do not import again.");
+        if (onCompletion) {
+            onCompletion();
+        }
         return;
     }
     

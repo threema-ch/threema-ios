@@ -69,6 +69,12 @@ class MentionsHelper {
                 let newLength = min(currMention.count, location.length)
                 let replacementRange = NSMakeRange(newLocation, newLength)
                 
+                // This fixes an issue where in some languages text gets replace by iOS with a shorter string
+                guard text.count >= replacementRange.length || text == "" else {
+                    resetMentions()
+                    return nil
+                }
+                
                 currMention = (currMention as NSString).replacingCharacters(in: replacementRange, with: text)
             }
             else {

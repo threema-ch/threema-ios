@@ -52,7 +52,10 @@ final class ProfileViewModel: ObservableObject {
     )
     
     lazy var delegateHandler: DelegateHandler =
-        .init(updateRevocationDetail: loadRevocationDetail, didDismissModal: load) { [unowned self] password in
+        .init(
+            updateRevocationDetail: loadRevocationDetail,
+            didDismissModal: load
+        ) { [unowned self] password in
             myIdentityStore.backupIdentity(withPassword: password)
         }
     
@@ -318,6 +321,18 @@ extension ProfileViewModel {
         private var backupIdentity: (String) -> (String)
         private var didDismissModal: () -> Void
         
+        lazy var revocationKey: PasswordNavigationDelegate = .init(
+            title: BundleUtil.localizedString(forKey: "revocation_password"),
+            additionalText: BundleUtil.localizedString(forKey: "revocation_password_description"),
+            callback: revocationHandler
+        )
+        
+        lazy var exportID: PasswordNavigationDelegate = .init(
+            title: BundleUtil.localizedString(forKey: "revocation_password"),
+            additionalText: BundleUtil.localizedString(forKey: "revocation_password_description"),
+            callback: self
+        )
+        
         init(
             updateRevocationDetail: @escaping () -> Void,
             didDismissModal: @escaping () -> Void,
@@ -331,6 +346,8 @@ extension ProfileViewModel {
         }
     }
 }
+
+// MARK: - ProfileViewModel.DelegateHandler.PasswordNavigationDelegate
 
 extension ProfileViewModel.DelegateHandler {
     class PasswordNavigationDelegate: NSObject, UINavigationControllerDelegate {
@@ -357,27 +374,6 @@ extension ProfileViewModel.DelegateHandler {
             if let passwordVerify = viewController as? BackupPasswordVerifyViewController {
                 passwordVerify.passwordCallback = callback
             }
-        }
-    }
-    
-    enum PasswordViewSetup {
-        case exportID
-        case revocationKey
-    }
-    
-    func createPassword(for setup: PasswordViewSetup) -> PasswordNavigationDelegate {
-        switch setup {
-        case .revocationKey:
-            return .init(
-                title: BundleUtil.localizedString(forKey: "revocation_password"),
-                additionalText: BundleUtil.localizedString(forKey: "revocation_password_description"),
-                callback: revocationHandler
-            )
-        case .exportID:
-            return .init(
-                additionalText: BundleUtil.localizedString(forKey: "password_description_backup"),
-                callback: self
-            )
         }
     }
 }

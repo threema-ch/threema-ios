@@ -111,6 +111,53 @@ class MessageSenderTests: XCTestCase {
         }
     }
 
+    func testSendUserAck() async throws {
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
+        let expectedMessageID = MockData.generateMessageID()
+        let expectedReadDate = Date()
+
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            return dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: false,
+                readDate: expectedReadDate,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            )
+        }
+
+        let taskManagerMock = TaskManagerMock()
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        await messageSender.sendUserAck(for: message, toIdentity: expectedThreemaIdentity)
+
+        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
+        XCTAssertEqual(
+            1,
+            taskManagerMock.addedTasks.filter { task in
+                guard let task = task as? TaskDefinitionSendDeliveryReceiptsMessage else {
+                    return false
+                }
+                return task.receiptType == .ack &&
+                    task.toIdentity == expectedThreemaIdentity.string &&
+                    task.receiptMessageIDs.contains(expectedMessageID) &&
+                    task.receiptReadDates.isEmpty
+            }.count
+        )
+    }
+
     func testSendReadReceipt() async throws {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let expectedMessageID = MockData.generateMessageID()

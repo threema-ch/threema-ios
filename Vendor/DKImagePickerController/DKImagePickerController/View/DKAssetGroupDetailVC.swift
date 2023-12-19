@@ -141,15 +141,15 @@ open class DKAssetGroupDetailVC: UIViewController, UICollectionViewDelegate, UIC
             
             DispatchQueue.global(qos: .userInitiated).async {
                 DispatchQueue.main.async {
-                    getImageManager().groupDataManager.loadMomentsGroup(group, completion: {
-                        self.groupListVC.hideLoadingForMoments()
+                    getImageManager().groupDataManager.loadMomentsGroup(group, completion: { [weak self] in
+                        self?.groupListVC.hideLoadingForMoments()
                         group.momentsLoaded = true
-                        self.collectionView!.reloadData()
-                    })                    
+                        self?.collectionView?.reloadData()
+                    })
                 }
             }
         } else {
-            self.collectionView!.reloadData()
+            self.collectionView?.reloadData()
         }
         /***** END THREEMA MODIFICATION: add reload data *********/
     }

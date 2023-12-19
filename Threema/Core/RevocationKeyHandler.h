@@ -29,7 +29,7 @@
 
 @interface RevocationKeyHandler : NSObject  <PasswordCallback>
 
-@property id<RevocationKeyDelegate> delegate;
+@property (weak) id<RevocationKeyDelegate> delegate;
 
 - (void)updateLastSetDateForLabel:(UILabel *)label;
 

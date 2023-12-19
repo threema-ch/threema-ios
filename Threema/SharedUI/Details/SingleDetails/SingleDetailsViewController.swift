@@ -245,9 +245,9 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             forName: Notification.Name(kNotificationIncomingSettingsSynchronization),
             object: nil,
             queue: .main
-        ) { _ in
-            self.dataSource.refresh(sections: [.privacySettings])
-            self.dataSource.reload(sections: [.privacySettings])
+        ) { [weak self] _ in
+            self?.dataSource.refresh(sections: [.privacySettings])
+            self?.dataSource.reload(sections: [.privacySettings])
         }
 
         observeContact(\.imageData) { [weak self] in

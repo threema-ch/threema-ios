@@ -164,7 +164,10 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     
     private func showBallot(ballotMessage: BallotMessage) {
         // Opens the ballot of a ballot message in a modal
-        BallotDispatcher.showViewController(for: ballotMessage.ballot, on: chatViewController?.navigationController)
+        entityManager.performBlock {
+            let ballot = self.entityManager.entityFetcher.ballot(for: ballotMessage.ballot.id)
+            BallotDispatcher.showViewController(for: ballot, on: self.chatViewController?.navigationController)
+        }
     }
     
     private func startVoIPCall(callMessage: SystemMessage) {

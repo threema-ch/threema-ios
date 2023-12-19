@@ -28,8 +28,8 @@ let tmpDirectory = "tmpImages/"
 @objc class PhotosAccessHelper: NSObject {
     
     let completion: ([Any], DKImagePickerController?) -> Void
-    var pickerController: DKImagePickerController?
-    var parentViewController: UIViewController?
+    weak var pickerController: DKImagePickerController?
+    weak var parentViewController: UIViewController?
     
     @objc init(completion: @escaping (([Any], DKImagePickerController?) -> Void)) {
         self.completion = completion

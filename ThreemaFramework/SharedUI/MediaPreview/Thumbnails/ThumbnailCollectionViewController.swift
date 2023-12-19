@@ -23,11 +23,11 @@ import UIKit
 
 class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
     
-    var parent: MediaPreviewViewController?
+    weak var parent: MediaPreviewViewController?
     
     private let reuseIdentifier = "thumbnailCell"
     private let collectionViewInsets: CGFloat = 13.0
-    
+        
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 {
             return parent?.mediaData.count ?? 0
@@ -158,8 +158,8 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
             return cell
         }
         
-        parent.mediaData[indexPath.item].thumbnail.done { image in
-            self.imageHandler(image: image, cell: cell, indexPath: indexPath)
+        parent.mediaData[indexPath.item].thumbnail.done { [weak self] image in
+            self?.imageHandler(image: image, cell: cell, indexPath: indexPath)
         }.catch { _ in
             cell.activityIndicator.hidesWhenStopped = true
             cell.activityIndicator.stopAnimating()
@@ -266,8 +266,9 @@ extension ThumbnailCollectionViewController: UICollectionViewDropDelegate {
             return
         }
         
-        coordinator.items.forEach { dropItem in
-            guard let sourceIndexPath = dropItem.sourceIndexPath else {
+        coordinator.items.forEach { [weak self] dropItem in
+            guard let weakSelf = self,
+                  let sourceIndexPath = dropItem.sourceIndexPath else {
                 return
             }
             
@@ -284,42 +285,46 @@ extension ThumbnailCollectionViewController: UICollectionViewDropDelegate {
                 )
             })
             
-            if self.parent?.currentItem == sourceIndexPath {
-                self.parent?.currentItem = destinationIndexPath
+            if weakSelf.parent?.currentItem == sourceIndexPath {
+                weakSelf.parent?.currentItem = destinationIndexPath
             }
             else {
-                if destinationIndexPath < self.parent!.currentItem, sourceIndexPath > self.parent!.currentItem {
-                    self.parent?.currentItem = IndexPath(
-                        item: min(self.parent!.currentItem.item + 1, self.parent!.mediaData.count - 1),
+                if destinationIndexPath < weakSelf.parent!.currentItem, sourceIndexPath > weakSelf.parent!.currentItem {
+                    weakSelf.parent?.currentItem = IndexPath(
+                        item: min(weakSelf.parent!.currentItem.item + 1, weakSelf.parent!.mediaData.count - 1),
                         section: 0
                     )
                 }
-                else if destinationIndexPath > self.parent!.currentItem, sourceIndexPath < self.parent!.currentItem {
-                    self.parent?.currentItem = IndexPath(item: max(self.parent!.currentItem.item - 1, 0), section: 0)
+                else if destinationIndexPath > weakSelf.parent!.currentItem,
+                        sourceIndexPath < weakSelf.parent!.currentItem {
+                    weakSelf.parent?.currentItem = IndexPath(
+                        item: max(weakSelf.parent!.currentItem.item - 1, 0),
+                        section: 0
+                    )
                 }
-                else if destinationIndexPath == self.parent!.currentItem {
-                    if sourceIndexPath < self.parent!.currentItem {
-                        self.parent?.currentItem = IndexPath(
-                            item: max(self.parent!.currentItem.item - 1, 0),
+                else if destinationIndexPath == weakSelf.parent!.currentItem {
+                    if sourceIndexPath < weakSelf.parent!.currentItem {
+                        weakSelf.parent?.currentItem = IndexPath(
+                            item: max(weakSelf.parent!.currentItem.item - 1, 0),
                             section: 0
                         )
                     }
                     else {
-                        self.parent?.currentItem = IndexPath(
-                            item: min(self.parent!.currentItem.item + 1, self.parent!.mediaData.count - 1),
+                        weakSelf.parent?.currentItem = IndexPath(
+                            item: min(weakSelf.parent!.currentItem.item + 1, weakSelf.parent!.mediaData.count - 1),
                             section: 0
                         )
                     }
                 }
             }
             
-            self.parent?.largeCollectionView.selectItem(
-                at: self.parent?.currentItem,
+            weakSelf.parent?.largeCollectionView.selectItem(
+                at: weakSelf.parent?.currentItem,
                 animated: true,
                 scrollPosition: .centeredHorizontally
             )
-            self.parent?.updateSelection()
-            self.parent?.shouldScrollTo(indexPath: self.parent!.currentItem)
+            weakSelf.parent?.updateSelection()
+            weakSelf.parent?.shouldScrollTo(indexPath: weakSelf.parent!.currentItem)
         }
     }
     

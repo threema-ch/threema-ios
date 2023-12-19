@@ -163,7 +163,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 UIViewController *dismissable = self.chatViewController.presentedViewController.presentingViewController;
                 NSArray *initialSelection = [self diffSelection:assets fromPreviouslySelected:prevSelected];
                 
-                [selectionViewController initWithMediaWithDataArray:initialSelection delegate:self completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
+                [selectionViewController initWithMediaWithDataArray:initialSelection completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [dismissable dismissViewControllerAnimated:true completion:^{
                             [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
@@ -199,7 +199,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                     assets = [lastSelection arrayByAddingObjectsFromArray:assets];
                 }
                 
-                [selectionViewController initWithMediaWithDataArray:assets delegate:self completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
+                [selectionViewController initWithMediaWithDataArray:assets completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [selectionViewController dismissViewControllerAnimated:true completion:^{
                             [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
@@ -285,13 +285,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         _mediaPreviewDataProcessor = [[MediaPreviewDataProcessor alloc] init];
     }
     
-    [selectionViewController initWithMediaWithDataArray:assets delegate:self completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
+    [selectionViewController initWithMediaWithDataArray:assets completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
         [selectionViewController dismissViewControllerAnimated:true completion:^{
             [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
         }];
     } itemDelegate: _mediaPreviewDataProcessor];
     
     __weak typeof(self) weakSelf = self;
+
     _mediaPreviewDataProcessor.returnToMe = ^(__unused NSArray *defaultSelection, NSArray *prevSelection) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [selectionViewController dismissViewControllerAnimated:true completion:nil];

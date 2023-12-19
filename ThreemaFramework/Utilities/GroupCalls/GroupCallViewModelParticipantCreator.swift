@@ -57,10 +57,9 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
         return (displayName, avatar, idColor)
     }
     
-    public func fetchInfoForLocalIdentity() -> (displayName: String?, avatar: UIImage?, color: UIColor) {
+    public func fetchInfoForLocalIdentity() -> (avatar: UIImage?, color: UIColor) {
         let identityStore = MyIdentityStore.shared()
         
-        let displayName = BundleUtil.localizedString(forKey: "me")
         let idColor = identityStore?.idColor ?? .primary
         
         var avatar: UIImage?
@@ -70,6 +69,6 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
             avatar = AvatarMaker.shared().maskedProfilePicture(image, size: 40)
         }
         
-        return (displayName, avatar, idColor)
+        return (avatar, idColor)
     }
 }

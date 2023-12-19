@@ -94,7 +94,7 @@ class ImageAssetPreviewItem: ImagePreviewItem {
                 seal.reject(MediaPreviewItem.LoadError.unknown)
                 return
             }
-
+            
             guard originalPHAsset.mediaType == PHAssetMediaType.image else {
                 seal.reject(MediaPreviewItem.LoadError.unknown)
                 return
@@ -104,34 +104,30 @@ class ImageAssetPreviewItem: ImagePreviewItem {
             let options = PHImageRequestOptions()
             options.isNetworkAccessAllowed = true
             
-            manager.requestImageData(
-                for: originalPHAsset,
-                options: options,
-                resultHandler: { data, dataUTI, _, _ in
-                    let resources = PHAssetResource.assetResources(for: originalPHAsset)
-                    var orgFilename = "File"
-                    
-                    if let originalFilename = resources.first?.originalFilename {
-                        orgFilename = originalFilename
-                    }
-                    
-                    guard let dataUTI else {
-                        seal.reject(MediaPreviewItem.LoadError.unknown)
-                        return
-                    }
-
-                    guard let data else {
-                        seal.reject(MediaPreviewItem.LoadError.unknown)
-                        return
-                    }
-                    
-                    self.internalFilename = orgFilename
-                    self.internalUTI = dataUTI
-                    self.internalImageData = data
-                    
-                    seal.fulfill((filename: orgFilename, uti: dataUTI, imageData: data))
+            manager.requestImageDataAndOrientation(for: originalPHAsset, options: options) { data, dataUTI, _, _ in
+                let resources = PHAssetResource.assetResources(for: originalPHAsset)
+                var orgFilename = "File"
+                
+                if let originalFilename = resources.first?.originalFilename {
+                    orgFilename = originalFilename
                 }
-            )
+                
+                guard let dataUTI else {
+                    seal.reject(MediaPreviewItem.LoadError.unknown)
+                    return
+                }
+                
+                guard let data else {
+                    seal.reject(MediaPreviewItem.LoadError.unknown)
+                    return
+                }
+                
+                self.internalFilename = orgFilename
+                self.internalUTI = dataUTI
+                self.internalImageData = data
+                
+                seal.fulfill((filename: orgFilename, uti: dataUTI, imageData: data))
+            }
         }
     }
     

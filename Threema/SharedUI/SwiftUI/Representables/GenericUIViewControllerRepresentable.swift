@@ -47,18 +47,17 @@ extension UIViewController {
     }
 
     var wrappedModalNavigationView: some View {
-        WrapperView { [weak self] in
-            guard let self else {
-                return nil
-            }
-            return ModalNavigationController(rootViewController: self)
+        uiViewController {
+            ModalNavigationController(rootViewController: self)
         }
     }
     
     func wrappedModalNavigationView(delegate: UINavigationControllerDelegate) -> some View {
-        ModalNavigationController(rootViewController: self).then {
-            $0.delegate = delegate
-        }.wrappedView
+        uiViewController {
+            ModalNavigationController(rootViewController: self).then {
+                $0.delegate = delegate
+            }
+        }
     }
 }
 

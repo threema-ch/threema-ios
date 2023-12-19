@@ -52,7 +52,10 @@ class PPOptionsViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        snapOption = PPOption.init(withTitle: config.previewReplacementText, withIcon: config.previewReplacementIcon, handler: {
+        snapOption = PPOption.init(withTitle: config.previewReplacementText, withIcon: config.previewReplacementIcon, handler: { [weak self] in
+            guard let self else {
+                return
+            }
             self.delegate?.optionsViewControllerDidRequestPreviewReplacementOption(self)
         })
 

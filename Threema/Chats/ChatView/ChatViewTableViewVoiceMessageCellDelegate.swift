@@ -288,7 +288,10 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         
         pauseCallback?()
         
-        AudioSessionInputOutputAdapter.resetAudioSession(to: previousAudioSessionCategory)
+        if !NavigationBarPromptHandler.isCallActiveInBackground || VoIPCallStateManager.shared
+            .currentCallState() == .idle, !NavigationBarPromptHandler.isGroupCallActive {
+            AudioSessionInputOutputAdapter.resetAudioSession(to: previousAudioSessionCategory)
+        }
     }
     
     func getProgress(for voiceMessage: VoiceMessage) -> CGFloat {

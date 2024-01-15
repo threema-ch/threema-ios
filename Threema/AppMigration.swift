@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -510,7 +510,8 @@ import ThreemaFramework
                         }
                         newPushSettings.append(pushSetting)
                     }
-                    else if let bytesGroupID = BytesUtility.toBytes(hexString: identity) {
+                    else if let myIdentity = self.businessInjector.myIdentityStore.identity,
+                            let bytesGroupID = BytesUtility.toBytes(hexString: identity) {
                         let groupID = Data(bytesGroupID)
                         self.businessInjector.entityManager.performAndWait {
                             if let groupEntities = self.businessInjector.entityManager.entityFetcher
@@ -518,8 +519,7 @@ import ThreemaFramework
                                 groupEntities.forEach { groupEntity in
                                     if let group = self.businessInjector.groupManager.getGroup(
                                         groupEntity.groupID,
-                                        creator: groupEntity.groupCreator ?? self.businessInjector.myIdentityStore
-                                            .identity
+                                        creator: groupEntity.groupCreator ?? myIdentity
                                     ) {
 
                                         let pushSetting = applyPushSetting(

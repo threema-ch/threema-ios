@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2023 Threema GmbH
+// Copyright (c) 2015-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -113,23 +113,14 @@
     [mdmSetup loadRenewableValues];
 
     // Work logo
-    switch (ThreemaAppObjc.current) {
-        case ThreemaAppWork:
-        case ThreemaAppWorkRed:
-            _threemaLogoView.image = [BundleUtil imageNamed:@"ThreemaWorkWhite"];
-            break;
-        case ThreemaAppOnPrem:
-            _threemaLogoView.image = [BundleUtil imageNamed:@"ThreemaOnpremWhite"];
-            break;
-        default:
-            _threemaLogoView.image = [BundleUtil imageNamed:@"ThreemaWhite"];
-            break;
+    if ([LicenseStore requiresLicenseKey]) {
+        _threemaLogoView.image = [BundleUtil imageNamed:@"ThreemaWork"];
     }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    
+
     _threemaLogoView.hidden = YES;
 }
 
@@ -172,11 +163,12 @@
     }
 }
 
-- (void)setupControls {    
-    _infoStackView.hidden = YES;
-    _infoStackView.frame = [RectUtil rect:_infoStackView.frame centerHorizontalIn:_containerView.frame];
-    _controlStackView.hidden = YES;
-    _controlStackView.frame = [RectUtil rect:_controlStackView.frame centerHorizontalIn:_containerView.frame];
+- (void)setupControls {
+    
+    _privacyView.hidden = YES;
+    _privacyView.frame = [RectUtil rect:_privacyView.frame centerHorizontalIn:_containerView.frame];
+    _controlsView.hidden = YES;
+    _controlsView.frame = [RectUtil rect:_controlsView.frame centerHorizontalIn:_containerView.frame];
     
     _setupButton.backgroundColor = Colors.primaryWizard;
     _setupButton.layer.cornerRadius = 5;
@@ -199,25 +191,9 @@
     _restoreTitleLabel.accessibilityElementsHidden = true;
     
     _welcomeLabel.text = [BundleUtil localizedStringForKey:@"lets_get_started"];
-    NSString *privacyPolicyText;
     
     _restoreTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"restore_title_text"], [ThreemaAppObjc appName]];
     _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], [ThreemaAppObjc appName]];
-    
-    if ([LicenseStore requiresLicenseKey]) {
-        _setupButton.accessibilityLabel = [NSString stringWithFormat:@"%@ %@", [BundleUtil localizedStringForKey:@"setup_work_title_text"], [BundleUtil localizedStringForKey:@"setup_threema"]];
-        
-        _restoreButton.accessibilityLabel = [NSString stringWithFormat:@"%@ %@", [BundleUtil localizedStringForKey:@"restore_work_title_text"], [BundleUtil localizedStringForKey:@"restore_id"]];
-        
-        
-        privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about_work"], [ThreemaAppObjc appName]];
-    } else {
-        _setupButton.accessibilityLabel = [NSString stringWithFormat:@"%@ %@", [BundleUtil localizedStringForKey:@"setup_consumer_title_text"], [BundleUtil localizedStringForKey:@"setup_threema"]];
-        
-        _restoreButton.accessibilityLabel = [NSString stringWithFormat:@"%@ %@", [BundleUtil localizedStringForKey:@"restore_consumer_title_text"], [BundleUtil localizedStringForKey:@"restore_id"]];
-        
-        privacyPolicyText = [BundleUtil localizedStringForKey:@"privacy_policy_about"];
-    }
     
     [_setupButton setTitle:[BundleUtil localizedStringForKey:@"setup_threema"] forState:UIControlStateNormal];
     [_restoreButton setTitle:[BundleUtil localizedStringForKey:@"restore_id"] forState:UIControlStateNormal];
@@ -226,19 +202,36 @@
         _privacyPolicyInfo.hidden = true;
     }
     else {
+        NSString *privacyPolicyText;
+
+        if ([LicenseStore requiresLicenseKey]) {
+            privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about_work"], [ThreemaAppObjc appName]];
+        } else {
+            privacyPolicyText = [BundleUtil localizedStringForKey:@"privacy_policy_about"];
+        }
+        
         _privacyPolicyInfo.font = [UIFont systemFontOfSize:16.0];
         _privacyPolicyInfo.tapDelegate = self;
-        NSDictionary *privacyNormalAttributes = @{NSFontAttributeName: _privacyPolicyInfo.font, NSForegroundColorAttributeName: [UIColor whiteColor]};
-        NSDictionary *privacyLinkAttributes = @{@"ZSWTappableLabelTappableRegionAttributeName": @YES,
+        NSDictionary *normalAttributes = @{NSFontAttributeName: _privacyPolicyInfo.font, NSForegroundColorAttributeName: [UIColor whiteColor]};
+        NSDictionary *linkAttributes = @{@"ZSWTappableLabelTappableRegionAttributeName": @YES,
                                          @"ZSWTappableLabelHighlightedForegroundAttributeName": Colors.red,
                                          NSForegroundColorAttributeName: Colors.textWizardLink,
                                          NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle),
                                          @"NSTextCheckingResult": @1
         };
         
-        NSMutableAttributedString *privacyAttributedString = [[NSMutableAttributedString alloc] initWithString:privacyPolicyText attributes:privacyNormalAttributes];
-        [privacyAttributedString addAttributes:privacyLinkAttributes range:[privacyPolicyText rangeOfString:[BundleUtil localizedStringForKey:@"privacy_policy_about_link"]]];
-        _privacyPolicyInfo.attributedText = privacyAttributedString;
+        NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:privacyPolicyText attributes:normalAttributes];
+        CGRect infoRect = [attributedString boundingRectWithSize:CGSizeMake(_privacyView.frame.size.width, 400.0) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading context:nil];
+        if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+            /* iPhone 4s */
+            _welcomeLabel.frame = CGRectMake(_welcomeLabel.frame.origin.x, _welcomeLabel.frame.origin.y - 20.0, _welcomeLabel.frame.size.width, _welcomeLabel.frame.size.height);
+            _privacyPolicyInfo.frame = CGRectMake(_privacyPolicyInfo.frame.origin.x, _privacyPolicyInfo.frame.origin.y - 50.0, infoRect.size.width, infoRect.size.height + 20.0);
+        } else {
+            _privacyPolicyInfo.frame = CGRectMake(_privacyPolicyInfo.frame.origin.x, _privacyPolicyInfo.frame.origin.y, infoRect.size.width, infoRect.size.height + 20.0);
+        }
+        [attributedString addAttributes:linkAttributes range:[privacyPolicyText rangeOfString:[BundleUtil localizedStringForKey:@"privacy_policy_about_link"]]];
+        _privacyPolicyInfo.attributedText = attributedString;
+        _privacyPolicyInfo.isAccessibilityElement = YES;
     }
     
     AppSetupState *appSetupState = [[AppSetupState alloc] init];
@@ -263,6 +256,8 @@
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
+
+    _threemaLogoView.frame = CGRectMake(_threemaLogoView.frame.origin.x, self.view.safeAreaLayoutGuide.layoutFrame.origin.y + 26.0, _threemaLogoView.frame.size.width, _threemaLogoView.frame.size.height);
     
     [self checkLicenseAndThreemaMDM];
 }
@@ -282,7 +277,7 @@
 
                 [self presentUI];
             } onError:^(NSError *error) {
-                [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"] message:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"] titleOk:nil actionOk:^(UIAlertAction *action __unused)  {
+                [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"] message:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"] actionOk:^(UIAlertAction *action __unused)  {
                     exit(0);
                 }];
                 return;
@@ -298,6 +293,7 @@
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
 
     _restoreButton.hidden = [mdmSetup disableBackups];
+
     if ([mdmSetup isSafeRestoreForce]) {
         [self showRestoreSafeViewController:[self hasDataOnDevice]];
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
@@ -315,7 +311,6 @@
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1200 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
             if (_animatedView.superview == nil) {
                 [_containerView addSubview:_animatedView];
-                [_infoStackView.topAnchor constraintEqualToAnchor:_animatedView.bottomAnchor].active = YES;
             }
         });
     }
@@ -324,45 +319,45 @@
 - (void)slidePrivacyControlsIn {
     CGRect viewFrame = self.view.safeAreaLayoutGuide.layoutFrame;
     
-    CGRect infoStackTargetRect;
-    CGRect controlStackTargetRect;
+    CGRect privacyTargetRect;
     
-    CGFloat logoHeight = _threemaLogoView.frame.origin.y + _threemaLogoView.frame.size.height;
-    if (MIN([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 320) {
+    if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
         /* iPhone 4s */
-        infoStackTargetRect = [RectUtil setYPositionOf:_infoStackView.frame y:logoHeight + 20.0];
+        privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:120.0];
     } else {
-        infoStackTargetRect = [RectUtil setYPositionOf:_infoStackView.frame y:logoHeight + _animatedView.frame.size.height];
+        privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:170.0];
     }
     
-    controlStackTargetRect = [RectUtil setYPositionOf:_controlStackView.frame y:viewFrame.size.height - _controlStackView.frame.size.height - 20.0];
-    
-    CGRect animationTargetRect = [RectUtil setYPositionOf:_animatedView.frame y:infoStackTargetRect.origin.y - _animatedView.frame.size.height];
+    CGRect animationTargetRect = [RectUtil setYPositionOf:_animatedView.frame y:privacyTargetRect.origin.y - _animatedView.frame.size.height];
 
-    CGRect infoStackSourceRect = [RectUtil setYPositionOf:_infoStackView.frame y:_infoStackView.frame.origin.y];
-    CGRect controlStackSourceRect = [RectUtil setYPositionOf:_controlStackView.frame y:_controlStackView.frame.origin.y];
+    CGRect privacySourceRect = [RectUtil setYPositionOf:_privacyView.frame y:_privacyView.frame.origin.y];
 
-    _infoStackView.alpha = 0.0;
-    _infoStackView.hidden = NO;
-    _infoStackView.frame = infoStackSourceRect;
+    CGRect controlsTargetRect;
+    if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+        /* iPhone 4s */
+        controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0];
+    } else {
+        controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height];
+    }
     
-    _controlStackView.alpha = 0.0;
-    _controlStackView.hidden = NO;
-    _controlStackView.frame = controlStackSourceRect;
-    
+    CGRect controlsSourceRect = [RectUtil setYPositionOf:_controlsView.frame y:viewFrame.size.height];
+
+    _privacyView.hidden = NO;
+    _privacyView.alpha = 0.0;
+    _privacyView.frame = privacySourceRect;
+    _controlsView.hidden = NO;
+    _controlsView.alpha = 0.0;
+    _controlsView.frame = controlsSourceRect;
+
     [UIView animateWithDuration:1.2 delay:0.0 usingSpringWithDamping:0.9 initialSpringVelocity:10.0 options:0 animations:^{
-        _infoStackView.alpha = 1.0;
-        _infoStackView.frame = infoStackTargetRect;
-        _controlStackView.alpha = 1.0;
-        _controlStackView.frame = controlStackTargetRect;
-
+        _privacyView.alpha = 1.0;
+        _privacyView.frame = privacyTargetRect;
         _animatedView.frame = animationTargetRect;
-        if (MIN([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 320) {
-            _animatedView.alpha = 0.0;
-        }
+        _controlsView.alpha = 1.0;
+        _controlsView.frame = controlsTargetRect;
     } completion:^(BOOL finished) {
         UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.welcomeLabel);
-
+        
         // Deactivate Multi Device if is enabled
         if ([[UserSettings sharedUserSettings] enableMultiDevice] == YES) {
             [[ServerConnector sharedServerConnector] deactivateMultiDevice];
@@ -391,7 +386,10 @@
 
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
         [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:^{
-            [self slidePrivacyControlsIn];
+            // make sure controls are visible
+            _privacyView.alpha = 1.0;
+            _privacyView.hidden = NO;
+            _privacyView.frame = [RectUtil rect:_privacyView.frame centerIn:self.view.frame];
 
             // show error message
             [_restoreIdentityViewController handleError:error];
@@ -510,7 +508,7 @@
 #pragma mark - FLAnimatedImageViewDelegate
 
 - (void)animatedImageViewWillDrawFrame:(NSUInteger)frameIndex {
-    if ((int)frameIndex == 0 && _infoStackView.hidden == NO) {
+    if ((int)frameIndex == 0 && _privacyView.hidden == NO) {
         // stay at last frame
         _animatedView.currentFrameIndex = 98;
     }
@@ -523,18 +521,18 @@
         } completion:nil];
     }
     else if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
-        if ((int)frameIndex == 62  && _infoStackView.hidden == YES) {
+        if ((int)frameIndex == 62  && _privacyView.hidden == YES) {
             [self slidePrivacyControlsIn];
         }
-        else if ((int)frameIndex == 88 && _infoStackView.hidden == NO) {
+        else if ((int)frameIndex == 88 && _privacyView.hidden == NO) {
             // go back for jumping dots
             _animatedView.currentFrameIndex = 73;
         }
     }
-    else if ((int)frameIndex == 72  && _infoStackView.hidden == YES) {
+    else if ((int)frameIndex == 72  && _privacyView.hidden == YES) {
         [self slidePrivacyControlsIn];
     }
-    else if ((int)frameIndex == 98 && _infoStackView.hidden == NO) {
+    else if ((int)frameIndex == 98 && _privacyView.hidden == NO) {
         // go back for jumping dots
         _animatedView.currentFrameIndex = 83;
     }
@@ -597,7 +595,6 @@
     UIView *childView;
     if ([child isKindOfClass:[SplashViewController class]]) {
         childView = _containerView;
-        childView.hidden = false;
     } else {
         [self addChildViewController:child];
 
@@ -648,11 +645,6 @@
         } else {
             childView.frame = [RectUtil setXPositionOf:childView.frame x:self.view.frame.size.width];
         }
-        
-        if ([child isKindOfClass:[SplashViewController class]]) {
-            childView.hidden = true;
-        }
-        
     } completion:^(BOOL finished) {
         [child endAppearanceTransition];
         if (![child isKindOfClass:[SplashViewController class]]) {
@@ -756,7 +748,6 @@
     if ([LicenseStore requiresLicenseKey] || (![LicenseStore requiresLicenseKey] && ![self checkForIDExists])) {
         if ([self checkForIDBackup] == NO) {
             [self showSetupViewController];
-            
             [self slideOut:self fromRightToLeft:YES onCompletion:nil];
             [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
         }
@@ -964,10 +955,10 @@
 #pragma mark - ZSWTappableLabel delegate
 
 - (void)tappableLabel:(ZSWTappableLabel *)tappableLabel tappedAtIndex:(NSInteger)idx withAttributes:(NSDictionary *)attributes {
-        UIStoryboard *storyboard = [AppDelegate getSettingsStoryboard];
-        UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"PrivacyPolicyViewController"];
-        UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:vc];
-        [self presentViewController:nc animated:YES completion:nil];
+    UIStoryboard *storyboard = [AppDelegate getSettingsStoryboard];
+    UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"PrivacyPolicyViewController"];
+    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:vc];
+    [self presentViewController:nc animated:YES completion:nil];
 }
 
 @end

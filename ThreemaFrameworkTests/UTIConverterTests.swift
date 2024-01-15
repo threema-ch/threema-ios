@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -40,20 +40,20 @@ class UTIConverterTestsSwift: XCTestCase {
     /// - Throws:
     func testGetRawImageMimeType() throws {
         let matrix: [(String, Bool)] = [
-            ("srf", false),
+            ("srf", true),
             ("sr2", true),
-            ("raf", false),
-            ("pef", false),
-            ("orf", false),
-            ("nef", false),
-            ("mrw", false),
+            ("raf", true),
+            ("pef", true),
+            ("orf", true),
+            ("nef", true),
+            ("mrw", true),
             ("erf", true),
             ("dng", true),
-            ("dcr", false),
+            ("dcr", true),
             ("crw", true),
-            ("cr2", false),
-            ("arw", false),
-            ("raw", false),
+            ("cr2", true),
+            ("arw", true),
+            ("raw", true),
         ]
         for item in matrix {
             let testImageURL = testBundle.url(forResource: rawFilename, withExtension: item.0)

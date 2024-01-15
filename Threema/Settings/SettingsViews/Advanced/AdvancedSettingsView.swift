@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2023-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -205,6 +205,62 @@ struct AdvancedSettingsView: View {
             
             if SettingsBundleHelper.safeMode {
                 Section {
+                    Button {
+                        let businessInjector = BusinessInjector()
+                        businessInjector.backgroundEntityManager.performAndWaitSave {
+                            let unreadMessages = UnreadMessages(entityManager: businessInjector.backgroundEntityManager)
+                            
+                            let batch = NSBatchUpdateRequest(entityName: "Message")
+                            batch.resultType = .statusOnlyResultType
+                            batch.predicate = NSPredicate(format: "read == false && isOwn == false")
+                            batch.propertiesToUpdate = ["read": true]
+                            if let batchResult = businessInjector.backgroundEntityManager.entityFetcher.execute(batch) {
+                                if let success = batchResult.result as? Bool,
+                                   success {
+                                    DDLogNotice("[Advanced Support Mode] Succeeded to set all unread messages to read.")
+                                }
+                                else {
+                                    DDLogError(
+                                        "[Advanced Support Mode] Failed to set all unread messages to read. ResultCount is 0"
+                                    )
+                                }
+                            }
+                            else {
+                                DDLogError(
+                                    "[Advanced Support Mode] Failed to set all unread messages to read. Result is nil."
+                                )
+                            }
+                            
+                            if let allConversations = NSSet(
+                                array: businessInjector.backgroundEntityManager
+                                    .entityFetcher.allConversations()
+                            ) as? Set<Conversation> {
+                                unreadMessages.totalCount(
+                                    doCalcUnreadMessagesCountOf: allConversations,
+                                    withPerformBlockAndWait: true
+                                )
+                            }
+                        }
+                        
+                        NotificationManager().updateUnreadMessagesCount()
+                        NotificationBannerHelper.newSuccessToast(
+                            title: "settings_advanced_successfully_reset_unread_count_label".localized,
+                            body: "ok".localized
+                        )
+
+                        let delay = DispatchTime.now() + DispatchTimeInterval.seconds(3)
+                        DispatchQueue.main.asyncAfter(deadline: delay) {
+                            SettingsBundleHelper.resetSafeMode()
+                            exit(0)
+                        }
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text(BundleUtil.localizedString(forKey: "settings_advanced_reset_unread_count_label"))
+                            Spacer()
+                        }
+                    }
+                    
                     Button {
                         SQLDHSessionStore.deleteSessionDB()
                     } label: {

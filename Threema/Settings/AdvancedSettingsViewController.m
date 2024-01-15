@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2013-2023 Threema GmbH
+// Copyright (c) 2013-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -63,6 +63,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     self.reregisterPushNotificationsLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_reregister_notifications_label"];
     
     self.resetFSDBLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_reset_fs_db_label"];
+    
+    self.resetUnreadCountLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_reset_unread_count_label"];
     
     [self.tableView reloadData];
 }
@@ -271,21 +273,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else if (indexPath.section == 6 && indexPath.row == 0) {
         [self reregisterPushNotifications];
     } else if (indexPath.section == 7 && indexPath.row == 0) {
-        [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:true];
-        
-        [SQLDHSessionStoreObjcHelper deleteSessionDB];
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-            [MBProgressHUD hideHUDForView:self.navigationController.view animated:true];
-            [NotificationBannerHelper newSuccessToastWithTitle:[BundleUtil localizedStringForKey:@"settings_advanced_successfully_deleted_fs_sessions_label"] body:[BundleUtil localizedStringForKey:@"ok"]];
-            
-            [SettingsBundleHelper resetSafeMode];
-        
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                sleep(2);
-                exit(EXIT_SUCCESS);
-            });
-        });
+        [self resetUnreadCount];
+    }
+    else if (indexPath.section == 7 && indexPath.row == 1) {
+        [self resetFSDB];
     }
     
     [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
@@ -306,6 +297,68 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
         [MBProgressHUD hideHUDForView:self.navigationController.view animated:true];
         [NotificationBannerHelper newSuccessToastWithTitle:[BundleUtil localizedStringForKey:@"settings_advanced_reregister_notifications_label"] body:[BundleUtil localizedStringForKey:@"ok"]];
+    });
+}
+
+- (void)resetFSDB {
+    [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:true];
+    
+    [SQLDHSessionStoreObjcHelper deleteSessionDB];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [MBProgressHUD hideHUDForView:self.navigationController.view animated:true];
+        [NotificationBannerHelper newSuccessToastWithTitle:[BundleUtil localizedStringForKey:@"settings_advanced_successfully_deleted_fs_sessions_label"] body:[BundleUtil localizedStringForKey:@"ok"]];
+        
+        [SettingsBundleHelper resetSafeMode];
+    
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            sleep(2);
+            exit(EXIT_SUCCESS);
+        });
+    });
+}
+
+- (void)resetUnreadCount {
+    [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:true];
+    
+    __block BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
+    [businessInjector.backgroundEntityManager performSyncBlockAndSafe:^{
+        UnreadMessages *unreadMessages = [[UnreadMessages alloc] initWithEntityManager:businessInjector.backgroundEntityManager];
+       
+        NSBatchUpdateRequest *batch = [[NSBatchUpdateRequest alloc] initWithEntityName:@"Message"];
+        batch.resultType = NSStatusOnlyResultType;
+        batch.predicate = [NSPredicate predicateWithFormat:@"read == false && isOwn == false"];
+        batch.propertiesToUpdate = @{@"read": @YES};
+        NSBatchUpdateResult *batchResult = [businessInjector.backgroundEntityManager.entityFetcher executeBatchUpdateRequest:batch];
+        if ([batchResult.result isKindOfClass:[NSNumber class]]){
+            if ([batchResult.result boolValue] == true){
+                DDLogNotice(@"[Advanced Support Mode] Succeeded to set all unread messages to read.");
+            }
+            else {
+                DDLogError(@"[Advanced Support Mode] Failed to set all unread messages to read. ResultCount is 0");
+            }
+        }
+        else {
+            DDLogError(@"[Advanced Support Mode] Failed to set all unread messages to read. Result is nil.");
+        }
+        
+        NSSet *allConversations = [NSSet setWithArray:businessInjector.backgroundEntityManager.entityFetcher.allConversations];
+        [unreadMessages totalCountWithDoCalcUnreadMessagesCountOf:allConversations withPerformBlockAndWait:YES];
+    }];
+    
+    NotificationManager *notificationManager = [[NotificationManager alloc] init];
+    [notificationManager updateUnreadMessagesCount];
+                    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [MBProgressHUD hideHUDForView:self.navigationController.view animated:true];
+        [NotificationBannerHelper newSuccessToastWithTitle:[BundleUtil localizedStringForKey:@"settings_advanced_successfully_reset_unread_count_label"] body:[BundleUtil localizedStringForKey:@"ok"]];
+        
+        [SettingsBundleHelper resetSafeMode];
+    
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            sleep(2);
+            exit(EXIT_SUCCESS);
+        });
     });
 }
 

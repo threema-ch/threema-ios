@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2023 Threema GmbH
+// Copyright (c) 2015-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -39,6 +39,13 @@
     [super viewWillAppear:animated];
     
     self.idLabel.text = [MyIdentityStore sharedMyIdentityStore].identity;
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    // This fixes an issue where the viewDidAppear() of SafeViewController.swift gets called to soon.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.titleLabel);
+    });
 }
 
 - (void)setup {

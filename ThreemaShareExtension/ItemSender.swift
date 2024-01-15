@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -167,10 +167,16 @@ class ItemSender: NSObject {
             sendURLSenderItem(senderItem: senderItem, toConversation: toConversation, correlationID: correlationID)
         }
         else if let message = senderItem as? String {
-            if !message.isEmpty {
+            
+            let trimmedMessage = ThreemaUtility.trimCharacters(in: message)
+            if !(trimmedMessage == "" || trimmedMessage == "\u{fffc}"), !trimmedMessage.isEmpty {
                 sendString(message: message, toConversation: toConversation)
             }
             else {
+                let title = BundleUtil.localizedString(forKey: "error_message_no_items_title")
+                let message = BundleUtil.localizedString(forKey: "error_message_no_items_message")
+                delegate!.showAlert(with: title, message: message)
+                
                 delegate?.finishedItem(item: progressItemKey(item: message, conversation: toConversation)!)
                 sentItemCount = sentItemCount! + 1
                 checkIsFinished()
@@ -204,32 +210,28 @@ class ItemSender: NSObject {
                 forItem: self.progressItemKey(item: message, conversation: toConversation)!
             )
             
-            let trimmedMessage = ThreemaUtility.trimCharacters(in: message)
-            if !(trimmedMessage == "" || trimmedMessage == "\u{fffc}") {
-                let messages = ThreemaUtilityObjC.getTrimmedMessages(trimmedMessage)
+            let messages = ThreemaUtilityObjC.getTrimmedMessages(message)
+            let businessInjector = BusinessInjector()
 
-                let businessInjector = BusinessInjector()
-
-                if let messages {
-                    for m in messages {
-                        businessInjector.messageSender.sendTextMessage(
-                            text: m as? String,
-                            in: toConversation,
-                            quickReply: false,
-                            requestID: nil,
-                            completion: self.textMessageCompletionHandler(baseMessage:)
-                        )
-                    }
-                }
-                else {
+            if let messages {
+                for m in messages {
                     businessInjector.messageSender.sendTextMessage(
-                        text: trimmedMessage,
+                        text: m as? String,
                         in: toConversation,
                         quickReply: false,
                         requestID: nil,
                         completion: self.textMessageCompletionHandler(baseMessage:)
                     )
                 }
+            }
+            else {
+                businessInjector.messageSender.sendTextMessage(
+                    text: message,
+                    in: toConversation,
+                    quickReply: false,
+                    requestID: nil,
+                    completion: self.textMessageCompletionHandler(baseMessage:)
+                )
             }
         }
     }

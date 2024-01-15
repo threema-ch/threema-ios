@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2023-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -96,6 +96,11 @@ extension StorageManagementConversationView {
                         olderThan: option.date,
                         for: conversation?.objectID
                     ) else {
+                    DDLogNotice("[EntityDestroyer] no messages got deleted")
+                    await MainActor.run {
+                        deleteInProgress = false
+                    }
+
                     return
                 }
                 
@@ -118,6 +123,11 @@ extension StorageManagementConversationView {
                         olderThan: option.date,
                         for: conversation?.objectID
                     ) else {
+                    DDLogNotice("[EntityDestroyer] media files deleted")
+                    await MainActor.run {
+                        deleteInProgress = false
+                    }
+
                     return
                 }
                 

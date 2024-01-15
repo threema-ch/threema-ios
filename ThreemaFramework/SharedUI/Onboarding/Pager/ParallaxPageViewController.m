@@ -87,7 +87,8 @@
     _pageContainerView = [[PageView alloc] initWithFrame:self.view.frame];
     _pageContainerView.delegate = self;
     _pageContainerView.datasource = self;
-    
+    _pageControl.isAccessibilityElement = NO;
+
     if (_parallaxFactor) {
         _pageContainerView.parallaxFactor = _parallaxFactor.floatValue;
     }

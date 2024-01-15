@@ -1276,9 +1276,11 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_advanced_reregister_notifications_label" = "Reregister Push Notifications";
 
 "settings_advanced_reset_fs_db_label" = "Reset Perfect Forward Secrecy State";
+"settings_advanced_reset_unread_count_label" = "Reset Unread Count";
 "settings_advanced_support_settings_header_title" = "Support Settings";
 "settings_advanced_support_settings_footer_title" = "Only perform this action when instructed do so by Threema’s support team.";
 "settings_advanced_successfully_deleted_fs_sessions_label" = "Forward Security state was successfully reset";
+"settings_advanced_successfully_reset_unread_count_label" = "Unread message count was successfully reset";
 
 // Sentry
 "sentry_crash_send_title" = "%@ Quit Unexpectedly";

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2023-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -46,7 +46,9 @@ struct Joining: GroupCallState {
         /// SfuHttpRequest.Join request. If this does not result in a response within 10s,
         ///  abort these steps and notify the user.
         ///  Note: Join Steps 3 & 4 are within the `.join()` below.
-        switch try await groupCallActor.sfuHTTPConnection.join(with: certificate) {
+        let joinResponse = try await groupCallActor.sfuHTTPConnection.join(with: certificate)
+        DDLogNotice("[GroupCall] [JoinSteps] JoinResponse was \(joinResponse).")
+        switch joinResponse {
         case .notDetermined, .notRunning, .timeout, .full:
             return Ending(groupCallActor: groupCallActor)
             

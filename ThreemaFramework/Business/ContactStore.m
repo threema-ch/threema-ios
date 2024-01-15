@@ -379,7 +379,10 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                                 } // if (cnContacts.count == 1)
                             }
                         } // if (granted == YES)
+                        
+                        linkingFinished(contact);
                     }];
+                    return;
                 } // if (![contact.cnContactId isEqualToString:cnContactId])
             } // if (contact.cnContactId != nil)
             else {
@@ -719,15 +722,16 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 
                 [entityManager performSyncBlockAndSafe:^{
                     ContactEntity *fetchedContact = [entityManager.entityFetcher contactForId:contact.identity];
-                    if (fetchedContact == nil) {
+                    NSString *cnContactID = [fetchedContact.cnContactId copy];
+                    if (cnContactID == nil) {
                         return;
                     }
 
-                    NSPredicate *predicate = [CNContact predicateForContactsWithIdentifiers:@[fetchedContact.cnContactId]];
+                    NSPredicate *predicate = [CNContact predicateForContactsWithIdentifiers:@[cnContactID]];
                     NSError *error;
                     NSArray *cnContacts = [cnAddressBook unifiedContactsMatchingPredicate:predicate keysToFetch:kCNContactKeys error:&error];
                     if (error) {
-                        NSLog(@"Error fetching contacts %@", error);
+                        DDLogError(@"Fetching address book contacts failed %@", error);
                     } else {
                         if (cnContacts != nil && cnContacts.count > 0) {
                             CNContact *foundContact = cnContacts.firstObject;

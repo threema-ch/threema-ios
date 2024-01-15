@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -516,19 +516,10 @@ final class ChatBarView: UIView {
     }
     
     /// Resets the keyboard to the default keyboard
-    public func resetKeyboard(andType type: Bool) {
-        DispatchQueue.main.async {
-            if type {
-                self.chatTextView.keyboardType = .default
-            }
-            // Note: This is a hacky solution to the self.chatTextView.becomeFirstResponder() always being animated
-            // XCode 14.1, filed FB11715663 on 24.10.2022
-            if self.chatTextView.isFirstResponder {
-                self.chatTextView.reloadInputViews()
-                self.chatTextView.keyboardType = .default
-                self.chatTextView.reloadInputViews()
-            }
-        }
+    @MainActor
+    public func resetKeyboard() {
+        chatTextView.keyboardType = .default
+        chatTextView.reloadInputViews()
     }
     
     @discardableResult
@@ -593,7 +584,7 @@ extension ChatBarView: ChatTextViewDelegate {
         }
         
         // Switch back to default keyboard (in case we're currently using the numeric or emoji keypad)
-        resetKeyboard(andType: true)
+        resetKeyboard()
         
         sendStartOrStopTypingIndicator()
         

@@ -729,15 +729,13 @@ Process incoming message.
     __block CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(message.latitude.doubleValue, message.longitude.doubleValue) altitude:0 horizontalAccuracy:message.accuracy.doubleValue verticalAccuracy:-1 timestamp:[NSDate date]];
 
     [ThreemaUtility fetchAddressObjcFor:location completionHandler:^(NSString * _Nonnull address) {
-        [entityManager performSyncBlockAndSafe:^{
-            if ([message wasDeleted]) {
-                return;
+        [entityManager performAsyncBlockAndSafe:^{
+            if (![message wasDeleted]) {
+                message.poiAddress = address;
             }
-
-            message.poiAddress = address;
+            
+            onCompletion();
         }];
-
-        onCompletion();
     }];
 }
 

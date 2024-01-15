@@ -1277,9 +1277,11 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_advanced_reregister_notifications_label" = "Push-Benachrichtigungen erneut registrieren";
 
 "settings_advanced_reset_fs_db_label" = "Perfect-Forward-Secrecy-Status zurücksetzen";
+"settings_advanced_reset_unread_count_label" = "Nachrichten als gelesen markieren";
 "settings_advanced_support_settings_header_title" = "Support-Einstellungen";
 "settings_advanced_support_settings_footer_title" = "Führen Sie diese Aktion nur aus, wenn Sie vom Threema-Support explizit dazu aufgefordert wurden.";
 "settings_advanced_successfully_deleted_fs_sessions_label" = "Perfect-Forward-Secrecy-Status wurde erfolgreich zurückgesetzt.";
+"settings_advanced_successfully_reset_unread_count_label" = "Alle Nachrichten wurde als gelesen markiert";
 
 // Sentry
 "sentry_crash_send_title" = "%@ wurde unerwartet beendet.";

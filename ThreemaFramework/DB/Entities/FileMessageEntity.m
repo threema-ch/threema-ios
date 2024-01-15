@@ -419,6 +419,19 @@ static NSString *fieldOrigin = @"origin";
     return [self blobData] != nil;
 }
 
+- (ImageData *)thumbnail {
+    
+    [self willAccessValueForKey:@"thumbnail"];
+    ImageData *underlyingValue = [self primitiveValueForKey:@"thumbnail"];
+    [self didAccessValueForKey:@"thumbnail"];
+
+    if ([underlyingValue willBeDeleted]) {
+        [self setThumbnail:nil];
+        return nil;
+    }
+    return underlyingValue;
+}
+
 #ifdef DEBUG
 #else
 - (NSString *)debugDescription {

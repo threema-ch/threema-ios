@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2023-2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -98,19 +98,23 @@ extension SFUHTTPConnection {
                 throw error
             }
             else {
+                DDLogError("[GroupCall] [Join Steps] An unknown error occurred.")
                 return .notDetermined
             }
             
         case .timeout:
+            DDLogError("[GroupCall] [Join Steps] Join timed out.")
             return .timeout
             
         case let .result(result):
             
             guard let (data, status) = result else {
+                DDLogError("[GroupCall] [Join Steps] Undetermined result.")
                 return .notDetermined
             }
             
             guard let httpStatus = status as? HTTPURLResponse else {
+                DDLogError("[GroupCall] [Join Steps] Group call not running.")
                 return .notRunning
             }
             
@@ -142,6 +146,7 @@ extension SFUHTTPConnection {
             }
             
             guard let joinResponse = try? Groupcall_SfuHttpResponse.Join(serializedData: data) else {
+                DDLogError("[GroupCall] [Join Steps] Could not create join from received data.")
                 return .notDetermined
             }
             
@@ -198,8 +203,8 @@ extension SFUHTTPConnection {
             throw GroupCallError.serializationFailure
         }
         
-        DDLogNotice("[GroupCall] Checking at URL \(groupCallURL)")
-        
+        DDLogInfo("[GroupCall] Checking at URL \(groupCallURL)")
+
         return try await dependencies.groupCallsHTTPClientAdapter.sendPeek(
             authorization: "ThreemaSfuToken \(authorizationToken.sfuToken)",
             url: groupCallURL,

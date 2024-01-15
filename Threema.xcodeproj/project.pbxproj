@@ -599,6 +599,7 @@
 		245274312907FC4D00BDF5CA /* VideoMessageEntity+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245274302907FC4D00BDF5CA /* VideoMessageEntity+Accessibility.swift */; };
 		2455C2CE287EF15E004BF21C /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2455C2CD287EF15E004BF21C /* BlobUploader.swift */; };
 		2457586C28F6E27900C79745 /* NotificationPresenterType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2457586B28F6E27900C79745 /* NotificationPresenterType.swift */; };
+		2459E6272B45963F004AF81B /* FileMessageEntityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2459E6262B45963F004AF81B /* FileMessageEntityTests.swift */; };
 		2464D3962947507200FC3772 /* BadgeCountLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2464D3952947507200FC3772 /* BadgeCountLabel.swift */; };
 		2464D3972947507200FC3772 /* BadgeCountLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2464D3952947507200FC3772 /* BadgeCountLabel.swift */; };
 		2464D3982947507200FC3772 /* BadgeCountLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2464D3952947507200FC3772 /* BadgeCountLabel.swift */; };
@@ -5902,6 +5903,7 @@
 		245274302907FC4D00BDF5CA /* VideoMessageEntity+Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VideoMessageEntity+Accessibility.swift"; sourceTree = "<group>"; };
 		2455C2CD287EF15E004BF21C /* BlobUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobUploader.swift; sourceTree = "<group>"; };
 		2457586B28F6E27900C79745 /* NotificationPresenterType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPresenterType.swift; sourceTree = "<group>"; };
+		2459E6262B45963F004AF81B /* FileMessageEntityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileMessageEntityTests.swift; sourceTree = "<group>"; };
 		245C925329CC931A002DF196 /* DeleteRevokeInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteRevokeInfoView.swift; sourceTree = "<group>"; };
 		2464D3952947507200FC3772 /* BadgeCountLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeCountLabel.swift; sourceTree = "<group>"; };
 		2464FB0F29E7D16B00B1B2F5 /* ChatSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSettingsView.swift; sourceTree = "<group>"; };
@@ -8810,6 +8812,7 @@
 				4A21CFBE2A08DE5D00A42DA3 /* FeatureMaskTests.swift */,
 				4A21CFC82A08F2C200A42DA3 /* FeatureMaskBuilderTests.swift */,
 				E1D4730D2828ED3F00E750B8 /* FileMessageEntityRenderTypeTests.swift */,
+				2459E6262B45963F004AF81B /* FileMessageEntityTests.swift */,
 				4D4941E228B8C2C9003FFC9B /* ForwardSecurity */,
 				2D1E44A323B0AD51008AD579 /* FulltextSearchPreparer.swift */,
 				2D1E44A123B0AC51008AD579 /* FulltextSearchTests.m */,
@@ -15125,6 +15128,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2459E6272B45963F004AF81B /* FileMessageEntityTests.swift in Sources */,
 				7ED8A0932678F45E00E01CD1 /* UserNotificationManagerMock.swift in Sources */,
 				2DF934C926090D1600E9A116 /* ImageURLSenderItemCreatorTest.swift in Sources */,
 				7E2F4E2829F17D26008C1066 /* TaskExecutionSendDeliveryReceiptsMessageTests.swift in Sources */,

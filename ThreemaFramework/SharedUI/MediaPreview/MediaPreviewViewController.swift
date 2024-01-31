@@ -633,9 +633,11 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     func updateOptions(imageSendOptions: MediaShareOptionsViewController.ImageSendOptions) {
-        for index in 0...mediaData.count - 1 {
-            let item = mediaData[index]
-            item.sendAsFile = imageSendOptions.sendAsFile
+        if !mediaData.isEmpty {
+            for index in 0...mediaData.count - 1 {
+                let item = mediaData[index]
+                item.sendAsFile = imageSendOptions.sendAsFile
+            }
         }
     }
 
@@ -690,7 +692,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     func updateTextForIndex(indexPath: IndexPath, animated: Bool) {
-        if mediaData.count - 1 < indexPath.item {
+        if mediaData.count - 1 < indexPath.item || mediaData.isEmpty {
             return
         }
         DispatchQueue.main.async {
@@ -727,7 +729,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     func updateSymbols(indexPath: IndexPath, animated: Bool) {
-        if mediaData.count - 1 < indexPath.item {
+        if mediaData.count - 1 < indexPath.item || mediaData.isEmpty {
             return
         }
         let index = indexPath.item

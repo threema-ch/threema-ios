@@ -67,6 +67,9 @@ import Sentry
                     let user = User(userId: appDevice)
                     event.user = user
                 }
+                
+                event.threads?.forEach { $0.stacktrace?.registers = [:] }
+                event.exceptions?.forEach { $0.stacktrace?.registers = [:] }
 
                 if event.exceptions?.first?.value != nil {
                     event.exceptions?.first?.value = self.redact(exceptionDescription: event.exceptions!.first!.value)

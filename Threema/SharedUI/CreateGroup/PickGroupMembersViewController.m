@@ -256,6 +256,10 @@ typedef enum : NSUInteger {
 #pragma mark - Actions
 
 - (IBAction)saveAction:(id)sender {
+    self.navigationItem.leftBarButtonItem.enabled = false;
+    self.navigationItem.rightBarButtonItem.enabled = false;
+    [_searchController setActive:false];
+    
     // Update group members
     NSMutableSet *groupMemberIdentities = [[NSMutableSet alloc] init];
     for (ContactEntity *contact in _selectedMembers) {
@@ -281,6 +285,10 @@ typedef enum : NSUInteger {
 }
 
 - (IBAction)cancelAction:(id)sender {
+    self.navigationItem.leftBarButtonItem.enabled = false;
+    self.navigationItem.rightBarButtonItem.enabled = false;
+    [_searchController setActive:false];
+    
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 

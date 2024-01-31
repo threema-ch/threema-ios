@@ -712,21 +712,16 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         if (granted == YES) {
             // Go through all contacts and resync with address book; only create
             // address book ref when encountering the first contact that is linked
-            __block int nupdated = 0;
+            __block int updated = 0;
                 
             for (ContactEntity *contact in linkedContacts) {
-                if (contact.cnContactId == nil) {
-                    DDLogNotice(@"CNContactID of linked contact was nil.");
-                    continue;
-                };
-                
                 [entityManager performSyncBlockAndSafe:^{
-                    ContactEntity *fetchedContact = [entityManager.entityFetcher contactForId:contact.identity];
-                    NSString *cnContactID = [fetchedContact.cnContactId copy];
+                    NSString *cnContactID = [contact.cnContactId copy];
                     if (cnContactID == nil) {
+                        DDLogNotice(@"CNContactID of linked contact was nil.");
                         return;
                     }
-
+                    
                     NSPredicate *predicate = [CNContact predicateForContactsWithIdentifiers:@[cnContactID]];
                     NSError *error;
                     NSArray *cnContacts = [cnAddressBook unifiedContactsMatchingPredicate:predicate keysToFetch:kCNContactKeys error:&error];
@@ -735,14 +730,13 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                     } else {
                         if (cnContacts != nil && cnContacts.count > 0) {
                             CNContact *foundContact = cnContacts.firstObject;
-                            [self _updateContact:fetchedContact withCnContact:foundContact forceImport:NO contactSyncer:mediatorSyncableContacts];
-                            nupdated++;
+                            [self _updateContact:contact withCnContact:foundContact forceImport:NO contactSyncer:mediatorSyncableContacts];
+                            updated++;
                         }
                     }
                 }];
             }
-            DDLogInfo(@"Updated %d contacts", nupdated);
-    
+            DDLogInfo(@"Updated %d contacts", updated);
             
             [self updateStatusForAllContactsIgnoreInterval:NO contactSyncer:mediatorSyncableContacts onCompletion:^{
                 [mediatorSyncableContacts syncObjcWithCompletionHandler:^(NSError * _Nullable error) {

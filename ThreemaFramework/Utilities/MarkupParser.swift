@@ -251,7 +251,7 @@ extension MarkupParser {
         -> NSMutableAttributedString {
         do {
             let dataDetector = try NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-            
+
             dataDetector.enumerateMatches(
                 in: attributedString.string,
                 range: NSRange(location: 0, length: attributedString.length)

@@ -124,3 +124,8 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 - (BOOL)noDeliveryReceiptFlagSet;
 
 @end
+
+@interface BaseMessage (CoreDataGeneratedAccessors)
+- (void)addRejectedByObject:(nonnull ContactEntity *)value NS_SWIFT_NAME(addRejectedBy(_:));
+- (void)removeRejectedByObject:(nonnull ContactEntity *)value NS_SWIFT_NAME(removeRejectedBy(_:));
+@end

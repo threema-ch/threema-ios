@@ -25,11 +25,14 @@ public struct ThreemaIdentity: Equatable, Hashable, CustomStringConvertible, Sen
     private enum CodingKeys: String, CodingKey {
         case string
     }
+    
+    /// Expected length of string representing a `ThreemaIdentity`
+    public static let stringLength = 8
 
     public let string: String
 
     public init(_ string: String) {
-        if string.count != 8 {
+        if string.count != ThreemaIdentity.stringLength {
             assertionFailure("Tried to create a ThreemaIdentity with length of \(string.count)")
             DDLogError("Tried to create a ThreemaIdentity with length of \(string.count)")
         }

@@ -84,6 +84,10 @@ public class MessageFetcher: NSObject {
         NSPredicate(format: "conversation == %@ AND read == false AND isOwn == false", conversation)
     }
     
+    private var conversationRejectedPredicate: NSPredicate {
+        NSPredicate(format: "conversation == %@ AND (rejectedBy.@count > 0)", conversation)
+    }
+    
     private var conversationWithFilteredNoMIMETypeFileMessages: NSPredicate {
         let fileMessagePredicate = NSPredicate(format: "%K == nil", "mimeType")
 
@@ -113,6 +117,13 @@ public class MessageFetcher: NSObject {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         fetchRequest.predicate = conversationUnreadPredicate
         fetchRequest.sortDescriptors = sortDescriptors(ascending: false)
+        return fetchRequest
+    }()
+    
+    private lazy var rejectedMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+        fetchRequest.predicate = conversationRejectedPredicate
+        // Sorting doesn't matter because we just need them to filter later
         return fetchRequest
     }()
     
@@ -289,6 +300,23 @@ public class MessageFetcher: NSObject {
         let fetchRequest = limitedUnreadMessagesFetchRequest
         fetchRequest.fetchLimit = limit
         guard let result = entityManager.entityFetcher.execute(fetchRequest) as? [BaseMessage] else {
+            return []
+        }
+        
+        return result
+    }
+    
+    /// Rejected group messages
+    ///
+    /// This only works for group messages, because `rejectedBy` is not set on for rejected 1:1 messages.
+    ///
+    /// To make this work for 1:1 messages you would have to also set `rejectedBy` in 1:1 rejections or also filter for
+    /// the `sendFailed` flag. However, `sendFailed` could also be set if sending failed for other reasons than
+    /// rejections.
+    ///
+    /// - Returns: Messages with at least one `rejectedBy` contact
+    public func rejectedGroupMessages() -> [BaseMessage] {
+        guard let result = entityManager.entityFetcher.execute(rejectedMessagesFetchRequest) as? [BaseMessage] else {
             return []
         }
         

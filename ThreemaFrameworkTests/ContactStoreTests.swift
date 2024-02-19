@@ -35,7 +35,7 @@ class ContactStoreTests: XCTestCase {
 
     func testAddWorkContactWithIdentity() throws {
         let expectedIdentity = "TESTER01"
-        let expectedPublicKey = BytesUtility.generateRandomBytes(length: Int(32))!
+        let expectedPublicKey = MockData.generatePublicKey()
         let expectedFirstName = "Test"
         let expectedLastName = "Tester"
 
@@ -43,7 +43,7 @@ class ContactStoreTests: XCTestCase {
         let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
 
-        let result = contactStore.addWorkContact(
+        let identity = contactStore.addWorkContact(
             with: expectedIdentity,
             publicKey: expectedPublicKey,
             firstname: expectedFirstName,
@@ -53,18 +53,18 @@ class ContactStoreTests: XCTestCase {
             contactSyncer: nil
         )
 
-        XCTAssertNotNil(result)
-        XCTAssertEqual(expectedIdentity, result?.identity)
-        XCTAssertEqual(expectedPublicKey, result?.publicKey)
-        XCTAssertEqual(expectedFirstName, result?.firstName)
-        XCTAssertEqual(expectedLastName, result?.lastName)
+        XCTAssertEqual(expectedIdentity, identity)
+        let contactEntity = try XCTUnwrap(em.entityFetcher.contact(for: identity))
+        XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
+        XCTAssertEqual(expectedFirstName, contactEntity.firstName)
+        XCTAssertEqual(expectedLastName, contactEntity.lastName)
         XCTAssertTrue(userSettingsMock.workIdentities.contains(expectedIdentity))
         XCTAssertTrue(userSettingsMock.profilePictureRequestList.contains(where: { $0 as? String == expectedIdentity }))
     }
 
     func testUpdateContactWithIdentity() throws {
         let expectedIdentity = "TESTER01"
-        let expectedPublicKey = BytesUtility.generateRandomBytes(length: Int(32))!
+        let expectedPublicKey = MockData.generatePublicKey()
         let expectedFirstName = "Dirsty"
 
         let dbPreparer = DatabasePreparer(context: databaseMainCnx.current)
@@ -90,19 +90,17 @@ class ContactStoreTests: XCTestCase {
             lastName: nil
         )
 
-        let contact = em.entityFetcher.contact(for: expectedIdentity)
-
-        XCTAssertNotNil(contact)
-        XCTAssertEqual(expectedIdentity, contact?.identity)
-        XCTAssertEqual(expectedPublicKey, contact?.publicKey)
-        XCTAssertNil(contact?.imageData)
-        XCTAssertEqual(expectedFirstName, contact?.firstName)
-        XCTAssertNil(contact?.lastName)
+        let contactEntity = try XCTUnwrap(em.entityFetcher.contact(for: expectedIdentity))
+        XCTAssertEqual(expectedIdentity, contactEntity.identity)
+        XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
+        XCTAssertNil(contactEntity.imageData)
+        XCTAssertEqual(expectedFirstName, contactEntity.firstName)
+        XCTAssertNil(contactEntity.lastName)
     }
     
     func testUpdateContactStatus() throws {
         let expectedIdentity = "TESTER01"
-        let expectedPublicKey = BytesUtility.generateRandomBytes(length: Int(32))!
+        let expectedPublicKey = MockData.generatePublicKey()
         let expectedStatus = kStateActive
 
         let dbPreparer = DatabasePreparer(context: databaseMainCnx.current)
@@ -127,13 +125,11 @@ class ContactStoreTests: XCTestCase {
         
         contactStore.updateStateToActive(for: savedContact!, entityManager: em)
 
-        let contact = em.entityFetcher.contact(for: expectedIdentity)
-
-        XCTAssertNotNil(contact)
-        XCTAssertEqual(expectedIdentity, contact?.identity)
-        XCTAssertEqual(expectedPublicKey, contact?.publicKey)
-        XCTAssertNil(contact?.firstName)
-        XCTAssertNil(contact?.lastName)
-        XCTAssertEqual(expectedStatus, contact?.state?.intValue)
+        let contactEntity = try XCTUnwrap(em.entityFetcher.contact(for: expectedIdentity))
+        XCTAssertEqual(expectedIdentity, contactEntity.identity)
+        XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
+        XCTAssertNil(contactEntity.firstName)
+        XCTAssertNil(contactEntity.lastName)
+        XCTAssertEqual(expectedStatus, contactEntity.state?.intValue)
     }
 }

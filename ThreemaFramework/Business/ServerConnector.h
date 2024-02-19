@@ -90,11 +90,12 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Reflect message to Mediator server, only if Multi Device is activated.
  
- @warning `deviceGroupPathKey` must not be `nil`
- 
+ @warning Must be connected with mediator
+
  @param message Message to reflect, if is not `nil`
+ @returns ThreemaError
  */
-- (BOOL)reflectMessage:(NSData*)message;
+- (NSError * _Nullable)reflectMessage:(NSData*)message;
 
 - (BOOL)sendMessage:(BoxedMessage*)message;
 

@@ -28,4 +28,5 @@ enum ForwardSecurityError: Error {
     case counterOutOfRange
     case noDHModeNegotiated
     case messageTypeNotSupported
+    case missingGroupIdentity
 }

@@ -104,6 +104,7 @@
 "file_message_video" = "Video";
 "file_message_voice" = "Sesli Mesaj";
 "file_message_file" = "Dosya";
+"chat" = "sohbet"; /* noun */
 
 "chat_back_button_accessibility" = "%d okunmadı";
 
@@ -126,6 +127,10 @@
 "include_media_title" = "Medya (resimler, videolar) ek olarak dahil edilsin mi?";
 "include_media_message" = "Dosyayı açmak için AES destekli modern bir sıkıştırma yazılımı (ZIP) gereklidir, örn. 7-Zip veya The Unarchiver (Mac).";
 
+"chat_view_resend_group_message_confirmation_title" = "Grup mesajı yeniden gönderilsin mi?";
+/* The placeholder will be replaced by a localized list of all receivers */
+"chat_view_resend_group_message_confirmation_message" = "Bu mesaj tüm üyelere gönderilemedi. Mesaj %@ tekrar gönderilsin mi?";
+"chat_view_resend_group_message_confirmation_button" = "Yeniden Gönder";
 
 /* image sizes */
 "image_size_title" = "Resim boyutu";
@@ -501,9 +506,11 @@
 "exclude_deleted_id_exclude_button" = "Hariç tut";
 
 "forward_security" = "Mükemmel İletme Gizliliği";
-"forward_security_none" = "Hiçbiri";
-"forward_security_2dh" = "Tek Taraflı";
-"forward_security_4dh" = "Tamam";
+"forward_security_none" = "Hiçbiri"; /* sent to _none_ with PFS (_no(ne)_ PFS) */
+"forward_security_2dh" = "Tek Taraflı"; /* _uniliteral_ PFS */
+"forward_security_4dh" = "Tamam"; /* _complete_ PFS */
+"forward_security_outgoing_group_partial" = "Kısmi"; /* _partial_ly sent with PFS */
+"forward_security_outgoing_group_full" = "Tam"; /* _full_y sent with PFS */
 "forward_security_clear_sessions" = "Bu Kişi için Mükemmel İletme Gizliliğini Sıfırla";
 "forward_security_explainer_footer" = "Bu işlemi yalnızca Threema'nın destek ekibi tarafından talimat verildiğinde gerçekleştirin.";
 "md_wizard_pfs_warning" = "Çoklu Cihaz Önizlemesini etkinleştirdikten sonra Mükemmel İletme Gizliliği tüm kişiler için devre dışı bırakılacaktır.";
@@ -626,6 +633,8 @@
 /* Notifications Text */
 "new_message_from_x" = "%@'dan mesaj";
 "new_group_message" = "Grup mesajı";
+"new_message_unknown" = "Bilinmeyen";
+"new_message_unknown_group" = "Bilinmeyen Grup";
 "new_group_message_from_x" = "%@’dan grup mesajı";
 "new_message_no_access_title" = "Yeni mesajlar";
 "new_message_no_access_message" = "Gelen mesajları almak için lütfen %@ açın.";
@@ -778,7 +787,8 @@
 "group_call_started_by_local_system_message" = "Bir grup araması başlattınız";
 "group_call_ended_system_message" = "Grup araması sona erdi";
 
-"group_call_start_message_received" = "Bir grup araması başlatıldı";
+"group_call_notification_body_preview" = "Grup araması %@ tarafından başlatıldı";
+"group_call_notification_body" = "Grup araması başlatıldı";
 
 "group_call_navbar_state_connecting" = "Bağlanıyor…";
 "group_call_navbar_state_joining" = "Katılıyor...";
@@ -788,6 +798,12 @@
 "group_call_error_generic_message" = "Sorun devam ederse lütfen müşteri hizmetleriyle iletişime geçin.";
 "group_call_error_already_in_call_title" = "Diğer Çağrı aktif";
 "group_call_error_already_in_call_message" = "Herhangi bir anda yalnızca bir çağrıya katılınabilir.";
+"group_call_error_ended_in_meantime_title" = "Grup Araması Sona Erdi";
+"group_call_error_ended_in_meantime_message" = "Katılmak istediğiniz arama bu sırada sona ermiştir.";
+
+"group_call_alert_full_title" = "Katılımcı Sınırına Ulaşıldı";
+"group_call_alert_full_message_count" = "Maksimum %d grup araması katılımcısı sayısına ulaşıldı.";
+"group_call_alert_full_message" = "Maksimum grup araması katılımcı sayısına ulaşıldı.";
 
 "group_call_accessibility_hide_view" = "Grup görüşmesi görünümünü gizle";
 "group_call_accessibility_enable_camera" = "Kamerayı etkinleştir";
@@ -962,6 +978,7 @@
 "safe_upload_failed" = "Yükleme başarısız";
 "safe_upload_size_exceeded" = "Sunucunun yükleme boyutu aşıldı";
 "safe_change_password" = "Şifre değiştir";
+"safe_change_password_disabled" = "Yönetici tarafından ayarlanan şifre";
 "safe_learn_more" = "Daha fazla bilgi edinin";
 "safe_backup_now" = "Şimdi yedekle";
 "safe_deactivate" = "Threema Safe’i kapat";
@@ -1031,6 +1048,11 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "restore_option_data_delete_data_description" = "Yerel verileri kaldırdıktan sonra bir Threema Safe yedeklemesini (kimliğinizi, kişilerinizi ve gruplarınızı içeren) veya bir kimlik dışa aktarımını (yalnızca Threema kimliğini içeren) geri yükle";
 "restore_option_data_delete_data_explain" = "Tam bir Threema Safe yedeklemesini geri yüklemek için, %@ yeniden yüklemelisiniz: Lütfen uygulamayı silin ve ardından App Store'dan yeniden indirin.";
 
+"threema_safe_company_mdm_password_changed_title" = "Yöneticiniz tarafından ayarlanan yeni Threema Safe şifresi";
+"threema_safe_company_mdm_password_changed_message" = "Kabul etmek ister misiniz? Şüpeniz varsa, yöneticinizle iletişime geçin.";
+"threema_safe_company_mdm_password_changed_accept" = "Kabul et";
+"threema_safe_company_mdm_password_changed_accepted" = "Yönetilen şifre ayarlandı";
+
 // Company Directory
 "companydirectory_description" = "Şirket dizinindeki kişileri arayın";
 "companydirectory_placeholder" = "Dizini ara";
@@ -1039,10 +1061,9 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 
 "already_licensed" = "Zaten lisanslı";
 
-// IDNSafetyHelper
+// IDNASafetyHelper
 "url_warning_title" = "Kimlik avı uyarısı";
 "url_warning_body" = "Açmak üzere olduğunuz bağlantının ana bilgisayar adı şüpheli:\n\nGörüntülenen ana bilgisayar adı: %@\nGerçek ana bilgisayar adı: %@\n\nBu, başka bir şeymiş gibi davranan bir site açmanız için sizi kandırma girişimi olabilir.\n\nDevam etmek istiyor musunuz?";
-
 
 // Settings
 "settings_navbar_title" = "Ayarlar";
@@ -1191,7 +1212,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "delete_messages_confirm" = "%@ eski tüm mesajları kalıcı olarak silmek istiyor musunuz?";
 "delete_messages_confirm_all" = "Tüm mesajları kalıcı olarak silmek istiyor musunuz?";
 "delete_messages_explain" = "Her türlü mesaj silinecektir: metin ve sesli mesajlar, medya, dosyalar, anketler, vb.";
-"automatic_delete_explain" = "Disk alanını boşaltmak için otomatik silmeyi kullanın. Açık anketler ve not grupları otomatik silme işleminin dışında tutulur.";
+"automatic_delete_explain" = "Disk alanını boşaltmak için mesajların ve medyanın otomatik olarak silinmesini kullanın. Açık anketler ve not grupları otomatik silme işleminin dışında tutulur.";
 "automatic_delete_on_confirmation_title" = "Otomatik silme açılsın mı?";
 "automatic_delete_off_confirmation_title" = "Otomatik silme kapatılsın mı?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1276,9 +1297,11 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_advanced_reregister_notifications_label" = "Anlık Bildirimleri Yeniden Kaydet";
 
 "settings_advanced_reset_fs_db_label" = "Mükemmel İletme Gizliliği Durumunu Sıfırla";
+"settings_advanced_reset_unread_count_label" = "Okunmamış Sayısını Sıfırla";
 "settings_advanced_support_settings_header_title" = "Destek Ayarları";
 "settings_advanced_support_settings_footer_title" = "Bu işlemi yalnızca Threema'nın destek ekibi tarafından talimat verildiğinde gerçekleştirin.";
 "settings_advanced_successfully_deleted_fs_sessions_label" = "İletim Güvenliği durumu başarıyla sıfırlandı";
+"settings_advanced_successfully_reset_unread_count_label" = "Okunmamış mesaj sayısı başarıyla sıfırlandı";
 
 // Sentry
 "sentry_crash_send_title" = "%@ beklenmedik bir şekilde kapandı";
@@ -1290,7 +1313,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 
 // Profile
 "profile_share_id_text" = "Threema kimliğim";
-"profile_share_id" = "Kimlik Paylaş";
+"profile_share_id" = "Threema Kimliğini Paylaş";
 "profile_show_qr_code" = "QR Kodunu Göster";
 "profile_big_qr_code" = "Büyük QR Kodu";
 "profile_big_qr_code_cover_view" = "Büyük QR Kodu Kapak Görünümü";
@@ -1298,6 +1321,10 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "profile_linked_phone" = "Bağlı Telefon Numarası";
 "profile_id_export" = "Kimlik Dışa Aktarma";
 "my_profile_delete_cell_title" = "Kimliği ve Verileri Sil";
+"profile_edit" = "Düzenle";
+"not_connected_for_edit_profile_message" = "Lütfen bağlantınızı kontrol edin";
+"not_connected_for_edit_profile_title" = "Bağlantı yok";
+
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema Kimliği";
@@ -1307,27 +1334,26 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "my_profile_delete_bullet_linked" = "Telefon numarası ve/veya e-posta bağlantıları";
 
 "my_profile_delete_info_title" = "Kimliği ve Verileri Kaldır";
-"my_profile_delete_info_keep" = "Threema Kimliğiniz iptal edilmeyecektir. Bir Threema Safe yedeği oluşturduysanız veya kimliğinizi dışa aktardıysanız, onu başka bir cihaza geri yükleyebilirsiniz.";
-"my_profile_delete_info_delete" = "Tüm Threema verileriniz bu cihazdan kaldırılacak:";
-"my_profile_delete_info_delete_server" = "Tüm Threema verileriniz de sunucudan kaldırılacaktır:";
-"my_profile_delete_info_revoke" = "Threema Kimliğiniz iptal edilecek ve geri yükleme imkanınız olmayacak.";
-"my_profile_delete_info_toggle" = "Her şeyi geri alınamaz bir şekilde sil";
-
+"my_profile_delete_info_delete" = "Tüm Threema verileriniz bu cihazdan kaldırılacaktır.";
+"my_profile_delete_info_keep" = "Bir Threema Safe yedeği oluşturduysanız veya kimliğinizi dışa aktardıysanız, başka bir cihaza geri yükleyebilirsiniz.";
+"my_profile_delete_info_revoke_info" = "Bu Threema ID'yi başka bir cihazda kullanmak istemiyorsanız, geri alınamaz bir şekilde silebilirsiniz:";
+"my_profile_delete_info_revoke_info_link" = "[Threema Kimliğini İptal Et](link)";
 "my_profile_delete_info_button" = "Kimliği ve Verileri Kaldır";
 
 "my_profile_delete_info_alert_title" = "Bir yedeğiniz yoksa Threema Kimliğinizi kaybedersiniz.";
 "my_profile_delete_info_alert_confirm" = "Verileri Kaldır";
 
-"my_profile_revoke_identity_view_title" = "Kimlik ve Veriler kaldırılsın mı?";
-"my_profile_revoke_info_delete" = "Tüm Threema verileriniz bu cihazdan kaldırılacak:";
-"my_profile_revoke_info_sever" = "Tüm Threema verileriniz de sunucudan kaldırılacaktır:";
-"my_profile_revoke_identity_view_enter_id" = "Her şeyi kesinlikle silmek için lütfen Threema kimliğinizi “%@“ girin:";
+"my_profile_revoke_identity_view_title" = "Kimliği ve Verileri Kaldır";
+"my_profile_revoke_info_delete" = "Tüm Threema verileriniz bu cihazdan kaldırılacak ve aşağıdaki veriler Threema sunucusunda silinecektir:";
+
+"my_profile_delete_info_revoke" = "Threema ID'nizi geri yüklemenin hiçbir yolu olmayacaktır.";
+"my_profile_revoke_identity_view_enter_id" = "Lütfen Threema ID'nizi girin\n\"%@\" her şeyi kesinlikle silmek için:";
 "my_profile_revoke_identity_view_placeholder" = "Threema Kimliğiniz";
 "my_profile_revoke_identity_view_button_revoke" = "Kimlik ve Veriler kaldırılsın mı?";
 
 "my_profile_delete_identity_summary_view_removed_title" = "Kimlik ve Veriler Kaldırıldı";
 "my_profile_delete_identity_summary_view_removed_success" = "Tüm Threema verileriniz bu cihazdan kaldırıldı:";
-"my_profile_delete_identity_summary_view_removed_server_success" = "Tüm Threema verileriniz sunucudan silindi:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "Tüm Threema veri̇leri̇ni̇z bu ci̇hazdan si̇li̇ndi̇ ve aşağidaki̇ veri̇ler Threema sunucusunda kaldırıldı:";
 "my_profile_delete_identity_summary_view_removed_threema_id" = "Threema Kimliğiniz iptal edildi";
 "my_profile_delete_identity_summary_view_restart" = "Kullanmaya devam etmek için uygulamayı yeniden başlatın.";
 "my_profile_delete_identity_summary_view_restart_new" = "Yeni bir Threema Kimliği oluşturmak için uygulamayı yeniden başlatın.";
@@ -1367,7 +1393,9 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "settings_advanced_contacts_cleanup_stats_logged" = "Bilgi kaydedildi.";
 "settings_advanced_contacts_cleanup_no_duplicates" = "Yinelenen kişileriniz yok.";
 "settings_advanced_contacts_cleanup_error_title" = "Kişiler silinemiyor";
-"settings_advanced_contacts_cleanup_still_used_error" = "Temizleme iptal edildi. %i yinelenen kişi kaldırılamıyor çünkü hala mesajları var veya bir gruba üyeler.";
+"settings_advanced_contacts_cleanup_in_use_error_title" = "Sohbetleri manuel olarak sil";
+"settings_advanced_contacts_cleanup_still_used_error" = "Temizleme tamamlanmadı (%i kopya kaldırıldı, %i kaldı).\n\nBazı bire bir sohbetler elle silinmelidir:\n\n%@\n\nLütfen sohbetleri silin ve tekrar deneyin.";
+"settings_advanced_contacts_multi_device_enabled_error" = "Cihazlar şu anda bağlı. Lütfen temizlemeden önce tüm bağlı cihazları kaldırın.";
 "settings_advanced_contacts_cleanup_success_title" = "Kişi temizliği başarılı";
 "settings_advanced_contacts_cleanup_success_exit" = "Çıkış";
 "settings_advanced_contacts_cleanup_unused_message" = "%i yinelenen kişi kaldırıldı.\n\nLütfen uygulamadan çıkın, yeniden başlatın ve bir cihaz bağlayın. Eğer çalışmazsa:";
@@ -1526,6 +1554,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "multi_device_new_linked_show_contact_button" = "Kişiyi Göster";
 "multi_device_new_linked_device_list_no_platform_details" = "Platform detayı yok";
 "multi_device_new_linked_device_list_last_active" = "Son aktif: %@";
+"multi_device_new_linked_device_list_currently_active" = "Şu anda aktif";
 
 "multi_device_join_perfect_forward_secrecy_info" = "Bir cihazı bağladığınızda Mükemmel İletme Gizliliği tüm kişiler için devre dışı bırakılır.\n\nBu işlem mevcut beta versiyonunun bir sınırlamasıdır. Daha fazla sınırlama için lütfen [SSS](%@) girişine bakın.";
 "multi_device_join_scan_qr_code_title" = "QR Kodunu Tara";
@@ -1687,7 +1716,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 "notification_flush_message_queue_succeeded" = "Mesaj kuyruğu temizlendi";
 
-"notification_reregister_notifications_successed" = "Anlık bildirimler yeniden kaydedildi";
+"notification_reregister_notifications_succeeded" = "Anlık bildirimler yeniden kaydedildi";
 
 "notification_audio_muted" = "Mikrofon: Kapalı";
 "notification_audio_unmuted" = "Mikrofon: Açık";
@@ -1858,6 +1887,8 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "alert_biometrics_changed_title_touch" = "TouchID'de olası bir değişiklik tespit edildi";
 "alert_biometrics_changed_title_face" = "FaceID'de olası bir değişiklik tespit edildi";
 "alert_biometrics_changed_message" = "Threema'yı biyometrik doğrulamayla kullanmaya devam etmek istiyorsanız, lütfen şifrenizi bir defalığına giriniz.";
+
+"alert_enable_actions" = "Mevcut eylemler: %ds";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n%d sürümünden %d sürümüne geçilemedi";

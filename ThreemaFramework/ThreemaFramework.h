@@ -122,7 +122,6 @@
 #import <ThreemaFramework/URLSenderItem.h>
 #import <ThreemaFramework/UserSettings.h>
 #import <ThreemaFramework/ThreemaUtilityObjC.h>
-#import <ThreemaFramework/Reachability.h>
 #import <ThreemaFramework/RequestedConversation.h>
 #import <ThreemaFramework/RequestedThumbnail.h>
 #import <ThreemaFramework/ServerConnector.h>

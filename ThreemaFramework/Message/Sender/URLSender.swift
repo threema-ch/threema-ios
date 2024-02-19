@@ -50,7 +50,7 @@ import Foundation
         
         Task {
             do {
-                try await BlobManager.shared.createMessageAndSyncBlobs(for: senderItem, in: conversation.objectID)
+                try await BusinessInjector().messageSender.sendBlobMessage(for: senderItem, in: conversation.objectID)
             }
             catch {
                 DDLogError("Could not send sender item, error: \(error)")

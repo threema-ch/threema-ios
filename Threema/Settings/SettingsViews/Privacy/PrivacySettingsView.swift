@@ -23,7 +23,7 @@ import SwiftUI
 
 struct PrivacySettingsView: View {
     
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
 
     @State private var contactsFooterText = BundleUtil
         .localizedString(forKey: "settings_privacy_block_unknown_footer_on")
@@ -49,23 +49,24 @@ struct PrivacySettingsView: View {
             // MARK: Contacts
 
             Section(
-                header: Text(BundleUtil.localizedString(forKey: "settings_privacy_contacts_header")),
+                header: Text("settings_privacy_contacts_header".localized),
                 footer: Text(contactsFooterText)
             ) {
                 Toggle(isOn: $settingsVM.syncContacts) {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_sync_contacts"))
+                    Text("settings_privacy_sync_contacts".localized)
                 }
                 .disabled(mdmSetup?.existsMdmKey(MDM_KEY_CONTACT_SYNC) ?? false)
                     
                 NavigationLink {
                     SyncExclusionListView()
-                        .navigationBarTitle(BundleUtil.localizedString(forKey: "settings_privacy_exclusion_list"))
+                        .environmentObject(settingsVM)
+                        .navigationBarTitle("settings_privacy_exclusion_list".localized)
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_exclusion_list"))
+                    Text("settings_privacy_exclusion_list".localized)
                 }
                     
                 Toggle(isOn: $settingsVM.blockUnknown) {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_block_unknown"))
+                    Text("settings_privacy_block_unknown".localized)
                 }
                 .disabled(mdmSetup?.existsMdmKey(MDM_KEY_BLOCK_UNKNOWN) ?? false)
             }
@@ -77,20 +78,20 @@ struct PrivacySettingsView: View {
             
             Section {
                 Toggle(isOn: $settingsVM.allowOutgoingDonations) {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_os_donate"))
+                    Text("settings_privacy_os_donate".localized)
                 }
                 if settingsVM.allowOutgoingDonations {
-                    Button(BundleUtil.localizedString(forKey: "settings_privacy_os_reset"), role: .destructive) {
+                    Button("settings_privacy_os_reset".localized, role: .destructive) {
                         settingsVM.removeINInteractions(showNotification: true)
                     }
                 }
             } header: {
-                Text(BundleUtil.localizedString(forKey: "settings_privacy_os_header"))
+                Text("settings_privacy_os_header".localized)
             } footer: {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_os_footer"))
+                    Text("settings_privacy_os_footer".localized)
                     Link(
-                        BundleUtil.localizedString(forKey: "learn_more"),
+                        "learn_more".localized,
                         destination: URL(string: interactionFAQURLString)!
                     )
                     .font(.footnote)
@@ -100,46 +101,42 @@ struct PrivacySettingsView: View {
             // MARK: Chats
 
             Section(
-                header: Text(BundleUtil.localizedString(forKey: "settings_privacy_chat_header")),
-                footer: Text(BundleUtil.localizedString(forKey: "settings_privacy_hide_private_chats_footer"))
+                header: Text("settings_privacy_chat_header".localized),
+                footer: Text("settings_privacy_hide_private_chats_footer".localized)
             ) {
                     
                 NavigationLink {
                     PickerAndButtonView(
                         optionType: .readReceipt,
-                        settingsVM: settingsVM,
                         selectionType: $readReceipts
                     )
+                    .environmentObject(settingsVM)
                 } label: {
-                    HStack {
-                        Text(BundleUtil.localizedString(forKey: "settings_privacy_read_receipts"))
-                        Spacer()
-                        Text(readReceipts.localizedDescription)
-                            .foregroundColor(.secondary)
-                    }
+                    SettingsListItemView(
+                        cellTitle: "settings_privacy_read_receipts".localized,
+                        accessoryText: readReceipts.localizedDescription
+                    )
                 }
                     
                 NavigationLink {
                     PickerAndButtonView(
                         optionType: .typingIndicator,
-                        settingsVM: settingsVM,
                         selectionType: $typingIndicators
                     )
+                    .environmentObject(settingsVM)
                 } label: {
-                    HStack {
-                        Text(BundleUtil.localizedString(forKey: "settings_privacy_typing_indicator"))
-                        Spacer()
-                        Text(typingIndicators.localizedDescription)
-                            .foregroundColor(.secondary)
-                    }
+                    SettingsListItemView(
+                        cellTitle: "settings_privacy_typing_indicator".localized,
+                        accessoryText: typingIndicators.localizedDescription
+                    )
                 }
                     
                 Toggle(isOn: $settingsVM.choosePOI) {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_choose_poi"))
+                    Text("settings_privacy_choose_poi".localized)
                 }
                 
                 Toggle(isOn: $intermediaryHidePrivate) {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_hide_private_chats"))
+                    Text("settings_privacy_hide_private_chats".localized)
                 }
                 .onChange(of: intermediaryHidePrivate) { newValue in
                     hidePrivateChatsChanged(newValue)
@@ -162,17 +159,17 @@ struct PrivacySettingsView: View {
         }
         .alert(isPresented: $settingsVM.syncFailed, content: {
             Alert(
-                title: Text(BundleUtil.localizedString(forKey: "settings_md_sync_alert_title")),
-                primaryButton: .default(Text(BundleUtil.localizedString(forKey: "try_again"))) {
+                title: Text("settings_md_sync_alert_title".localized),
+                primaryButton: .default(Text("try_again".localized)) {
                     settingsVM.syncAndSave()
                 },
-                secondaryButton: .default(Text(BundleUtil.localizedString(forKey: "cancel"))) {
+                secondaryButton: .default(Text("cancel".localized)) {
                     settingsVM.discardUnsyncedChanges()
                 }
             )
         })
         
-        .navigationBarTitle(BundleUtil.localizedString(forKey: "settings_list_privacy_title"), displayMode: .inline)
+        .navigationBarTitle("settings_list_privacy_title".localized, displayMode: .inline)
         .tint(UIColor.primary.color)
     }
     
@@ -184,7 +181,7 @@ struct PrivacySettingsView: View {
             .localizedString(forKey: "settings_privacy_block_unknown_foooter_off")
        
         if let mdmSetup, mdmSetup.existsMdmKey(MDM_KEY_BLOCK_UNKNOWN) || mdmSetup.existsMdmKey(MDM_KEY_CONTACT_SYNC) {
-            footerText = footerText + "\n\n" + BundleUtil.localizedString(forKey: "disabled_by_device_policy")
+            footerText = footerText + "\n\n" + "disabled_by_device_policy".localized
         }
         
         contactsFooterText = footerText
@@ -222,7 +219,7 @@ struct PrivacySettingsView: View {
 struct PrivacySettingsView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            PrivacySettingsView(settingsVM: SettingsStore())
+            PrivacySettingsView()
         }
         .tint(UIColor.primary.color)
         .environmentObject(SettingsStore())
@@ -238,9 +235,9 @@ private enum SettingValueOption: CaseIterable {
     var localizedDescription: String {
         switch self {
         case .doSend:
-            return BundleUtil.localizedString(forKey: "send")
+            return "send".localized
         case .dontSend:
-            return BundleUtil.localizedString(forKey: "dont_send")
+            return "dont_send".localized
         }
     }
     
@@ -261,9 +258,9 @@ private enum SettingType {
     var navigationTitle: String {
         switch self {
         case .readReceipt:
-            return BundleUtil.localizedString(forKey: "settings_privacy_read_receipts")
+            return "settings_privacy_read_receipts".localized
         case .typingIndicator:
-            return BundleUtil.localizedString(forKey: "settings_privacy_typing_indicator")
+            return "settings_privacy_typing_indicator".localized
         }
     }
 }
@@ -272,7 +269,7 @@ private struct PickerAndButtonView: View {
     
     var optionType: SettingType
     
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     @State var showResetAlert = false
     @Binding var selectionType: SettingValueOption
 
@@ -291,18 +288,18 @@ private struct PickerAndButtonView: View {
                 selectionType = newValue
                 didSelect(newValue)
             }
-
-            Section(footer: Text(BundleUtil.localizedString(forKey: "settings_privacy_TIRR_reset_footer"))) {
+            
+            Section(footer: Text("settings_privacy_TIRR_reset_footer".localized)) {
                 Button {
                     showResetAlert = true
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_TIRR_reset_all"))
+                    Text("settings_privacy_TIRR_reset_all".localized)
                         .foregroundColor(.red)
                 }
             }
         }
         .alert(
-            BundleUtil.localizedString(forKey: "settings_privacy_TIRR_reset_alert_title"),
+            "settings_privacy_TIRR_reset_alert_title".localized,
             isPresented: $showResetAlert,
             actions: {
                 Button(role: .destructive) {
@@ -313,12 +310,12 @@ private struct PickerAndButtonView: View {
                         resetTypingIndicator()
                     }
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "settings_privacy_TIRR_reset_alert_action"))
+                    Text("settings_privacy_TIRR_reset_alert_action".localized)
                 }
 
             },
             message: {
-                Text(BundleUtil.localizedString(forKey: "settings_privacy_TIRR_reset_alert_message"))
+                Text("settings_privacy_TIRR_reset_alert_message".localized)
             }
         )
         .navigationTitle(optionType.navigationTitle)

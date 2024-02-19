@@ -184,7 +184,7 @@ extension Connected {
         case .connectedConfirmed:
             try await connectedConfirmed()
             
-            try await groupCallContext.updatePendingParticipants(
+            try await groupCallContext.updateParticipants(
                 add: participantIDs.map { ParticipantID(id: $0) },
                 remove: [],
                 existingParticipants: true
@@ -295,18 +295,23 @@ extension Connected {
     
     private func process(_ buffer: PeerConnectionMessage) async throws {
         guard let sfuToParticipant = try? Groupcall_SfuToParticipant.Envelope(serializedData: buffer.data) else {
-            fatalError()
+            DDLogWarn(
+                "[GroupCall] Could not create `Groupcall_SfuToParticipant.Envelope` from `PeerConnectionMessage`, thus ignoring it."
+            )
+            return
         }
         
         switch sfuToParticipant.content {
         case .none:
-            fatalError()
+            DDLogWarn(
+                "[GroupCall] Creating content for `Groupcall_SfuToParticipant.Envelope` failed, ignoring `PeerConnectionMessage`."
+            )
             
         case let .some(content):
             switch content {
             case let .relay(relay):
                 guard groupCallContext.verifyReceiver(for: relay) else {
-                    // TODO: What do we need to do here
+                    // TODO: (IOS-4124) What do we need to do here
                     throw GroupCallError.badMessage
                 }
                 
@@ -356,7 +361,7 @@ extension Connected {
                 
                 /// **Protocol Step: Join/Leave of Other Participants (Join 4.)**
                 /// Join: 4. is completed in this call as long as `existingParticipants` is `false`
-                try await groupCallContext.updatePendingParticipants(
+                try await groupCallContext.updateParticipants(
                     add: [ParticipantID(id: message.participantID)],
                     remove: [],
                     existingParticipants: false
@@ -371,7 +376,7 @@ extension Connected {
                     return
                 }
                 
-                try await groupCallContext.updatePendingParticipants(
+                try await groupCallContext.updateParticipants(
                     add: [],
                     remove: [ParticipantID(id: message.participantID)],
                     existingParticipants: false
@@ -431,17 +436,11 @@ extension Connected {
     
     private func sendVideoUnmuteMessages(to participant: RemoteParticipant) async throws {
         // Send Video Unmute
-        if groupCallContext.hasVideoCapturer {
-            DDLogNotice("[GroupCall] Correct Capturer, send unmute")
-            let videoUnmuteMessage = try participant.videoUnmuteMessage()
-            try serializeAndSend(videoUnmuteMessage, to: participant)
-            
-            if groupCallContext.localVideoTrack() == nil {
-                try await groupCallContext.startVideoCapture(position: .front)
-            }
-        }
-        else {
-            DDLogWarn("[GroupCall] We do not have a video capturer")
+        let videoUnmuteMessage = try participant.videoUnmuteMessage()
+        try serializeAndSend(videoUnmuteMessage, to: participant)
+        
+        if groupCallContext.localVideoTrack() == nil {
+            try await groupCallContext.startVideoCapture(position: .front)
         }
     }
 }

@@ -1211,8 +1211,10 @@ typedef enum : NSUInteger {
 }
 
 - (void)refreshWorkContactTableView:(NSNotification *)notification {
-    [self refresh];
-    self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCellView : nil;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self refresh];
+        self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCellView : nil;
+    });
 }
 
 - (void)refreshContactSortIndices:(NSNotification *)notification {

@@ -438,6 +438,16 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (_indexPathForPicker && indexPath.section == _indexPathForPicker.section && indexPath.row == _indexPathForPicker.row) {
+        if (UITraitCollection.currentTraitCollection.preferredContentSizeCategory >= UIContentSizeCategoryAccessibilityExtraExtraLarge) {
+            return 750;
+        }
+        else if (UITraitCollection.currentTraitCollection.preferredContentSizeCategory >= UIContentSizeCategoryAccessibilityMedium) {
+            return 650;
+        }
+        else if (UITraitCollection.currentTraitCollection.preferredContentSizeCategory >= UIContentSizeCategoryExtraLarge) {
+            return 550.0;
+        }
+        
         return 450.0;
     }
 

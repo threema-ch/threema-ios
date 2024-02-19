@@ -63,17 +63,14 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     // MARK: - UICollectionViewDelegate
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        // TODO: (IOS-4058) refactor sub/unsub
         updateVideoTask?.cancel()
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        // TODO: (IOS-4058) refactor sub/unsub
         updateVideo()
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        // TODO: (IOS-4058) refactor sub/unsub
         if !decelerate {
             updateVideo()
         }

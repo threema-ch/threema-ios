@@ -166,8 +166,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         NSIndexPath *gatewayIndexPath = [NSIndexPath indexPathForRow:indexPath.row inSection:0];
         return [_gatewayFetchedResultsController objectAtIndexPath:gatewayIndexPath];
     }
-    
-    return [self.fetchedResultsController objectAtIndexPath:indexPath];
+
+    @try {
+        return [self.fetchedResultsController objectAtIndexPath:indexPath];
+    }
+    @catch (NSException *exception) {
+        return [self.fetchedResultsController objectAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:indexPath.section]];
+    }
 }
 
 - (NSIndexPath *)indexPathForObject:(id)object {

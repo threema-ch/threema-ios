@@ -47,7 +47,7 @@ final class MessageReceiver {
     }
 
     /// Send get devices info to Mediator server and get linked/paired devices.
-    /// - Parameter deviceID: Owen device ID for calculating other devices
+    /// - Parameter deviceID: Own device ID for calculating other devices
     /// - Returns: Linked/paired other devices
     /// - Throws: MultiDeviceManagerError.multiDeviceNotActivated, MessageReceiverError
     func requestDevicesInfo(thisDeviceID deviceID: Data) -> Promise<[DeviceInfo]> {
@@ -93,8 +93,8 @@ final class MessageReceiver {
 
             self.serverConnector.registerMessageListenerDelegate(delegate: messageListener!)
 
-            if !self.serverConnector.reflectMessage(getDevicesList) {
-                throw MessageReceiverError.reflectMessageFailed
+            if let error = self.serverConnector.reflectMessage(getDevicesList) as? Error {
+                throw error
             }
 
             let result = dispatchMessageListener?.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
@@ -197,8 +197,8 @@ final class MessageReceiver {
 
             self.serverConnector.registerMessageListenerDelegate(delegate: messageListener!)
 
-            if !self.serverConnector.reflectMessage(dropDevice) {
-                throw MessageReceiverError.reflectMessageFailed
+            if let error = self.serverConnector.reflectMessage(dropDevice) as? Error {
+                throw error
             }
 
             let result = dispatchMessageListener?.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))

@@ -201,7 +201,7 @@ typedef enum : NSUInteger {
 
 - (NSFetchedResultsController *)fetchedResultsControllerForGroups;
 
-- (NSFetchedResultsController *)fetchedResultsControllerForConversationsWithSections:(BOOL)sections;
+- (NSFetchedResultsController *)fetchedResultsControllerForConversations;
 
 - (NSFetchedResultsController *)fetchedResultsControllerForArchivedConversations;
 

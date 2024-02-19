@@ -31,8 +31,8 @@
     #import <ThreemaFramework/Constants.h>
     #import "ThreemaError.h"
     #import "ProtocolDefines.h"
-    #import <CocoaLumberjack/CocoaLumberjack.h>
     #import <ThreemaFramework/LogLevelCustom.h>
     #import "ThreemaFramework/ThreemaFramework-swift.h"
 
+    @import CocoaLumberjack;
 #endif

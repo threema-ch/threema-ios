@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
@@ -88,7 +89,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
             receiverIdentity: receiverIdentity,
-            group: nil,
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -166,7 +166,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
             receiverIdentity: receiverIdentity,
-            group: nil,
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -238,7 +237,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
             receiverIdentity: receiverIdentity,
-            group: nil,
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -300,9 +298,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: expectedReflectedAt]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
@@ -357,7 +358,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
             receiverIdentity: receiverIdentity,
-            group: nil,
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -425,9 +425,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: expectedReflectedAt]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
@@ -501,8 +504,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
-            receiverIdentity: nil,
             group: group,
+            receivers: group.members.map(\.identity),
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -572,9 +575,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: expectedReflectedAt]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
@@ -652,8 +658,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
-            receiverIdentity: nil,
             group: group,
+            receivers: group.members.map(\.identity),
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -729,9 +735,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: expectedReflectedAt]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
@@ -804,8 +813,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
-            receiverIdentity: nil,
             group: group,
+            receivers: group.members.map(\.identity),
             sendContactProfilePicture: false
         )
         task.messageAlreadySentTo["MEMBER01"] = MockData.generateMessageNonce()
@@ -846,6 +855,305 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
             XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
         }
+    }
+    
+    func testExecuteGroupTextMessageSendWithRejectedByContacts() throws {
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
+        let rejectedByMembers = expectedMembers.prefix(2)
+        
+        let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
+        let frameworkInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbMainCnx),
+            serverConnector: serverConnectorMock
+        )
+
+        let (messageID, group, conversation) = dbPreparer.save {
+            let members = expectedMembers.map {
+                dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: $0,
+                    verificationLevel: 0
+                )
+            }
+            let rejectedMembers = members.filter { contact in
+                rejectedByMembers.contains(contact.identity)
+            }
+
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: MockData.generateGroupID(),
+                groupCreator: "MEMBER01"
+            )
+
+            let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(Set(members))
+
+            let messageID = MockData.generateMessageID()
+            let textMessage = self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.rejectedBy = Set(rejectedMembers)
+
+            let group = Group(
+                myIdentityStore: frameworkInjectorMock.myIdentityStore,
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            return (messageID, group, conversation)
+        }
+
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
+
+        let task = TaskDefinitionSendBaseMessage(
+            messageID: messageID,
+            group: group,
+            receivers: group.members.map(\.identity),
+            sendContactProfilePicture: false
+        )
+        task.create(frameworkInjector: frameworkInjectorMock).execute()
+            .done {
+                expect.fulfill()
+            }
+            .catch { error in
+                expectError = error
+                expect.fulfill()
+            }
+
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(expectedMembers.count, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            expectedMembers.count,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }.count
+        )
+        
+        let textMessage = try XCTUnwrap(
+            entityManager.entityFetcher
+                .message(with: messageID, conversation: conversation) as? TextMessage
+        )
+        XCTAssertTrue(textMessage.sent.boolValue)
+        XCTAssertFalse(textMessage.sendFailed?.boolValue ?? true)
+        XCTAssertEqual(0, textMessage.rejectedBy?.count ?? 0)
+    }
+    
+    func testExecuteGroupTextMessageResendToRejectedByContacts() throws {
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
+        let expectedReceivers = expectedMembers.prefix(2)
+        
+        // On resend the send failed state should be not be changed by TaskExecutionSendMessage
+        let expectedSendFailedState = false
+
+        let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
+        let frameworkInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbMainCnx),
+            serverConnector: serverConnectorMock
+        )
+
+        let (messageID, group, conversation) = dbPreparer.save {
+            let members = expectedMembers.map {
+                dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: $0,
+                    verificationLevel: 0
+                )
+            }
+            let rejectedMembers = members.filter { contact in
+                expectedReceivers.contains(contact.identity)
+            }
+
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: MockData.generateGroupID(),
+                groupCreator: "MEMBER01"
+            )
+
+            let conversation = dbPreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default
+            )
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(Set(members))
+
+            let messageID = MockData.generateMessageID()
+            let textMessage = self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = NSNumber(value: expectedSendFailedState)
+            textMessage.rejectedBy = Set(rejectedMembers)
+
+            let group = Group(
+                myIdentityStore: frameworkInjectorMock.myIdentityStore,
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            return (messageID, group, conversation)
+        }
+
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
+
+        let task = TaskDefinitionSendBaseMessage(
+            messageID: messageID,
+            group: group,
+            receivers: expectedReceivers.map { ThreemaIdentity($0) },
+            sendContactProfilePicture: false
+        )
+        task.create(frameworkInjector: frameworkInjectorMock).execute()
+            .done {
+                expect.fulfill()
+            }
+            .catch { error in
+                expectError = error
+                expect.fulfill()
+            }
+
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(expectedReceivers.count, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            expectedReceivers.count,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }.count
+        )
+        let textMessage = try XCTUnwrap(
+            entityManager.entityFetcher
+                .message(with: messageID, conversation: conversation) as? TextMessage
+        )
+        XCTAssertTrue(textMessage.sent.boolValue)
+        XCTAssertEqual(expectedSendFailedState, textMessage.sendFailed?.boolValue ?? true)
+        XCTAssertEqual(0, textMessage.rejectedBy?.count ?? 0)
+    }
+    
+    // This tests when a another reject is received while the resend is confirmed
+    func testExecuteGroupTextMessageResendToSubsetOfRejectedByContacts() throws {
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
+        let rejectedBy = Set(expectedMembers.prefix(2))
+        let expectedReceivers = Set(expectedMembers.prefix(1))
+        let expectedRejectedBy = Array(rejectedBy.subtracting(expectedReceivers))
+        
+        // On resend the send failed state should be not be changed by TaskExecutionSendMessage
+        let expectedSendFailedState = true
+
+        let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
+        let frameworkInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbMainCnx),
+            serverConnector: serverConnectorMock
+        )
+
+        let (messageID, group, conversation) = dbPreparer.save {
+            let members = expectedMembers.map {
+                dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: $0,
+                    verificationLevel: 0
+                )
+            }
+            let rejectedMembers = members.filter { contact in
+                rejectedBy.contains(contact.identity)
+            }
+
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: MockData.generateGroupID(),
+                groupCreator: "MEMBER01"
+            )
+
+            let conversation = dbPreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default
+            )
+            conversation.groupID = groupEntity.groupID
+            conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+            conversation.addMembers(Set(members))
+
+            let messageID = MockData.generateMessageID()
+            let textMessage = self.dbPreparer.createTextMessage(
+                conversation: conversation,
+                delivered: false,
+                id: messageID,
+                isOwn: true,
+                read: false,
+                sent: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = NSNumber(value: expectedSendFailedState)
+            textMessage.rejectedBy = Set(rejectedMembers)
+
+            let group = Group(
+                myIdentityStore: frameworkInjectorMock.myIdentityStore,
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+
+            return (messageID, group, conversation)
+        }
+
+        let expect = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expectError: Error?
+
+        let task = TaskDefinitionSendBaseMessage(
+            messageID: messageID,
+            group: group,
+            receivers: expectedReceivers.map { ThreemaIdentity($0) },
+            sendContactProfilePicture: false
+        )
+        task.create(frameworkInjector: frameworkInjectorMock).execute()
+            .done {
+                expect.fulfill()
+            }
+            .catch { error in
+                expectError = error
+                expect.fulfill()
+            }
+
+        waitForExpectations(timeout: 6)
+
+        XCTAssertNil(expectError)
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(expectedReceivers.count, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(
+            expectedReceivers.count,
+            serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }.count
+        )
+        let textMessage = try XCTUnwrap(
+            entityManager.entityFetcher
+                .message(with: messageID, conversation: conversation) as? TextMessage
+        )
+        XCTAssertTrue(textMessage.sent.boolValue)
+        XCTAssertEqual(expectedSendFailedState, textMessage.sendFailed?.boolValue ?? false)
+        XCTAssertEqual(expectedRejectedBy, textMessage.rejectedBy?.map(\.identity))
     }
 
     func testExecuteGroupCreateMessageWithOwnIdentityAsMemberAlreadySent() throws {
@@ -937,9 +1245,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: Date()]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
 
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -1006,8 +1317,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
-            receiverIdentity: nil,
             group: group,
+            receivers: group.members.map(\.identity),
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -1077,9 +1388,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
                         object: expectedReflectID,
                         userInfo: [expectedReflectID: expectedReflectedAt]
                     )
-                    return true
+                    return nil
                 }
-                return false
+                return ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError
             }
             let myIdentityStoreMock = MyIdentityStoreMock()
             XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
@@ -1155,8 +1469,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
             let task = TaskDefinitionSendBaseMessage(
                 messageID: messageID,
-                receiverIdentity: nil,
                 group: group,
+                receivers: group.members.map(\.identity),
                 sendContactProfilePicture: false
             )
             task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -1189,12 +1503,9 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }
                     .count
             )
-            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01"
-            }.count)
-            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER02"
-            }.count)
-            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03"
-            }.count)
+            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
+            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER02" }.count)
+            XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
             XCTAssertEqual(
                 broadcastGroupTest[2] as! Int,
                 serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "*ADMIN01" }.count
@@ -1224,6 +1535,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
             deviceGroupKeys: MockData.deviceGroupKeys
         )
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+        serverConnectorMock.reflectMessageClosure = { _ in
+            serverConnectorMock.connectionState == .loggedIn ? nil : ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
+        }
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             entityManager: EntityManager(databaseContext: dbMainCnx),
@@ -1273,7 +1590,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let task = TaskDefinitionSendBaseMessage(
             messageID: messageID,
             receiverIdentity: receiverIdentity,
-            group: nil,
             sendContactProfilePicture: false
         )
         task.create(frameworkInjector: frameworkInjectorMock).execute()
@@ -1287,12 +1603,18 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         waitForExpectations(timeout: 6)
 
-        let expectedError = try XCTUnwrap(expectError as? TaskExecutionError)
+        let expectedError = try XCTUnwrap(expectError)
         XCTAssertEqual(
             "\(expectedError)",
-            "\(TaskExecutionError.reflectMessageFailed(message: "(Reflect ID: \(expectedReflectID.hexString) (type: text; id: \(messageID.hexString)))"))"
+            "Error Domain=ThreemaErrorDomain Code=675 \"Not logged in\" UserInfo={NSLocalizedDescription=Not logged in}"
         )
         XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(
+                    message: "[0x03] reflectOutgoingMessageToMediator (Reflect ID: \(expectedReflectID.hexString) (type: text; id: \(messageID.hexString)))"
+                )
+        )
         XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
 
         try entityManager.performAndWait {

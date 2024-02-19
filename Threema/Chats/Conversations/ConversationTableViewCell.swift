@@ -674,8 +674,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             threemaTypeImageView.isHidden = true
         }
         
-        if conversation.isGroup(), ThreemaEnvironment.groupCalls,
-           businessInjector.settingsStore.enableThreemaGroupCalls {
+        if conversation.isGroup(), businessInjector.settingsStore.enableThreemaGroupCalls {
             updateGroupCallButton()
         }
         else {
@@ -687,7 +686,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private func updateGroupCallButton() {
         
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
             hideUpdateGroupCallButton()
             assertionFailure()
             return
@@ -1206,7 +1205,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             self?.loadAvatar()
         }
 
-        if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
+        if businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on de-init
             startGroupCallObserver()
         }
@@ -1433,7 +1432,7 @@ extension ConversationTableViewCell {
     ///
     /// Note that we don't need to remove this as they will automatically be removed on deallocation
     private func startGroupCallObserver() {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
             assertionFailure()
             return
         }

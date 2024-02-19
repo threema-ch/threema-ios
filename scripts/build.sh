@@ -25,11 +25,9 @@ if [[ $# = 0 ]]; then
   echo "Usage: ./build.sh [--dependencies | --dependencies-force | --generate-protobuf | [--build & --work]] [<relative project path>]"
   echo ""
   echo "Options to build the app and its dependencies:
-  --dependencies                Check out and build Carthage dependencies, and download WebRTC.
-                                (https://github.com/Carthage/Carthage#installing-carthage)
+  --dependencies                Download WebRTC if not cached.
                                 
-  --dependencies-force          Rebuild Carthage dependencies, download version of
-                                WebRTC.
+  --dependencies-force          Always download the most recent available version of WebRTC.
                                 
   --generate-protobuf           Parse Protobuf files and generate Swift source code.
                                 (https://github.com/apple/swift-protobuf/#alternatively-install-via-homebrew)
@@ -77,15 +75,6 @@ for arg in "$@"; do
 done
 
 if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
-  carthage version
-  
-  # Build carthage dependencies
-  if [[ "$dependencies_force_arg" = 1 ]]; then
-    carthage bootstrap --platform iOS --use-xcframeworks --no-use-binaries --project-directory "$project_dir" --derived-data "DerivedData/"
-  else
-    carthage bootstrap --platform iOS --use-xcframeworks --no-use-binaries --cache-builds --project-directory "$project_dir" --derived-data "$project_dir/DerivedData/"
-  fi
-
   # Delete or reset download directories
   # $1: Local directory
   reset() {

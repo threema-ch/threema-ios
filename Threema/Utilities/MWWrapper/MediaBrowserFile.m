@@ -131,7 +131,8 @@
         }
     } else {
         BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-        [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^{
+        [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^(enum BlobManagerObjCResult result){
+            NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
             [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:self];
         }];
     }
@@ -202,7 +203,8 @@
 
 - (void)performLoadUnderlyingImageAndNotify {
     BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-    [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^{
+    [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^(enum BlobManagerObjCResult result){
+        NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
         [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:self];
     }];
 }

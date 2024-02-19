@@ -28,7 +28,7 @@ import Foundation
     private var safeApiService: SafeApiService
     private var logger: ValidationLogger
 
-    // trigger safe backup states
+    // Trigger safe backup states
     private static var backupObserver: NSObjectProtocol?
     private static var backupDelay: Timer?
     private static let backupProcessLock = DispatchQueue(label: "backupProcessLock")
@@ -50,6 +50,30 @@ import Foundation
         self.safeStore = safeStore
         self.safeApiService = safeApiService
         self.logger = ValidationLogger.shared()
+    }
+    
+    convenience init(groupManager: GroupManagerProtocol) {
+        let safeConfigManager = SafeConfigManager()
+        let serverAPIConnector = ServerAPIConnector()
+        let safeAPIService = SafeApiService()
+        let safeStore = SafeStore(
+            safeConfigManager: safeConfigManager,
+            serverApiConnector: serverAPIConnector,
+            groupManager: groupManager
+        )
+        self.init(safeConfigManager: safeConfigManager, safeStore: safeStore, safeApiService: safeAPIService)
+    }
+    
+    @objc convenience init(groupManager: GroupManager) {
+        let safeConfigManager = SafeConfigManager()
+        let serverAPIConnector = ServerAPIConnector()
+        let safeAPIService = SafeApiService()
+        let safeStore = SafeStore(
+            safeConfigManager: safeConfigManager,
+            serverApiConnector: serverAPIConnector,
+            groupManager: groupManager
+        )
+        self.init(safeConfigManager: safeConfigManager, safeStore: safeStore, safeApiService: safeAPIService)
     }
     
     // NSObject thereby not the whole SafeConfigManagerProtocol interface must be like @objc
@@ -76,6 +100,41 @@ import Foundation
         SafeManager.backupIsRunning
     }
     
+    // Activate safe with password of MDM
+    @objc func activateThroughMDM() {
+        guard let mdm = MDMSetup(setup: false) else {
+            return
+        }
+        let customServer = mdm.safeServerURL()
+        var server: String?
+        
+        if mdm.isSafeBackupPasswordPreset() {
+            server = safeStore.composeSafeServerAuth(
+                server: customServer,
+                user: mdm.safeServerUsername(),
+                password: mdm.safeServerPassword()
+            )?.absoluteString
+        }
+        
+        activate(
+            identity: MyIdentityStore.shared().identity,
+            password: mdm.safePassword(),
+            customServer: customServer,
+            server: server,
+            maxBackupBytes: nil,
+            retentionDays: nil
+        ) { error in
+            if let error = error as? NSError {
+                if error.code == ThreemaProtocolError.safePasswordEmpty.rawValue {
+                    Task { @MainActor in
+                        LaunchModalManager.shared.checkLaunchModals()
+                    }
+                }
+                DDLogError("Failed to activate Threema Safe: \(error)")
+            }
+        }
+    }
+    
     @objc func activate(
         identity: String,
         password: String?,
@@ -98,6 +157,25 @@ import Foundation
             retentionDays: retentionDays?.intValue,
             completion: completion
         )
+    }
+    
+    func credentialsChanged() -> Bool {
+        guard let mdm = MDMSetup(setup: false) else {
+            return false
+        }
+        
+        let current = safeConfigManager.getKey()
+        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: mdm.safePassword())
+        return current != poss
+    }
+    
+    func isSafePasswordDefinedByAdmin() -> Bool {
+        guard let mdm = MDMSetup(setup: false), mdm.safePassword() != nil else {
+            return false
+        }
+        let current = safeConfigManager.getKey()
+        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: mdm.safePassword())
+        return current == poss
     }
     
     func activate(
@@ -885,78 +963,80 @@ import Foundation
     }
     
     @objc func initTrigger() {
+                
+        guard isActivated else {
+            return
+        }
         
         DDLogVerbose("Threema Safe triggered")
         
-        if isActivated {
-            if SafeManager.backupObserver == nil {
-                SafeManager.backupObserver = NotificationCenter.default.addObserver(
-                    forName: Notification.Name(kSafeBackupTrigger),
-                    object: nil,
-                    queue: nil
-                ) { notification in
-                    if !AppDelegate.shared().isAppInBackground(), self.isActivated {
+        if SafeManager.backupObserver == nil {
+            SafeManager.backupObserver = NotificationCenter.default.addObserver(
+                forName: Notification.Name(kSafeBackupTrigger),
+                object: nil,
+                queue: nil
+            ) { notification in
+                if !AppDelegate.shared().isAppInBackground(), self.isActivated {
                         
-                        // start background task to give time to create backup file, if the app is going into background
-                        BackgroundTaskManager.shared.newBackgroundTask(
-                            key: kSafeBackgroundTask,
-                            timeout: 60,
-                            completionHandler: {
-                                if SafeManager.backupDelay != nil {
-                                    SafeManager.backupDelay?.invalidate()
-                                }
-                            
-                                // set 5s delay timer to start backup (if delay time 0s, then force backup)
-                                var interval = 5
-                                if notification.object is Int {
-                                    interval = notification.object as! Int
-                                }
-                                self.backupForce = interval == 0
-                            
-                                // async is necessary if the call is already within an operation queue (like after setup
-                                // completion)
-                                SafeManager.backupDelay = Timer.scheduledTimer(
-                                    timeInterval: TimeInterval(interval),
-                                    target: self,
-                                    selector: #selector(self.trigger),
-                                    userInfo: nil,
-                                    repeats: false
-                                )
+                    // start background task to give time to create backup file, if the app is going into background
+                    BackgroundTaskManager.shared.newBackgroundTask(
+                        key: kSafeBackgroundTask,
+                        timeout: 60,
+                        completionHandler: {
+                            if SafeManager.backupDelay != nil {
+                                SafeManager.backupDelay?.invalidate()
                             }
-                        )
-                    }
-                }
-            }
-            
-            if safeConfigManager.getIsTriggered() || safeStore
-                .isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 1) {
-                NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupTrigger), object: nil)
-            }
-            
-            // Show alert once a day, if is last successful backup older than 7 days
-            if safeConfigManager.getLastResult() != BundleUtil.localizedString(forKey: "safe_successful"),
-               safeConfigManager.getLastBackup() != nil,
-               safeStore.isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 7) {
-                
-                DDLogWarn("WARNING Threema Safe backup not successfully since 7 days or more")
-                logger.logString("WARNING Threema Safe backup not successfully since 7 days or more")
-            
-                if safeStore.isDateOlderThenDays(date: safeConfigManager.getLastAlertBackupFailed(), days: 1),
-                   let topViewController = AppDelegate.shared()?.currentTopViewController(),
-                   let seconds = safeConfigManager.getLastBackup()?.timeIntervalSinceNow,
-                   let days = Double(exactly: seconds / 86400)?.rounded(FloatingPointRoundingRule.up) {
-                    
-                    safeConfigManager.setLastAlertBackupFailed(Date())
-                    
-                    UIAlertTemplate.showAlert(
-                        owner: topViewController,
-                        title: BundleUtil.localizedString(forKey: "safe_setup_backup_title"),
-                        message: String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "safe_failed_notification"),
-                            abs(days)
-                        )
+                            
+                            // set 5s delay timer to start backup (if delay time 0s, then force backup)
+                            var interval = 5
+                            if notification.object is Int {
+                                interval = notification.object as! Int
+                            }
+                            self.backupForce = interval == 0
+                            
+                            // async is necessary if the call is already within an operation queue (like after setup
+                            // completion)
+                            SafeManager.backupDelay = Timer.scheduledTimer(
+                                timeInterval: TimeInterval(interval),
+                                target: self,
+                                selector: #selector(self.trigger),
+                                userInfo: nil,
+                                repeats: false
+                            )
+                        }
                     )
                 }
+            }
+        }
+            
+        if safeConfigManager.getIsTriggered() || safeStore
+            .isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 1) {
+            NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupTrigger), object: nil)
+        }
+            
+        // Show alert once a day, if is last successful backup older than 7 days
+        if safeConfigManager.getLastResult() != BundleUtil.localizedString(forKey: "safe_successful"),
+           safeConfigManager.getLastBackup() != nil,
+           safeStore.isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 7) {
+                
+            DDLogWarn("WARNING Threema Safe backup not successfully since 7 days or more")
+            logger.logString("WARNING Threema Safe backup not successfully since 7 days or more")
+            
+            if safeStore.isDateOlderThenDays(date: safeConfigManager.getLastAlertBackupFailed(), days: 1),
+               let topViewController = AppDelegate.shared()?.currentTopViewController(),
+               let seconds = safeConfigManager.getLastBackup()?.timeIntervalSinceNow,
+               let days = Double(exactly: seconds / 86400)?.rounded(FloatingPointRoundingRule.up) {
+                    
+                safeConfigManager.setLastAlertBackupFailed(Date())
+                    
+                UIAlertTemplate.showAlert(
+                    owner: topViewController,
+                    title: BundleUtil.localizedString(forKey: "safe_setup_backup_title"),
+                    message: String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "safe_failed_notification"),
+                        abs(days)
+                    )
+                )
             }
         }
     }
@@ -1017,6 +1097,34 @@ import Foundation
             
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupUIRefresh), object: nil)
+            }
+        }
+    }
+    
+    @objc func performThreemaSafeLaunchChecks() {
+        guard let mdm = MDMSetup(setup: false) else {
+            return
+        }
+        // We abort if we are currently creating a backup, e.g. from app setup
+        if safeConfigManager.getIsTriggered() {
+            return
+        }
+        // Check if Threema Safe is forced and not activated yet
+        if !isActivated, mdm.isSafeBackupForce() {
+            activateThroughMDM()
+        }
+        // Else if Threema Safe is disabled by MDM and Safe is activated, deactivate Safe
+        else if isActivated, mdm.isSafeBackupDisable() {
+            deactivate()
+        }
+        // Else if Safe activated, check if server has been changed by MDM
+        else if LicenseStore.shared().getRequiresLicenseKey(), isActivated {
+            safeStore.isSafeServerChanged(mdmSetup: mdm) { changed in
+                guard changed else {
+                    return
+                }
+                self.deactivate()
+                self.activateThroughMDM()
             }
         }
     }

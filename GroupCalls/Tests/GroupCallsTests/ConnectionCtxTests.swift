@@ -244,7 +244,6 @@ final class ConnectionCtxTests: XCTestCase {
                 groupName: "ECHOECHO"
             ),
             startedAt: Date(),
-            maxParticipants: 100,
             dependencies: dependencies,
             groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: "")
         )

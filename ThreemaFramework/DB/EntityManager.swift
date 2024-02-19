@@ -304,8 +304,46 @@ public class EntityManager: NSObject {
         forwardSecurityMode: ForwardSecurityMode
     ) {
         performAndWaitSave {
-            if let dbMsg = self.entityFetcher.ownMessage(with: messageID, conversation: conversation) {
-                dbMsg.forwardSecurityMode = forwardSecurityMode.rawValue as NSNumber
+            guard let dbMsg = self.entityFetcher.ownMessage(with: messageID, conversation: conversation) else {
+                // This might also be called for messages not stored in CD. Thus we don't log anything here.
+                return
+            }
+            
+            dbMsg.forwardSecurityMode = forwardSecurityMode.rawValue as NSNumber
+        }
+    }
+    
+    /// Remove contacts form rejected-by list of passed message
+    ///
+    /// This is normally only needed for group messages
+    ///
+    /// - Parameters:
+    ///   - contactIDs: Threema ID strings of IDs to remove
+    ///   - messageID: Message ID of message to remove receivers from
+    ///   - conversation: Conversation the message is in
+    func removeContacts(
+        with contactIDs: Set<String>,
+        fromRejectedListOfMessageWith messageID: Data,
+        in conversation: Conversation
+    ) {
+        performAndWaitSave {
+            guard let dbMsg = self.entityFetcher.ownMessage(with: messageID, conversation: conversation) else {
+                DDLogWarn("No own message to be found for \(messageID)")
+                return
+            }
+            
+            // Only remove all possible contacts if there are any rejected
+            guard !(dbMsg.rejectedBy?.isEmpty ?? true) else {
+                return
+            }
+            
+            for contactID in contactIDs {
+                // For example if your own ID happens to be in contactIDs the contact cannot be loaded
+                guard let contact = self.entityFetcher.contact(for: contactID) else {
+                    continue
+                }
+                
+                dbMsg.removeRejectedBy(contact)
             }
         }
     }

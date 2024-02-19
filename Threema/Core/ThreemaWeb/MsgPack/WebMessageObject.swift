@@ -738,7 +738,7 @@ struct WebFile {
     var inApp: Bool
     
     init(name: String, size: Int, mimeType: String) {
-        self.name = mimeType
+        self.name = name
         self.size = size
         self.type = mimeType
         self.inApp = false

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaFramework
 
 extension UIViewController {
     fileprivate struct WrapperView<V: UIViewController>: UIViewControllerRepresentable {
@@ -35,6 +36,10 @@ extension UIViewController {
         }
         
         func updateUIViewController(_ uiViewController: V, context: Context) { }
+        
+        static func dismantleUIViewController(_ uiViewController: V, coordinator: ()) {
+            NotificationCenter.default.removeObserver(uiViewController)
+        }
     }
     
     private var wrappedView: some View {
@@ -45,23 +50,21 @@ extension UIViewController {
             return self
         }
     }
-
+    
     var wrappedModalNavigationView: some View {
-        uiViewController {
-            ModalNavigationController(rootViewController: self)
-        }
+        uiViewController(ModalNavigationController(rootViewController: self))
     }
     
     func wrappedModalNavigationView(delegate: UINavigationControllerDelegate) -> some View {
-        uiViewController {
+        uiViewController(
             ModalNavigationController(rootViewController: self).then {
                 $0.delegate = delegate
             }
-        }
+        )
     }
 }
 
-func uiViewController(_ vc: @escaping () -> UIViewController) -> some View {
+func uiViewController(_ vc: @autoclosure @escaping () -> UIViewController) -> some View {
     UIViewController.WrapperView {
         vc()
     }

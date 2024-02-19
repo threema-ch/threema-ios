@@ -60,12 +60,10 @@ static dispatch_queue_t directContextsQueue;
 {
     self = [self initWithPersistentCoordinator:persistentCoordinator];
     if (self) {
-        // Listen to DB changes to merge changed objects in main context to private context
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:nil];
-
         privateContext = [[TMAManagedObjectContext alloc] initWithConcurrencyType:childContextforBackgroundProcess ? NSPrivateQueueConcurrencyType : NSMainQueueConcurrencyType];
         [privateContext setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
         [privateContext setParentContext:mainContext];
+        privateContext.automaticallyMergesChangesFromParent = YES;
     }
     return self;
 }
@@ -79,12 +77,11 @@ static dispatch_queue_t directContextsQueue;
         mainContext = mainCnx;
 
         if (backgroundCnx) {
-            // Listen to DB changes to merge changed objects in main context to private context
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:nil];
-
             privateContext = backgroundCnx;
             [privateContext setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
             [privateContext setParentContext:mainContext];
+            privateContext.automaticallyMergesChangesFromParent = YES;
+
         }
     }
     return self;
@@ -146,22 +143,4 @@ static dispatch_queue_t directContextsQueue;
         }
     });
 }
-
-- (void)managedObjectContextDidSave:(NSNotification *)notification {
-    // Check has something changed
-    if ([[[notification userInfo] objectForKey:NSDeletedObjectsKey] count] == 0
-        && [[[notification userInfo] objectForKey:NSUpdatedObjectsKey] count] == 0
-        && [[[notification userInfo] objectForKey:NSInsertedObjectsKey] count] == 0) {
-        return;
-    }
-
-    // Merge changes from context to private context
-    NSManagedObjectContext *currentContext = notification.object;
-    if (currentContext == mainContext && privateContext != nil) {
-        [privateContext performBlock:^{
-            [privateContext mergeChangesFromContextDidSaveNotification:notification];
-        }];
-    }
-}
-
 @end

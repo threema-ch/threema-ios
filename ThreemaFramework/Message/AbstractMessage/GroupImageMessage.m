@@ -58,6 +58,7 @@
 }
 
 - (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
+    // Legacy messages are not supported in FS
     return kUnspecified;
 }
 

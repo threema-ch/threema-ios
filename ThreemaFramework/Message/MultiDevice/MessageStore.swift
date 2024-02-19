@@ -665,6 +665,9 @@ class MessageStore: MessageStoreProtocol {
                         else {
                             self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
                             self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                            if let ballot = msg.ballot {
+                                self.messageProcessorDelegate.changedManagedObjectID(ballot.objectID)
+                            }
                         }
 
                         seal.fulfill_()
@@ -1002,6 +1005,9 @@ class MessageStore: MessageStoreProtocol {
                             else {
                                 self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
                                 self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                                if let ballot = msg.ballot {
+                                    self.messageProcessorDelegate.changedManagedObjectID(ballot.objectID)
+                                }
                             }
                         }
 

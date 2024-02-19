@@ -134,6 +134,10 @@ import SwiftUI
         present(type: .updateWorkDataFailed)
     }
     
+    @objc public func presentSendingError() {
+        present(type: .sendingError)
+    }
+    
     // MARK: - Styles
     
     private func initializeStyles() {

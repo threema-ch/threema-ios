@@ -104,6 +104,7 @@
 "file_message_video" = "Відео";
 "file_message_voice" = "Голосове повідомлення";
 "file_message_file" = "Файл";
+"chat" = "діалог"; /* noun */
 
 "chat_back_button_accessibility" = "%d непрочитаних";
 
@@ -126,6 +127,10 @@
 "include_media_title" = "Долучити медіа (зображення, відео) як вкладення?";
 "include_media_message" = "Сучасний ZIP застосунок з підтримкою AES необхідний для розархівування файлу, як-от 7-Zip або The Unarchiver (Mac).";
 
+"chat_view_resend_group_message_confirmation_title" = "Надіслати повідомлення групі ще раз?";
+/* The placeholder will be replaced by a localized list of all receivers */
+"chat_view_resend_group_message_confirmation_message" = "Це повідомлення неможливо надіслати усім учасникам. Надіслати повідомлення лише %@?";
+"chat_view_resend_group_message_confirmation_button" = "Надіслати ще раз";
 
 /* image sizes */
 "image_size_title" = "Розмір зображення";
@@ -501,9 +506,11 @@
 "exclude_deleted_id_exclude_button" = "Виключити";
 
 "forward_security" = "Цілковита пряма секретність";
-"forward_security_none" = "Немає";
-"forward_security_2dh" = "Одностороння";
-"forward_security_4dh" = "Повна";
+"forward_security_none" = "Немає"; /* sent to _none_ with PFS (_no(ne)_ PFS) */
+"forward_security_2dh" = "Одностороння"; /* _uniliteral_ PFS */
+"forward_security_4dh" = "Повна"; /* _complete_ PFS */
+"forward_security_outgoing_group_partial" = "Частково"; /* _partial_ly sent with PFS */
+"forward_security_outgoing_group_full" = "Повністю"; /* _full_y sent with PFS */
 "forward_security_clear_sessions" = "Скинути параметр «Цілковита пряма секретність» для цього контакта";
 "forward_security_explainer_footer" = "Виконувати цю дію лише за вказівкою команди підтримки Threema.";
 "md_wizard_pfs_warning" = "Цілковита пряма секретність буде заблокована для усіх контактів після активації Огляду на декількох пристроях.";
@@ -626,6 +633,8 @@
 /* Notifications Text */
 "new_message_from_x" = "Повідомлення від %@";
 "new_group_message" = "Повідомлення групи";
+"new_message_unknown" = "Невідомий";
+"new_message_unknown_group" = "Невідома група";
 "new_group_message_from_x" = "Повідомлення групи від %@";
 "new_message_no_access_title" = "Нове повідомлення";
 "new_message_no_access_message" = "Будь ласка, відкрийте %@ для отримання вхідних повідомлень.";
@@ -778,7 +787,8 @@
 "group_call_started_by_local_system_message" = "Ви почали груповий дзвінок";
 "group_call_ended_system_message" = "Груповий дзвінок завершено";
 
-"group_call_start_message_received" = "Розпочато груповий дзвінок";
+"group_call_notification_body_preview" = "Груповий дзвінок від %@";
+"group_call_notification_body" = "Груповий дзвінок розпочато";
 
 "group_call_navbar_state_connecting" = "Під’єднання…";
 "group_call_navbar_state_joining" = "Приєднання…";
@@ -788,6 +798,12 @@
 "group_call_error_generic_message" = "Якщо проблема не зникне, зверніться до служби підтримки.";
 "group_call_error_already_in_call_title" = "Активний інший виклик";
 "group_call_error_already_in_call_message" = "У кожний момент часу можна приєднатися лише до одного виклику.";
+"group_call_error_ended_in_meantime_title" = "Груповий дзвінок завершено";
+"group_call_error_ended_in_meantime_message" = "Завершився дзвінок, до якого Ви хотіли долучитись.";
+
+"group_call_alert_full_title" = "Досягнуто ліміту кількості учасників";
+"group_call_alert_full_message_count" = "Досягнуто ліміту групового дзвінка у %d учасників.";
+"group_call_alert_full_message" = "Досягнуто ліміту учасників групового дзвінка.";
 
 "group_call_accessibility_hide_view" = "Приховати груповий виклик";
 "group_call_accessibility_enable_camera" = "Увімкнути камеру";
@@ -828,7 +844,7 @@
 
 "select_all" = "Обрати усі";
 "deselect_all" = "Зняти виділення";
-"no_archived_chats" = "Немає архівованих бесід";
+"no_archived_chats" = "Немає архівованих діалогів";
 
 "privateChat_alert_title" = "Приватні діалоги";
 "privateChat_code_alert_message" = "Позначте діалоги приватними для захисту за допомогою паролю та приховання з переліку бесід. Для цього має бути налаштовано Блокування паролем.";
@@ -962,6 +978,7 @@
 "safe_upload_failed" = "Вивантаження не вдалось";
 "safe_upload_size_exceeded" = "Перевищено встановлений сервером розмір файлів для вивантаження.";
 "safe_change_password" = "Змінити пароль";
+"safe_change_password_disabled" = "Паролем керує адміністратор";
 "safe_learn_more" = "Докладніше";
 "safe_backup_now" = "Зробити резервну копію зараз";
 "safe_deactivate" = "Вимкнути Threema Safe";
@@ -1031,6 +1048,11 @@
 "restore_option_data_delete_data_description" = "Відновити резервну копію Threema Safe (містить ваш ID, контакти та групи) або експортований ID (містить лише Threema ID) після видалення даних на пристрої";
 "restore_option_data_delete_data_explain" = "Для відновлення повної резервної копії Threema Safe ви маєте перевстановити %@. Будь ласка, видаліть застосунок та завантажте його знов з App Store.";
 
+"threema_safe_company_mdm_password_changed_title" = "Новий пароль від Threema Safe встановлено адміністратором вашої компанії";
+"threema_safe_company_mdm_password_changed_message" = "Бажаєте схвалити його? Якщо маєте сумніви – зв’яжіться з адміністратором.";
+"threema_safe_company_mdm_password_changed_accept" = "Схвалити";
+"threema_safe_company_mdm_password_changed_accepted" = "Керований пароль всстановлено";
+
 // Company Directory
 "companydirectory_description" = "Шукати у папці компанії";
 "companydirectory_placeholder" = "Пошук у папці";
@@ -1039,10 +1061,9 @@
 
 "already_licensed" = "Вже ліцензовано";
 
-// IDNSafetyHelper
+// IDNASafetyHelper
 "url_warning_title" = "Попередження про фішинг";
 "url_warning_body" = "Ім’я хоста посилання, яке ви збираєтеся відкрити, підозріле:\n\nПоказане ім'я хоста: %@\nСправжнє ім'я: %@\n\nЦе може бути спробою змусити вас відкрити сайт, прикидаючись іншим сайтом.\n\nВсе одно бажаєте продовжити?";
-
 
 // Settings
 "settings_navbar_title" = "Налаштування";
@@ -1277,9 +1298,11 @@
 "settings_advanced_reregister_notifications_label" = "Повторно зареєструватися для отримання push-сповіщень";
 
 "settings_advanced_reset_fs_db_label" = "Скинути стан «цілковита пряма секретність»";
+"settings_advanced_reset_unread_count_label" = "Скинути лічильник непрочитаних повідомлень";
 "settings_advanced_support_settings_header_title" = "Параметри підтримки";
 "settings_advanced_support_settings_footer_title" = "Виконувати цю дію лише за вказівкою команди підтримки Threema.";
 "settings_advanced_successfully_deleted_fs_sessions_label" = "Стан «Пряма секретність» скинуто";
+"settings_advanced_successfully_reset_unread_count_label" = "Лічильник непрочитаних повідомлень успішно скинуто";
 
 // Sentry
 "sentry_crash_send_title" = "Аварійне завершення роботи %@";
@@ -1299,6 +1322,10 @@
 "profile_linked_phone" = "Прив’язаний номер телефону";
 "profile_id_export" = "Експорт ID";
 "my_profile_delete_cell_title" = "Вилучити ID і дані";
+"profile_edit" = "Редагувати";
+"not_connected_for_edit_profile_message" = "Перевірте з'єднання, будь ласка";
+"not_connected_for_edit_profile_title" = "Немає з'єднання";
+
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";
@@ -1308,12 +1335,10 @@
 "my_profile_delete_bullet_linked" = "Прив’язані номер телефону та / або електронна пошта";
 
 "my_profile_delete_info_title" = "Вилучити ID і дані";
-"my_profile_delete_info_keep" = "Ваш ідентифікатор Threema не буде відкликано. Якщо ви створили резервну копію Threema Safe або експортували свій ідентифікатор, ви можете відновити його на іншому пристрої.";
 "my_profile_delete_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою:";
-"my_profile_delete_info_delete_server" = "Усі ваші дані Threema буде вилучено із цього пристрою:";
-"my_profile_delete_info_revoke" = "Ваш Threema ID буде відкликано без можливості відновлення.";
-"my_profile_delete_info_toggle" = "Видалити все остаточно";
-
+"my_profile_delete_info_keep" = "Ваш ідентифікатор Threema не буде відкликано. Якщо ви створили резервну копію Threema Safe або експортували свій ідентифікатор, ви можете відновити його на іншому пристрої.";
+"my_profile_delete_info_revoke_info" = "Якщо не бажаєте використовувати цей Threema ID на своїх присторях, можете видалити його безповоротно: ";
+"my_profile_delete_info_revoke_info_link" = "[Видалити Threema ID](link)";
 "my_profile_delete_info_button" = "Вилучити ID і дані";
 
 "my_profile_delete_info_alert_title" = "Ви втратите свій Threema ID, якщо не маєте резервної копії.";
@@ -1321,7 +1346,8 @@
 
 "my_profile_revoke_identity_view_title" = "Видалити ID і дані?";
 "my_profile_revoke_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою:";
-"my_profile_revoke_info_sever" = "Усі ваші дані Threema також буде вилучено із цього сервера:";
+
+"my_profile_delete_info_revoke" = "Ваш Threema ID буде відкликано без можливості відновлення.";
 "my_profile_revoke_identity_view_enter_id" = "Введіть свій Threema ID \"%@\", щоб підтвердити видалення всього:";
 "my_profile_revoke_identity_view_placeholder" = "Ваш Threema ID";
 "my_profile_revoke_identity_view_button_revoke" = "Видалити ID і дані";
@@ -1368,7 +1394,9 @@
 "settings_advanced_contacts_cleanup_stats_logged" = "Інформацію зареєстровано.\n";
 "settings_advanced_contacts_cleanup_no_duplicates" = "У вас немає дублікатів контактів.";
 "settings_advanced_contacts_cleanup_error_title" = "Не вдалося видалити контакти";
+"settings_advanced_contacts_cleanup_in_use_error_title" = "Видалити діалоги вручну";
 "settings_advanced_contacts_cleanup_still_used_error" = "Очищення скасовано. Дублікати контактів (%i) не можна видалити, тому що дублікати досі мають повідомлення або є членами групи.\n";
+"settings_advanced_contacts_multi_device_enabled_error" = "Зараз пристрої прив’язано. Будь ласка, видалить усі прив’язані пристрої перед видаленням.";
 "settings_advanced_contacts_cleanup_success_title" = "Контакт очищено";
 "settings_advanced_contacts_cleanup_success_exit" = "Вийти";
 "settings_advanced_contacts_cleanup_unused_message" = "Видалено дублікати контактів: %i.\n\nВийдіть із програми, перезапустіть її та прив'яжіть пристрій. Якщо це не спрацює, виконайте такі дії: ";
@@ -1527,6 +1555,7 @@
 "multi_device_new_linked_show_contact_button" = "Показати контакт";
 "multi_device_new_linked_device_list_no_platform_details" = "Немає відомостей про платформу";
 "multi_device_new_linked_device_list_last_active" = "Остання активність: %@";
+"multi_device_new_linked_device_list_currently_active" = "Активний";
 
 "multi_device_join_perfect_forward_secrecy_info" = "Коли ви прив’яжете пристрій, функцію «Цілковита пряма секретність» буде вимкнено для всіх контактів.\n\nЦе обмеження поточної бета-версії. Щоб дізнатися про інші обмеження, ознайомтесь із [цією статтею поширених запитань](%@).";
 "multi_device_join_scan_qr_code_title" = "Проскануйте QR-код";
@@ -1688,7 +1717,7 @@
 
 "notification_flush_message_queue_succeeded" = "Чергу повідомлень очищено";
 
-"notification_reregister_notifications_successed" = "Push-сповіщення зареєстровано повторно";
+"notification_reregister_notifications_succeeded" = "Push-сповіщення було перереєстровано";
 
 "notification_audio_muted" = "Мікрофон: вимк.";
 "notification_audio_unmuted" = "Мікрофон: увімк.";
@@ -1858,6 +1887,8 @@
 "alert_biometrics_changed_title_touch" = "Виявлено можливу зміну в TouchID";
 "alert_biometrics_changed_title_face" = "Виявлено можливу зміну в FaceID";
 "alert_biometrics_changed_message" = "Введіть свій код доступу Threema один раз, щоб і надалі використовувати біометричну автентифікацію для розблокування Threema.";
+
+"alert_enable_actions" = "Доступні дії у: %d";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nНе вдалося перейти з версії %d на нижчу версію %d";

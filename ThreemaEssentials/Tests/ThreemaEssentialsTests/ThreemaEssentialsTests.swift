@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaEssentials
 
@@ -40,5 +41,13 @@ final class ThreemaEssentialsTests: XCTestCase {
         XCTAssertEqual(groupIdentity.id, groupID)
         XCTAssertEqual(groupIdentity.creator, groupCreator)
         XCTAssertEqual(groupIdentity.description, "id: \(groupID.hexString) creator: \(groupCreator)")
+    }
+    
+    func testGroupIdentityWithEmptyCommonGroupIdentity() throws {
+        let commonGroupIdentity = Common_GroupIdentity()
+        
+        XCTAssertThrowsError(try GroupIdentity(commonGroupIdentity: commonGroupIdentity)) { error in
+            XCTAssertEqual(error as! GroupIdentity.Error, GroupIdentity.Error.invalidCreatorIdentityLength)
+        }
     }
 }

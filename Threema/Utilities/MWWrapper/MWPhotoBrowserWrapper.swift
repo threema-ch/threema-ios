@@ -339,7 +339,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
             .videoMessages(for: conversation) as? [VideoMessage] ?? [VideoMessage]()
         let fileMessages = entityManager.entityFetcher
             .filesMessagesFilteredForPhotoBrowser(for: conversation) as? [FileMessageEntity] ?? [FileMessageEntity]()
-
+        
         finalMessages.append(contentsOf: imageMessages)
         finalMessages.append(contentsOf: videoMessages)
         finalMessages.append(contentsOf: fileMessages)

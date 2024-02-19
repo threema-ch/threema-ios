@@ -106,7 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(ContactEntity * nonnull))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError
     NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:acquaintanceLevel:onCompletion:onError:));
-- (nullable ContactEntity *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
+- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
     NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:acquaintanceLevel:entityManager:contactSyncer:));
 
 - (void)resetImportedStatus;
@@ -117,7 +117,6 @@ NS_ASSUME_NONNULL_BEGIN
     NS_SWIFT_NAME(unlink(_:));
 - (void)upgradeContact:(ContactEntity *)contact toVerificationLevel:(int32_t)verificationLevel
     NS_SWIFT_NAME(upgrade(_:toVerificationLevel:));
-- (void)setWorkContact:(nullable ContactEntity *)contact workContact:(BOOL)workContact;
 
 - (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname;
 

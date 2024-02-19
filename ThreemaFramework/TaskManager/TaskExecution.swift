@@ -182,22 +182,22 @@ class TaskExecution: NSObject {
         mediatorMessageAck.enter()
 
         DDLogNotice("\(ltReflect.hexString) \(ltReflect) \(loggingMsgInfo)")
-        if frameworkInjector.serverConnector.reflectMessage(reflectMessage) {
-            let result = mediatorMessageAck.wait(timeout: .now() + .seconds(responseTimeoutInSeconds))
-            if result != .success {
-                notificationCenter.removeObserver(mediatorMessageAckObserver!)
-                throw TaskExecutionError.reflectMessageTimeout(message: loggingMsgInfo)
-            }
-
-            guard let reflectedAt else {
-                throw TaskExecutionError.reflectMessageFailed(message: "Reflected at is nil for \(loggingMsgInfo)")
-            }
-            return reflectedAt
-        }
-        else {
+        if let error = frameworkInjector.serverConnector.reflectMessage(reflectMessage) {
             notificationCenter.removeObserver(mediatorMessageAckObserver!)
-            throw TaskExecutionError.reflectMessageFailed(message: loggingMsgInfo)
+            throw error
         }
+
+        guard mediatorMessageAck.wait(timeout: .now() + .seconds(responseTimeoutInSeconds)) == .success else {
+            notificationCenter.removeObserver(mediatorMessageAckObserver!)
+            throw TaskExecutionError.reflectMessageTimeout(message: loggingMsgInfo)
+        }
+
+        guard let reflectedAt else {
+            notificationCenter.removeObserver(mediatorMessageAckObserver!)
+            throw TaskExecutionError.reflectMessageFailed(message: "Reflected at is nil for \(loggingMsgInfo)")
+        }
+
+        return reflectedAt
     }
 
     /// Send abstract message to chat server.
@@ -216,24 +216,18 @@ class TaskExecution: NSObject {
             assert(ltSend != .none && ltAck != .none)
             
             guard message.toIdentity != self.frameworkInjector.myIdentityStore.identity else {
-                seal.reject(
-                    TaskExecutionError
-                        .sendMessageFailed(
-                            message: "Do not sending message to own identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
-                        )
-                )
+                seal.reject(TaskExecutionError.sendMessageFailed(
+                    message: "Do not sending message to own identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
+                ))
                 return
             }
 
             frameworkInjector.backgroundEntityManager.performBlock {
                 guard let toContact = self.frameworkInjector.backgroundEntityManager.entityFetcher
                     .contact(for: message.toIdentity) else {
-                    seal.reject(
-                        TaskExecutionError
-                            .sendMessageFailed(
-                                message: "Contact not found for identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
-                            )
-                    )
+                    seal.reject(TaskExecutionError.sendMessageFailed(
+                        message: "Contact not found for identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
+                    ))
                     return
                 }
 
@@ -263,7 +257,8 @@ class TaskExecution: NSObject {
 
                 var messageToSend = message
                 var auxMessage: ForwardSecurityEnvelopeMessage?
-                var sendAuxFailure: (() -> Void)?
+                // Call after sending of any message failed
+                var sendingFailure: (() -> Void)?
 
                 // Check whether the message and the destination contact support forward security
                 if ThreemaUtility.supportsForwardSecurity, toContact.isForwardSecurityAvailable() {
@@ -273,18 +268,18 @@ class TaskExecution: NSObject {
                             publicKey: toContact.publicKey
                         )
                         
+                        // TODO: (IOS-4278) Remove check
                         // If this is a message which we can send in this session make the fs message
                         // Otherwise do nothing
                         if try self.frameworkInjector.fsmp.canSend(message, to: fsContact) {
                             (
                                 auxMessage: auxMessage,
                                 message: messageToSend,
-                                sendAuxFailure: sendAuxFailure
-                            ) = try self
-                                .frameworkInjector.fsmp.makeMessage(
-                                    contact: fsContact,
-                                    innerMessage: message
-                                )
+                                sendAuxFailure: sendingFailure
+                            ) = try self.frameworkInjector.fsmp.makeMessage(
+                                contact: fsContact,
+                                innerMessage: message
+                            )
                         }
                     }
                     catch {
@@ -293,20 +288,32 @@ class TaskExecution: NSObject {
                     }
                 }
 
+                // TODO: (IOS-4348) Optimize messages sending
+                // Sending can be optimized, because the messages need to be sent in order, but we only need to wait at
+                // the end for all server acks. One possible implementation is to do the sending in order an then return
+                // a promise that resolves when the server ack is received. So after sending all the messages we wait
+                // for all the server acks.
+                
                 // Send message in own thread, because of possible network latency
                 DispatchQueue.global().async {
                     if let auxMessage {
+                        
+                        let failure = {
+                            sendingFailure?()
+                            let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
+                            seal.reject(err)
+                        }
+                        
                         // We have an auxiliary (control) message to send before the actual message
                         guard let boxAuxMsg = self.frameworkInjector.backgroundEntityManager.performAndWait({
                             auxMessage.makeBox(
                                 toContact,
                                 myIdentityStore: self.frameworkInjector.myIdentityStore,
+                                // TODO: (IOS-4242)
                                 nonce: NaClCrypto.shared().randomBytes(Int32(kNaClCryptoNonceSize))
                             )
                         }) else {
-                            sendAuxFailure?()
-                            let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
-                            seal.reject(err)
+                            failure()
                             return
                         }
 
@@ -320,38 +327,20 @@ class TaskExecution: NSObject {
                             )
                         }
                         catch {
-                            sendAuxFailure?()
-                            let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
-                            seal.reject(err)
+                            failure()
                             return
                         }
                     }
+                    
                     self.frameworkInjector.backgroundEntityManager.performBlock {
-                        if !messageToSend.flagGroupMessage() {
-                            // Save forward security mode in any case (could also be a message first sent with FS and
-                            // then resent without)
-                            if let conversation = try? self.getConversation(for: self.taskDefinition) {
-                                self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
-                                    message.messageID,
-                                    in: conversation,
-                                    forwardSecurityMode: messageToSend.forwardSecurityMode
-                                )
-                            }
-                            else {
-                                DDLogWarn(
-                                    "\(self.taskDefinition) no conversation found for \(message.loggingDescription) to set forward security mode"
-                                )
-                            }
-                        }
-                        
                         var nonce: Data
                         do {
                             nonce = try self.messageNonce(for: toContact.identity)
                         }
                         catch {
+                            sendingFailure?()
                             seal.reject(
-                                TaskExecutionError
-                                    .sendMessageFailed(message: "\(error) \(message.loggingDescription)")
+                                TaskExecutionError.sendMessageFailed(message: "\(error) \(message.loggingDescription)")
                             )
                             return
                         }
@@ -361,6 +350,7 @@ class TaskExecution: NSObject {
                             myIdentityStore: self.frameworkInjector.myIdentityStore,
                             nonce: nonce
                         ) else {
+                            sendingFailure?()
                             seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
                             return
                         }
@@ -370,11 +360,13 @@ class TaskExecution: NSObject {
                                 try self.frameworkInjector.nonceGuard.processed(boxedMessage: boxMsg)
                             }
                             catch {
+                                sendingFailure?()
                                 seal.reject(error)
                                 return
                             }
                         }
 
+                        // TODO: (IOS-4348) Why is this `.utility`, but aux `.default`?
                         DispatchQueue.global(qos: .utility).async {
                             do {
                                 try self.sendAndWait(
@@ -386,10 +378,13 @@ class TaskExecution: NSObject {
                                 )
                             }
                             catch {
+                                sendingFailure?()
                                 seal.reject(error)
                                 return
                             }
 
+                            // We now know the FS mode so we also set it for the "inner" message
+                            message.forwardSecurityMode = messageToSend.forwardSecurityMode
                             seal.fulfill(message)
                         }
                     }
@@ -440,6 +435,7 @@ class TaskExecution: NSObject {
                 let result = chatMessageAck.wait(timeout: .now() + .seconds(responseTimeoutInSeconds))
                 if result == .success {
                     if !isAuxMessage, let toIdentity = abstractMessage.toIdentity {
+                        // Only non-AuxMessages need their nonces to be reflected and are thus stored
                         try messageAlreadySentTo(identity: toIdentity, nonce: messageNonce(for: toIdentity))
                     }
                 }
@@ -525,7 +521,7 @@ class TaskExecution: NSObject {
         }
         else if let task = task as? TaskDefinitionSendMessage {
             if task.isGroupMessage {
-                guard let members = task.allGroupMembers else {
+                guard let members = task.receivingGroupMembers else {
                     throw TaskExecutionError.missingGroupInformation
                 }
                 identities = members
@@ -760,7 +756,7 @@ class TaskExecution: NSObject {
                 return msg
             }
             else if let message = message as? BallotMessage {
-                let msg: BoxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: message.ballot)
+                let msg: BoxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: message.ballot!)
                 msg.messageID = message.id
 
                 guard let groupID = task.groupID,

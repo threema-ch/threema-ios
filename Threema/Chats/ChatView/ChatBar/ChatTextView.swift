@@ -718,7 +718,7 @@ extension ChatTextView: UITextViewDelegate {
         in characterRange: NSRange,
         interaction: UITextItemInteraction
     ) -> Bool {
-        guard IDNSafetyHelper.isLegalURL(url: URL, viewController: AppDelegate.shared().currentTopViewController())
+        guard IDNASafetyHelper.isLegalURL(url: URL, viewController: AppDelegate.shared().currentTopViewController())
         else {
             return false
         }

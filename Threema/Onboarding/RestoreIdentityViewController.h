@@ -37,7 +37,7 @@
 @property (weak, nonatomic) IBOutlet UITextView *backupTextView;
 @property (weak, nonatomic) IBOutlet UITextField *passwordTextField;
 @property (weak, nonatomic) IBOutlet UIView *passwordFieldBackground;
-@property (weak, nonatomic) IBOutlet SSLabel *backupLabel;
+@property (weak, nonatomic) IBOutlet UILabel *backupLabel;
 
 @property (weak) id<RestoreIdentityViewControllerDelegate> delegate;
 

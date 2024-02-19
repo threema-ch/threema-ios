@@ -465,12 +465,12 @@
 
 - (NSArray *)imageMessagesForConversation:(Conversation *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
-    return [self allEntitiesNamed:@"ImageMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@", conversation];
+    return [self allEntitiesNamed:@"ImageMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@ AND image.data != nil", conversation];
 }
 
 - (NSArray *)videoMessagesForConversation:(Conversation *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
-    return [self allEntitiesNamed:@"VideoMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@", conversation];
+    return [self allEntitiesNamed:@"VideoMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@ AND video.data != nil", conversation];
 }
 
 - (NSArray *)fileMessagesForConversation:(Conversation *)conversation {
@@ -487,7 +487,7 @@
     NSMutableArray *filteredMimeTypes = [NSMutableArray arrayWithArray:renderingAudioMimetypes];
     [filteredMimeTypes addObject:gifMimeType];
     
-    return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"(conversation == %@) AND (type != 2) AND !(mimeType IN %@)", conversation, filteredMimeTypes];
+    return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"(conversation == %@) AND (type != 2) AND !(mimeType IN %@) AND data.data != nil", conversation, filteredMimeTypes];
 }
 
 - (NSArray *)unreadMessagesForConversation:(Conversation *)conversation {
@@ -734,7 +734,7 @@
     return fetchedResultsController;
 }
 
-- (NSFetchedResultsController *)fetchedResultsControllerForConversationsWithSections:(BOOL)sections {
+- (NSFetchedResultsController *)fetchedResultsControllerForConversations {
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     fetchRequest.relationshipKeyPathsForPrefetching = @[@"members"];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Conversation" inManagedObjectContext:_managedObjectContext];
@@ -761,10 +761,8 @@
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"visibility" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"lastUpdate" ascending:NO],
                                  [NSSortDescriptor sortDescriptorWithKey:@"lastMessage.date" ascending:NO]];
     [fetchRequest setSortDescriptors:sortDescriptors];
-    
-    NSString *sectionString = sections ? @"visibility" : nil;
-    
-    NSFetchedResultsController *fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:sectionString cacheName:nil];
+        
+    NSFetchedResultsController *fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:nil cacheName:nil];
 
     return fetchedResultsController;
 }

@@ -35,7 +35,7 @@
 + (AbstractMessage*)decodeFromBoxed:(BoxedMessage*)boxmsg withPublicKey:(NSData*)publicKey;
 
 /**
- Decode message depence on type.
+ Decode message depending on type
  
  @param type: Message Type (MSGTYPE_...), see in `ProtocolDefines.h`
  @param body: Decrypted message data

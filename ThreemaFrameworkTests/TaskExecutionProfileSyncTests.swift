@@ -166,10 +166,12 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                         }
                         expectedMediatorLockState = lockState
                     }
-                    return true
+                    return nil
                 }
-
-                return false
+                return ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError
             }
 
             if let expectedServerTransactionErrorResponse = test.expectedServerTransactionErrorResponses {

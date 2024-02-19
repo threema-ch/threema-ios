@@ -74,6 +74,9 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         serverUserNameField.placeholder = BundleUtil.localizedString(forKey: "username")
         serverPasswordField.placeholder = BundleUtil.localizedString(forKey: "Password")
         
+        passwordField.isHidden = (mdmSetup.safePassword() != nil)
+        passwordAgainField.isHidden = (mdmSetup.safePassword() != nil)
+        
         if safeManager.isActivated || mdmSetup.isSafeBackupServerPreset() || isForcedBackup {
             // is already activated means is in change password mode or server is given by MDM
             // hide server config elements
@@ -146,6 +149,11 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     }
     
     private func checkPasswordAndActivate() {
+        guard mdmSetup.safePassword() == nil else {
+            activate(password: mdmSetup.safePassword())
+            return
+        }
+        
         if let password = validatedPassword() {
             if safeManager.isPasswordBad(password: password) {
                 UIAlertTemplate.showConfirm(
@@ -381,6 +389,10 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         }
         else {
             switch indexPath.section {
+            case 0:
+                if mdmSetup.safePassword() != nil {
+                    return 0.0
+                }
             case 1:
                 if indexPath.row != 0 {
                     return serverSwitch.isOn ? 0.0 : UITableView.automaticDimension
@@ -405,6 +417,9 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 0:
+            if mdmSetup.safePassword() != nil {
+                return nil
+            }
             return BundleUtil.localizedString(forKey: "safe_configure_choose_password_title")
         case 1:
             return !safeManager.isActivated && !mdmSetup.isSafeBackupServerPreset() && !isForcedBackup ? BundleUtil
@@ -424,7 +439,11 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         switch section {
         case 0:
-            if isForcedBackup {
+            if mdmSetup.safePassword() != nil {
+                return "threema_safe_company_mdm_password_changed_title"
+                    .localized + ".\n" + "safe_change_password_disabled".localized + "."
+            }
+            else if isForcedBackup {
                 return BundleUtil.localizedString(forKey: "safe_configure_choose_password_mdm") + "\n\n" + BundleUtil
                     .localizedString(forKey: "safe_configure_choose_password")
             }

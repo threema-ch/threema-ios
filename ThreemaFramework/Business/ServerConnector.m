@@ -30,7 +30,6 @@
 #import "BoxedMessage.h"
 #import "MyIdentityStore.h"
 #import "ProtocolDefines.h"
-#import "Reachability.h"
 #import "ThreemaUtilityObjC.h"
 #import "ContactStore.h"
 #import "UserSettings.h"
@@ -88,8 +87,7 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     uint64_t lastSentEchoSeq;
     uint64_t lastRcvdEchoSeq;
 
-    Reachability *internetReachability;
-    NetworkStatus lastInternetStatus;
+    ReachabilityWrapper *reachabilityWrapper;
     
     NSMutableSet *displayedServerAlerts;
     int anotherConnectionCount;
@@ -210,11 +208,9 @@ struct pktExtension {
         displayedServerAlerts = [NSMutableSet set];
         
         /* register with reachability API */
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkStatusDidChange:) name:kReachabilityChangedNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkStatusDidChange:) name:@"reachabilityChanged" object:nil];
         
-        internetReachability = [Reachability reachabilityForInternetConnection];
-        lastInternetStatus = [internetReachability currentReachabilityStatus];
-        [internetReachability startNotifier];
+        reachabilityWrapper = [[ReachabilityWrapper alloc] init];
 
         doUnblockIncomingMessages = YES;
         isWaitingForReconnect = NO;
@@ -981,23 +977,22 @@ struct pktExtension {
     return [self sendPayloadWithType:PLTYPE_OUTGOING_MESSAGE data:[NSData dataWithBytesNoCopy:plmsg length:msglen]];
 }
 
-- (BOOL)reflectMessage:(NSData *)message {
+- (NSError * _Nullable)reflectMessage:(NSData *)message {
+
     if (message == nil) {
-        return NO;
+        return [ThreemaError threemaError:[NSString stringWithFormat:@"Bad message"] withCode:ThreemaProtocolErrorBadMessage];
     }
     
-    if ([serverConnectorConnectionState connectionState] != ConnectionStateLoggedIn) {
-        DDLogVerbose(@"Cannot reflect message - not logged in");
-        return NO;
+    if ([(NSObject*)socket isKindOfClass:[MediatorWebSocket class]] == NO) {
+        return [ThreemaError threemaError:[NSString stringWithFormat:@"Not connected to mediator"] withCode:ThreemaProtocolErrorNotConnectedToMediator];
     }
 
-    if (deviceGroupKeys.dgrk == nil) {
-        DDLogError(@"Message could not be reflected, because Device Group Reflect Key is missing");
-        return NO;
+    if ([serverConnectorConnectionState connectionState] != ConnectionStateLoggedIn) {
+        return [ThreemaError threemaError:[NSString stringWithFormat:@"Not logged in"] withCode:ThreemaProtocolErrorNotLoggedIn];
     }
 
     [socket writeWithData:message];
-    return YES;
+    return nil;
 }
 
 - (BOOL)ackMessage:(NSData*)messageId fromIdentity:(NSString*)fromIdentity {
@@ -1214,20 +1209,7 @@ struct pktExtension {
 
 - (void)networkStatusDidChange:(NSNotification *)notice
 {
-    NetworkStatus internetStatus = [internetReachability currentReachabilityStatus];
-    switch (internetStatus) {
-        case NotReachable:
-            DDLogNotice(@"Internet is not reachable");
-            break;
-        case ReachableViaWiFi:
-            DDLogNotice(@"Internet is reachable via WiFi");
-            break;
-        case ReachableViaWWAN:
-            DDLogNotice(@"Internet is reachable via WWAN");
-            break;
-    }
-    
-    if (internetStatus != lastInternetStatus) {
+    if ([reachabilityWrapper didLastConnectionTypeChange]) {
         if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
             DDLogNotice(@"Internet status changed - forcing reconnect");
             [self reconnect];
@@ -1237,7 +1219,6 @@ struct pktExtension {
             [serverConnectorConnectionState disconnecting];
             [socket disconnect];
         }
-        lastInternetStatus = internetStatus;
     }
 }
 

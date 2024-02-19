@@ -72,37 +72,30 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
 
 ### 1. Install Dependencies
 
-1. Install [Carthage](https://github.com/Carthage/Carthage)
-
-   ```sh
-   brew install carthage
-   ```
-
-   (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://github.com/Carthage/Carthage#installing-carthage).)
-
-2. If your Xcode installation is fresh make sure that command line tools are selected
+1. If your Xcode installation is fresh make sure that command line tools are selected
 
    ```sh
    sudo xcode-select --switch /Applications/Xcode.app
    ```
 
-3. Install and build the dependencies
+2. Install and build the dependencies
 
    ```sh
    ./scripts/build.sh --dependencies
    ```
 
-   This checks out and builds Carthage dependencies, and downloads the WebRTC.xcframework if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
+   This downloads the WebRTC.xcframework if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
 
-4. Install & intialize [Rustup](https://rustup.rs) for building SaltyRTC. The build happens during the first compilation of the project which also installs the specific toolchain and targets needed.
+3. Install & intialize [Rustup](https://rustup.rs) for building SaltyRTC. The build happens during the first compilation of the project which also installs the specific toolchain and targets needed.
    ```sh
    brew install rustup
    rustup-init
    ```
-
+   (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://github.com/Carthage/Carthage#installing-carthage).)
+   
    (You might want to add $HOME/.cargo/bin to your PATH.)
    
-5. Ensure that submodules are checked out
+4. Ensure that submodules are checked out
 
    ```sh
    git submodule update --init
@@ -162,7 +155,7 @@ These are the most important groups of the Xcode project:
 - `Threema{Framework}Tests`: Test files
 - `GroupCalls`: Code of group calls
 
-Our dependencies are manged with Swift Package Manager & Carthage. Additionally we use WebRTC based on binaries hosted on our servers. If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).
+Our dependencies are managed with Swift Package Manager. Additionally we use WebRTC based on binaries hosted on our servers. If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).
 
 
 ## <a name="contributions"></a>Contributions

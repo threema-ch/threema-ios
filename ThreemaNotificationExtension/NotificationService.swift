@@ -135,7 +135,7 @@ class NotificationService: UNNotificationServiceExtension {
                 
                 businessInjector.serverConnector.businessInjectorForMessageProcessing = businessInjector
                 
-                if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
+                if businessInjector.settingsStore.enableThreemaGroupCalls {
                     GlobalGroupCallsManagerSingleton.shared.processBusinessInjector = businessInjector
                 }
                 
@@ -583,6 +583,12 @@ extension NotificationService: MessageProcessorDelegate {
                 // Set dirty DB objects for refreshing in the app process
                 let databaseManager = DatabaseManager()
                 databaseManager.addDirtyObject(msg)
+                
+                if let ballotMessage = msg as? BallotMessage,
+                   let ballot = ballotMessage.ballot {
+                    databaseManager.addDirtyObject(ballot)
+                }
+                
                 if let conversation = msg.conversation {
                     databaseManager.addDirtyObject(conversation)
                     if let contact = conversation.contact {

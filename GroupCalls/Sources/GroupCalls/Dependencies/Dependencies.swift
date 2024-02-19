@@ -42,7 +42,8 @@ public struct Dependencies: @unchecked Sendable {
     let groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol
     let groupCallSessionHelper: GroupCallSessionHelperProtocol
     let groupCallBundleUtil: GroupCallBundleUtilProtocol
-    
+    let isRunningForScreenshots: Bool
+
     // MARK: - Lifecycle
     
     public init(
@@ -55,8 +56,8 @@ public struct Dependencies: @unchecked Sendable {
         notificationPresenterWrapper: NotificationPresenterWrapperProtocol,
         groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol,
         groupCallSessionHelper: GroupCallSessionHelperProtocol,
-        groupCallBundleUtil: GroupCallBundleUtilProtocol
-
+        groupCallBundleUtil: GroupCallBundleUtilProtocol,
+        isRunningForScreenshots: Bool
     ) {
         self.groupCallsHTTPClientAdapter = groupCallsHTTPClientAdapter
         self.httpHelper = httpHelper
@@ -68,5 +69,6 @@ public struct Dependencies: @unchecked Sendable {
         self.groupCallParticipantInfoFetcher = groupCallParticipantInfoFetcher
         self.groupCallSessionHelper = groupCallSessionHelper
         self.groupCallBundleUtil = groupCallBundleUtil
+        self.isRunningForScreenshots = isRunningForScreenshots
     }
 }

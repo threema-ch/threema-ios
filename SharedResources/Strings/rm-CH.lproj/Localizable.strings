@@ -977,7 +977,7 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 
 "already_licensed" = "Gia licenzià";
 
-// IDNSafetyHelper
+// IDNASafetyHelper
 "url_warning_title" = "Avertiment da phishing";
 "url_warning_body" = "La pagina-web che ti vuls avrir è dubiusa:\n\nNum dal host inditgà: %@\nNum dal host effectiv: %@\n\nQuai pudess esser in’emprova da manar tai sin ina pagina-web falsifitgada.\n\nVuls ti tuttina cuntinuar?";
 

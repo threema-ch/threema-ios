@@ -62,6 +62,10 @@ final class GroupCallSessionDescription: Sendable {
         DDLogNotice("[GroupCall] [mLineOrder] Post Current mLineOrder \(state.mLineOrder)")
     }
     
+    func mLineOrderContains(participantID: ParticipantID) -> Bool {
+        state.mLineOrder.contains(participantID)
+    }
+    
     // MARK: - SDP Generating
     
     func generateRemoteDescription(from descriptionInit: RemoteSessionDescriptionInit) -> String {
@@ -300,11 +304,11 @@ extension GroupCallSessionDescription {
     ]
 
     fileprivate static let MICROPHONE_HEADER_EXTENSIONS: [UInt: String] = [
-        10: "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+        1: "urn:ietf:params:rtp-hdrext:sdes:mid",
         4: "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
         5: "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
-        1: "urn:ietf:params:rtp-hdrext:sdes:mid",
         // TODO(SE-257): Disabled until we can use cryptex
+        // 10: "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
     ]
 
     fileprivate static let CAMERA_HEADER_EXTENSIONS: [UInt: String] = [
@@ -332,7 +336,7 @@ extension GroupCallSessionDescription {
         ),
         SendEncoding(
             rid: "h",
-            maxBitrateBps: 2_200_000,
+            maxBitrateBps: 1_200_000,
             scalabilityMode: ScalabilityMode.L1T3
         ),
     ]

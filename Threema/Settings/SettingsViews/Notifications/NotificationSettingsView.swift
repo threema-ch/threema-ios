@@ -24,7 +24,7 @@ import ThreemaFramework
 
 struct NotificationSettingsView: View {
     
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
 
     @State var dndBegin = Date.now
     @State var dndEnd = Date.now
@@ -38,7 +38,7 @@ struct NotificationSettingsView: View {
         List {
             // MARK: - In App
                         
-            Section(header: Text(BundleUtil.localizedString(forKey: "settings_notifications_inapp_section"))) {
+            Section(header: Text("settings_notifications_inapp_section".localized)) {
 
                 NotificationTypeNotificationView(
                     showPreview: $settingsVM.inAppPreview,
@@ -51,17 +51,17 @@ struct NotificationSettingsView: View {
                 .accessibilityElement(children: .combine)
                 
                 Toggle(isOn: $settingsVM.inAppPreview) {
-                    Text(BundleUtil.localizedString(forKey: "settings_notifications_inapp_preview"))
+                    Text("settings_notifications_inapp_preview".localized)
                 }
             }
             
             Section {
                 Toggle(isOn: $settingsVM.inAppSounds) {
-                    Text(BundleUtil.localizedString(forKey: "settings_notifications_inapp_sounds"))
+                    Text("settings_notifications_inapp_sounds".localized)
                 }
                 
                 Toggle(isOn: $settingsVM.inAppVibrate) {
-                    Text(BundleUtil.localizedString(forKey: "settings_notifications_inapp_vibrate"))
+                    Text("settings_notifications_inapp_vibrate".localized)
                 }
             }
             
@@ -79,7 +79,7 @@ struct NotificationSettingsView: View {
                 .accessibilityElement(children: .combine)
 
                 Toggle(isOn: $settingsVM.pushShowPreview) {
-                    Text(BundleUtil.localizedString(forKey: "settings_notifications_push_preview"))
+                    Text("settings_notifications_push_preview".localized)
                 }
                 .disabled(disablePreviewToggle)
                 
@@ -98,16 +98,16 @@ struct NotificationSettingsView: View {
                 }
                 
             } header: {
-                Text(BundleUtil.localizedString(forKey: "settings_notifications_push_section"))
+                Text("settings_notifications_push_section".localized)
             } footer: {
                 VStack {
                     Text(LocalizedStringKey(String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "settings_notification_type_preview_description"),
+                        "settings_notification_type_preview_description".localized,
                         faqURLString
                     )))
                     
                     if disablePreviewToggle {
-                        Text(BundleUtil.localizedString(forKey: "disabled_by_device_policy"))
+                        Text("disabled_by_device_policy".localized)
                     }
                 }
             }
@@ -116,29 +116,25 @@ struct NotificationSettingsView: View {
                 NavigationLink {
                     SoundPickerView(
                         selection: $settingsVM.pushSound,
-                        title: BundleUtil.localizedString(forKey: "settings_notifications_push_sound")
+                        title: "settings_notifications_push_sound".localized
                     )
                 } label: {
-                    HStack {
-                        Text(BundleUtil.localizedString(forKey: "settings_notifications_push_sound"))
-                        Spacer()
-                        Text(BundleUtil.localizedString(forKey: "sound_\(settingsVM.pushSound)"))
-                            .foregroundColor(.secondary)
-                    }
+                    SettingsListItemView(
+                        cellTitle: "settings_notifications_push_sound".localized,
+                        accessoryText: "sound_\(settingsVM.pushSound)".localized
+                    )
                 }
                 
                 NavigationLink {
                     SoundPickerView(
                         selection: $settingsVM.pushGroupSound,
-                        title: BundleUtil.localizedString(forKey: "settings_notifications_push_groupsound")
+                        title: "settings_notifications_push_groupsound".localized
                     )
                 } label: {
-                    HStack {
-                        Text(BundleUtil.localizedString(forKey: "settings_notifications_push_groupsound"))
-                        Spacer()
-                        Text(BundleUtil.localizedString(forKey: "sound_\(settingsVM.pushGroupSound)"))
-                            .foregroundColor(.secondary)
-                    }
+                    SettingsListItemView(
+                        cellTitle: "settings_notifications_push_groupsound".localized,
+                        accessoryText: "sound_\(settingsVM.pushGroupSound)".localized
+                    )
                 }
             }
 
@@ -146,35 +142,28 @@ struct NotificationSettingsView: View {
             
             if LicenseStore.requiresLicenseKey() {
                 Section(
-                    header: Text(
-                        BundleUtil
-                            .localizedString(forKey: "settings_notifications_masterDnd_section_header")
-                    ),
-                    footer: Text(
-                        BundleUtil
-                            .localizedString(forKey: "settings_notifications_masterDnd_section_footer")
-                    )
+                    header: Text("settings_notifications_masterDnd_section_header".localized),
+                    footer: Text("settings_notifications_masterDnd_section_footer".localized)
                 ) {
                     
                     Toggle(isOn: $settingsVM.enableMasterDnd) {
-                        Text(BundleUtil.localizedString(forKey: "settings_notifications_masterDnd"))
+                        Text("settings_notifications_masterDnd".localized)
                     }
                     
                     if settingsVM.enableMasterDnd {
                         
                         NavigationLink {
-                            DayPickerView(settingsVM: settingsVM)
+                            DayPickerView()
+                                .environmentObject(settingsVM)
                         } label: {
-                            HStack {
-                                Text(BundleUtil.localizedString(forKey: "settings_notifications_masterDnd_workingDays"))
-                                Spacer()
-                                Text(workingDaysSummary())
-                                    .foregroundColor(.secondary)
-                            }
+                            SettingsListItemView(
+                                cellTitle: "settings_notifications_masterDnd_workingDays".localized,
+                                accessoryText: workingDaysSummary()
+                            )
                         }
                         
                         DatePicker(
-                            BundleUtil.localizedString(forKey: "settings_notifications_masterDnd_startTime"),
+                            "settings_notifications_masterDnd_startTime".localized,
                             selection: $dndBegin,
                             displayedComponents: .hourAndMinute
                         )
@@ -184,7 +173,7 @@ struct NotificationSettingsView: View {
                         }
                         
                         DatePicker(
-                            BundleUtil.localizedString(forKey: "settings_notifications_masterDnd_endTime"),
+                            "settings_notifications_masterDnd_endTime".localized,
                             selection: $dndEnd,
                             displayedComponents: .hourAndMinute
                         )
@@ -205,13 +194,13 @@ struct NotificationSettingsView: View {
 
             Section {
                 Link(
-                    BundleUtil.localizedString(forKey: "settings_notification_iOS_settings"),
+                    "settings_notification_iOS_settings".localized,
                     destination: URL(string: UIApplication.openSettingsURLString)!
                 )
             }
         }
         .navigationBarTitle(
-            BundleUtil.localizedString(forKey: "settings_list_notifications_title"),
+            "settings_list_notifications_title".localized,
             displayMode: .inline
         )
         .tint(UIColor.primary.color)
@@ -297,7 +286,7 @@ struct NotificationSettingsView_Previews: PreviewProvider {
         Group {
             
             NavigationView {
-                NotificationSettingsView(settingsVM: SettingsStore())
+                NotificationSettingsView()
             }
             
             NavigationView {
@@ -320,7 +309,7 @@ private struct SoundPickerView: View {
         List {
             Picker("", selection: $selection) {
                 ForEach(sounds, id: \.self) { sound in
-                    Text(BundleUtil.localizedString(forKey: "sound_\(sound)"))
+                    Text("sound_\(sound)".localized)
                 }
             }
             .onChange(of: selection, perform: { _ in
@@ -363,7 +352,7 @@ private struct SoundPickerView: View {
 
 private struct DayPickerView: View {
     
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     var days: [String] = Calendar.current.weekdaySymbols
     
     var body: some View {
@@ -382,7 +371,7 @@ private struct DayPickerView: View {
                     didTap(index: index)
                 }
             }
-            .navigationTitle(BundleUtil.localizedString(forKey: "settings_notifications_masterDnd_workingDays"))
+            .navigationTitle("settings_notifications_masterDnd_workingDays".localized)
         }
     }
     

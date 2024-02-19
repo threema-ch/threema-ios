@@ -79,15 +79,13 @@ class TaskExecutionTests: XCTestCase {
         }
 
         let cnx = TaskContext()
-        let msg1 = BoxTextMessage()
+        let msg1 = ContactDeletePhotoMessage()
         msg1.fromIdentity = myIdentityStoreMock.identity
         msg1.toIdentity = expectedToIdentity1
-        msg1.text = "Test message 1"
 
-        let msg2 = BoxTextMessage()
+        let msg2 = ContactDeletePhotoMessage()
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = expectedToIdentity2
-        msg2.text = "Test message 1"
 
         let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
         task.nonces = [
@@ -155,19 +153,17 @@ class TaskExecutionTests: XCTestCase {
         }
 
         let cnx = TaskContext()
-        let msg1 = GroupTextMessage()
+        let msg1 = GroupDeletePhotoMessage()
         msg1.groupID = groupID
         msg1.groupCreator = myIdentityStoreMock.identity
         msg1.fromIdentity = myIdentityStoreMock.identity
         msg1.toIdentity = expectedToIdentity1
-        msg1.text = "Test message 1"
 
-        let msg2 = GroupTextMessage()
+        let msg2 = GroupDeletePhotoMessage()
         msg2.groupID = groupID
         msg2.groupCreator = myIdentityStoreMock.identity
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = expectedToIdentity2
-        msg2.text = "Test message 1"
 
         let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
         task.nonces = [
@@ -227,15 +223,13 @@ class TaskExecutionTests: XCTestCase {
         }
 
         let cnx = TaskContext()
-        let msg1 = BoxTextMessage()
+        let msg1 = ContactRequestPhotoMessage()
         msg1.fromIdentity = myIdentityStoreMock.identity
         msg1.toIdentity = expectedToIdentity1
-        msg1.text = "Test message 1"
 
-        let msg2 = BoxTextMessage()
+        let msg2 = ContactRequestPhotoMessage()
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = "TESTER02"
-        msg2.text = "Test message 2"
 
         let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
         task.nonces = [expectedToIdentity1: MockData.generateMessageNonce()]

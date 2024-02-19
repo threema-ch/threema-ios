@@ -27,8 +27,9 @@ extension ProfileView {
     struct DynamicHeader<Content: View>: View {
         
         @EnvironmentObject var model: ProfileViewModel
+        @EnvironmentObject var navigationBarBranding: ThreemaNavigationBarBranding
         
-        let content: ((GeometryProxy) -> AnyView) -> Content
+        let content: () -> Content
         
         private let animation: Animation = .spring().speed(4.4)
         
@@ -72,30 +73,46 @@ extension ProfileView {
             state == .normal ? (1 - (manualScale - 0.4) / 0.1) * 10 : 0
         }
         
+        init(@ViewBuilder content: @escaping () -> Content) {
+            self.content = content
+        }
+        
         // MARK: - Views
         
         var body: some View {
-            GeometryReader { _ in
-                ZStack {
-                    content(placeHolder)
-                        .onTapGesture(count: 3, perform: {
-                            debugHidden.toggle()
-                        })
-                    profileHeaderView
-                        
-                    #if DEBUG
-                        if !debugHidden {
-                            debugInfo()
+            GeometryReader { proxy in
+                dynamicListContainer { placeHolder in
+                    VStack {
+                        List {
+                            placeHolder(proxy)
+                            content()
                         }
-                    #endif
+                    }
                 }
-                .onPreferenceChange(TrackedFrame.Key.self, perform: processOnPreferenceChange)
-                .animation(animation, value: state)
-                .environmentObject(model)
-                .onRotate(perform: onOrientationChange)
-                .onAppear {
-                    onOrientationChange(UIDevice.current.orientation)
-                }
+            }
+        }
+        
+        private func dynamicListContainer(@ViewBuilder _ content: @escaping ((GeometryProxy) -> AnyView) -> some View)
+            -> some View {
+            ZStack {
+                content(placeHolder)
+                    .onTapGesture(count: 3, perform: {
+                        debugHidden.toggle()
+                    })
+                profileHeaderView
+                    
+                #if DEBUG
+                    if !debugHidden {
+                        debugInfo()
+                    }
+                #endif
+            }
+            .onPreferenceChange(TrackedFrame.Key.self, perform: processOnPreferenceChange)
+            .animation(animation, value: state)
+            .environmentObject(model)
+            .onRotate(perform: onOrientationChange)
+            .onAppear {
+                onOrientationChange(UIDevice.current.orientation)
             }
         }
         
@@ -304,13 +321,11 @@ extension ProfileView {
         }
         
         private func scaleByOffset(_ offset: CGFloat) -> CGFloat {
-            print("SCALE BY OFFSET INPUT \(offset)")
             let ref = offset - (originalState?.frame.minY ?? 0.0)
             let newScale = min(max(log10(abs(ref) + 10), 1), 10) / 10
             let dir: CGFloat = ref < 0 ? -1 : 1
             let gap: CGFloat = ref < 0 ? 0.1 : -0.1
             let finalScale = 1 + newScale * dir + gap + 0.05
-            print("SCALE BY OFFSET OUTPUT \(finalScale)")
             return finalScale
         }
 
@@ -331,14 +346,13 @@ extension ProfileView {
                 }
             }
         }
-        
+
         private func toggleNavigationBarTitle() {
             guard let height = originalState?.frame.height, abs(scrollOffset) > height else {
-                model.titleUpdateDelegate?.showTitleLogo()
+                navigationBarBranding.show()
                 return
             }
-            
-            model.titleUpdateDelegate?.showTitleText()
+            navigationBarBranding.hide()
         }
         
         private func calculateOffScreenScale() {

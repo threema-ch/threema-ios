@@ -776,7 +776,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             return
         }
     
-        chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID)
+        chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID, from: retryAndCancelButton)
     }
 
     // MARK: - Neighboring helpers

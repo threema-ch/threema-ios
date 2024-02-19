@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "SSLabel.h"
 #import "ProgressLabel.h"
 #import "ZSWTappableLabel.h"
 

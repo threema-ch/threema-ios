@@ -104,6 +104,7 @@
 "file_message_video" = "Video";
 "file_message_voice" = "Voice Message";
 "file_message_file" = "File";
+"chat" = "chat"; /* noun */
 
 "chat_back_button_accessibility" = "%d unread";
 
@@ -126,6 +127,10 @@
 "include_media_title" = "Include media (images, videos) as attachments?";
 "include_media_message" = "A modern ZIP tool with AES support is needed in order to unzip the file, e.g. 7-Zip or The Unarchiver (Mac).";
 
+"chat_view_resend_group_message_confirmation_title" = "Resend group message?";
+/* The placeholder will be replaced by a localized list of all receivers */
+"chat_view_resend_group_message_confirmation_message" = "This message could not be sent to all members. Resend message to %@?";
+"chat_view_resend_group_message_confirmation_button" = "Resend";
 
 /* image sizes */
 "image_size_title" = "Image Size";
@@ -501,9 +506,11 @@
 "exclude_deleted_id_exclude_button" = "Exclude";
 
 "forward_security" = "Perfect Forward Secrecy";
-"forward_security_none" = "None";
-"forward_security_2dh" = "Unilateral";
-"forward_security_4dh" = "Complete";
+"forward_security_none" = "None"; /* sent to _none_ with PFS (_no(ne)_ PFS) */
+"forward_security_2dh" = "Unilateral"; /* _uniliteral_ PFS */
+"forward_security_4dh" = "Complete"; /* _complete_ PFS */
+"forward_security_outgoing_group_partial" = "Partial"; /* _partial_ly sent with PFS */
+"forward_security_outgoing_group_full" = "Full"; /* _full_y sent with PFS */
 "forward_security_clear_sessions" = "Reset Perfect Forward Secrecy for This Contact";
 "forward_security_explainer_footer" = "Only perform this action when instructed do so by Threema’s support team.";
 "md_wizard_pfs_warning" = "Perfect Forward Secrecy will be disabled for all contacts after you activate the Multi-Device Preview.";
@@ -626,6 +633,8 @@
 /* Notifications Text */
 "new_message_from_x" = "Message from %@";
 "new_group_message" = "Group message";
+"new_message_unknown" = "Unknown";
+"new_message_unknown_group" = "Unknown Group";
 "new_group_message_from_x" = "Group message from %@";
 "new_message_no_access_title" = "New messages";
 "new_message_no_access_message" = "Please open %@ to fetch incoming messages.";
@@ -778,7 +787,8 @@
 "group_call_started_by_local_system_message" = "You started a group call";
 "group_call_ended_system_message" = "Group call has ended";
 
-"group_call_start_message_received" = "Started a group call";
+"group_call_notification_body_preview" = "Group call started by %@";
+"group_call_notification_body" = "Group call started";
 
 "group_call_navbar_state_connecting" = "Connecting…";
 "group_call_navbar_state_joining" = "Joining…";
@@ -788,6 +798,12 @@
 "group_call_error_generic_message" = "If the issue persists, please contact customer support.";
 "group_call_error_already_in_call_title" = "Other Call active";
 "group_call_error_already_in_call_message" = "Only one call can be joined at any given moment.";
+"group_call_error_ended_in_meantime_title" = "Group Call Ended";
+"group_call_error_ended_in_meantime_message" = "The call you wanted to join has ended in the meantime.";
+
+"group_call_alert_full_title" = "Participant Limit Reached";
+"group_call_alert_full_message_count" = "The maximum number of %d group call participants has been reached.";
+"group_call_alert_full_message" = "The maximum number of group call participants has been reached.";
 
 "group_call_accessibility_hide_view" = "Hide group call view";
 "group_call_accessibility_enable_camera" = "Enable camera";
@@ -962,6 +978,7 @@
 "safe_upload_failed" = "Upload failed";
 "safe_upload_size_exceeded" = "Server’s upload size exceeded";
 "safe_change_password" = "Change Password";
+"safe_change_password_disabled" = "Password managed by admin";
 "safe_learn_more" = "Learn more";
 "safe_backup_now" = "Backup Now";
 "safe_deactivate" = "Turn off Threema Safe";
@@ -1031,6 +1048,11 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "restore_option_data_delete_data_description" = "Restore a Threema Safe backup (containing your ID, contacts, and groups) or an ID export (containing only the Threema ID) after removing the local data";
 "restore_option_data_delete_data_explain" = "In order to restore a full Threema Safe backup, you must reinstall %@: Please delete the app and then download it again from the App Store.";
 
+"threema_safe_company_mdm_password_changed_title" = "New managed Threema Safe password set by your administrator";
+"threema_safe_company_mdm_password_changed_message" = "Would you like to accept it? When in doubt, contact your administrator.";
+"threema_safe_company_mdm_password_changed_accept" = "Accept";
+"threema_safe_company_mdm_password_changed_accepted" = "Managed password set";
+
 // Company Directory
 "companydirectory_description" = "Look up contacts in company directory";
 "companydirectory_placeholder" = "Search directory";
@@ -1039,10 +1061,9 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 
 "already_licensed" = "Already licensed";
 
-// IDNSafetyHelper
+// IDNASafetyHelper
 "url_warning_title" = "Phishing warning";
 "url_warning_body" = "The hostname of the link you’re about to open is suspicious:\n\nDisplayed Hostname: %@\nReal hostname: %@\n\nThis could be an attempt to trick you into opening a site pretending to be something else.\n\nWould you like to continue anyway?";
-
 
 // Settings
 "settings_navbar_title" = "Settings";
@@ -1300,6 +1321,10 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "profile_linked_phone" = "Linked Phone Number";
 "profile_id_export" = "ID Export";
 "my_profile_delete_cell_title" = "Remove ID and Data";
+"profile_edit" = "Edit";
+"not_connected_for_edit_profile_message" = "Please check your connection";
+"not_connected_for_edit_profile_title" = "No connection";
+
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";
@@ -1309,27 +1334,26 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "my_profile_delete_bullet_linked" = "Phone number and/or email links";
 
 "my_profile_delete_info_title" = "Remove ID And Data";
-"my_profile_delete_info_keep" = "Your Threema ID won’t be revoked. If you have created a Threema Safe backup or exported your ID, you can restore it on another device.";
-"my_profile_delete_info_delete" = "All of your Threema data will be removed from this device:";
-"my_profile_delete_info_delete_server" = "All of your Threema data will be removed also from the server:";
-"my_profile_delete_info_revoke" = "Your Threema ID will be revoked, and there is no possibility to restore it.";
-"my_profile_delete_info_toggle" = "Delete everything irrevocably";
-
+"my_profile_delete_info_delete" = "All of your Threema data will be removed from this device.";
+"my_profile_delete_info_keep" = "If you have created a Threema Safe backup or exported your ID, you can restore it on another device.";
+"my_profile_delete_info_revoke_info" = "If you don’t want to use this Threema ID on any other device, you can delete it irrevocably: ";
+"my_profile_delete_info_revoke_info_link" = "[Revoke Threema ID](link)";
 "my_profile_delete_info_button" = "Remove ID and Data";
 
 "my_profile_delete_info_alert_title" = "You lose your Threema ID if you don’t have a backup.";
 "my_profile_delete_info_alert_confirm" = "Remove Data";
 
-"my_profile_revoke_identity_view_title" = "Remove ID and Data?";
-"my_profile_revoke_info_delete" = "All of your Threema data will be removed from this device:";
-"my_profile_revoke_info_sever" = "All of your Threema data will be removed also from the server:";
-"my_profile_revoke_identity_view_enter_id" = "Please enter your Threema ID “%@“ to definitely delete everything:";
+"my_profile_revoke_identity_view_title" = "Remove ID And Data";
+"my_profile_revoke_info_delete" = "All your Threema data will be removed from this device, and the following data will be deleted on the Threema server:";
+
+"my_profile_delete_info_revoke" = "There will be no way to restore your Threema ID.";
+"my_profile_revoke_identity_view_enter_id" = "Please enter your Threema ID\n“%@“ to definitely delete everything:";
 "my_profile_revoke_identity_view_placeholder" = "Your Threema ID";
 "my_profile_revoke_identity_view_button_revoke" = "Remove ID and Data";
 
 "my_profile_delete_identity_summary_view_removed_title" = "ID and Data Removed";
 "my_profile_delete_identity_summary_view_removed_success" = "All of your Threema data was removed from this device:";
-"my_profile_delete_identity_summary_view_removed_server_success" = "All of your Threema data has been deleted from the server:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "All your Threema data has been deleted from this device, and the following data has been deleted on the Threema server:";
 "my_profile_delete_identity_summary_view_removed_threema_id" = "Your Threema ID has been revoked";
 "my_profile_delete_identity_summary_view_restart" = "Restart the app to continue using it.";
 "my_profile_delete_identity_summary_view_restart_new" = "Restart the app to create a new Threema ID.";
@@ -1369,7 +1393,9 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "settings_advanced_contacts_cleanup_stats_logged" = "Information has been logged.\n\n";
 "settings_advanced_contacts_cleanup_no_duplicates" = "You have no duplicate contacts.";
 "settings_advanced_contacts_cleanup_error_title" = "Unable to remove contacts";
-"settings_advanced_contacts_cleanup_still_used_error" = "Clean up cancelled. %i duplicate contacts can not be removed because the duplicates still have messages or because they are member of a group.\n\n";
+"settings_advanced_contacts_cleanup_in_use_error_title" = "Delete chats manually";
+"settings_advanced_contacts_cleanup_still_used_error" = "Clean up incomplete (%i duplicates removed, %i remaining).\n\nSome one-to-one chats must be deleted manually:\n\n%@\n\nPlease delete the chats and try again.";
+"settings_advanced_contacts_multi_device_enabled_error" = "Devices are currently linked. Please remove all linked devices before cleaning up.";
 "settings_advanced_contacts_cleanup_success_title" = "Contact cleanup successful";
 "settings_advanced_contacts_cleanup_success_exit" = "Exit";
 "settings_advanced_contacts_cleanup_unused_message" = "%i duplicate contacts were removed.\n\nPlease exit the app, restart it, and link a device. If it does not work: ";
@@ -1528,6 +1554,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "multi_device_new_linked_show_contact_button" = "Show Contact";
 "multi_device_new_linked_device_list_no_platform_details" = "No platform details";
 "multi_device_new_linked_device_list_last_active" = "Last active: %@";
+"multi_device_new_linked_device_list_currently_active" = "Currently active";
 
 "multi_device_join_perfect_forward_secrecy_info" = "When you link a device, Perfect Forward Secrecy will be disabled for all contacts.\n\nThis is a limitation of the current beta version. For more limitations, please refer to [this FAQ entry](%@).";
 "multi_device_join_scan_qr_code_title" = "Scan QR Code";
@@ -1689,7 +1716,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 
 "notification_flush_message_queue_succeeded" = "Message queue has been cleared";
 
-"notification_reregister_notifications_successed" = "Push notifications have been re-registered";
+"notification_reregister_notifications_succeeded" = "Push notifications have been re-registered";
 
 "notification_audio_muted" = "Microphone: Off";
 "notification_audio_unmuted" = "Microphone: On";
@@ -1859,6 +1886,8 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "alert_biometrics_changed_title_touch" = "Possible change in TouchID detected";
 "alert_biometrics_changed_title_face" = "Possible change in FaceID detected";
 "alert_biometrics_changed_message" = "Please enter your Threema passcode once, to continue using biometric authentication to unlock Threema.";
+
+"alert_enable_actions" = "Actions available in: %ds";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nCould not downgrade from version %d to version %d";

@@ -48,7 +48,7 @@ class MediatorReflectedGroupSyncProcessor {
 
     private func delete(identity: Common_GroupIdentity) -> Promise<Void> {
         Promise { seal in
-            let groupIdentity = GroupIdentity(identity: identity)
+            let groupIdentity = try GroupIdentity(commonGroupIdentity: identity)
 
             guard self.frameworkInjector.backgroundGroupManager.getGroup(
                 groupIdentity.id,
@@ -73,7 +73,7 @@ class MediatorReflectedGroupSyncProcessor {
 
     private func create(group syncGroup: Sync_Group) -> Promise<Void> {
         Promise { seal in
-            let groupIdentity = GroupIdentity(identity: syncGroup.groupIdentity)
+            let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
 
             guard self.frameworkInjector.backgroundGroupManager.getGroup(
                 groupIdentity.id,
@@ -100,7 +100,7 @@ class MediatorReflectedGroupSyncProcessor {
 
     private func update(group syncGroup: Sync_Group) -> Promise<Void> {
         Promise { seal in
-            let groupIdentity = GroupIdentity(identity: syncGroup.groupIdentity)
+            let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
 
             guard self.frameworkInjector.backgroundGroupManager.getGroup(
                 groupIdentity.id,
@@ -145,9 +145,9 @@ class MediatorReflectedGroupSyncProcessor {
                 return Guarantee()
             }
             .then { () -> Promise<Void> in
-                let groupIdentity = GroupIdentity(identity: syncGroup.groupIdentity)
-
-                return Promise<Group?> { seal in
+                Promise<Group?> { seal in
+                    let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
+                    
                     if syncGroup.hasMemberIdentities {
                         self.frameworkInjector.backgroundGroupManager.createOrUpdateDB(
                             for: groupIdentity,
@@ -173,14 +173,16 @@ class MediatorReflectedGroupSyncProcessor {
                 .then { group -> Promise<Void> in
                     Promise { seal in
                         guard let group else {
-                            seal.reject(MediatorReflectedProcessorError.groupNotFound(message: "\(groupIdentity)"))
+                            seal.reject(
+                                MediatorReflectedProcessorError.groupNotFound(message: "\(syncGroup.groupIdentity)")
+                            )
                             return
                         }
 
                         if syncGroup.hasUserState, syncGroup.userState == .left {
                             self.frameworkInjector.backgroundGroupManager.leaveDB(
-                                groupID: groupIdentity.id,
-                                creator: groupIdentity.creator.string,
+                                groupID: group.groupIdentity.id,
+                                creator: group.groupIdentity.creator.string,
                                 member: self.frameworkInjector.myIdentityStore.identity,
                                 systemMessageDate: Date()
                             )
@@ -188,8 +190,8 @@ class MediatorReflectedGroupSyncProcessor {
 
                         if syncGroup.hasName {
                             self.frameworkInjector.backgroundGroupManager.setName(
-                                groupID: groupIdentity.id,
-                                creator: groupIdentity.creator.string,
+                                groupID: group.groupIdentity.id,
+                                creator: group.groupIdentity.creator.string,
                                 name: syncGroup.name,
                                 systemMessageDate: Date(),
                                 send: false
@@ -203,8 +205,8 @@ class MediatorReflectedGroupSyncProcessor {
                             switch syncGroup.profilePicture.image {
                             case .removed:
                                 self.frameworkInjector.backgroundGroupManager.deletePhoto(
-                                    groupID: groupIdentity.id,
-                                    creator: groupIdentity.creator.string,
+                                    groupID: group.groupIdentity.id,
+                                    creator: group.groupIdentity.creator.string,
                                     sentDate: Date(),
                                     send: false
                                 )
@@ -214,8 +216,8 @@ class MediatorReflectedGroupSyncProcessor {
                             case .updated:
                                 if let imageData = profilePicture {
                                     self.frameworkInjector.backgroundGroupManager.setPhoto(
-                                        groupID: groupIdentity.id,
-                                        creator: groupIdentity.creator.string,
+                                        groupID: group.groupIdentity.id,
+                                        creator: group.groupIdentity.creator.string,
                                         imageData: imageData,
                                         sentDate: Date(),
                                         send: false

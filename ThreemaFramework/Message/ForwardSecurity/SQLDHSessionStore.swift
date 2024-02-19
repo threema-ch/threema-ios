@@ -48,6 +48,10 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     
     let sessionTable = Table("session")
     
+    // MARK: Columns
+    
+    // See `DHSession` for documentation of these columns
+    
     let myIdentityColumn = Expression<String>("myIdentity")
     let peerIdentityColumn = Expression<String>("peerIdentity")
     let sessionIDColumn = Expression<Data>("sessionId")
@@ -64,12 +68,14 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     // Note: Should be named `myCurrentVersion_4dh` but it's too late now
     let myCurrentVersion4DH = Expression<Int?>("negotiatedVersion")
     let peerCurrentVersion4DH = Expression<Int?>("peerCurrentVersion_4dh")
+    let newSessionCommitted = Expression<Bool>("newSessionCommitted")
+    let lastMessageSent = Expression<Date?>("lastMessageSent")
     
     fileprivate let versionInfo: SQLDHSessionStoreVersionInfo
     
     fileprivate static let defaultVersionInfo = SQLDHSessionStoreVersionInfo(
         dbVersion: 4,
-        maximumSupportedDowngradeVersion: 4
+        maximumSupportedDowngradeVersion: 5
     )
     
     var db: Connection
@@ -187,6 +193,11 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 newVersion: newVersion,
                 versionInfo: versionInfo
             )
+        }
+        
+        if oldVersion > 4, newVersion <= 4 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v5")
+            try downgradeFromV5(db)
         }
         
         if oldVersion > 3, newVersion <= 3 {

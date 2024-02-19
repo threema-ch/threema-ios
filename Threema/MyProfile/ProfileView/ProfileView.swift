@@ -27,96 +27,106 @@ struct ProfileView: View {
     @ObservedObject var model = ProfileViewModel()
     
     var body: some View {
-        GeometryReader { proxy in
-            DynamicHeader { placeHolder in
-                VStack {
-                    List {
-                        placeHolder(proxy)
-                        QuickActionsViewSection()
-                        ThreemaSaveSection()
-                        IDSection()
-                        LinkedDataSection()
-                        PublicKeySection()
-                        RemoveIDAndDataSection()
-                    }
-                    .onAppear {
-                        DispatchQueue.main.async {
-                            model.load()
-                        }
-                    }
+        ThreemaNavigationView(.manual) {
+            DynamicHeader {
+                QuickActionsViewSection()
+                ThreemaSafeSection()
+                IDSection()
+                LinkedDataSection()
+                PublicKeySection()
+                RemoveIDAndDataSection()
+            }
+            .navigationDestination(for: AnyViewDestination.self)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    leftBarButtonItem
+                }
+                ToolbarItem(placement: isModallyPresented ? .topBarLeading : .topBarTrailing) {
+                    rightBarButtonItem
                 }
             }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
             .environmentObject(model)
+            .environmentObject(model.navigator)
+            .onAppear { model.load() }
+            .onReceive(\.identityLinked) { _ in model.load() }
+            .onReceive(\.enteredForeground) { _ in model.load() }
+            .onReceive(\.showSafeSetup) { _ in
+                model.navigator.navigate(ThreemaSafeSection.safe)
+            }
+            .onReceive(\.profileSyncPublisher) { _ in model.incomingSync() }
         }
-    }
-}
-
-extension ProfileView {
-    func createProfileViewController() -> UIViewController {
-        Controller(self)
     }
     
-    class Controller: ThemedTableViewControllerSwiftUI {
-        init(_ profileView: ProfileView = ProfileView()) {
-            super.init(navTitle: "myIdentity".localized, hostedView: profileView)
-            setup(profileView.model)
+    @ViewBuilder
+    private var leftBarButtonItem: some View {
+        Button(
+            action: editAction,
+            label: {
+                Text("profile_edit".localized)
+            }
+        )
+        .accessibilityLabel("edit_profile".localized)
+    }
+    
+    @ViewBuilder
+    private var rightBarButtonItem: some View {
+        if ScanIdentityController.canScan() {
+            Button(action: scanAction, label: {
+                Image(systemName: "qrcode.viewfinder")
+            })
+            .tint(UIColor.primary.color)
+            .accessibilityLabel("scan_identity".localized)
+        }
+    }
+    
+    private func editAction() {
+        guard let topViewController else {
+            return
         }
         
-        private func setup(_ model: ProfileViewModel) {
-            model.titleUpdateDelegate = self
+        if UserSettings.shared().enableMultiDevice,
+           BusinessInjector().serverConnector.connectionState != .loggedIn {
             
-            let editBtn = UIBarButtonItem(systemItem: .edit, primaryAction: .init(handler: { _ in
-                if UserSettings.shared().enableMultiDevice,
-                   BusinessInjector().serverConnector.connectionState != .loggedIn {
-                    
-                    UIAlertTemplate.showAlert(
-                        owner: self,
-                        title: "not_connected_for_edit_profile_title".localized,
-                        message: "not_connected_for_edit_profile_message".localized
-                    )
-                }
-                else {
-                    let vc = ProfileView.viewController("editProfileViewController")
-                    let mvc = ModalNavigationController(rootViewController: vc)
-                    mvc.modalDelegate = model.delegateHandler
-                    ModalPresenter.present(mvc, on: self.navigationController!)
-                }
-            }))
-            
-            editBtn.accessibilityLabel = "edit_profile".localized
-            editBtn.accessibilityTraits = .none
-            navigationItem.leftBarButtonItem = editBtn
-            
-            if ScanIdentityController.canScan() {
-                let btn = UIBarButtonItem(
-                    image: BundleUtil.imageNamed("QRScan"),
-                    primaryAction: .init(handler: { _ in
-                        guard let disableAddContact = model.mdmSetup?.disableAddContact(), disableAddContact else {
-                            let scanIdentity = ScanIdentityController()
-                            scanIdentity.containingViewController = self.navigationController!
-                            scanIdentity.startScan()
-                            
-                            BusinessInjector().contactStore
-                                .synchronizeAddressBook(
-                                    forceFullSync: true,
-                                    ignoreMinimumInterval: false,
-                                    onCompletion: nil
-                                )
-                            
-                            return
-                        }
-                        
-                        UIAlertTemplate.showAlert(
-                            owner: self,
-                            title: "",
-                            message: "disabled_by_device_policy".localized
-                        )
-                    }), menu: nil
-                )
-                
-                btn.accessibilityLabel = "scan_identity".localized
-                navigationItem.rightBarButtonItem = btn
-            }
+            UIAlertTemplate.showAlert(
+                owner: topViewController,
+                title: "not_connected_for_edit_profile_title".localized,
+                message: "not_connected_for_edit_profile_message".localized
+            )
         }
+        else {
+            let vc = ProfileView.viewController("editProfileViewController")
+            let mvc = ModalNavigationController(rootViewController: vc)
+            mvc.modalDelegate = model.delegateHandler
+            ModalPresenter.present(mvc, on: topViewController)
+        }
+    }
+    
+    private func scanAction() {
+        guard let topViewController else {
+            return
+        }
+        
+        guard let disableAddContact = model.mdmSetup?.disableAddContact(), disableAddContact else {
+            let scanIdentity = ScanIdentityController()
+            scanIdentity.containingViewController = topViewController
+            scanIdentity.startScan()
+            
+            BusinessInjector().contactStore
+                .synchronizeAddressBook(
+                    forceFullSync: true,
+                    ignoreMinimumInterval: false,
+                    onCompletion: nil
+                )
+            
+            return
+        }
+        
+        UIAlertTemplate.showAlert(
+            owner: topViewController,
+            title: "",
+            message: "disabled_by_device_policy".localized
+        )
     }
 }

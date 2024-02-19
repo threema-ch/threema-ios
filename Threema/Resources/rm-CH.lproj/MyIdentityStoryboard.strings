@@ -91,3 +91,11 @@
 
 /* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "z90-JB-13a"; */
 "z90-JB-13a.text" = "00000000000000000000000000000000";
+
+/* Class = "UILabel"; text = "Email address"; ObjectID = "JRY-UB-2Zx"; */
+
+"JRY-UB-2Zx.text" = "Tia adressa dad e-mail";
+
+/* Class = "UITextField"; placeholder = "your email address"; ObjectID = "5bh-L5-CVm"; */
+
+"5bh-L5-CVm.placeholder" = "Adressa dad e-mail";

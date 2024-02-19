@@ -20,70 +20,54 @@
 
 import Foundation
 
+public enum BlobManagerResult {
+    case uploaded
+    case downloaded
+    case inProgress
+    
+    /// Failed sync
+    ///
+    /// Only use for non-throwing functions
+    case failed
+}
+
 public enum BlobManagerError: Error {
     case noID
     case noData
-    case messageNotFound
+    case unableToLoadMessageAsBlobData
     case noEncryptionKey
     case alreadySyncing
     case stateMismatch
     case cryptographyFailed
-    case tooBig
     case uploadFailed
     case noOrigin
     case markDoneFailed
-    case sendingFailed
+    case noteGroupNeedsNoSync
+    case notConnected
 }
 
 /// Defines the public functions used in BlobManager.swift
 public protocol BlobManagerProtocol {
-        
-    /// Creates a message for a given URLSenderItem and syncs the blobs of it, and  throws if something goes wrong
-    /// - Parameters:
-    ///   - item: URLSenderItem
-    ///   - conversation: Conversation where message is sent
-    ///   - correlationID: Optional String used to identify blobs that are sent together
-    ///   - webRequestID: Optional String used to identify the web request
-    func createMessageAndSyncBlobs(
-        for item: URLSenderItem,
-        in conversationID: NSManagedObjectID,
-        correlationID: String?,
-        webRequestID: String?
-    ) async throws
-    
     /// Start automatic download of blobs in passed object
     /// - Parameter objectID: Object to sync blobs for
     func autoSyncBlobs(for objectID: NSManagedObjectID) async
     
     /// Start up- or download of blobs in passed object
+    ///
+    /// If you want to upload and send a blob message use
+    /// `MessageSender.sendBlobMessage(for:in:correlationID:webRequestID)`
+    ///
     /// - Parameter objectID: Object to sync blobs for
-    func syncBlobs(for objectID: NSManagedObjectID) async
+    func syncBlobs(for objectID: NSManagedObjectID) async -> BlobManagerResult
     
     /// Same as `syncBlobs(for:)` but throws an error if there was any
     ///
     /// Mostly used for testing
     ///
     /// - Parameter objectID: Object to sync blobs for
-    func syncBlobsThrows(for objectID: NSManagedObjectID) async throws
+    func syncBlobsThrows(for objectID: NSManagedObjectID) async throws -> BlobManagerResult
     
     /// Cancel up- or download of blobs in passed object
     /// - Parameter objectID: Object to sync blobs for
     func cancelBlobsSync(for objectID: NSManagedObjectID) async
-}
-
-extension BlobManagerProtocol {
-    
-    public func createMessageAndSyncBlobs(
-        for item: URLSenderItem,
-        in conversationID: NSManagedObjectID,
-        correlationID: String? = nil,
-        webRequestID: String? = nil
-    ) async throws {
-        try await createMessageAndSyncBlobs(
-            for: item,
-            in: conversationID,
-            correlationID: correlationID,
-            webRequestID: webRequestID
-        )
-    }
 }

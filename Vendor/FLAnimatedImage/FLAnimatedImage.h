@@ -103,9 +103,9 @@
 #if FLLumberjackIntegrationEnabled
     #if defined(__has_include)
         #if __has_include("<CocoaLumberjack/CocoaLumberjack.h>")
-            #import <CocoaLumberjack/CocoaLumberjack.h>
+            @import CocoaLumberjack;
         #elif __has_include("CocoaLumberjack.h")
-            #import "CocoaLumberjack.h"
+            @import CocoaLumberjack;
         #elif __has_include("<CocoaLumberjack/DDLog.h>")
             #import <CocoaLumberjack/DDLog.h>
         #elif __has_include("DDLog.h")
@@ -113,7 +113,7 @@
         #endif
     #elif defined(COCOAPODS_POD_AVAILABLE_CocoaLumberjack) || defined(__POD_CocoaLumberjack)
         #if COCOAPODS_VERSION_MAJOR_CocoaLumberjack == 2
-            #import <CocoaLumberjack/CocoaLumberjack.h>
+            @import CocoaLumberjack;
         #else
             #import <CocoaLumberjack/DDLog.h>
         #endif

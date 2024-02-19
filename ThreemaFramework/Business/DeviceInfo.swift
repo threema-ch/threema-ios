@@ -86,9 +86,9 @@ public struct DeviceInfo {
 // MARK: - Equatable
 
 extension DeviceInfo: Equatable {
-    public static func == (lhs: DeviceInfo, rhs: DeviceInfo) -> Bool {
-        lhs.deviceID == rhs.deviceID
-    }
+    // intentionally left blank: the Swift compiler will synthesize an
+    // implementation of func == that will return true iff all properties
+    // are equal
 }
 
 // MARK: - Identifiable

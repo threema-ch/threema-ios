@@ -59,6 +59,11 @@ class GroupCallCollectionViewDataSource: UICollectionViewDiffableDataSource<
                 cell.participantID = itemIdentifier
                 cell.participant = fetchedParticipant
                 
+                // Workaround for when running screenshots
+                guard !(fetchedParticipant?.dependencies.isRunningForScreenshots ?? false) else {
+                    return
+                }
+                
                 if fetchedParticipant?.videoMuteState == .muted {
                     cell.hideRenderer()
                     await viewModel.removeRendererView(for: itemIdentifier, rendererView: cell.videoRendererView)

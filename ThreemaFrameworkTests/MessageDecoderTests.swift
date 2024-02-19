@@ -323,7 +323,7 @@ class MessageDecoderTests: XCTestCase {
         wait(for: [expectInitial], timeout: 3)
 
         // Check Initial Choices exist
-        let initialChoicesSet = (ballotInitialMessage?.ballot.choices!)! as NSSet
+        let initialChoicesSet = (ballotInitialMessage?.ballot?.choices!)! as NSSet
         let initialChoicesArray = initialChoicesSet.allObjects as! [BallotChoice]
         let initialChoicesSorted = initialChoicesArray.sorted { $0.orderPosition.intValue <= $1.orderPosition.intValue
         }
@@ -366,7 +366,7 @@ class MessageDecoderTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         // Check Results Message Overrides Initial (Local) Message
-        let resultChoicesSet = (ballotInitialMessage?.ballot.choices!)! as NSSet
+        let resultChoicesSet = (ballotInitialMessage?.ballot?.choices!)! as NSSet
         let resultChoicesArray = resultChoicesSet.allObjects as! [BallotChoice]
         let resultChoicesSorted = resultChoicesArray.sorted { $0.orderPosition.intValue <= $1.orderPosition.intValue }
 
@@ -883,7 +883,7 @@ class MessageDecoderTests: XCTestCase {
     }
     
     private func checkBallotResult(ballotMessage: BallotMessage?, result: [Any]) {
-        let allObjects = ((ballotMessage?.ballot.choices)! as NSSet).allObjects
+        let allObjects = ((ballotMessage?.ballot?.choices)! as NSSet).allObjects
         let choice1 = allObjects.first as! BallotChoice
         let choice2 = allObjects.last as! BallotChoice
         

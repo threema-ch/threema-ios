@@ -453,4 +453,51 @@ class MarkupParserTests: XCTestCase {
         let parser = MarkupParser()
         return parser.removeMarkupsFromParse(parsed: parsed).string
     }
+
+    func testParseURLWithDataDetectorForLinks() throws {
+        let tests: [(
+            expectedAttributedString: String,
+            expectedURLString: String
+        )] = [
+            (
+                "threema.ch",
+                "http://threema.ch"
+            ),
+            (
+                "http://threema.ch",
+                "http://threema.ch"
+            ),
+            (
+                "HTTP://threema.ch",
+                "HTTP://threema.ch"
+            ),
+            (
+                "https://threema.ch",
+                "https://threema.ch"
+            ),
+            (
+                "HTTPS://threema.ch",
+                "HTTPS://threema.ch"
+            ),
+            (
+                "HTTps://threema.ch",
+                "HTTps://threema.ch"
+            ),
+            (
+                "https://threema.ch/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstraße%201,St%20Musterstadt",
+                "https://threema.ch/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstra%C3%9Fe%201,St%20Musterstadt"
+            ),
+        ]
+
+        for test in tests {
+            let attributedString = NSMutableAttributedString(string: test.expectedAttributedString)
+
+            let parser = MarkupParser()
+            let result = parser.parseURLWithDataDetectorForLinks(attributedString: attributedString)
+                .attributes(at: 0, effectiveRange: nil)
+
+            let urlResult = try XCTUnwrap(result[.link] as? URL)
+            XCTAssertEqual(urlResult.absoluteString, test.expectedURLString)
+        }
+    }
 }

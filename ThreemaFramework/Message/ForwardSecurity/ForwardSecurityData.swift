@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 @objc class ForwardSecurityData: NSObject {
@@ -39,32 +40,54 @@ import ThreemaProtocols
                 versionRange: initv.supportedVersion,
                 ephemeralPublicKey: initv.fssk
             )
+            
         case let .accept(accept):
             return try ForwardSecurityDataAccept(
                 sessionID: sessionID,
                 version: accept.supportedVersion,
                 ephemeralPublicKey: accept.fssk
             )
+            
         case let .reject(reject):
+            let groupIdentity: GroupIdentity?
+            if reject.hasGroupIdentity {
+                groupIdentity = try? GroupIdentity(commonGroupIdentity: reject.groupIdentity)
+            }
+            else {
+                groupIdentity = nil
+            }
+            
             return try ForwardSecurityDataReject(
                 sessionID: sessionID,
-                rejectedMessageID: withUnsafeBytes(of: reject.messageID) { Data($0) },
+                messageID: reject.messageID.littleEndianData,
+                groupIdentity: groupIdentity,
                 cause: reject.cause
             )
+            
         case let .encapsulated(message):
             let appliedVersion = CspE2eFs_Version(rawValue: Int(message.appliedVersion)) ??
                 .UNRECOGNIZED(Int(message.appliedVersion))
             let offeredVersion = CspE2eFs_Version(rawValue: Int(message.offeredVersion)) ??
                 .UNRECOGNIZED(Int(message.offeredVersion))
             
+            let groupIdentity: GroupIdentity?
+            if message.hasGroupIdentity {
+                groupIdentity = try? GroupIdentity(commonGroupIdentity: message.groupIdentity)
+            }
+            else {
+                groupIdentity = nil
+            }
+            
             return ForwardSecurityDataMessage(
                 sessionID: sessionID,
                 type: message.dhType,
+                counter: message.counter,
+                groupIdentity: groupIdentity,
                 offeredVersion: offeredVersion,
                 appliedVersion: appliedVersion,
-                counter: message.counter,
                 message: message.encryptedInner
             )
+            
         case let .terminate(message):
             return ForwardSecurityDataTerminate(sessionID: sessionID, cause: message.cause)
         }

@@ -259,6 +259,13 @@ class SafeActivatedViewController: ThemedTableViewController {
         forRowAt indexPath: IndexPath
     ) {
         super.tableView(tableView, willDisplay: cell, forRowAt: indexPath)
+        
+        let safeManager = SafeManager(groupManager: GroupManager())
+        if indexPath.section == 2, indexPath.row == 2, safeManager.isSafePasswordDefinedByAdmin() {
+            cell.isUserInteractionEnabled = false
+            changePasswordButtonLabel.isEnabled = false
+            changePasswordButtonLabel.text = "safe_change_password_disabled".localized
+        }
         updateColors()
     }
 }

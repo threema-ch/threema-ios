@@ -17,6 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../ThreemaProtocols"),
+        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", from: "3.8.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -25,9 +26,8 @@ let package = Package(
             name: "ThreemaEssentials",
             dependencies: [
                 "ThreemaProtocols",
-                "CocoaLumberjackSwift",
-                // Both the regular and the Swift version of CocoaLumberjack are needed for some unknown reason.
-                "CocoaLumberjack",
+                .product(name: "CocoaLumberjackSwift", package: "CocoaLumberjack"),
+                .product(name: "CocoaLumberjack", package: "CocoaLumberjack"),
             ],
             
             swiftSettings: [
@@ -48,10 +48,5 @@ let package = Package(
             name: "ThreemaEssentialsTests",
             dependencies: ["ThreemaEssentials"]
         ),
-        
-        // If there is a warning about error: could not build Objective-C module 'CocoaLumberjackSwift', just rebuild
-        // all Carthage dependencies without caching. That seems to help.
-        .binaryTarget(name: "CocoaLumberjackSwift", path: "../Carthage/Build/CocoaLumberjackSwift.xcframework"),
-        .binaryTarget(name: "CocoaLumberjack", path: "../Carthage/Build/CocoaLumberjack.xcframework"),
     ]
 )

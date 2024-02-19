@@ -282,12 +282,19 @@ class UserNotificationManagerTests: XCTestCase {
             "voip": false,
             "cmd": expectedCmd,
         ])
+        
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            entityManager,
+            false
+        )
 
         let userNotificationManager = UserNotificationManager(
             settingsStoreMock,
             userSettingsMock,
             MyIdentityStoreMock(),
-            PushSettingManagerMock(),
+            pushSettingManager,
             contactStoreMock,
             GroupManagerMock(),
             entityManager,
@@ -306,8 +313,10 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
         XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
         XCTAssertEqual(result?.groupID, expectedGroupID)
-        XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
-        XCTAssertEqual(result?.pushSetting?.type, .on)
+        
+        var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+        XCTAssertEqual(pushSetting?.identity, expectedSenderID)
+        XCTAssertEqual(pushSetting?.type, .on)
     }
 
     func testUserNotificationContentBaseMessageFlags() throws {
@@ -407,20 +416,22 @@ class UserNotificationManagerTests: XCTestCase {
             "voip": false,
             "cmd": expectedCmd,
         ])
-
+        let entityManager = EntityManager(databaseContext: databaseCnx)
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            entityManager,
+            false
+        )
+        
         let userNotificationManager = UserNotificationManager(
             settingsStoreMock,
             userSettingsMock,
             MyIdentityStoreMock(),
-            PushSettingManager(
-                userSettingsMock,
-                GroupManagerMock(),
-                EntityManager(databaseContext: databaseCnx),
-                false
-            ),
+            pushSettingManager,
             ContactStoreMock(),
             GroupManagerMock(),
-            EntityManager(databaseContext: databaseCnx),
+            entityManager,
             false
         )
         let result = userNotificationManager.userNotificationContent(pendingUserNotification)
@@ -436,14 +447,13 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
         XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
         XCTAssertEqual(result?.groupID, expectedGroupID)
-
-        if let pushSetting = result?.pushSetting {
+        
+        if let pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification) {
             XCTAssertFalse(pushSetting.canSendPush())
         }
         else {
             XCTFail("Push setting is missing")
         }
-        XCTAssertNil(result?.baseMessage)
     }
 
     func testUserNotificationContentPushSettingSendPushGroupChat() throws {
@@ -552,14 +562,12 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
         XCTAssertEqual(result?.groupID, expectedGroupIdentity.id.base64EncodedString())
 
-        if let pushSetting = result?.pushSetting {
+        if let pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification) {
             XCTAssertFalse(pushSetting.canSendPush())
-            XCTAssertFalse(try pushSettingManager.canSendPush(for: XCTUnwrap(result?.baseMessage)))
         }
         else {
             XCTFail("Push setting is missing")
         }
-        XCTAssertNotNil(result?.baseMessage)
     }
 
     func testUserNotificationContentPushOnly() throws {
@@ -586,14 +594,22 @@ class UserNotificationManagerTests: XCTestCase {
             "cmd": expectedCmd,
         ])
 
+        let entityManager = EntityManager(databaseContext: databaseCnx)
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            entityManager,
+            false
+        )
+        
         let userNotificationManager = UserNotificationManager(
             SettingsStoreMock(),
             userSettingsMock,
             MyIdentityStoreMock(),
-            PushSettingManagerMock(),
+            pushSettingManager,
             ContactStoreMock(),
             GroupManagerMock(),
-            EntityManager(databaseContext: databaseCnx),
+            entityManager,
             false
         )
         let result = userNotificationManager.userNotificationContent(pendingUserNotification)
@@ -609,8 +625,10 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
         XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
         XCTAssertEqual(result?.groupID, expectedGroupID)
-        XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
-        XCTAssertEqual(result?.pushSetting?.type, .on)
+        
+        var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+        XCTAssertEqual(pushSetting?.identity, expectedSenderID)
+        XCTAssertEqual(pushSetting?.type, .on)
     }
 
     func testUserNotificationContentPushWithAbstractMessage() throws {
@@ -700,15 +718,23 @@ class UserNotificationManagerTests: XCTestCase {
                     "cmd": expectedCmd,
                 ])
             pendingUserNotification.abstractMessage = message
-
+            
+            let entityManager = EntityManager(databaseContext: databaseCnx)
+            let pushSettingManager = PushSettingManager(
+                userSettingsMock,
+                GroupManagerMock(),
+                entityManager,
+                false
+            )
+            
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
                 MyIdentityStoreMock(),
-                PushSettingManagerMock(),
+                pushSettingManager,
                 contactStoreMock,
                 GroupManagerMock(),
-                EntityManager(databaseContext: databaseCnx),
+                entityManager,
                 false
             )
             let result = userNotificationManager.userNotificationContent(pendingUserNotification)
@@ -724,9 +750,10 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, expectedGroupID)
-            XCTAssertNil(result?.baseMessage)
-            XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
-            XCTAssertEqual(result?.pushSetting?.type, .on)
+
+            var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+            XCTAssertEqual(pushSetting?.identity, expectedSenderID)
+            XCTAssertEqual(pushSetting?.type, .on)
         }
     }
 
@@ -856,15 +883,23 @@ class UserNotificationManagerTests: XCTestCase {
                     "cmd": expectedCmd,
                 ])
             pendingUserNotification.abstractMessage = message
-
+            
+            let entityManager = EntityManager(databaseContext: databaseCnx)
+            let pushSettingManager = PushSettingManager(
+                userSettingsMock,
+                GroupManagerMock(),
+                entityManager,
+                false
+            )
+            
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
                 MyIdentityStoreMock(),
-                PushSettingManagerMock(),
+                pushSettingManager,
                 contactStoreMock,
                 groupManagerMock,
-                EntityManager(databaseContext: databaseCnx),
+                entityManager,
                 false
             )
             let result = userNotificationManager.userNotificationContent(pendingUserNotification)
@@ -880,8 +915,9 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, expectedGroupID)
-            XCTAssertNil(result?.baseMessage)
-            XCTAssertNil(result?.pushSetting)
+            
+            var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+            XCTAssertNotNil(pushSetting)
         }
     }
 
@@ -1081,14 +1117,22 @@ class UserNotificationManagerTests: XCTestCase {
                 ])
             pendingUserNotification.baseMessage = message
 
+            let entityManager = EntityManager(databaseContext: databaseCnx)
+            let pushSettingManager = PushSettingManager(
+                userSettingsMock,
+                GroupManagerMock(),
+                entityManager,
+                false
+            )
+            
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
                 MyIdentityStoreMock(),
-                PushSettingManagerMock(),
+                pushSettingManager,
                 contactStoreMock,
                 GroupManagerMock(),
-                EntityManager(databaseContext: databaseCnx),
+                entityManager,
                 false
             )
             let result = userNotificationManager.userNotificationContent(pendingUserNotification)
@@ -1104,9 +1148,10 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, expectedGroupID)
-            XCTAssertNil(result?.baseMessage)
-            XCTAssertEqual(result?.pushSetting?.identity, expectedSenderID)
-            XCTAssertEqual(result?.pushSetting?.type, .on)
+
+            var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+            XCTAssertEqual(pushSetting?.identity, expectedSenderID)
+            XCTAssertEqual(pushSetting?.type, .on)
         }
     }
 
@@ -1231,6 +1276,14 @@ class UserNotificationManagerTests: XCTestCase {
                 ])
             pendingUserNotification.baseMessage = message
 
+            let entityManager = EntityManager(databaseContext: databaseCnx)
+            let pushSettingManager = PushSettingManager(
+                userSettingsMock,
+                GroupManagerMock(),
+                entityManager,
+                false
+            )
+            
             let userNotificationManager = UserNotificationManager(
                 settingsStoreMock,
                 userSettingsMock,
@@ -1254,9 +1307,10 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, testData["expectedGroupId"] as? String)
-            XCTAssertNotNil(result?.baseMessage)
-            XCTAssertEqual(result?.pushSetting?.groupIdentity, GroupIdentity(id: groupID, creator: groupCreator))
-            XCTAssertEqual(result?.pushSetting?.type, .on)
+
+            var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+            XCTAssertEqual(pushSetting?.groupIdentity, GroupIdentity(id: groupID, creator: groupCreator))
+            XCTAssertEqual(pushSetting?.type, .on)
         }
     }
 

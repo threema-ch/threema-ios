@@ -44,7 +44,12 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
                 // TODO: error handling
                 return
             }
-            avatar = AvatarMaker.shared().avatar(for: contact, size: 40, masked: true)
+            if ProcessInfoHelper.isRunningForScreenshots {
+                avatar = AvatarMaker.shared().avatar(for: contact, size: 200, masked: false, scaled: true)
+            }
+            else {
+                avatar = AvatarMaker.shared().avatar(for: contact, size: 40, masked: true)
+            }
             
             if AvatarMaker.shared().isDefaultAvatar(for: contact) {
                 avatar = avatar?.withTintColor(.white)
@@ -66,7 +71,12 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
         
         if let profilePictureDict = identityStore?.profilePicture,
            let imageData = profilePictureDict["ProfilePicture"] as? Data, let image = UIImage(data: imageData) {
-            avatar = AvatarMaker.shared().maskedProfilePicture(image, size: 40)
+            if ProcessInfoHelper.isRunningForScreenshots {
+                avatar = image
+            }
+            else {
+                avatar = AvatarMaker.shared().maskedProfilePicture(image, size: 40)
+            }
         }
         
         return (avatar, idColor)

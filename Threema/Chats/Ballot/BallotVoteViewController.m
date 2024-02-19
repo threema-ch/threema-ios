@@ -258,7 +258,7 @@
 - (void)setDefaultResultsIfMissing {
     for (BallotChoice *choice in [_ballot choices]) {
         if ([choice getOwnResult] == nil) {
-            // add default value
+            // Add default value
             [_ballotManager updateOwnChoice:choice with:[NSNumber numberWithBool:NO]];
         }
     }

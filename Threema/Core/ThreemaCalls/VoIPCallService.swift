@@ -870,7 +870,18 @@ extension VoIPCallService {
                         BackgroundTaskManager.shared.newBackgroundTask(
                             key: kAppVoIPBackgroundTask,
                             timeout: Int(kAppVoIPBackgroundTaskTime)
-                        ) {
+                        ) { [weak self] in
+                            guard let self else {
+                                return
+                            }
+                            
+                            guard offer.callID == self.incomingOffer?.callID else {
+                                DDLogError(
+                                    "Trying to run background task for call with ID \(offer.callID), but current incoming offer call ID is \(self.incomingOffer?.callID ?? VoIPCallID(callID: nil))"
+                                )
+                                return
+                            }
+                            
                             self.businessInjector.serverConnector.connect(initiator: .threemaCall)
 
                             self.callKitManager?.timeoutCall()

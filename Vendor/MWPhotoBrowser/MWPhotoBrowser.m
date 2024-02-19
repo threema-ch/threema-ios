@@ -14,9 +14,9 @@
 #import "MWCommon.h"
 #import "MWPhotoBrowser.h"
 #import "MWPhotoBrowserPrivate.h"
-///***** BEGIN THREEMA MODIFICATION: Use carthage SDWebImage *********/
+///***** BEGIN THREEMA MODIFICATION *********/
 #import <SDWebImage/SDImageCache.h>
-///***** END THREEMA MODIFICATION: Use carthage SDWebImage *********/
+///***** END THREEMA MODIFICATION *********/
 #import "UIImage+MWPhotoBrowser.h"
 ///***** BEGIN THREEMA MODIFICATION: Add AppGroup and utils *********/
 #import "TTOpenInAppActivity.h"
@@ -1396,7 +1396,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
                     if ([_delegate respondsToSelector:@selector(photoBrowser:objectIDAtIndex:)]) {
                        NSManagedObjectID * objectID = [_delegate photoBrowser:self objectIDAtIndex:index];
                         BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-                        [manager syncBlobsFor:objectID onCompletion:^{
+                        [manager syncBlobsFor:objectID onCompletion:^(enum BlobManagerObjCResult result){
+                            NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
                             dispatch_async(dispatch_get_main_queue(), ^{
                                 [weakSelf setVideoLoadingIndicatorVisible:NO atPageIndex:index];
                                 [weakSelf playVideoAtIndex:index];

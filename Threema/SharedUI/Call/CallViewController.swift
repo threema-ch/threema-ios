@@ -76,7 +76,6 @@ class CallViewController: UIViewController {
     var isCallInitiator = false
     var isTesting = false
     var viewWasHidden = false
-    var wasProximityMonitoringEnabled: Bool?
     var threemaVideoCallAvailable = false
     var isLocalVideoActive = false
     var isReceivingRemoteVideo = false {
@@ -257,10 +256,9 @@ class CallViewController: UIViewController {
                 
         NavigationBarPromptHandler.isCallActiveInBackground = false
         muteButton.isSelected = VoIPCallStateManager.shared.isCallMuted()
-        if isTesting == false {
-            if UserSettings.shared()?.disableProximityMonitoring == false {
-                UIDevice.current.isProximityMonitoringEnabled = wasProximityMonitoringEnabled ?? true
-            }
+        if !isTesting {
+            UIDevice.current
+                .isProximityMonitoringEnabled = !(UserSettings.shared()?.disableProximityMonitoring ?? false)
         }
         UIApplication.shared.isIdleTimerDisabled = true
         setupView()
@@ -284,8 +282,8 @@ class CallViewController: UIViewController {
     override internal func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
                 
-        wasProximityMonitoringEnabled = UIDevice.current.isProximityMonitoringEnabled
         UIDevice.current.isProximityMonitoringEnabled = false
+        
         if !NavigationBarPromptHandler.isWebActive {
             UIApplication.shared.isIdleTimerDisabled = false
         }
@@ -1658,7 +1656,6 @@ extension CallViewController {
         else {
             NavigationBarPromptHandler.isCallActiveInBackground = true
             NavigationBarPromptHandler.name = contact?.displayName
-            wasProximityMonitoringEnabled = UIDevice.current.isProximityMonitoringEnabled
             UIDevice.current.isProximityMonitoringEnabled = false
             
             NotificationCenter.default.post(

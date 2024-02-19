@@ -391,16 +391,19 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             deviceID: MockData.deviceID,
             deviceGroupKeys: MockData.deviceGroupKeys
         )
-        serverConnectorMock.reflectMessageClosure = { _ -> Bool in
+        serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
                 NotificationCenter.default.post(
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: Date()]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         let messageProcessorMock = MessageProcessorMock()
         let mediatorMessageProtocolMock = MediatorMessageProtocolMock(

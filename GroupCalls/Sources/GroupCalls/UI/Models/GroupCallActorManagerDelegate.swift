@@ -46,4 +46,8 @@ protocol GroupCallActorManagerDelegate: AnyObject {
     /// Runs the Periodic Refresh-Steps for the group with the given identity.
     /// - Parameter group: GroupIdentity of group to run Refresh-Steps for
     func refreshGroupCalls(in group: GroupIdentity) async
+    
+    /// Shows an alert that the group call is currently full
+    /// - Parameter maxParticipants: Optional maximal participant count
+    func showGroupCallFullAlert(maxParticipants: Int?) async
 }

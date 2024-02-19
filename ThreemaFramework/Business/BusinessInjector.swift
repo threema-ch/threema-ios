@@ -149,7 +149,7 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             fsmpInstance = ForwardSecurityMessageProcessor(
                 dhSessionStore: dhSessionStore,
                 identityStore: myIdentityStore,
-                messageSender: MessageSenderAdapter(businessInjector: self)
+                messageSender: messageSender
             )
             
             fsStatusSender = ForwardSecurityStatusSender(entityManager: entityManager)
@@ -173,16 +173,4 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
     lazy var blobUploader: BlobUploaderProtocol =
         BlobUploader(blobURL: BlobURL(serverConnector: self.serverConnector, userSettings: self.userSettings))
-
-    class MessageSenderAdapter: ForwardSecurityMessageSenderProtocol {
-        private let businessInjector: BusinessInjector
-
-        init(businessInjector: BusinessInjector) {
-            self.businessInjector = businessInjector
-        }
-
-        func send(message: AbstractMessage) {
-            businessInjector.messageSender.sendMessage(abstractMessage: message, isPersistent: true)
-        }
-    }
 }

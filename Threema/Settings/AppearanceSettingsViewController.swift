@@ -63,11 +63,8 @@ class AppearanceSettingsViewController: ThemedTableViewController {
             forName: Notification.Name(kNotificationColorThemeChanged),
             object: nil,
             queue: nil
-        ) { [weak self] _ in
-            guard let self else {
-                return
-            }
-            self.systemThemeButton.layer.shadowColor = Colors.shadowThemeChooser.cgColor
+        ) { _ in
+            super.refresh()
         }
     }
     
@@ -84,33 +81,35 @@ class AppearanceSettingsViewController: ThemedTableViewController {
     }
     
     func updateView() {
-        darkThemeLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_dark_theme")
-        lightThemeLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_light_theme")
-        systemThemeLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_system_theme")
+        darkThemeLabel.text = "settings_appearance_dark_theme".localized
+        lightThemeLabel.text = "settings_appearance_light_theme".localized
+        systemThemeLabel.text = "settings_appearance_system_theme".localized
         
-        darkThemeButton.accessibilityLabel = BundleUtil.localizedString(forKey: "settings_appearance_dark_theme")
-        lightThemeButton.accessibilityLabel = BundleUtil.localizedString(forKey: "settings_appearance_light_theme")
-        systemThemeButton.accessibilityLabel = BundleUtil.localizedString(forKey: "settings_appearance_system_theme")
+        darkThemeButton.accessibilityLabel = "settings_appearance_dark_theme".localized
+        lightThemeButton.accessibilityLabel = "settings_appearance_light_theme".localized
+        systemThemeButton.accessibilityLabel = "settings_appearance_system_theme".localized
         
-        hideStaleContactsLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_hide_stale_contacts")
-        showProfilePicturesLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_show_profile_pictures")
-        displayOrderLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_display_order")
-        showGalleryPreviewLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_show_gallery_preview")
+        hideStaleContactsLabel.text = "settings_appearance_hide_stale_contacts".localized
+        showProfilePicturesLabel.text = "settings_appearance_show_profile_pictures".localized
+        displayOrderLabel.text = "settings_appearance_display_order".localized
+        showGalleryPreviewLabel.text = "settings_appearance_show_gallery_preview".localized
         
         showProfilePicturesSwitch.isOn = UserSettings.shared().showProfilePictures
         showGalleryPreviewSwitch.isOn = UserSettings.shared().showGalleryPreview
-                
-        darkThemeButton.layer.shadowColor = Colors.white.cgColor
-        darkThemeButton.layer.shadowOffset = CGSize(width: 0, height: 0)
-        darkThemeButton.layer.shadowRadius = 9.0
+  
+        let padding: CGFloat = 2
+        let inset = UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding)
         
-        lightThemeButton.layer.shadowColor = Colors.black.cgColor
-        lightThemeButton.layer.shadowOffset = CGSize(width: 0, height: 0)
-        lightThemeButton.layer.shadowRadius = 9.0
+        darkThemeButton.contentEdgeInsets = inset
+        lightThemeButton.contentEdgeInsets = inset
+        systemThemeButton.contentEdgeInsets = inset
         
-        systemThemeButton.layer.shadowColor = Colors.shadowThemeChooser.cgColor
-        systemThemeButton.layer.shadowOffset = CGSize(width: 0, height: 0)
-        systemThemeButton.layer.shadowRadius = 9.0
+        darkThemeButton.layer.cornerRadius = 8.0
+        darkThemeButton.layer.masksToBounds = true
+        lightThemeButton.layer.cornerRadius = 8.0
+        lightThemeButton.layer.masksToBounds = true
+        systemThemeButton.layer.cornerRadius = 8.0
+        systemThemeButton.layer.masksToBounds = true
 
         if LicenseStore.requiresLicenseKey() == false {
             lightThemeButton.setImage(BundleUtil.imageNamed("Light-Theme"), for: .normal)
@@ -123,8 +122,9 @@ class AppearanceSettingsViewController: ThemedTableViewController {
             systemThemeButton.setImage(BundleUtil.imageNamed("System-Theme-Work"), for: .normal)
         }
         
-        displayOrderValue.text = UserSettings.shared().displayOrderFirstName ? BundleUtil
-            .localizedString(forKey: "SortOrder_Firstname") : BundleUtil.localizedString(forKey: "SortOrder_Lastname")
+        displayOrderValue
+            .text = (UserSettings.shared().displayOrderFirstName ? "SortOrder_Firstname" : "SortOrder_Lastname")
+            .localized
         
         if let mdmSetup = MDMSetup(setup: false) {
             hideStaleContactsSwitch.isEnabled = !mdmSetup.disableHideStaleContacts()
@@ -137,55 +137,69 @@ class AppearanceSettingsViewController: ThemedTableViewController {
         
         previewLimitSlider.value = UserSettings.shared().previewLimit
         previewLimitLabel.text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "preview_limit"),
+            "preview_limit".localized,
             previewLimitSlider.value
         )
         previewLimitLabel.isEnabled = showGalleryPreviewSwitch.isOn
         
         systemStackView.isHidden = false
         if UserSettings.shared().useSystemTheme {
-            lightThemeButton.layer.shadowOpacity = 0.0
-            darkThemeButton.layer.shadowOpacity = 0.0
-            systemThemeButton.layer.shadowOpacity = 1.0
+            lightThemeButton.applyDeselectStyle()
+            darkThemeButton.applyDeselectStyle()
+            systemThemeButton.applySelectedStyle()
+            
             themeCell.accessibilityLabel = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "settings_appearance_theme_selected"),
-                BundleUtil.localizedString(forKey: "settings_appearance_system_theme")
+                "settings_appearance_theme_selected".localized,
+                "settings_appearance_system_theme".localized
             )
-            systemThemeButton.accessibilityLabel = BundleUtil
-                .localizedString(forKey: "settings_appearance_system_theme") + ", " + BundleUtil
-                .localizedString(forKey: "settings_appearance_theme_active")
+            systemThemeButton.accessibilityLabel = "settings_appearance_system_theme"
+                .localized + ", " + "settings_appearance_theme_active".localized
         }
         else {
-            updateButtonShadowForCurrentTheme()
+            updateButtonSelectionForCurrentTheme()
         }
         
-        appIconLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_hide_app_icon")
+        appIconLabel.text = "settings_appearance_hide_app_icon".localized
     }
     
-    private func updateButtonShadowForCurrentTheme() {
+    private func updateButtonSelectionForCurrentTheme() {
         switch Colors.theme {
         case .dark:
-            lightThemeButton.layer.shadowOpacity = 0.0
-            darkThemeButton.layer.shadowOpacity = 1.0
-            systemThemeButton.layer.shadowOpacity = 0.0
+            lightThemeButton.applyDeselectStyle()
+            darkThemeButton.applySelectedStyle()
+            systemThemeButton.applyDeselectStyle()
             themeCell.accessibilityLabel = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "settings_appearance_theme_selected"),
-                BundleUtil.localizedString(forKey: "settings_appearance_dark_theme")
+                "settings_appearance_theme_selected".localized,
+                "settings_appearance_dark_theme".localized
             )
-            darkThemeButton.accessibilityLabel = BundleUtil
-                .localizedString(forKey: "settings_appearance_dark_theme") + ", " + BundleUtil
-                .localizedString(forKey: "settings_appearance_theme_active")
+            darkThemeButton.accessibilityLabel = "settings_appearance_dark_theme"
+                .localized + ", " + "settings_appearance_theme_active".localized
         case .light, .undefined:
-            lightThemeButton.layer.shadowOpacity = 1.0
-            darkThemeButton.layer.shadowOpacity = 0.0
-            systemThemeButton.layer.shadowOpacity = 0.0
+            lightThemeButton.applySelectedStyle()
+            darkThemeButton.applyDeselectStyle()
+            systemThemeButton.applyDeselectStyle()
             themeCell.accessibilityLabel = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "settings_appearance_theme_selected"),
-                BundleUtil.localizedString(forKey: "settings_appearance_light_theme")
+                "settings_appearance_theme_selected".localized,
+                "settings_appearance_light_theme".localized
             )
-            lightThemeButton.accessibilityLabel = BundleUtil
-                .localizedString(forKey: "settings_appearance_light_theme") + ", " + BundleUtil
-                .localizedString(forKey: "settings_appearance_theme_active")
+            lightThemeButton.accessibilityLabel = "settings_appearance_light_theme"
+                .localized + ", " + "settings_appearance_theme_active".localized
+        }
+    }
+}
+
+extension UIButton {
+    fileprivate func applySelectedStyle() {
+        UIView.animate(withDuration: 0.2) {
+            self.layer.borderColor = UIColor.tintColor.cgColor
+            self.layer.borderWidth = 2
+        }
+    }
+    
+    fileprivate func applyDeselectStyle() {
+        UIView.animate(withDuration: 0.2) {
+            self.layer.borderColor = UIColor.clear.cgColor
+            self.layer.borderWidth = 0
         }
     }
 }
@@ -194,14 +208,14 @@ extension AppearanceSettingsViewController {
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.section == 0, indexPath.row == 0 {
-            return 230.0
+            return 235.0
         }
         return UITableView.automaticDimension
     }
     
     override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.section == 0, indexPath.row == 0 {
-            return 230
+            return 235
         }
         return UITableView.automaticDimension
     }
@@ -236,16 +250,15 @@ extension AppearanceSettingsViewController {
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 {
-            return BundleUtil.localizedString(forKey: "settings_appearance_theme_section")
+            return "settings_appearance_theme_section".localized
         }
         return nil
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 2 {
-            return UserSettings.shared().hideStaleContacts ? BundleUtil
-                .localizedString(forKey: "show_stale_contacts_on") : BundleUtil
-                .localizedString(forKey: "show_stale_contacts_off")
+            return (UserSettings.shared().hideStaleContacts ? "show_stale_contacts_on" : "show_stale_contacts_off")
+                .localized
         }
         return nil
     }
@@ -287,9 +300,9 @@ extension AppearanceSettingsViewController {
     @IBAction func systemThemeSelected(sender: UIButton) {
         UserSettings.shared()?.useSystemTheme = true
         
-        darkThemeButton.layer.shadowOpacity = 0.0
-        lightThemeButton.layer.shadowOpacity = 0.0
-        systemThemeButton.layer.shadowOpacity = 1.0
+        lightThemeButton.applyDeselectStyle()
+        darkThemeButton.applyDeselectStyle()
+        systemThemeButton.applySelectedStyle()
         
         AppDelegate.shared().window.overrideUserInterfaceStyle = .unspecified
         
@@ -315,8 +328,8 @@ extension AppearanceSettingsViewController {
             Colors.theme = .light
         }
         
-        updateButtonShadowForCurrentTheme()
-        
+        updateButtonSelectionForCurrentTheme()
+
         AppDelegate.shared()?.window.overrideUserInterfaceStyle = .light
         NotificationPresenterWrapper.shared.colorChanged()
     }
@@ -329,7 +342,7 @@ extension AppearanceSettingsViewController {
         case .light, .undefined:
             Colors.theme = .dark
         }
-        updateButtonShadowForCurrentTheme()
+        updateButtonSelectionForCurrentTheme()
         
         AppDelegate.shared()?.window.overrideUserInterfaceStyle = .dark
         NotificationPresenterWrapper.shared.colorChanged()
@@ -354,7 +367,7 @@ extension AppearanceSettingsViewController {
         let roundedValue = round(sender.value / 5) * 5
         sender.value = roundedValue
         previewLimitLabel.text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "preview_limit"),
+            "preview_limit".localized,
             sender.value
         )
         UserSettings.shared()?.previewLimit = sender.value
@@ -365,8 +378,7 @@ struct AppearanceSettingsViewControllerRepresentable: UIViewControllerRepresenta
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
     
     func makeUIViewController(context: Context) -> some UIViewController {
-        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-        let vc = storyboard.instantiateViewController(identifier: "AppearanceSettingsViewController")
-        return vc
+        UIStoryboard(name: "SettingsStoryboard", bundle: nil)
+            .instantiateViewController(identifier: "AppearanceSettingsViewController")
     }
 }

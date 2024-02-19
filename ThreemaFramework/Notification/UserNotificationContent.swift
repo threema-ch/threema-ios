@@ -31,9 +31,6 @@ public class UserNotificationContent {
         pendingUserNotification.stage
     }
     
-    public var baseMessage: BaseMessage?
-    public var pushSetting: PushSetting?
-    
     public var messageID: String! {
         pendingUserNotification.messageID
     }

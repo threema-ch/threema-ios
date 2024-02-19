@@ -56,7 +56,7 @@
 }
 
 - (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
-    return kUnspecified;
+    return kV12;
 }
 
 #pragma mark - NSSecureCoding

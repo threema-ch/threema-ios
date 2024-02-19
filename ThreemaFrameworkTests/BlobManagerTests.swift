@@ -42,8 +42,9 @@ class BlobManagerTests: XCTestCase {
     private var entityManager: EntityManager!
     private var blobManager: BlobManager!
     private let myIdentityStoreMock = MyIdentityStoreMock()
+    
     private let baseURLString = "https://example.com"
-    private let encryptionKey = BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!
+    private let encryptionKey = MockData.generateBlobEncryptionKey()
     
     private let testThumbnailID = "546573745468756d62".data(using: .ascii)!
     private let testThumbnailData = try! Data(
@@ -61,7 +62,7 @@ class BlobManagerTests: XCTestCase {
     )
     
     private let testBlobID = "54657374426c6f62".data(using: .ascii)!
-    private let testBlobData = "This is test blob data.".data(using: .utf8)!
+    private let testBlobData = Data("This is test blob data.".utf8)
     private lazy var encryptedBlobData: Data = NaClCrypto.shared().symmetricEncryptData(
         testBlobData,
         withKey: encryptionKey,
@@ -70,7 +71,7 @@ class BlobManagerTests: XCTestCase {
     
     // MARK: - Lifecycle
     
-    override func setUp() {
+    override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
         let (_, context, backgroundManagedObjectContext) = DatabasePersistentContext.devNullContext()
@@ -110,9 +111,7 @@ class BlobManagerTests: XCTestCase {
             userSettings: UserSettingsMock()
         )
     }
-    
-    override func setUpWithError() throws { }
-    
+        
     // MARK: - Incoming Tests
     
     @MainActor
@@ -120,7 +119,7 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -152,16 +151,17 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        let actualSyncResult = await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationData, expectationDone], timeout: 50)
+        await fulfillment(of: [expectationData, expectationDone], timeout: 50)
         
         // Assert
         let actualBlobData = try XCTUnwrap(fileMessageEntity.blobData)
         let blobProgress = fileMessageEntity.blobProgress
         let blobError = fileMessageEntity.blobError
         
+        XCTAssertEqual(actualSyncResult, .downloaded)
         XCTAssertEqual(actualBlobData, testBlobData)
         XCTAssertEqual(blobProgress, nil)
         XCTAssertEqual(blobError, false)
@@ -172,8 +172,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -232,10 +232,13 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        let actualSyncResult = await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
+        await fulfillment(
+            of: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData],
+            timeout: 50
+        )
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -245,6 +248,7 @@ class BlobManagerTests: XCTestCase {
         let blobProgress = fileMessageEntity.blobProgress
         let blobError = fileMessageEntity.blobError
         
+        XCTAssertEqual(actualSyncResult, .downloaded)
         XCTAssertEqual(testThumbnailData, actualThumbnailData)
         XCTAssertEqual(loadedThumbnailImage.size.width as NSNumber, thumbnail.width)
         XCTAssertEqual(loadedThumbnailImage.size.height as NSNumber, thumbnail.height)
@@ -259,8 +263,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -317,9 +321,10 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        let actualSyncResult = await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationThumbnail, expectationData], timeout: 60)
+        await fulfillment(of: [expectationThumbnail, expectationData], timeout: 60)
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -327,6 +332,7 @@ class BlobManagerTests: XCTestCase {
         let blobProgress = fileMessageEntity.blobProgress
         let blobError = fileMessageEntity.blobError
         
+        XCTAssertEqual(actualSyncResult, .downloaded)
         XCTAssertEqual(testThumbnailData, actualThumbnailData)
         XCTAssertEqual(testBlobData, actualBlobData)
         XCTAssertEqual(blobProgress, nil)
@@ -338,7 +344,7 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -374,16 +380,17 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        let actualSyncResult = await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationData, expectationDone], timeout: 50)
+        await fulfillment(of: [expectationData, expectationDone], timeout: 50)
         
         // Assert
         let actualBlobData = try XCTUnwrap(fileMessageEntity.blobData)
         let blobProgress = fileMessageEntity.blobProgress
         let blobError = fileMessageEntity.blobError
         
+        XCTAssertEqual(actualSyncResult, .downloaded)
         XCTAssertEqual(testBlobData, actualBlobData)
         XCTAssertEqual(blobProgress, nil)
         XCTAssertEqual(blobError, false)
@@ -394,8 +401,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -431,12 +438,13 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        let actualSyncResult = await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
         // Assert
         let blobProgress = fileMessageEntity.blobProgress
         let blobError = fileMessageEntity.blobError
         
+        XCTAssertEqual(actualSyncResult, .downloaded)
         XCTAssertEqual(blobProgress, nil)
         XCTAssertEqual(blobError, false)
     }
@@ -484,7 +492,7 @@ class BlobManagerTests: XCTestCase {
             )
         }
         
-        let expectation = expectation(description: "Basic Incoming Sync")
+        let expectation = expectation(description: "Basic Outgoing Sync")
         let url = try await blobURL(with: baseURLString, and: testBlobID, direction: .outgoing)
         let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[url] = (
@@ -495,14 +503,15 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        let actualSyncResult = await blobManager.syncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectation], timeout: 50)
+        await fulfillment(of: [expectation], timeout: 50)
         
         // Assert
         let receivedBlobID = try XCTUnwrap(convertHexToAsciiData(data: fileMessageEntity.blobIdentifier))
         
+        XCTAssertEqual(actualSyncResult, .uploaded)
         XCTAssertEqual(testBlobID, receivedBlobID)
     }
     
@@ -525,7 +534,7 @@ class BlobManagerTests: XCTestCase {
             )
         }
         
-        let expectationData = expectation(description: "Basic Incoming Sync")
+        let expectationData = expectation(description: "Basic Outgoing Sync")
         let dataURL = try await blobURL(with: baseURLString, and: testBlobID, direction: .outgoing)
         let responseData = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
@@ -534,7 +543,8 @@ class BlobManagerTests: XCTestCase {
         var counter = 0
         URLProtocolMock.mockResponses[dataURL] = (
             (nil, testBlobID, responseData),
-            { counter += 1
+            {
+                counter += 1
                 if counter == 2 {
                     expectationData.fulfill()
                 }
@@ -542,15 +552,10 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        do {
-            try await blobManager.syncBlobsThrows(for: fileMessageEntity.objectID)
-        }
-        catch {
-            XCTAssertEqual(error as! BlobManagerError, BlobManagerError.sendingFailed)
-        }
+        let actualSyncResult = try await blobManager.syncBlobsThrows(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationData], timeout: 50)
+        await fulfillment(of: [expectationData], timeout: 50)
         
         // Assert
         let receivedThumbnailID = try XCTUnwrap(convertHexToAsciiData(data: fileMessageEntity.blobThumbnailIdentifier))
@@ -558,14 +563,15 @@ class BlobManagerTests: XCTestCase {
         let blobProgress = fileMessageEntity.blobProgress
         let blobError = fileMessageEntity.blobError
         
+        XCTAssertEqual(actualSyncResult, .uploaded)
         XCTAssertEqual(testBlobID, receivedThumbnailID)
         XCTAssertEqual(testBlobID, receivedBlobID)
         XCTAssertEqual(blobProgress, nil)
-        // We cannot test for error, since the sending of the message fails and an error is set
+        XCTAssertFalse(blobError)
     }
     
     @MainActor
-    func testOutGoingDataNoActionNeeded() async throws {
+    func testOutGoingDataNoInternetConnection() async throws {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
@@ -602,14 +608,11 @@ class BlobManagerTests: XCTestCase {
             userSettings: UserSettingsMock()
         )
         
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
-                
-        // Assert
-        let blobProgress = fileMessageEntity.blobProgress
-        let blobError = fileMessageEntity.blobError
-        
-        XCTAssertEqual(blobProgress, nil)
-        XCTAssertEqual(blobError, false)
+        await XCTAssertThrowsAsyncError(
+            try await blobManager.syncBlobsThrows(for: fileMessageEntity.objectID)
+        ) { error in
+            XCTAssertEqual(error as! BlobManagerError, BlobManagerError.notConnected)
+        }
     }
     
     func testOutGoingDataNoteGroup() async throws {
@@ -633,21 +636,17 @@ class BlobManagerTests: XCTestCase {
             GroupPhotoSenderMock()
         )
         
-        let grp = createOrUpdateDBWait(
+        let grp = try createOrUpdateDBWait(
             groupManager: groupManager,
             groupIdentity: expectedGroupIdentity,
             members: []
         )
+                
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+            for: grp.groupID,
+            creator: grp.groupIdentity.creator.string
+        ))
         
-        XCTAssertNotNil(grp)
-        
-        let conversation = entityManager.entityFetcher.conversation(
-            for: grp!.groupID,
-            creator: grp!.groupIdentity.creator.string
-        )
-        
-        XCTAssertNotNil(conversation)
-
         // Arrange
         var fileMessageEntity: FileMessageEntity!
         let fileData = databasePreparer.createFileData(data: testBlobData)
@@ -655,7 +654,7 @@ class BlobManagerTests: XCTestCase {
 
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
-                conversation: conversation!,
+                conversation: conversation,
                 encryptionKey: encryptionKey,
                 blobID: testBlobID,
                 blobThumbnailID: testThumbnailID,
@@ -685,12 +684,13 @@ class BlobManagerTests: XCTestCase {
             userSettings: UserSettingsMock()
         )
 
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        let actualSyncResult = await blobManager.syncBlobs(for: fileMessageEntity.objectID)
 
         // Assert
         let blobProgress = fileMessageEntity.blobProgress
         let blobError = fileMessageEntity.blobError
 
+        XCTAssertEqual(actualSyncResult, .failed) // Internally it throws `BlobManagerError.noteGroupNeedsNoSync`
         XCTAssertEqual(fileMessageEntity.blobIdentifier, ThreemaProtocol.nonUploadedBlobID)
         XCTAssertEqual(fileMessageEntity.blobThumbnailIdentifier, ThreemaProtocol.nonUploadedBlobID)
         XCTAssertEqual(blobProgress, nil)
@@ -729,8 +729,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -789,11 +789,15 @@ class BlobManagerTests: XCTestCase {
                 expectationDoneData.fulfill()
             }
         )
+        
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
+        await fulfillment(
+            of: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData],
+            timeout: 50
+        )
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -812,8 +816,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -872,11 +876,15 @@ class BlobManagerTests: XCTestCase {
                 expectationDoneData.fulfill()
             }
         )
+        
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
+        await fulfillment(
+            of: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData],
+            timeout: 50
+        )
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -895,8 +903,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -955,11 +963,15 @@ class BlobManagerTests: XCTestCase {
                 expectationDoneData.fulfill()
             }
         )
+        
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
+        await fulfillment(
+            of: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData],
+            timeout: 50
+        )
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -978,8 +990,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -1038,11 +1050,15 @@ class BlobManagerTests: XCTestCase {
                 expectationDoneData.fulfill()
             }
         )
+        
         // Act
         await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
         
         // TODO: (IOS-3875) Timeout
-        wait(for: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData], timeout: 50)
+        await fulfillment(
+            of: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData],
+            timeout: 50
+        )
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
@@ -1061,8 +1077,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -1110,8 +1126,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let thumbnailID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+        let blobID = MockData.generateBlobID()
+        let thumbnailID = MockData.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -1210,7 +1226,7 @@ class BlobManagerTests: XCTestCase {
         groupManager: GroupManagerProtocol,
         groupIdentity: GroupIdentity,
         members: Set<String>
-    ) -> Group? {
+    ) throws -> Group {
         var group: Group?
 
         let expec = expectation(description: "Group create or update")
@@ -1231,6 +1247,6 @@ class BlobManagerTests: XCTestCase {
 
         wait(for: [expec], timeout: 30)
 
-        return group
+        return try XCTUnwrap(group)
     }
 }

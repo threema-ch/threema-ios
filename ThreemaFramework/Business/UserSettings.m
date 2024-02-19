@@ -133,8 +133,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize enableVideoCall;
 @synthesize threemaVideoCallQualitySetting;
 
-@synthesize newSettingsActive;
-
 @synthesize unknownGroupAlertList;
 
 @synthesize evaluatedPolicyDomainStateApp;
@@ -148,12 +146,15 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize keepMessagesDays;
 
+@synthesize enableFSv12ForTesting;
+
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
 /// - `PushShowNickname`
 /// - `NewChatViewActive`
 /// - `GroupCallsDeveloper`
 /// - `NewProfileActive`
+/// - `NewSettingsActive`
 
 static UserSettings *instance;
 
@@ -255,7 +256,6 @@ static UserSettings *instance;
                                         @"08:00", @"MasterDNDStartTime",
                                         @"17:00", @"MasterDNDEndTime",
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
-                                        [NSNumber numberWithBool:NO], @"NewSettingsActive",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
                                         [NSMutableArray array], @"UnknownGroupAlertList",
@@ -265,6 +265,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                         [NSNumber numberWithBool:NO], @"GroupCallsDebugMessages",
                                         @-1, @"KeepMessagesDays",
+                                        [NSNumber numberWithBool:YES], @"EnableFSv1_2ForTesting",
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
@@ -390,7 +391,7 @@ static UserSettings *instance;
     blockCommunication = [defaults boolForKey:@"BlockCommunication"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
-    newSettingsActive = [defaults boolForKey:@"NewSettingsActive"];
+    enableFSv12ForTesting = [defaults boolForKey:@"EnableFSv1_2ForTesting"];
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -860,12 +861,6 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setNewSettingsActive:(BOOL)newNewSettingsActive {
-    newSettingsActive = newNewSettingsActive;
-    [defaults setBool:newSettingsActive forKey:@"NewSettingsActive"];
-    [defaults synchronize];
-}
-
 - (void)setUnknownGroupAlertList:(NSMutableArray *)newUnknownGroupAlertList {
     unknownGroupAlertList = newUnknownGroupAlertList;
     [defaults setObject:unknownGroupAlertList forKey:@"UnknownGroupAlertList"];
@@ -926,6 +921,12 @@ static UserSettings *instance;
 - (void)setVoiceMessagesShowTimeRemaining:(BOOL)newVoiceMessagesShowTimeRemaining {
     voiceMessagesShowTimeRemaining = newVoiceMessagesShowTimeRemaining;
     [defaults setBool:voiceMessagesShowTimeRemaining forKey:@"VoiceMessagesShowTimeRemaining"];
+    [defaults synchronize];
+}
+
+- (void)setEnableFSv12ForTesting:(BOOL)newEnableFSv12ForTesting {
+    enableFSv12ForTesting = newEnableFSv12ForTesting;
+    [defaults setBool:enableFSv12ForTesting forKey:@"EnableFSv1_2ForTesting"];
     [defaults synchronize];
 }
 

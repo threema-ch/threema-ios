@@ -21,7 +21,7 @@
 import SwiftUI
 
 struct CallSoundSettingsView: View {
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     
     private static let soundPreviewPlayer = SoundPreviewPlayer()
     
@@ -38,7 +38,7 @@ struct CallSoundSettingsView: View {
         List {
             Picker("", selection: $settingsVM.voIPSound) {
                 ForEach(soundList, id: \.self) { soundName in
-                    Text(BundleUtil.localizedString(forKey: "sound_\(soundName)"))
+                    Text("sound_\(soundName)".localized)
                 }
             }
         }
@@ -50,13 +50,13 @@ struct CallSoundSettingsView: View {
         }
         .pickerStyle(.inline)
         .tint(UIColor.primary.color)
-        .navigationTitle(BundleUtil.localizedString(forKey: "settings_threema_calls_call_sound"))
+        .navigationTitle("settings_threema_calls_call_sound".localized)
     }
 }
 
 struct CallSoundSettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        CallSoundSettingsView(settingsVM: SettingsStore())
+        CallSoundSettingsView()
             .tint(UIColor.primary.color)
             .environmentObject(SettingsStore())
     }

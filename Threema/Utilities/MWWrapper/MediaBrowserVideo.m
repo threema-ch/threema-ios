@@ -77,7 +77,8 @@
         [self play];
     } else {
         BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-        [manager syncBlobsFor:_message.objectID onCompletion:^{
+        [manager syncBlobsFor:_message.objectID onCompletion:^(enum BlobManagerObjCResult result){
+            NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
             [self postCompleteNotification];
         }];
     }
@@ -135,7 +136,8 @@
 
 - (void)performLoadUnderlyingImageAndNotify {
     BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-    [manager syncBlobsFor:_message.objectID onCompletion:^{
+    [manager syncBlobsFor:_message.objectID onCompletion:^(enum BlobManagerObjCResult result){
+        NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
         [self postCompleteNotification];
     }];
 }

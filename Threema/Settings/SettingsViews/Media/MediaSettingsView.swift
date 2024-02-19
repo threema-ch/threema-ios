@@ -23,7 +23,7 @@ import SwiftUI
 struct MediaSettingsView: View {
     private let mdmSetup = MDMSetup(setup: false)
 
-    @StateObject var settingsStore = BusinessInjector().settingsStore as! SettingsStore
+    @EnvironmentObject var settingsStore: SettingsStore
 
     @State private var imageSize: ImageSenderItemSize = .original
     @State private var videoQuality: VideoSenderItemQuality = .original
@@ -33,29 +33,27 @@ struct MediaSettingsView: View {
         List {
             Section(footer: Text(footerText)) {
                 NavigationLink {
-                    ImageSizePickerView(settingsVM: settingsStore, selectionItem: $imageSize)
+                    ImageSizePickerView(selectionItem: $imageSize)
+                        .environmentObject(settingsStore)
                 } label: {
-                    HStack {
-                        Text(BundleUtil.localizedString(forKey: "settings_media_image_size_title"))
-                        Spacer()
-                        Text(BundleUtil.localizedString(forKey: imageSize.rawValue))
-                            .foregroundColor(.secondary)
-                    }
+                    SettingsListItemView(
+                        cellTitle: "settings_media_image_size_title".localized,
+                        accessoryText: imageSize.rawValue.localized
+                    )
                 }
 
                 NavigationLink {
-                    VideoQualityPickerView(settingsVM: settingsStore, selectionItem: $videoQuality)
+                    VideoQualityPickerView(selectionItem: $videoQuality)
+                        .environmentObject(settingsStore)
                 } label: {
-                    HStack {
-                        Text(BundleUtil.localizedString(forKey: "settings_media_video_quality_title"))
-                        Spacer()
-                        Text(BundleUtil.localizedString(forKey: videoQuality.rawValue))
-                            .foregroundColor(.secondary)
-                    }
+                    SettingsListItemView(
+                        cellTitle: "settings_media_video_quality_title".localized,
+                        accessoryText: videoQuality.rawValue.localized
+                    )
                 }
 
                 Toggle(isOn: $settingsStore.autoSaveMedia) {
-                    Text(BundleUtil.localizedString(forKey: "settings_media_autosave_title"))
+                    Text("settings_media_autosave_title".localized)
                 }
                 .disabled(mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_SAVE_TO_GALLERY) ?? false)
                 .onChange(of: settingsStore.autoSaveMedia) { _ in
@@ -72,7 +70,7 @@ struct MediaSettingsView: View {
             }
             updateFooter()
         }
-        .navigationBarTitle(BundleUtil.localizedString(forKey: "settings_media_title"), displayMode: .inline)
+        .navigationBarTitle("settings_media_title".localized, displayMode: .inline)
         .tint(UIColor.primary.color)
     }
 
@@ -86,7 +84,7 @@ struct MediaSettingsView: View {
             if !text.isEmpty {
                 text += "\n\n"
             }
-            text += BundleUtil.localizedString(forKey: "disabled_by_device_policy")
+            text += "disabled_by_device_policy".localized
         }
 
         footerText = text
@@ -102,7 +100,7 @@ struct MediaSettingsView_Previews: PreviewProvider {
 }
 
 private struct ImageSizePickerView: View {
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     @Binding var selectionItem: ImageSenderItemSize
 
     var body: some View {
@@ -119,13 +117,13 @@ private struct ImageSizePickerView: View {
                 .pickerStyle(.inline)
                 .labelsHidden()
             } footer: {
-                Text(BundleUtil.localizedString(forKey: "image_resize_share_extension"))
+                Text("image_resize_share_extension".localized)
             }
             .onChange(of: selectionItem) { newValue in
                 settingsVM.imageSize = newValue.rawValue
             }
         }
-        .navigationTitle(BundleUtil.localizedString(forKey: "settings_media_image_size_title"))
+        .navigationTitle("settings_media_image_size_title".localized)
     }
 
     private func pickerItem(_ option: ImageSenderItemSize) -> some View {
@@ -134,10 +132,10 @@ private struct ImageSizePickerView: View {
 
             let resolution = Int(option.resolution)
             let footnote = option != .original ? String(
-                format: BundleUtil.localizedString(forKey: "max_x_by_x_pixels"),
+                format: "max_x_by_x_pixels".localized,
                 resolution,
                 resolution
-            ) : BundleUtil.localizedString(forKey: "images are not scaled")
+            ) : "images are not scaled".localized
 
             Text(footnote)
                 .font(.footnote)
@@ -147,7 +145,7 @@ private struct ImageSizePickerView: View {
 }
 
 private struct VideoQualityPickerView: View {
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     @Binding var selectionItem: VideoSenderItemQuality
 
     var body: some View {
@@ -161,7 +159,7 @@ private struct VideoQualityPickerView: View {
                             let duration = Int(option.maxDurationInMinutes)
                             if duration > 0 {
                                 let footnote = String(
-                                    format: BundleUtil.localizedString(forKey: "max_x_minutes"),
+                                    format: "max_x_minutes".localized,
                                     duration
                                 )
 
@@ -175,12 +173,12 @@ private struct VideoQualityPickerView: View {
                 .pickerStyle(.inline)
                 .labelsHidden()
             } footer: {
-                Text(BundleUtil.localizedString(forKey: "still_compressed_note"))
+                Text("still_compressed_note".localized)
             }
             .onChange(of: selectionItem) { newValue in
                 settingsVM.videoQuality = newValue.rawValue
             }
         }
-        .navigationTitle(BundleUtil.localizedString(forKey: "settings_media_video_quality_title"))
+        .navigationTitle("settings_media_video_quality_title".localized)
     }
 }

@@ -64,201 +64,61 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         self.isWorkApp = isWorkApp
     }
     
+    // MARK: - Public functions
+    
     /// Get the best infos for user notification on the basis of the threema push, abstract or base (DB) message.
     ///
     /// - Parameter pendingUserNotification: Incoming processing message
-    /// - Returns: User notification content or NULL if should no user notification should be shown or if the user
+    /// - Returns: User notification content or `nil` if should no user notification should be shown or if the user
     ///            notification is handled otherwise
     public func userNotificationContent(_ pendingUserNotification: PendingUserNotification)
         -> UserNotificationContent? {
         
-        guard let senderIdentity = pendingUserNotification.senderIdentity,
-              !userSettings.blacklist.contains(senderIdentity) else {
+        // We run some Pre-Checks, regardless of state
+        guard shouldShowPush(for: pendingUserNotification) else {
             return nil
         }
         
-        if let flagShouldPush = pendingUserNotification.abstractMessage?.flagShouldPush() {
-            guard flagShouldPush else {
-                return nil
-            }
-        }
-        if let flagImmediateDeliveryRequired = pendingUserNotification.abstractMessage?
-            .flagImmediateDeliveryRequired() {
-            guard !flagImmediateDeliveryRequired else {
-                return nil
-            }
-        }
-        if let flagIsVoIP = pendingUserNotification.abstractMessage?.flagIsVoIP() {
-            guard !flagIsVoIP else {
-                return nil
-            }
-        }
-        
-        if pendingUserNotification.abstractMessage is GroupCallStartMessage,
-           !(ThreemaEnvironment.groupCalls && BusinessInjector().settingsStore.enableThreemaGroupCalls) {
-            return nil
-        }
-            
-        if let flags = pendingUserNotification.baseMessage?.flags {
-            guard flags.intValue & Int(MESSAGE_FLAG_SEND_PUSH) != 0,
-                  flags.intValue & Int(MESSAGE_FLAG_IMMEDIATE_DELIVERY) == 0 else {
-                return nil
-            }
-        }
-        
-        if !pushSettingManager.canMasterDndSendPush() {
-            return nil
-        }
-
-        // If the notification is for a group, we check if it is for a group I did not leave. If so we don't show a
-        // notification.
-        if pendingUserNotification.isGroupMessage ?? false,
-           let groupMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
-            guard let group = groupManager.getGroup(groupMessage.groupID, creator: groupMessage.groupCreator),
-                  !group.didLeave,
-                  !group.didForcedLeave
-            else {
-                return nil
-            }
-        }
-
+        // We begin assembling the content
         let userNotificationContent = UserNotificationContent(pendingUserNotification)
         
-        // Set push setting
-        if !userNotificationContent.isGroupMessage {
-            userNotificationContent.pushSetting = pushSettingManager
-                .find(forContact: ThreemaIdentity(userNotificationContent.senderID))
+        // Set group infos if they are available
+        if let (groupID, groupCreator) = groupInfos(for: pendingUserNotification) {
+            userNotificationContent.groupID = groupID
+            userNotificationContent.groupCreator = groupCreator
         }
-        else if let baseMessage = pendingUserNotification.baseMessage,
-                let groupID = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation)?.groupID {
-            userNotificationContent.baseMessage = baseMessage
-            userNotificationContent.groupID = groupID.base64EncodedString()
-            userNotificationContent.groupCreator = entityManager.entityFetcher
-                .groupEntity(for: baseMessage.conversation)?.groupCreator ?? MyIdentityStore.shared().identity
-            userNotificationContent.pushSetting = pushSettingManager
-                .find(forGroup: GroupIdentity(
-                    id: groupID,
-                    creator: ThreemaIdentity(userNotificationContent.groupCreator!)
-                ))
-        }
-        else if let groupCallMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {
-            userNotificationContent.pushSetting = pushSettingManager
-                .find(forGroup: GroupIdentity(
-                    id: groupCallMessage.groupID,
-                    creator: ThreemaIdentity(groupCallMessage.groupCreator)
-                ))
-        }
+
+        let fromName = fromName(for: pendingUserNotification)
             
-        let notificationType = settingsStore.notificationType
+        // Set the name
+        userNotificationContent.fromName = fromName
         
-        // Name
-        // We only show nickname for restrictive notifications, otherwise we always use the display name.
-        if let sender = entityManager.entityFetcher.contact(for: senderIdentity) {
-            switch notificationType {
-            case .restrictive:
-                userNotificationContent.fromName = sender.publicNickname ?? senderIdentity
-            case .balanced, .complete:
-                userNotificationContent.fromName = sender.displayName
-            }
-        }
-        else {
-            guard !userSettings.blockUnknown else {
-                return nil
-            }
-            
-            userNotificationContent.fromName = nickname(for: pendingUserNotification)
-        }
-        
-        // Body
-        // We only hide the text if showPreview, is disabled
+        // Set the title
         if settingsStore.pushShowPreview {
-            if let baseMessage = pendingUserNotification.baseMessage {
-                // Apply content from base message
-                if userNotificationContent.isGroupMessage {
-                    userNotificationContent.title = baseMessage.conversation?.groupName ?? userNotificationContent
-                        .fromName
-                    // If we have create a communication notification, we don't add the name
-                    if notificationType == .complete {
-                        userNotificationContent.body = TextStyleUtils
-                            .makeMentionsString(
-                                forText: baseMessage.previewText()!
-                            )
-                    }
-                    else {
-                        userNotificationContent.body = TextStyleUtils
-                            .makeMentionsString(
-                                forText: "\(userNotificationContent.fromName!): \(baseMessage.previewText()!)"
-                            )
-                    }
-                    
-                    userNotificationContent.groupID = baseMessage.conversation.groupID!
-                        .base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
-                }
-                else {
-                    userNotificationContent.title = userNotificationContent.fromName
-                    userNotificationContent.body = TextStyleUtils
-                        .makeMentionsString(forText: baseMessage.previewText())
-                }
-                    
-                if pendingUserNotification.stage == .final {
-                    // Add thumbnail attachment if file, image or video message
-                    var image: ImageData? = (baseMessage as? FileMessageEntity)?.thumbnail
-                    if image == nil {
-                        image = (baseMessage as? VideoMessageEntity)?.thumbnail
-                    }
-                    if image == nil {
-                        image = (baseMessage as? ImageMessageEntity)?.image
-                    }
-                        
-                    if let image,
-                       let attachment = saveAttachment(
-                           image,
-                           baseMessage.id.hexString,
-                           pendingUserNotification.stage
-                       ) {
-                            
-                        userNotificationContent.attachmentName = attachment.name
-                        userNotificationContent.attachmentURL = attachment.url
-                    }
-                }
-            }
-            else if let abstractMessage = pendingUserNotification.abstractMessage {
-                // Apply content from abstract message
-                if let abstractGroupMessage = abstractMessage as? AbstractGroupMessage {
-                    userNotificationContent.title = BundleUtil.localizedString(forKey: "new_group_message")
-                    userNotificationContent
-                        .body = "\(userNotificationContent.fromName!): \(abstractGroupMessage.pushNotificationBody()!)"
-                    
-                    userNotificationContent.groupID = abstractGroupMessage.groupID
-                        .base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
-                    userNotificationContent.groupCreator = abstractGroupMessage.groupCreator
-                }
-                else {
-                    userNotificationContent.title = userNotificationContent.fromName
-                    userNotificationContent.body = abstractMessage.pushNotificationBody()
-                }
-            }
-            
-            else {
-                let name = userNotificationContent.fromName ?? pendingUserNotification.senderIdentity ?? "unknown"
-                userNotificationContent.title = name
-                
-                let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
-                userNotificationContent.body = BundleUtil.localizedString(forKey: key)
-            }
+            userNotificationContent.title = titleWithPreview(
+                for: pendingUserNotification,
+                fromName: fromName
+            )
         }
         else {
-            let name = userNotificationContent.fromName ?? pendingUserNotification.senderIdentity ?? "unknown"
-            userNotificationContent.title = name
-                
-            let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
-            userNotificationContent.body = BundleUtil.localizedString(forKey: key)
-            
-            if let abstractGroupMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
-                userNotificationContent.groupID = abstractGroupMessage.groupID
-                    .base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
-                userNotificationContent.groupCreator = abstractGroupMessage.groupCreator
-            }
+            userNotificationContent.title = fromName
+        }
+        
+        // Set the body
+        if settingsStore.pushShowPreview {
+            userNotificationContent.body = bodyWithPreview(
+                for: pendingUserNotification,
+                fromName: fromName
+            )
+        }
+        else {
+            userNotificationContent.body = bodyWithoutPreview(for: pendingUserNotification)
+        }
+        
+        // Add thumbnail attachment if file, image or video message
+        if settingsStore.pushShowPreview, let (name, url) = addAttachment(for: pendingUserNotification) {
+            userNotificationContent.attachmentName = name
+            userNotificationContent.attachmentURL = url
         }
         
         return userNotificationContent
@@ -303,49 +163,6 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
 
         return notificationContent
     }
-
-    private func saveAttachment(
-        _ image: ImageData,
-        _ id: String,
-        _ stage: UserNotificationStage
-    ) -> (name: String, url: URL)? {
-        guard let imageData = image.data else {
-            return nil
-        }
-        
-        if let tmpDirectory = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).last {
-            let attachmentDirectory = "\(tmpDirectory)/PushImages"
-            let attachmentName = "PushImage_\(id)_\(stage)"
-            let attachmentURL = URL(fileURLWithPath: "\(attachmentDirectory)/\(attachmentName).jpg")
-            
-            let fileManager = FileManager.default
-            
-            do {
-                if !fileManager.fileExists(atPath: attachmentDirectory) {
-                    try fileManager.createDirectory(
-                        at: URL(fileURLWithPath: attachmentDirectory, isDirectory: true),
-                        withIntermediateDirectories: false,
-                        attributes: nil
-                    )
-                }
-                if fileManager.fileExists(atPath: attachmentURL.absoluteString) {
-                    try fileManager.removeItem(at: attachmentURL)
-                }
-                
-                try imageData.write(to: attachmentURL, options: .completeFileProtectionUntilFirstUserAuthentication)
-                
-                return (name: attachmentName, url: attachmentURL)
-            }
-            catch {
-                DDLogError("Could not save attachement: \(error.localizedDescription)")
-            }
-        }
-        else {
-            DDLogError("Could not find cache directory.")
-        }
-        
-        return nil
-    }
     
     /// Apply user notification to notification content.
     ///
@@ -389,10 +206,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 to.attachments.append(attachment)
             }
         }
-
+        
         let unreadMessages = UnreadMessages(entityManager: entityManager)
         var badge = unreadMessages.totalCount()
-
+        
         // Update app badge, +1 if message is not saved in core data
         if from.stage == .initial || from.stage == .abstract {
             badge += 1
@@ -400,7 +217,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         to.badge = NSNumber(integerLiteral: badge)
         
         to.userInfo = from.userInfo
-
+        
         if from.categoryIdentifier.elementsEqual("SINGLE") || from.categoryIdentifier.elementsEqual("GROUP") {
             to.categoryIdentifier = userSettings.pushDecrypt ? from.categoryIdentifier : ""
         }
@@ -417,26 +234,135 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 let groupID = from.groupID, let groupCreator = from.groupCreator {
             
             to.threadIdentifier = "GROUP-\(groupID)-\(groupCreator)"
-            
-            if let fromName = from.fromName {
-                to.summaryArgument = fromName
-            }
         }
     }
     
-    private func isPrivate(content: UserNotificationContent) -> Bool {
-        if let senderID = content.senderID,
-           let conversation = entityManager.entityFetcher.conversation(forIdentity: senderID) {
-            return conversation.conversationCategory == .private
+    // MARK: - Private functions
+    
+    private func saveAttachment(
+        _ image: ImageData,
+        _ id: String,
+        _ stage: UserNotificationStage
+    ) -> (name: String, url: URL)? {
+        guard let imageData = image.data else {
+            return nil
         }
-        return false
+        
+        if let tmpDirectory = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).last {
+            let attachmentDirectory = "\(tmpDirectory)/PushImages"
+            let attachmentName = "PushImage_\(id)_\(stage)"
+            let attachmentURL = URL(fileURLWithPath: "\(attachmentDirectory)/\(attachmentName).jpg")
+            
+            let fileManager = FileManager.default
+            
+            do {
+                if !fileManager.fileExists(atPath: attachmentDirectory) {
+                    try fileManager.createDirectory(
+                        at: URL(fileURLWithPath: attachmentDirectory, isDirectory: true),
+                        withIntermediateDirectories: false,
+                        attributes: nil
+                    )
+                }
+                if fileManager.fileExists(atPath: attachmentURL.absoluteString) {
+                    try fileManager.removeItem(at: attachmentURL)
+                }
+                
+                try imageData.write(to: attachmentURL, options: .completeFileProtectionUntilFirstUserAuthentication)
+                
+                return (name: attachmentName, url: attachmentURL)
+            }
+            catch {
+                DDLogError("Could not save attachment: \(error.localizedDescription)")
+            }
+        }
+        else {
+            DDLogError("Could not find cache directory.")
+        }
+        
+        return nil
     }
-}
-
-// MARK: Private functions
-
-extension UserNotificationManager {
-    private func nickname(for pendingUserNotification: PendingUserNotification) -> String? {
+    
+    private func shouldShowPush(for pendingUserNotification: PendingUserNotification) -> Bool {
+        
+        // Are push even enabled?
+        if !pushSettingManager.canMasterDndSendPush() {
+            return false
+        }
+        
+        // Is sender blocked?
+        guard let senderIdentity = pendingUserNotification.senderIdentity,
+              !userSettings.blacklist.contains(senderIdentity) else {
+            return false
+        }
+        
+        // Is blockUnknown active?
+        if entityManager.entityFetcher.contact(for: senderIdentity) == nil, userSettings.blockUnknown {
+            return false
+        }
+        
+        // AbstractMessage checks
+        if let abstractMessage = pendingUserNotification.abstractMessage {
+            
+            if abstractMessage is GroupCallStartMessage,
+               !BusinessInjector().settingsStore.enableThreemaGroupCalls {
+                return false
+            }
+            
+            guard abstractMessage.flagShouldPush(), !abstractMessage.flagImmediateDeliveryRequired(),
+                  !abstractMessage.flagIsVoIP() else {
+                return false
+            }
+        }
+        
+        // Are we still member?
+        if let groupMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
+            guard let group = groupManager.getGroup(groupMessage.groupID, creator: groupMessage.groupCreator),
+                  !group.didLeave, !group.didForcedLeave else {
+                return false
+            }
+        }
+        
+        // BaseMessage checks
+        if let flags = pendingUserNotification.baseMessage?.flags {
+            guard flags.intValue & Int(MESSAGE_FLAG_SEND_PUSH) != 0,
+                  flags.intValue & Int(MESSAGE_FLAG_IMMEDIATE_DELIVERY) == 0 else {
+                return false
+            }
+        }
+        
+        // We can show a notification
+        return true
+    }
+    
+    private func groupInfos(for pendingUserNotification: PendingUserNotification)
+        -> (groupID: String, groupCreator: String)? {
+        if let baseMessage = pendingUserNotification.baseMessage,
+           let group = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation) {
+            return (group.groupID.base64EncodedString(), group.groupCreator ?? MyIdentityStore.shared().identity)
+        }
+        else if let abstractMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
+            return (abstractMessage.groupID.base64EncodedString(), abstractMessage.groupCreator)
+        }
+        return nil
+    }
+    
+    private func fromName(for pendingUserNotification: PendingUserNotification) -> String {
+        if let senderIdentity = pendingUserNotification.senderIdentity,
+           let senderContact = entityManager.entityFetcher.contact(for: senderIdentity) {
+            // We only show nickname for restrictive notifications, otherwise we always use the display name.
+            switch settingsStore.notificationType {
+            case .restrictive:
+                return senderContact.publicNickname ?? senderIdentity
+            case .balanced, .complete:
+                return senderContact.displayName
+            }
+        }
+        else {
+            return nickname(for: pendingUserNotification)
+        }
+    }
+    
+    private func nickname(for pendingUserNotification: PendingUserNotification) -> String {
         if let baseMessage = pendingUserNotification.baseMessage,
            let conversation = baseMessage.conversation {
             if conversation.isGroup() {
@@ -452,6 +378,119 @@ extension UserNotificationManager {
                 }
             }
         }
-        return pendingUserNotification.senderIdentity
+        return pendingUserNotification.senderIdentity ?? "unknown".localized
+    }
+    
+    private func titleWithPreview(for pendingUserNotification: PendingUserNotification, fromName: String) -> String {
+        if let baseMessage = pendingUserNotification.baseMessage,
+           let isGroup = pendingUserNotification.isGroupMessage, isGroup {
+            return baseMessage.conversation.groupName ?? fromName
+        }
+        else if pendingUserNotification.abstractMessage != nil {
+            if let isGroup = pendingUserNotification.isGroupMessage, isGroup {
+                if let groupCallStartMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {
+                    if let groupConversation = entityManager.entityFetcher.conversation(
+                        for: groupCallStartMessage.groupID,
+                        creator: groupCallStartMessage.groupCreator
+                    ) {
+                        return groupConversation.groupName ?? "new_message_unknown_group".localized
+                    }
+                    else {
+                        return fromName
+                    }
+                }
+                else {
+                    return BundleUtil.localizedString(forKey: "new_group_message")
+                }
+            }
+            else {
+                return fromName
+            }
+        }
+        return fromName
+    }
+    
+    private func bodyWithPreview(for pendingUserNotification: PendingUserNotification, fromName: String) -> String {
+        if let baseMessage = pendingUserNotification.baseMessage {
+            if let isGroup = pendingUserNotification.isGroupMessage, isGroup {
+                if settingsStore.notificationType == .complete {
+                    return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText()!)
+                }
+                else {
+                    return TextStyleUtils.makeMentionsString(forText: "\(fromName): \(baseMessage.previewText()!)")
+                }
+            }
+            else {
+                return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText())
+            }
+        }
+        if let abstractMessage = pendingUserNotification.abstractMessage {
+            if abstractMessage is AbstractGroupMessage {
+                if abstractMessage is GroupCallStartMessage {
+                    switch settingsStore.notificationType {
+                    case .restrictive, .balanced:
+                        return String.localizedStringWithFormat(
+                            "group_call_notification_body_preview".localized,
+                            fromName
+                        )
+                    case .complete:
+                        return abstractMessage.pushNotificationBody()
+                    }
+                }
+                else {
+                    return "\(fromName): \(abstractMessage.pushNotificationBody()!)"
+                }
+            }
+            else {
+                return abstractMessage.pushNotificationBody()
+            }
+        }
+        else {
+            let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
+            return key.localized
+        }
+    }
+    
+    private func bodyWithoutPreview(for pendingUserNotification: PendingUserNotification) -> String {
+        if let abstractMessage = pendingUserNotification.abstractMessage, abstractMessage is GroupCallStartMessage {
+            return abstractMessage.pushNotificationBody()
+        }
+        else {
+            let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
+            return key.localized
+        }
+    }
+    
+    private func isPrivate(content: UserNotificationContent) -> Bool {
+        if let senderID = content.senderID,
+           let conversation = entityManager.entityFetcher.conversation(forIdentity: senderID) {
+            return conversation.conversationCategory == .private
+        }
+        return false
+    }
+    
+    private func addAttachment(for pendingUserNotification: PendingUserNotification) -> (name: String?, url: URL?)? {
+        guard let baseMessage = pendingUserNotification.baseMessage, pendingUserNotification.stage == .final else {
+            return nil
+        }
+        var image: ImageData? = (baseMessage as? FileMessageEntity)?.thumbnail
+        if image == nil {
+            image = (baseMessage as? VideoMessageEntity)?.thumbnail
+        }
+        if image == nil {
+            image = (baseMessage as? ImageMessageEntity)?.image
+        }
+        
+        if let image,
+           let attachment = saveAttachment(
+               image,
+               baseMessage.id.hexString,
+               pendingUserNotification.stage
+           ) {
+            
+            return (attachment.name, attachment.url)
+        }
+        
+        return nil
     }
 }

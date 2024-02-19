@@ -72,7 +72,7 @@ extension SFUHTTPConnection {
         
         if httpStatus.statusCode == 400 {
             DDLogWarn(
-                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) failed with 400, becasue the provided data invalid or call ids don't match"
+                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) failed with 400, because the provided data invalid or call ids don't match"
             )
             return .invalidRequest
         }

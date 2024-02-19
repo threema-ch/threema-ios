@@ -22,8 +22,7 @@ import SwiftUI
 
 struct DeviceJoinView: View {
     
-    //    @EnvironmentObject var settingsStore: SettingsStore
-    @ObservedObject var settingsStore: SettingsStore
+    @EnvironmentObject var settingsStore: SettingsStore
     
     @Binding var showWizard: Bool
     
@@ -57,6 +56,6 @@ struct DeviceJoinView: View {
 
 struct DeviceJoinView_Previews: PreviewProvider {
     static var previews: some View {
-        DeviceJoinView(settingsStore: SettingsStore(), showWizard: .constant(true))
+        DeviceJoinView(showWizard: .constant(true))
     }
 }

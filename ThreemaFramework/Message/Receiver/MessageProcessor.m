@@ -247,6 +247,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
         return;
     }
 
+    // Note: This is an variable holding a block called after the PFS envelope is removed if there is any
     void(^processAbstractMessageBlock)(AbstractMessage *, NSObject *) = ^void(AbstractMessage *amsg, NSObject *pfsSession) {
         [messageProcessorDelegate incomingMessageStarted:amsg];
         DDLogVerbose(@"Process incoming message: %@", amsg);
@@ -304,10 +305,12 @@ static NSMutableOrderedSet *pendingGroupMessages;
                 [self processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage*)amsg senderPublicKey:senderPublicKey onCompletion:^(AbstractMessage *unwrappedMessage, NSObject *pfsSession) {
 
                     // Don't allow double encapsulated forward security messages
-                    // Don't allow group messages to be sent as forward security messages
+                    // Group messages are not supported if FS 1.2 is not enabled
                     // This is also checked when decoding messages in MessageDecoder+Swift.swift lines 26ff
-                    if (unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]]
-                                                && ![unwrappedMessage isKindOfClass:[AbstractGroupMessage class]]) {
+                    if (ThreemaEnvironment.fsEnableV12 && (unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]])) {
+                        processAbstractMessageBlock(unwrappedMessage, pfsSession);
+                    } else if (unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]]
+                               && ![unwrappedMessage isKindOfClass:[AbstractGroupMessage class]]) {
                         processAbstractMessageBlock(unwrappedMessage, pfsSession);
                     } else {
                         [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
@@ -587,7 +590,7 @@ Process incoming message.
         } else if ([amsg isKindOfClass:[GroupDeliveryReceiptMessage class]]) {
             [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupCallStartMessage class]]) {
-            if ([ThreemaEnvironment groupCalls] && [[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
+            if ([[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
                 GroupCallStartMessage *newMsg = (GroupCallStartMessage *) amsg;
                 [[GlobalGroupCallsManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation receiveDate:newMsg.date onCompletion:^{
                     DDLogNotice(@"[GroupCall] [DB] Completion handler called");

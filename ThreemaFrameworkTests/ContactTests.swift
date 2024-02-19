@@ -223,4 +223,62 @@ class ContactTests: XCTestCase {
 
         XCTAssertTrue(contact.willBeDeleted)
     }
+    
+    func testDisplayName() {
+        dbPreparer.save {
+            let contactEntity = self.dbPreparer.createContact(
+                publicKey: MockData.generatePublicKey(),
+                identity: "CONTACT1",
+                verificationLevel: kVerificationLevelFullyVerified
+            )
+
+            let assertDisplayNameEquals = { (s: String) in
+                var c: Contact
+
+                contactEntity.state = NSNumber(integerLiteral: kStateActive)
+                c = Contact(contactEntity: contactEntity)
+                XCTAssertEqual(c.displayName, s)
+                XCTAssertEqual(contactEntity.displayName, c.displayName)
+                
+                contactEntity.state = NSNumber(integerLiteral: kStateInactive)
+                c = Contact(contactEntity: contactEntity)
+                XCTAssertEqual(c.displayName, "\(s) (\("inactive".localized))")
+                XCTAssertEqual(contactEntity.displayName, c.displayName)
+
+                contactEntity.state = NSNumber(integerLiteral: kStateInvalid)
+                c = Contact(contactEntity: contactEntity)
+                XCTAssertEqual(c.displayName, "\(s) (\("invalid".localized))")
+                XCTAssertEqual(contactEntity.displayName, c.displayName)
+            }
+
+            // make sure we are at default settings
+            UserSettings.shared().setSortOrderFirstName(true, displayOrderFirstName: true)
+
+            assertDisplayNameEquals("CONTACT1")
+
+            contactEntity.publicNickname = ""
+            assertDisplayNameEquals("CONTACT1")
+            
+            contactEntity.publicNickname = "🙂"
+            assertDisplayNameEquals("~🙂")
+
+            contactEntity.firstName = "First"
+            assertDisplayNameEquals("First")
+
+            contactEntity.lastName = "Last Name"
+            assertDisplayNameEquals("First Last Name")
+
+            contactEntity.firstName = nil
+            assertDisplayNameEquals("Last Name")
+
+            UserSettings.shared().setSortOrderFirstName(false, displayOrderFirstName: false)
+
+            contactEntity.firstName = "First"
+            contactEntity.lastName = "Last Name"
+            assertDisplayNameEquals("Last Name First")
+            
+            // reset to default in case of further tests depending on the default
+            UserSettings.shared().setSortOrderFirstName(true, displayOrderFirstName: true)
+        }
+    }
 }

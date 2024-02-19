@@ -25,6 +25,7 @@ import ThreemaEssentials
 public protocol PushSettingManagerProtocol {
     func find(forContact identity: ThreemaIdentity) -> PushSetting
     func find(forGroup groupIdentity: GroupIdentity) -> PushSetting
+    func pushSetting(for pendingUserNotification: PendingUserNotification) -> PushSetting?
     func save(pushSetting: PushSetting, sync: Bool) async
     func delete(forContact identity: ThreemaIdentity) async
     func canSendPush(for message: BaseMessage) -> Bool
@@ -102,6 +103,33 @@ public actor PushSettingManager: PushSettingManagerProtocol {
         }
 
         return pushSetting ?? PushSetting(groupIdentity: groupIdentity)
+    }
+    
+    /// Computes the `PushSetting` for a given `PendingUserNotification`
+    /// - Parameter pendingUserNotification: `PendingUserNotification` to find `PushSetting` for
+    /// - Returns: `PushSetting1
+    public nonisolated func pushSetting(for pendingUserNotification: PendingUserNotification) -> PushSetting? {
+        
+        if let isGroupMessage = pendingUserNotification.isGroupMessage, isGroupMessage,
+           let baseMessage = pendingUserNotification.baseMessage,
+           let group = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation) {
+            let creator = group.groupCreator ?? MyIdentityStore.shared().identity
+            return find(forGroup: GroupIdentity(id: group.groupID, creator: ThreemaIdentity(creator!)))
+        }
+        
+        else if let groupCallMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {
+            return find(forGroup: GroupIdentity(
+                id: groupCallMessage.groupID,
+                creator: ThreemaIdentity(groupCallMessage.groupCreator)
+            ))
+        }
+        
+        else if let senderIdentity = pendingUserNotification.senderIdentity {
+            return find(forContact: ThreemaIdentity(senderIdentity))
+        }
+        
+        assertionFailure("This should not happen.")
+        return nil
     }
 
     /// Save push setting

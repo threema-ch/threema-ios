@@ -31,14 +31,20 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     private let groupManager: GroupManagerProtocol
     private let taskManager: TaskManagerProtocol
     private let entityManager: EntityManager
+    private let blobManager: BlobManagerProtocol
+    private let blobMessageSender: BlobMessageSender
 
+    // MARK: - Lifecycle
+    
     init(
         serverConnector: ServerConnectorProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
         groupManager: GroupManagerProtocol,
         taskManager: TaskManagerProtocol,
-        entityManager: EntityManager
+        entityManager: EntityManager,
+        blobManger: BlobManagerProtocol,
+        blobMessageSender: BlobMessageSender
     ) {
         self.serverConnector = serverConnector
         self.myIdentityStore = myIdentityStore
@@ -46,8 +52,30 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         self.groupManager = groupManager
         self.taskManager = taskManager
         self.entityManager = entityManager
+        self.blobManager = blobManger
+        self.blobMessageSender = blobMessageSender
 
         super.init()
+    }
+    
+    convenience init(
+        serverConnector: ServerConnectorProtocol,
+        myIdentityStore: MyIdentityStoreProtocol,
+        userSettings: UserSettingsProtocol,
+        groupManager: GroupManagerProtocol,
+        taskManager: TaskManagerProtocol,
+        entityManager: EntityManager
+    ) {
+        self.init(
+            serverConnector: serverConnector,
+            myIdentityStore: myIdentityStore,
+            userSettings: userSettings,
+            groupManager: groupManager,
+            taskManager: taskManager,
+            entityManager: entityManager,
+            blobManger: BlobManager.shared,
+            blobMessageSender: BlobMessageSender()
+        )
     }
 
     @objc public convenience init(entityManager: EntityManager) {
@@ -62,17 +90,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     @objc override public convenience init() {
-        let entityManager = EntityManager()
-        self.init(
-            serverConnector: ServerConnector.shared(),
-            myIdentityStore: MyIdentityStore.shared(),
-            userSettings: UserSettings.shared(),
-            groupManager: GroupManager(entityManager: entityManager),
-            taskManager: TaskManager(),
-            entityManager: entityManager
-        )
+        self.init(entityManager: EntityManager())
     }
 
+    // MARK: - Type specific sending
+    
     @objc public func sendTextMessage(
         text: String?,
         in conversation: Conversation,
@@ -150,6 +172,126 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
 
         donateInteractionForOutgoingMessage(in: conversation)
+    }
+    
+    public func sanitizeAndSendText(_ rawText: String, in conversation: Conversation) {
+        let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
+        let splitMessages = ThreemaUtilityObjC.getTrimmedMessages(trimmedText)
+        
+        if let splitMessages = splitMessages as? [String] {
+            for splitMessage in splitMessages {
+                sendTextMessage(
+                    text: splitMessage,
+                    in: conversation,
+                    quickReply: false
+                )
+            }
+        }
+        else {
+            sendTextMessage(
+                text: trimmedText,
+                in: conversation,
+                quickReply: false
+            )
+        }
+    }
+    
+    public func sendBlobMessage(
+        for item: URLSenderItem,
+        in conversationObjectID: NSManagedObjectID,
+        correlationID: String?,
+        webRequestID: String?
+    ) async throws {
+        // Check if we actually have data and if it is smaller than the max file size
+        guard let data = item.getData(),
+              data.count < kMaxFileSize
+        else {
+            NotificationPresenterWrapper.shared.present(
+                type: .sendingError,
+                subtitle: BundleUtil.localizedString(forKey: "notification_sending_failed_subtitle_size")
+            )
+            throw MessageSenderError.tooBig
+        }
+        
+        // Create file message
+        
+        let em = entityManager
+        // Create message
+        let messageID = try await em.performSave {
+            guard let localConversation = em.entityFetcher.existingObject(
+                with: conversationObjectID
+            ) as? Conversation else {
+                throw MessageSenderError.unableToLoadConversation
+            }
+            
+            let origin: BlobOrigin
+            if localConversation.isGroup(), let group = self.groupManager.getGroup(conversation: localConversation),
+               group.isNoteGroup {
+                origin = .local
+            }
+            else {
+                origin = .public
+            }
+            
+            let fileMessageEntity = try em.entityCreator.createFileMessageEntity(
+                for: item,
+                in: localConversation,
+                with: origin,
+                correlationID: correlationID,
+                webRequestID: webRequestID
+            )
+            
+            return fileMessageEntity.id
+        }
+        
+        guard let messageID else {
+            throw MessageSenderError.noID
+        }
+        
+        // Fetch it again to get a non temporary objectID
+        let fileMessageObjectID = try await em.perform {
+            guard let localConversation = em.entityFetcher.existingObject(
+                with: conversationObjectID
+            ) as? Conversation else {
+                throw MessageSenderError.unableToLoadConversation
+            }
+            
+            guard let fileMessage = em.entityFetcher.message(
+                with: messageID,
+                conversation: localConversation
+            ) as? FileMessageEntity else {
+                throw MessageSenderError.unableToLoadMessage
+            }
+            
+            return fileMessage.objectID
+        }
+        
+        try await syncAndSendBlobMessage(with: fileMessageObjectID)
+    }
+    
+    @available(*, deprecated, message: "Only use from Objective-C code")
+    @objc public func sendBlobMessage(
+        for item: URLSenderItem,
+        in conversation: Conversation,
+        correlationID: String?,
+        webRequestID: String?,
+        completion: ((Error?) -> Void)?
+    ) {
+        Task {
+            do {
+                try await sendBlobMessage(
+                    for: item,
+                    in: conversation.objectID,
+                    correlationID: correlationID,
+                    webRequestID: webRequestID
+                )
+                completion?(nil)
+            }
+            catch {
+                DDLogError("Could not create message and sync blobs due to: \(error)")
+                completion?(error)
+            }
+        }
     }
 
     @objc public func sendLocationMessage(
@@ -303,6 +445,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
 
+    // MARK: - Generic sending
+    
     public func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?) {
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
@@ -314,31 +458,88 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
 
-    @objc public func sendMessage(baseMessage: BaseMessage) {
-        let (messageID, receiverIdentity, group) = entityManager.performAndWait {
-            let messageID = baseMessage.id
-            var receiverIdentity: ThreemaIdentity?
-            let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
-            if group == nil {
-                receiverIdentity = baseMessage.conversation.contact?.threemaIdentity
+    public func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) async {
+        let isBlobData: Bool? = entityManager.performAndWaitSave {
+            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            else {
+                return nil
             }
-            return (messageID, receiverIdentity, group)
+            
+            return baseMessage is BlobData
         }
-
-        guard let messageID else {
-            DDLogError("Message ID is nil")
+    
+        guard let isBlobData else {
+            DDLogError("Unable to load message with object id \(objectID)")
             return
         }
-
-        taskManager.add(
-            taskDefinition: TaskDefinitionSendBaseMessage(
-                messageID: messageID,
-                receiverIdentity: receiverIdentity?.string,
-                group: group,
-                sendContactProfilePicture: false
-            )
-        )
+        
+        @Sendable func resetSendingErrorIfValid() {
+            entityManager.performAndWaitSave {
+                // We just checked above that a base message with this objectID exists
+                guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+                else {
+                    return
+                }
+                
+                if baseMessage.isGroupMessage {
+                    // 3. If `receivers` includes the list of group members requesting a re-send
+                    //    of `message`², remove the _re-send requested_ mark on `message` [...]
+                    switch receivers {
+                    case .all:
+                        baseMessage.sendFailed = false
+                    case let .groupMembers(receivingMembers):
+                        let rejectedByIdentities = Set(
+                            baseMessage.rejectedBy?.map { ThreemaIdentity($0.identity) } ?? []
+                        )
+                        
+                        if rejectedByIdentities.subtracting(receivingMembers).isEmpty {
+                            baseMessage.sendFailed = false
+                        }
+                        else {
+                            // For blob message this might be reset so we set it again
+                            baseMessage.sendFailed = true
+                        }
+                    }
+                }
+                else {
+                    // 2. Remove the _re-send requested_ mark on `message`
+                    baseMessage.sendFailed = false
+                }
+            }
+        }
+        
+        // Set error state if blob sync or sending task creation fails
+        @Sendable func setSendingError() {
+            entityManager.performAndWaitSave {
+                // We just checked above that a base message with this objectID exists
+                let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+                baseMessage?.sendFailed = true
+            }
+        }
+        
+        if isBlobData {
+            do {
+                try await syncAndSendBlobMessage(with: objectID, to: receivers)
+                resetSendingErrorIfValid()
+            }
+            catch {
+                DDLogError("Unable to send blob base message: \(error)")
+                setSendingError()
+            }
+        }
+        else {
+            do {
+                try sendNonBlobMessage(with: objectID, to: receivers)
+                resetSendingErrorIfValid()
+            }
+            catch {
+                DDLogError("Unable to send base message: \(error)")
+                setSendingError()
+            }
+        }
     }
+    
+    // MARK: - Status update
 
     public func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void> {
         Promise { seal in
@@ -488,29 +689,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         return doSendTypingIndicator(to: conversation.contact)
     }
 
-    public func sanitizeAndSendText(_ rawText: String, in conversation: Conversation) {
-        let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
-        let splitMessages = ThreemaUtilityObjC.getTrimmedMessages(trimmedText)
-        
-        if let splitMessages = splitMessages as? [String] {
-            for splitMessage in splitMessages {
-                sendTextMessage(
-                    text: splitMessage,
-                    in: conversation,
-                    quickReply: false
-                )
-            }
-        }
-        else {
-            sendTextMessage(
-                text: trimmedText,
-                in: conversation,
-                quickReply: false
-            )
-        }
-    }
-
-    // MARK: Donate interaction
+    // MARK: - Donate interaction
 
     func donateInteractionForOutgoingMessage(in conversation: Conversation) {
         donateInteractionForOutgoingMessage(in: conversation.objectID)
@@ -590,8 +769,81 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
 
-    // MARK: Private functions
+    // - MARK: Private functions
 
+    private func syncAndSendBlobMessage(
+        with objectID: NSManagedObjectID,
+        to receivers: MessageSenderReceivers = .all
+    ) async throws {
+        let result = try await blobManager.syncBlobsThrows(for: objectID)
+        
+        if result == .uploaded {
+            try await blobMessageSender.sendBlobMessage(with: objectID, to: receivers)
+        }
+        else {
+            DDLogError(
+                "Sending blob message (\(objectID)) failed, because sync result was \(result) instead of .uploaded"
+            )
+            throw MessageSenderError.sendingFailed
+        }
+    }
+    
+    private func sendNonBlobMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) throws {
+        let (messageID, receiverIdentity, group) = try entityManager.performAndWait {
+            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            else {
+                throw MessageSenderError.unableToLoadMessage
+            }
+            
+            let messageID = baseMessage.id
+            var receiverIdentity: ThreemaIdentity?
+            let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
+            if group == nil {
+                receiverIdentity = baseMessage.conversation.contact?.threemaIdentity
+            }
+            return (messageID, receiverIdentity, group)
+        }
+
+        guard let messageID else {
+            DDLogError("Message ID is nil")
+            throw MessageSenderError.sendingFailed
+        }
+
+        if let group {
+            let receiverIdentities: [ThreemaIdentity]
+            switch receivers {
+            case .all:
+                receiverIdentities = group.members.map(\.identity)
+            case let .groupMembers(identities):
+                receiverIdentities = identities
+            }
+            
+            let taskDefinition = TaskDefinitionSendBaseMessage(
+                messageID: messageID,
+                group: group,
+                receivers: receiverIdentities,
+                sendContactProfilePicture: false
+            )
+            
+            taskManager.add(taskDefinition: taskDefinition)
+        }
+        else if let receiverIdentity {
+            let taskDefinition = TaskDefinitionSendBaseMessage(
+                messageID: messageID,
+                receiverIdentity: receiverIdentity.string,
+                sendContactProfilePicture: false
+            )
+            
+            taskManager.add(taskDefinition: taskDefinition)
+        }
+        else {
+            DDLogError(
+                "Unable to create task for non blob message (\(objectID)): Group and receiver identity are both nil."
+            )
+            throw MessageSenderError.sendingFailed
+        }
+    }
+    
     private func sendReceipt(
         for messages: [BaseMessage],
         receiptType: ReceiptType,

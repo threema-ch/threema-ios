@@ -47,11 +47,13 @@ final class ConnectionContext<
     fileprivate let cryptoContext: GroupCallFrameCryptoAdapterProtocol
     
     fileprivate let transceivers = TransceiverMap<RTCRtpTransceiverImpl>()
+        
     fileprivate var audioTrack: RTCAudioTrack?
     fileprivate var audioSource: RTCAudioSource?
+    
     fileprivate var videoTrack: RTCVideoTrack?
-    // TODO: (IOS-4085) Make non optional, is initialized all the time anyways
-    var videoCapturer: RTCCameraVideoCapturer?
+    fileprivate var videoSource: RTCVideoSource
+    private(set) var videoCapturer: RTCCameraVideoCapturer
     
     // MARK: WebRTC Connection
 
@@ -153,7 +155,6 @@ final class ConnectionContext<
         self.webRTCConnectionContext = WebRTCConnectionContext(
             certificate: certificate,
             sessionParameters: sessionParameters,
-            dependencies: dependencies,
             peerConnectionCtx: peerConnectionContext
         )
         self.cryptoContext = cryptoContext
@@ -162,6 +163,9 @@ final class ConnectionContext<
         self.sessionDescription = GroupCallSessionDescription(localParticipantID: sessionParameters.participantID)
         self.myParticipantID = Participant(participantID: sessionParameters.participantID)
         self.dependencies = dependencies
+        
+        self.videoSource = PeerConnectionContext.peerConnectionFactory.videoSource()
+        self.videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
     }
     
     // MARK: Update Functions
@@ -208,7 +212,7 @@ final class ConnectionContext<
         }
         
         guard !remove.isEmpty || !add.isEmpty else {
-            DDLogError("[GroupCall] Ignoring update, no participants to be removed or added")
+            DDLogNotice("[GroupCall] Ignoring update, no participants to be removed or added")
             return
         }
         
@@ -222,8 +226,8 @@ final class ConnectionContext<
         await remoteParticipants.append(contentsOf: transceivers.remote.map(\.key))
         remoteParticipants.append(contentsOf: add)
         
-        for participant in add {
-            sessionDescription.addParticipantToMLineOrder(participantID: participant)
+        for participantID in add {
+            sessionDescription.addParticipantToMLineOrder(participantID: participantID)
         }
         
         try await createAndApplyOffer(remoteParticipants: remoteParticipants)
@@ -337,7 +341,7 @@ extension ConnectionContext {
         }
         RTCAudioSession.sharedInstance().unlockForConfiguration()
         
-        await videoCapturer?.stopCapture()
+        await videoCapturer.stopCapture()
         
         webRTCConnectionContext.teardown()
     }
@@ -421,7 +425,12 @@ extension ConnectionContext {
                     }
                 }
                 if transceiver.mediaType == .video {
-                    //  transceiver.sender.track?.isEnabled = ownVideoMuteState == .unmuted
+                    if ownVideoMuteState == .unmuted {
+                        transceiver.setEnabled()
+                    }
+                    else {
+                        transceiver.setDisabled()
+                    }
                 }
                 
                 // Initial mapping: Set direction to activate correctly
@@ -471,15 +480,15 @@ extension ConnectionContext {
         DDLogNotice("[GroupCall] Remapping all newly added remote transceivers")
         for participantID in add {
             // Sanity checks
-//            if !sessionDescription.mLineOrder.contains(participantID) ||
-//            transceivers.remote.contains(participantID.id) {
-//                let msg = "remapAddedRemoteTransceivers sanity check failed"
-//                assertionFailure(msg)
-//                DDLogError(msg)
-//            }
-            
-            // TODO: (IOS-4058) Add decryptor
-//            let decryptor = frameCrypto.addDecryptor(id: participantID.id)
+            // if !sessionDescription.mLineOrder.contains(participantID) ||
+            // transceivers.remote.contains(participantID.id) {
+            //     let msg = "remapAddedRemoteTransceivers sanity check failed"
+            //     assertionFailure(msg)
+            //     DDLogError(msg)
+            //   }
+                        
+            // TODO: (IOS-4271) Add decryptor
+            // let decryptor = frameCrypto.addDecryptor(id: participantID.id)
             
             // Create transceivers map
             var remoteTransceivers: [MediaKind: RTCRtpTransceiverImpl] = [:]
@@ -497,9 +506,9 @@ extension ConnectionContext {
                 await unmapped.setupTransceiver(transceiver)
                 
                 // Add stream to decryptor
-//                let tag = "\(participantID.id).\(mid).\(kind == .video ? "vp8" : "opus").receiver"
-//                decryptor.attach(transceiver.receiver, tag: tag)
-                
+                // let tag = "\(participantID.id).\(mid).\(kind == .video ? "vp8" : "opus").receiver"
+                // decryptor.attach(transceiver.receiver, tag: tag)
+                                
                 // Set transceiver
                 remoteTransceivers[kind.mediaKind] = transceiver
             }
@@ -554,16 +563,16 @@ extension ConnectionContext {
         unmapped: TransceiverMapActor<some RTCRtpTransceiverProtocol>,
         add: any Collection<ParticipantID>
     ) async {
+        
         // Remap all existing remote participant transceivers
         DDLogVerbose("[GroupCall] Remapping all existing remote transceivers")
         for (participantID, remoteTransceivers) in await transceivers.remote {
+            
             // Sanity checks
-            // TODO: (IOS-4085) Add sanity checks
-//            guard sessionParameters.participantID != session.mLineOrder ||
-//                sessionParameters.participantID != transceivers.remote[participantID] ||
-//                add.contains(participantID) else {
-//                    fatalError("remapExistingRemoteTransceivers sanity check failed")
-//            }
+            guard sessionDescription.mLineOrderContains(participantID: participantID),
+                  !add.contains(participantID) else {
+                fatalError("remapExistingRemoteTransceivers sanity check failed")
+            }
 
             for (kind, mid) in Mids(from: participantID).toMap() {
                 // Mark it as mapped
@@ -656,10 +665,6 @@ extension ConnectionContext {
 
 extension ConnectionContext {
     func startVideoCapture(position: CameraPosition?) async throws {
-        guard let videoCapturer else {
-            throw GroupCallError.captureError
-        }
-        
         let device = RTCCameraVideoCapturer.captureDevices()
             .first { $0.position == position?.avDevicePosition ?? .front }
         
@@ -700,9 +705,6 @@ extension ConnectionContext {
     }
     
     private func createVideoTrack() -> RTCVideoTrack {
-        let videoSource = PeerConnectionContext.peerConnectionFactory.videoSource()
-        videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
-        
         // swiftformat:disable:next acronyms
         let videoTrack = PeerConnectionContext.peerConnectionFactory.videoTrack(with: videoSource, trackId: "gcVideo0")
         

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
@@ -78,11 +79,12 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         contact: ForwardSecurityContact,
         session: DHSession?,
         rejectedMessageID: Data,
+        groupIdentity: GroupIdentity?,
         rejectCause: CspE2eFs_Reject.Cause,
         hasForwardSecuritySupport: Bool
     ) {
         let msg =
-            "Reject received for session \(session?.description ?? "nil") (session-id=\(sessionID), rejected-message-id=\(rejectedMessageID), cause=\(rejectCause)"
+            "Reject received for session \(session?.description ?? "nil") (session-id=\(sessionID), rejected-message-id=\(rejectedMessageID.hexString), cause=\(rejectCause)"
         DDLogNotice("[ForwardSecurity] \(msg)")
         
         if ThreemaEnvironment.fsDebugStatusMessages {
@@ -93,21 +95,129 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             )
         }
         
-        entityManager.performAsyncBlockAndSafe { [self] in
-            guard let conversation = entityManager.entityFetcher.conversation(forIdentity: contact.identity) else {
-                assertionFailure("Conversation for rejected message ID \(rejectedMessageID.hexString) not found")
-                DDLogError("Conversation for rejected message ID \(rejectedMessageID.hexString) not found")
-                return
-            }
-            let message = entityManager.entityFetcher.ownMessage(with: rejectedMessageID, conversation: conversation)
-            message?.sendFailed = NSNumber(booleanLiteral: true)
-            message?.sent = NSNumber(booleanLiteral: false)
+        if let groupIdentity, ThreemaEnvironment.fsEnableV12 {
+            // 3. If `group_identity` has been provided:
+            handleRejectedGroupMessage(
+                rejectedMessageID: rejectedMessageID,
+                sender: ThreemaIdentity(contact.identity),
+                groupIdentity: groupIdentity
+            )
+        }
+        else {
+            // 2. If `group_identity` has not been provided:
+            handleRejectedMessage(contact: contact, rejectedMessageID: rejectedMessageID)
         }
         
         //  Only show status message for sessions that are known. It doesn't make sense to report a terminated
         //  session we don't even know about.
         if session != nil {
             showResetOrNotSupportedAnymore(contact: contact, hasForwardSecuritySupport)
+        }
+    }
+    
+    func handleRejectedGroupMessage(rejectedMessageID: Data, sender: ThreemaIdentity, groupIdentity: GroupIdentity) {
+        // 1. Run the _Common Group Receive Steps_. If the message has been
+        //    discarded, abort these steps.
+        guard CommonGroupReceiveSteps().run(for: groupIdentity, sender: sender) == .keepMessage else {
+            DDLogWarn("Discard Group FS Reject message")
+            return
+        }
+                
+        let messageFound: Bool = entityManager.performAndWaitSave {
+            // 2. Lookup the message for `message_id` in the `group` and let `message` be
+            //    the result.
+            guard let conversation = self.entityManager.entityFetcher.conversation(
+                for: groupIdentity.id,
+                creator: groupIdentity.creator.string
+            ) else {
+                return false
+            }
+            
+            guard let message = self.entityManager.entityFetcher.ownMessage(
+                with: rejectedMessageID,
+                conversation: conversation
+            ) else {
+                // 4. If the user is not the sender of (the original) `message`, abort these
+                //    steps.
+                return false
+            }
+            
+            // 5. If the _when rejected_ property associated to `message` allows to
+            //    re-send after confirmation, mark `message` with _re-send requested_ and
+            //    add `sender` to the list of group members requesting a re-send for
+            //    `message`.
+            switch message {
+            case is TextMessage, is LocationMessage, is FileMessageEntity, is BallotMessage:
+                guard let contactEntity = self.entityManager.entityFetcher.contact(for: sender.string) else {
+                    DDLogError("Unable to find contact entity for \(sender.string)")
+                    return true
+                }
+                
+                message.sendFailed = NSNumber(booleanLiteral: true)
+                // Add contact to rejected by list
+                message.addRejectedBy(contactEntity)
+                
+            default:
+                let errorMessage = "Not handled message type for rejected group message: \(message.loggingDescription)"
+                assertionFailure(errorMessage)
+                DDLogError(errorMessage)
+            }
+            
+            return true
+        }
+        
+        if !messageFound {
+            // 3. If `message` is not defined:
+            //    1. If the user is the creator of the group, assume that a
+            //       `group-sync-request` has been received from the sender and run the
+            //       associated steps.
+            //    2. Abort these steps.
+            
+            let groupManager = GroupManager(entityManager: entityManager)
+            guard let group = groupManager.getGroup(groupIdentity.id, creator: groupIdentity.creator.string) else {
+                DDLogWarn("Unable to load group")
+                return
+            }
+            
+            if group.isOwnGroup {
+                groupManager.sync(group: group, to: Set([sender.string]), withoutCreateMessage: false)
+                    .catch { error in
+                        DDLogError("Error while syncing group: \(error)")
+                    }
+            }
+        }
+    }
+    
+    func handleRejectedMessage(contact: ForwardSecurityContact, rejectedMessageID: Data) {
+        entityManager.performAsyncBlockAndSafe { [self] in
+            // 1. Lookup the message for `message_id` in the associated 1:1 conversation
+            //    and let `message` be the result.
+            guard let conversation = entityManager.entityFetcher.conversation(forIdentity: contact.identity) else {
+                assertionFailure("Conversation for rejected message ID \(rejectedMessageID.hexString) not found")
+                DDLogError("Conversation for rejected message ID \(rejectedMessageID.hexString) not found")
+                return
+            }
+            
+            guard let message = entityManager.entityFetcher.ownMessage(
+                with: rejectedMessageID,
+                conversation: conversation
+            ) else {
+                // 2. If `message` is not defined or the user is not the sender of `message`,
+                //    abort these steps.
+                return
+            }
+            
+            // 3. If the _when rejected_ property associated to `message` allows to
+            //    re-send after confirmation, mark `message` with _re-send requested_.
+            switch message {
+            case is TextMessage, is LocationMessage, is FileMessageEntity, is BallotMessage:
+                message.sendFailed = NSNumber(booleanLiteral: true)
+            // TODO: (IOS-4253) Handle call offer, call answer & call ringing and abort call.
+            default:
+                let errorMessage = "Not handled message type for rejected group message: \(message.loggingDescription)"
+                assertionFailure(errorMessage)
+                DDLogError(errorMessage)
+            }
         }
     }
     
@@ -212,11 +322,11 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         contact: ForwardSecurityContact
     ) {
         DDLogNotice(
-            "[ForwardSecurity] \(session.description) updated to version \(versionUpdatedSnapshot.description) with contact: \(contact.identity)"
+            "[ForwardSecurity] \(session.description) updated \(versionUpdatedSnapshot.description) with contact: \(contact.identity)"
         )
 
         if ThreemaEnvironment.fsDebugStatusMessages {
-            let string = "\(session.description) updated to version \(versionUpdatedSnapshot.description)"
+            let string = "\(session.description) updated \(versionUpdatedSnapshot.description)"
             postSystemMessage(for: contact.identity, reason: kFsDebugMessage, arg: string)
         }
         

@@ -162,13 +162,13 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     /// - Parameters:
     ///   - syncGroup: Sync group information
     func updateConversation(withGroup syncGroup: Sync_Group) {
-        let groupIdentity = GroupIdentity(identity: syncGroup.groupIdentity)
-        guard let conversation = entityManager.entityFetcher.conversation(
-            for: groupIdentity.id,
-            creator: groupIdentity.creator.string
-        ) else {
+        guard let groupIdentity = try? GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity),
+              let conversation = entityManager.entityFetcher.conversation(
+                  for: groupIdentity.id,
+                  creator: groupIdentity.creator.string
+              ) else {
             DDLogError(
-                "Conversation for group (ID: \(groupIdentity.id.hexString) / creator: \(groupIdentity.creator)) not found"
+                "Group identity and conversation for group (\(syncGroup.groupIdentity)) not found"
             )
             return
         }

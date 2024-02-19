@@ -56,7 +56,6 @@ final class ConnectedTests: XCTestCase {
         let groupCallMessageCrypto = try! GroupCallBaseState(
             group: groupModel,
             startedAt: Date(),
-            maxParticipants: Int.max,
             dependencies: dependencies,
             groupCallStartData: groupCallStartData
         )
@@ -143,7 +142,6 @@ final class ConnectedTests: XCTestCase {
         let groupCallMessageCrypto = try! GroupCallBaseState(
             group: groupModel,
             startedAt: Date(),
-            maxParticipants: Int.max,
             dependencies: dependencies,
             groupCallStartData: groupCallStartData
         )
@@ -239,7 +237,6 @@ final class ConnectedTests: XCTestCase {
                 let groupCallMessageCrypto = try! GroupCallBaseState(
                     group: self.groupModel,
                     startedAt: Date(),
-                    maxParticipants: Int.max,
                     dependencies: dependencies,
                     groupCallStartData: groupCallStartData
                 )

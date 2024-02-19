@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 protocol ForwardSecurityStatusListener: AnyObject {
@@ -34,6 +35,7 @@ protocol ForwardSecurityStatusListener: AnyObject {
         contact: ForwardSecurityContact,
         session: DHSession?,
         rejectedMessageID: Data,
+        groupIdentity: GroupIdentity?,
         rejectCause: CspE2eFs_Reject.Cause,
         hasForwardSecuritySupport: Bool
     )
@@ -80,6 +82,7 @@ extension ForwardSecurityStatusListener {
         contact: ForwardSecurityContact,
         session: DHSession?,
         rejectedMessageID: Data,
+        groupIdentity: GroupIdentity?,
         rejectCause: CspE2eFs_Reject.Cause,
         hasForwardSecuritySupport: Bool
     ) {

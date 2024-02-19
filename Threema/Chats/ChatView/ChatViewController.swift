@@ -244,7 +244,7 @@ final class ChatViewController: ThemedViewController {
         )
         
         button.accessibilityLabel = BundleUtil.localizedString(forKey: "call")
-        button.accessibilityIdentifier = "ChatViewControllerCallBarButtonItem"
+        button.accessibilityIdentifier = "ChatViewControllerGroupCallBarButtonItem"
         return button
     }()
     
@@ -778,14 +778,14 @@ final class ChatViewController: ThemedViewController {
             object: nil
         )
         
-        if ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls {
+        if businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on deinit
             startGroupCallObserver()
         }
     }
     
     private func startGroupCallObserver() {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
             return
         }
         
@@ -1077,9 +1077,7 @@ extension ChatViewController {
             
             if conversation.isGroup() {
                 if let group = businessInjector.groupManager.getGroup(conversation: conversation),
-                   ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls,
-                   group.isSelfMember, !group.isNoteGroup {
-                    // TODO: IOS-3745 This should be somewhat dynamic
+                   businessInjector.settingsStore.enableThreemaGroupCalls, group.isSelfMember, !group.isNoteGroup {
                     navigationItem.rightBarButtonItem = groupCallBarButtonItem
                 }
                 else {
@@ -1189,6 +1187,13 @@ extension ChatViewController {
         guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
             return
         }
+        
+        // When running for screenshots we fake a call.
+        guard !ProcessInfoHelper.isRunningForScreenshots else {
+            GlobalGroupCallsManagerSingleton.shared.startGroupCallForScreenshots(group: group)
+            return
+        }
+        
         chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
         GlobalGroupCallsManagerSingleton.shared.startGroupCall(
             in: group, intent: .createOrJoin

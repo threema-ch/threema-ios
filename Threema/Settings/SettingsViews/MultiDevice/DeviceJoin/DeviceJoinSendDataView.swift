@@ -27,7 +27,7 @@ struct DeviceJoinSendDataView: View {
 
     @EnvironmentObject private var deviceJoinManager: DeviceJoinManager
 
-    @State private var sendingText = BundleUtil.localizedString(forKey: "multi_device_join_sending_data")
+    @State private var sendingText = "multi_device_join_sending_data".localized
     
     @State private var showSendingError = false
     @State private var showThreemaWebError = false
@@ -83,12 +83,12 @@ struct DeviceJoinSendDataView: View {
             Task { @MainActor in
                 try await Task.sleep(seconds: 5)
                 withAnimation {
-                    sendingText = BundleUtil.localizedString(forKey: "multi_device_join_sending_continue_on_new_device")
+                    sendingText = "multi_device_join_sending_continue_on_new_device".localized
                 }
                 
                 try await Task.sleep(seconds: 10)
                 withAnimation {
-                    sendingText = BundleUtil.localizedString(forKey: "multi_device_join_sending_wait")
+                    sendingText = "multi_device_join_sending_wait".localized
                 }
             }
         }
@@ -104,7 +104,7 @@ struct DeviceJoinSendDataView: View {
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .alert(
-            BundleUtil.localizedString(forKey: "multi_device_join_failed_to_send_data_title"),
+            "multi_device_join_failed_to_send_data_title".localized,
             isPresented: $showSendingError
         ) {
             Button("OK") {
@@ -112,10 +112,10 @@ struct DeviceJoinSendDataView: View {
                 showWizard = false
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "multi_device_join_fatal_error_message"))
+            Text("multi_device_join_fatal_error_message".localized)
         }
         .alert(
-            BundleUtil.localizedString(forKey: "multi_device_join_failed_threema_web_title"),
+            "multi_device_join_failed_threema_web_title".localized,
             isPresented: $showThreemaWebError
         ) {
             Button("OK") {
@@ -123,7 +123,7 @@ struct DeviceJoinSendDataView: View {
                 showWizard = false
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "multi_device_join_failed_threema_web_message"))
+            Text("multi_device_join_failed_threema_web_message".localized)
         }
     }
     

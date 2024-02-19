@@ -205,8 +205,8 @@ typedef enum : NSUInteger {
     }
     
     if (_renderType == nil) {
-        _renderType = @0;
-    }
+            _renderType = @0;
+        }
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -540,7 +540,7 @@ typedef enum : NSUInteger {
     if (!_delegateDisablesSearchController) {
         [self.searchController setActive:false];
     }
-
+    
     [self.delegate contactPicker:self didPickConversations:_currentDataSource.selectedConversations renderType:_renderType sendAsFile:_sendAsFileSwitch.on];
 }
 

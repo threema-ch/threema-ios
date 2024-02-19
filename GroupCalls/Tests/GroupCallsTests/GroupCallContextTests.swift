@@ -67,7 +67,6 @@ final class GroupCallContextTests: XCTestCase {
                 groupName: "ECHOECHO"
             ),
             startedAt: Date(),
-            maxParticipants: 100,
             dependencies: dependencies,
             groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: "")
         )
@@ -134,7 +133,6 @@ final class GroupCallContextTests: XCTestCase {
                 groupName: "ECHOECHO"
             ),
             startedAt: Date(),
-            maxParticipants: 100,
             dependencies: dependencies,
             groupCallStartData: GroupCallStartData(
                 protocolVersion: 0,
@@ -230,7 +228,6 @@ final class GroupCallContextTests: XCTestCase {
                         groupName: "ECHOECHO"
                     ),
                     startedAt: Date(),
-                    maxParticipants: 100,
                     dependencies: dependencies,
                     groupCallStartData: GroupCallStartData(
                         protocolVersion: 0,
@@ -277,7 +274,7 @@ final class GroupCallContextTests: XCTestCase {
                     mockPeerConnectionCtx.transceivers.append(contentsOf: self.transceivers(for: participant))
                 }
             
-                try! await groupCallContext.updatePendingParticipants(add: add, remove: [], existingParticipants: true)
+                try! await groupCallContext.updateParticipants(add: add, remove: [], existingParticipants: true)
                 
                 if #available(iOS 16.0, *) {
                     try await Task.sleep(for: .seconds(2))

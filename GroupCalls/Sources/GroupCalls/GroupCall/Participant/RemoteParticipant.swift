@@ -222,7 +222,7 @@ extension RemoteParticipant {
     private func handlePostHandshakeMessage(relayData: Data) throws -> MessageResponseAction {
         DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         
-        // TODO: (IOS-3883) Why is this copy here?
+        // TODO: (IOS-3883) Why is this copied here?
         let data = relayData
         
         var nextPcckNonce = pcckRemote!
@@ -244,16 +244,19 @@ extension RemoteParticipant {
         }
         
         switch envelope.content {
+        
         case let .captureState(newCaptureState):
             DDLogNotice("New capture state is \(newCaptureState)")
             switch newCaptureState.state {
+           
             case let .camera(muteState):
-                DDLogNotice("Camera announced")
+               
                 guard let innerState = muteState.state else {
                     DDLogError("[GroupCall] Camera state announcement doesn't have state")
                     assertionFailure()
                     throw GroupCallError.decryptionFailure
                 }
+                
                 switch innerState {
                 case .on:
                     DDLogNotice("[GroupCall] Camera announced on")
@@ -262,12 +265,15 @@ extension RemoteParticipant {
                     DDLogNotice("[GroupCall] Camera announced off")
                     return try .participantToSFU(subscribeVideo(subscribe: false), self, .videoState(.muted))
                 }
+            
             case let .microphone(muteState):
+                
                 guard let innerState = muteState.state else {
                     DDLogError("[GroupCall] Audio state announcement doesn't have state")
                     assertionFailure()
                     throw GroupCallError.decryptionFailure
                 }
+                
                 switch innerState {
                 case .on:
                     DDLogNotice("[GroupCall] Audio state announced on")
@@ -277,23 +283,30 @@ extension RemoteParticipant {
                     DDLogNotice("[GroupCall] Audio state announced off")
                     return .muteStateChanged(self, .audioState(.muted))
                 }
+            
             case .none:
-                // TODO: (IOS-4124)
-                fatalError()
+                DDLogNotice(
+                    "[GroupCall] Received a `Groupcall_ParticipantToParticipant.CaptureState`, which could not be processed, so ignoring it."
+                )
+                return .none
             }
+       
         case .none:
-            // TODO: (IOS-4124)
-            fatalError()
+            DDLogWarn(
+                "[GroupCall] Creating content for `Groupcall_ParticipantToParticipant.Envelope` failed, ignoring it."
+            )
+            return .none
+        
         case .encryptedAdminEnvelope:
-            // TODO: (IOS-4124)
-            fatalError()
+            DDLogNotice("[GroupCall] Received an encryptedAdminEnvelope, which not yet supported, so ignoring it.")
+            return .none
+       
         case let .rekey(mediaKeys):
             return handleRekey(with: mediaKeys)
+       
         case .holdState:
-            // TODO: (IOS-4124)
-            let message = "Not supported"
-            DDLogNotice(message)
-            fatalError(message)
+            DDLogNotice("[GroupCall] Received a holdState, which not yet supported, so ignoring it.")
+            return .none
         }
     }
 }

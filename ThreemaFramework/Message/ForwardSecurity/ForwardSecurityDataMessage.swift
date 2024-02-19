@@ -19,21 +19,24 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 class ForwardSecurityDataMessage: ForwardSecurityData {
     let type: CspE2eFs_Encapsulated.DHType
     let counter: UInt64
-    let message: Data
+    let groupIdentity: GroupIdentity?
     let offeredVersion: CspE2eFs_Version
     let appliedVersion: CspE2eFs_Version
-    
+    let message: Data
+        
     init(
         sessionID: DHSessionID,
         type: CspE2eFs_Encapsulated.DHType,
+        counter: UInt64,
+        groupIdentity: GroupIdentity?,
         offeredVersion: CspE2eFs_Version,
         appliedVersion: CspE2eFs_Version,
-        counter: UInt64,
         message: Data
     ) {
         self.type = type
@@ -41,19 +44,25 @@ class ForwardSecurityDataMessage: ForwardSecurityData {
         self.appliedVersion = appliedVersion
         self.counter = counter
         self.message = message
+        self.groupIdentity = groupIdentity
         super.init(sessionID: sessionID)
     }
     
     override func toProtobuf() throws -> Data {
-        var pb = CspE2eFs_Envelope()
-        pb.sessionID = sessionID.value
-        var pbMessage = CspE2eFs_Encapsulated()
-        pbMessage.dhType = type
-        pbMessage.offeredVersion = UInt32(offeredVersion.rawValue)
-        pbMessage.appliedVersion = UInt32(appliedVersion.rawValue)
-        pbMessage.counter = counter
-        pbMessage.encryptedInner = message
-        pb.content = CspE2eFs_Envelope.OneOf_Content.encapsulated(pbMessage)
-        return try pb.serializedData()
+        let envelope = CspE2eFs_Envelope.with {
+            $0.sessionID = sessionID.value
+            $0.encapsulated = CspE2eFs_Encapsulated.with {
+                $0.dhType = type
+                $0.counter = counter
+                $0.offeredVersion = UInt32(offeredVersion.rawValue)
+                $0.appliedVersion = UInt32(appliedVersion.rawValue)
+                if let groupIdentity {
+                    $0.groupIdentity = groupIdentity.asCommonGroupIdentity
+                }
+                $0.encryptedInner = message
+            }
+        }
+        
+        return try envelope.serializedData()
     }
 }

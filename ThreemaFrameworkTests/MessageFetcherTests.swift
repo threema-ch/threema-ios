@@ -187,6 +187,38 @@ class MessageFetcherTests: XCTestCase {
             XCTAssertEqual(textMessage.text, expectedUnreadMessages[index])
         }
     }
+    
+    func testRejectedGroupMessages() throws {
+        let rejectedTextMessages = [
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 👋🏼",
+            "😀😃😄😁",
+            "Lorem ipsum dolor sit amet. Quo similique eius id ipsam dignissimos ut debitis dolores sit illum fuga et provident soluta qui Quis voluptates. Ut porro nesciunt ut aperiam dolorem 33 accusamus voluptatem id eius quaerat. More...",
+        ]
+        let testContactIdentity = "CONTACT1"
+        
+        let contact = databasePreparer.createContact(identity: testContactIdentity)
+            
+        for message in rejectedTextMessages {
+            let textMessage = databasePreparer.createTextMessage(
+                conversation: conversation,
+                text: message,
+                date: Date(),
+                delivered: true,
+                id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                isOwn: false,
+                read: false,
+                sent: true,
+                userack: false,
+                sender: nil,
+                remoteSentDate: Date()
+            )
+            textMessage.addRejectedBy(contact)
+        }
+        
+        let rejectedMessages = messageFetcher.rejectedGroupMessages()
+        
+        XCTAssertEqual(rejectedMessages.count, rejectedTextMessages.count)
+    }
 
     func testLastMessageIsTextMessage() throws {
         let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessage)

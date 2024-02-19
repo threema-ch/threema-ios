@@ -27,7 +27,8 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     var sendMessageCalls = [BoxedMessage]()
     var completedProcessingMessageCalls = [BoxedMessage]()
 
-    var reflectMessageClosure: ((_ message: Data) -> Bool)?
+    var reflectMessageClosure: ((_ message: Data) -> NSError?)?
+    var sendMessageClosure: ((_ message: BoxedMessage) -> Bool)?
 
     var connectionStateDelegate: ConnectionStateDelegate?
     var taskExecutionTransactionDelegate: TaskExecutionTransactionDelegate?
@@ -115,13 +116,21 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         taskExecutionTransactionDelegate?.transactionResponse(messageType, reason: reason)
     }
     
-    func reflectMessage(_ message: Data) -> Bool {
+    func reflectMessage(_ message: Data) -> Error? {
         reflectMessageCalls.append(message)
-        return reflectMessageClosure?(message) ?? false
+
+        return reflectMessageClosure?(message) ?? (connectionState == .loggedIn ? nil : ThreemaError.threemaError(
+            "Not logged in",
+            withCode: ThreemaProtocolError.notLoggedIn.rawValue
+        ))
     }
     
     func send(_ message: BoxedMessage) -> Bool {
         sendMessageCalls.append(message)
+
+        if let sendMessageClosure {
+            return sendMessageClosure(message)
+        }
 
         if connectionState == .loggedIn {
             // TODO: Should wait here to simulate poor network, but it those not work

@@ -526,7 +526,7 @@ static NSDictionary *_mdmCacheSetup;
         supportDescriptionString = [@"" stringByAppendingString:@"m"];
     }
     
-    if ([self getMdmCompany] != nil && [[self getMdmCompany] allKeys].count > 0) {
+    if ([self getCompanyMDM] != nil && [[self getCompanyMDM] allKeys].count > 0) {
         if (supportDescriptionString != nil) {
             supportDescriptionString = [supportDescriptionString stringByAppendingString:@"e"];
         } else {
@@ -608,12 +608,12 @@ static NSDictionary *_mdmCacheSetup;
     [[LicenseStore sharedLicenseStore] performUpdateWorkInfoForce:sendForce];
 }
 
-- (NSDictionary*)getMdmCompany {
+- (NSDictionary*)getCompanyMDM {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     return [defaults dictionaryForKey:MDM_CONFIGURATION_KEY];
     
-    /// fake company MDM parameters here
-    //return @{MDM_KEY_LICENSE_USERNAME: @"", MDM_KEY_LICENSE_PASSWORD: @""};
+    // Fake company MDM parameters here
+   // return @{MDM_KEY_SAFE_PASSWORD: @"pw123456", MDM_KEY_SAFE_SERVER_USERNAME: @"user"};
 }
 
 - (NSDictionary*)getThreemaMDM {
@@ -627,12 +627,18 @@ static NSDictionary *_mdmCacheSetup;
         if (isLicenseRequired) {
             if (!isSetup) {
                 if (_mdmCache == nil) {
-                    _mdmCache = [self getMdmParameters:[self getMdmCompany] threemMdm:[self getThreemaMDM]];
+                    _mdmCache = [self getMDMParameters:[self getCompanyMDM] threemaMDM:[self getThreemaMDM]];
+                    if ([_mdmCache valueForKey:MDM_KEY_SAFE_PASSWORD] != nil) {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kSafeBackupPasswordCheck object:nil userInfo:nil];
+                    }
                 }
                 mdm = _mdmCache;
             } else {
                 if (_mdmCacheSetup == nil) {
-                    _mdmCacheSetup = [self getMdmParameters:[self getMdmCompany] threemMdm:[self getThreemaMDM]];
+                    _mdmCacheSetup = [self getMDMParameters:[self getCompanyMDM] threemaMDM:[self getThreemaMDM]];
+                    if ([_mdmCache valueForKey:MDM_KEY_SAFE_PASSWORD] != nil) {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kSafeBackupPasswordCheck object:nil userInfo:nil];
+                    }
                 }
                 mdm = _mdmCacheSetup;
             }
@@ -643,10 +649,10 @@ static NSDictionary *_mdmCacheSetup;
     return mdm;
 }
 
-- (NSDictionary*)getMdmParameters:(NSDictionary*)companyMdm threemMdm:(NSDictionary*)threemaMdm {
+- (NSDictionary*)getMDMParameters:(NSDictionary*)companyMdm threemaMDM:(NSDictionary*)threemaMdm {
     if (companyMdm != nil) {
         if (threemaMdm != nil) {
-            // merge company and Threema MDM
+            // Merge company and Threema MDM
             BOOL override = ((NSNumber *)threemaMdm[MDM_KEY_THREEMA_OVERRIDE]).boolValue;
             NSDictionary *newMdm = [self applyMdmParameters:companyMdm source:threemaMdm[MDM_KEY_THREEMA_PARAMS] override:override];
             DDLogNotice(@"\n[MDMSetup] Company MDM");
@@ -674,10 +680,9 @@ static NSDictionary *_mdmCacheSetup;
         [self printMDMIntoDebugLog:newMdm];
         
         return newMdm;
-        
     }
     
-     // print empty mdm
+     // Print empty mdm
     DDLogNotice(@"[MDMSetup] Company and Threema MDM is empty");
     return [[NSDictionary alloc] init];
 }
@@ -685,7 +690,7 @@ static NSDictionary *_mdmCacheSetup;
 - (NSDictionary*)applyMdmParameters:(NSDictionary*)destination source:(NSDictionary*)source override:(BOOL)override {
     NSMutableDictionary *mdmParameters = [[NSMutableDictionary alloc] initWithDictionary:destination];
     
-    // apply parameter if is override and renweable or missing
+    // Apply parameter if is override and renewable or missing
     [[source allKeys] enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
         if ([self shouldDiscardInThreemaMDM:key]) {
             return;

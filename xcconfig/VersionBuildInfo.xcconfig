@@ -21,5 +21,5 @@
 // Configuration settings file format documentation can be found at:
 // https://help.apple.com/xcode/#/dev745c5c974
 
-VERSION_NUMBER=5.7.3
-BUILD_NUMBER=5786
+VERSION_NUMBER=5.8
+BUILD_NUMBER=5851

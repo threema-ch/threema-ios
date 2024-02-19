@@ -35,6 +35,7 @@ enum SingleDetails {
         case privacySettings
         case wallpaper
         case fsActions
+        case debugInfo
     }
     
     enum Row: Hashable {
@@ -61,5 +62,9 @@ enum SingleDetails {
         
         // Wallpaper
         case wallpaper(action: Details.Action, isDefault: Bool)
+        
+        // Debug
+        case coreDataDebugInfo(contact: ContactEntity)
+        case fsDebugInfo(sessionInfo: String)
     }
 }

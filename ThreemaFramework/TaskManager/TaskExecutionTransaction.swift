@@ -168,8 +168,8 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
         transactionResponseTimeout = DispatchGroup()
         transactionResponseTimeout?.enter()
 
-        if !frameworkInjector.serverConnector.reflectMessage(message) {
-            throw TaskExecutionError.reflectMessageFailed(message: "type: \(messageType)")
+        if let error = frameworkInjector.serverConnector.reflectMessage(message) {
+            throw TaskExecutionError.reflectMessageFailed(message: "message type: \(messageType) / \(error)")
         }
 
         let result = transactionResponseTimeout?.wait(timeout: .now() + .seconds(responseTimeoutInSeconds))

@@ -22,6 +22,10 @@ import Foundation
 
 extension BallotMessage: MessageAccessibility {
     public var customAccessibilityLabel: String {
+        guard let ballot else {
+            return ""
+        }
+
         if !ballot.isClosed() {
             return String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "accessibility_poll_content_open"),
@@ -41,6 +45,10 @@ extension BallotMessage: MessageAccessibility {
     }
     
     public var customAccessibilityHint: String? {
+        guard let ballot else {
+            return ""
+        }
+
         if ballot.isClosed() {
             return BundleUtil.localizedString(forKey: "accessibility_ballotMessage_hint_closed")
         }

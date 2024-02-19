@@ -19,7 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import <CocoaLumberjack/CocoaLumberjack.h>
+
+@import CocoaLumberjack;
 
 @interface FileLoggerCustom : DDAbstractLogger <DDLogger> {
 }

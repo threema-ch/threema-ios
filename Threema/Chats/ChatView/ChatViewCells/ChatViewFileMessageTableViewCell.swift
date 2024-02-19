@@ -294,8 +294,12 @@ extension ChatViewFileMessageTableViewCell: ChatViewMessageAction {
         
         // Retry
         if message.showRetryAndCancelButton {
-            let retryHandler = Provider.retryAction {
-                self.chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID)
+            let retryHandler = Provider.retryAction { [weak self] in
+                guard let self else {
+                    return
+                }
+                
+                chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID, from: rootView)
             }
             
             // Retry action position analogously to download

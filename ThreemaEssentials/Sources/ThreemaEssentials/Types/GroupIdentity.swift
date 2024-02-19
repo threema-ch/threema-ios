@@ -23,15 +23,22 @@ import Foundation
 import ThreemaProtocols
 
 public struct GroupIdentity: Equatable, Hashable, CustomStringConvertible, Sendable, Codable {
+    public enum Error: Swift.Error {
+        case invalidCreatorIdentityLength
+    }
+    
     private enum CodingKeys: String, CodingKey {
         case id, creator
     }
+    
+    /// Expected length of `id`
+    public static let idLength = 8
 
     public let id: Data
     public let creator: ThreemaIdentity
 
     public init(id: Data, creator: ThreemaIdentity) {
-        if id.count != 8 {
+        if id.count != GroupIdentity.idLength {
             assertionFailure("Tried to create a GroupIdentity with id length of \(id.count)")
             DDLogError("Tried to create a GroupIdentity with id length of \(id.count)")
         }
@@ -40,10 +47,33 @@ public struct GroupIdentity: Equatable, Hashable, CustomStringConvertible, Senda
         self.creator = creator
     }
 
-    public init(identity: Common_GroupIdentity) {
-        self.init(id: identity.groupID.littleEndianData, creator: ThreemaIdentity(identity.creatorIdentity))
+    // MARK: - Common_GroupIdentity helper
+    
+    /// Create new group identity from `Common_GroupIdentity`
+    /// - Parameter commonGroupIdentity: Common Group Identity to use
+    /// - Throws: `GroupIdentity.Error` if `commonGroupIdentity` is not a valid group identity
+    public init(commonGroupIdentity: Common_GroupIdentity) throws {
+        // `commonGroupIdentity.groupID` will always be valid, also if it is 0
+        
+        guard commonGroupIdentity.creatorIdentity.count == ThreemaIdentity.stringLength else {
+            throw Error.invalidCreatorIdentityLength
+        }
+        
+        self.init(
+            id: commonGroupIdentity.groupID.littleEndianData,
+            creator: ThreemaIdentity(commonGroupIdentity.creatorIdentity)
+        )
+    }
+    
+    public var asCommonGroupIdentity: Common_GroupIdentity {
+        var commonGroupIdentity = Common_GroupIdentity()
+        commonGroupIdentity.groupID = id.paddedLittleEndian()
+        commonGroupIdentity.creatorIdentity = creator.string
+        return commonGroupIdentity
     }
 
+    // MARK: - CustomStringConvertible
+    
     public var description: String {
         "id: \(id.hexString) creator: \(creator)"
     }

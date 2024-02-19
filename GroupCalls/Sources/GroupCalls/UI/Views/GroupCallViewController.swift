@@ -65,7 +65,7 @@ public class GroupCallViewController: UIViewController {
     
     // MARK: - Lifecycle
     
-    public init(viewModel: GroupCallViewModel, dependencies: Dependencies) {
+    public init(viewModel: GroupCallViewModel, dependencies: Dependencies, isRunningForScreenShots: Bool = false) {
         self.viewModel = viewModel
         self.dependencies = dependencies
 
@@ -74,6 +74,10 @@ public class GroupCallViewController: UIViewController {
         self.viewModel.setViewDelegate(self)
 
         configureViewController()
+        
+        if isRunningForScreenShots {
+            viewModel.updateForScreenshots()
+        }
     }
     
     @available(*, unavailable)

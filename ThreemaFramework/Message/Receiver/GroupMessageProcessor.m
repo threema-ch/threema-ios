@@ -106,9 +106,21 @@
 
             onCompletion(YES);
         }
-        else if (grp.isSelfMember == NO && grp.isSelfCreator == NO) {
-            [self sendSyncRequest];
-            
+        else if (grp.isSelfMember == NO) {
+            // 3. If the group is marked as _left_:
+            //     1. If the user is the creator of the group, send a
+            //        [`group-setup`](ref:e2e.group-setup) with an empty members list back
+            //        to the sender, discard the message and abort these steps.
+            //     2. Send a [`group-leave`](ref:e2e.group-leave) back to the sender,
+            //        discard the message and abort these steps.
+
+            if (grp.isSelfCreator == YES) {
+                [groupManager dissolveWithGroupID:_message.groupId to:[[NSSet alloc] initWithArray:@[_message.fromIdentity]]];
+            }
+            else {
+                [groupManager leaveWithGroupID:_message.groupId creator:_message.groupCreator toMembers:@[_message.fromIdentity] systemMessageDate:[NSDate now]];
+            }
+
             onCompletion(YES);
         }
         else if ([grp isMemberWithIdentity:_message.fromIdentity] == NO) {

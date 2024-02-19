@@ -36,6 +36,8 @@ actor GroupCallActor: Sendable {
     
     let proposedGroupCall: ProposedGroupCall
     
+    let groupCallBaseState: GroupCallBaseState
+    
     // MARK: Protocol Peek Steps Helper Variables
 
     var tokenRefreshed = false
@@ -60,17 +62,6 @@ actor GroupCallActor: Sendable {
     
     nonisolated var sfuBaseURL: String {
         groupCallBaseState.sfuBaseURL
-    }
-    
-    nonisolated var groupCallBaseStateCopy: GroupCallBaseState {
-        try! GroupCallBaseState(
-            group: group,
-            startedAt: groupCallBaseState.startedAt,
-            // TODO: (IOS-4086) Use actual value from SFU, this needs to be refactored, also remove try!
-            maxParticipants: groupCallBaseState.maxParticipants,
-            dependencies: dependencies,
-            groupCallStartData: groupCallStartData
-        )
     }
     
     nonisolated var logIdentifier: String {
@@ -151,7 +142,6 @@ actor GroupCallActor: Sendable {
         }
     }
     
-    private let groupCallBaseState: GroupCallBaseState
     private let groupCallStartData: GroupCallStartData
     
     /// Task running group call state machine
@@ -181,8 +171,6 @@ actor GroupCallActor: Sendable {
         self.groupCallBaseState = try GroupCallBaseState(
             group: groupModel,
             startedAt: Date(),
-            // TODO: (IOS-4086) Use actual value from SFU
-            maxParticipants: 100,
             dependencies: dependencies,
             groupCallStartData: groupCallStartData
         )
@@ -327,7 +315,8 @@ actor GroupCallActor: Sendable {
         switch peekResult {
         case let .running(peekResponse):
             exactCallStartDate = peekResponse.startedAt
-            
+            groupCallBaseState.maxParticipants = Int(peekResponse.maxParticipants)
+
             if peekResponse.hasEncryptedCallState {
                 let nonce = peekResponse.encryptedCallState[0..<24]
                 let peekResponseData = peekResponse.encryptedCallState[24..<peekResponse.encryptedCallState.count]
@@ -643,6 +632,11 @@ extension GroupCallActor {
             assertionFailure(msg)
             DDLogError(msg)
         }
+    }
+    
+    func showGroupCallFullAlert(maxParticipants: Int?) async {
+        await actorDelegate?.showGroupCallFullAlert(maxParticipants: maxParticipants)
+        await updateButtonAndBanner(hide: true)
     }
 
     func teardown() async {

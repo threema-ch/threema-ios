@@ -29,6 +29,7 @@ protocol NonceGuardProtocol: NonceGuardProtocolObjc {
     func processed(nonces: [Data])
     func processed(message: AbstractMessage) throws
     func processed(boxedMessage: BoxedMessage) throws
+    func processed(reflectedEnvelope message: D2d_Envelope) throws
 }
 
 @objc
@@ -83,7 +84,7 @@ class NonceGuard: NSObject, NonceGuardProtocol {
     /// Incoming message nonce will be stored in DB.
     ///
     /// - Parameter message: Store nonce of the message
-    /// - Throws: NonceGuardError.messageNonceIsNull
+    /// - Throws: NonceGuardError.messageNonceIsNil
     func processed(message: AbstractMessage) throws {
         guard let nonce = message.nonce else {
             throw NonceGuardError
@@ -96,7 +97,7 @@ class NonceGuard: NSObject, NonceGuardProtocol {
     /// Outgoing message nonce will be stored in DB.
     ///
     /// - Parameter message: Store nonce of the message
-    /// - Throws: NonceGuardError.messageNonceIsNull
+    /// - Throws: NonceGuardError.messageNonceIsNil
     func processed(boxedMessage message: BoxedMessage) throws {
         guard let nonce = message.nonce else {
             throw NonceGuardError
@@ -104,6 +105,22 @@ class NonceGuard: NSObject, NonceGuardProtocol {
         }
 
         processed(nonce: nonce)
+    }
+
+    /// Incoming reflected message nonce(s) will be stored in DB.
+    ///
+    /// - Parameter message: Store nonce of the reflected message
+    /// - Throws: NonceGuardError.messageNonceIsNil
+    func processed(reflectedEnvelope message: D2d_Envelope) throws {
+        switch message.content {
+        case let .incomingMessage(incomingMessage):
+            processed(nonce: incomingMessage.nonce)
+        case let .outgoingMessage(outgoingMessage):
+            processed(nonces: outgoingMessage.nonces)
+        default:
+            throw NonceGuardError
+                .messageNonceIsNil(message: "Can't store nonce of message \(message.loggingDescription)")
+        }
     }
 
     /// Nonce will be stored in DB.

@@ -195,8 +195,8 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
                 font: .preferredFont(forTextStyle: .body)
             )
         case let ballotMessage as BallotMessage:
-            messagePreviewTextLabel.text = ballotMessage.ballot.title
-            
+            messagePreviewTextLabel.text = ballotMessage.ballot?.title ?? ""
+
         case let fileMessageEntity as FileMessageEntity:
             messagePreviewTextLabel.text = fileMessageEntity.fileName
             

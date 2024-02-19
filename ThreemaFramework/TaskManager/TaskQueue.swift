@@ -46,6 +46,13 @@ final class TaskQueue {
     let queueType: TaskQueueType
     let supportedTypes: [TaskDefinition.Type]
     static let retriesOfFailedTasks = 1
+
+    private var spoolingDelay = false
+    private var spoolingDelayAttempts = 0
+    private let spoolingDelayBaseInterval: Float = 2
+    private let spoolingDelayMaxInterval: Float = 10
+    private var isWaitingForSpooling = false
+
     private let frameworkInjector: FrameworkInjectorProtocol
     private let renewFrameworkInjector: Bool
 
@@ -61,8 +68,9 @@ final class TaskQueue {
     }
 
     private var queue = Queue<QueueItem>()
-    private let dispatchQueue = DispatchQueue(label: "ch.threema.TaskQueue.dispatchQueue")
+    private let taskQueueQueue = DispatchQueue(label: "ch.threema.TaskQueue.taskQueueQueue")
     private let taskScheduleQueue = DispatchQueue(label: "ch.threema.TaskQueue.taskScheduleQueue")
+    private let spoolingDelayQueue = DispatchQueue(label: "ch.threema.TaskQueue.spoolingDelayQueue")
 
     enum TaskQueueError: Error {
         case notSupportedType
@@ -96,7 +104,7 @@ final class TaskQueue {
             throw TaskQueueError.notSupportedType
         }
         
-        dispatchQueue.sync {
+        taskQueueQueue.sync {
             queue.enqueue(QueueItem(taskDefinition: task, completionHandler: completionHandler))
             if task.isPersistent {
                 save()
@@ -105,7 +113,7 @@ final class TaskQueue {
     }
 
     func interrupt() {
-        dispatchQueue.sync {
+        taskQueueQueue.sync {
             if let item = queue.peek(), item.taskDefinition.state == .executing {
                 item.taskDefinition.state = .interrupted
             }
@@ -114,14 +122,14 @@ final class TaskQueue {
     }
     
     func removeAll() {
-        dispatchQueue.sync {
+        taskQueueQueue.sync {
             queue.removeAll()
             save()
         }
     }
 
     func removeCurrent() {
-        dispatchQueue.sync {
+        taskQueueQueue.sync {
             if let item = queue.dequeue(), item.taskDefinition.isPersistent {
                 save()
 
@@ -131,15 +139,44 @@ final class TaskQueue {
         }
     }
 
-    /// Execute next `pending` task.
     func spool() {
+        guard spoolingDelay else {
+            executeNext()
+            return
+        }
+
+        spoolingDelayQueue.async {
+            guard !self.isWaitingForSpooling else {
+                return
+            }
+
+            self.isWaitingForSpooling = true
+
+            var delay = powf(self.spoolingDelayBaseInterval, Float(min(self.spoolingDelayAttempts - 1, 10)))
+            if delay > self.spoolingDelayMaxInterval {
+                delay = self.spoolingDelayMaxInterval
+            }
+
+            self.spoolingDelayAttempts += 1
+
+            DDLogNotice("Waiting \(delay) seconds before execute next task")
+
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + .milliseconds(Int(delay * 1000))) {
+                self.isWaitingForSpooling = false
+                self.executeNext()
+            }
+        }
+    }
+
+    /// Execute next `pending` task.
+    func executeNext() {
         guard frameworkInjector.serverConnector.connectionState == .loggedIn else {
             DDLogWarn("Task queue spool interrupt, because not logged in to server")
             return
         }
         
         var queueItem: QueueItem?
-        dispatchQueue.sync {
+        taskQueueQueue.sync {
             queueItem = queue.peek()
         }
         
@@ -167,9 +204,23 @@ final class TaskQueue {
                 item.taskDefinition.create(frameworkInjector: injector).execute()
                     .done {
                         if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                            try self.ackReflectedMessage(reflectID: task.reflectID)
+                            if let reflectMessageError = self.frameworkInjector.serverConnector
+                                .reflectMessage(
+                                    self.frameworkInjector.mediatorMessageProtocol
+                                        .encodeReflectedAck(reflectID: task.reflectID)
+                                ) as? NSError {
+
+                                guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
+                                    self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
+                                    return
+                                }
+
+                                DDLogError(
+                                    "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
+                                )
+                            }
                         }
-                        
+
                         self.done(item: item)
                     }
                     .catch(on: .global()) { error in
@@ -186,9 +237,30 @@ final class TaskQueue {
                                 try? self.frameworkInjector.nonceGuard.processed(boxedMessage: task.message)
                                 self.frameworkInjector.serverConnector.completedProcessingMessage(task.message)
                             }
-                            else {
-                                DDLogWarn("\(item.taskDefinition) \(error)")
+                            else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+                                DDLogNotice("\(task) discard reflected message: \(error)")
+
+                                try? self.frameworkInjector.nonceGuard
+                                    .processed(reflectedEnvelope: task.reflectedEnvelope)
+
+                                if let reflectMessageError = self.frameworkInjector.serverConnector
+                                    .reflectMessage(
+                                        self.frameworkInjector.mediatorMessageProtocol
+                                            .encodeReflectedAck(reflectID: task.reflectID)
+                                    ) as? NSError {
+
+                                    guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
+                                        self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
+                                        return
+                                    }
+
+                                    DDLogError("\(item.taskDefinition) done \(reflectMessageError)")
+                                }
                             }
+                            else {
+                                DDLogError("\(item.taskDefinition) \(error)")
+                            }
+
                             self.done(item: item)
                         }
                         else if case ThreemaProtocolError.pendingGroupMessage = error {
@@ -224,21 +296,28 @@ final class TaskQueue {
                         else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
                             DDLogNotice("\(item.taskDefinition) discard reflected message: \(error)")
 
-                            switch task.reflectedEnvelope.content {
-                            case let .incomingMessage(incomingMessage):
-                                self.frameworkInjector.nonceGuard.processed(nonce: incomingMessage.nonce)
-                            case let .outgoingMessage(outgoingMessage):
-                                self.frameworkInjector.nonceGuard.processed(nonces: outgoingMessage.nonces)
-                            default:
-                                DDLogInfo("No nonces to save for reflect ID: \(task.reflectID.hexString)")
+                            try? self.frameworkInjector.nonceGuard.processed(reflectedEnvelope: task.reflectedEnvelope)
+
+                            if let reflectMessageError = self.frameworkInjector.serverConnector
+                                .reflectMessage(
+                                    self.frameworkInjector.mediatorMessageProtocol
+                                        .encodeReflectedAck(reflectID: task.reflectID)
+                                ) as? NSError {
+
+                                guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
+                                    self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
+                                    return
+                                }
+
+                                DDLogError(
+                                    "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
+                                )
                             }
 
-                            try? self.ackReflectedMessage(reflectID: task.reflectID)
-                            
                             self.done(item: item)
                         }
                         else {
-                            self.failed(item: item, error: error)
+                            self.failed(item: item, error: error, enableSpoolingDelay: false)
                         }
                     }
             }
@@ -394,7 +473,12 @@ final class TaskQueue {
     /// Processing of queue item is successfully done, task will be dequeued and execute next task.
     /// - Parameter item: Queue item
     private func done(item: QueueItem) {
-        dispatchQueue.sync {
+        spoolingDelayQueue.sync {
+            spoolingDelay = false
+            spoolingDelayAttempts = 0
+        }
+
+        taskQueueQueue.sync {
             DDLogNotice("\(item.taskDefinition) done")
 
             guard item === queue.peek() else {
@@ -422,17 +506,22 @@ final class TaskQueue {
     /// Processing queue item is failed, retry or dequeue it.
     /// - Parameter item: Queue item
     /// - Parameter error: Task failed with error
-    private func failed(item: QueueItem, error: Error) {
+    private func failed(item: QueueItem, error: Error, enableSpoolingDelay: Bool) {
         var retry = false
 
-        dispatchQueue.sync {
+        taskQueueQueue.sync {
             DDLogError("\(item.taskDefinition) failed \(error)")
-
-            retry = false
 
             guard item === queue.peek() else {
                 DDLogError("\(item.taskDefinition) wrong spooling order")
                 return
+            }
+
+            spoolingDelayQueue.sync {
+                spoolingDelay = enableSpoolingDelay
+                if !enableSpoolingDelay {
+                    spoolingDelayAttempts = 0
+                }
             }
 
             if item.taskDefinition.state != .pending {
@@ -451,7 +540,7 @@ final class TaskQueue {
                     }
                     retry = true
                 }
-                else if queueType == .incoming {
+                else if queueType == .incoming, !spoolingDelay {
                     // Remove/chancel task processing of failed incoming message, try again with next server connection!
                     DDLogVerbose("\(item.taskDefinition) dequeue")
                     _ = queue.dequeue()
@@ -467,7 +556,7 @@ final class TaskQueue {
             }
         }
 
-        if !retry {
+        if !retry, !spoolingDelay {
             item.completionHandler?(item.taskDefinition, error)
         }
 
@@ -483,21 +572,6 @@ final class TaskQueue {
                !FileUtility.write(fileURL: queuePath, contents: queueData) {
                 DDLogError("Could not save queue into file")
             }
-        }
-    }
-
-    private func ackReflectedMessage(reflectID: Data) throws {
-        if frameworkInjector.userSettings.enableMultiDevice {
-            if !frameworkInjector.serverConnector
-                .reflectMessage(
-                    frameworkInjector.mediatorMessageProtocol
-                        .encodeReflectedAck(reflectID: reflectID)
-                ) {
-                throw TaskExecutionError.reflectMessageFailed(message: "(reflect ID: \(reflectID.hexString))")
-            }
-        }
-        else {
-            throw TaskExecutionError.multiDeviceNotRegistered
         }
     }
 }

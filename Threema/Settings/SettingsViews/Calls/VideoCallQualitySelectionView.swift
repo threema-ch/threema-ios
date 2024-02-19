@@ -21,7 +21,7 @@
 import SwiftUI
 
 struct VideoCallQualitySelectionView: View {
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     
     private let videoQualitySettings: [ThreemaVideoCallQualitySetting] = [
         ThreemaVideoCallQualitySettingAuto,
@@ -47,12 +47,12 @@ struct VideoCallQualitySelectionView: View {
                 }
                 
             } footer: {
-                Text(BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_footer"))
+                Text("settings_threema_calls_video_quality_profile_footer".localized)
             }
         }
         .pickerStyle(.inline)
         .tint(UIColor.primary.color)
-        .navigationTitle(BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile"))
+        .navigationTitle("settings_threema_calls_video_quality_profile".localized)
     }
 }
 
@@ -62,6 +62,6 @@ extension ThreemaVideoCallQualitySetting: Hashable { }
 
 struct VideoCallQualitySelectionView_Previews: PreviewProvider {
     static var previews: some View {
-        VideoCallQualitySelectionView(settingsVM: SettingsStore())
+        VideoCallQualitySelectionView()
     }
 }

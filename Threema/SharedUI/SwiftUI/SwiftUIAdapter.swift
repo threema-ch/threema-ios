@@ -24,8 +24,10 @@ import SwiftUI
 /// Adapter class to make SwiftUI-Views useable in Obj-C code
 @objc class SwiftUIAdapter: NSObject {
     
+    private static var injectedContainer: AppContainer = .defaultValue
+    
     @objc static func createDeleteRevokeIdentityView() -> UIViewController {
-        let deleteRevokeView = DeleteRevokeInfoView()
+        let deleteRevokeView = DeleteRevokeView()
         let hostingController = UIHostingController(rootView: deleteRevokeView)
         hostingController.navigationItem.largeTitleDisplayMode = .never
         hostingController.navigationController?.navigationBar.isHidden = true
@@ -34,28 +36,25 @@ import SwiftUI
         hostingController.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         return hostingController
     }
-    
+        
     @objc static func createDeleteSummaryView() -> UIViewController {
-        let deleteView = DeleteRevokeSummaryView(type: .delete)
+        let deleteView = DeleteRevokeView(alreadyDeleted: true)
         let hostingController = UIHostingController(rootView: deleteView)
         return hostingController
     }
 
     @objc static func createNotificationSettingsView() -> UIViewController {
-        let notificationSettingsView = NotificationSettingsView(settingsVM: SettingsStore())
+        let notificationSettingsView = NotificationSettingsView()
         let hostingController = UIHostingController(rootView: notificationSettingsView)
         hostingController.navigationItem.largeTitleDisplayMode = .never
         return hostingController
     }
     
     @objc static func createSettingsView() -> UIViewController {
-        let settingsView = SettingsView()
-        let hostingController = UIHostingController(rootView: settingsView)
-        hostingController.navigationItem.largeTitleDisplayMode = .never
-        return hostingController
+        SettingsView().makeViewController(injectedContainer)
     }
-    
+ 
     @objc static func createProfileView() -> UIViewController {
-        ProfileView().createProfileViewController()
+        ProfileView().makeViewController(injectedContainer)
     }
 }

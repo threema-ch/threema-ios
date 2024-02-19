@@ -59,8 +59,6 @@
         return;
     }
 
-    MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-    
     NSUserDefaults *defaults = [AppGroup userDefaults];
     
     NSDate *lastWorkSync = [defaults objectForKey:@"WorkDataLastSync"];
@@ -85,7 +83,64 @@
         }
         return;
     }
-    
+
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+
+    typedef void (^OnCompletion)();
+
+    void(^finishWorkFetch)(NSDictionary *, OnCompletion) = ^void(NSDictionary *workData, OnCompletion onCompletion) {
+        /* Extract check interval, if supplied */
+        NSInteger checkInterval = WORK_DEFAULT_CHECK_INTERVAL;
+        if ([workData[@"checkInterval"] isKindOfClass:[NSNumber class]]) {
+            NSInteger serverCheckInterval = [((NSNumber*)workData[@"checkInterval"]) integerValue];
+            DDLogVerbose(@"Server supplied check interval is %ld", (long)serverCheckInterval);
+            if (serverCheckInterval > 0)
+                checkInterval = serverCheckInterval;
+        }
+
+        BOOL refreshWorkContactTableView = false;
+
+        /* Check if there is a company directory */
+        if (workData[@"directory"] != [NSNull null] && workData[@"directory"] != nil) {
+            if ([mdmSetup disableWorkDirectory] == true) {
+                [UserSettings sharedUserSettings].companyDirectory = false;
+            } else {
+                NSDictionary *directory = workData[@"directory"];
+                BOOL enableWorkDirectory = [directory[@"enabled"] boolValue];
+                if (enableWorkDirectory != [UserSettings sharedUserSettings].companyDirectory) {
+                    [UserSettings sharedUserSettings].companyDirectory = enableWorkDirectory;
+                    refreshWorkContactTableView = true;
+                }
+                [MyIdentityStore sharedMyIdentityStore].directoryCategories = directory[@"cat"];
+            }
+        } else {
+            [UserSettings sharedUserSettings].companyDirectory = false;
+        }
+
+        if (workData[@"org"] != [NSNull null]) {
+            NSDictionary *org = workData[@"org"];
+            if (org[@"name"] != [NSNull null]) {
+                NSString *name = org[@"name"];
+                if (![name isEqualToString:[MyIdentityStore sharedMyIdentityStore].companyName]) {
+                    [MyIdentityStore sharedMyIdentityStore].companyName = name;
+                    refreshWorkContactTableView = true;
+                }
+            }
+        }
+
+        if (refreshWorkContactTableView == true) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationRefreshWorkContactTableView object:nil];
+        }
+
+        [defaults setObject:[NSDate date] forKey:@"WorkDataLastSync"];
+        [defaults setInteger:checkInterval forKey:@"WorkDataCheckInterval"];
+        [defaults synchronize];
+        if (onCompletion != nil)
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onCompletion();
+            });
+    };
+
     // Send Work fetch request with license username/password and list of identities in local contact list
     NSArray *contactIds = [[ContactStore sharedContactStore] allIdentities];
     NSDictionary *request = @{
@@ -99,7 +154,6 @@
         
         DDLogVerbose(@"Work data: %@", workData);
         
-        MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
         [mdmSetup applyThreemaMdm:workData sendForce:sendForce];
 
         /* Extract logo URL, if supplied */
@@ -133,6 +187,11 @@
         /* Process supplied contacts */
         if (ProcessInfoHelper.isRunningForScreenshots)  {
             // do not update for screenshots
+            if (onCompletion != nil) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    onCompletion();
+                });
+            }
         } else {
             NSArray *workContacts = workData[@"contacts"];
             NSMutableSet *workContactIds = [NSMutableSet set];
@@ -160,67 +219,26 @@
                     [batchAddWorkContacts addObject:batchAddWorkContact];
                     [workContactIds addObject:identity];
                 }
-                [[ContactStore sharedContactStore] batchAddWorkContactsWithBatchAddContacts:[batchAddWorkContacts allObjects]];
-            }
-            
-            /* Get all work verified contacts from DB and set those that have not been supplied in this sync back to non-work */
-            NSArray *allContacts = [[ContactStore sharedContactStore] allContacts];
-            for (ContactEntity *contact in allContacts) {
-                BOOL isWorkContact = [workContactIds containsObject:contact.identity];
-                if (contact.workContact == nil || contact.workContact.boolValue != isWorkContact) {
-                    [[ContactStore sharedContactStore] setWorkContact:contact workContact:isWorkContact];
-                    [mediatorSyncableContacts updateAllWithIdentity:contact.identity added:NO];
-                }
-            }
-            
-            /* Extract check interval, if supplied */
-            NSInteger checkInterval = WORK_DEFAULT_CHECK_INTERVAL;
-            if ([workData[@"checkInterval"] isKindOfClass:[NSNumber class]]) {
-                NSInteger serverCheckInterval = [((NSNumber*)workData[@"checkInterval"]) integerValue];
-                DDLogVerbose(@"Server supplied check interval is %ld", (long)serverCheckInterval);
-                if (serverCheckInterval > 0)
-                    checkInterval = serverCheckInterval;
-            }
-            
-            BOOL refreshWorkContactTableView = false;
-            
-            /* Check if there is a company directory */
-            if (workData[@"directory"] != [NSNull null] && workData[@"directory"] != nil) {
-                if ([mdmSetup disableWorkDirectory] == true) {
-                    [UserSettings sharedUserSettings].companyDirectory = false;
-                } else {
-                    NSDictionary *directory = workData[@"directory"];
-                    BOOL enableWorkDirectory = [directory[@"enabled"] boolValue];
-                    if (enableWorkDirectory != [UserSettings sharedUserSettings].companyDirectory) {
-                        [UserSettings sharedUserSettings].companyDirectory = enableWorkDirectory;
-                        refreshWorkContactTableView = true;
+
+                [[ContactStore sharedContactStore] batchAddWorkContactsWithBatchAddContacts:[batchAddWorkContacts allObjects] completionHandler:^(NSError * _Nullable error) {
+                    if (error) {
+                        DDLogError(@"Adding work contacts failed: %@", error);
+
+                        if (onError != nil) {
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                onError(error);
+                            });
+                        }
+                        return;
                     }
-                    [MyIdentityStore sharedMyIdentityStore].directoryCategories = directory[@"cat"];
-                }
-            } else {
-                [UserSettings sharedUserSettings].companyDirectory = false;
+
+                    finishWorkFetch(workData, onCompletion);
+                }];
             }
-            
-            if (workData[@"org"] != [NSNull null]) {
-                NSDictionary *org = workData[@"org"];
-                if (org[@"name"] != [NSNull null]) {
-                    NSString *name = org[@"name"];
-                    if (![name isEqualToString:[MyIdentityStore sharedMyIdentityStore].companyName]) {
-                        [MyIdentityStore sharedMyIdentityStore].companyName = name;
-                        refreshWorkContactTableView = true;
-                    }
-                }
-            }
-            
-            if (refreshWorkContactTableView == true) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationRefreshWorkContactTableView object:nil];
+            else {
+                finishWorkFetch(workData, onCompletion);
             }
         }
-        [defaults setObject:[NSDate date] forKey:@"WorkDataLastSync"];
-        [defaults setInteger:checkInterval forKey:@"WorkDataCheckInterval"];
-        [defaults synchronize];
-        if (onCompletion != nil)
-            onCompletion();
     } onError:^(NSError *error) {
         DDLogError(@"Work API fetch failed: %@", error);
         if (onError != nil)

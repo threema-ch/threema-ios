@@ -154,9 +154,12 @@ class TaskExecutionTransactionTests: XCTestCase {
                         }
                         expectedMediatorLockState = lockState
                     }
-                    return true
+                    return nil
                 }
-                return false
+                return ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError
             }
             let frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),

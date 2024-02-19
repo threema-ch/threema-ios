@@ -72,6 +72,24 @@ public class ViewModelParticipant {
         self.videoMuteState = GroupCallConfiguration.LocalInitialMuteState.video.muteState()
     }
     
+    // Only use when running screenshots
+    init(
+        id: ParticipantID,
+        identity: ThreemaIdentity,
+        name: String,
+        avatar: UIImage?,
+        idColor: UIColor,
+        dependencies: Dependencies
+    ) async {
+        self.participantID = id
+        self.threemaIdentity = identity
+        
+        self.name = name
+        self.avatar = avatar
+        self.idColor = idColor
+        self.dependencies = dependencies
+    }
+    
     // MARK: - Accessibility
     
     public func cellAccessibilityString() -> String {

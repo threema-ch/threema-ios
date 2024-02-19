@@ -34,15 +34,15 @@ struct DeviceJoinPFSInfoView: View {
         VStack {
             ScrollView {
                 DeviceJoinHeaderView(
-                    title: BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_title"),
+                    title: "multi_device_new_linked_devices_title".localized,
                     description: String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "multi_device_join_perfect_forward_secrecy_info"),
+                        "multi_device_join_perfect_forward_secrecy_info".localized,
                         faqURL
                     )
                 )
                 .padding([.horizontal, .top], 24)
                 .accessibilityAction(named: Text(String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
+                    "accessibility_action_open_link".localized,
                     faqURL
                 ))) {
                     openURL(URL(string: faqURL)!)
@@ -69,7 +69,7 @@ struct DeviceJoinPFSInfoView: View {
                 Button {
                     showScanQRCodeView = true
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_add_button"))
+                    Text("multi_device_new_linked_devices_add_button".localized)
                         .font(.title3) // This is a little bit too big
                         .bold()
                         .padding(8)

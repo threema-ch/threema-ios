@@ -53,8 +53,8 @@
     return [NSString stringWithFormat:@"%@: %@", [BundleUtil localizedStringForKey:@"ballot"], self.ballot.title];
 }
 
-- (BOOL)isClosed {
-    return self.ballotState.intValue == kBallotMessageStateCloseBallot;
+- (BOOL)isSummaryMessage {
+    return self.ballotState.intValue == kBallotMessageStateCloseBallot && self.ballot.state.intValue == kBallotStateClosed;
 }
 
 - (void)setBallot:(Ballot *)ballot

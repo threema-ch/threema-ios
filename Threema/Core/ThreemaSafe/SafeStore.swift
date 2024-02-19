@@ -213,7 +213,7 @@ import ThreemaFramework
                 }
             }
             catch {
-                print("regex faild to check default server: \(error.localizedDescription)")
+                print("regex failed to check default server: \(error.localizedDescription)")
             }
             
             return safeConfigManager.getCustomServer() != nil ? safeConfigManager.getCustomServer()! : server
@@ -788,8 +788,10 @@ import ThreemaFramework
                             if let bContact,
                                let contactIdentity = bContact.identity,
                                contactIdentity.uppercased() != identity.uppercased() {
-                            
+
                                 if let publicKey = publicKeys?[index] as? Data {
+                                    var contactForConversation: ContactEntity?
+
                                     // check is contact already stored, could be when Threema MDM sync was running (it's
                                     // a bug, should not before restore is finished)
                                     if let contact = entityManager.entityFetcher.contact(for: bContact.identity) {
@@ -799,6 +801,8 @@ import ThreemaFramework
                                             contact.lastName = bContact.lastname
                                             contact.publicNickname = bContact.nickname
                                         }
+
+                                        contactForConversation = contact
                                     }
                                     else {
                                         entityManager.performSyncBlockAndSafe {
@@ -853,14 +857,28 @@ import ThreemaFramework
                                                             )
                                                     }
                                                 }
-                                                // We create conversations for private contacts
-                                                if let isPrivate = bContact.private,
-                                                   isPrivate {
-                                                    let conversation = entityManager.conversation(
-                                                        forContact: contact,
-                                                        createIfNotExisting: true
-                                                    )
-                                                    conversation?.conversationCategory = .private
+
+                                                contactForConversation = contact
+                                            }
+                                        }
+                                    }
+
+                                    // Create conversation if last update set or the contact is private
+                                    if let contactForConversation,
+                                       bContact.lastUpdate != nil || bContact.private ?? false {
+                                        entityManager.performAndWaitSave {
+                                            if let conversation = entityManager.conversation(
+                                                forContact: contactForConversation,
+                                                createIfNotExisting: true,
+                                                setLastUpdate: false
+                                            ) {
+
+                                                if let lastUpdate = bContact.lastUpdate {
+                                                    conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
+                                                }
+
+                                                if let isPrivate = bContact.private, isPrivate {
+                                                    conversation.conversationCategory = .private
                                                 }
                                             }
                                         }
@@ -935,6 +953,10 @@ import ThreemaFramework
                         entityManager.performSyncBlockAndSafe {
                             group.conversation.groupName = bGroup.groupname
                             group.conversation.conversationCategory = category
+
+                            if let lastUpdate = bGroup.lastUpdate {
+                                group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
+                            }
                         }
 
                         // Sync only group is active

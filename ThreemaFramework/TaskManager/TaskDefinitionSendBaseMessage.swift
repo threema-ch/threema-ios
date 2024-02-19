@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 @objc class TaskDefinitionSendBaseMessage: TaskDefinitionSendMessage {
     override func create(
@@ -50,7 +51,17 @@ import Foundation
     private enum CodingKeys: String, CodingKey {
         case messageID, messageType
     }
-
+    
+    /// Create send base message task
+    ///
+    /// For group messages this will always send the message to all group members.
+    ///
+    /// - Parameters:
+    ///   - messageID: ID of message to send
+    ///   - receiverIdentity: Receiver identity string for 1:1 conversations, `nil` otherwise
+    ///   - group: Group if the message belongs to a group, `nil` otherwise
+    ///   - sendContactProfilePicture: Send contact profile picture if needed?
+    @available(*, deprecated, message: "Use the specific initializers for 1:1 or group conversations")
     @objc init(
         messageID: Data,
         receiverIdentity: String?,
@@ -58,11 +69,47 @@ import Foundation
         sendContactProfilePicture: Bool
     ) {
         self.messageID = messageID
+        
         super.init(
             receiverIdentity: receiverIdentity,
             group: group,
             sendContactProfilePicture: sendContactProfilePicture
         )
+    }
+    
+    /// Create send base message task for 1:1 message
+    /// - Parameters:
+    ///   - messageID: ID of message to send
+    ///   - receiverIdentity: Receiver identity string for 1:1 conversations
+    ///   - sendContactProfilePicture: Send contact profile picture if needed?
+    @objc init(
+        messageID: Data,
+        receiverIdentity: String,
+        sendContactProfilePicture: Bool
+    ) {
+        self.messageID = messageID
+        
+        super.init(
+            receiverIdentity: receiverIdentity,
+            group: nil,
+            sendContactProfilePicture: sendContactProfilePicture
+        )
+    }
+    
+    /// Create send base message task for group message
+    /// - Parameters:
+    ///   - messageID: ID of message to send
+    ///   - group: Group the message belongs to
+    ///   - groupReceivers: Group members that should receive the message
+    ///   - sendContactProfilePicture: Send contact profile picture if needed?
+    init(
+        messageID: Data,
+        group: Group,
+        receivers: [ThreemaIdentity],
+        sendContactProfilePicture: Bool
+    ) {
+        self.messageID = messageID
+        super.init(group: group, groupReceivers: receivers, sendContactProfilePicture: sendContactProfilePicture)
     }
 
     required init(from decoder: Decoder) throws {

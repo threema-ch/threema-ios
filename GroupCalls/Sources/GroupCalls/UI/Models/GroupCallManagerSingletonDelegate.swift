@@ -42,4 +42,9 @@ public protocol GroupCallManagerSingletonDelegate: AnyObject {
         groupModel: GroupCallsThreemaGroupModel,
         senderThreemaID: ThreemaIdentity
     )
+    
+    /// Shows an alert that the group call is currently full
+    /// - Parameter maxParticipants: Optional maximal participant count
+    /// - Parameter onOK: Block to be executed when `OK` is pressed
+    nonisolated func showGroupCallFullAlert(maxParticipants: Int?, onOK: @escaping () -> Void)
 }

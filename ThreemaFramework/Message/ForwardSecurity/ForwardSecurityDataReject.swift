@@ -19,30 +19,43 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 class ForwardSecurityDataReject: ForwardSecurityData {
-    let rejectedMessageID: Data
+    let messageID: Data
+    let groupIdentity: GroupIdentity?
     let cause: CspE2eFs_Reject.Cause
-    
-    init(sessionID: DHSessionID, rejectedMessageID: Data, cause: CspE2eFs_Reject.Cause) throws {
-        if rejectedMessageID.count != ThreemaProtocol.messageIDLength {
+        
+    init(
+        sessionID: DHSessionID,
+        messageID: Data,
+        groupIdentity: GroupIdentity?,
+        cause: CspE2eFs_Reject.Cause
+    ) throws {
+        if messageID.count != ThreemaProtocol.messageIDLength {
             throw ForwardSecurityError.invalidMessageIDLength
         }
-        self.rejectedMessageID = rejectedMessageID
+            
+        self.messageID = messageID
+        self.groupIdentity = groupIdentity
         self.cause = cause
+        
         super.init(sessionID: sessionID)
     }
     
     override func toProtobuf() throws -> Data {
-        var pb = CspE2eFs_Envelope()
-        pb.sessionID = sessionID.value
-        var pbReject = CspE2eFs_Reject()
-        pbReject.messageID = rejectedMessageID.withUnsafeBytes {
-            $0.load(as: UInt64.self)
+        let envelope = try CspE2eFs_Envelope.with {
+            $0.sessionID = sessionID.value
+            $0.reject = try CspE2eFs_Reject.with {
+                $0.messageID = try messageID.littleEndian()
+                if let groupIdentity {
+                    $0.groupIdentity = groupIdentity.asCommonGroupIdentity
+                }
+                $0.cause = cause
+            }
         }
-        pbReject.cause = cause
-        pb.content = CspE2eFs_Envelope.OneOf_Content.reject(pbReject)
-        return try pb.serializedData()
+        
+        return try envelope.serializedData()
     }
 }

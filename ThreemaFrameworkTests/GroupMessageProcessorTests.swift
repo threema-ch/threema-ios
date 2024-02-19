@@ -595,7 +595,7 @@ class GroupMessageProcessorTests: XCTestCase {
         }
     }
 
-    func testHandleMessageGroupExistsIamCreatorLeftTheGroup() throws {
+    func testHandleMessageGroupExistsILeftTheGroup() throws {
         let expectedMember01 = "MEMBER01"
         let expectedMember02 = "MEMBER02"
         let expectedMember03 = "MEMBER03"
@@ -604,29 +604,37 @@ class GroupMessageProcessorTests: XCTestCase {
             databasePreparer.createContact(identity: member)
         }
 
+        let myIdentityStoreMock = MyIdentityStoreMock()
+
         // 0: test description
         // test config:
         // 1: message
         // 2: sender
+        // 3: group creator
+        // 4: group members before leaving
         // expected results:
-        // 3: dissolve group
-        // 4: add to pending messages
+        // 4: dissolve group
+        // 5: sent leave group
         let tests = [
-            [
-                "Message won't processed, because i'm creator but left the group",
-                GroupTextMessage(),
-                expectedMember01,
-                false,
-                false,
-            ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
+            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp.struct/index.html#n:e2e:receiving
             // Section: 3.
             [
-                "Dissolve group to sender, because i'm creator but left the group",
-                GroupRequestSyncMessage(),
-                expectedMember02,
+                "Dissolve group to sender, because I'm creator but left the group",
+                GroupTextMessage(),
+                expectedMember01,
+                myIdentityStoreMock.identity,
+                [expectedMember01, expectedMember02, expectedMember03],
                 true,
                 false,
+            ],
+            [
+                "Send leave group to sender, because I left the group",
+                GroupRequestSyncMessage(),
+                expectedMember02,
+                expectedMember01,
+                [myIdentityStoreMock.identity, expectedMember02, expectedMember03],
+                false,
+                true,
             ],
         ]
 
@@ -635,7 +643,6 @@ class GroupMessageProcessorTests: XCTestCase {
         for test in tests {
             let testDescription = test[0] as! String
 
-            let myIdentityStoreMock = MyIdentityStoreMock()
             let userSettingsMock = UserSettingsMock()
             let taskManagerMock = TaskManagerMock()
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
@@ -651,13 +658,13 @@ class GroupMessageProcessorTests: XCTestCase {
 
             let expectedGroupIdentity = GroupIdentity(
                 id: MockData.generateGroupID(),
-                creator: ThreemaIdentity(myIdentityStoreMock.identity)
+                creator: ThreemaIdentity(test[3] as! String)
             )
 
             let group = try XCTUnwrap(createOrUpdateDBWait(
                 groupManager: groupManager,
                 groupIdentity: expectedGroupIdentity,
-                members: Set<String>([expectedMember01, expectedMember02, expectedMember03])
+                members: Set<String>(test[4] as! [String])
             ))
 
             XCTAssertEqual(.active, group.state)
@@ -665,7 +672,7 @@ class GroupMessageProcessorTests: XCTestCase {
             groupManager.leaveDB(
                 groupID: expectedGroupIdentity.id,
                 creator: expectedGroupIdentity.creator.string,
-                member: expectedGroupIdentity.creator.string,
+                member: myIdentityStoreMock.identity,
                 systemMessageDate: Date()
             )
 
@@ -708,12 +715,18 @@ class GroupMessageProcessorTests: XCTestCase {
             XCTAssertTrue(try XCTUnwrap(resultDidHandleMessage), testDescription)
             XCTAssertEqual(0, userSettingsMock.unknownGroupAlertList.count, testDescription)
             XCTAssertEqual(
-                test[3] as! Bool,
+                test[5] as! Bool,
                 (taskManagerMock.addedTasks.first as? TaskDefinitionGroupDissolve)?
                     .toMembers.contains(where: { $0 == (test[2] as! String) }) ?? false,
                 testDescription
             )
-            XCTAssertEqual(test[4] as! Bool, groupMessageProcessor.addToPendingMessages, testDescription)
+            XCTAssertEqual(
+                test[6] as! Bool,
+                (taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupLeaveMessage)?
+                    .toMembers.contains(where: { $0 == (test[2] as! String) }) ?? false,
+                testDescription
+            )
+            XCTAssertFalse(groupMessageProcessor.addToPendingMessages, testDescription)
         }
     }
 

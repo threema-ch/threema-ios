@@ -485,7 +485,7 @@ extension WCSessionManager {
     }
         
     private func canConnectToWebClient(completionHandler: @escaping ((_ isValid: Bool) -> Void)) {
-        if UserSettings.shared().threemaWeb {
+        if UserSettings.shared().threemaWeb, !MDMSetup(setup: false).disableWeb() {
             if LicenseStore.shared().isValid() == true {
                 completionHandler(true)
             }

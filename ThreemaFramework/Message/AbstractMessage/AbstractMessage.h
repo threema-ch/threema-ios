@@ -60,7 +60,12 @@
 /* Methods to be overridden by subclasses: */
 - (uint8_t)type;
 - (BOOL)flagShouldPush;
+
+/// No server queuing. Use this for messages that can be
+/// discarded by the chat server in case the receiver is not connected
+/// to the chat server, e.g. the _typing_ indicator.
 - (BOOL)flagDontQueue;
+
 - (BOOL)flagDontAck;
 - (BOOL)flagGroupMessage;
 - (BOOL)flagImmediateDeliveryRequired;

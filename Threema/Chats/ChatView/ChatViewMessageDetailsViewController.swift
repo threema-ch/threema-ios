@@ -161,7 +161,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 return cell
                 
             case .coreDataDebugInfo:
-                let cell: ChatViewMessageDetailsDebugInfoTableViewCell = tableView.dequeueCell(for: indexPath)
+                let cell: DebugInfoTableViewCell = tableView.dequeueCell(for: indexPath)
                 cell.debugText = message.debugDescription
                 return cell
             }
@@ -228,7 +228,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             forCellReuseIdentifier: ChatViewMessageDetailsViewController.contentConfigurationCellIdentifier
         )
         tableView.registerCell(ChatViewMessageDetailsGroupReactionTableViewCell.self)
-        tableView.registerCell(ChatViewMessageDetailsDebugInfoTableViewCell.self)
+        tableView.registerCell(DebugInfoTableViewCell.self)
                 
         tableView.delegate = self
     }
@@ -428,7 +428,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         snapshot.appendSections([.messageStates])
         // Show nothing for SystemMessages
-        if message.isKind(of: SystemMessage.self) {
+        if message is SystemMessage {
             // Empty
         }
         // Don't show delivered and read state for outgoing group messages as this is not set
@@ -446,7 +446,16 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         }
         
         snapshot.appendSections([.metadata])
-        if !(message.conversation?.isGroup() ?? true) {
+        // Show PFS mode for all messages except non-call system messages
+        if let systemMessage = message as? SystemMessage {
+            switch systemMessage.systemMessageType {
+            case .callMessage:
+                snapshot.appendItems([.perfectForwardSecrecy])
+            case .systemMessage, .workConsumerInfo:
+                break
+            }
+        }
+        else {
             snapshot.appendItems([.perfectForwardSecrecy])
         }
         snapshot.appendItems([.messageID])

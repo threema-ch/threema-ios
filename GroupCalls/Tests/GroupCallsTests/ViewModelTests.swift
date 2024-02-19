@@ -77,7 +77,6 @@ final class GroupCallViewModelTests: XCTestCase {
         let groupCallDescription = try GroupCallBaseState(
             group: groupModel,
             startedAt: Date(),
-            maxParticipants: 100,
             dependencies: dependencies,
             groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: "")
         )

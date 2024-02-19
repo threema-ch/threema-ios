@@ -23,7 +23,7 @@ import Foundation
 import PromiseKit
 
 /// Process and ack incoming message from chat server, is multi device
-/// enbaled the message will be reflect to mediator server.
+/// enabled the message will be reflect to mediator server.
 final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionReceiveMessage, task.message != nil else {

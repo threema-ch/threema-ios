@@ -32,71 +32,71 @@ public class BrandingUtils: NSObject {
     static let customLogoHeight: CGFloat = 28.0
     static let totalVerticalSafeArea: CGFloat = 32
     
-    // Helpers
-    static let helperImageView = UIImageView()
-
-    @objc public static func updateTitleLogo(of navItem: UINavigationItem?, in navController: UINavigationController?) {
+    private enum LogoType {
+        case `default`(UIImage?)
+        case custom(UIImage?)
         
+        var height: CGFloat {
+            switch self {
+            case .default:
+                return BrandingUtils.defaultLogoHeight
+            case .custom:
+                return BrandingUtils.customLogoHeight
+            }
+        }
+        
+        var image: UIImage? {
+            switch self {
+            case let .default(image):
+                return image
+            case let .custom(image):
+                return image
+            }
+        }
+    }
+    
+    @objc public static func updateTitleLogo(in navController: UINavigationController?) {
+        guard let navController, let navItem = navController.topViewController?.navigationItem else {
+            return
+        }
+        
+        updateTitleLogo(of: navItem, in: navController)
+    }
+    
+    @objc public static func updateTitleLogo(of navItem: UINavigationItem?, in navController: UINavigationController?) {
         guard let navItem,
               let navController else {
             return
         }
         
-        if LicenseStore.requiresLicenseKey(), let logoURLString = Colors.licenseLogoURL {
-            // Not consumer and has logoURL
-            guard let logoURL = URL(string: logoURLString) else {
-                DDLogError("Generating logo URL failed")
-                return
-            }
+        Task {
+            let logo = await self.logo()
             
-            // **Info**: The helper image view is used in a hackie fashion, just for calling the set image function, but is else never used. We use the image returned in the closure to then add it to the titleView.
-            
-            // Load Image and assign it
-            helperImageView.sd_setImage(with: logoURL) { image, error, _, _ in
-                if let error {
-                    DDLogError("Loading logo failed: \(error)")
-                    return
-                }
-                
-                self.setLogo(of: navItem, in: navController, with: image, defaultLogo: false)
+            await MainActor.run {
+                setLogo(logo, of: navItem, navigationController: navController)
             }
-        }
-        else {
-            // Consumer or no LogoURL
-            setLogo(of: navItem, in: navController, with: Colors.threemaLogo, defaultLogo: true)
         }
     }
     
     private static func setLogo(
-        of navItem: UINavigationItem,
-        in navController: UINavigationController,
-        with logo: UIImage?,
-        defaultLogo: Bool
+        _ logoType: LogoType,
+        of navigationItem: UINavigationItem,
+        navigationController: UINavigationController
     ) {
-        
-        guard let logo else {
+        guard let logo = logoType.image else {
             return
         }
-    
+        
         // Size
-        var height: CGFloat = defaultLogo ? defaultLogoHeight : customLogoHeight
+        var height: CGFloat = logoType.height
         var hasCorrectSize = false
-        var totalFreeWidth: CGFloat = navController.navigationBar.frame.width
+        var totalFreeWidth: CGFloat = navigationController.navigationBar.frame.width
         var frame = CGRect.zero
         
         // Subtract NavbarItems
-        if let leftItems = navItem.leftBarButtonItems {
-            for item in leftItems {
-                totalFreeWidth -= item.width
-            }
-        }
-        
-        if let rightItems = navItem.rightBarButtonItems {
-            for item in rightItems {
-                totalFreeWidth -= item.width
-            }
-        }
-        
+        navigationItem.leftBarButtonItems.map { totalFreeWidth -= $0.reduce(0) { $0 + $1.width } }
+        navigationItem.rightBarButtonItems.map { totalFreeWidth -= $0.reduce(0) { $0 + $1.width } }
+    
         // Scale
         while !hasCorrectSize, height > 0 {
             let width: CGFloat = height * logo.size.width / logo.size.height
@@ -106,7 +106,7 @@ public class BrandingUtils: NSObject {
                 frame = CGRect(x: 0.0, y: 0.0, width: width, height: height)
             }
             else {
-                height = height - 2
+                height -= 2
             }
         }
 
@@ -121,7 +121,27 @@ public class BrandingUtils: NSObject {
         
         // Add to NavBar
         DispatchQueue.main.async {
-            navItem.titleView = wrapView
+            navigationItem.titleView = wrapView
+        }
+    }
+    
+    private static func logo() async -> LogoType {
+        await withCheckedContinuation { continuation in
+            if LicenseStore.requiresLicenseKey(), let logoURLString = Colors.licenseLogoURL {
+                // Not consumer and has logoURL
+                guard let logoURL = URL(string: logoURLString) else {
+                    DDLogError("Generating logo URL failed")
+                    return
+                }
+                
+                SDWebImageManager.shared.loadImage(with: logoURL, progress: nil) { image, _, error, _, _, _ in
+                    error.map { DDLogError("Loading logo failed: \($0)") }
+                    continuation.resume(returning: .custom(image))
+                }
+            }
+            else {
+                continuation.resume(returning: .default(Colors.threemaLogo))
+            }
         }
     }
 }

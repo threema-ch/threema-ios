@@ -89,23 +89,26 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
 
         let task = TaskDefinitionSettingsSync(syncSettings: syncSettings)
 
-        let expec = expectation(description: "TaskDefinitionSettingsSync")
-        var expecError: Error?
+        let expect = expectation(description: "TaskDefinitionSettingsSync")
+        var expectError: Error?
 
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 DDLog.flushLog()
-                expec.fulfill()
+                expect.fulfill()
             }
             .catch { error in
-                expecError = error
-                expec.fulfill()
+                expectError = error
+                expect.fulfill()
             }
 
         waitForExpectations(timeout: 6) { error in
             XCTAssertNil(error)
-            if let expectedError = try? XCTUnwrap(expecError as? TaskExecutionError) {
-                XCTAssertEqual("\(expectedError)", "\(TaskExecutionError.reflectMessageFailed(message: "type: lock"))")
+            if let expectedError = try? XCTUnwrap(expectError) {
+                XCTAssertEqual(
+                    "\(expectedError)",
+                    "reflectMessageFailed(message: Optional(\"message type: lock / Error Domain=ThreemaErrorDomain Code=675 \\\"Not logged in\\\" UserInfo={NSLocalizedDescription=Not logged in}\"))"
+                )
             }
             else {
                 XCTFail("Exception should be thrown")
@@ -231,9 +234,12 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                         }
                         expectedMediatorLockState = lockState
                     }
-                    return true
+                    return nil
                 }
-                return false
+                return ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError
             }
 
             let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")

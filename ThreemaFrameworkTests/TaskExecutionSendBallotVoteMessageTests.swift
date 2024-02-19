@@ -67,9 +67,12 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: Date()]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
         let groupManagerMock = GroupManagerMock()
@@ -180,9 +183,12 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: Date()]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         
         let frameworkInjectorMock = BusinessInjectorMock(
@@ -286,9 +292,12 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: Date()]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
         let groupManagerMock = GroupManagerMock()

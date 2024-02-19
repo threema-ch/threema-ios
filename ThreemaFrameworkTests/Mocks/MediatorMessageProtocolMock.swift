@@ -47,11 +47,18 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         )
     }
 
-    private func nextReturnValue() -> (reflectID: Data?, reflectMessage: Data?) {
-        guard let reflectData = returnValues.first else {
+    private func nextReturnValue(for reflectID: Data? = nil) -> (reflectID: Data?, reflectMessage: Data?) {
+        guard let reflectID else {
+            guard let reflectData = returnValues.first else {
+                return (nil, nil)
+            }
+            returnValues.remove(at: 0)
+            return (reflectData.id, reflectData.message)
+        }
+
+        guard let reflectData = returnValues.first(where: { $0.id == reflectID }) else {
             return (nil, nil)
         }
-        returnValues.remove(at: 0)
         return (reflectData.id, reflectData.message)
     }
 
@@ -87,7 +94,7 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
     }
 
     func encodeReflectedAck(reflectID: Data) -> Data {
-        nextReturnValue().reflectMessage!
+        nextReturnValue(for: reflectID).reflectMessage!
     }
 
     func decodeDeviceInfo(message: Data) -> D2d_DeviceInfo? {

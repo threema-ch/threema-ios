@@ -43,6 +43,7 @@ struct QuickActionRow: View {
         let action: () -> Void
         let icon: String
         let title: String
+        let buttonAccessibilityIdentifier: String
         let accessibilityIdentifier: String
     }
     
@@ -70,11 +71,13 @@ struct QuickActionRow: View {
                     .foregroundStyle(.tint)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }).opacity(isPressed ? 0.3 : 1)
-                .buttonStyle(PlainButtonStyle())
-                .onLongPressGesture(minimumDuration: .infinity, pressing: { isPressing in
-                    isPressed = isPressing
-                }, perform: { })
+            })
+            .accessibilityIdentifier(model.buttonAccessibilityIdentifier)
+            .opacity(isPressed ? 0.3 : 1)
+            .buttonStyle(PlainButtonStyle())
+            .onLongPressGesture(minimumDuration: .infinity, pressing: { isPressing in
+                isPressed = isPressing
+            }, perform: { })
         }
     }
 }
@@ -89,6 +92,7 @@ struct QuickActionRow_Previews: PreviewProvider {
                     },
                     icon: "qrcode",
                     title: "qrcode",
+                    buttonAccessibilityIdentifier: "qrcode-button",
                     accessibilityIdentifier: "qrcode"
                 ),
                 .init(
@@ -97,6 +101,7 @@ struct QuickActionRow_Previews: PreviewProvider {
                     },
                     icon: "square.and.arrow.up.fill",
                     title: "Share ID",
+                    buttonAccessibilityIdentifier: "shareID-button",
                     accessibilityIdentifier: "shareID"
                 ),
             ]

@@ -27,9 +27,10 @@
 #import "Old_FileMessageSender.h"
 #import <Contacts/Contacts.h>
 #import <ContactsUI/ContactsUI.h>
-#import <CocoaLumberjack/CocoaLumberjack.h>
 #import "UserSettings.h"
 #import "Threema-Swift.h"
+
+@import CocoaLumberjack;
 
 @interface DocumentPicker () <UIDocumentPickerDelegate, UIDocumentMenuDelegate, UploadProgressDelegate, CNContactPickerDelegate>
 
@@ -131,8 +132,12 @@ static DocumentPicker *pickerStrongReference;
             item.caption = captionTextField.text;
         }
         
-        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-        [manager createMessageAndSyncBlobsFor:item in:_conversation correlationID:nil webRequestID:nil completion:nil];
+        if (_conversation != nil) {
+            MessageSender *messageSender = [[MessageSender alloc] init];
+            [messageSender sendBlobMessageFor:item in:_conversation correlationID:nil webRequestID:nil completion:nil];
+        } else {
+            [NotificationPresenterWrapper.shared presentSendingError];
+        }
     }];
     [alertController addAction:defaultAction];
     

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import Combine
 import Foundation
 import MBProgressHUD
 import ThreemaFramework
@@ -25,6 +26,7 @@ import ThreemaFramework
 final class ProfileViewModel: ObservableObject {
     
     @Published var shouldNavigateToSafeSetup = false
+    @Published var navigator = Navigator()
     
     @Published private(set) var nickname: String
     @Published private(set) var threemaID: String
@@ -41,12 +43,10 @@ final class ProfileViewModel: ObservableObject {
     private let safeConfigManager: SafeConfigManager
     private let serverAPIConnector: ServerAPIConnector
     
-    var titleUpdateDelegate: ThreemaTitleUpdatable?
-    
     private(set) var mdmSetup = MDMSetup(setup: false)
     
     private lazy var safeManager: SafeManager = .init(
-        safeConfigManagerAsObject: self.safeConfigManager,
+        safeConfigManager: self.safeConfigManager,
         safeStore: self.safeStore,
         safeApiService: SafeApiService()
     )
@@ -55,8 +55,8 @@ final class ProfileViewModel: ObservableObject {
         .init(
             updateRevocationDetail: loadRevocationDetail,
             didDismissModal: load
-        ) { [unowned self] password in
-            myIdentityStore.backupIdentity(withPassword: password)
+        ) { [weak self] password in
+            self?.myIdentityStore.backupIdentity(withPassword: password)
         }
     
     var hasProfile: Bool {
@@ -96,8 +96,7 @@ final class ProfileViewModel: ObservableObject {
         serverConnector: ServerConnectorProtocol,
         myIdentityStore: MyIdentityStore,
         safeConfigManager: SafeConfigManager,
-        serverAPIConnector: ServerAPIConnector,
-        titleUpdateDelegate: ThreemaTitleUpdatable? = nil
+        serverAPIConnector: ServerAPIConnector
     ) {
         self.serverConnector = serverConnector
         self.myIdentityStore = myIdentityStore
@@ -116,14 +115,7 @@ final class ProfileViewModel: ObservableObject {
         self.profileImage = UIImage()
         self.revocationDetail = "…"
         self.isThreemaSafeActivated = false
-        
-        self.titleUpdateDelegate = titleUpdateDelegate
-        
-        registerNotifications()
-        
-        DispatchQueue.main.async {
-            self.load()
-        }
+        load()
     }
     
     public func share(_ items: [Any]?) {
@@ -147,21 +139,24 @@ final class ProfileViewModel: ObservableObject {
         }
     }
     
-    @objc func load() {
-        loadQRCode()
-        loadNickname()
-        loadLinkedEmail()
-        loadLinkedMobile()
-        loadProfilePicture()
-        loadRevocationDetail()
-        
-        isThreemaSafeActivated = safeManager.isActivated
+    func load() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                return
+            }
+            self.loadQRCode()
+            self.loadNickname()
+            self.loadLinkedEmail()
+            self.loadLinkedMobile()
+            self.loadProfilePicture()
+            self.loadRevocationDetail()
+            
+            self.isThreemaSafeActivated = self.safeManager.isActivated
+        }
     }
     
-    @objc private func incomingSync() {
-        DispatchQueue.main.async {
-            self.load()
-        }
+    func incomingSync() {
+        load()
         
         NotificationPresenterWrapper.shared.present(
             type: .init(
@@ -170,10 +165,6 @@ final class ProfileViewModel: ObservableObject {
             ),
             subtitle: BundleUtil.localizedString(forKey: "incoming_profile_sync_message")
         )
-    }
-    
-    @objc private func showSafeSetup() {
-        shouldNavigateToSafeSetup = true
     }
     
     private func loadLinkedEmail() {
@@ -278,37 +269,6 @@ final class ProfileViewModel: ObservableObject {
         
         updateDetail()
     }
-    
-    private func registerNotifications() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(load),
-            name: .identityLinkedWithMobileNo,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(incomingSync),
-            name: .incomingProfileSync,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(load),
-            name: UIApplication.willEnterForegroundNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(showSafeSetup),
-            name: .navigateSafeSetup,
-            object: nil
-        )
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
 }
 
 // MARK: - ProfileViewModel.DelegateHandler
@@ -318,7 +278,7 @@ extension ProfileViewModel {
         
         fileprivate let revocationHandler = RevocationKeyHandler()
         private var updateRevocationDetail: () -> Void
-        private var backupIdentity: (String) -> (String)
+        private var backupIdentity: (String) -> (String?)
         private var didDismissModal: () -> Void
         
         lazy var revocationKey: PasswordNavigationDelegate = .init(
@@ -335,7 +295,7 @@ extension ProfileViewModel {
         init(
             updateRevocationDetail: @escaping () -> Void,
             didDismissModal: @escaping () -> Void,
-            backupIdentity: @escaping (String) -> String
+            backupIdentity: @escaping (String) -> String?
         ) {
             self.updateRevocationDetail = updateRevocationDetail
             self.backupIdentity = backupIdentity

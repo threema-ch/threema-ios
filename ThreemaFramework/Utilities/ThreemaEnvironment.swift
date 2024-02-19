@@ -51,17 +51,17 @@ import ThreemaProtocols
         return .appStore
     }
 
-    @objc public static var groupCalls: Bool {
-        // Available for all builds in all flavors, kept to disable it again if everything goes wrong
-        true
-    }
-
     #if DEBUG
         // This exists purely for unit tests.
         static var fsVersion: CspE2eFs_VersionRange = {
             var range = CspE2eFs_VersionRange()
             range.min = UInt32(CspE2eFs_Version.v10.rawValue)
-            range.max = UInt32(CspE2eFs_Version.v11.rawValue)
+            if fsEnableV12 {
+                range.max = UInt32(CspE2eFs_Version.v12.rawValue)
+            }
+            else {
+                range.max = UInt32(CspE2eFs_Version.v11.rawValue)
+            }
 
             return range
         }()
@@ -69,7 +69,12 @@ import ThreemaProtocols
         static var fsVersion: CspE2eFs_VersionRange {
             var range = CspE2eFs_VersionRange()
             range.min = UInt32(CspE2eFs_Version.v10.rawValue)
-            range.max = UInt32(CspE2eFs_Version.v11.rawValue)
+            if fsEnableV12 {
+                range.max = UInt32(CspE2eFs_Version.v12.rawValue)
+            }
+            else {
+                range.max = UInt32(CspE2eFs_Version.v11.rawValue)
+            }
         
             return range
         }
@@ -82,6 +87,19 @@ import ThreemaProtocols
             if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
                 return true
             }
+            return false
+        #endif
+    }
+    
+    @objc static var fsEnableV12: Bool {
+        #if DEBUG
+            // Use setting for debug builds
+            return UserSettings.shared().enableFSv12ForTesting
+        #else
+            if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+                return true
+            }
+        
             return false
         #endif
     }

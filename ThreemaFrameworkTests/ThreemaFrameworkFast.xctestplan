@@ -1,0 +1,34 @@
+{
+  "configurations" : [
+    {
+      "id" : "D5872C3F-7B9B-4D40-8521-73A1528A9A2B",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "skippedTests" : [
+        "ImageURLSenderItemCreatorTest\/testCreateSenderFromData()",
+        "ImageURLSenderItemCreatorTest\/testCreateSenderFromURL()",
+        "TaskDefinitionTests\/testTaskDefinitionUpdateContactSyncEncodeDecode()",
+        "TaskExecutionProfileSyncTests\/testAlreadyLocked()",
+        "TaskExecutionSettingsSyncTests\/testAlreadyLocked()",
+        "TaskExecutionTransactionTests\/testLockTimeout()",
+        "URLSenderItemCreatorTests\/testCreateSenderFromURL()"
+      ],
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "0A677B8A1C6250CA0019B361",
+        "name" : "ThreemaFrameworkTests"
+      }
+    }
+  ],
+  "version" : 1
+}

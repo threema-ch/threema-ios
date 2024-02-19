@@ -20,16 +20,13 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
-
-protocol ForwardSecurityMessageSenderProtocol {
-    func send(message: AbstractMessage)
-}
 
 @objc class ForwardSecurityMessageProcessor: NSObject {
     private let dhSessionStore: DHSessionStoreProtocol
     private let identityStore: MyIdentityStoreProtocol
-    private let messageSender: ForwardSecurityMessageSenderProtocol
+    private let messageSender: MessageSenderProtocol
     private let localSupportedVersionRange: CspE2eFs_VersionRange
     
     struct Listener {
@@ -41,7 +38,7 @@ protocol ForwardSecurityMessageSenderProtocol {
     init(
         dhSessionStore: DHSessionStoreProtocol,
         identityStore: MyIdentityStoreProtocol,
-        messageSender: ForwardSecurityMessageSenderProtocol,
+        messageSender: MessageSenderProtocol,
         localSupportedVersionRange: CspE2eFs_VersionRange = ThreemaEnvironment.fsVersion
     ) {
         self.dhSessionStore = dhSessionStore
@@ -104,7 +101,8 @@ protocol ForwardSecurityMessageSenderProtocol {
                 
                 let reject = try ForwardSecurityDataReject(
                     sessionID: msg.sessionID,
-                    rejectedMessageID: envelopeMessage.messageID,
+                    messageID: envelopeMessage.messageID,
+                    groupIdentity: msg.groupIdentity,
                     cause: .disabledByLocal
                 )
                 sendMessageToContact(contact: sender, message: reject)
@@ -144,13 +142,13 @@ protocol ForwardSecurityMessageSenderProtocol {
             peerIdentity: contact.identity
         ) else {
             DDLogNotice(
-                "[ForwardSecurity] \(minimumRequiredForwardSecurityVersion.rawValue <= CspE2eFs_Version.v10.rawValue ? "Send" : "Don't send") message \(String(describing: message.type)) with minimum required version \(minimumRequiredForwardSecurityVersion) in session with assumed version \(CspE2eFs_Version.v10.rawValue)"
+                "[ForwardSecurity] \(minimumRequiredForwardSecurityVersion.rawValue <= CspE2eFs_Version.v10.rawValue ? "Send" : "Don't send") message \(String(describing: message.type)) with minimum required version \(minimumRequiredForwardSecurityVersion) in session with assumed version \(CspE2eFs_Version.v10)"
             )
             return minimumRequiredForwardSecurityVersion.rawValue <= CspE2eFs_Version.v10.rawValue
         }
         
         DDLogNotice(
-            "[ForwardSecurity] \(minimumRequiredForwardSecurityVersion.rawValue <= session.outgoingAppliedVersion.rawValue ? "Send" : "Don't send") message \(String(describing: message.type)) with minimum required version \(minimumRequiredForwardSecurityVersion) in session with version \(session.outgoingAppliedVersion.rawValue)"
+            "[ForwardSecurity] \(minimumRequiredForwardSecurityVersion.rawValue <= session.outgoingAppliedVersion.rawValue ? "Send" : "Don't send") message \(String(describing: message.type)) with minimum required version \(minimumRequiredForwardSecurityVersion) in session with version \(session.outgoingAppliedVersion)"
         )
         return minimumRequiredForwardSecurityVersion.rawValue <= session.outgoingAppliedVersion.rawValue
     }
@@ -162,12 +160,11 @@ protocol ForwardSecurityMessageSenderProtocol {
     func makeMessage(
         contact: ForwardSecurityContact,
         innerMessage: AbstractMessage
-    ) throws
-        -> (
-            auxMessage: ForwardSecurityEnvelopeMessage?,
-            message: ForwardSecurityEnvelopeMessage,
-            sendAuxFailure: () -> Void
-        ) {
+    ) throws -> (
+        auxMessage: ForwardSecurityEnvelopeMessage?,
+        message: ForwardSecurityEnvelopeMessage,
+        sendAuxFailure: () -> Void
+    ) {
         var initEnvelope: ForwardSecurityEnvelopeMessage?
         
         // Check if we already have a session with this contact
@@ -307,13 +304,30 @@ protocol ForwardSecurityMessageSenderProtocol {
         // A new key is used for each message, so the nonce can be zero
         let nonce = Data(count: Int(kNaClCryptoNonceSize))
         let ciphertext = NaClCrypto.shared().symmetricEncryptData(plaintext, withKey: currentKey, nonce: nonce)!
-            
+        
+        // Load group identity if it is a group message
+        let groupIdentity: GroupIdentity?
+        if let abstractGroupMessage = innerMessage as? AbstractGroupMessage {
+            if let groupID = abstractGroupMessage.groupID,
+               let groupCreatorIdentity = abstractGroupMessage.groupCreator {
+                groupIdentity = GroupIdentity(id: groupID, creator: .init(groupCreatorIdentity))
+            }
+            else {
+                DDLogError("Unable to create group identity from abstract group message")
+                throw ForwardSecurityError.missingGroupIdentity
+            }
+        }
+        else {
+            groupIdentity = nil
+        }
+        
         let dataMessage = ForwardSecurityDataMessage(
             sessionID: session.id,
             type: dhType,
+            counter: counter,
+            groupIdentity: groupIdentity,
             offeredVersion: session.outgoingOfferedVersion,
             appliedVersion: appliedVersion,
-            counter: counter,
             message: ciphertext
         )
         let envelope = ForwardSecurityEnvelopeMessage(data: dataMessage)
@@ -554,7 +568,8 @@ protocol ForwardSecurityMessageSenderProtocol {
             sessionID: reject.sessionID,
             contact: sender,
             session: nil,
-            rejectedMessageID: reject.rejectedMessageID,
+            rejectedMessageID: reject.messageID,
+            groupIdentity: reject.groupIdentity,
             rejectCause: reject.cause,
             hasForwardSecuritySupport: hasForwardSecuritySupport
         ) }
@@ -579,7 +594,8 @@ protocol ForwardSecurityMessageSenderProtocol {
             // Send reject message
             let reject = try ForwardSecurityDataReject(
                 sessionID: message.sessionID,
-                rejectedMessageID: envelopeMessage.messageID,
+                messageID: envelopeMessage.messageID,
+                groupIdentity: message.groupIdentity,
                 cause: .unknownSession
             )
             sendMessageToContact(contact: sender, message: reject)
@@ -600,7 +616,8 @@ protocol ForwardSecurityMessageSenderProtocol {
             // Message rejected by session validator, `Reject` and terminate the session
             let reject = try ForwardSecurityDataReject(
                 sessionID: session.id,
-                rejectedMessageID: envelopeMessage.messageID,
+                messageID: envelopeMessage.messageID,
+                groupIdentity: message.groupIdentity,
                 cause: .stateMismatch
             )
             sendMessageToContact(contact: sender, message: reject)
@@ -652,7 +669,8 @@ protocol ForwardSecurityMessageSenderProtocol {
             
             let reject = try ForwardSecurityDataReject(
                 sessionID: message.sessionID,
-                rejectedMessageID: envelopeMessage.messageID,
+                messageID: envelopeMessage.messageID,
+                groupIdentity: message.groupIdentity,
                 cause: .stateMismatch
             )
             
@@ -714,7 +732,8 @@ protocol ForwardSecurityMessageSenderProtocol {
             // Send reject message
             let reject = try ForwardSecurityDataReject(
                 sessionID: message.sessionID,
-                rejectedMessageID: envelopeMessage.messageID,
+                messageID: envelopeMessage.messageID,
+                groupIdentity: message.groupIdentity,
                 cause: .stateMismatch
             )
             sendMessageToContact(contact: sender, message: reject)
@@ -787,6 +806,7 @@ protocol ForwardSecurityMessageSenderProtocol {
             for: processedVersion.appliedVersion
         )
         innerMsg?.forwardSecurityMode = mode
+        
         return (innerMsg, session)
     }
     
@@ -912,13 +932,13 @@ protocol ForwardSecurityMessageSenderProtocol {
     private func sendMessageToContact(contact: ForwardSecurityContact, message: ForwardSecurityData) {
         let message = ForwardSecurityEnvelopeMessage(data: message)
         message.toIdentity = contact.identity
-        messageSender.send(message: message)
+        messageSender.sendMessage(abstractMessage: message)
     }
     
     private func sendMessageToContact(identity: String, message: ForwardSecurityData) {
         let message = ForwardSecurityEnvelopeMessage(data: message)
         message.toIdentity = identity
-        messageSender.send(message: message)
+        messageSender.sendMessage(abstractMessage: message)
     }
     
     private func notifyListeners(block: (ForwardSecurityStatusListener) -> Void) {

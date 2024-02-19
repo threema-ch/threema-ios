@@ -38,6 +38,7 @@ extension ProfileView {
                                 action: shareID,
                                 icon: "square.and.arrow.up.fill",
                                 title: "profile_share_id".localized,
+                                buttonAccessibilityIdentifier: "share_id_button",
                                 accessibilityIdentifier: "share_id"
                             )
                         }
@@ -46,6 +47,7 @@ extension ProfileView {
                             action: showQrCode,
                             icon: "qrcode",
                             title: "profile_show_qr_code".localized,
+                            buttonAccessibilityIdentifier: "qr_code_button",
                             accessibilityIdentifier: "qr_code"
                         )
                     }
@@ -76,10 +78,12 @@ extension ProfileView {
             guard let qrCodeUiView else {
                 return
             }
-            qrCodeUiView.frame.size.width = screenWidth
-            qrCodeUiView.frame.size.height = screenHeight
+
+            qrCodeUiView.frame.size.width = currentWindow.view.bounds.width
+            qrCodeUiView.frame.size.height = currentWindow.view.bounds.height
             qrCodeUiView.alpha = 0
             qrCodeUiView.backgroundColor = .clear
+            qrCodeUiView.accessibilityIdentifier = "qr_code"
             currentWindow.view.addSubview(qrCodeUiView)
             
             UIView.animate(withDuration: 0.3) {
@@ -129,26 +133,23 @@ extension ProfileView {
         }
     }
     
-    // MARK: - IsThreemaSaveSection
+    // MARK: - IsThreemaSafeSection
 
-    struct ThreemaSaveSection: View {
+    struct ThreemaSafeSection: View {
         @EnvironmentObject var model: ProfileViewModel
-    
+        
         var body: some View {
             Section {
                 LockedNavigationLink(shouldNavigate: $model.shouldNavigateToSafeSetup, label: {
                     ListItem(
-                        title: "Threema Safe",
+                        title: "safe_setup_backup_title".localized,
                         subTitle: (model.isThreemaSafeActivated ? "On" : "Off").localized
                     )
                 }, destination: {
-                    uiViewController {
-                        viewController("safeSetupViewController")
-                    }
-                    .navigationBarTitleDisplayMode(.inline)
-                    .navigationTitle("Threema Safe")
+                    ThreemaSafeSection.safe
                 })
                 .disabled(model.mdmSetup?.isSafeBackupDisable() ?? false)
+                .accessibilityIdentifier("safe_cell")
             } footer: { footer }
         }
         
@@ -161,6 +162,12 @@ extension ProfileView {
                         : "disabled_by_device_policy"
                 )
             )
+        }
+        
+        static var safe: some View {
+            uiViewController(viewController("safeSetupViewController"))
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationTitle("safe_setup_backup_title".localized)
         }
     }
     
@@ -280,7 +287,7 @@ extension ProfileView {
                 }
                 else {
                     ModalNavigationLink(destination: {
-                        DeleteRevokeInfoView()
+                        DeleteRevokeView()
                     }, label: {
                         label
                     }, onDismiss: model.load, fullscreen: true)

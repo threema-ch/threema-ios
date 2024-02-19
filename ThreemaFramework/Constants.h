@@ -53,7 +53,6 @@
 
 #define kNotificationShowContact @"ThreemaShowContact"
 #define kNotificationDeletedContact @"ThreemaDeletedContact"
-#define kNotificationAddedContact @"ThreemaAddedContact"
 #define kNotificationBlockedContact @"ThreemaBlockedContact"
 
 #define kNotificationBatchDeletedAllConversationMessages @"ThreemaBatchDeletedAllConversationMessages"
@@ -61,6 +60,7 @@
 
 #define kNotificationShowGroup @"ThreemaShowGroup"
 #define kNotificationShowSafeSetup @"ThreemaShowSafeSetup"
+#define kShowNotificationSettings @"ThreemaShowNotificationSettings"
 
 #define kNotificationMessagesCountChanged @"ThreemaUnreadMessagesCountChanged"
 
@@ -165,6 +165,8 @@ static NSString * const kNotificationGroupConversationImageChanged = @"ThreemaGr
 
 static NSString * const kSafeBackupTrigger = @"ThreemaSafeBackupTrigger";
 static NSString * const kSafeBackupUIRefresh = @"ThreemaSafeBackupUIRefresh";
+static NSString * const kSafeBackupPasswordCheck = @"ThreemaSafeBackupPasswordCheck";
+
 #define kSafeSetupUI @"ThreemaSafeSetupUI"
 
 #pragma mark - Threema Calls

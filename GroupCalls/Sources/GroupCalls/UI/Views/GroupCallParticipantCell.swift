@@ -137,7 +137,26 @@ class GroupCallParticipantCell: UICollectionViewCell {
         [
             avatarImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             avatarImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+        ]
+    }()
+    
+    private lazy var avatarImageViewWidthConstraint: [NSLayoutConstraint] = {
+        [
             avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.6),
+        ]
+    }()
+    
+    // Used when running for screenshots
+    private lazy var avatarImageViewWidthConstraintScreenshots: [NSLayoutConstraint] = {
+        [
+            avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor),
+        ]
+    }()
+    
+    // Used when running for screenshots
+    private lazy var avatarImageViewHeightConstraintScreenshots: [NSLayoutConstraint] = {
+        [
+            avatarImageView.heightAnchor.constraint(equalTo: contentView.heightAnchor),
         ]
     }()
     
@@ -168,7 +187,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
         
         NSLayoutConstraint.activate(
             videoRendererViewConstraints() + blurBackgroundConstrains + participantInfoStackViewConstrains +
-                avatarImageViewConstrains
+                avatarImageViewConstrains + avatarImageViewWidthConstraint
         )
         
         isAccessibilityElement = true
@@ -220,6 +239,10 @@ class GroupCallParticipantCell: UICollectionViewCell {
 
         // Text Label
         nameLabel.text = participant.name
+
+        if participant.dependencies.isRunningForScreenshots {
+            nameLabel.textColor = participant.idColor
+        }
         
         // Image
         avatarImageView.image = participant.avatar ?? UIImage(
@@ -227,16 +250,41 @@ class GroupCallParticipantCell: UICollectionViewCell {
             withConfiguration: UIImage.SymbolConfiguration(pointSize: 40 * UIScreen.main.scale)
         )
         
-        // Audio
-        switch participant.audioMuteState {
-        case .muted:
-            UIView.animate(withDuration: 0.2) {
-                self.participantInfoStackView.insertArrangedSubview(self.statusSymbolView, at: 0)
+        if participant.dependencies.isRunningForScreenshots {
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                NSLayoutConstraint.activate(avatarImageViewHeightConstraintScreenshots)
+                if participant.participantID.id == 0 {
+                    avatarImageView.contentMode = .scaleAspectFill
+                }
             }
-        case .unmuted:
-            UIView.animate(withDuration: 0.2) {
-                self.participantInfoStackView.removeArrangedSubview(self.statusSymbolView)
-                self.statusSymbolView.removeFromSuperview()
+            else {
+                NSLayoutConstraint.activate(avatarImageViewWidthConstraintScreenshots)
+                avatarImageView.contentMode = .scaleAspectFill
+            }
+            NSLayoutConstraint.deactivate(avatarImageViewWidthConstraint)
+            NSLayoutConstraint.activate(blurBackgroundConstrains)
+            contentView.insertSubview(blurBackground, at: 1)
+        }
+
+        // Audio
+        if participant.dependencies.isRunningForScreenshots {
+            if participant.participantID.id != 3 {
+                participantInfoStackView.removeArrangedSubview(statusSymbolView)
+                statusSymbolView.removeFromSuperview()
+            }
+            statusSymbolView.tintColor = participant.idColor
+        }
+        else {
+            switch participant.audioMuteState {
+            case .muted:
+                UIView.animate(withDuration: 0.2) {
+                    self.participantInfoStackView.insertArrangedSubview(self.statusSymbolView, at: 0)
+                }
+            case .unmuted:
+                UIView.animate(withDuration: 0.2) {
+                    self.participantInfoStackView.removeArrangedSubview(self.statusSymbolView)
+                    self.statusSymbolView.removeFromSuperview()
+                }
             }
         }
         

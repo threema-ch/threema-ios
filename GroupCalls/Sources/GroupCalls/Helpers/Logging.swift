@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import CocoaLumberjackSwiftSupport
 import Foundation
 
 ///

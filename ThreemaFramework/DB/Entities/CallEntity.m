@@ -23,7 +23,8 @@
 @implementation CallEntity
 
 @synthesize callID;
-// TODO: Check if this needs to be @dynamic as well
+// TODO: IOS-4317: This needs to be @dynamic for updates to be saved properly.
+// Not changing it right away because of a failing test in CallHistoryManagerTests.
 // https://stackoverflow.com/questions/1160498/synthesize-vs-dynamic-what-are-the-differences
 @synthesize contact;
 @synthesize date;

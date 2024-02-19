@@ -21,73 +21,60 @@
 import CocoaLumberjackSwift
 import Foundation
 
+@objc public enum BlobManagerObjCResult: Int {
+    case uploaded
+    case downloaded
+    case inProgress
+    case failed
+}
+
+extension BlobManagerResult {
+    fileprivate var objCResult: BlobManagerObjCResult {
+        switch self {
+        case .uploaded:
+            return .uploaded
+        case .downloaded:
+            return .downloaded
+        case .inProgress:
+            return .inProgress
+        case .failed:
+            return .failed
+        }
+    }
+}
+
 /// Wraps the BlobManager to make it usable in Obj-C code, should only be used when new chat view is active
 @objc public class BlobManagerObjcWrapper: NSObject {
     
-    /// Creates a message for a given URLSenderItem and syncs the blobs of it
-    /// - Parameters:
-    ///   - item: URLSenderItem
-    ///   - conversation: Conversation where message is sent
-    ///   - correlationID: Optional String
-    ///   - webRequestID: Optional String
-    ///   - completion: Called when the create and sync completed (there is no guarantee no error occurred)
-    @objc public func createMessageAndSyncBlobs(
-        for item: URLSenderItem,
-        in conversation: Conversation?,
-        correlationID: String?,
-        webRequestID: String?,
-        completion: (() -> Void)?
-    ) {
-        Task {
-            do {
-                guard let objectID = conversation?.objectID else {
-                    NotificationPresenterWrapper.shared.present(type: .sendingError)
-                    DDLogError("ObjectID of conversation to create blob message for was nil.")
-                    return
-                }
-                
-                try await BlobManager.shared.createMessageAndSyncBlobs(
-                    for: item,
-                    in: objectID,
-                    correlationID: correlationID,
-                    webRequestID: webRequestID
-                )
-            }
-            catch {
-                DDLogError("Could not create message and sync blobs due to: \(error)")
-            }
-            completion?()
-        }
-    }
-    
-    /// Start up- or download of blobs in passed object
-    /// - Parameter messageID: NSManagedObjectID of message to be synced
-    @objc public func syncBlobs(for messageID: NSManagedObjectID?, onCompletion: @escaping () -> Void) {
-        Task {
-     
-            guard let messageID else {
-                DDLogError("ObjectID of conversation to create blob message for was nil.")
-                return
-            }
-            
-            await BlobManager.shared.syncBlobs(for: messageID)
-            Task { @MainActor in
-                onCompletion()
-            }
-        }
-    }
-    
-    /// Start up- or download of blobs in passed object, use to start automatic downloads
+    /// Start automatic download of blobs in passed object
     /// - Parameter messageID: NSManagedObjectID of message to be synced
     @objc public func autoSyncBlobs(for messageID: NSManagedObjectID?) {
         Task {
-     
             guard let messageID else {
                 DDLogError("ObjectID of conversation to create blob message for was nil.")
                 return
             }
             
             await BlobManager.shared.autoSyncBlobs(for: messageID)
+        }
+    }
+    
+    /// Start up- or download of blobs in passed object
+    /// - Parameter messageID: NSManagedObjectID of message to be synced
+    @objc public func syncBlobs(
+        for messageID: NSManagedObjectID?,
+        onCompletion: @escaping (BlobManagerObjCResult) -> Void
+    ) {
+        Task {
+            guard let messageID else {
+                DDLogError("ObjectID of conversation to create blob message for was nil.")
+                return
+            }
+            
+            let result = await BlobManager.shared.syncBlobs(for: messageID)
+            Task { @MainActor in
+                onCompletion(result.objCResult)
+            }
         }
     }
  

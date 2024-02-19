@@ -18,6 +18,76 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import ThreemaFramework
 
-class SettingsViewModel: ObservableObject { }
+class SettingsViewModel: ObservableObject {
+    @Published var navigator = Navigator()
+
+    var displayFeedback: Bool {
+        switch ThreemaEnvironment.env() {
+        case .appStore:
+            return false
+        case .testFlight:
+            if ThreemaApp.current == .red || ThreemaApp.current == .workRed || ThreemaApp.current == .onPrem {
+                return false
+            }
+            return true
+        case .xcode:
+            return true
+        }
+    }
+    
+    var displayDevSettings: Bool {
+        switch ThreemaEnvironment.env() {
+        case .appStore:
+            return false
+        case .testFlight:
+            if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+                return true
+            }
+            return false
+        case .xcode:
+            return true
+        }
+    }
+    
+    func giveFeedback() {
+        if let contact = BusinessInjector().entityManager.entityFetcher
+            .contact(for: Constants.betaFeedbackIdentity) {
+            showConversation(for: contact)
+        }
+        else {
+            BusinessInjector().contactStore.addContact(
+                with: Constants.betaFeedbackIdentity,
+                verificationLevel: Int32(kVerificationLevelUnverified)
+            ) { [self] contact, _ in
+                guard let contact else {
+                    DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact")
+                    return
+                }
+                
+                showConversation(for: contact)
+            } onError: { error in
+                DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact \(error)")
+            }
+        }
+    }
+    
+    private func showConversation(for contact: ContactEntity) {
+        let info = [
+            kKeyContact: contact,
+            kKeyForceCompose: NSNumber(booleanLiteral: true),
+            kKeyText: "Version: \(ThreemaUtility.clientVersionWithMDM)",
+        ] as [String: Any]
+        
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                object: nil,
+                userInfo: info
+            )
+        }
+    }
+}

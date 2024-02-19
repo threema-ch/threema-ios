@@ -51,9 +51,6 @@ protocol GroupCallContextProtocol: AnyObject {
     
     // MARK: Media Capture
 
-    // TODO: (IOS-4085) Remove
-    var hasVideoCapturer: Bool { get }
-    
     func stopVideoCapture() async
     func startVideoCapture(position: CameraPosition?) async throws
     
@@ -85,7 +82,7 @@ protocol GroupCallContextProtocol: AnyObject {
     
     func mapLocalTransceivers(ownAudioMuteState: OwnMuteState, ownVideoMuteState: OwnMuteState) async throws
     
-    func updatePendingParticipants(
+    func updateParticipants(
         add: [ParticipantID],
         remove: [ParticipantID],
         existingParticipants: Bool
@@ -307,7 +304,7 @@ extension GroupCallContext {
         /// Receiving 1. If the `receiver` is not the user's assigned participant id, discard the message and abort
         /// these steps.
         guard verifyReceiver(for: message) else {
-            fatalError()
+            return .none
         }
         
         /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 2.)**
@@ -322,7 +319,7 @@ extension GroupCallContext {
         /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 3.)**
         let message = try participant.handle(message: message, localParticipant: participantState.localParticipant)
         
-        // If the handshake was completed, and the participant is no longer pending, we add the decryptor
+        // If the handshake was completed, and the participant is no longer pending, we promote the participant
         if participant.isHandshakeCompleted {
             DDLogNotice("[GroupCall] Promote RemoteParticipant \(participant.participantID.id) from pending.")
             if try participantState.promote(participant) {
@@ -419,7 +416,7 @@ extension GroupCallContext {
         )
     }
     
-    func updatePendingParticipants(
+    func updateParticipants(
         add: [ParticipantID],
         remove: [ParticipantID],
         existingParticipants: Bool
@@ -489,12 +486,8 @@ extension GroupCallContext {
 // MARK: Media Capture
 
 extension GroupCallContext {
-    var hasVideoCapturer: Bool {
-        connectionContext.videoCapturer != nil
-    }
-    
     func stopVideoCapture() async {
-        await connectionContext.videoCapturer?.stopCapture()
+        await connectionContext.videoCapturer.stopCapture()
     }
     
     func startVideoCapture(position: CameraPosition?) async throws {

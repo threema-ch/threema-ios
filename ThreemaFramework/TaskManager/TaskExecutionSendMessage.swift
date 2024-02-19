@@ -29,6 +29,7 @@ import ThreemaProtocols
 ///
 /// Additionally my profile picture will be send to message receiver if is necessary.
 final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
+    
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSendMessage else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
@@ -129,8 +130,8 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                                 return
                             }
                         }
-                        else if let allGroupMembers = task.allGroupMembers {
-                            for member in allGroupMembers {
+                        else if let receivingGroupMembers = task.receivingGroupMembers {
+                            for member in receivingGroupMembers {
                                 if member == self.frameworkInjector.myIdentityStore.identity {
                                     continue
                                 }
@@ -210,12 +211,14 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                 }
             }
         }
-        .then { reflectedAt, sendMessages -> Promise<[AbstractMessage?]> in
+        .then { reflectedAt, sendMessages -> Promise<[AbstractMessage]> in
             // Send messages parallel
             when(fulfilled: sendMessages)
-                .then { sentMessages -> Promise<[AbstractMessage?]> in
+                .then { sentMessages -> Promise<[AbstractMessage]> in
+                    let filteredSentMessages = sentMessages.compactMap { $0 }
+                    
                     // Mark (group) message as sent
-                    if let msg = sentMessages.compactMap({ $0 }).first {
+                    if let msg = filteredSentMessages.first {
                         self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                             var conversation: Conversation
                             do {
@@ -233,18 +236,75 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                             )
                         }
                     }
-                    return Promise { $0.fulfill(sentMessages) }
+                    return Promise { $0.fulfill(filteredSentMessages) }
                 }
         }
-        .then { sentMessages -> Promise<Void> in
+        .then { (sentMessages: [AbstractMessage]) -> Promise<[AbstractMessage]> in
+            // Set/update FS mode
+            guard let abstractMessage = sentMessages.first else {
+                DDLogWarn("No message found to update FS mode")
+                return Promise { $0.fulfill(sentMessages) }
+            }
+
+            do {
+                try self.frameworkInjector.backgroundEntityManager.performAndWait {
+                    let conversation = try self.getConversation(for: task)
+
+                    let newMode: ForwardSecurityMode
+                    if !abstractMessage.flagGroupMessage() {
+                        newMode = abstractMessage.forwardSecurityMode
+                    }
+                    else {
+                        newMode = try self.newOutgoingGroupForwardSecurityMode(
+                            for: abstractMessage,
+                            and: sentMessages,
+                            in: conversation
+                        )
+                    }
+                    
+                    self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
+                        abstractMessage.messageID,
+                        in: conversation,
+                        forwardSecurityMode: newMode
+                    )
+                }
+            }
+            catch {
+                DDLogWarn("Failed to set/update FS mode: \(error)")
+            }
+
+            return Promise { $0.fulfill(sentMessages) }
+        }
+        .then { (sentMessages: [AbstractMessage]) -> Promise<[AbstractMessage]> in
+            // Remove all group receivers from rejected list
+            if let msg = sentMessages.first,
+               let receivingGroupMembers = task.receivingGroupMembers {
+                self.frameworkInjector.backgroundEntityManager.performAndWait {
+                    do {
+                        let conversation = try self.getConversation(for: task)
+                        
+                        self.frameworkInjector.backgroundEntityManager.removeContacts(
+                            with: receivingGroupMembers,
+                            fromRejectedListOfMessageWith: msg.messageID,
+                            in: conversation
+                        )
+                    }
+                    catch {
+                        DDLogError("Conversation for message ID \(msg.messageID.hexString) not found")
+                        return
+                    }
+                }
+            }
+            
+            return Promise { $0.fulfill(sentMessages) }
+        }
+        .then { (sentMessages: [AbstractMessage]) -> Promise<Void> in
             // Get receiver, group or contact, from messages ware sent to all group members or one message to contact
             var messageSentMessageID: Data?
             // swiftformat:disable:next all
             var messageConversationID: D2d_ConversationId?
 
-            for sentMessage in sentMessages.filter({ msg in
-                msg != nil
-            }) {
+            for sentMessage in sentMessages {
                 if messageConversationID == nil {
                     if let msg = sentMessage as? AbstractGroupMessage,
                        let groupID = task.groupID,
@@ -255,13 +315,12 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         messageConversationID?.group.groupID = try groupID.littleEndian()
                         messageConversationID?.group.creatorIdentity = groupCreatorIdentity
                     }
-                    else if let msg = sentMessage,
-                            task.groupID == nil,
+                    else if task.groupID == nil,
                             task.groupCreatorIdentity == nil {
-                        messageSentMessageID = msg.messageID
+                        messageSentMessageID = sentMessage.messageID
                         // swiftformat:disable:next all
                         messageConversationID = D2d_ConversationId()
-                        messageConversationID?.contact = msg.toIdentity
+                        messageConversationID?.contact = sentMessage.toIdentity
                     }
                     else {
                         return Promise(error: TaskExecutionError.sendMessageFailed(message: "Could not eval message"))
@@ -274,7 +333,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     // TODO: Inject for testing
                     self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                         ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
-                            .sendProfilePicture(message: sentMessage!)
+                            .sendProfilePicture(message: sentMessage)
                     }
                 }
             }
@@ -304,5 +363,88 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
 
             return Promise()
         }
+    }
+    
+    // MARK: - Private helper
+    
+    /// Get new outgoing forward security mode for an outgoing group message
+    /// - Parameters:
+    ///   - abstractMessage: One of the abstract messages for the outgoing message
+    ///   - sentMessages: All sent abstract messages
+    ///   - conversation: Group conversation
+    /// - Returns: New outgoing forward security mode
+    private func newOutgoingGroupForwardSecurityMode(
+        for abstractMessage: AbstractMessage,
+        and sentMessages: [AbstractMessage],
+        in conversation: Conversation
+    ) throws -> ForwardSecurityMode {
+        guard
+            let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(
+                with: abstractMessage.messageID,
+                conversation: conversation
+            ),
+            let initialForwardSecurityMode = ForwardSecurityMode(
+                rawValue: message.forwardSecurityMode.uintValue
+            )
+        else {
+            throw TaskExecutionError.missingMessageInformation
+        }
+            
+        return determineOutgoingGroupForwardSecurityMode(
+            for: sentMessages,
+            with: initialForwardSecurityMode
+        )
+    }
+    
+    /// Determine forward security mode for an outing group message
+    /// - Parameters:
+    ///   - sentMessages: All sent abstract messages
+    ///   - initialMode: Initial mode. `.none`, `.outgoingGroupNone`, `outgoingGroupPartial` or `.outgoingGroupFull` is
+    ///                  expected
+    /// - Returns: Determined new outgoing forward security mode
+    private func determineOutgoingGroupForwardSecurityMode(
+        for sentMessages: [AbstractMessage],
+        with initialMode: ForwardSecurityMode
+    ) -> ForwardSecurityMode {
+        // If `initialMode` is `.none` we assume the message was not sent before and thus every state can be reached.
+        // If `initialMode` is `.outgoingGroupFull` or `.outgoingGroupPartial` state we cannot reach
+        // `.outgoingGroupNone` as we don't know who got the message in which mode before.
+        
+        var currentMode = initialMode
+        
+        for message in sentMessages {
+            guard message.flagGroupMessage() else {
+                DDLogWarn("Non group message in abstract messages list of outgoing group message. Skip.")
+                continue
+            }
+                        
+            if message.forwardSecurityMode == .fourDH { // Full or partial
+                // If none or full was before we're still full
+                if currentMode == .outgoingGroupFull || currentMode == .none {
+                    currentMode = .outgoingGroupFull
+                }
+                // Otherwise we are now partial
+                else if currentMode == .outgoingGroupPartial || currentMode == .outgoingGroupNone {
+                    currentMode = .outgoingGroupPartial
+                }
+                else {
+                    DDLogWarn("This state should not exist for outgoing group messages")
+                    currentMode = .outgoingGroupNone
+                }
+            }
+            else { // Partial or none
+                // This message was not sent with FS, but if some before were we're still partial.
+                if currentMode == .outgoingGroupFull || currentMode == .outgoingGroupPartial {
+                    currentMode = .outgoingGroupPartial
+                }
+                else {
+                    // This state basically captures the case when the first messages was sent without FS, but all
+                    // others were. Then it should reach partial after the first iteration, but not full.
+                    currentMode = .outgoingGroupNone
+                }
+            }
+        }
+        
+        return currentMode
     }
 }

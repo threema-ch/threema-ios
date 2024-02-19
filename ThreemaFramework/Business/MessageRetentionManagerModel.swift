@@ -25,9 +25,14 @@ import Foundation
 ///  - Filter affected conversations based on Policy (currently only to filter out Note Groups)
 public final class MessageRetentionManagerModel: MessageRetentionManagerModelProtocol & ObservableObject {
   
-    @Published public var selection: Int = -1
-        
-    private let businessInjector: BusinessInjectorProtocol
+    @Published public var selection: Int = MessageRetentionManagerModel.defaultValue
+    
+    private weak var backgroundEntityManager: EntityManager?
+    private weak var userSettings: UserSettingsProtocol?
+    private weak var backgroundGroupManager: GroupManagerProtocol?
+    
+    private static let defaultValue = -1
+    
     private let mdm = MDMSetup(setup: false)
     
     public var isMDM: Bool {
@@ -49,28 +54,47 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
         
         guard let keepMessagesDays = mdm?.keepMessagesDays() as? Int else {
             // Take UserSettings if the MDM values are not set
-            return checkDays(businessInjector.userSettings.keepMessagesDays)
+            if let userSettings {
+                return checkDays(userSettings.keepMessagesDays)
+            }
+            
+            return MessageRetentionManagerModel.defaultValue
         }
         
         return checkDays(keepMessagesDays)
+    }
+    
+    init(
+        backgroundEntityManager: EntityManager,
+        userSettings: UserSettingsProtocol,
+        backgroundGroupManager: GroupManagerProtocol
+    ) {
+        self.backgroundEntityManager = backgroundEntityManager
+        self.userSettings = userSettings
+        self.backgroundGroupManager = backgroundGroupManager
+        self.selection = keepMessagesDays
     }
     
     convenience init() {
         self.init(businessInjector: BusinessInjector())
     }
   
-    init(businessInjector: BusinessInjectorProtocol) {
-        self.businessInjector = businessInjector
-        self.selection = keepMessagesDays
+    convenience init(businessInjector: BusinessInjectorProtocol) {
+        self.init(
+            backgroundEntityManager: businessInjector.backgroundEntityManager,
+            userSettings: businessInjector.userSettings,
+            backgroundGroupManager: businessInjector.backgroundGroupManager
+        )
     }
     
     /// Deletes all messages according to the current setting. MDMs or userSetttings `keepMessagesDays` are used to
     /// calculate the date after which messages should be deleted.
     public func deleteOldMessages() async {
-        guard keepMessagesDays > 0, let deletionDate = deletionDate(keepMessagesDays) else {
+        guard keepMessagesDays > 0, let deletionDate = deletionDate(keepMessagesDays),
+              let backgroundEntityManager else {
             return
         }
-        await businessInjector.backgroundEntityManager.entityDestroyer.deleteMessagesForMessageRetention(
+        await backgroundEntityManager.entityDestroyer.deleteMessagesForMessageRetention(
             olderThan: deletionDate,
             for: conversations().map(\.objectID)
         )
@@ -84,11 +108,12 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     /// for `never`
     /// - Returns: number of messages to be deleted
     public func numberOfMessagesToDelete(for retentionDays: Int?) async -> Int {
-        guard let retentionDays, retentionDays > 0, let deletionDate = deletionDate(retentionDays) else {
+        guard let retentionDays, retentionDays > 0, let deletionDate = deletionDate(retentionDays),
+              let backgroundEntityManager else {
             return 0
         }
         
-        return await businessInjector.backgroundEntityManager.entityDestroyer.messagesToBeDeleted(
+        return await backgroundEntityManager.entityDestroyer.messagesToBeDeleted(
             olderThan: deletionDate,
             for: conversations().map(\.objectID)
         )
@@ -101,12 +126,12 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     ///
     /// - Parameter days: how many days in the past we will delete
     public func set(_ days: Int, completion: (() -> Void)? = nil) {
-        guard selection != days, keepMessagesDays != days, !isMDM else {
+        guard selection != days, keepMessagesDays != days, !isMDM, let userSettings else {
             return
         }
         
         selection = days
-        businessInjector.userSettings.keepMessagesDays = days
+        userSettings.keepMessagesDays = days
             
         // Trigger Deletion
         Task {
@@ -117,17 +142,24 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     
     /// Computes the Conversations to be affected by the deletion
     private func conversations() -> [Conversation] {
-        let convs = (businessInjector.backgroundEntityManager.entityFetcher.allConversations() as? [Conversation]) ?? []
+        guard let backgroundEntityManager, let backgroundGroupManager else {
+            return []
+        }
+        let convs = (backgroundEntityManager.entityFetcher.allConversations() as? [Conversation]) ?? []
         return convs.filter {
             // note groups are excluded
-            return !(businessInjector.backgroundGroupManager.getGroup(conversation: $0)?.isNoteGroup ?? false)
+            return !(backgroundGroupManager.getGroup(conversation: $0)?.isNoteGroup ?? false)
         }
     }
     
     private func computeUnread() {
-        let unreadMessages = UnreadMessages(entityManager: businessInjector.backgroundEntityManager)
+        guard let backgroundEntityManager else {
+            return
+        }
         
-        if let conversations = businessInjector.backgroundEntityManager.entityFetcher
+        let unreadMessages = UnreadMessages(entityManager: backgroundEntityManager)
+        
+        if let conversations = backgroundEntityManager.entityFetcher
             .notArchivedConversations() as? [Conversation] {
             unreadMessages.totalCount(doCalcUnreadMessagesCountOf: Set(conversations))
         }

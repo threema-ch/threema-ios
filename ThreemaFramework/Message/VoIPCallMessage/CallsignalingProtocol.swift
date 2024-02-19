@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import Reachability
 import ThreemaProtocols
 
 public enum CallsignalingProtocol {
@@ -236,10 +237,10 @@ extension CallsignalingProtocol {
     }
     
     public static func localPeerQualityProfile() -> ThreemaVideoCallQualityProfile {
-        let reachability = Reachability.forInternetConnection()
+        let reachability = try! Reachability()
         switch UserSettings.shared()?.threemaVideoCallQualitySetting {
         case ThreemaVideoCallQualitySettingAuto:
-            if reachability!.currentReachabilityStatus() == ReachableViaWiFi {
+            if reachability.connection == .wifi {
                 return ThreemaVideoCallQualityProfiles.high.qualityProfile()
             }
             else {

@@ -83,9 +83,12 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
                         )
                     }
                 }
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
 
         let businessInjectorMock = BusinessInjectorMock(

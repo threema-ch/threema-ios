@@ -730,6 +730,7 @@ class RootNavigationController: UINavigationController {
 // MARK: - ContactGroupPickerDelegate
 
 extension RootNavigationController: ContactGroupPickerDelegate {
+
     func contactPicker(
         _ contactPicker: ContactGroupPickerViewController!,
         didPickConversations conversations: Set<AnyHashable>!,

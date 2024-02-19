@@ -322,7 +322,7 @@ import Foundation
                 guard let ballotMessage = message as? BallotMessage else {
                     return true
                 }
-                return ballotMessage.ballot.isClosed()
+                return ballotMessage.ballot?.isClosed() ?? false
             }
             return filtered.count
         }
@@ -536,7 +536,7 @@ import Foundation
 
             let messages = try (objCnx.fetch(fetchRequest)) as? [BaseMessage] ?? []
             // Currently we want to keep open Ballots excluded from deletion
-            let filtered = messages.compactMap { ($0 as? BallotMessage)?.ballot.isClosed() ?? true ? $0 : nil }
+            let filtered = messages.compactMap { ($0 as? BallotMessage)?.ballot?.isClosed() ?? true ? $0 : nil }
             
             guard !filtered.isEmpty else {
                 return

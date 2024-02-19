@@ -52,9 +52,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @property PortraitNavigationController *contactsNavigationController;
 @property PortraitNavigationController *conversationsNavigationController;
 
-@property UINavigationController *settingsNavigationController;
-
-@property SettingsViewController *settingsViewController;
+@property UIViewController *settingsViewController;
+@property UIViewController *profileViewController;
 
 /// Covering view to hide private chat
 @property UIView *coverView;
@@ -88,18 +87,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _coverView.frame = self.view.bounds;
     _coverView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    if (UserSettings.sharedUserSettings.newSettingsActive) {
-        NSMutableArray *vcs = [[NSMutableArray alloc]initWithArray:self.viewControllers];
-        [vcs removeLastObject];
-        UIViewController *settingsVC = SwiftUIAdapter.createSettingsView;
-        settingsVC.tabBarItem.title = @"Settings";
-        settingsVC.tabBarItem.image = [UIImage systemImageNamed:@"gear"];
-        [vcs addObject:settingsVC];
-        self.viewControllers = vcs;
-    }
-    
-    [self setupProfileView];
-    
+    [self setupSwiftUITabs];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -128,6 +116,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _conversationsNavigationController = nil;
     
     _settingsViewController = nil;
+    _profileViewController = nil;
 }
 
 - (BOOL)shouldAutorotate {
@@ -137,17 +126,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return YES;
 }
 
--(void)setupProfileView {
-    // Setup Profile Tab
+-(void)setupSwiftUITabs {
     NSMutableArray *vcs = [[NSMutableArray alloc]initWithArray:self.viewControllers];
-    UIViewController *profileVC = SwiftUIAdapter.createProfileView;
-    ThemedNavigationController *navC = [[ThemedNavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
-    [navC pushViewController:profileVC animated:false];
-    navC.tabBarItem.image = [UIImage systemImageNamed:@"person.crop.rectangle.fill"];
-    [navC.tabBarItem setTitle:[BundleUtil localizedStringForKey:@"myIdentity"]];
-    [navC.navigationItem setTitle:[BundleUtil localizedStringForKey:@"myIdentity"]];
-    [vcs insertObject:navC atIndex:2];
-    self.viewControllers = vcs;
+    _settingsViewController = SwiftUIAdapter.createSettingsView;
+    _profileViewController = SwiftUIAdapter.createProfileView;
+    [vcs addObject:_profileViewController];
+    [vcs addObject:_settingsViewController];
+    [self setViewControllers:vcs animated:NO];
 }
 
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
@@ -301,16 +286,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showSettings {
-    if (UserSettings.sharedUserSettings.newSettingsActive) {
-        [self showModal: SwiftUIAdapter.createSettingsView];
-        return;
-    }
-    
-    if (_settingsViewController == nil) {
-        _settingsViewController = (SettingsViewController *)[self loadSettingsControllerNamed:@"settingsViewController"];
-    }
-    
-    [self showModal:_settingsViewController];
+    [self showModal: SwiftUIAdapter.createSettingsView];
 }
 
 - (void)clearNavigationControllerAt:(NSUInteger)index {
@@ -325,12 +301,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (UIViewController *)loadSettingsControllerNamed:(NSString *)viewControllerName {
-    if (UserSettings.sharedUserSettings.newSettingsActive) {
-        return SwiftUIAdapter.createSettingsView;
-    }
-    
-    UIStoryboard *storyboard = [AppDelegate getSettingsStoryboard];
-    return [storyboard instantiateViewControllerWithIdentifier:viewControllerName];
+    return SwiftUIAdapter.createProfileView;
 }
 
 - (UIViewController *)loadMyIdentityController {
@@ -441,7 +412,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     UIViewController *notificationViewController = [SwiftUIAdapter createNotificationSettingsView];
     
     if(SYSTEM_IS_IPAD) {
-        UIViewController *settings = [self loadSettingsControllerNamed:@"settingsViewController"];
+        UIViewController *settings = _settingsViewController;
         ModalNavigationController *navigationController = [[ModalNavigationController alloc] init];
         navigationController.showDoneButton = YES;
         navigationController.dismissOnTapOutside = YES;
@@ -452,12 +423,34 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         [self presentViewController:navigationController animated:YES completion:nil];
     }
-    
     else {
-        _settingsNavigationController = self.viewControllers[kSettingsTabBarIndex];
-        [_settingsNavigationController popToRootViewControllerAnimated:false];
-        [_settingsNavigationController pushViewController:notificationViewController animated:false];
-        [self setSelectedViewController:_settingsNavigationController];
+        [self setSelectedIndex:kSettingsTabBarIndex];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kShowNotificationSettings object:nil userInfo:nil];
+    }
+}
+
+- (void)showSafeSetup:(NSNotification*)notification {
+    [self showThreemaSafe];
+}
+
+-(void)showThreemaSafe {
+    UIViewController *notificationViewController = [SwiftUIAdapter createProfileView];
+    
+    if(SYSTEM_IS_IPAD) {
+        UIViewController *profile = _profileViewController;
+        ModalNavigationController *navigationController = [[ModalNavigationController alloc] init];
+        navigationController.showDoneButton = YES;
+        navigationController.dismissOnTapOutside = YES;
+        navigationController.modalDelegate = self;
+        
+        [navigationController pushViewController:profile animated:NO];
+        [navigationController pushViewController:notificationViewController animated:NO];
+        
+        [self presentViewController:navigationController animated:YES completion:nil];
+    }
+    else {
+        [self setSelectedIndex:kMyIdentityTabBarIndex];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowSafeSetup object:nil userInfo:nil];
     }
 }
 
@@ -573,12 +566,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)showSafeSetup:(NSNotification*)notification {
-    // switch to My Identity tab and show Threema Safe settings/setup
-    [self setSelectedIndex:kMyIdentityTabBarIndex];
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowSafeSetup object:nil userInfo:nil];
-}
-
 - (void)hideModal {
     if (self.presentedViewController == nil) {
         return;
@@ -623,9 +610,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self setNeedsStatusBarAppearanceUpdate];
     
     if (SYSTEM_IS_IPAD) {
-        [_settingsViewController refresh];
-        [Colors updateWithNavigationBar:_settingsViewController.navigationController.navigationBar];
-        
         [_singleDetailViewController refresh];
         [Colors updateWithNavigationBar:_singleDetailViewController.navigationController.navigationBar];
         [_contactsViewController refresh];

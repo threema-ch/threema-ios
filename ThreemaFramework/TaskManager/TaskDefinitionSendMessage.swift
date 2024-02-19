@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 /// Task definition base class for sending messages. Group is NULL if is single chat message.
 class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceProtocol,
@@ -47,7 +48,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     var groupID: Data?
     var groupCreatorIdentity: String?
     var groupName: String?
-    var allGroupMembers: Set<String>?
+    var receivingGroupMembers: Set<String>?
     var isNoteGroup: Bool?
     var sendContactProfilePicture: Bool?
 
@@ -72,6 +73,23 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         super.init(isPersistent: true)
         self.sendContactProfilePicture = sendContactProfilePicture
     }
+    
+    init(group: Group, groupReceivers: [ThreemaIdentity]?, sendContactProfilePicture: Bool) {
+        super.init(isPersistent: true)
+        self.groupID = group.groupID
+        self.groupCreatorIdentity = group.groupCreatorIdentity
+        self.groupName = group.name
+        if let groupReceivers {
+            self.receivingGroupMembers = Set(groupReceivers.map(\.string))
+        }
+        else {
+            self.receivingGroupMembers = Set(group.members.map(\.identity.string))
+        }
+        self.isNoteGroup = group.isNoteGroup
+        self.sendContactProfilePicture = sendContactProfilePicture
+        
+        assert(receiverIdentity == nil)
+    }
 
     init(receiverIdentity: String?, group: Group?, sendContactProfilePicture: Bool) {
         super.init(isPersistent: true)
@@ -79,7 +97,9 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         self.groupID = group?.groupID
         self.groupCreatorIdentity = group?.groupCreatorIdentity
         self.groupName = group?.name
-        self.allGroupMembers = group?.allMemberIdentities
+        if let groupMembers = group?.members {
+            self.receivingGroupMembers = Set(groupMembers.map(\.identity.string))
+        }
         self.isNoteGroup = group?.isNoteGroup
         self.sendContactProfilePicture = sendContactProfilePicture
     }
@@ -98,7 +118,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         self.groupID = groupID
         self.groupCreatorIdentity = groupCreatorIdentity
         self.groupName = groupName
-        self.allGroupMembers = allGroupMembers
+        self.receivingGroupMembers = allGroupMembers
         self.isNoteGroup = isNoteGroup
         self.sendContactProfilePicture = sendContactProfilePicture
     }
@@ -112,7 +132,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         self.groupID = try container.decode(Data?.self, forKey: .groupID)
         self.groupCreatorIdentity = try container.decode(String?.self, forKey: .groupCreatorIdentity)
         self.groupName = try container.decode(String?.self, forKey: .groupName)
-        self.allGroupMembers = try container.decode(Set<String>?.self, forKey: .allGroupMembers)
+        self.receivingGroupMembers = try container.decode(Set<String>?.self, forKey: .allGroupMembers)
         self.isNoteGroup = try container.decode(Bool?.self, forKey: .isNoteGroup)
         self.sendContactProfilePicture = try container.decode(Bool?.self, forKey: .sendContactProfilePicture)
         messageAlreadySentToQueue.sync {
@@ -131,7 +151,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         try container.encode(groupID, forKey: .groupID)
         try container.encode(groupCreatorIdentity, forKey: .groupCreatorIdentity)
         try container.encode(groupName, forKey: .groupName)
-        try container.encode(allGroupMembers, forKey: .allGroupMembers)
+        try container.encode(receivingGroupMembers, forKey: .allGroupMembers)
         try container.encode(isNoteGroup, forKey: .isNoteGroup)
         try container.encode(sendContactProfilePicture, forKey: .sendContactProfilePicture)
         messageAlreadySentToQueue.sync {

@@ -43,8 +43,7 @@ final class WebRTCConnectionContext<PeerConnectionCtxImpl: PeerConnectionContext
 
     convenience init(
         certificate: RTCCertificate,
-        sessionParameters: SessionParameters,
-        dependencies: Dependencies
+        sessionParameters: SessionParameters
     ) throws {
         let config = WebRTCConnectionContext.getPeerConnectionConfiguration(certificate: certificate)
         let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
@@ -53,7 +52,6 @@ final class WebRTCConnectionContext<PeerConnectionCtxImpl: PeerConnectionContext
         self.init(
             certificate: certificate,
             sessionParameters: sessionParameters,
-            dependencies: dependencies,
             peerConnectionCtx: peerConnectionCtx
         )
         
@@ -71,7 +69,6 @@ final class WebRTCConnectionContext<PeerConnectionCtxImpl: PeerConnectionContext
     init(
         certificate: RTCCertificate,
         sessionParameters: SessionParameters,
-        dependencies: Dependencies,
         peerConnectionCtx: PeerConnectionCtxImpl
     ) {
         self.peerConnectionCtx = peerConnectionCtx

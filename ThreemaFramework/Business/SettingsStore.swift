@@ -107,7 +107,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
 
         // Advanced
         self.enableIPv6 = userSettings.enableIPv6
-        self.disableProximityMonitoring = userSettings.disableProximityMonitoring
+        self.enableProximityMonitoring = !userSettings.disableProximityMonitoring
         self.validationLogging = userSettings.validationLogging
         self.sentryAppDevice = userSettings.sentryAppDevice
         
@@ -483,9 +483,9 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
     }
     
-    @Published public var disableProximityMonitoring: Bool {
+    @Published public var enableProximityMonitoring: Bool {
         didSet {
-            guard userSettings.disableProximityMonitoring != disableProximityMonitoring else {
+            guard userSettings.disableProximityMonitoring == enableProximityMonitoring else {
                 return
             }
             updateUserSettingsAsync()
@@ -799,7 +799,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
 
         // Advanced
         compareAndAssign(&userSettings.enableIPv6, enableIPv6)
-        compareAndAssign(&userSettings.disableProximityMonitoring, disableProximityMonitoring)
+        compareAndAssign(&userSettings.disableProximityMonitoring, !enableProximityMonitoring)
         compareAndAssign(&userSettings.validationLogging, validationLogging)
         compareAndAssign(&userSettings.sentryAppDevice, sentryAppDevice)
         
@@ -867,7 +867,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         
         // Advanced
         compareAndAssign(&enableIPv6, userSettings.enableIPv6)
-        compareAndAssign(&disableProximityMonitoring, userSettings.disableProximityMonitoring)
+        compareAndAssign(&enableProximityMonitoring, !userSettings.disableProximityMonitoring)
         compareAndAssign(&validationLogging, userSettings.validationLogging)
         compareAndAssign(&sentryAppDevice, userSettings.sentryAppDevice)
     }

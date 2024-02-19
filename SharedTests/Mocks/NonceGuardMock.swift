@@ -51,6 +51,20 @@ class NonceGuardMock: NSObject, NonceGuardProtocol {
         processedCalls(nonce: boxedMessage.nonce)
     }
 
+    func processed(reflectedEnvelope message: ThreemaProtocols.D2d_Envelope) throws {
+        switch message.content {
+        case let .incomingMessage(msg):
+            processedCalls(nonce: msg.nonce)
+        case let .outgoingMessage(msg):
+            for nonce in msg.nonces {
+                processedCalls(nonce: nonce)
+            }
+        default:
+            // no-op
+            break
+        }
+    }
+
     private func processedCalls(nonce: Data?) {
         if let nonce {
             processedCalls.insert(nonce)

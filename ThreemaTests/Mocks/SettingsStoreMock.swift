@@ -84,7 +84,7 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     
     var enableIPv6 = true
     
-    var disableProximityMonitoring = false
+    var enableProximityMonitoring = true
     
     var validationLogging = false
     

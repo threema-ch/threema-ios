@@ -36,7 +36,7 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
         // Noop
     }
     
-    func updatePendingParticipants(
+    func updateParticipants(
         add: [GroupCalls.ParticipantID],
         remove: [GroupCalls.ParticipantID],
         existingParticipants: Bool

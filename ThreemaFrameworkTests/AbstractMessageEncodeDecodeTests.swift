@@ -601,9 +601,10 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
             data: ForwardSecurityDataMessage(
                 sessionID: DHSessionID(value: expectedSessionID),
                 type: .twodh,
+                counter: 1,
+                groupIdentity: nil,
                 offeredVersion: .v11,
                 appliedVersion: .v11,
-                counter: 1,
                 message: BytesUtility.generateRandomBytes(length: 48)!
             )
         )

@@ -22,7 +22,7 @@ import SwiftUI
 import ThreemaFramework
 
 struct ButtonNavigationLink<Content: View>: View {
-
+    
     var action: () -> Void
     var label: () -> Content
 
@@ -153,5 +153,63 @@ struct LockedNavigationLink<Content: View, Label: View>: View {
             }
         }
         .tint(Color.primary)
+    }
+}
+
+struct ThreemaNavigationLink<Label: View, ViewDestination: ViewDestinationRepresentable>: View {
+    @EnvironmentObject var navigator: Navigator<ViewDestination>
+    var viewDestination: ViewDestination
+    var label: () -> Label
+    
+    init(_ viewDestination: ViewDestination, label: @escaping () -> Label) {
+        self.viewDestination = viewDestination
+        self.label = label
+    }
+ 
+    var body: some View {
+        NavigationLink(
+            tag: viewDestination,
+            selection: $navigator.path,
+            destination: {
+                viewDestination.view.asAnyView
+            },
+            label: label
+        )
+    }
+}
+
+extension ThreemaNavigationLink {
+    init(_ viewDestination: ViewDestination) where Label == EmptyView {
+        self.init(viewDestination) {
+            EmptyView()
+        }
+    }
+}
+
+protocol ThemedViewControllerRepresentable: View {
+    /// Add additional setup before the view is presented
+    var title: String { get }
+    /// Used for `tabBarItem.image`
+    var largeTitle: Bool { get }
+    /// Used for `navigationController.navigationBar.prefersLargeTitles`
+    var systemImageName: String { get }
+    /// Used for `tabBarItem.title` and `navigationItem.title`
+    var setup: (inout ThemedTableViewControllerSwiftUI) -> Void { get }
+}
+
+extension ThemedViewControllerRepresentable {
+    func navigationController() -> UINavigationController {
+        let navC = ThemedNavigationController(navigationBarClass: StatusNavigationBar.self, toolbarClass: nil)
+        navC.navigationBar.prefersLargeTitles = largeTitle
+        var c = ThemedTableViewControllerSwiftUI(navTitle: title, hostedView: self)
+        c.title = title
+        c.tabBarItem.title = title
+        c.navigationItem.title = title
+        navC.pushViewController(c, animated: false)
+        navC.tabBarItem.image = UIImage(systemName: systemImageName)
+        navC.tabBarItem.title = title
+        navC.navigationItem.title = title
+        setup(&c)
+        return navC
     }
 }

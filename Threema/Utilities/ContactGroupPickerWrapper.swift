@@ -56,7 +56,12 @@ import Foundation
         
         let forwarder = MessageForwarder()
         for case let conversation as Conversation in conversations {
-            forwarder.forward(message, to: conversation, additionalText: contactPicker.additionalTextToSend)
+            forwarder.forward(
+                message,
+                to: conversation,
+                sendAsFile: sendAsFile,
+                additionalText: contactPicker.additionalTextToSend
+            )
         }
         
         modalNavController?.dismiss(animated: true)

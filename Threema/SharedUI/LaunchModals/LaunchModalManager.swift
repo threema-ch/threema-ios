@@ -24,6 +24,7 @@ import Foundation
     
     @objc static let shared = LaunchModalManager()
     
+    public var isBeingDisplayed = false
     private lazy var safeConfigManager = SafeConfigManager()
     private lazy var safeStore = SafeStore(
         safeConfigManager: safeConfigManager,
@@ -40,15 +41,23 @@ import Foundation
     @objc func checkLaunchModals() {
         
         // Get root view and view to show
-        guard let firstScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootView = firstScene.windows.first?.rootViewController else {
+        guard let rootView = AppDelegate.shared().currentTopViewController() else {
             return
         }
         
         Task {
             guard let modalType = await resolveModalType() else {
+                // No more launch modals to show
+                self.isBeingDisplayed = false
+                
+                if let mdm = MDMSetup(setup: false),
+                   mdm.existsMdmKey(MDM_KEY_SAFE_PASSWORD) {
+                    NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupPasswordCheck), object: nil)
+                }
                 return
             }
+            
+            isBeingDisplayed = true
             
             // Display view
             Task { @MainActor in
@@ -58,7 +67,6 @@ import Foundation
     }
         
     private func resolveModalType() async -> LaunchModalType? {
-        
         guard !ProcessInfoHelper.isRunningForScreenshots else {
             return nil
         }

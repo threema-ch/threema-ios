@@ -324,6 +324,116 @@ class GroupManagerTests: XCTestCase {
             task.toMembers.filter { $0.elementsEqual("MEMBER01") || $0.elementsEqual("MEMBER03") }.count
         )
     }
+    
+    func testSendGroupSetupIamCreatorRemoveMemberWithRejectedMessages() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+        
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
+        
+        for member in expectedMembers {
+            databasePreparer.save {
+                let contact = databasePreparer.createContact(identity: member)
+                contact.isContactHidden = (member == "MEMBER02")
+            }
+        }
+        
+        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            entityManager,
+            groupPhotoSenderMock
+        )
+        
+        createOrUpdateDBWait(
+            groupManager: groupManager,
+            groupIdentity: expectedGroupIdentity,
+            members: expectedMembers
+        )
+
+        let expectedNewMembers = expectedMembers.filter { $0 != "MEMBER02" && $0 != "MEMBER04" }
+        let leavingMembers = expectedMembers.subtracting(expectedNewMembers)
+        
+        let messageID: Data! = try databasePreparer.save {
+            let stayingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contact(for: expectedNewMembers.first))
+            let leavingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contact(for: leavingMembers.first))
+
+            let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
+            let textMessage = self.databasePreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: true,
+                sent: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = NSNumber(booleanLiteral: true)
+            textMessage.addRejectedBy(stayingContactEntity)
+            textMessage.addRejectedBy(leavingContactEntity)
+
+            return textMessage.id
+        }
+        
+        var resultGroup: Group?
+        var resultNewMembers: Set<String>?
+        
+        let expec = expectation(description: "Group create or update")
+
+        groupManager.createOrUpdate(
+            for: expectedGroupIdentity,
+            members: expectedNewMembers,
+            systemMessageDate: Date()
+        )
+        .done { grp, newMembers in
+            resultGroup = grp
+            resultNewMembers = newMembers
+
+            expec.fulfill()
+        }
+        .catch { error in
+            XCTFail(error.localizedDescription)
+        }
+
+        waitForExpectations(timeout: 1)
+
+        let resultGrp = try XCTUnwrap(resultGroup)
+        XCTAssertEqual(resultGrp.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(resultGrp.allMemberIdentities.count, expectedNewMembers.count + 1)
+        XCTAssertTrue(resultGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertNil(resultGrp.lastSyncRequest)
+
+        XCTAssertEqual(1, contactStoreMock.deleteContactCalls.count)
+        XCTAssertTrue(contactStoreMock.deleteContactCalls.contains("MEMBER02"))
+        
+        XCTAssertNil(resultNewMembers)
+        XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupCreateMessage }.count)
+        
+        let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)
+        XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
+        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedNewMembers, task.members)
+        XCTAssertEqual(2, task.removedMembers?.filter { $0 == "MEMBER02" || $0 == "MEMBER04" }.count)
+        XCTAssertEqual(
+            expectedNewMembers.count,
+            task.toMembers.filter { $0.elementsEqual("MEMBER01") || $0.elementsEqual("MEMBER03") }.count
+        )
+        
+        // Only the rejectedBy from the leaving member should be removed
+        
+        let actualBaseMessage = try XCTUnwrap(
+            entityManager.entityFetcher.message(with: messageID, conversation: resultGrp.conversation)
+        )
+        XCTAssertTrue(actualBaseMessage.sendFailed?.boolValue ?? false)
+        XCTAssertEqual(1, actualBaseMessage.rejectedBy?.count ?? -1)
+    }
 
     /// Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-setup
     /// Section: When receiving this message: 4. / 1.
@@ -478,6 +588,98 @@ class GroupManagerTests: XCTestCase {
             XCTAssertFalse(grp.isSelfMember)
             XCTAssertFalse(grp.isNoteGroup)
         }
+    }
+    
+    func testReceiveGroupSetupExistingGroupIamNotMemberWithRejectedMessages() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+
+        let expectedGroupCreator = "MEMBER01"
+        let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
+
+        databasePreparer.createContact(identity: expectedGroupCreator)
+        for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+            databasePreparer.createContact(identity: member)
+        }
+        databasePreparer.createContact(identity: "MEMBER04")
+
+        let expectedMembers: Set<String> = ["MEMBER02", "MEMBER04"]
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(expectedGroupCreator)
+        )
+        
+        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            ContactStoreMock(callOnCompletion: true),
+            TaskManagerMock(),
+            UserSettingsMock(),
+            entityManager,
+            groupPhotoSenderMock
+        )
+        
+        let initialGrp = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroupIdentity,
+                members: expectedInitialMembers
+            )
+        )
+        
+        XCTAssertEqual(4, initialGrp.numberOfMembers)
+        XCTAssertTrue(initialGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertTrue(initialGrp.allMemberIdentities.contains("MEMBER01"))
+        XCTAssertTrue(initialGrp.allMemberIdentities.contains("MEMBER02"))
+        XCTAssertTrue(initialGrp.allMemberIdentities.contains("MEMBER03"))
+        XCTAssertFalse(initialGrp.didCreatorLeave)
+        XCTAssertFalse(initialGrp.didLeave)
+        XCTAssertFalse(initialGrp.didForcedLeave)
+        XCTAssertTrue(initialGrp.isSelfMember)
+        XCTAssertFalse(initialGrp.isNoteGroup)
+        
+        let messageID: Data! = try databasePreparer.save {
+            let member02 = try XCTUnwrap(entityManager.entityFetcher.contact(for: "MEMBER02"))
+            let member03 = try XCTUnwrap(entityManager.entityFetcher.contact(for: "MEMBER03"))
+
+            let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
+            let textMessage = self.databasePreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: true,
+                sent: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = NSNumber(booleanLiteral: true)
+            textMessage.addRejectedBy(member02)
+            textMessage.addRejectedBy(member03)
+
+            return textMessage.id
+        }
+        
+        // Hold old members to list chat history and to clone
+        let grp = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroupIdentity,
+                members: expectedMembers
+            )
+        )
+        
+        XCTAssertEqual(3, grp.numberOfMembers)
+        XCTAssertTrue(grp.allMemberIdentities.contains("MEMBER01"))
+        XCTAssertTrue(grp.allMemberIdentities.contains("MEMBER02"))
+        XCTAssertTrue(grp.allMemberIdentities.contains("MEMBER03"))
+        XCTAssertFalse(grp.didCreatorLeave)
+        XCTAssertFalse(grp.didLeave)
+        XCTAssertTrue(grp.didForcedLeave)
+        XCTAssertFalse(grp.isSelfMember)
+        XCTAssertFalse(grp.isNoteGroup)
+        
+        let actualBaseMessage = try XCTUnwrap(
+            entityManager.entityFetcher.message(with: messageID, conversation: grp.conversation)
+        )
+        XCTAssertFalse(actualBaseMessage.sendFailed?.boolValue ?? true)
+        XCTAssertEqual(0, actualBaseMessage.rejectedBy?.count ?? -1)
     }
     
     func testReceiveGroupSetupWithRevokedMember() throws {
@@ -916,7 +1118,8 @@ class GroupManagerTests: XCTestCase {
             members: expectedMembers
         )
 
-        XCTAssertNotNil(grp)
+        let group = try XCTUnwrap(grp)
+        let initialNumberOfMember = group.numberOfMembers
 
         groupManager.leave(
             groupID: expectedGroupIdentity.id,
@@ -944,6 +1147,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(2, task.hiddenContacts.count)
         XCTAssertTrue(task.hiddenContacts.contains("MEMBER02"))
         XCTAssertTrue(task.hiddenContacts.contains("MEMBER04"))
+        XCTAssertEqual(initialNumberOfMember - 1, grp?.numberOfMembers)
     }
 
     func testSendLeaveToParticularMember() throws {
@@ -1052,6 +1256,149 @@ class GroupManagerTests: XCTestCase {
 
         XCTAssertEqual(4, grpAdded.allMemberIdentities.count)
         XCTAssertFalse(grpAdded.didLeave)
+    }
+    
+    func testReceiveLeaveFromMember() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator:
+            ThreemaIdentity("MEMBER01")
+        )
+        let leavingMember = "MEMBER03"
+        let initialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", leavingMember]
+
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        for member in initialMembers {
+            databasePreparer.createContact(identity: member)
+        }
+
+        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            entityManager,
+            groupPhotoSenderMock
+        )
+
+        createOrUpdateDBWait(
+            groupManager: groupManager,
+            groupIdentity: expectedGroupIdentity,
+            members: initialMembers
+        )
+
+        groupManager.leaveDB(
+            groupID: expectedGroupIdentity.id,
+            creator: expectedGroupIdentity.creator.string,
+            member: leavingMember,
+            systemMessageDate: Date()
+        )
+
+        let group = try XCTUnwrap(
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+        )
+
+        DDLog.flushLog()
+
+        XCTAssertFalse(group.didLeave)
+        XCTAssertFalse(group.didForcedLeave)
+        XCTAssertEqual(3, group.allMemberIdentities.count)
+        XCTAssertTrue(group.allMemberIdentities.contains("MEMBER02"))
+        XCTAssertFalse(group.allMemberIdentities.contains(leavingMember))
+
+        // Check added system messages
+
+        let messageFetcher = MessageFetcher(for: group.conversation, with: entityManager)
+        XCTAssertEqual(messageFetcher.count(), 4)
+
+        let systemMessageTypes = messageFetcher.messages(at: 0, count: 0).map { ($0 as? SystemMessage)?.type ?? 0 }
+        XCTAssertEqual(3, systemMessageTypes.filter { $0.intValue == kSystemMessageGroupMemberAdd }.count)
+        XCTAssertEqual(kSystemMessageGroupMemberLeave, systemMessageTypes.last?.intValue)
+    }
+    
+    func testReceiveLeaveFromMemberWithRejectedMessages() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator:
+            ThreemaIdentity("MEMBER01")
+        )
+        let leavingMember = "MEMBER03"
+        let initialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", leavingMember]
+
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        for member in initialMembers {
+            databasePreparer.createContact(identity: member)
+        }
+
+        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            entityManager,
+            groupPhotoSenderMock
+        )
+
+        createOrUpdateDBWait(
+            groupManager: groupManager,
+            groupIdentity: expectedGroupIdentity,
+            members: initialMembers
+        )
+
+        let group = try XCTUnwrap(
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+        )
+
+        let messageID: Data! = try databasePreparer.save {
+            let leavingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contact(for: leavingMember))
+
+            let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
+            let textMessage = self.databasePreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = NSNumber(booleanLiteral: true)
+            textMessage.addRejectedBy(leavingContactEntity)
+
+            return textMessage.id
+        }
+
+        // Run leave
+
+        groupManager.leaveDB(
+            groupID: expectedGroupIdentity.id,
+            creator: expectedGroupIdentity.creator.string,
+            member: leavingMember,
+            systemMessageDate: Date()
+        )
+
+        DDLog.flushLog()
+
+        XCTAssertFalse(group.didLeave)
+        XCTAssertFalse(group.didForcedLeave)
+        XCTAssertEqual(3, group.allMemberIdentities.count)
+        XCTAssertTrue(group.allMemberIdentities.contains("MEMBER02"))
+        XCTAssertFalse(group.allMemberIdentities.contains(leavingMember))
+
+        let actualBaseMessage = try XCTUnwrap(
+            entityManager.entityFetcher.message(with: messageID, conversation: group.conversation)
+        )
+        XCTAssertFalse(actualBaseMessage.sendFailed?.boolValue ?? true)
+        XCTAssertEqual(0, actualBaseMessage.rejectedBy?.count ?? -1)
     }
 
     // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-leave
@@ -1169,6 +1516,110 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(2, task.toMembers.count)
         XCTAssertTrue(task.toMembers.contains("MEMBER01"))
         XCTAssertTrue(task.toMembers.contains("MEMBER03"))
+    }
+    
+    func testDissolveAsAdminWithRejectedMessages() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
+
+        for member in expectedMembers {
+            databasePreparer.save {
+                let contactEntity = databasePreparer.createContact(identity: member)
+                contactEntity.state = NSNumber(integerLiteral: member == "MEMBER02" ? kStateInvalid : kStateActive)
+            }
+        }
+
+        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            entityManager,
+            groupPhotoSenderMock
+        )
+
+        let grp = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroupIdentity,
+                members: expectedMembers
+            )
+        )
+        
+        // Create two text messages with rejectedBy
+        
+        let messageID1: Data! = try databasePreparer.save {
+            let someContactEntity = try XCTUnwrap(
+                entityManager.entityFetcher.contact(for: expectedMembers.randomElement())
+            )
+
+            let textMessage = self.databasePreparer.createTextMessage(
+                conversation: grp.conversation,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = NSNumber(booleanLiteral: true)
+            textMessage.addRejectedBy(someContactEntity)
+
+            return textMessage.id
+        }
+        
+        let messageID2: Data! = try databasePreparer.save {
+            let someContactEntity = try XCTUnwrap(
+                entityManager.entityFetcher.contact(for: expectedMembers.randomElement())
+            )
+
+            let textMessage = self.databasePreparer.createTextMessage(
+                conversation: grp.conversation,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = NSNumber(booleanLiteral: true)
+            textMessage.addRejectedBy(someContactEntity)
+
+            return textMessage.id
+        }
+
+        groupManager.dissolve(groupID: grp.groupID, to: nil)
+
+        let group = try XCTUnwrap(
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+        )
+
+        XCTAssertTrue(group.didLeave)
+        XCTAssertFalse(group.didForcedLeave)
+        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.string))
+        XCTAssertEqual(3, group.allMemberIdentities.count)
+
+        let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionGroupDissolve)
+        XCTAssertEqual(2, task.toMembers.count)
+        XCTAssertTrue(task.toMembers.contains("MEMBER01"))
+        XCTAssertTrue(task.toMembers.contains("MEMBER03"))
+        
+        // All rejectedBys should be removed
+        
+        let actualBaseMessage1 = try XCTUnwrap(
+            entityManager.entityFetcher.message(with: messageID1, conversation: group.conversation)
+        )
+        XCTAssertFalse(actualBaseMessage1.sendFailed?.boolValue ?? true)
+        XCTAssertEqual(0, actualBaseMessage1.rejectedBy?.count ?? -1)
+        
+        let actualBaseMessage2 = try XCTUnwrap(
+            entityManager.entityFetcher.message(with: messageID2, conversation: group.conversation)
+        )
+        XCTAssertFalse(actualBaseMessage2.sendFailed?.boolValue ?? true)
+        XCTAssertEqual(0, actualBaseMessage2.rejectedBy?.count ?? -1)
     }
 
     func testDissolveAsAdminTwoMembers() throws {

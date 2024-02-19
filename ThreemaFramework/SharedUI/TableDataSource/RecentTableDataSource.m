@@ -62,7 +62,7 @@
 - (void)initFetchedResultsController
 {
     EntityManager *entityManager = [[EntityManager alloc] init];
-    _fetchedResultsController = [entityManager.entityFetcher fetchedResultsControllerForConversationsWithSections:false];
+    _fetchedResultsController = [entityManager.entityFetcher fetchedResultsControllerForConversations];
     
     NSError *error = nil;
     if (![_fetchedResultsController performFetch:&error]) {

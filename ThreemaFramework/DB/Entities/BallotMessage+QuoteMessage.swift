@@ -24,7 +24,7 @@ import Foundation
 
 extension BallotMessage: QuoteMessageProvider {
     public var quoteMessage: QuoteMessage? {
-        if isClosed() {
+        if isSummaryMessage() {
             return self
         }
         else {

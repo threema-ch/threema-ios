@@ -207,9 +207,42 @@ struct plOutgoingMessageAck {
 };
 
 typedef NS_ENUM(NSUInteger, ForwardSecurityMode) {
+    /// No FS applied
+    ///
+    /// Incoming: Message received without FS
+    ///
+    /// Outgoing:
+    ///  - 1:1: Not sent or sent without FS
+    ///  - Group: Not sent. Otherwise this should be set to any of the `.outgoingGroupXY` cases.
     kForwardSecurityModeNone = 0,
+    
+    /// Sent or received with 2DH
+    ///
+    /// This can only apply to 1:1 messages
     kForwardSecurityModeTwoDH = 1,
-    kForwardSecurityModeFourDH = 2
+    
+    /// Sent or received with 4DH
+    ///
+    /// This can apply to 1:1 or _incoming_ group messages
+    kForwardSecurityModeFourDH = 2,
+    
+    /// Sent group message with no FS
+    ///
+    /// None of the receivers got the message with FS (i.e. none has a FS >= 1.2 session with this contact).
+    /// This can only apply to outgoing group messages.
+    kForwardSecurityModeOutgoingGroupNone = 3,
+    
+    /// Sent group message partially with FS
+    ///
+    /// Some of the receivers got the message with FS (i.e. some have a FS >= 1.2 session with this contact).
+    /// This can only apply to outgoing group messages.
+    kForwardSecurityModeOutgoingGroupPartial = 4,
+    
+    /// Sent group message fully with FS
+    ///
+    /// All of the receivers got the message with FS (i.e. all have a FS >= 1.2 session with this contact).
+    /// This can only apply to outgoing group messages.
+    kForwardSecurityModeOutgoingGroupFull = 5
 };
 
 typedef NS_ENUM(NSUInteger, ForwardSecurityState) {

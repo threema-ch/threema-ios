@@ -180,9 +180,19 @@ public final actor GroupCallManager {
         let callsInGroup = groupsWithCurrentlyRunningGroupCalls[group.groupIdentity]
         var runningOrCreatedCall = try await getCurrentlyChosenCall(from: callsInGroup)
         
-        /// 4. If call is undefined and intent is to only join, abort these steps and notify the user that no group call
-        /// is running / the group call is no longer running.
-        if runningOrCreatedCall == nil {
+        // If we have a current call, we re-check if the call is still running, if not we reset the local state and show
+        // an error
+        if let runningOrCreatedCall {
+            guard try await runningOrCreatedCall.stillRunning() != .ended else {
+                currentlyJoiningOrJoinedCall = nil
+                await remove(runningOrCreatedCall)
+                throw GroupCallError.endedInMeantime
+            }
+        }
+        else {
+            /// 4. If call is undefined and intent is to only join, abort these steps and notify the user that no group
+            /// call
+            /// is running / the group call is no longer running.
             if intent == .join {
                 throw GroupCallError.joinError
             }
@@ -730,5 +740,67 @@ extension GroupCallManager: GroupCallActorManagerDelegate {
     
     func refreshGroupCalls(in group: GroupIdentity) async {
         try? await refreshRunningGroupCalls(in: group)
+    }
+    
+    func showGroupCallFullAlert(maxParticipants: Int?) async {
+        await withCheckedContinuation { continuation in
+            
+            guard let singletonDelegate else {
+                continuation.resume()
+                return
+            }
+            
+            singletonDelegate.showGroupCallFullAlert(maxParticipants: maxParticipants) {
+                continuation.resume()
+            }
+        }
+    }
+}
+
+extension GroupCallManager {
+    /// Only use when running screenshots
+    public func groupCallViewControllerForScreenshots(
+        groupName: String,
+        localID: String,
+        participantThreemaIdentities: [ThreemaIdentity]
+    ) async -> GroupCallViewController {
+        
+        let localParticipantInfo = dependencies.groupCallParticipantInfoFetcher.fetchInfoForLocalIdentity()
+        let localParticipant = await ViewModelParticipant(
+            id: ParticipantID(id: 0),
+            identity: ThreemaIdentity(localID),
+            name: dependencies.groupCallBundleUtil.localizedString(for: "me"),
+            avatar: localParticipantInfo.avatar,
+            idColor: localParticipantInfo.color,
+            dependencies: dependencies
+        )
+        
+        var participantsList = [localParticipant]
+        
+        for (index, participantThreemaIdentity) in participantThreemaIdentities.enumerated() {
+            let participantInfo = dependencies.groupCallParticipantInfoFetcher
+                .fetchInfo(id: participantThreemaIdentity.string)
+            let participant = await ViewModelParticipant(
+                id: ParticipantID(id: UInt32(index + 1)),
+                identity: participantThreemaIdentities[index],
+                name: participantInfo.displayName!,
+                avatar: participantInfo.avatar,
+                idColor: participantInfo.color,
+                dependencies: dependencies
+            )
+            participantsList.append(participant)
+        }
+        
+        let viewModel = GroupCallViewModel(
+            screenshotGroupName: groupName,
+            localParticipant: localParticipant,
+            participantsList: participantsList
+        )
+        
+        return await GroupCallViewController(
+            viewModel: viewModel,
+            dependencies: dependencies,
+            isRunningForScreenShots: true
+        )
     }
 }

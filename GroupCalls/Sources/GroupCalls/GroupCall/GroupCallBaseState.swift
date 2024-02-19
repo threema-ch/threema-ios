@@ -39,11 +39,12 @@ protocol GroupCallFrameCryptoAdapterProtocol: Sendable {
 
 /// Contains the base state for the group call
 /// Contains all keys that won't change over the lifetime of the group call
-struct GroupCallBaseState {
+final class GroupCallBaseState {
     let group: GroupCallsThreemaGroupModel
     let callID: GroupCallID
     let startedAt: Date
-    let maxParticipants: Int
+    /// This property is only used to display alerts. The actual maximum is enforced by the SFU.
+    var maxParticipants: Int?
     
     let sfuBaseURL: String
     let protocolVersion: UInt32
@@ -58,14 +59,12 @@ struct GroupCallBaseState {
     init(
         group: GroupCallsThreemaGroupModel,
         startedAt: Date,
-        maxParticipants: Int,
         dependencies: Dependencies,
         groupCallStartData: GroupCallStartData
     ) throws {
         self.group = group
         
         self.startedAt = startedAt
-        self.maxParticipants = maxParticipants
         self.dependencies = dependencies
         self.groupCallStartData = groupCallStartData
         

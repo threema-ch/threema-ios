@@ -108,7 +108,7 @@ public enum URLParser {
     private static func parse(webURL: URL) -> URLType {
         // TODO: Parse threema.ch & threema.id urls
         
-        if webURL.isIDNSafe {
+        if webURL.isIDNASafe {
             return .url(url: webURL)
         }
         else {

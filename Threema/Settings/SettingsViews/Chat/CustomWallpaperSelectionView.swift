@@ -23,7 +23,7 @@ import SwiftUI
 struct CustomWallpaperSelectionView: View {
     let conversationID: NSManagedObjectID
     
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     @State private var showingImagePicker = false
 
     @State var defaultSelected = false
@@ -40,7 +40,7 @@ struct CustomWallpaperSelectionView: View {
         List {
             HStack(alignment: .center, spacing: 20) {
                 WallpaperTypeView(
-                    description: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_default"),
+                    description: "settings_chat_wallpaper_default".localized,
                     image: $defaultImage, isSelected: $defaultSelected,
                     isSelectingCustom: $customSelected
                 )
@@ -48,7 +48,7 @@ struct CustomWallpaperSelectionView: View {
                     selectDefault()
                 }
                 WallpaperTypeView(
-                    description: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_custom"),
+                    description: "settings_chat_wallpaper_custom".localized,
                     image: $customImage,
                     isSelected: $customSelected,
                     isSelectingCustom: $customSelected
@@ -135,15 +135,14 @@ public class CustomWallpaperSelectionViewController: UIViewController {
     ) -> UIViewController {
         let view = CustomWallpaperSelectionView(
             conversationID: conversationID,
-            settingsVM: SettingsStore(),
             onDismiss: onDismiss
-        )
+        ).environmentObject(SettingsStore())
         let hostingController = UIHostingController(rootView: view)
         let action = UIAction { _ in
             hostingController.dismiss(animated: true)
         }
         hostingController.navigationItem.rightBarButtonItem = UIBarButtonItem(systemItem: .close, primaryAction: action)
-        hostingController.navigationItem.title = BundleUtil.localizedString(forKey: "settings_chat_wallpaper_title")
+        hostingController.navigationItem.title = "settings_chat_wallpaper_title".localized
 
         return hostingController
     }

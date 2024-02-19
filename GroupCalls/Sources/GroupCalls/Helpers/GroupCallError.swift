@@ -51,6 +51,7 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
     case invalidThreemaIDLength
     case viewModelRetrieveError
     case sendStartMessageError
+    case endedInMeantime
     
     case keyDerivationError
     
@@ -83,7 +84,7 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
              .localProtocolViolation, .promotionError,
              .badMessage, .badParticipantState, .firstMessageNotReceived, .invalidToken, .unsupportedMessage,
              .serializationFailure, .encryptionFailure, .decryptionFailure,
-             .streamCreationError:
+             .streamCreationError, .endedInMeantime:
             return true
         case .captureError:
             return false
@@ -94,6 +95,8 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
         switch self {
         case .alreadyInCall:
             return "group_call_error_already_in_call_title"
+        case .endedInMeantime:
+            return "group_call_error_ended_in_meantime_title"
         default:
             return "group_call_error_generic_title"
         }
@@ -103,6 +106,8 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
         switch self {
         case .alreadyInCall:
             return "group_call_error_already_in_call_message"
+        case .endedInMeantime:
+            return "group_call_error_ended_in_meantime_message"
         default:
             return "group_call_error_generic_title"
         }

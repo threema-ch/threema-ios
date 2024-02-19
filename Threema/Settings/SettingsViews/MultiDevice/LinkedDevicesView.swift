@@ -28,8 +28,7 @@ import SwiftUI
 /// Enable Multi-Device with initial device or show existing linked devices
 struct LinkedDevicesView: View {
     
-//    @EnvironmentObject var settingsStore: SettingsStore
-    @ObservedObject var settingsStore: SettingsStore
+    @EnvironmentObject var settingsStore: SettingsStore
 
     @State private var showWizard = false
     
@@ -44,11 +43,11 @@ struct LinkedDevicesView: View {
             }
         }
         .navigationBarTitle(
-            Text(BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_title")),
+            Text("multi_device_new_linked_devices_title".localized),
             displayMode: .inline
         )
         .sheet(isPresented: $showWizard) {
-            DeviceJoinView(settingsStore: settingsStore, showWizard: $showWizard)
+            DeviceJoinView(showWizard: $showWizard)
         }
     }
 }
@@ -56,7 +55,7 @@ struct LinkedDevicesView: View {
 struct LinkedDevices_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            LinkedDevicesView(settingsStore: SettingsStore())
+            LinkedDevicesView()
         }
     }
 }
@@ -98,11 +97,7 @@ struct EnabledMultiDeviceListView: View {
                 Section {
                     // No row
                 } footer: {
-                    Text(
-                        BundleUtil.localizedString(
-                            forKey: "multi_device_new_linked_devices_failed_to_load"
-                        )
-                    )
+                    Text("multi_device_new_linked_devices_failed_to_load".localized)
                 }
             case let .linkedDevices(devicesInfo: devicesInfo):
                 if !devicesInfo.isEmpty {
@@ -111,7 +106,7 @@ struct EnabledMultiDeviceListView: View {
                             LinkedDeviceListView(device: device)
                         }
                     } footer: {
-                        Text(BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_limitation_info"))
+                        Text("multi_device_new_linked_devices_limitation_info".localized)
                     }
                 }
                 else {
@@ -120,8 +115,8 @@ struct EnabledMultiDeviceListView: View {
                     } footer: {
                         // TODO: (IOS-3939) How do we handle if probably no device is linked, but md enabled?
                         Text(String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_no_other_device"),
-                            BundleUtil.localizedString(forKey: "multi_device_new_linked_device_remove_all_button")
+                            "multi_device_new_linked_devices_no_other_device".localized,
+                            "multi_device_new_linked_device_remove_all_button".localized
                         ))
                     }
                 }
@@ -131,16 +126,16 @@ struct EnabledMultiDeviceListView: View {
                 Button(role: .destructive) {
                     showDisableMultiDeviceConfirmation = true
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "multi_device_new_linked_device_remove_all_button"))
+                    Text("multi_device_new_linked_device_remove_all_button".localized)
                         .frame(maxWidth: .infinity)
                 }
                 .disabled(linkedDevicesState == .refreshing)
                 .confirmationDialog(
-                    BundleUtil.localizedString(forKey: "multi_device_new_linked_device_remove_all_title"),
+                    "multi_device_new_linked_device_remove_all_title".localized,
                     isPresented: $showDisableMultiDeviceConfirmation
                 ) {
                     Button(
-                        BundleUtil.localizedString(forKey: "multi_device_new_linked_device_remove_all_button"),
+                        "multi_device_new_linked_device_remove_all_button".localized,
                         role: .destructive
                     ) {
                         linkedDevicesState = .refreshing
@@ -160,40 +155,61 @@ struct EnabledMultiDeviceListView: View {
         }
         .task {
             linkedDevicesState = .refreshing
-            refresh()
+            await refresh()
         }
         .refreshable {
-            refresh()
+            await refresh()
         }
         .onChange(of: showWizard) { newValue in
             if newValue == false {
                 linkedDevicesState = .refreshing
-                refresh()
+                Task {
+                    await refresh()
+                }
             }
         }
         .alert(
-            BundleUtil.localizedString(forKey: "multi_device_new_linked_device_remove_all_error_title"),
+            "multi_device_new_linked_device_remove_all_error_title".localized,
             isPresented: $showRemovingError
         ) {
-            Button("OK") {
+            Button("ok".localized) {
                 linkedDevicesState = .refreshing
-                refresh()
+                Task {
+                    await refresh()
+                }
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "multi_device_new_linked_device_error_message"))
+            Text("multi_device_new_linked_device_error_message".localized)
         }
     }
     
-    private func refresh() {
-        businessInjector.multiDeviceManager.otherDevices()
-            .done { devicesInfo in
-                linkedDevicesState = .linkedDevices(devicesInfo: devicesInfo)
-            }
-            .catch { error in
-                DDLogError("Failed to load device list: \(error)")
-                
-                linkedDevicesState = .error
-            }
+    private func refresh() async {
+        await withCheckedContinuation { continuation in
+            businessInjector.multiDeviceManager.otherDevices()
+                .done { devices in
+                    // sort device s by label, if label is the same sort by ID
+                    // (so the ordering is consistent across refreshes)
+                    let sortedDevices = devices.sorted {
+                        if $0.label != $1.label {
+                            return $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending
+                        }
+                        else {
+                            return $0.deviceID < $1.deviceID
+                        }
+                    }
+                    
+                    linkedDevicesState = .linkedDevices(devicesInfo: sortedDevices)
+                    
+                    continuation.resume()
+                }
+                .catch { error in
+                    DDLogError("Failed to load device list: \(error)")
+                    
+                    linkedDevicesState = .error
+                    
+                    continuation.resume()
+                }
+        }
     }
 }
 
@@ -234,9 +250,9 @@ struct DisabledMultiDeviceListView: View {
                     }
                 } label: {
                     HStack {
-                        SettingsListView(
-                            cellTitle: BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_add_button"),
-                            imageSystemName: "desktopcomputer"
+                        SettingsListItemView(
+                            cellTitle: "multi_device_new_linked_devices_add_button".localized,
+                            image: .systemImage("desktopcomputer")
                         )
                         Spacer()
                         Image(systemName: "chevron.forward")
@@ -250,17 +266,17 @@ struct DisabledMultiDeviceListView: View {
                 if duplicateContactIdentities.isEmpty {
                     Text("""
                         \(String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "multi_device_new_linked_device_instructions"),
+                        "multi_device_new_linked_device_instructions".localized,
                         ThreemaApp.appName,
                         DeviceJoinManager.downloadURL
                         ))
                         
-                        \(BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_limitation_info"))
+                        \("multi_device_new_linked_devices_limitation_info".localized)
                         """)
                 }
                 else {
                     Text(String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "multi_device_linked_duplicate_contacts_desc"),
+                        "multi_device_linked_duplicate_contacts_desc".localized,
                         ListFormatter.localizedString(byJoining: Array(duplicateContactIdentities))
                     ))
                 }
@@ -270,10 +286,10 @@ struct DisabledMultiDeviceListView: View {
             loadDuplicateContacts()
         }
         .alert(
-            BundleUtil.localizedString(forKey: "multi_device_new_linked_own_identity_in_contacts_title"),
+            "multi_device_new_linked_own_identity_in_contacts_title".localized,
             isPresented: $showOwnIdentityInContactsAlert
         ) {
-            Button(BundleUtil.localizedString(forKey: "multi_device_new_linked_show_contact_button")) {
+            Button("multi_device_new_linked_show_contact_button".localized) {
                 guard let ownIdentityContact = businessInjector.entityManager.entityFetcher.contact(
                     for: businessInjector.myIdentityStore.identity
                 ) else {
@@ -292,7 +308,7 @@ struct DisabledMultiDeviceListView: View {
                 // no-op
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "multi_device_new_linked_own_identity_in_contacts_message"))
+            Text("multi_device_new_linked_own_identity_in_contacts_message".localized)
         }
         .sheet(isPresented: $showPasscodeView) {
             LockScreenView(codeEnteredCorrectly: {
@@ -361,10 +377,17 @@ struct LinkedDeviceListView: View {
                             .localizedString(forKey: "multi_device_new_linked_device_list_no_platform_details")
                     )
 
-                    Text(String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "multi_device_new_linked_device_list_last_active"),
-                        DateFormatter.relativeLongStyleDateShortStyleTime(device.lastLoginAt)
-                    ))
+                    // TODO: (IOS-4200) Fix properly
+                    // Quick fix for current online state
+                    if device.lastLoginAt.millisecondsSince1970 < 1 {
+                        Text("multi_device_new_linked_device_list_currently_active".localized)
+                    }
+                    else {
+                        Text(String.localizedStringWithFormat(
+                            "multi_device_new_linked_device_list_last_active".localized,
+                            DateFormatter.relativeLongStyleDateShortStyleTime(device.lastLoginAt)
+                        ))
+                    }
                 }
                 .font(.footnote)
                 .foregroundColor(.secondary)
@@ -396,7 +419,7 @@ struct LinkedDeviceListView_Previews: PreviewProvider {
         DeviceInfo(
             deviceID: 3,
             label: "Firefox 112.0.2",
-            lastLoginAt: .now,
+            lastLoginAt: Date(timeIntervalSince1970: 0),
             badge: "Volatile Session",
             platform: .web,
             platformDetails: "Firefox 112.0.2"

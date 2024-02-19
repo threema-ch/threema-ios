@@ -17,8 +17,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
+import CocoaLumberjackSwiftSupport
 import Foundation
 
 /// Tagging convention of Log Entry/Message:

@@ -47,9 +47,6 @@ extension ProfileView {
                     }
                     .scaleEffect(CGSize(width: scale, height: scale))
                     .padding()
-                    .background(
-                        .ultraThinMaterial
-                    )
                 }
                 .onAppear {
                     withAnimation(.spring.speed(2)) {
@@ -72,7 +69,14 @@ extension ProfileView {
                     }
                     Spacer()
                 }.padding()
-            }.onTapGesture(perform: onDismiss)
+            }
+            .background(
+                .ultraThinMaterial
+            )
+            .onTapGesture(perform: onDismiss)
+            .onRotate { _ in
+                onDismiss()
+            }
         }
         
         private func onDismiss() {

@@ -201,7 +201,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         // We must change the icon based on the closing state and re-assign the attributed text for the icons to change
         // color as well
         if let ballotMessage = ballotMessageAndNeighbors?.message, !ballotMessage.willBeDeleted {
-            if ballotMessage.isClosed() {
+            if ballotMessage.isSummaryMessage() ?? false {
                 iconView.image = iconView.image?.withTintColor(Colors.textLight)
             }
             else {
@@ -238,12 +238,12 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         messageQuoteStackView.quoteMessage = ballotMessage?.quoteMessage
         
         // Distinguish between closed and open poll message
-        if ballotMessage?.isClosed() ?? false {
+        if ballotMessage?.isSummaryMessage() ?? false {
             messageQuoteStackView.isHidden = false
             messageTextView.text = ""
             messageTextView.isHidden = true
             
-            if let symbol = ballotMessage?.ballot.stateSymbol {
+            if let symbol = ballotMessage?.ballot?.stateSymbol {
                 iconView.image = symbol.withConfiguration(ChatViewConfiguration.Text.symbolConfiguration)
             }
             

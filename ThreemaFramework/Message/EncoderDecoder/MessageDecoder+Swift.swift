@@ -76,6 +76,25 @@ extension MessageDecoder {
         msg.receivedAfterInitialQueueSend = outer.receivedAfterInitialQueueSend
         msg.pushFromName = outer.pushFromName
         
+        // Fix group message creator
+        // For group control messages the creator is normally not included in the message itself. Thus we fix this here.
+        // This should be in sync with the other place with the comment "Fix group message creator"
+        if let groupMsg = msg as? AbstractGroupMessage {
+            if groupMsg is GroupCreateMessage ||
+                groupMsg is GroupRenameMessage ||
+                groupMsg is GroupSetPhotoMessage ||
+                groupMsg is GroupDeletePhotoMessage {
+                groupMsg.groupCreator = outer.fromIdentity
+            }
+            else if groupMsg is GroupRequestSyncMessage {
+                groupMsg.groupCreator = outer.toIdentity
+            }
+        
+            // Validation
+            assert(groupMsg.groupID != nil)
+            assert(groupMsg.groupCreator != nil)
+        }
+        
         return msg
     }
 }

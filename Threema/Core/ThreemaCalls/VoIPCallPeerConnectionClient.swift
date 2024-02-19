@@ -23,6 +23,7 @@
 import AVFoundation
 import CocoaLumberjackSwift
 import Foundation
+import Reachability
 import ThreemaFramework
 import WebRTC
 
@@ -144,8 +145,8 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     
     private var contactIdentity: String?
     
-    private let internetReachability: Reachability! = Reachability.forInternetConnection()
-    private var lastInternetStatus: NetworkStatus?
+    private let internetReachability = try! Reachability()
+    private var lastInternetStatus: Reachability.Connection?
     private(set) var networkIsRelayed = false // will be checked every 30 seconds after connection is established
     
     private var previousPeriodDebugState: VoIPStatsState?
@@ -156,7 +157,7 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     private var isSelectedCandidatePairCellular = false {
         didSet {
             let shouldShowCellularCallWarning = isSelectedCandidatePairCellular && lastInternetStatus ==
-                ReachableViaWiFi
+                .wifi
             delegate?.peerConnectionClient(self, shouldShowCellularCallWarning: shouldShowCellularCallWarning)
         }
     }
@@ -239,8 +240,8 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
                         .encodeVideoQuality(CallsignalingProtocol.localPeerQualityProfile().profile!) {
                         self.sendDataToRemote(protobufMessage)
                     }
-                    self.internetReachability.startNotifier()
-                    self.lastInternetStatus = self.internetReachability.currentReachabilityStatus()
+                    try self.internetReachability.startNotifier()
+                    self.lastInternetStatus = self.internetReachability.connection
 
                     completion(nil)
                 }
@@ -1117,7 +1118,7 @@ extension VoIPCallPeerConnectionClient {
     
     @objc func networkStatusDidChange(notice: Notification) {
         if CallsignalingProtocol.isThreemaVideoCallQualitySettingAuto() {
-            let currentInternetStatus = internetReachability.currentReachabilityStatus()
+            let currentInternetStatus = internetReachability.connection
             if lastInternetStatus != currentInternetStatus {
                 lastInternetStatus = currentInternetStatus
                 setQualityProfileForVideoSource()

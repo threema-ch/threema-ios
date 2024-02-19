@@ -31,6 +31,13 @@ class MessageSenderTests: XCTestCase {
     
     private var ddLoggerMock: DDLoggerMock!
     
+    private lazy var taskManagerMock = TaskManagerMock()
+    private lazy var entityManager = EntityManager(databaseContext: dbMainCnx)
+    private lazy var blobMessageSender = BlobMessageSender(
+        businessInjector: BusinessInjectorMock(backgroundEntityManager: entityManager, entityManager: entityManager),
+        taskManager: taskManagerMock
+    )
+    
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
@@ -42,6 +49,509 @@ class MessageSenderTests: XCTestCase {
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
+    }
+    
+    func testSendBlobMessage() async throws {
+        // Setup
+        
+        let testItemData = Data("Test item data.".utf8)
+        let testFileName = "Testfile"
+        let urlSenderItem = try XCTUnwrap(URLSenderItem(
+            data: testItemData,
+            fileName: testFileName,
+            type: "application/octet-stream",
+            renderType: 0,
+            sendAsFile: true
+        ))
+        
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
+        let conversation = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            return dbPreparer.createConversation(contactEntity: contactEntity)
+        }
+        
+        let blobManagerMock = BlobManagerMock()
+        blobManagerMock.syncHandler = { objectID in
+            guard let blobData = self.entityManager.entityFetcher.existingObject(with: objectID) as? BlobData else {
+                XCTFail("A message should exist")
+                return .failed
+            }
+            
+            self.entityManager.performAndWaitSave {
+                blobData.blobIdentifier = MockData.generateBlobID()
+            }
+            
+            return .uploaded
+        }
+        
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: blobManagerMock,
+            blobMessageSender: blobMessageSender
+        )
+        
+        // Run
+        
+        try await messageSender.sendBlobMessage(
+            for: urlSenderItem,
+            in: conversation.objectID,
+            correlationID: nil,
+            webRequestID: nil
+        )
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
+        let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
+        
+        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.string)
+        XCTAssertNil(addedSendBaseMessageTask.groupID)
+        XCTAssertNil(addedSendBaseMessageTask.groupCreatorIdentity)
+        XCTAssertNil(addedSendBaseMessageTask.groupName)
+        XCTAssertNil(addedSendBaseMessageTask.receivingGroupMembers)
+        
+        // Check that a message with the blob was created
+        let blobMessage = try XCTUnwrap(
+            entityManager.entityFetcher.ownMessage(
+                with: addedSendBaseMessageTask.messageID,
+                conversation: conversation
+            ) as? FileMessageProvider
+        )
+        XCTAssertEqual(blobMessage.blobData, testItemData)
+    }
+    
+    func testSendBaseMessage() async throws {
+        // Setup
+        
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
+        let expectedMessageID = MockData.generateMessageID()
+
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            let textMessage = dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: true,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            )
+            textMessage.sendFailed = true
+            
+            return textMessage
+        }
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
+        )
+
+        // Run
+        
+        await messageSender.sendBaseMessage(with: message.objectID)
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
+        let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
+        
+        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.string)
+        XCTAssertNil(addedSendBaseMessageTask.groupID)
+        XCTAssertNil(addedSendBaseMessageTask.groupCreatorIdentity)
+        XCTAssertNil(addedSendBaseMessageTask.groupName)
+        XCTAssertNil(addedSendBaseMessageTask.receivingGroupMembers)
+
+        XCTAssertFalse(message.sendFailed?.boolValue ?? false)
+    }
+    
+    func testSendBaseMessageBlob() async throws {
+        // Setup
+        
+        let testItemData = Data("Test item data.".utf8)
+        
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            
+            let fileData = dbPreparer.createFileData(data: testItemData)
+            
+            return dbPreparer.createFileMessageEntity(
+                conversation: conversation,
+                data: fileData,
+                mimeType: "application/octet-stream",
+                type: 0
+            )
+        }
+        
+        let blobManagerMock = BlobManagerMock()
+        blobManagerMock.syncHandler = { objectID in
+            guard let blobData = self.entityManager.entityFetcher.existingObject(with: objectID) as? BlobData else {
+                XCTFail("A message should exist")
+                return .failed
+            }
+            
+            self.entityManager.performAndWaitSave {
+                blobData.blobIdentifier = MockData.generateBlobID()
+            }
+            
+            return .uploaded
+        }
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: blobManagerMock,
+            blobMessageSender: blobMessageSender
+        )
+        
+        // Run
+        
+        await messageSender.sendBaseMessage(with: message.objectID)
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
+        let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
+        
+        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.string)
+        XCTAssertNil(addedSendBaseMessageTask.groupID)
+        XCTAssertNil(addedSendBaseMessageTask.groupCreatorIdentity)
+        XCTAssertNil(addedSendBaseMessageTask.groupName)
+        XCTAssertNil(addedSendBaseMessageTask.receivingGroupMembers)
+
+        XCTAssertFalse(message.sendFailed?.boolValue ?? false)
+    }
+    
+    func testSendBaseMessageBlobWithError() async throws {
+        // Setup
+                
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            return dbPreparer.createFileMessageEntity(conversation: conversation)
+        }
+        
+        let blobManagerMock = BlobManagerMock()
+        blobManagerMock.syncHandler = { _ in
+            throw BlobManagerError.noData
+        }
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: blobManagerMock,
+            blobMessageSender: blobMessageSender
+        )
+        
+        // Run
+        
+        await messageSender.sendBaseMessage(with: message.objectID)
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 0)
+        XCTAssertTrue(message.sendFailed?.boolValue ?? false)
+    }
+    
+    func testSendBaseMessageToGroup() async throws {
+        // Setup
+        
+        let expectedMessageID = MockData.generateMessageID()
+        
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        
+        let expectedGroupID = MockData.generateGroupID()
+        let membersWithoutCreator = ["MEMBER01", "MEMBER02", "MEMBER03"]
+        let expectedReceivers = Set(membersWithoutCreator)
+
+        // Setup initial group in DB
+
+        let message = dbPreparer.save {
+            let members = membersWithoutCreator.map { identityString in
+                dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: identityString,
+                    verificationLevel: 0
+                )
+            }
+            
+            _ = dbPreparer.createGroupEntity(
+                groupID: expectedGroupID,
+                groupCreator: nil
+            )
+            let conversation = dbPreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default
+            ) { conversation in
+                conversation.groupID = expectedGroupID
+                conversation.groupMyIdentity = myIdentityStoreMock.identity
+                conversation.addMembers(Set(members))
+            }
+            
+            let textMessage = dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = true
+            
+            return textMessage
+        }
+
+        let userSettingMock = UserSettingsMock()
+        
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            ContactStoreMock(),
+            taskManagerMock,
+            userSettingMock,
+            entityManager,
+            GroupPhotoSenderMock()
+        )
+        
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingMock,
+            groupManager: groupManager,
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
+        )
+
+        // Run
+        
+        await messageSender.sendBaseMessage(with: message.objectID)
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
+        let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
+        
+        XCTAssertNil(addedSendBaseMessageTask.receiverIdentity)
+        XCTAssertEqual(addedSendBaseMessageTask.groupID, expectedGroupID)
+        XCTAssertEqual(addedSendBaseMessageTask.groupCreatorIdentity, myIdentityStoreMock.identity)
+        XCTAssertNil(addedSendBaseMessageTask.groupName) // We didn't set a group name
+        XCTAssertEqual(addedSendBaseMessageTask.receivingGroupMembers, expectedReceivers)
+
+        XCTAssertFalse(message.sendFailed?.boolValue ?? false)
+    }
+    
+    func testSendBaseMessageToSubsetOfGroupMembers() async throws {
+        // Setup
+        
+        let expectedMessageID = MockData.generateMessageID()
+        
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        
+        let expectedGroupID = MockData.generateGroupID()
+        let membersWithoutCreator = ["MEMBER01", "MEMBER02", "MEMBER03"]
+        let expectedReceivers = Set(membersWithoutCreator[0...1])
+
+        // Setup initial group in DB
+
+        let message = dbPreparer.save {
+            let members = membersWithoutCreator.map { identityString in
+                dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: identityString,
+                    verificationLevel: 0
+                )
+            }
+            let rejectedByContacts = members.filter { contact in
+                expectedReceivers.contains(contact.identity)
+            }
+            
+            _ = dbPreparer.createGroupEntity(
+                groupID: expectedGroupID,
+                groupCreator: nil
+            )
+            let conversation = dbPreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default
+            ) { conversation in
+                conversation.groupID = expectedGroupID
+                conversation.groupMyIdentity = myIdentityStoreMock.identity
+                conversation.addMembers(Set(members))
+            }
+            
+            let textMessage = dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = true
+            textMessage.rejectedBy = Set(rejectedByContacts)
+            
+            return textMessage
+        }
+
+        let userSettingMock = UserSettingsMock()
+        
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            ContactStoreMock(),
+            taskManagerMock,
+            userSettingMock,
+            entityManager,
+            GroupPhotoSenderMock()
+        )
+        
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingMock,
+            groupManager: groupManager,
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
+        )
+
+        // Run
+        
+        await messageSender.sendBaseMessage(
+            with: message.objectID,
+            to: .groupMembers(expectedReceivers.map { ThreemaIdentity($0) })
+        )
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
+        let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
+        
+        XCTAssertNil(addedSendBaseMessageTask.receiverIdentity)
+        XCTAssertEqual(addedSendBaseMessageTask.groupID, expectedGroupID)
+        XCTAssertEqual(addedSendBaseMessageTask.groupCreatorIdentity, myIdentityStoreMock.identity)
+        XCTAssertNil(addedSendBaseMessageTask.groupName) // We didn't set a group name
+        XCTAssertEqual(addedSendBaseMessageTask.receivingGroupMembers, expectedReceivers)
+
+        XCTAssertFalse(message.sendFailed?.boolValue ?? false)
+    }
+    
+    func testSendBaseMessageToSubsetOfRejectedGroupMembers() async throws {
+        // Setup
+        
+        let expectedMessageID = MockData.generateMessageID()
+        
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        
+        let expectedGroupID = MockData.generateGroupID()
+        let membersWithoutCreator = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
+        let rejectedBy = membersWithoutCreator[1...]
+        let expectedReceivers = Set(membersWithoutCreator[2...])
+
+        // Setup initial group in DB
+
+        let message = dbPreparer.save {
+            let members = membersWithoutCreator.map { identityString in
+                dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: identityString,
+                    verificationLevel: 0
+                )
+            }
+            let rejectedByContacts = members.filter { contact in
+                rejectedBy.contains(contact.identity)
+            }
+            
+            _ = dbPreparer.createGroupEntity(
+                groupID: expectedGroupID,
+                groupCreator: nil
+            )
+            let conversation = dbPreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default
+            ) { conversation in
+                conversation.groupID = expectedGroupID
+                conversation.groupMyIdentity = myIdentityStoreMock.identity
+                conversation.addMembers(Set(members))
+            }
+            
+            let textMessage = dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            textMessage.sendFailed = true
+            textMessage.rejectedBy = Set(rejectedByContacts)
+            
+            return textMessage
+        }
+
+        let userSettingMock = UserSettingsMock()
+        
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            ContactStoreMock(),
+            taskManagerMock,
+            userSettingMock,
+            entityManager,
+            GroupPhotoSenderMock()
+        )
+        
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingMock,
+            groupManager: groupManager,
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
+        )
+
+        // Run
+        
+        await messageSender.sendBaseMessage(
+            with: message.objectID,
+            to: .groupMembers(expectedReceivers.map { ThreemaIdentity($0) })
+        )
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
+        let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
+        
+        XCTAssertNil(addedSendBaseMessageTask.receiverIdentity)
+        XCTAssertEqual(addedSendBaseMessageTask.groupID, expectedGroupID)
+        XCTAssertEqual(addedSendBaseMessageTask.groupCreatorIdentity, myIdentityStoreMock.identity)
+        XCTAssertNil(addedSendBaseMessageTask.groupName) // We didn't set a group name
+        XCTAssertEqual(addedSendBaseMessageTask.receivingGroupMembers, expectedReceivers)
+
+        XCTAssertTrue(message.sendFailed?.boolValue ?? false)
     }
 
     func testSendDeliveryReceipt() throws {
@@ -83,19 +593,19 @@ class MessageSenderTests: XCTestCase {
             GroupCallStartMessage(),
         ]
 
-        var expectedExcludeFromSending = [Data]()
         for testMessage in testMessages {
             testMessage.fromIdentity = "ECHOECHO"
-
-            let taskManagerMock = TaskManagerMock()
-
+            taskManagerMock.addedTasks = []
+            
             let messageSender = MessageSender(
                 serverConnector: ServerConnectorMock(),
                 myIdentityStore: MyIdentityStoreMock(),
                 userSettings: UserSettingsMock(),
                 groupManager: GroupManagerMock(),
                 taskManager: taskManagerMock,
-                entityManager: EntityManager(databaseContext: dbMainCnx)
+                entityManager: entityManager,
+                blobManger: BlobManagerMock(),
+                blobMessageSender: blobMessageSender
             )
 
             let expect = expectation(description: "Send delivery receipt")
@@ -177,15 +687,15 @@ class MessageSenderTests: XCTestCase {
             )
         }
 
-        let taskManagerMock = TaskManagerMock()
-
         let messageSender = MessageSender(
             serverConnector: ServerConnectorMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
@@ -222,15 +732,15 @@ class MessageSenderTests: XCTestCase {
         let userSettings = UserSettingsMock()
         userSettings.sendReadReceipts = false
 
-        let taskManagerMock = TaskManagerMock()
-
         let messageSender = MessageSender(
             serverConnector: ServerConnectorMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettings,
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
@@ -253,15 +763,15 @@ class MessageSenderTests: XCTestCase {
             )
         }
 
-        let taskManagerMock = TaskManagerMock()
-
         let messageSender = MessageSender(
             serverConnector: ServerConnectorMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
@@ -294,7 +804,6 @@ class MessageSenderTests: XCTestCase {
             deviceID: MockData.deviceID,
             deviceGroupKeys: MockData.deviceGroupKeys
         )
-        let taskManagerMock = TaskManagerMock()
 
         let messageSender = MessageSender(
             serverConnector: serverConnectorMock,
@@ -302,7 +811,9 @@ class MessageSenderTests: XCTestCase {
             userSettings: UserSettingsMock(enableMultiDevice: true),
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
@@ -354,7 +865,6 @@ class MessageSenderTests: XCTestCase {
             conversation: message.conversation,
             lastSyncRequest: nil
         ))
-        let taskManagerMock = TaskManagerMock()
 
         let messageSender = MessageSender(
             serverConnector: ServerConnectorMock(),
@@ -362,7 +872,9 @@ class MessageSenderTests: XCTestCase {
             userSettings: UserSettingsMock(),
             groupManager: groupManagerMock,
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         await messageSender.sendReadReceipt(for: [message], toGroupIdentity: expectedGroupIdentity)
@@ -412,7 +924,6 @@ class MessageSenderTests: XCTestCase {
             conversation: message.conversation,
             lastSyncRequest: nil
         ))
-        let taskManagerMock = TaskManagerMock()
 
         let messageSender = MessageSender(
             serverConnector: serverConnectorMock,
@@ -420,7 +931,9 @@ class MessageSenderTests: XCTestCase {
             userSettings: userSettingsMock,
             groupManager: groupManagerMock,
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         await messageSender.sendReadReceipt(for: [message], toGroupIdentity: expectedGroupIdentity)
@@ -460,8 +973,10 @@ class MessageSenderTests: XCTestCase {
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            taskManager: TaskManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         messageSender.donateInteractionForOutgoingMessage(in: objectID).done { success in
@@ -496,8 +1011,10 @@ class MessageSenderTests: XCTestCase {
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            taskManager: TaskManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         messageSender.donateInteractionForOutgoingMessage(
@@ -535,8 +1052,10 @@ class MessageSenderTests: XCTestCase {
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            taskManager: TaskManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         messageSender.donateInteractionForOutgoingMessage(
@@ -563,8 +1082,10 @@ class MessageSenderTests: XCTestCase {
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
             groupManager: GroupManagerMock(),
-            taskManager: TaskManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
         )
 
         XCTAssertFalse(messageSender.doSendReadReceipt(to: nil))

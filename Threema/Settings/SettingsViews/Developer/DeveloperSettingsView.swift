@@ -30,7 +30,7 @@ struct DeveloperSettingsView: View {
     @State private var showDebugDeviceJoin = false
     
     // Feature Flags
-    @State var newSettings = UserSettings.shared().newSettingsActive
+    @State var enableFSv12 = UserSettings.shared().enableFSv12ForTesting
     
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
@@ -76,7 +76,7 @@ struct DeveloperSettingsView: View {
                 }
                 
                 NavigationLink {
-                    LinkedDevicesView(settingsStore: BusinessInjector().settingsStore as! SettingsStore)
+                    LinkedDevicesView()
                 } label: {
                     Text("Linked Device (beta)")
                 }
@@ -89,12 +89,15 @@ struct DeveloperSettingsView: View {
             }
             
             Section("Feature Flags") {
-                Toggle(isOn: $newSettings) {
-                    Text("SwiftUI Settings")
-                }
-                .onChange(of: newSettings) { newValue in
-                    UserSettings.shared().newSettingsActive = newValue
-                    exit(1)
+                if ThreemaEnvironment.env() == .xcode {
+                    Toggle(isOn: $enableFSv12) {
+                        Text("Enable PFS 1.2")
+                    }
+                    .onChange(of: enableFSv12) { newValue in
+                        UserSettings.shared().enableFSv12ForTesting = newValue
+                        exit(1)
+                    }
+                    .disabled(UserSettings.shared().enableMultiDevice)
                 }
             }
             
@@ -105,7 +108,6 @@ struct DeveloperSettingsView: View {
                 .onChange(of: groupCallsDebugMessages) { newValue in
                     UserSettings.shared().groupCallsDebugMessages = newValue
                 }
-                .disabled(!ThreemaEnvironment.groupCalls)
             }
             
             Section {

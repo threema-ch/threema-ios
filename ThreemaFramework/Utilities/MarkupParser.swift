@@ -259,7 +259,28 @@ extension MarkupParser {
                 guard let result else {
                     return
                 }
-                attributedString.addAttribute(.link, value: result.url ?? "", range: result.range)
+
+                var url: URL?
+                if let urlResult = result.url {
+                    // Corrects the wrong encoded URL from NSDataDetector under iOS17
+                    if #available(iOS 17.0, *),
+                       var urlSourceString = attributedString.string.substring(with: result.range) {
+
+                        // Add missing URL scheme, if happen when NSDataDetector detected an URL without scheme in the
+                        // text (eg. 'threema.ch')
+                        if let scheme = urlResult.scheme, !urlSourceString.starts(with: scheme) {
+                            urlSourceString = "\(scheme)://\(urlSourceString)"
+                        }
+
+                        let urlString = urlSourceString.removingPercentEncoding ?? String(urlSourceString)
+                        url = URL(string: urlString, encodingInvalidCharacters: true)
+                    }
+                    else {
+                        url = urlResult
+                    }
+                }
+
+                attributedString.addAttribute(.link, value: url ?? "", range: result.range)
             }
             return attributedString
         }

@@ -385,7 +385,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             if let senderItem = imageSender.senderItem(from: image, uti: uti) {
                 Task {
                     do {
-                        try await BlobManager.shared.createMessageAndSyncBlobs(
+                        try await businessInjector.messageSender.sendBlobMessage(
                             for: senderItem,
                             in: conversation.objectID
                         )

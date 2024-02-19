@@ -57,32 +57,141 @@ class DBLoadTests: XCTestCase {
         XCTAssertNotNil(databasePath)
     }
 
-    /// Generate duplicate contacts of each existing contact,
-    /// it's useful to test "Setting - Advanced - Contacts Cleanup"
+    /// Generate duplicate contacts of each existing contact:
+    /// - create a 1:1 conversation with some messages for the first duplicate contact
+    /// - create 10 call history entries for the first duplicate contact
+    /// - create a group for all existing identities plus all new duplicates, with some messages
+    /// This test is useful to test "Settings - Advanced - Contacts Cleanup"
+    ///
+    /// Note: the database must contain at least 2 nonduplicate contacts before running this test
     func testGenerateDuplicateContacts() throws {
         let em = EntityManager()
-        em.performAndWaitSave {
-            if let identities = (em.entityFetcher.allContacts() as? [ContactEntity])?.map(\.identity) {
-                identities.forEach { identity in
+        var newDuplicateContacts = [ContactEntity]()
 
-                    if let contactsForIdentity = em.entityFetcher.allContacts(forID: identity) as? [ContactEntity],
-                       contactsForIdentity.count == 1,
-                       let contact = contactsForIdentity.first {
-
-                        print("Create duplicate contact for \(identity)")
-                        let duplicateContact = em.entityCreator.contact()
-                        duplicateContact?.identity = identity
-                        duplicateContact?.publicKey = contact.publicKey
-                        duplicateContact?.verificationLevel = contact.verificationLevel
-                        duplicateContact?.workContact = contact.workContact
-                        duplicateContact?.forwardSecurityState = contact.forwardSecurityState
-                        duplicateContact?.featureMask = contact.featureMask
-                        duplicateContact?.isContactHidden = contact.isContactHidden
-                        duplicateContact?.typingIndicator = contact.typingIndicator
-                        duplicateContact?.readReceipt = contact.readReceipt
-                        duplicateContact?.importedStatus = contact.importedStatus
-                        duplicateContact?.publicNickname = contact.publicNickname
+        try em.performAndWaitSave {
+            if let allContacts = em.entityFetcher.allContacts() {
+                guard allContacts.count >= 2 else {
+                    print("\nSkipping test, please first add at least 2 contacts\n")
+                    return
+                }
+                
+                if let identities = (allContacts as? [ContactEntity])?.map(\.identity) {
+                    
+                    identities.forEach { identity in
+                        
+                        if let contactsForIdentity = em.entityFetcher.allContacts(forID: identity) as? [ContactEntity],
+                           contactsForIdentity.count == 1,
+                           let contact = contactsForIdentity.first {
+                            
+                            print("Create duplicate contact for \(identity)")
+                            let duplicateContact = em.entityCreator.contact()
+                            duplicateContact?.identity = identity
+                            duplicateContact?.firstName = "Duplicate of"
+                            duplicateContact?.lastName = identity
+                            duplicateContact?.publicKey = contact.publicKey
+                            duplicateContact?.verificationLevel = contact.verificationLevel
+                            duplicateContact?.workContact = contact.workContact
+                            duplicateContact?.forwardSecurityState = contact.forwardSecurityState
+                            duplicateContact?.featureMask = contact.featureMask
+                            duplicateContact?.isContactHidden = contact.isContactHidden
+                            duplicateContact?.typingIndicator = contact.typingIndicator
+                            duplicateContact?.readReceipt = contact.readReceipt
+                            duplicateContact?.importedStatus = contact.importedStatus
+                            duplicateContact?.publicNickname = contact.publicNickname
+                            
+                            newDuplicateContacts.append(duplicateContact!)
+                        }
                     }
+                    
+                    guard !newDuplicateContacts.isEmpty else {
+                        print("No duplicates created, terminating test.")
+                        return
+                    }
+                    
+                    //
+                    // create 1:1 conversation for the first duplicated contact
+                    //
+                    
+                    if let firstDuplicateContact = newDuplicateContacts.first {
+                        self.addOneToOneTextMessage(
+                            "This message was received",
+                            isOwn: false,
+                            contact: firstDuplicateContact,
+                            entityManager: em
+                        )
+                        self.addOneToOneTextMessage(
+                            "This message was sent",
+                            isOwn: true,
+                            contact: firstDuplicateContact,
+                            entityManager: em
+                        )
+                        print(
+                            "Created (duplicate) 1:1 conversation with \(firstDuplicateContact.identity) and sent/received messages"
+                        )
+                    }
+                    
+                    //
+                    // create call history entries for duplicate contact
+                    //
+                    
+                    if let firstDuplicateContact = newDuplicateContacts.first {
+                        // inspired from CallHistoryManager / CallHistoryManagerTests
+                        for _ in 0..<10 {
+                            if let call = em.entityCreator.callEntity() {
+                                call.callID = NSNumber(value: UInt32.random(in: UInt32.min..<UInt32.max))
+                                call.date = Date()
+                                call.contact = firstDuplicateContact
+                            }
+                        }
+                        print(
+                            "Created 10 (invisible) call history entries for duplicate of \(firstDuplicateContact.identity)"
+                        )
+                    }
+
+                    //
+                    // create group with duplicate contacts
+                    //
+                    
+                    let group = try self.createGroup(
+                        named: "Duplicate members in this group",
+                        with: identities,
+                        entityManager: em
+                    )
+                    group.conversation.addMembers(Set(newDuplicateContacts))
+                    newDuplicateContacts.forEach { duplicateContact in
+                        let mainContact = em.entityFetcher.contact(for: duplicateContact.identity)
+                        
+                        self.addGroupTextMessage("From main contact", sender: mainContact, in: group, entityManager: em)
+                        self.addGroupTextMessage(
+                            "From duplicate contact",
+                            sender: duplicateContact,
+                            in: group,
+                            entityManager: em
+                        )
+                    }
+                    print(
+                        "Created group conversation '\(group.name!)' with regular and duplicate members and received messages"
+                    )
+                    
+                    //
+                    // add rejected message at the end of the group
+                    //
+
+                    let message = self.addGroupTextMessage(
+                        "From myself. Rejected by 50% main contacts and 50% duplicates.",
+                        in: group,
+                        entityManager: em
+                    )
+                    message.sendFailed = NSNumber(booleanLiteral: true)
+                    for i in 0..<newDuplicateContacts.count {
+                        // alternate between regular and duplicate contacts
+                        let duplicate = newDuplicateContacts[i]
+                        let contact = i % 2 == 0 ? duplicate : em.entityFetcher.contact(for: duplicate.identity)
+                        message.addRejectedBy(contact!)
+                    }
+                    print(
+                        "Added message in group '\(group.name!)' rejected by various main contacts/duplicates"
+                    )
                 }
             }
         }
@@ -1330,16 +1439,16 @@ class DBLoadTests: XCTestCase {
         
         // Add messages
         
-        addTextMessage("Hello", sender: members[0], in: group, entityManager: entityManager)
-        addTextMessage(
+        addGroupTextMessage("Hello", sender: members[0], in: group, entityManager: entityManager)
+        addGroupTextMessage(
             "Who's up for a hike next weekend?",
             sender: members[0],
             in: group,
             entityManager: entityManager
         )
         
-        addTextMessage("I'm in!", sender: members[1], in: group, entityManager: entityManager)
-        addTextMessage("Let's do it. 🥾", sender: members[2], in: group, entityManager: entityManager)
+        addGroupTextMessage("I'm in!", sender: members[1], in: group, entityManager: entityManager)
+        addGroupTextMessage("Let's do it. 🥾", sender: members[2], in: group, entityManager: entityManager)
         
         let testBundle = Bundle(for: DBLoadTests.self)
         let testImageURL = try XCTUnwrap(testBundle.url(forResource: "Bild-1-0", withExtension: "jpg"))
@@ -1353,7 +1462,7 @@ class DBLoadTests: XCTestCase {
             entityManager: entityManager
         )
         
-        addTextMessage(
+        addGroupTextMessage(
             "I need to check how my schedule looks like. When do you plan to go? Only one day or both days?",
             sender: members[3],
             in: group,
@@ -1459,15 +1568,91 @@ class DBLoadTests: XCTestCase {
         return createdContacts
     }
     
-    private func addTextMessage(
+    // the function below is a copy from entityManager.conversation,
+    // but it allows creating a (potentially) duplicate conversation for contactEntity.identity
+    private func getOrCreateDuplicateOneToOneConversation(
+        forContact contactEntity: ContactEntity,
+        entityManager: EntityManager
+    ) -> Conversation? {
+        let conversation = entityManager.entityFetcher.conversation(for: contactEntity)
+        
+        if conversation == nil,
+           let conversation = entityManager.entityCreator.conversation(true) {
+            conversation.contact = contactEntity
+            
+            if contactEntity.isContactHidden {
+                contactEntity.isContactHidden = false
+                
+                let mediatorSyncableContacts = MediatorSyncableContacts()
+                mediatorSyncableContacts.updateAcquaintanceLevel(
+                    identity: contactEntity.identity,
+                    value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
+                )
+                mediatorSyncableContacts.syncAsync()
+            }
+            
+            if contactEntity.showOtherThreemaTypeIcon {
+                // Add work info as first message
+                let systemMessage = entityManager.entityCreator.systemMessage(for: conversation)
+                systemMessage?.type = NSNumber(value: kSystemMessageContactOtherAppInfo)
+                systemMessage?.remoteSentDate = Date()
+            }
+            
+            print("Created 1:1 conversation for \(contactEntity.identity)")
+            return conversation
+        }
+        else {
+            print("Found exising 1:1 conversation for \(contactEntity.identity)")
+        }
+        
+        return conversation
+    }
+
+    /// create a text message in the one to one conversation with the provided contact
+    ///
+    /// isOwn: true if I sent the message, false of the provided contact sent the message
+    private func addOneToOneTextMessage(
+        _ text: String,
+        quoteID: Data? = nil,
+        isOwn: Bool,
+        contact: ContactEntity,
+        entityManager: EntityManager
+    ) {
+        entityManager.performSyncBlockAndSafe {
+            let conversation = self.getOrCreateDuplicateOneToOneConversation(
+                forContact: contact,
+                entityManager: entityManager
+            )
+            let message = entityManager.entityCreator.textMessage(for: conversation)!
+            
+            message.text = text
+            
+            message.date = Date()
+            message.sent = true
+            message.remoteSentDate = Date()
+            message.delivered = true
+            message.deliveryDate = Date()
+            
+            message.quotedMessageID = quoteID
+            
+            if isOwn {
+                message.isOwn = true
+            }
+            else {
+                message.isOwn = false
+            }
+        }
+    }
+
+    @discardableResult private func addGroupTextMessage(
         _ text: String,
         quoteID: Data? = nil,
         sender: ContactEntity? = nil,
         in group: Group,
         entityManager: EntityManager
-    ) {
-        entityManager.performSyncBlockAndSafe {
-            let message = entityManager.entityCreator.textMessage(for: group.conversation)!
+    ) -> TextMessage {
+        entityManager.performAndWaitSave {
+            let message = entityManager.entityCreator.textMessage(for: group.conversation)! as TextMessage
             
             message.text = text
             
@@ -1486,6 +1671,8 @@ class DBLoadTests: XCTestCase {
             else {
                 message.isOwn = true
             }
+            
+            return message
         }
     }
     

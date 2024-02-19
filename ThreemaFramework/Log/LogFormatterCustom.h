@@ -20,8 +20,9 @@
 
 #import <Foundation/Foundation.h>
 #import "LogLevelCustom.h"
-#import <CocoaLumberjack/CocoaLumberjack.h>
 #import <stdatomic.h>
+
+@import CocoaLumberjack;
 
 @interface LogFormatterCustom : NSObject <DDLogFormatter> {
     atomic_int atomicLoggerCount;

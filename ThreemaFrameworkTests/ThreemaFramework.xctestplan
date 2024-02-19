@@ -1,0 +1,55 @@
+{
+  "configurations" : [
+    {
+      "id" : "FE86ED23-24DF-447E-BF1A-E2E019D240D3",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "-com.apple.CoreData.SQLDebug 1",
+        "enabled" : false
+      },
+      {
+        "argument" : "-com.apple.CoreData.ConcurrencyDebug 1",
+        "enabled" : false
+      }
+    ],
+    "environmentVariableEntries" : [
+      {
+        "key" : "SQLITE_ENABLE_THREAD_ASSERTIONS",
+        "value" : "1"
+      },
+      {
+        "enabled" : false,
+        "key" : "SQLITE_AUTO_TRACE",
+        "value" : "1"
+      },
+      {
+        "key" : "SQLITE_ENABLE_FILE_ASSERTIONS",
+        "value" : "1"
+      }
+    ],
+    "language" : "en",
+    "region" : "CH",
+    "testRepetitionMode" : "retryOnFailure"
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : [
+        "BlobManagerTests\/testIncomingDataWithThumbnailNoDone()",
+        "EntityCreatorTests\/testCreateFileMessageEntityVideo()"
+      ],
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "0A677B8A1C6250CA0019B361",
+        "name" : "ThreemaFrameworkTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -50,7 +50,8 @@ final class MockDependencies {
             notificationPresenterWrapper: mockNotificationPresenterWrapper,
             groupCallParticipantInfoFetcher: mockGroupCallParticipantInfoFetcher,
             groupCallSessionHelper: mockGroupCallSessionHelper,
-            groupCallBundleUtil: mockGroupCallBundleUtil
+            groupCallBundleUtil: mockGroupCallBundleUtil,
+            isRunningForScreenshots: false
         )
     }
 }

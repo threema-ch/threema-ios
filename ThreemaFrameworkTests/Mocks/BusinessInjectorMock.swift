@@ -132,7 +132,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.fsmp = ForwardSecurityMessageProcessor(
             dhSessionStore: dhSessionStore,
             identityStore: myIdentityStore,
-            messageSender: DummySender()
+            messageSender: messageSender
         )
         self.settingsStore = settingsStore
         self.conversationStoreInternal = conversationStore
@@ -141,11 +141,5 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.nonceGuard = nonceGuard
         self.blobUploader = blobUploader
         self.messageRetentionManager = messageRetentionManager
-    }
-
-    class DummySender: ForwardSecurityMessageSenderProtocol {
-        func send(message: AbstractMessage) {
-            // do nothing
-        }
     }
 }

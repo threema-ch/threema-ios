@@ -40,7 +40,6 @@
 #import "PhoneNumberNormalizer.h"
 #import "AbstractGroupMessage.h"
 #import "NSString+Hex.h"
-#import "SVProgressHUD.h"
 #import "NewMessageToaster.h"
 #import "EntityFetcher.h"
 #import "SplitViewController.h"
@@ -52,7 +51,6 @@
 #import "ErrorNotificationHandler.h"
 #import "SplashViewController.h"
 
-#import "SDNetworkActivityIndicator.h"
 #import "ActivityIndicatorProxy.h"
 #import "BundleUtil.h"
 #import "AppGroup.h"
@@ -84,6 +82,7 @@
 #import <PushKit/PushKit.h>
 #import <Intents/Intents.h>
 #import <LocalAuthentication/LocalAuthentication.h>
+#import <MBProgressHUD/MBProgressHUD.h>
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -106,7 +105,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     UIViewController *lastViewController;
     UIApplicationShortcutItem *pendingShortCutItem;
     BOOL shouldLoadUIForEnterForeground;
-    BOOL isEnterForeground;
+    BOOL isEnteringForeground;
     BOOL startCheckBiometrics;
     BOOL rootToNotificationSettings;
     UIView *lockView;
@@ -144,20 +143,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 + (AppDelegate*)sharedAppDelegate {
     __block AppDelegate *appDelegate = nil;
     if ([NSThread isMainThread]) {
-        [AppDelegate initAppDelegate];
         appDelegate = (AppDelegate*)[UIApplication sharedApplication].delegate;
     } else {
         dispatch_sync(dispatch_get_main_queue(), ^{
-            [AppDelegate initAppDelegate];
             appDelegate = (AppDelegate*)[UIApplication sharedApplication].delegate;
         });
     }
     
     return appDelegate;
-}
-
-+ (void)initAppDelegate {
-    [ActivityIndicatorProxy wireActivityIndicator:[SDNetworkActivityIndicator sharedActivityIndicator]];
 }
 
 #pragma mark - Launching
@@ -170,11 +163,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     [self registerBackgroundTasks];
-    
+    [self registerLifetimeObservers];
     [PromiseKitConfiguration configurePromiseKit];
     
     shouldLoadUIForEnterForeground = false;
-    isEnterForeground = false;
+    isEnteringForeground = false;
     databaseImported = false;
     startCheckBiometrics = false;
     launchOptions = _launchOptions;
@@ -302,8 +295,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self.window makeKeyAndVisible];
 
     /* display spinner during copy database */
-    [SVProgressHUD showWithStatus:[BundleUtil localizedStringForKey:@"updating_database"]];
+    
+    MBProgressHUD *progressHUD = [[MBProgressHUD alloc] initWithView:self.window];
+    progressHUD.label.numberOfLines = 0;
+    progressHUD.label.text = [BundleUtil localizedStringForKey:@"updating_database"];
+    progressHUD.mode = MBProgressHUDModeIndeterminate;
 
+    [self.window addSubview:progressHUD];
+    [progressHUD showAnimated:YES];
+    
     /* run copy database now in background */
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -315,7 +315,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         NSError *storeError = [dbManager storeError];
         if (storeError != nil) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [SVProgressHUD dismiss];
+                [progressHUD hideAnimated:YES];
+                [progressHUD removeFromSuperview];
                 [ErrorHandler abortWithError: storeError additionalText:@"Failed to import database"];
                 /* do not run launchPhase3 at this point, as we shouldn't load the main storyboard and cause any database accesses */
             });
@@ -330,7 +331,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                     /* run phase 2 (which involves migration) separately to avoid getting killed with "failed to launch in time" */
                     [self performSelectorOnMainThread:@selector(launchPhase2) withObject:nil waitUntilDone:NO];
                 } else {
-                    [SVProgressHUD dismiss];
+                    [progressHUD hideAnimated:YES];
+                    [progressHUD removeFromSuperview];
                     migrating = NO;
                     /* run phase 3 immediately */
                     [self applicationDidBecomeActive:[UIApplication sharedApplication]];
@@ -359,11 +361,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if ([[DatabaseManager dbManager] canMigrateDB] == NO) {
         return;
     }
+    
+    MBProgressHUD *progressHUD = [[MBProgressHUD alloc] initWithView:self.window];
+    progressHUD.label.numberOfLines = 0;
 
     if (databaseImported == false) {
         /* display spinner during migration */
-        [SVProgressHUD showWithStatus:[BundleUtil localizedStringForKey:@"updating_database"]];
+        progressHUD.label.text = [BundleUtil localizedStringForKey:@"updating_database"];
+        progressHUD.mode = MBProgressHUDModeIndeterminate;
+
+        [self.window addSubview:progressHUD];
+        [progressHUD showAnimated:YES];
     }
+    
     /* run migration now in background */
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -379,7 +389,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
         if (storeError != nil) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [SVProgressHUD dismiss];
+                [progressHUD hideAnimated:YES];
+                [progressHUD removeFromSuperview];
                 [ErrorHandler abortWithError: storeError additionalText:[BundleUtil localizedStringForKey:@"database_migration_error_hints"]];
                 /* do not run launchPhase3 at this point, as we shouldn't load the main storyboard and cause any database accesses */
             });
@@ -399,7 +410,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                [SVProgressHUD dismiss];
+                [progressHUD hideAnimated:YES];
+                [progressHUD removeFromSuperview];
                 [self launchPhase3];
                 migrating = NO;
                 [self applicationDidBecomeActive:[UIApplication sharedApplication]];
@@ -422,8 +434,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     NSURL *logFile = [LogManager dbMigrationLogFile];
     [LogManager removeFileLogger:logFile];
 
-    AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
-    [appLaunchTasks runLaunchEventDidFinishLaunching];
     
     incomingMessageManager = [IncomingMessageManager new];
     
@@ -448,6 +458,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self.window makeKeyAndVisible];
         return;
     }
+    
+    AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
+    [appLaunchTasks runLaunchEventDidFinishLaunching];
     
     [incomingMessageManager showIsNotPending];
 
@@ -539,6 +552,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)completedIDSetup {
+    AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
+    [appLaunchTasks runLaunchEventDidFinishLaunching];
+    
     NSInteger state = [[VoIPCallStateManager shared] currentCallState];
     if ((state != CallStateIdle && state != CallStateSendOffer && state != CallStateReceivedOffer) | ![[KKPasscodeLock sharedLock] isPasscodeRequired]) {
         [self presentApplicationUI];
@@ -588,7 +604,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
     
-    if ([self isAppInBackground] && isEnterForeground == false) {
+    if ([self isAppInBackground] && isEnteringForeground == false) {
         shouldLoadUIForEnterForeground = true;
         UIStoryboard *launchStoryboard = [AppDelegate getLaunchStoryboard];
         self.window.rootViewController = [launchStoryboard instantiateInitialViewController];
@@ -690,70 +706,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 });
             }
         } else {
-            // Show Threema Safe Intro once after App update
+            // Do not perform if we are running for screenshots
             if (ProcessInfoHelper.isRunningForScreenshots)  {
-                // Do not show threema safe intro
                 return;
             }
                               
-            // Check if backup is forced from MDM
-            SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-            SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
-            SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
-            MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-            
-            // We abort if we are currently creating a backup, e.g. from app setup
-            if ([safeConfigManager getIsTriggered]) {
-                return;
-            }
-            
-            // Check if Threema Safe is forced and not activated yet
-            if (![safeManager isActivated] && [mdmSetup isSafeBackupForce]) {
-                // Activate with the MDM Password
-                [self activateSafeWithMDMSetup:mdmSetup safeStore:safeStore safeManager:safeManager];
-            }
-            // If Threema Safe is disabled by MDM and Safe is activated, deactivate Safe
-            else if ([safeManager isActivated] && [mdmSetup isSafeBackupDisable]) {
-                [safeManager deactivate];
-            }
-            // If Safe activated, check if server has been changed by MDM
-            else if ([safeManager isActivated] && LicenseStore.sharedLicenseStore.getRequiresLicenseKey) {
-                [safeStore isSafeServerChangedWithMdmSetup:mdmSetup completion:^(BOOL changed) {
-                    
-                    if (!changed) {
-                        return;
-                    }
-                    [safeManager deactivate];
-                    [self activateSafeWithMDMSetup:mdmSetup safeStore:safeStore safeManager:safeManager];
-                }];
-            }
+            // Perform Threema Safe launch checks
+            SafeManager *safeManager = [[SafeManager alloc] initWithGroupManager:[[GroupManager alloc] init]];
+            [safeManager performThreemaSafeLaunchChecks];
         }
     }
-}
-
-/// Activate safe with the password of the MDM
-- (void)activateSafeWithMDMSetup:(MDMSetup *)mdmSetup safeStore:(SafeStore *)safeStore safeManager:(SafeManager *)safeManager {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Or if password is already set from MDM (automatically perform safe)
-        NSString *customServer = nil;
-        NSString *server = nil;
-        if ([mdmSetup isSafeBackupServerPreset]) {
-            // Server is given by MDM
-            customServer = [mdmSetup safeServerUrl];
-            server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
-        }
-        [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
-            if (error) {
-                if ([error code] == ThreemaProtocolErrorSafePasswordEmpty) {
-                    // password was empty
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [LaunchModalManager.shared checkLaunchModals];
-                    });
-                }
-                DDLogError(@"Failed to activate Threema Safe: %@", error);
-            }
-        }];
-    });
 }
 
 - (UIViewController *)currentTopViewController {
@@ -880,7 +842,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)showLockScreen {
         
-    /* replace the root view controller to ensure it's not visible in snapshots */
+    /* Replace the root view controller to ensure it's not visible in snapshots */
     if ([[KKPasscodeLock sharedLock] isPasscodeRequired]) {
         if (![lockView isDescendantOfView:self.window]) {
             if ([self.window.rootViewController isKindOfClass:[UINavigationController class]]) {
@@ -1215,7 +1177,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [[BackgroundTaskManager shared] cancelBackgroundTaskWithKey:kAppClosedByUserBackgroundTask];
     [[BackgroundTaskManager shared] cancelBackgroundTaskWithKey:kAppWCBackgroundTask];
 
-    isEnterForeground = true;
+    isEnteringForeground = true;
     BOOL shouldLoadUI = true;
 
     if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && [NavigationBarPromptHandler isCallActiveInBackground]) {
@@ -1268,7 +1230,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
     [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
     
-    if ([ThreemaEnvironment groupCalls] && [[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
+    if ([[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
         [[GlobalGroupCallsManagerSingleton shared] handleCallsFromDBWithCompletionHandler:^{
             // Noop
         }];
@@ -1358,10 +1320,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle && ![NavigationBarPromptHandler isCallActiveInBackground]) {
         [[VoIPCallStateManager shared] presentCallViewController];
     } else {
-        // if not a call, then trigger Threema Safe backup (it will show an alert here, if last successful backup older than 7 days)
-        SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-        SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
-        SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
+        // If not a call, then trigger Threema Safe backup (it will show an alert here, if last successful backup older than 7 days)
+        SafeManager *safeManager = [[SafeManager alloc]initWithGroupManager:[[GroupManager alloc] init]];
         [safeManager initTrigger];
     }
     
@@ -1444,8 +1404,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #pragma mark - UNUserNotificationCenterDelegate
 
 /**
- Is not allowed when could not evaluate requiers DB migration or DB migration is running or App setup is not finished yet.
- @param doBeforExit: Will be running before possible exit
+ Is not allowed when could not evaluate requires DB migration or DB migration is running or App setup is not finished yet.
+ @param doBeforeExit: Will be running before possible exit
  */
 - (BOOL)isHandleNotificationAllowed:(void(^ _Nullable)(void))doBeforeExit {
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
@@ -1590,6 +1550,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return;
     }
     
+    [self completeAuthentication];
+}
+
+- (void)completeAuthentication {
     [self presentApplicationUI];
     
     if (pendingUrl) {
@@ -1598,6 +1562,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else if (pendingShortCutItem) {
         [URLHandler handleShortCutItem:pendingShortCutItem];
         pendingShortCutItem = nil;
+    }
+    
+    if (evaluatedPolicyDomainState != nil) {
+        [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:evaluatedPolicyDomainState];
+        evaluatedPolicyDomainState = nil;
+    }
+    
+    if (rootToNotificationSettings) {
+        MainTabBarController *mainTabBarController = [AppDelegate getMainTabBarController];
+        [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
+        [mainTabBarController showNotificationSettings];
+        rootToNotificationSettings = nil;
     }
 }
 
@@ -1635,11 +1611,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 
-
 #pragma mark - Passcode lock delegate
 
 - (void)shouldEraseApplicationData:(JKLLockScreenViewController *)viewController {
-
     [self eraseApplicationData];
 }
 
@@ -1647,27 +1621,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     isAppLocked = NO;
     startCheckBiometrics = false;
 
-    [self presentApplicationUI];
-
-    if (pendingUrl) {
-        [URLHandler handleURL:pendingUrl];
-        pendingUrl = nil;
-    } else if (pendingShortCutItem) {
-        [URLHandler handleShortCutItem:pendingShortCutItem];
-        pendingShortCutItem = nil;
-    }
-    
-    if (evaluatedPolicyDomainState != nil) {
-        [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:evaluatedPolicyDomainState];
-        evaluatedPolicyDomainState = nil;
-    }
-    
-    if (rootToNotificationSettings) {
-        MainTabBarController *mainTabBarController = [AppDelegate getMainTabBarController];
-        [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
-        [mainTabBarController showNotificationSettings];
-        rootToNotificationSettings = nil;
-    }
+    [self completeAuthentication];
 }
 
 - (void)didPasscodeViewDismiss:(JKLLockScreenViewController *)viewController {

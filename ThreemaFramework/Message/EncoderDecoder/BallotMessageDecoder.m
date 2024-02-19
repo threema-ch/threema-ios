@@ -107,7 +107,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     /* Create Message in DB */
     [_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
-        [_entityManager performAsyncBlockAndSafe:^{
+        [_entityManager performSyncBlockAndSafe:^{
             Ballot *ballot = [_entityManager.entityFetcher ballotForBallotId:ballotId];
             NSDate *conversationLastUpdate = conversation.lastUpdate;
             if (ballot != nil) {
@@ -140,9 +140,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             ballot.modifyDate = [NSDate date];
             ballot.conversation = conversation;
             ((BallotMessage *)message).ballot = ballot;
-
-            onCompletion(message);
         }];
+        onCompletion(message);
     } onError:onError];
 
 }

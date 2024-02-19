@@ -120,7 +120,7 @@ public class Contact: NSObject {
     @objc public dynamic var displayName: String {
         var value = String(ContactUtil.name(fromFirstname: firstName, lastname: lastName) ?? "")
 
-        if value.isEmpty, let publicNickname, publicNickname != identity.string {
+        if value.isEmpty, let publicNickname, !publicNickname.isEmpty, publicNickname != identity.string {
             value = "~\(publicNickname)"
         }
 

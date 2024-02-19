@@ -131,6 +131,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         tableView?.registerCell(SwitchDetailsTableViewCell.self)
         tableView?.registerCell(GroupCell.self)
         tableView?.registerCell(PrivacySettingsTableViewCell.self)
+        tableView?.registerCell(DebugInfoTableViewCell.self)
     }
     
     private let cellProvider: SingleDetailsDataSource.CellProvider = { tableView, indexPath, row in
@@ -191,6 +192,16 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             wallpaperCell.action = action
             wallpaperCell.isDefault = isDefault
             return wallpaperCell
+            
+        case let .coreDataDebugInfo(contact):
+            let cell: DebugInfoTableViewCell = tableView.dequeueCell(for: indexPath)
+            cell.debugText = contact.debugDescription
+            return cell
+            
+        case let .fsDebugInfo(sessionInfo: sessionInfo):
+            let cell: DebugInfoTableViewCell = tableView.dequeueCell(for: indexPath)
+            cell.debugText = sessionInfo
+            return cell
         }
     }
     
@@ -249,6 +260,12 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         snapshot.appendItems(shareRows)
         snapshot.appendSections([.contactActions])
         snapshot.appendItems(contactActions)
+        
+        if ThreemaEnvironment.env() == .xcode {
+            snapshot.appendSections([.debugInfo])
+            snapshot.appendItems([.coreDataDebugInfo(contact: contact)])
+            snapshot.appendItems(fsSessionDebugInfo)
+        }
     }
     
     func sortedGroupMembershipConversations() -> [Conversation]? {
@@ -1185,6 +1202,15 @@ extension SingleDetailsDataSource {
         }
         
         return [.action(clearForwardSecurityAction)]
+    }
+    
+    private var fsSessionDebugInfo: [SingleDetails.Row] {
+        let session = try? businessInjector.dhSessionStore.bestDHSession(
+            myIdentity: businessInjector.myIdentityStore.identity,
+            peerIdentity: contact.identity
+        )
+        
+        return [.fsDebugInfo(sessionInfo: session?.description ?? "No Session")]
     }
 }
 

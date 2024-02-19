@@ -237,6 +237,10 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_video_unmuted"),
         notificationStyle: .none
     )
+    public static let safePasswordAccepted = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "threema_safe_company_mdm_password_changed_accepted"),
+        notificationStyle: .success
+    )
 }
 
 // MARK: - AccessibilityAnnouncementType

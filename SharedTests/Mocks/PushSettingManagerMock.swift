@@ -31,6 +31,10 @@ class PushSettingManagerMock: PushSettingManagerProtocol {
         PushSetting(groupIdentity: groupIdentity)
     }
     
+    func pushSetting(for pendingUserNotification: PendingUserNotification) -> PushSetting? {
+        nil
+    }
+
     func save(pushSetting: PushSetting, sync: Bool) async {
         // no-op
     }

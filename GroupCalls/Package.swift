@@ -23,6 +23,7 @@ let package = Package(
         .package(path: "../ThreemaEssentials"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "0.1.0"),
+        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", from: "3.8.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -36,6 +37,8 @@ let package = Package(
                 "ThreemaEssentials",
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+                .product(name: "CocoaLumberjackSwift", package: "CocoaLumberjack"),
+                .product(name: "CocoaLumberjack", package: "CocoaLumberjack"),
             ],
             
             swiftSettings: [

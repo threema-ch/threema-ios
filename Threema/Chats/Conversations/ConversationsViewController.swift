@@ -74,7 +74,7 @@ class ConversationsViewController: ThemedTableViewController {
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = businessInjector.entityManager
             .entityFetcher
-            .fetchedResultsControllerForConversations(withSections: false)
+            .fetchedResultsControllerForConversations()
         
         fetchedResultsController.delegate = self
         
@@ -138,7 +138,6 @@ class ConversationsViewController: ThemedTableViewController {
         
         navigationItem.leftBarButtonItem = editButton
         navigationItem.rightBarButtonItem = newChatButton
-        navigationItem.searchController = searchController
         
         tableView.allowsMultipleSelectionDuringEditing = true
         
@@ -165,6 +164,13 @@ class ConversationsViewController: ThemedTableViewController {
         // This and the opposite in `viewWillDisappear` is needed to make a search controller work that is added in a
         // child view controller using the same navigation bar. See ChatSearchController for details.
         definesPresentationContext = true
+    }
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        if navigationItem.searchController == nil {
+            navigationItem.searchController = searchController
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -222,18 +228,6 @@ extension ConversationsViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         fetchedResultsController.sections?[section].numberOfObjects ?? 0
-    }
-    
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if fetchedResultsController.sections?.count == 1 {
-            return nil
-        }
-        
-        if fetchedResultsController.sections?[section].name == "0" {
-            return BundleUtil.localizedString(forKey: "chats_title")
-        }
-        
-        return BundleUtil.localizedString(forKey: "chats_pinned")
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -896,24 +890,34 @@ extension ConversationsViewController {
     
     /// Enables or Disables the ArchiveButton
     private func updateArchivedButton() {
-        
-        // Disable button if no archived chats, hide it if there are not conversations at all
-        let count = businessInjector.entityManager.entityFetcher.countArchivedConversations()
-        if count > 0 {
-            archivedChatsButton.isHidden = false
-            archivedChatsButton.setTitle(BundleUtil.localizedString(forKey: "archived_chats") + " ", for: .normal)
-            archivedChatsButton.setImage(BundleUtil.imageNamed("chevron.right_semibold.M"), for: .normal)
-            archivedChatsButton.isEnabled = true
-        }
-        // swiftformat:disable:next isEmpty
-        else if let objects = fetchedResultsController.fetchedObjects as NSArray?, objects.count != 0 {
-            archivedChatsButton.setTitle(BundleUtil.localizedString(forKey: "no_archived_chats"), for: .normal)
-            archivedChatsButton.setImage(nil, for: .normal)
-            archivedChatsButton.isEnabled = false
-            archivedChatsButton.isHidden = false
-        }
-        else {
-            archivedChatsButton.isHidden = true
+        Task { @MainActor in
+            await Task.yield()
+            
+            // Disable button if no archived chats, hide it if there are not conversations at all
+            let em = businessInjector.entityManager
+            let count = await em.perform {
+                em.entityFetcher.countArchivedConversations()
+            }
+            
+            if count > 0 {
+                archivedChatsButton.isHidden = false
+                archivedChatsButton.setTitle(
+                    BundleUtil.localizedString(forKey: "archived_chats") + " ",
+                    for: .normal
+                )
+                archivedChatsButton.setImage(BundleUtil.imageNamed("chevron.right_semibold.M"), for: .normal)
+                archivedChatsButton.isEnabled = true
+            }
+            // swiftformat:disable:next isEmpty
+            else if let objects = fetchedResultsController.fetchedObjects as NSArray?, objects.count != 0 {
+                archivedChatsButton.setTitle(BundleUtil.localizedString(forKey: "no_archived_chats"), for: .normal)
+                archivedChatsButton.setImage(nil, for: .normal)
+                archivedChatsButton.isEnabled = false
+                archivedChatsButton.isHidden = false
+            }
+            else {
+                archivedChatsButton.isHidden = true
+            }
         }
     }
     

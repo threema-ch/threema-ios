@@ -38,8 +38,8 @@ struct DeviceJoinVerifyEmojiView: View {
                 VStack(alignment: .center) {
                     
                     DeviceJoinHeaderView(
-                        title: BundleUtil.localizedString(forKey: "multi_device_join_trust_new_device_title"),
-                        description: BundleUtil.localizedString(forKey: "multi_device_join_trust_new_device_info")
+                        title: "multi_device_join_trust_new_device_title".localized,
+                        description: "multi_device_join_trust_new_device_info".localized
                     )
                     .padding(.bottom, 24)
                     
@@ -53,7 +53,7 @@ struct DeviceJoinVerifyEmojiView: View {
                             .frame(maxWidth: !dynamicTypeSize.isAccessibilitySize ? 250 : nil)
                             .padding(.bottom, 24)
                             
-                            Button(BundleUtil.localizedString(forKey: "multi_device_join_no_match_button")) {
+                            Button("multi_device_join_no_match_button".localized) {
                                 showNoMatchAlert = true
                             }
                         }
@@ -92,7 +92,7 @@ struct DeviceJoinVerifyEmojiView: View {
                         
                         Label(
                             String.localizedStringWithFormat(
-                                BundleUtil.localizedString(forKey: "multi_device_join_sending_info"),
+                                "multi_device_join_sending_info".localized,
                                 ThreemaApp.appName
                             ),
                             systemImage: "info.circle"
@@ -121,13 +121,13 @@ struct DeviceJoinVerifyEmojiView: View {
                 }
             }
         }
-        .alert(BundleUtil.localizedString(forKey: "multi_device_join_no_match_title"), isPresented: $showNoMatchAlert) {
-            Button("OK") {
+        .alert("multi_device_join_no_match_title".localized, isPresented: $showNoMatchAlert) {
+            Button("ok".localized) {
                 deviceJoinManager.deviceJoin.cancel()
                 showWizard = false
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "multi_device_join_no_match_message"))
+            Text("multi_device_join_no_match_message".localized)
         }
     }
 }

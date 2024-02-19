@@ -89,7 +89,6 @@
     NSString *placeholder = [BundleUtil localizedStringForKey:@"Password"];
     _passwordTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
 
-    _backupLabel.verticalTextAlignment = SSLabelVerticalTextAlignmentTop;
     _backupLabel.text = [BundleUtil localizedStringForKey:@"id_backup_placeholder"];
     _backupLabel.numberOfLines = 0;
     

@@ -127,4 +127,6 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var groupCallsDebugMessages = false
     
     var keepMessagesDays = -1
+    
+    var enableFSv12ForTesting = true
 }

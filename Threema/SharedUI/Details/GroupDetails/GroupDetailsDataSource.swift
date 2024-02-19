@@ -64,6 +64,24 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         
     private let configuration = Configuration()
     
+    private static let contentConfigurationCellIdentifier = "contentConfigurationCellIdentifier"
+    
+    // Keep tack of debug info taps and configure threshold after how many taps to show debug info
+    
+    private var showDebugInfo: Bool {
+        showDebugInfoTapCounter >= showDebugInfoThreshold || ThreemaEnvironment.env() == .xcode
+    }
+
+    private var showDebugInfoTapCounter = 0 {
+        didSet {
+            if showDebugInfo {
+                reload(sections: [.debugInfo])
+            }
+        }
+    }
+
+    private let showDebugInfoThreshold = 5
+    
     // MARK: - Lifecycle
     
     init(
@@ -103,6 +121,10 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         tableView?.registerCell(DoNotDisturbDetailsTableViewCell.self)
         tableView?.registerCell(SwitchDetailsTableViewCell.self)
         tableView?.registerCell(WallpaperTableViewCell.self)
+        tableView?.register(
+            UITableViewCell.self,
+            forCellReuseIdentifier: GroupDetailsDataSource.contentConfigurationCellIdentifier
+        )
     }
     
     private let cellProvider: GroupDetailsDataSource.CellProvider = { tableView, indexPath, row in
@@ -177,6 +199,20 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
             wallpaperCell.action = action
             wallpaperCell.isDefault = isDefault
             return wallpaperCell
+            
+        case let .fsDebugMember(contact: contact, sessionInfo: sessionInfo):
+            let cell = tableView.dequeueReusableCell(
+                withIdentifier: GroupDetailsDataSource.contentConfigurationCellIdentifier,
+                for: indexPath
+            )
+            cell.selectionStyle = .none
+            
+            var contentConfiguration = UIListContentConfiguration.valueCell()
+            contentConfiguration.text = contact.displayName
+            contentConfiguration.secondaryText = sessionInfo
+            
+            cell.contentConfiguration = contentConfiguration
+            return cell
         }
         
         return cell
@@ -212,6 +248,11 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         snapshot.appendItems(notificationRows)
         appendSectionIfNonEmptyItems(section: .groupActions, with: groupActions)
         appendSectionIfNonEmptyItems(section: .destructiveGroupActions, with: destructiveGroupActions)
+        
+        if showDebugInfo {
+            snapshot.appendSections([.debugInfo])
+            snapshot.appendItems(fsDebugMembers)
+        }
         
         apply(snapshot, animatingDifferences: false)
     }
@@ -259,6 +300,13 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
                 update(section: .destructiveGroupActions, with: destructiveGroupActions)
             case .wallpaper:
                 localSnapshot.appendItems(wallpaperActions, toSection: .wallpaper)
+            case .debugInfo:
+                if showDebugInfo {
+                    localSnapshot.appendItems(fsDebugMembers, toSection: .debugInfo)
+                }
+                else {
+                    update(section: .debugInfo, with: [])
+                }
             default:
                 fatalError("Unable to update section: \(section)")
             }
@@ -394,8 +442,8 @@ extension GroupDetailsDataSource {
     }
     
     private func groupCallQuickAction(in viewController: UIViewController) -> QuickAction? {
-        // Only show call icon if group calls are enabled
-        guard ThreemaEnvironment.groupCalls, UserSettings.shared().enableThreemaGroupCalls, !group.isNoteGroup,
+        // Only show call icon if group calls are enabled and is not note group
+        guard UserSettings.shared().enableThreemaGroupCalls, !group.isNoteGroup,
               group.isSelfMember else {
             return nil
         }
@@ -917,6 +965,8 @@ extension GroupDetailsDataSource {
             ) { _ in
                 DDLogVerbose("Group was deleted")
             }
+            
+            strongSelf.showDebugInfoTapCounter += 1
         }
         rows.append(.action(deleteAction))
         
@@ -949,6 +999,28 @@ extension GroupDetailsDataSource {
             isDefault: !SettingsStore().wallpaperStore.hasCustomWallpaper(for: conversation.objectID)
         ))
         return row
+    }
+    
+    // MARK: Debug info
+    
+    private var fsDebugMembers: [GroupDetails.Row] {
+        var rows = [GroupDetails.Row]()
+
+        for member in group.members {
+            let session = try? businessInjector.dhSessionStore.bestDHSession(
+                myIdentity: businessInjector.myIdentityStore.identity,
+                peerIdentity: member.identity.string
+            )
+            
+            rows.append(
+                .fsDebugMember(
+                    contact: member,
+                    sessionInfo: session?.description ?? "No Session"
+                )
+            )
+        }
+        
+        return rows
     }
 }
 

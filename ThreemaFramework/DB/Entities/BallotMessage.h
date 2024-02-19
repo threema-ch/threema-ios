@@ -26,20 +26,16 @@
 
 @interface BallotMessage : BaseMessage
 
-@property (nonatomic, retain) NSNumber *ballotState;
-@property (nonatomic, retain) Ballot *ballot;
+@property (nullable, nonatomic, retain) NSNumber *ballotState;
+@property (nullable, nonatomic, retain) Ballot *ballot;
 
 #pragma mark - own definitions & methods
 
 enum {
     kBallotMessageStateOpenBallot = 0,
-    kBallotMessageStateCloseBallot,
-    kBallotMessageStateSyncBallot,
-    kBallotMessageStateGotVote,
-    kBallotMessageStateSentVote
+    kBallotMessageStateCloseBallot
 };
 
-
-- (BOOL)isClosed;
+- (BOOL)isSummaryMessage;
 
 @end

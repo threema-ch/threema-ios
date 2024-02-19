@@ -40,7 +40,7 @@ import ThreemaProtocols
     }
     
     override public func minimumRequiredForwardSecurityVersion() -> ObjcCspE2eFs_Version {
-        ObjcCspE2eFs_Version.unspecified
+        .V12
     }
     
     @objc var decodedObj: Any {
@@ -52,7 +52,6 @@ import ThreemaProtocols
               let serializedData = try? decoded?.serializedData()
         else {
             let message = "Unable to create GroupCallStartMessage body"
-            assertionFailure(message)
             DDLogError(message)
             return nil
         }
@@ -66,7 +65,7 @@ import ThreemaProtocols
     }
     
     override public func pushNotificationBody() -> String! {
-        BundleUtil.localizedString(forKey: "group_call_start_message_received")
+        BundleUtil.localizedString(forKey: "group_call_notification_body")
     }
     
     override public func isContentValid() -> Bool {

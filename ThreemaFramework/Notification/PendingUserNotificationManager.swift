@@ -215,120 +215,8 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
             }
 
             // Get notification content
-            if let userNotificationContent = self.userNotificationManager
-                .userNotificationContent(pendingUserNotification) {
-                // Add notification or suppress it
-                var suppress = false
-                var silent = false
-                
-                if let pushSetting = userNotificationContent.pushSetting {
-                    if userNotificationContent.isGroupMessage {
-                        if let baseMessage = userNotificationContent.baseMessage {
-                            suppress = !pushSettingManager.canSendPush(for: baseMessage) ||
-                                !pushSetting
-                                .canSendPushGroupCallStartMessage(for: pendingUserNotification.abstractMessage)
-                        }
-                        else {
-                            suppress = !pushSetting
-                                .canSendPushGroupCallStartMessage(for: pendingUserNotification.abstractMessage)
-                        }
-                    }
-                    else {
-                        suppress = !pushSetting.canSendPush()
-                    }
-
-                    silent = pushSetting.muted
-                }
-
-                if !suppress {
-                    var notification = UNMutableNotificationContent()
-                    userNotificationManager.applyContent(
-                        userNotificationContent,
-                        &notification,
-                        silent,
-                        pendingUserNotification.baseMessage
-                    )
-                    
-                    let businessInjector = BusinessInjector()
-                    let notificationType = NotificationType.type(for: businessInjector.userSettings.notificationType)
-                    
-                    // Add communication notification if enabled
-                    if case .complete = notificationType,
-                       let interaction = pendingUserNotification.interaction {
-
-                        // Donating
-                        interaction.donate { error in
-                            
-                            if let error {
-                                
-                                // Could not donate, we add a standard notification instead
-                                DDLogError("[Push] Could not donate Intent, error: \(error.localizedDescription)")
-                                
-                                self.addPendingUserNotification(
-                                    for: notification,
-                                    with: pendingUserNotification,
-                                    seal: seal
-                                )
-                                return
-                            }
-                            
-                            // Update notification content with intent
-                            do {
-        
-                                guard let updatedNotification = try notification
-                                    .updating(
-                                        from: interaction
-                                            .intent as! UNNotificationContentProviding
-                                    ) as? UNMutableNotificationContent
-                                else {
-                                    DDLogError("[Push] Could not cast to mutable notification. Post old.")
-                                        
-                                    self.addPendingUserNotification(
-                                        for: notification,
-                                        with: pendingUserNotification,
-                                        seal: seal
-                                    )
-                                        
-                                    return
-                                }
-                                    
-                                // Add communication notification
-                                self.addPendingUserNotification(
-                                    for: updatedNotification,
-                                    with: pendingUserNotification,
-                                    seal: seal
-                                )
-                            }
-                            catch {
-                                // Could not update, add standard notification instead
-                                DDLogError(
-                                    "[Push] Could not update notification content with intent, error: \(error.localizedDescription)"
-                                )
-                                
-                                self.addPendingUserNotification(
-                                    for: notification,
-                                    with: pendingUserNotification,
-                                    seal: seal
-                                )
-                            }
-                        }
-                    }
-                    else {
-                        // Add standard notification
-                        addPendingUserNotification(for: notification, with: pendingUserNotification, seal: seal)
-                    }
-                }
-                else {
-                    DDLogWarn("[Push] Suppressed push, removing from pending, key: \(pendingUserNotification.key)")
-                    userNotificationCenterManager.remove(
-                        key: pendingUserNotification.key,
-                        exceptStage: nil,
-                        justPending: true
-                    )
-                    seal(false)
-                }
-            }
-            else {
+            guard let userNotificationContent = self.userNotificationManager
+                .userNotificationContent(pendingUserNotification) else {
                 DDLogWarn(
                     "[Push] Invalid Notification content, removed from pending, key: \(pendingUserNotification.key)"
                 )
@@ -338,6 +226,110 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                     justPending: true
                 )
                 seal(false)
+                return
+            }
+            
+            // Add notification or suppress it
+            var suppress = false
+            var silent = false
+                    
+            if let pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification) {
+                if userNotificationContent.isGroupMessage {
+                    if let baseMessage = pendingUserNotification.baseMessage {
+                        suppress = !pushSettingManager.canSendPush(for: baseMessage) || !pushSetting
+                            .canSendPushGroupCallStartMessage(for: pendingUserNotification.abstractMessage)
+                    }
+                    else {
+                        suppress = !pushSetting
+                            .canSendPushGroupCallStartMessage(for: pendingUserNotification.abstractMessage)
+                    }
+                }
+                else {
+                    suppress = !pushSetting.canSendPush()
+                }
+
+                silent = pushSetting.muted
+            }
+
+            guard !suppress else {
+                DDLogWarn("[Push] Suppressed push, removing from pending, key: \(pendingUserNotification.key)")
+                userNotificationCenterManager.remove(
+                    key: pendingUserNotification.key,
+                    exceptStage: nil,
+                    justPending: true
+                )
+                seal(false)
+                return
+            }
+            
+            var notification = UNMutableNotificationContent()
+            userNotificationManager.applyContent(
+                userNotificationContent,
+                &notification,
+                silent,
+                pendingUserNotification.baseMessage
+            )
+                        
+            let businessInjector = BusinessInjector()
+            let notificationType = NotificationType.type(for: businessInjector.userSettings.notificationType)
+                        
+            // Add communication notification if enabled
+            guard case .complete = notificationType, let interaction = pendingUserNotification.interaction else {
+                // Add standard notification
+                addPendingUserNotification(for: notification, with: pendingUserNotification, seal: seal)
+                return
+            }
+
+            // Donating
+            interaction.donate { error in
+                guard error == nil else {
+                    // Could not donate, we add a standard notification instead
+                    DDLogError("[Push] Could not donate Intent, error: \(error!.localizedDescription)")
+                                    
+                    self.addPendingUserNotification(
+                        for: notification,
+                        with: pendingUserNotification,
+                        seal: seal
+                    )
+                    return
+                }
+                                
+                // Update notification content with intent
+                do {
+                    guard let updatedNotification = try notification
+                        .updating(
+                            from: interaction
+                                .intent as! UNNotificationContentProviding
+                        ) as? UNMutableNotificationContent else {
+                        DDLogError("[Push] Could not cast to mutable notification. Post old.")
+                                            
+                        self.addPendingUserNotification(
+                            for: notification,
+                            with: pendingUserNotification,
+                            seal: seal
+                        )
+                        return
+                    }
+                                        
+                    // Add communication notification
+                    self.addPendingUserNotification(
+                        for: updatedNotification,
+                        with: pendingUserNotification,
+                        seal: seal
+                    )
+                }
+                catch {
+                    // Could not update, add standard notification instead
+                    DDLogError(
+                        "[Push] Could not update notification content with intent, error: \(error.localizedDescription)"
+                    )
+                                    
+                    self.addPendingUserNotification(
+                        for: notification,
+                        with: pendingUserNotification,
+                        seal: seal
+                    )
+                }
             }
         }
     }
@@ -497,21 +489,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                             .pathProcessedUserNotifications
                     ) as? [String] {
 
-                    var isChanged = false
-
-                    if savedProcessedUserNotifications.count > 300 {
-                        isChanged = true
-
-                        for _ in 0...savedProcessedUserNotifications.count - 300 {
-                            savedProcessedUserNotifications.remove(at: 0)
-                        }
-                    }
-
                     PendingUserNotificationManager.processedUserNotifications = savedProcessedUserNotifications
-
-                    if isChanged {
-                        PendingUserNotificationManager.saveProcessedUserNotifications()
-                    }
+                }
+                else {
+                    DDLogError("File of processed user notifications could not be decoded")
                 }
             }
         }
@@ -523,17 +504,17 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                         withFile: PendingUserNotificationManager
                             .pathPendingUserNotifications
                     ) as? [PendingUserNotification] {
-
+                    
                     guard PendingUserNotificationManager.pendingUserNotifications == nil else {
                         return
                     }
                     PendingUserNotificationManager.pendingUserNotifications = [PendingUserNotification]()
-
+                    
                     for pendingUserNotification in savedPendingUserNotifications {
                         if isProcessed(pendingUserNotification: pendingUserNotification) {
                             continue
                         }
-
+                        
                         if let exists = PendingUserNotificationManager.pendingUserNotifications?
                             .contains(where: { $0.key == pendingUserNotification.key }), exists {
                             DDLogWarn("[Push] PendingUserNotification duplicate")
@@ -549,9 +530,27 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                             PendingUserNotificationManager.pendingUserNotifications?.append(pendingUserNotification)
                         }
                     }
-
+                    
                     PendingUserNotificationManager.savePendingUserNotifications()
                 }
+                else {
+                    DDLogError("File of pending user notifications could not be decoded")
+                }
+            }
+        }
+        
+        PendingUserNotificationManager.processedQueue.sync {
+            guard var savedProcessedUserNotifications = PendingUserNotificationManager.processedUserNotifications,
+                  !savedProcessedUserNotifications.isEmpty else {
+                return
+            }
+            let maxListCount = 300
+                
+            if savedProcessedUserNotifications.count > maxListCount {
+                for _ in 0...savedProcessedUserNotifications.count - maxListCount {
+                    savedProcessedUserNotifications.remove(at: 0)
+                }
+                PendingUserNotificationManager.saveProcessedUserNotifications()
             }
         }
     }

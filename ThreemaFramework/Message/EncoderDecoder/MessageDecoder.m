@@ -150,6 +150,8 @@
             msg.pushFromName = boxmsg.pushFromName;
         }
         
+        // Fix group message creator
+        // This should be in sync with the other place with the comment "Fix group message creator"
         if (msg.flagGroupMessage == YES) {
             // Set group creator and sync group id/creator with boxed message
             if ([msg isKindOfClass:[GroupCreateMessage class]] || [msg isKindOfClass:[GroupRenameMessage class]] || [msg isKindOfClass:[GroupSetPhotoMessage class]] || [msg isKindOfClass:[GroupDeletePhotoMessage class]]) {

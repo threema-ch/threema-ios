@@ -294,7 +294,6 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
             }
 
             fileMessageEntity.json = [[NSString alloc] initWithData:_jsonData encoding:NSUTF8StringEncoding];
-
             onCompletionInternal(fileMessageEntity);
         }];
     } onError:onErrorInternal];
@@ -315,7 +314,6 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
             
             msg.thumbnail = thumbnail;
         }
-
         _onCompletion(msg);
     }];
 }

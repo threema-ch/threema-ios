@@ -581,7 +581,10 @@ extension ChatViewVoiceMessageTableViewCell {
         case .remote:
             DDLogVerbose("Start sync for message with id: \(voiceMessage.objectID)")
             Task {
-                await BlobManager.shared.syncBlobs(for: voiceMessage.objectID)
+                let result = await BlobManager.shared.syncBlobs(for: voiceMessage.objectID)
+                if result == .downloaded {
+                    waveformView.render(voiceMessage)
+                }
             }
 
         case .dataDeleted, .fileNotFound:
@@ -628,6 +631,10 @@ extension ChatViewVoiceMessageTableViewCell {
         )
             
         isPlaying = true
+        
+        if !isFocused {
+            UIAccessibility.post(notification: .layoutChanged, argument: self)
+        }
     }
 }
 
@@ -785,7 +792,47 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
     }
     
     // MARK: - Accessibility
-
+    
+    // Do not read accessibility labels if voice message is playing
+    override public var accessibilityLabel: String? {
+        get {
+            if isPlaying {
+                return nil
+            }
+            return super.accessibilityLabel
+        }
+        
+        set {
+            // No-op
+        }
+    }
+    
+    override var accessibilityValue: String? {
+        get {
+            if isPlaying {
+                return nil
+            }
+            return super.accessibilityValue
+        }
+        
+        set {
+            // No-op
+        }
+    }
+    
+    override public var accessibilityHint: String? {
+        get {
+            if isPlaying {
+                return nil
+            }
+            return super.accessibilityHint
+        }
+        
+        set {
+            // No-op
+        }
+    }
+    
     @objc func handleTap(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
             stateButtonAction(nil)

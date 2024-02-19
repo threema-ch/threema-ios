@@ -79,9 +79,12 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: expectedReflectedAt]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
 
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])
@@ -176,9 +179,12 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: expectedReflectedAt]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
 
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])

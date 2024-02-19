@@ -104,6 +104,7 @@
 "file_message_video" = "视频";
 "file_message_voice" = "语音消息";
 "file_message_file" = "文件";
+"chat" = "会话"; /* noun */
 
 "chat_back_button_accessibility" = "%d条未读消息";
 
@@ -126,6 +127,10 @@
 "include_media_title" = "包含媒体（图片、视频）作为附件？";
 "include_media_message" = "您需要具有 AES 支持的现代 ZIP 工具才能解压缩文件，例如 7-Zip 或 The Unarchiver (Mac)。";
 
+"chat_view_resend_group_message_confirmation_title" = "重新发送群组消息？";
+/* The placeholder will be replaced by a localized list of all receivers */
+"chat_view_resend_group_message_confirmation_message" = "此消息无法发送到所有群组成员。重新发送消息到%@？";
+"chat_view_resend_group_message_confirmation_button" = "重新发送";
 
 /* image sizes */
 "image_size_title" = "图片大小";
@@ -501,9 +506,11 @@
 "exclude_deleted_id_exclude_button" = "排除";
 
 "forward_security" = "完全正向保密";
-"forward_security_none" = "无保密";
-"forward_security_2dh" = "单向保密";
-"forward_security_4dh" = "完整保密";
+"forward_security_none" = "无保密"; /* sent to _none_ with PFS (_no(ne)_ PFS) */
+"forward_security_2dh" = "单向保密"; /* _uniliteral_ PFS */
+"forward_security_4dh" = "完整保密"; /* _complete_ PFS */
+"forward_security_outgoing_group_partial" = "部分保密"; /* _partial_ly sent with PFS */
+"forward_security_outgoing_group_full" = "完整保密"; /* _full_y sent with PFS */
 "forward_security_clear_sessions" = "重置对此联系人的 “完全正向保密” 状态";
 "forward_security_explainer_footer" = "仅在 Threema 支持团队的指示下，才执行此操作。";
 "md_wizard_pfs_warning" = "启用多设备预览后，所有联系人的完全正向保密将被禁用。";
@@ -626,6 +633,8 @@
 /* Notifications Text */
 "new_message_from_x" = "来自%@的消息";
 "new_group_message" = "群组消息";
+"new_message_unknown" = "未知";
+"new_message_unknown_group" = "未知群组";
 "new_group_message_from_x" = "来自%@的群组消息";
 "new_message_no_access_title" = "新消息";
 "new_message_no_access_message" = "请打开 %@ 获取接收到的消息。";
@@ -778,7 +787,8 @@
 "group_call_started_by_local_system_message" = "您发起了群组通话";
 "group_call_ended_system_message" = "群组通话已结束";
 
-"group_call_start_message_received" = "发起群组通话";
+"group_call_notification_body_preview" = "%@ 发起的群组通话";
+"group_call_notification_body" = "群组通话已开始";
 
 "group_call_navbar_state_connecting" = "连接中...";
 "group_call_navbar_state_joining" = "正在加入…";
@@ -788,6 +798,12 @@
 "group_call_error_generic_message" = "如果问题仍然存在，请联系我们的客户支持。";
 "group_call_error_already_in_call_title" = "其他通话进行中";
 "group_call_error_already_in_call_message" = "在任何时候，您都只能加入一个通话，不可同时加入其他通话。";
+"group_call_error_ended_in_meantime_title" = "群组通话已结束";
+"group_call_error_ended_in_meantime_message" = "无法加入通话，因为您想加入的通话现在已结束。";
+
+"group_call_alert_full_title" = "已达到参与者人数上限";
+"group_call_alert_full_message_count" = "已达到 %d 位群组通话参与者人数上限。";
+"group_call_alert_full_message" = "群组通话参与人数已达到上限。";
 
 "group_call_accessibility_hide_view" = "隐藏群组通话视图";
 "group_call_accessibility_enable_camera" = "启用摄像头";
@@ -962,6 +978,7 @@
 "safe_upload_failed" = "上传失败";
 "safe_upload_size_exceeded" = "超出服务器的上传最大限制";
 "safe_change_password" = "更改密码";
+"safe_change_password_disabled" = "密码由管理员管理";
 "safe_learn_more" = "了解更多";
 "safe_backup_now" = "立即备份";
 "safe_deactivate" = "关闭 Threema Safe";
@@ -1031,6 +1048,11 @@
 "restore_option_data_delete_data_description" = "删除本地数据后，恢复 Threema Safe 备份（包含您的 ID，联系人和群组）或 ID 导出（仅包含Threema ID）";
 "restore_option_data_delete_data_explain" = "为了恢复完整的 Threema Safe 备份，您必须重新安装 %@。请先删除应用，然后从 App Store 重新下载。";
 
+"threema_safe_company_mdm_password_changed_title" = "由管理员设置的新的 Threema Safe 管理密码";
+"threema_safe_company_mdm_password_changed_message" = "您接受这个新密码吗？如有疑问，请联系您的管理员。";
+"threema_safe_company_mdm_password_changed_accept" = "接受";
+"threema_safe_company_mdm_password_changed_accepted" = "管理密码设置";
+
 // Company Directory
 "companydirectory_description" = "在公司目录中查找联系人";
 "companydirectory_placeholder" = "搜索目录";
@@ -1039,10 +1061,9 @@
 
 "already_licensed" = "已获得许可";
 
-// IDNSafetyHelper
+// IDNASafetyHelper
 "url_warning_title" = "网络钓鱼警告";
 "url_warning_body" = "您要打开的链接的主机名有可疑。\n\n显示的主机名：%@\n真实主机名：%@\n\n这可能是试图欺骗您打开一个假装成其他网站的虛假网页。\n\n您仍然要继续吗？";
-
 
 // Settings
 "settings_navbar_title" = "设置";
@@ -1191,12 +1212,12 @@
 "delete_messages_confirm" = "您要永久删除所有早于%@的消息吗？";
 "delete_messages_confirm_all" = "您要永久删除所有消息吗？";
 "delete_messages_explain" = "任何类型的消息都将被删除：文字和语音消息、媒体、文件、投票等。";
-"automatic_delete_explain" = "使用自动删除功能可以释放磁盘空间。公开投票和私人收藏的消息不会被自动删除。";
+"automatic_delete_explain" = "使用自动删除信息和媒体功能可以释放磁盘空间。公开投票和私人收藏在备忘录 “一人群组” 内的消息不会被自动删除。";
 "automatic_delete_on_confirmation_title" = "打开自动删除？";
 "automatic_delete_off_confirmation_title" = "关闭自动删除？";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
-"automatic_delete_confirmation_message_no_immediate_deletion" = "从现在开始，早于%@的消息将被自动删除。注意：公开投票和私人收藏的消息不会被自动删除。";
-"automatic_delete_confirmation_message_immediate_deletion" = "%d条消息将被立即删除，所有早于%@的消息将从现在开始会自动删除。注意：公开投票和私人收藏的消息不会被自动删除。";
+"automatic_delete_confirmation_message_no_immediate_deletion" = "从现在开始，早于%@的消息将被自动删除。注意：公开投票和私人收藏在备忘录 “一人群组” 内的消息不会被自动删除。";
+"automatic_delete_confirmation_message_immediate_deletion" = "%d条消息将被立即删除，所有早于%@的消息将从现在开始会自动删除。注意：公开投票和私人收藏在备忘录 “一人群组” 内的消息不会被自动删除。";
 "automatic_delete_on_confirmation_button" = "打开自动删除";
 "automatic_delete_off_confirmation_button" = "关闭自动删除";
 "delete_in_progress" = "删除中…";
@@ -1276,9 +1297,11 @@
 "settings_advanced_reregister_notifications_label" = "重新注册推送通知";
 
 "settings_advanced_reset_fs_db_label" = "重置完全正向保密的状态";
+"settings_advanced_reset_unread_count_label" = "重置未读数字";
 "settings_advanced_support_settings_header_title" = "支持设置";
 "settings_advanced_support_settings_footer_title" = "仅在 Threema 支持团队的指示下，才执行此操作。";
 "settings_advanced_successfully_deleted_fs_sessions_label" = "完全正向保密的状态已成功重置";
+"settings_advanced_successfully_reset_unread_count_label" = "未读消息数字已成功重置";
 
 // Sentry
 "sentry_crash_send_title" = "%@ 意外退出";
@@ -1298,6 +1321,10 @@
 "profile_linked_phone" = "已链接电话号码";
 "profile_id_export" = "ID导出";
 "my_profile_delete_cell_title" = "移除ID和数据";
+"profile_edit" = "编辑";
+"not_connected_for_edit_profile_message" = "请检查您的网络连接";
+"not_connected_for_edit_profile_title" = "没有连接";
+
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";
@@ -1307,27 +1334,26 @@
 "my_profile_delete_bullet_linked" = "电话号码和/或电子邮件链接";
 
 "my_profile_delete_info_title" = "删除ID和数据";
-"my_profile_delete_info_keep" = "您的 Threema ID 不会被撤销。如果您之前已创建 Threema Safe 备份或导出您的ID，就可以在另一台设备上恢复原有的 Threema ID。";
-"my_profile_delete_info_delete" = "您所有的 Threema 数据都将在这个设备上删除：";
-"my_profile_delete_info_delete_server" = "您所有的 Threema 数据也将在服务器上删除：";
-"my_profile_delete_info_revoke" = "您的 Threema ID 将被撤销，并且无法恢复";
-"my_profile_delete_info_toggle" = "彻底删除所有内容";
-
+"my_profile_delete_info_delete" = "您所有的 Threema 数据都将在这个设备上删除。";
+"my_profile_delete_info_keep" = "如果您之前已创建 Threema Safe 备份或导出您的ID，就可以在另一台设备上恢复原有的 Threema ID。";
+"my_profile_delete_info_revoke_info" = "如果您不想在其他设备上使用此 Threema ID，您可以将它徹底删除： ";
+"my_profile_delete_info_revoke_info_link" = "[撤销 Threema ID](链接)";
 "my_profile_delete_info_button" = "删除ID和数据";
 
 "my_profile_delete_info_alert_title" = "如果您之前没有备份，您将失去现有的 Threema ID。";
 "my_profile_delete_info_alert_confirm" = "删除数据";
 
-"my_profile_revoke_identity_view_title" = "删除ID和数据？";
-"my_profile_revoke_info_delete" = "您所有的 Threema 数据都将在这个设备上删除：";
-"my_profile_revoke_info_sever" = "您所有的 Threema 数据也将在服务器上删除：";
-"my_profile_revoke_identity_view_enter_id" = "请输入您的 Threema ID “%@”，以完全删除所有内容：";
+"my_profile_revoke_identity_view_title" = "删除ID和数据";
+"my_profile_revoke_info_delete" = "您所有的 Threema 数据都将在这个设备上删除，而在 Threema 服务器存储的以下数据也将被删除：";
+
+"my_profile_delete_info_revoke" = "您将无法恢复您的 Threema ID。";
+"my_profile_revoke_identity_view_enter_id" = "请输入您的 Threema ID\n“%@”，以彻底删除所有内容：";
 "my_profile_revoke_identity_view_placeholder" = "您的 Threema ID";
 "my_profile_revoke_identity_view_button_revoke" = "删除ID和数据";
 
 "my_profile_delete_identity_summary_view_removed_title" = "ID和数据已删除";
 "my_profile_delete_identity_summary_view_removed_success" = "您所有的 Threema 数据已经在这个设备上删除：";
-"my_profile_delete_identity_summary_view_removed_server_success" = "您所有的 Threema 数据已经在服务器上删除：";
+"my_profile_delete_identity_summary_view_removed_server_success" = "您所有的 Threema 数据已在这个设备上删除，而在 Threema 服务器存储的以下数据已删除：";
 "my_profile_delete_identity_summary_view_removed_threema_id" = "您的 Threema ID 已被撤销";
 "my_profile_delete_identity_summary_view_restart" = "请重启此应用程序以应用更改。";
 "my_profile_delete_identity_summary_view_restart_new" = "请重启此应用，以创建新的 Threema ID。";
@@ -1367,7 +1393,9 @@
 "settings_advanced_contacts_cleanup_stats_logged" = "信息已被记录。\n";
 "settings_advanced_contacts_cleanup_no_duplicates" = "您没有重复的联系人。";
 "settings_advanced_contacts_cleanup_error_title" = "无法删除联系人";
-"settings_advanced_contacts_cleanup_still_used_error" = "已取消清理重复的联系人。由于您与重复的联系人仍然有消息来往，或者联系人仍然是某个群组的成员，所以无法删除%i个重复的联系人。\n";
+"settings_advanced_contacts_cleanup_in_use_error_title" = "手动删除会话";
+"settings_advanced_contacts_cleanup_still_used_error" = "未完成清理重复的联系人（已删除 %i 个重复项，剩余 %i 个）。\n\n部份一对一聊天记录必须手动删除：\n\n%@\n\n请先删除聊天记录，之后重试。";
+"settings_advanced_contacts_multi_device_enabled_error" = "设备当前已链接。清理会话前请移除所有已链接的设备。";
 "settings_advanced_contacts_cleanup_success_title" = "联系人清理成功";
 "settings_advanced_contacts_cleanup_success_exit" = "退出";
 "settings_advanced_contacts_cleanup_unused_message" = "已删除 %i 个重复的联系人。\n\n请先退出此应用程序，再重启，然后链接设备。如果还不行： ";
@@ -1526,6 +1554,7 @@
 "multi_device_new_linked_show_contact_button" = "显示联系人";
 "multi_device_new_linked_device_list_no_platform_details" = "无平台详细信息";
 "multi_device_new_linked_device_list_last_active" = "最后上线时间：%@";
+"multi_device_new_linked_device_list_currently_active" = "当前在线";
 
 "multi_device_join_perfect_forward_secrecy_info" = "当您链接新设备时，将对所有联系人禁用完全正向保密。\n\n这是当前测试版的限制。如想知道更多其他的限制，请参阅[这条常见问题解答条目](%@)。";
 "multi_device_join_scan_qr_code_title" = "扫描二维码";
@@ -1687,7 +1716,7 @@
 
 "notification_flush_message_queue_succeeded" = "消息队列已被清除";
 
-"notification_reregister_notifications_successed" = "推送通知已重新注册";
+"notification_reregister_notifications_succeeded" = "推送通知已重新注册";
 
 "notification_audio_muted" = "麦克风：已关闭";
 "notification_audio_unmuted" = "麦克风：已开启";
@@ -1857,6 +1886,8 @@
 "alert_biometrics_changed_title_touch" = "检测到 Touch ID 可能发生变化";
 "alert_biometrics_changed_title_face" = "检测到 Face ID 可能发生变化";
 "alert_biometrics_changed_message" = "请再输入你的 Threema 密码，以继续使用生物认证来解锁 Threema。";
+
+"alert_enable_actions" = "可用操作：%ds";
 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n无法从 %d 版本降级到 %d 版本";

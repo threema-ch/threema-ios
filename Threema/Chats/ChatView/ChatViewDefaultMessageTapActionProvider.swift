@@ -74,10 +74,13 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         case let fileMessageProvider as FileMessageProvider:
             switch fileMessageProvider.blobDisplayState {
             case .remote:
+                // Start download if possible
                 syncBlobsAction(objectID: message.objectID)
                 
             case .processed, .pending, .uploading, .uploaded, .sendingError:
+                // TODO: (IOS-4252) Cleanup by also setting state to remote for this case
                 if case .outgoing(.pendingDownload) = fileMessageProvider.dataState {
+                    // Start download if possible
                     syncBlobsAction(objectID: message.objectID)
                     return
                 }
@@ -165,8 +168,13 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     private func showBallot(ballotMessage: BallotMessage) {
         // Opens the ballot of a ballot message in a modal
         entityManager.performBlock {
-            let ballot = self.entityManager.entityFetcher.ballot(for: ballotMessage.ballot.id)
-            BallotDispatcher.showViewController(for: ballot, on: self.chatViewController?.navigationController)
+            if let ballot = ballotMessage.ballot,
+               let fetchedBallot = self.entityManager.entityFetcher.ballot(for: ballot.id) {
+                BallotDispatcher.showViewController(
+                    for: fetchedBallot,
+                    on: self.chatViewController?.navigationController
+                )
+            }
         }
     }
     

@@ -22,31 +22,27 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
 
-public class BlobMessageSender {
+final class BlobMessageSender {
     
-    /// Global blob message sender
-    ///
-    /// Use this if you're not testing the sender
-    public static let shared = BlobMessageSender()
-    
-    let taskManager: TaskManager
-    let businessInjector: BusinessInjector
-    let groupManager: GroupManagerProtocol
+    let taskManager: TaskManagerProtocol
+    let businessInjector: BusinessInjectorProtocol
     
     // MARK: - Lifecycle
     
     init(
-        businessInjector: BusinessInjector = BusinessInjector(),
-        taskManager: TaskManager = TaskManager()
+        businessInjector: BusinessInjectorProtocol = BusinessInjector(),
+        taskManager: TaskManagerProtocol = TaskManager()
     ) {
         self.businessInjector = businessInjector
         self.taskManager = taskManager
-        self.groupManager = businessInjector.groupManager
     }
     
     // MARK: - Public Functions
     
-    public func sendBlobMessage(with objectID: NSManagedObjectID) async throws {
+    func sendBlobMessage(
+        with objectID: NSManagedObjectID,
+        to receivers: MessageSenderReceivers = .all
+    ) async throws {
                 
         // Concurrency Loading
         let (messageID, receiverIdentity, group) = businessInjector.entityManager.performAndWait {
@@ -69,23 +65,49 @@ public class BlobMessageSender {
         
         guard let messageID else {
             DDLogError("[BlobMessageSender]: Unable to load message as FileMessage for object ID: \(objectID)")
-            throw BlobManagerError.sendingFailed
+            throw MessageSenderError.sendingFailed
         }
         
         guard isMessageReadyToSend(with: objectID) else {
             DDLogError(
                 "[BlobMessageSender]: State of BlobData for file message with object ID: \(objectID) does not allow sending"
             )
-            throw BlobManagerError.sendingFailed
+            throw MessageSenderError.sendingFailed
         }
 
-        let taskDefinition = TaskDefinitionSendBaseMessage(
-            messageID: messageID,
-            receiverIdentity: receiverIdentity?.string,
-            group: group,
-            sendContactProfilePicture: true
-        )
-        taskManager.add(taskDefinition: taskDefinition)
+        if let group {
+            let receiverIdentities: [ThreemaIdentity]
+            switch receivers {
+            case .all:
+                receiverIdentities = group.members.map(\.identity)
+            case let .groupMembers(identities):
+                receiverIdentities = identities
+            }
+            
+            let taskDefinition = TaskDefinitionSendBaseMessage(
+                messageID: messageID,
+                group: group,
+                receivers: receiverIdentities,
+                sendContactProfilePicture: false
+            )
+            
+            taskManager.add(taskDefinition: taskDefinition)
+        }
+        else if let receiverIdentity {
+            let taskDefinition = TaskDefinitionSendBaseMessage(
+                messageID: messageID,
+                receiverIdentity: receiverIdentity.string,
+                sendContactProfilePicture: false
+            )
+            
+            taskManager.add(taskDefinition: taskDefinition)
+        }
+        else {
+            DDLogError(
+                "[BlobMessageSender] Unable to create task for blob message (objectID \(objectID)): Group and receiver identity are nil."
+            )
+            throw MessageSenderError.sendingFailed
+        }
     }
     
     // MARK: - Private Functions
@@ -98,11 +120,6 @@ public class BlobMessageSender {
         
         entityManager.performBlockAndWait {
             guard let fileMessage = entityManager.entityFetcher.existingObject(with: objectID) as? FileMessage else {
-                return
-            }
-            
-            // If we download our own sent messages (MD), we do not want to send them again.
-            guard !fileMessage.sent.boolValue else {
                 return
             }
             

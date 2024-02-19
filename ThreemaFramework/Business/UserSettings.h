@@ -96,6 +96,8 @@ enum ThreemaVideoCallQualitySetting {
 
 @property (nonatomic, readwrite) NSInteger keepMessagesDays;
 
+@property (nonatomic, readwrite) BOOL enableFSv12ForTesting;
+
 @end
 
 @interface UserSettings : NSObject <UserSettingsProtocol>
@@ -143,8 +145,6 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) BOOL videoCallInChatInfoShown;
 @property (nonatomic, readwrite) BOOL videoCallInfoShown;
 @property (nonatomic, readwrite) BOOL videoCallSpeakerInfoShown;
-
-@property (nonatomic, readwrite) BOOL newSettingsActive;
 
 + (UserSettings*)sharedUserSettings;
 - (instancetype) __unavailable init;

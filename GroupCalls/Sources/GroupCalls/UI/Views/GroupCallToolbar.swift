@@ -162,6 +162,7 @@ class GroupCallToolbar: UIView {
         button.layer.cornerRadius = toolbarButtonConfig.biggerButtonCornerRadius
         button.clipsToBounds = true
         button.tintColor = .red
+        button.accessibilityIdentifier = "group_call_button_hangup"
         
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),

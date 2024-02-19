@@ -35,6 +35,8 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         self.doSendReadReceiptContacts = doSendReadReceiptContacts
     }
 
+    var sentAbstractMessagesQueue = [AbstractMessage]()
+    
     var sendDeliveryReceiptCalls = [AbstractMessage]()
 
     func sendTextMessage(
@@ -66,10 +68,10 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
     }
 
     func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?) {
-        // no-op
+        sentAbstractMessagesQueue.append(abstractMessage)
     }
 
-    func sendMessage(baseMessage: BaseMessage) {
+    func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) {
         // no-op
     }
 

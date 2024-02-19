@@ -415,11 +415,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 if (![captions[i] isEqualToString:@""]) {
                     item.caption = captions[i];
                 }
-
-                BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-                [manager createMessageAndSyncBlobsFor:item in:self.chatViewController.conversation correlationID:correlationID webRequestID:nil completion:^{
+                
+                Conversation *conversation = self.chatViewController.conversation;
+                if (conversation != nil) {
+                    MessageSender *messageSender = [[MessageSender alloc] init];
+                    [messageSender sendBlobMessageFor:item in:conversation correlationID:correlationID webRequestID:nil completion:^(NSError *error) {
+                        dispatch_semaphore_signal(_sequentialSema);
+                    }];
+                } else {
+                    [NotificationPresenterWrapper.shared presentSendingError];
                     dispatch_semaphore_signal(_sequentialSema);
-                }];
+                }
             } else {
                 // Video
                 AVAsset *item = itemArray[i];
@@ -665,8 +671,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         ImageURLSenderItemCreator *itemCreator = [[ImageURLSenderItemCreator alloc] init];
         URLSenderItem *senderItem = [itemCreator senderItemFromImage:image];
         
-        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-        [manager createMessageAndSyncBlobsFor:senderItem in:self.chatViewController.conversation correlationID:nil webRequestID:nil completion:nil];
+        Conversation *conversation = self.chatViewController.conversation;
+        if (senderItem != nil && conversation != nil) {
+            MessageSender *messageSender = [[MessageSender alloc] init];
+            [messageSender sendBlobMessageFor:senderItem in:conversation correlationID:nil webRequestID:nil completion:nil];
+        } else {
+            [NotificationPresenterWrapper.shared presentSendingError];
+        }
     });
 }
 
@@ -709,8 +720,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [self.videoEncoders addObject:exportSession];
         
         URLSenderItem *senderItem = [senderCreator senderItemFrom:asset on:exportSession];
-        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-        [manager createMessageAndSyncBlobsFor:senderItem in:self.chatViewController.conversation correlationID:nil webRequestID:nil completion:nil];
+        Conversation *conversation = self.chatViewController.conversation;
+        if (senderItem != nil && conversation != nil) {
+            MessageSender *messageSender = [[MessageSender alloc] init];
+            [messageSender sendBlobMessageFor:senderItem in:conversation correlationID:nil webRequestID:nil completion:nil];
+        } else {
+            [NotificationPresenterWrapper.shared presentSendingError];
+        }
         
         if (onCompletion != nil) {
             onCompletion();

@@ -573,15 +573,17 @@ class TaskDefinitionTests: XCTestCase {
 
     func testTaskDefinitionSendAbstractMessageEncodeDecode() throws {
         let expectedMessageID = MockData.generateMessageID()
-        let expectedText = "Test text"
+        let expectedReceiptType = ReceiptType.read
+        let expectedReceiptMessageIDs = [MockData.generateMessageID(), MockData.generateMessageID()]
         let expectedFromIdentity = "FROMID01"
         let expectedToIdentity = "ECHOECHO"
         let expectedDate = Date()
         let expectedNonces = [expectedToIdentity: MockData.generateMessageNonce()]
 
-        let abstractMessage = BoxTextMessage()
+        let abstractMessage = DeliveryReceiptMessage()
         abstractMessage.messageID = expectedMessageID
-        abstractMessage.text = expectedText
+        abstractMessage.receiptType = expectedReceiptType
+        abstractMessage.receiptMessageIDs = expectedReceiptMessageIDs
         abstractMessage.fromIdentity = expectedFromIdentity
         abstractMessage.toIdentity = expectedToIdentity
         abstractMessage.date = expectedDate
@@ -594,9 +596,11 @@ class TaskDefinitionTests: XCTestCase {
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinitionSendAbstractMessage.self, from: data)
-        if let message = result.message as? BoxTextMessage {
+        if let message = result.message as? DeliveryReceiptMessage {
             XCTAssertEqual(expectedMessageID, message.messageID)
-            XCTAssertEqual(expectedText, message.text)
+            XCTAssertEqual(expectedReceiptType, message.receiptType)
+            let actualReceiptMessageIDs = try XCTUnwrap(message.receiptMessageIDs as? [Data])
+            XCTAssertEqual(expectedReceiptMessageIDs, actualReceiptMessageIDs)
             XCTAssertEqual(expectedFromIdentity, message.fromIdentity)
             XCTAssertEqual(expectedToIdentity, message.toIdentity)
             XCTAssertEqual(expectedDate, message.date)

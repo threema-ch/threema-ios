@@ -167,12 +167,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         updateView(with: voiceMessage)
     }
     
-    private func updateView(with voiceMessage: VoiceMessage?) {
-        guard
-            voiceMessage?.objectID != self.voiceMessage?.objectID else {
-            return
-        }
-        
+    func render(_ voiceMessage: VoiceMessage?) {
         guard let audioURL = blobDataURL(for: voiceMessage) else {
             let msg = "URL for blobdata was unexpectedly nil"
             DDLogError(msg)
@@ -183,6 +178,15 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         Task {
             await updateWaveformImageViews(with: audioURL, and: voiceMessage?.objectID)
         }
+    }
+ 
+    private func updateView(with voiceMessage: VoiceMessage?) {
+        guard
+            voiceMessage?.objectID != self.voiceMessage?.objectID else {
+            return
+        }
+        
+        render(voiceMessage)
     }
    
     private func updateWaveformImageViews(with audioURL: URL, and identifier: NSManagedObjectID?) async {

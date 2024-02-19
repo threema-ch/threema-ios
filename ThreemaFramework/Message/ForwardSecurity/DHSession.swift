@@ -34,6 +34,8 @@ public struct DHVersions: CustomStringConvertible, Equatable {
     }
     
     /// Restore the 4DH versions from a database
+    ///
+    /// Only used for tests
     public static func restored(local: CspE2eFs_Version?, remote: CspE2eFs_Version?) -> DHVersions? {
         guard let local, let remote else {
             return nil
@@ -61,7 +63,7 @@ public class ProcessedVersions {
     // In Android `offeredVersion` is an Int, in Swift its not as inconvenient to use the real type
     /// The effective offered version of the associated message
     public var offeredVersion: CspE2eFs_Version
-    /// he effective applied version of the associated message
+    /// The effective applied version of the associated message
     public var appliedVersion: CspE2eFs_Version
     /// The resulting versions to be committed when the message has been processed
     public var pending4DHVersion: DHVersions?
@@ -80,7 +82,7 @@ public class UpdatedVersionsSnapshot {
     public var after: DHVersions
     
     var description: String {
-        "\(before), \(after)"
+        "from (\(before)), to (\(after))"
     }
     
     init(before: DHVersions, after: DHVersions) {
@@ -123,6 +125,7 @@ enum BadMessageError: Error {
     case unsupportedMinimumFSVersion
     case unableToNegotiateFSSession
     case unexpectedGroupMessageEncapsulated
+    case noGroupIdentity
 }
 
 enum RejectMessageError: Error {
@@ -154,14 +157,19 @@ public class DHSession: CustomStringConvertible, Equatable {
     var peerRatchet4DH: KDFRatchet?
     
     /// Version used for local (outgoing) / remote (incoming) 4DH messages.
-    /// `null` in case the 4DH message version has not been negotiated yet.
+    /// `nil` in case the 4DH message version has not been negotiated yet.
     ///  Warning: Only exported for storing the session, don't use it anywhere else!
     private(set) var current4DHVersions: DHVersions?
     
     static func supportedVersionWithin(majorVersion: CspE2eFs_Version) throws -> CspE2eFs_Version {
         switch majorVersion.rawValue & 0xFF00 {
         case CspE2eFs_Version.v10.rawValue:
-            return .v11
+            if ThreemaEnvironment.fsEnableV12 {
+                return .v12
+            }
+            else {
+                return .v11
+            }
         default:
             throw DHSession.State.StateError.invalidStateError("Unknown major version: \(majorVersion.logDescription)")
         }
@@ -369,6 +377,7 @@ public class DHSession: CustomStringConvertible, Equatable {
     
     // MARK: - Private Properties
     
+    // TODO: (IOS-4251) Can this be removed?
     private let localSupportedVersionRange: CspE2eFs_VersionRange
     
     /// Create a new DHSession as an initiator, using a new random session ID and

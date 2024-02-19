@@ -24,10 +24,11 @@
 #import "UserSettings.h"
 #import "AppGroup.h"
 #import "LicenseStore.h"
-#import <CocoaLumberjack/CocoaLumberjack.h>
 #import "BundleUtil.h"
 #import <Photos/Photos.h>
 #import <ThreemaFramework/ThreemaFramework-Swift.h>
+
+@import CocoaLumberjack;
 
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 

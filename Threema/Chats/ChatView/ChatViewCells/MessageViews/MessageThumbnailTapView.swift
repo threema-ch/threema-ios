@@ -285,7 +285,7 @@ final class MessageThumbnailTapView: UIView {
             
         case .processed, .uploaded, .sendingError:
             if case let .video(videoThumbnailDisplayMessage) = thumbnailDisplayMessage?.fileMessageType,
-               let duration = videoThumbnailDisplayMessage.durationTimeInterval {
+               let duration = videoThumbnailDisplayMessage.durationTimeInterval, !duration.isNaN, !duration.isInfinite {
                 metadataView.symbolName = videoThumbnailDisplayMessage.fileMessageType.symbolName
                 metadataView.metadataString = DateFormatter.timeFormatted(Int(duration))
                 metadataBlurBackgroundContainerView.isHidden = false

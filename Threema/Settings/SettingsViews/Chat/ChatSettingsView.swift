@@ -22,40 +22,41 @@ import SwiftUI
 import ThreemaFramework
 
 struct ChatSettingsView: View {
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
 
     var body: some View {
         List {
             // MARK: - Wallpaper
     
-            WallpaperSectionView(settingsVM: settingsVM)
+            WallpaperSectionView()
+                .environmentObject(settingsVM)
             
             // MARK: - Chat
 
             Section {
                 Toggle(isOn: $settingsVM.useBigEmojis) {
-                    Text(BundleUtil.localizedString(forKey: "settings_chat_bigger_emojis"))
+                    Text("settings_chat_bigger_emojis".localized)
                 }
                 Toggle(isOn: $settingsVM.sendMessageFeedback) {
-                    Text(BundleUtil.localizedString(forKey: "settings_chat_send_message_feedback_label"))
+                    Text("settings_chat_send_message_feedback_label".localized)
                 }
             }
         }
-        .navigationBarTitle(BundleUtil.localizedString(forKey: "settings_list_chat_title"), displayMode: .inline)
+        .navigationBarTitle("settings_list_chat_title".localized, displayMode: .inline)
         .tint(UIColor.primary.color)
     }
 }
 
 struct ChatSettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        ChatSettingsView(settingsVM: SettingsStore())
+        ChatSettingsView()
     }
 }
 
 // MARK: - WallpaperSectionView
 
 struct WallpaperSectionView: View {
-    @ObservedObject var settingsVM: SettingsStore
+    @EnvironmentObject var settingsVM: SettingsStore
     @State private var showingImagePicker = false
     @State private var showDeleteAlert = false
     
@@ -72,10 +73,10 @@ struct WallpaperSectionView: View {
     
     var body: some View {
         
-        Section(header: Text(BundleUtil.localizedString(forKey: "settings_chat_wallpaper_title"))) {
+        Section(header: Text("settings_chat_wallpaper_title".localized)) {
             HStack(alignment: .center, spacing: 20) {
                 WallpaperTypeView(
-                    description: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_empty"),
+                    description: "settings_chat_wallpaper_empty".localized,
                     image: $emptyImage,
                     isSelected: $emptySelected,
                     isSelectingCustom: $isSelectingCustom
@@ -95,7 +96,7 @@ struct WallpaperSectionView: View {
                 }
                 
                 WallpaperTypeView(
-                    description: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_custom"),
+                    description: "settings_chat_wallpaper_custom".localized,
                     image: $customImage,
                     isSelected: $customSelected,
                     isSelectingCustom: $isSelectingCustom
@@ -118,7 +119,7 @@ struct WallpaperSectionView: View {
                 Button(role: .destructive) {
                     showDeleteAlert = true
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "settings_chat_wallpaper_reset"))
+                    Text("settings_chat_wallpaper_reset".localized)
                 }
                 Spacer()
             }
@@ -126,15 +127,15 @@ struct WallpaperSectionView: View {
         
         .alert(isPresented: $showDeleteAlert, content: {
             Alert(
-                title: Text(BundleUtil.localizedString(forKey: "settings_chat_wallpaper_reset")),
-                message: Text(BundleUtil.localizedString(forKey: "settings_chat_wallpaper_reset_all_alert")),
+                title: Text("settings_chat_wallpaper_reset".localized),
+                message: Text("settings_chat_wallpaper_reset_all_alert".localized),
                 primaryButton: .destructive(Text(
                     BundleUtil
                         .localizedString(forKey: "settings_privacy_TIRR_reset_alert_action")
                 )) {
                     settingsVM.wallpaperStore.deleteAllCustom()
                 },
-                secondaryButton: .default(Text(BundleUtil.localizedString(forKey: "cancel"))) {
+                secondaryButton: .default(Text("cancel".localized)) {
                     // Noop
                 }
             )

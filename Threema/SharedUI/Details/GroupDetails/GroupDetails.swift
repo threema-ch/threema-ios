@@ -33,6 +33,7 @@ enum GroupDetails {
         case groupActions
         case destructiveGroupActions
         case wallpaper
+        case debugInfo
     }
     
     enum Row: Hashable {
@@ -59,5 +60,8 @@ enum GroupDetails {
         
         // Wallpaper
         case wallpaper(action: Details.Action, isDefault: Bool)
+        
+        // Debug
+        case fsDebugMember(contact: Contact, sessionInfo: String)
     }
 }

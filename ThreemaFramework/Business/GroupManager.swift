@@ -142,8 +142,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             var newMembers: Set<String>?
             self.entityManager.performBlockAndWait {
                 if let oldMembers,
-                   let conversation = self
-                   .getConversation(for: GroupIdentity(
+                   let conversation = self.getConversation(for: GroupIdentity(
                        id: group.groupID,
                        creator: group.groupIdentity.creator
                    )) {
@@ -167,14 +166,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     members: members
                 )
 
-                self.taskManager.add(taskDefinition: task) { _, error in
-                    if error == nil {
-                        self.sendGroupBallotIsNotClosed(group, newMembers)
-                    }
-                }
-            }
-            else {
-                self.sendGroupBallotIsNotClosed(group, newMembers)
+                self.taskManager.add(taskDefinition: task)
             }
 
             return Promise { $0.fulfill((group, newMembers)) }
@@ -423,14 +415,18 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                             groupCreator: groupIdentity.creator.string,
                             since: lastSyncRequestSince
                         )
-
-                        group = Group(
+                        
+                        let localGroup = Group(
                             myIdentityStore: self.myIdentityStore,
                             userSettings: self.userSettings,
                             groupEntity: groupEntity,
                             conversation: conversation,
                             lastSyncRequest: lastSyncRequest?.lastSyncRequest
                         )
+                                                
+                        self.refreshRejectedMessages(in: localGroup)
+                        
+                        group = localGroup
                     }
 
                     if let internalError {
@@ -476,14 +472,18 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                                 groupCreator: groupIdentity.creator.string,
                                 since: lastSyncRequestSince
                             )
-
-                            group = Group(
+                            
+                            let localGroup = Group(
                                 myIdentityStore: self.myIdentityStore,
                                 userSettings: self.userSettings,
                                 groupEntity: groupEntity,
                                 conversation: conversation,
                                 lastSyncRequest: lastSyncRequest?.lastSyncRequest
                             )
+                            
+                            self.refreshRejectedMessages(in: localGroup)
+                            
+                            group = localGroup
                         }
                         else {
                             DDLogWarn("Conversation entity for \(groupIdentity) not found")
@@ -882,14 +882,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             return
         }
 
-        // Leave must be called even the group not exists
-        if let group = getGroup(groupID, creator: creator) {
-            guard group.state != .left, group.state != .forcedLeft else {
-                DDLogWarn("I can't left the group, I'm not member of this group anymore")
-                return
-            }
-        }
-
+        // Send leave group message even I'm left the group already or the group not exists
         var currentMembers = [String]()
         var hiddenContacts = [String]()
         entityManager.performBlockAndWait {
@@ -913,6 +906,13 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         task.toMembers = sendToMembers
         task.hiddenContacts = hiddenContacts
         taskManager.add(taskDefinition: task)
+
+        if let group = getGroup(groupID, creator: creator) {
+            guard group.state != .left, group.state != .forcedLeft else {
+                DDLogWarn("I can't left the group, I'm not member of this group anymore")
+                return
+            }
+        }
 
         leaveDB(
             groupID: groupID,
@@ -998,6 +998,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     date: systemMessageDate
                 )
             }
+            
+            self.refreshRejectedMessages(in: grp)
         }
     }
 
@@ -1609,96 +1611,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
     }
     
-    /// Send not closed ballot messages to "new" members.
-    ///
-    /// - Parameters:
-    ///   - group: Group with new members
-    ///   - members: "New" members of group
-    private func sendGroupBallotIsNotClosed(_ group: Group, _ members: Set<String>?) {
-        // TODO: Check must be reflect ballot messages to new members???
-
-        guard let conversation =
-            getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupIdentity.creator))
-        else {
-            return
-        }
-        
-        guard let members,
-              !members.isEmpty,
-              let ballots = conversation.ballots else {
-            return
-        }
-        
-        // Get all open ballots if there are any
-        
-        let myOpenBallots = ballots.compactMap {
-            $0 as? Ballot
-        }.filter {
-            $0.isOwn() && !$0.isClosed()
-        }
-        
-        guard !myOpenBallots.isEmpty else {
-            return
-        }
-        
-        // Send ballots to new members
-        for memberID in members {
-            guard let contact = entityManager.entityFetcher.contact(for: memberID) else {
-                continue
-            }
-            
-            for ballot in myOpenBallots {
-                sendGroupBallotCreateMessage(ballot, conversation, contact.identity)
-                
-                if ballot.isIntermediate() {
-                    sendGroupBallotVoteMessage(ballot, conversation, contact.identity)
-                }
-            }
-        }
-    }
-    
-    private func sendGroupBallotCreateMessage(_ ballot: Ballot, _ conversation: Conversation, _ toMember: String) {
-        let boxMsg = BallotMessageEncoder.encodeCreateMessage(for: ballot)
-        boxMsg.messageID = AbstractMessage.randomMessageID()
-        
-        guard let groupID = conversation.groupID,
-              let groupCreatorIdentity = conversation.contact?.identity ?? myIdentityStore.identity else {
-            DDLogWarn("Group not found to send ballot create messages")
-            return
-        }
-
-        let msg = BallotMessageEncoder.groupBallotCreateMessage(
-            from: boxMsg,
-            groupID: groupID,
-            groupCreatorIdentity: groupCreatorIdentity
-        )
-        msg.toIdentity = toMember
-        
-        let task = TaskDefinitionSendAbstractMessage(message: msg)
-        taskManager.add(taskDefinition: task)
-    }
-    
-    private func sendGroupBallotVoteMessage(_ ballot: Ballot, _ conversation: Conversation, _ toMember: String) {
-        let boxMsg = BallotMessageEncoder.encodeVoteMessage(for: ballot)
-        boxMsg.messageID = AbstractMessage.randomMessageID()
-        
-        guard let groupID = conversation.groupID,
-              let groupCreatorIdentity = conversation.contact?.identity ?? myIdentityStore.identity else {
-            DDLogWarn("Group not found to send ballot vote messages")
-            return
-        }
-
-        let msg = BallotMessageEncoder.groupBallotVoteMessage(
-            from: boxMsg,
-            groupID: groupID,
-            groupCreatorIdentity: groupCreatorIdentity
-        )
-        msg.toIdentity = toMember
-        
-        let task = TaskDefinitionSendAbstractMessage(message: msg)
-        taskManager.add(taskDefinition: task)
-    }
-    
     private func sendGroupSyncRequest(_ groupID: Data, _ creator: String) {
         let msg = GroupRequestSyncMessage()
         msg.groupID = groupID
@@ -1731,6 +1643,95 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     member.isContactHidden = false
                 }
             }
+        }
+    }
+
+    // MARK: Rejected Messages Refresh Steps
+
+    /// Implementation of `Rejected Messages Refresh Steps`
+    ///
+    /// From the protocol documentation:
+    /// > [...] run every time the group members are being updated
+    ///
+    /// - Parameter group: Group to run Rejected Messages Refresh Steps on
+    private func refreshRejectedMessages(in group: Group) {
+        // 2. If `group` is marked as _left_:
+        if group.state == .left || group.state == .forcedLeft {
+            resetAllRejectedMessages(in: group)
+        }
+        // 3. If `group` is not marked as _left_:
+        else {
+            updateAllRejectedMessages(in: group)
+        }
+    }
+    
+    /// Don't call this directly. Use `refreshRejectedMessages(in:)` instead
+    private func resetAllRejectedMessages(in group: Group) {
+        //    1. For each `message` of `group` that has a _re-send requested_ mark,
+        //       remove the mark and the list of receivers requiring a re-send.
+        entityManager.performAndWaitSave {
+            let messageFetcher = MessageFetcher(for: group.conversation, with: self.entityManager)
+            let allRejectedMessages = messageFetcher.rejectedGroupMessages()
+            
+            for rejectedMessage in allRejectedMessages {
+                rejectedMessage.rejectedBy = Set()
+                // We only reset `sendFailed` if the message was sent successfully before. As `sendFailed` might not
+                // have been set because of rejections. In theory this should never happen as an unsent message should
+                // never have been rejected.
+                if rejectedMessage.sent?.boolValue ?? false {
+                    rejectedMessage.sendFailed = false
+                }
+            }
+        }
+    }
+    
+    /// Don't call this directly. Use `refreshRejectedMessages(in:)` instead
+    private func updateAllRejectedMessages(in group: Group) {
+        
+        entityManager.performAndWaitSave {
+            //    1. Let `members` be the current list of members for `group`.
+            let members = group.members.map(\.identity)
+            
+            //    2. For each `message` of `group` that has a _re-send requested_ mark:
+            let messageFetcher = MessageFetcher(for: group.conversation, with: self.entityManager)
+            let allRejectedMessages = messageFetcher.rejectedGroupMessages()
+            for rejectedMessage in allRejectedMessages {
+                self.updateRejectedMessage(rejectedMessage, with: members)
+            }
+        }
+    }
+    
+    private func updateRejectedMessage(_ rejectedMessage: BaseMessage, with groupMembers: [ThreemaIdentity]) {
+        
+        //       1. Let `receivers` be the list of receivers requiring a re-send for
+        //          `message`.
+        
+        guard let rejectedByContactsList = rejectedMessage.rejectedBy?.map({
+            ThreemaIdentity($0.identity)
+        }) else {
+            return
+        }
+        let rejectedByContacts = Set(rejectedByContactsList)
+
+        //       2. Remove all entries from `receivers` that are not present in
+        //          `members`.
+        
+        let contactsToRemove = rejectedByContacts.subtracting(groupMembers)
+        for contactToRemove in contactsToRemove {
+            guard let contact = entityManager.entityFetcher.contact(for: contactToRemove.string) else {
+                continue
+            }
+            rejectedMessage.removeRejectedBy(contact)
+        }
+        
+        //       3. If `receivers` is now empty, remove the _re-send requested_ mark on
+        //          `message`.
+        
+        // We only reset `sendFailed` if the message was sent successfully before. As `sendFailed` might not
+        // have been set because of rejections. In theory this should never happen as an unsent message should
+        // never have been rejected.
+        if rejectedMessage.rejectedBy?.isEmpty ?? true, rejectedMessage.sent?.boolValue ?? false {
+            rejectedMessage.sendFailed = false
         }
     }
 }

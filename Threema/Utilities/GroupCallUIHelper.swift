@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 
@@ -32,6 +33,10 @@ import GroupCalls
 extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
     func showViewController(_ viewController: GroupCallViewController) {
         Task { @MainActor in
+            guard AppDelegate.isAlertViewShown() == nil else {
+                DDLogError("[GroupCall] Do not show GroupCallViewController because an alert is being presented.")
+                return
+            }
             AppDelegate.shared().currentTopViewController().present(viewController, animated: true)
         }
     }
@@ -43,6 +48,27 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
                 title: BundleUtil.localizedString(forKey: groupCallError.alertTitleKey),
                 message: BundleUtil.localizedString(forKey: groupCallError.alertMessageKey)
             )
+        }
+    }
+    
+    func showGroupCallFullAlert(maxParticipants: Int?, onOK: @escaping () -> Void) {
+        let title = "group_call_alert_full_title".localized
+        let message: String
+        if let maxParticipants {
+            message = String.localizedStringWithFormat("group_call_alert_full_message_count".localized, maxParticipants)
+        }
+        else {
+            message = "group_call_alert_full_message".localized
+        }
+        
+        Task { @MainActor in
+            UIAlertTemplate.showAlert(
+                owner: AppDelegate.shared().currentTopViewController(),
+                title: title,
+                message: message
+            ) { _ in
+                onOK()
+            }
         }
     }
     

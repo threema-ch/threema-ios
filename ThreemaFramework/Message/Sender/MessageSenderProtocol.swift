@@ -23,8 +23,28 @@ import Foundation
 import PromiseKit
 import ThreemaEssentials
 
+public enum MessageSenderError: Error {
+    case tooBig
+    case noID
+    case unableToLoadConversation
+    case unableToLoadMessage
+    case sendingFailed
+}
+
+public enum MessageSenderReceivers {
+    // Send to all members in this conversation (For 1:1 there is just one receiver)
+    case all
+    // Send to a subset of members in a group. This is invalid for 1:1 conversations.
+    case groupMembers([ThreemaIdentity])
+}
+
+/// Central place to send or resend a message
+///
+/// Use this to send any message (including blob messages)
 public protocol MessageSenderProtocol {
 
+    // MARK: - Type specific sending
+    
     func sendTextMessage(
         text: String?,
         in conversation: Conversation,
@@ -32,6 +52,15 @@ public protocol MessageSenderProtocol {
         requestID: String?,
         completion: ((BaseMessage?) -> Void)?
     )
+    
+    func sanitizeAndSendText(_ rawText: String, in conversation: Conversation)
+    
+    func sendBlobMessage(
+        for item: URLSenderItem,
+        in conversationObjectID: NSManagedObjectID,
+        correlationID: String?,
+        webRequestID: String?
+    ) async throws
 
     func sendLocationMessage(
         coordinates: CLLocationCoordinate2D,
@@ -45,9 +74,22 @@ public protocol MessageSenderProtocol {
 
     func sendBallotVoteMessage(for ballot: Ballot)
 
-    func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?)
+    // MARK: - Generic sending
 
-    func sendMessage(baseMessage: BaseMessage)
+    /// Send abstract message
+    ///
+    /// This should only be used for abstract messages that are not stored in Core Data, because this won't update all
+    /// flags of the CD object correctly. Use `sendBaseMessage(with:to:)` instead.
+    ///
+    /// - Parameters:
+    ///   - abstractMessage: Abstract message
+    ///   - isPersistent: Should task (and thus the abstract message) be persisted if the app is terminated?
+    ///   - completion: Called when the task is completed (NOT when adding is completed). This handler is not persisted!
+    func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?)
+    
+    func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) async
+    
+    // MARK: - Status update
 
     func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void>
 
@@ -72,8 +114,6 @@ public protocol MessageSenderProtocol {
     func doSendTypingIndicator(to contact: ContactEntity?) -> Bool
 
     func doSendTypingIndicator(to conversation: Conversation) -> Bool
-
-    func sanitizeAndSendText(_ rawText: String, in conversation: Conversation)
 }
 
 extension MessageSenderProtocol {
@@ -85,9 +125,35 @@ extension MessageSenderProtocol {
     ) {
         sendTextMessage(text: text, in: conversation, quickReply: quickReply, requestID: requestID, completion: nil)
     }
+    
+    public func sendBlobMessage(
+        for item: URLSenderItem,
+        in conversationObjectID: NSManagedObjectID,
+        correlationID: String? = nil,
+        webRequestID: String? = nil
+    ) async throws {
+        try await sendBlobMessage(
+            for: item,
+            in: conversationObjectID,
+            correlationID: correlationID,
+            webRequestID: webRequestID
+        )
+    }
 
-    func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool) {
+    /// Send abstract message
+    ///
+    /// This should only be used for abstract messages that are not stored in Core Data, because this won't update all
+    /// flags of the CD object correctly. Use `sendBaseMessage(with:to:)` instead.
+    ///
+    /// - Parameters:
+    ///   - abstractMessage: Abstract message
+    ///   - isPersistent: Should task (and thus the abstract message) be persisted if the app is terminated?
+    func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool = true) {
         sendMessage(abstractMessage: abstractMessage, isPersistent: isPersistent, completion: nil)
+    }
+    
+    public func sendBaseMessage(with objectID: NSManagedObjectID) async {
+        await sendBaseMessage(with: objectID, to: .all)
     }
 
     func sendReadReceipt(

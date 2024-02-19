@@ -99,8 +99,8 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                         if task.isNoteGroup ?? false {
                             seal.fulfill(sendMessages)
                         }
-                        else if let allGroupMembers = task.allGroupMembers {
-                            for member in allGroupMembers {
+                        else if let receivingGroupMembers = task.receivingGroupMembers {
+                            for member in receivingGroupMembers {
                                 if member == self.frameworkInjector.myIdentityStore.identity {
                                     continue
                                 }

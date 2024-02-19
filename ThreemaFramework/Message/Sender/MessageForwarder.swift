@@ -39,7 +39,12 @@ public final class MessageForwarder {
     ///   - conversation: Conversation which message should be forwarded to.
     ///   - additionalText: Additional text to be send as caption for file messages, or as normal text message for other
     ///                     types.
-    public func forward(_ message: BaseMessage, to conversation: Conversation, additionalText: String?) {
+    public func forward(
+        _ message: BaseMessage,
+        to conversation: Conversation,
+        sendAsFile: Bool,
+        additionalText: String?
+    ) {
         
         switch message {
         case let textMessage as TextMessage:
@@ -64,14 +69,13 @@ public final class MessageForwarder {
             sendAdditionalText(additionalText, to: conversation)
             
         case let fileMessage as FileMessageEntity:
-            let renderType = fileMessage.type
             
             guard let item = URLSenderItem(
                 data: fileMessage.data?.data,
                 fileName: fileMessage.fileName,
                 type: fileMessage.blobUTTypeIdentifier,
-                renderType: renderType,
-                sendAsFile: true
+                renderType: sendAsFile ? 0 : fileMessage.type,
+                sendAsFile: sendAsFile
             ) else {
                 DDLogError("[MessageForwarder] Could not create URLSenderItem.")
                 return
@@ -83,7 +87,7 @@ public final class MessageForwarder {
             
             Task {
                 do {
-                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
+                    try await businessInjector.messageSender.sendBlobMessage(for: item, in: conversation.objectID)
                 }
                 catch {
                     DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
@@ -91,16 +95,14 @@ public final class MessageForwarder {
             }
             
         case let audioMessage as AudioMessageEntity:
-            let type = kUTTypeAudio as String
-            
             guard let audio = audioMessage.audio,
                   let data = audio.data,
                   let item = URLSenderItem(
                       data: data,
                       fileName: audio.getFilename(),
-                      type: type,
-                      renderType: 1,
-                      sendAsFile: true
+                      type: UTType.audio.identifier,
+                      renderType: sendAsFile ? 0 : 1,
+                      sendAsFile: sendAsFile
                   ) else {
                 DDLogError("[MessageForwarder] Could not create URLSenderItem.")
                 return
@@ -108,7 +110,7 @@ public final class MessageForwarder {
             
             Task {
                 do {
-                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
+                    try await businessInjector.messageSender.sendBlobMessage(for: item, in: conversation.objectID)
                 }
                 catch {
                     DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
@@ -123,8 +125,8 @@ public final class MessageForwarder {
                       data: data,
                       fileName: image.getFilename(),
                       type: imageMessage.blobUTTypeIdentifier,
-                      renderType: 1,
-                      sendAsFile: true
+                      renderType: sendAsFile ? 0 : 1,
+                      sendAsFile: sendAsFile
                   ) else {
                 DDLogError("[MessageForwarder] Could not create URLSenderItem.")
                 return
@@ -136,7 +138,7 @@ public final class MessageForwarder {
             
             Task {
                 do {
-                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
+                    try await businessInjector.messageSender.sendBlobMessage(for: item, in: conversation.objectID)
                 }
                 catch {
                     DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
@@ -150,8 +152,8 @@ public final class MessageForwarder {
                       data: data,
                       fileName: video.getFilename(),
                       type: videoMessage.blobUTTypeIdentifier,
-                      renderType: 1,
-                      sendAsFile: true
+                      renderType: sendAsFile ? 0 : 1,
+                      sendAsFile: sendAsFile
                   ) else {
                 DDLogError("[MessageForwarder] Could not create URLSenderItem.")
                 return
@@ -163,7 +165,7 @@ public final class MessageForwarder {
             
             Task {
                 do {
-                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
+                    try await businessInjector.messageSender.sendBlobMessage(for: item, in: conversation.objectID)
                 }
                 catch {
                     DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")

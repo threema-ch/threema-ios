@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 @objc final class TaskDefinitionSendAbstractMessage: TaskDefinition, TaskDefinitionSendMessageNonceProtocol,
@@ -67,6 +68,27 @@ import Foundation
     }
 
     @objc init(message: AbstractMessage, isPersistent: Bool) {
+        if !(
+            message is BoxBallotVoteMessage || message is GroupBallotVoteMessage ||
+                message is BoxVoIPCallAnswerMessage || message is BoxVoIPCallHangupMessage ||
+                message is BoxVoIPCallIceCandidatesMessage || message is BoxVoIPCallOfferMessage ||
+                message is BoxVoIPCallRingingMessage ||
+                message is ContactDeletePhotoMessage || message is ContactRequestPhotoMessage ||
+                message is ContactSetPhotoMessage ||
+                message is DeliveryReceiptMessage || message is GroupDeliveryReceiptMessage ||
+                message is TypingIndicatorMessage ||
+                message is GroupCallStartMessage ||
+                message is GroupCreateMessage || message is GroupRenameMessage || message is GroupLeaveMessage ||
+                message is GroupSetPhotoMessage || message is GroupDeletePhotoMessage ||
+                message is GroupRequestSyncMessage ||
+                message is ForwardSecurityEnvelopeMessage
+        ) {
+            DDLogWarn(
+                "Only abstract messages for non-persisted messages should be send using this task (\(message.loggingDescription))"
+            )
+            assertionFailure()
+        }
+        
         self.message = message
         super.init(isPersistent: isPersistent)
     }

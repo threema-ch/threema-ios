@@ -25,8 +25,9 @@
 #import "BundleUtil.h"
 #import "Old_FileMessageSender.h"
 #import "UTIConverter.h"
-#import <CocoaLumberjack/CocoaLumberjack.h>
 #import "UserSettings.h"
+
+@import CocoaLumberjack;
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -81,8 +82,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if(_url) {
-        NSSet *conversations = [NSSet setWithObject:conversation];
-        
         URLSenderItem *item;
         if (sendAsFile) {
             NSString *mimetype = [UTIConverter mimeTypeFromUTI:[UTIConverter utiForFileURL:_url]];
@@ -90,9 +89,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         } else {
             item = [URLSenderItemCreator getSenderItemFor:_url];
         }
-        for (Conversation *conv in conversations) {
-            BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-            [manager createMessageAndSyncBlobsFor:item in:conversation correlationID:nil webRequestID:nil completion:nil];
+        
+        if (item != nil) {
+            MessageSender *messageSender = [[MessageSender alloc] init];
+            [messageSender sendBlobMessageFor:item in:conversation correlationID:nil webRequestID:nil completion:nil];
+        } else {
+            [NotificationPresenterWrapper.shared presentSendingError];
         }
     } else {
         DDLogError(@"No URL provided, can't share anything");

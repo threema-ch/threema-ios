@@ -35,7 +35,7 @@ struct AppIconSettingsView: View {
                 }
             }
             header: {
-                Text(BundleUtil.localizedString(forKey: "settings_appicon_default_header"))
+                Text("settings_appicon_default_header".localized)
             }
             
             Section {
@@ -44,7 +44,7 @@ struct AppIconSettingsView: View {
                 }
             }
             header: {
-                Text(BundleUtil.localizedString(forKey: "settings_appicon_legacy_header"))
+                Text("settings_appicon_legacy_header".localized)
             }
             
             Section {
@@ -52,10 +52,10 @@ struct AppIconSettingsView: View {
                     AppIconMenuItem(icon: icon, currentlySelected: $currentlySelected)
                 }
             } header: {
-                Text(BundleUtil.localizedString(forKey: "settings_appicon_special_header"))
+                Text("settings_appicon_special_header".localized)
             }
             .navigationTitle(
-                Text(BundleUtil.localizedString(forKey: "settings_appearance_hide_app_icon"))
+                Text("settings_appearance_hide_app_icon".localized)
             )
             .navigationBarTitleDisplayMode(.inline)
         }

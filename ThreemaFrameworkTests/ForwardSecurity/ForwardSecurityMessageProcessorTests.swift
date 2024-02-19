@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -33,12 +34,17 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     static let aliceMessage5 = "Why did you lose your data, Bob?"
     static let aliceMessage6 = "Just making sure I can still reach you in 4DH mode."
     static let aliceMessage7 = "Looks good."
+    static let aliceGroupMessage1 = "Hi Bob. This is a group message."
     static let bobMessage1 = "Hello Alice, glad to talk to you in 4DH mode!"
     static let bobMessage2 = "Hello Alice, I haven't heard from you yet!"
     static let bobMessage3 = "Let's see whose session we will use..."
     
+    private let aliceIdentity = ThreemaIdentity("AAAAAAAA")
+    
     private var aliceContext: UserContext!
     private var bobContext: UserContext!
+    
+    private lazy var groupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: aliceIdentity)
     
     override func setUp() {
         continueAfterFailure = false
@@ -78,7 +84,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         }
         
         // At this point, Bob should have enqueued one FS message: Accept
-        XCTAssertEqual(bobContext!.dummySender.queueSize, 1)
+        XCTAssertEqual(bobContext!.dummySender.sentAbstractMessagesQueue.count, 1)
         
         // Let Alice process the Accept message that she has received from Bob
         let alicesReceivedMessages = try await processReceivedMessages(
@@ -143,7 +149,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         )
         
         // At this point, Bob should not have enqueued any further messages
-        XCTAssertEqual(bobContext.dummySender.queueSize, 0)
+        XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 0)
         
         // Bob should have discarded his 2DH peer ratchet now
         let bobsResponderSession = try bobContext.dhSessionStore.bestDHSession(
@@ -164,6 +170,31 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             expectedMessage: ForwardSecurityMessageProcessorTests.bobMessage1,
             expectedMode: .fourDH
         )
+    }
+    
+    func test4DHGroupMessage() async throws {
+        try XCTSkipIf(!ThreemaEnvironment.fsEnableV12, "This only works with PFS 1.2 and up")
+
+        try await test4DH()
+        
+        // Alice sends a group message to Bob
+        try sendGroupTextMessage(
+            message: ForwardSecurityMessageProcessorTests.aliceGroupMessage1,
+            senderContext: aliceContext,
+            groupIdentity: groupIdentity
+        )
+        
+        // Bob should receive the message
+        try await receiveAndAssertSingleGroupMessage(
+            senderContext: aliceContext,
+            recipientContext: bobContext,
+            expectedMessage: ForwardSecurityMessageProcessorTests.aliceGroupMessage1,
+            expectedMode: .fourDH,
+            expectedGroupIdentity: groupIdentity
+        )
+        
+        // At this point, Bob should not have enqueued any further messages
+        XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 0)
     }
     
     func testMissingMessage() async throws {
@@ -190,7 +221,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         )
         
         // At this point, Bob should not have enqueued any further messages
-        XCTAssertEqual(bobContext.dummySender.queueSize, 0)
+        XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 0)
     }
     
     func testDataLoss() async throws {
@@ -205,10 +236,10 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try await test4DH()
         
         // Check that Bob has a responder DH session that matches Alice's initiator session.
-        let alicesSession = try aliceContext.dhSessionStore.bestDHSession(
+        let alicesSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: aliceContext.peerContact.identity
-        )!
+        ))
         XCTAssertNotNil(try bobContext.dhSessionStore.exactDHSession(
             myIdentity: bobContext.identityStore.identity,
             peerIdentity: bobContext.peerContact.identity,
@@ -230,7 +261,8 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try await setupDataLoss()
         
         // Set up expectation that the failure listener is invoked on Alice's side
-        // let listener = RejectStatusListener(expectation: expectation(description: "rejectReceived"))
+        // let rejectListenerExpectation = expectation(description: "rejectReceived")
+        // let listener = RejectStatusListener(expectation: rejectListenerExpectation)
         // aliceContext.fsmp.addListener(listener: listener)
         
         let alicesBestSession = try aliceContext.dhSessionStore.bestDHSession(
@@ -254,7 +286,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(bobsReceivedMessages.count, 0)
         
         // Bob should have enqueued one FS message (a reject) to Alice.
-        XCTAssertEqual(bobContext.dummySender.queueSize, 1)
+        XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 1)
         
         // Let Alice process the reject message that she has received from Bob.
         let alicesReceivedMessages = try await processReceivedMessages(
@@ -277,7 +309,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         ))
         
         // Check that the failure listener has been informed on Alice's side.
-        // await waitForExpectations(timeout: 5)
+        // await fulfillment(of: [rejectListenerExpectation], timeout: 5)
         // XCTAssertEqual(listener.rejectedMessageID, encapMessage.messageID)
     }
     
@@ -290,13 +322,10 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         // Bob sends Alice a message, and since he doesn't have a session anymore, he starts a new one
         try sendTextMessage(message: ForwardSecurityMessageProcessorTests.bobMessage2, senderContext: bobContext)
         
-        guard let bobsBestSession = try bobContext.dhSessionStore.bestDHSession(
+        let bobsBestSession = try XCTUnwrap(bobContext.dhSessionStore.bestDHSession(
             myIdentity: bobContext.identityStore.identity,
             peerIdentity: bobContext.peerContact.identity
-        ) else {
-            XCTFail()
-            return
-        }
+        ))
         XCTAssertEqual(try bobsBestSession.state, .L20)
         
         // Let Alice process all the messages that she has received from Bob.
@@ -308,14 +337,11 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         )
         
         // Alice should have enqueued an Accept for the new session to Bob
-        guard let alicesBestSession = try aliceContext.dhSessionStore.bestDHSession(
+        let alicesBestSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: aliceContext.peerContact.identity
-        ) else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(aliceContext.dummySender.queueSize, 1)
+        ))
+        XCTAssertEqual(aliceContext.dummySender.sentAbstractMessagesQueue.count, 1)
         XCTAssertEqual(try alicesBestSession.state, .R24)
         
         // Alice now sends a message to Bob, which should be in 4DH mode
@@ -339,15 +365,15 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         
         // Bob has received a 4DH message from Alice, and thus both parties should
         // not have a 2DH session anymore
-        let alicesSession = try aliceContext.dhSessionStore.bestDHSession(
+        let alicesSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: aliceContext.peerContact.identity
-        )!
-        let bobsSession = try bobContext.dhSessionStore.exactDHSession(
+        ))
+        let bobsSession = try XCTUnwrap(bobContext.dhSessionStore.exactDHSession(
             myIdentity: bobContext.identityStore.identity,
             peerIdentity: bobContext.peerContact.identity,
             sessionID: alicesSession.id
-        )!
+        ))
         XCTAssertNil(alicesSession.myRatchet2DH)
         XCTAssertNil(alicesSession.peerRatchet2DH)
         XCTAssertEqual(try alicesSession.state, .RL44)
@@ -421,15 +447,18 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: bobContext.identityStore.identity
         ))
-        XCTAssertEqual(CspE2eFs_Version.v10, aliceSession.current4DHVersions?.local)
+        XCTAssertEqual(.v10, aliceSession.current4DHVersions?.local)
         XCTAssertEqual(try aliceSession.state, .RL44)
         XCTAssertEqual(aliceSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        print(
-            "JOFFY: \(aliceSession.outgoingOfferedVersionOverride) \(aliceSession.current4DHVersions) \(try! DHSession.supportedVersionWithin(majorVersion: aliceSession.current4DHVersions!.local))"
+        XCTAssertEqual(
+            try! DHSession.supportedVersionWithin(majorVersion: .v10),
+            ThreemaEnvironment.fsEnableV12 ? .v12 : .v11
         )
-        XCTAssertEqual(aliceSession.current4DHVersions?.local, .v10)
-        XCTAssertEqual(try! DHSession.supportedVersionWithin(majorVersion: .v10), .v11)
-        XCTAssertEqual(aliceSession.outgoingOfferedVersion, .v11)
+        XCTAssertEqual(
+            try! DHSession.supportedVersionWithin(majorVersion: .v10),
+            ThreemaEnvironment.fsEnableV12 ? .v12 : .v11
+        )
+        XCTAssertEqual(aliceSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
         XCTAssertEqual(aliceSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, .v10)
         
@@ -438,10 +467,10 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             myIdentity: bobContext.identityStore.identity,
             peerIdentity: aliceContext.identityStore.identity
         ))
-        XCTAssertEqual(CspE2eFs_Version.v10, bobSession.current4DHVersions?.local)
+        XCTAssertEqual(.v10, bobSession.current4DHVersions?.local)
         XCTAssertEqual(try bobSession.state, .R24)
         XCTAssertEqual(bobSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v11)
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
         XCTAssertEqual(bobSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
         
@@ -455,7 +484,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         )
         XCTAssertEqual(try bobSession.state, .R24)
         XCTAssertEqual(bobSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v11)
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
         XCTAssertEqual(bobSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
         
@@ -463,7 +492,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try sendTextMessage(message: ForwardSecurityMessageProcessorTests.aliceMessage1, senderContext: aliceContext)
         XCTAssertEqual(try aliceSession.state, .RL44)
         XCTAssertEqual(aliceSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        XCTAssertEqual(aliceSession.outgoingOfferedVersion, .v11)
+        XCTAssertEqual(aliceSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
         XCTAssertEqual(aliceSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, .v10)
         
@@ -475,9 +504,12 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             expectedMode: .fourDH
         )
         XCTAssertEqual(try bobSession.state, .RL44)
-        XCTAssertEqual(bobSession.current4DHVersions, DHVersions.restored(local: .v11, remote: .v10))
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v11)
-        XCTAssertEqual(bobSession.outgoingAppliedVersion, .v11)
+        XCTAssertEqual(
+            bobSession.current4DHVersions,
+            DHVersions.restored(local: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11, remote: .v10)
+        )
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(bobSession.outgoingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
     
         // Now Bob sends a message with offered and applied version 1.1.
@@ -486,9 +518,12 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: bobContext
         ))
         XCTAssertEqual(try bobSession.state, .RL44)
-        XCTAssertEqual(bobSession.current4DHVersions, DHVersions.restored(local: .v11, remote: .v10))
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v11)
-        XCTAssertEqual(bobSession.outgoingAppliedVersion, .v11)
+        XCTAssertEqual(
+            bobSession.current4DHVersions,
+            DHVersions.restored(local: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11, remote: .v10)
+        )
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(bobSession.outgoingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
         
         // Alice processes Bob's message (where 1.1 is offered and applied). This updates both Alice's local/outgoing
@@ -500,10 +535,17 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             expectedMode: .fourDH
         )
         XCTAssertEqual(try aliceSession.state, .RL44)
-        XCTAssertEqual(aliceSession.current4DHVersions, DHVersions.restored(local: .v11, remote: .v11))
-        XCTAssertEqual(aliceSession.outgoingOfferedVersion, .v11)
-        XCTAssertEqual(aliceSession.outgoingAppliedVersion, .v11)
-        XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, .v11)
+        XCTAssertEqual(
+            aliceSession.current4DHVersions,
+            DHVersions
+                .restored(
+                    local: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11,
+                    remote: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11
+                )
+        )
+        XCTAssertEqual(aliceSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(aliceSession.outgoingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
     }
     
     func testRequiredVersionForMessageTypes() async throws {
@@ -537,7 +579,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         
         setSupportedVersionRange(range)
         
-        try await processReceivedMessages(senderContext: bobContext, recipientContext: aliceContext)
+        _ = try await processReceivedMessages(senderContext: bobContext, recipientContext: aliceContext)
         
         // At this point, Alice has a session with negotiated version 1.0, whereas Bob has negotiated version 1.1. This
         // does not change, as long as Alice does not process any message of Bob (which now all would announce version
@@ -598,6 +640,73 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try assertMessageTypeSupport(BoxBallotVoteMessage(), context: aliceContext, supported: true)
     }
     
+    func testMessageSupportOfV12() async throws {
+        // Start the negotiation on Alice's side, up to the point where the Init and Message are
+        // on the way to Bob, but have not been received by him yet
+        try startNegotiationAlice()
+        
+        // Let Bob process all the messages that he has received from Alice.
+        // The decapsulated message should be the text message from Alice.
+        try await receiveAndAssertSingleMessage(
+            senderContext: aliceContext,
+            recipientContext: bobContext,
+            expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage1,
+            expectedMode: .twoDH
+        )
+        
+        // Let Alice process the Accept message that she has received from Bob
+        _ = try await processReceivedMessages(
+            senderContext: bobContext,
+            recipientContext: aliceContext
+        )
+        
+        // Alice should have a 4DH session negotiated with 1.2 support now
+        let aliceSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
+            myIdentity: aliceContext.identityStore.identity,
+            peerIdentity: bobContext.identityStore.identity
+        ))
+        XCTAssertEqual(aliceSession.outgoingAppliedVersion, .v12)
+        
+        // Check some 1.0 messages
+        try assertMessageTypeSupport(BoxTextMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxLocationMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxFileMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxBallotCreateMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxBallotVoteMessage(), context: aliceContext, supported: true)
+        
+        // Check some 1.1 messages
+        try assertMessageTypeSupport(BoxVoIPCallOfferMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxVoIPCallRingingMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxVoIPCallAnswerMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxVoIPCallHangupMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(BoxVoIPCallIceCandidatesMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(DeliveryReceiptMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(TypingIndicatorMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(ContactSetPhotoMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(ContactDeletePhotoMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(ContactRequestPhotoMessage(), context: aliceContext, supported: true)
+        
+        // Check messages new supported in 1.2 (i.e. group messages)
+        try assertMessageTypeSupport(GroupBallotCreateMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupBallotVoteMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupCallStartMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupCreateMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupDeletePhotoMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupDeliveryReceiptMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupFileMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupLeaveMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupLocationMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupRenameMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupRequestSyncMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupSetPhotoMessage(), context: aliceContext, supported: true)
+        try assertMessageTypeSupport(GroupTextMessage(), context: aliceContext, supported: true)
+
+        // Check unsupported group legacy messages
+        try assertMessageTypeSupport(GroupAudioMessage(), context: aliceContext, supported: false)
+        try assertMessageTypeSupport(GroupImageMessage(), context: aliceContext, supported: false)
+        try assertMessageTypeSupport(GroupVideoMessage(), context: aliceContext, supported: false)
+    }
+    
     // TODO: (IOS-3949) Test changed
     func testMinorVersionUpgradeToUnknownVersion() async throws {
         // Alice and Bob support versions 1.x. Bob will later upgrade his version to 1.255.
@@ -606,10 +715,10 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertNoThrow(try startNegotiationAlice())
         
         // Bob processes the init and the text message of alice
-        try await processReceivedMessages(senderContext: aliceContext, recipientContext: bobContext)
+        _ = try await processReceivedMessages(senderContext: aliceContext, recipientContext: bobContext)
         
         // Alice should process the accept message now
-        try await processReceivedMessages(senderContext: bobContext, recipientContext: aliceContext)
+        _ = try await processReceivedMessages(senderContext: bobContext, recipientContext: aliceContext)
         
         // Alice should now have initiated a session with the maximum supported version
         let aliceSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
@@ -686,7 +795,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             text: ForwardSecurityMessageProcessorTests.aliceMessage2,
             senderContext: aliceContext
         )
-        aliceContext.dummySender.send(message: message.message)
+        aliceContext.dummySender.sendMessage(abstractMessage: message.message, isPersistent: true)
         
         // Now Bob processes the text message from Alice. This should not fail, even if the applied version is not
         // known.
@@ -718,7 +827,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         )
         
         // Assert that Alice did not receive session reject
-        XCTAssertEqual(bobContext.dummySender.messageQueue.count, 0)
+        XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 0)
     }
     
     // TODO: (IOS-3949) Test changed
@@ -809,24 +918,21 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             text: ForwardSecurityMessageProcessorTests.aliceMessage2,
             senderContext: aliceContext
         )
-        aliceContext.dummySender.send(message: message.message)
+        aliceContext.dummySender.sendMessage(abstractMessage: message.message, isPersistent: true)
         
         // Now Bob processes the text message from Alice. Note that the message should be rejected and therefore return
         // an empty list.
         let numberOfMessages =
             try await (processReceivedMessages(senderContext: aliceContext, recipientContext: bobContext)).count
-        XCTAssertEqual(
-            numberOfMessages,
-            0
-        )
+        XCTAssertEqual(numberOfMessages, 0)
         XCTAssertNil(try? bobContext.dhSessionStore.bestDHSession(
             myIdentity: bobContext.identityStore.identity,
             peerIdentity: aliceContext.identityStore.identity
         ))
         
         // Assert that Alice did receive a session reject
-        XCTAssertEqual(bobContext.dummySender.messageQueue.count, 1)
-        try await processOneReceivedMessage(senderContext: bobContext, recipientContext: aliceContext)
+        XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 1)
+        _ = try await processOneReceivedMessage(senderContext: bobContext, recipientContext: aliceContext)
         XCTAssertNil(try? aliceContext.dhSessionStore.bestDHSession(
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: bobContext.identityStore.identity
@@ -892,7 +998,30 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(try bobFinalSession.state, .RL44)
     }
     
+    // MARK: - Private helper
+    
     private func assertMessageTypeSupport(_ message: AbstractMessage, context: UserContext, supported: Bool) throws {
+        do {
+            _ = try aliceContext.fsmp.makeMessage(contact: aliceContext.peerContact, innerMessage: message)
+            
+            if !supported {
+                XCTFail()
+            }
+        }
+        catch {
+            let fsError = try XCTUnwrap(error as? ForwardSecurityError)
+            XCTAssertEqual(fsError, ForwardSecurityError.messageTypeNotSupported)
+        }
+    }
+    
+    private func assertMessageTypeSupport(
+        _ message: AbstractGroupMessage,
+        context: UserContext,
+        supported: Bool
+    ) throws {
+        message.groupID = groupIdentity.id
+        message.groupCreator = groupIdentity.creator.string
+        
         do {
             _ = try aliceContext.fsmp.makeMessage(contact: aliceContext.peerContact, innerMessage: message)
             
@@ -920,17 +1049,17 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try sendTextMessage(message: ForwardSecurityMessageProcessorTests.bobMessage2, senderContext: bobContext)
         
         // At this point, Bob has enqueued two FS messages: Init and Message.
-        XCTAssertEqual(bobContext.dummySender.queueSize, 2)
+        XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 2)
         
         // Bob should now have a (separate) 2DH session with Alice
-        let alicesBestSession = try aliceContext.dhSessionStore.bestDHSession(
+        let alicesBestSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: aliceContext.peerContact.identity
-        )!
-        let bobsBestSession = try bobContext.dhSessionStore.bestDHSession(
+        ))
+        let bobsBestSession = try XCTUnwrap(bobContext.dhSessionStore.bestDHSession(
             myIdentity: bobContext.identityStore.identity,
             peerIdentity: bobContext.peerContact.identity
-        )!
+        ))
         XCTAssertNotEqual(alicesBestSession.id, bobsBestSession.id)
     }
     
@@ -1045,21 +1174,21 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     
     private func assertSameBestSession() throws {
         // Alice and Bob should now each have one matching 4DH session
-        let alicesBestSession = try aliceContext.dhSessionStore.bestDHSession(
+        let alicesBestSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: aliceContext.peerContact.identity
-        )!
-        let bobsBestSession = try bobContext.dhSessionStore.bestDHSession(
+        ))
+        let bobsBestSession = try XCTUnwrap(bobContext.dhSessionStore.bestDHSession(
             myIdentity: bobContext.identityStore.identity,
             peerIdentity: bobContext.peerContact.identity
-        )!
+        ))
         
         XCTAssertEqual(alicesBestSession.id, bobsBestSession.id)
     }
     
     private func makeAliceContext(localSupportedVersionRange: CspE2eFs_VersionRange = ThreemaEnvironment.fsVersion) {
         aliceContext = makeTestUserContext(
-            myIdentity: "AAAAAAAA",
+            myIdentity: aliceIdentity.string,
             mySecretKey: Data(base64Encoded: "2Hi7lA4boz9eLl0ozdeb2uKj2+i/wD2PUTRczwshp1Y=")!,
             peerIdentity: "BBBBBBBB",
             peerPublicKey: Data(base64Encoded: "oUEC0jPaUjqLqfEUXlCSSndLmwSg6d4/qA9XKKIJfSs=")!,
@@ -1071,7 +1200,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         bobContext = makeTestUserContext(
             myIdentity: "BBBBBBBB",
             mySecretKey: Data(base64Encoded: "WE2g/Mu8jeGHMUX0pqyCP+ypW6gCu2xEBKESOyqgbn0=")!,
-            peerIdentity: "AAAAAAAA",
+            peerIdentity: aliceIdentity.string,
             peerPublicKey: Data(base64Encoded: "CkgZmn3tqLS1YQHk2IF46hFK5ZdPhzayZjooLIvWxFo=")!,
             localSupportedVersionRange: ThreemaEnvironment.fsVersion
         )
@@ -1087,7 +1216,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try sendTextMessage(message: ForwardSecurityMessageProcessorTests.aliceMessage1, senderContext: aliceContext!)
         
         // At this point, Alice has enqueued two FS messages: Init and Message.
-        XCTAssertEqual(aliceContext!.dummySender.queueSize, 2)
+        XCTAssertEqual(aliceContext!.dummySender.sentAbstractMessagesQueue.count, 2)
         
         // Alice should now have a 2DH session with Bob
         let alicesInitiatorSession = try aliceContext!.dhSessionStore.bestDHSession(
@@ -1109,10 +1238,26 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     ) throws -> ForwardSecurityEnvelopeMessage {
         let encapMessages = try makeEncapTextMessage(text: message, senderContext: senderContext)
         if let auxMessage = encapMessages.auxMessage {
-            senderContext.dummySender.send(message: auxMessage)
+            senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
         }
-        senderContext.dummySender.send(message: encapMessages.message)
+        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.message, isPersistent: true)
         return encapMessages.message
+    }
+    
+    private func sendGroupTextMessage(
+        message: String,
+        senderContext: UserContext,
+        groupIdentity: GroupIdentity
+    ) throws {
+        let encapMessages = try makeEncapGroupTextMessage(
+            text: message,
+            senderContext: senderContext,
+            groupIdentity: groupIdentity
+        )
+        if let auxMessage = encapMessages.auxMessage {
+            senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
+        }
+        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.message, isPersistent: true)
     }
     
     private func processReceivedMessages(
@@ -1120,7 +1265,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         recipientContext: UserContext
     ) async throws -> [AbstractMessage] {
         var decapsulatedMessages: [AbstractMessage] = []
-        while senderContext.dummySender.queueSize > 0 {
+        while !senderContext.dummySender.sentAbstractMessagesQueue.isEmpty {
             if let decap = try await processOneReceivedMessage(
                 senderContext: senderContext,
                 recipientContext: recipientContext
@@ -1135,10 +1280,12 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         senderContext: UserContext,
         recipientContext: UserContext
     ) async throws -> AbstractMessage? {
-        guard let message = senderContext.dummySender.popMessage() else {
+        guard !senderContext.dummySender.sentAbstractMessagesQueue.isEmpty else {
             XCTFail()
             return nil
         }
+        
+        let message = senderContext.dummySender.sentAbstractMessagesQueue.removeFirst()
         
         let (decap, dhSession) = try await recipientContext.fsmp.processEnvelopeMessage(
             sender: recipientContext.peerContact,
@@ -1166,19 +1313,54 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(receivedMessages[0].forwardSecurityMode, expectedMode)
     }
     
+    private func receiveAndAssertSingleGroupMessage(
+        senderContext: UserContext,
+        recipientContext: UserContext,
+        expectedMessage: String,
+        expectedMode: ForwardSecurityMode,
+        expectedGroupIdentity: GroupIdentity
+    ) async throws {
+        let receivedMessages = try await processReceivedMessages(
+            senderContext: senderContext,
+            recipientContext: recipientContext
+        )
+        XCTAssertEqual(receivedMessages.count, 1)
+        let groupMessage = try XCTUnwrap(receivedMessages.first as? GroupTextMessage)
+        XCTAssertEqual(groupMessage.text, expectedMessage)
+        XCTAssertEqual(groupMessage.forwardSecurityMode, expectedMode)
+        XCTAssertEqual(groupMessage.groupID, expectedGroupIdentity.id)
+        XCTAssertEqual(groupMessage.groupCreator, expectedGroupIdentity.creator.string)
+    }
+    
     private func makeEncapTextMessage(
         text: String,
         senderContext: UserContext
-    ) throws
-        -> (
-            auxMessage: ForwardSecurityEnvelopeMessage?,
-            message: ForwardSecurityEnvelopeMessage,
-            sendAuxFailure: () -> Void
-        ) {
+    ) throws -> (
+        auxMessage: ForwardSecurityEnvelopeMessage?,
+        message: ForwardSecurityEnvelopeMessage,
+        sendAuxFailure: () -> Void
+    ) {
         let textMessage = BoxTextMessage()
         textMessage.text = text
         textMessage.toIdentity = senderContext.peerContact.identity
         return try senderContext.fsmp.makeMessage(contact: senderContext.peerContact, innerMessage: textMessage)
+    }
+    
+    private func makeEncapGroupTextMessage(
+        text: String,
+        senderContext: UserContext,
+        groupIdentity: GroupIdentity
+    ) throws -> (
+        auxMessage: ForwardSecurityEnvelopeMessage?,
+        message: ForwardSecurityEnvelopeMessage,
+        sendAuxFailure: () -> Void
+    ) {
+        let groupTextMessage = GroupTextMessage()
+        groupTextMessage.text = text
+        groupTextMessage.toIdentity = senderContext.peerContact.identity
+        groupTextMessage.groupID = groupIdentity.id
+        groupTextMessage.groupCreator = groupIdentity.creator.string
+        return try senderContext.fsmp.makeMessage(contact: senderContext.peerContact, innerMessage: groupTextMessage)
     }
     
     private func makeTestUserContext(
@@ -1192,12 +1374,12 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         let peerContact = ForwardSecurityContact(identity: peerIdentity, publicKey: peerPublicKey)
         let mockIdentityStore = MyIdentityStoreMock(identity: myIdentity, secretKey: mySecretKey)
         
-        let dummySender = DummySender()
+        let messageSenderMock = MessageSenderMock()
         
         let fsmp = ForwardSecurityMessageProcessor(
             dhSessionStore: dhSessionStore,
             identityStore: mockIdentityStore,
-            messageSender: dummySender,
+            messageSender: messageSenderMock,
             localSupportedVersionRange: localSupportedVersionRange
         )
         
@@ -1206,27 +1388,8 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             dhSessionStore: dhSessionStore,
             identityStore: mockIdentityStore,
             fsmp: fsmp,
-            dummySender: dummySender
+            dummySender: messageSenderMock
         )
-    }
-}
-
-class DummySender: ForwardSecurityMessageSenderProtocol {
-    var messageQueue: [AbstractMessage] = []
-    
-    func send(message: AbstractMessage) {
-        messageQueue.append(message)
-    }
-    
-    func popMessage() -> AbstractMessage? {
-        if messageQueue.isEmpty {
-            return nil
-        }
-        return messageQueue.removeFirst()
-    }
-    
-    var queueSize: Int {
-        messageQueue.count
     }
 }
 
@@ -1308,5 +1471,5 @@ private struct UserContext {
     let dhSessionStore: DHSessionStoreProtocol
     let identityStore: MyIdentityStoreProtocol
     let fsmp: ForwardSecurityMessageProcessor
-    let dummySender: DummySender
+    let dummySender: MessageSenderMock
 }

@@ -39,9 +39,9 @@ struct DeviceJoinSuccessView: View {
                             .accessibilityHidden(true)
                         
                         DeviceJoinHeaderView(
-                            title: BundleUtil.localizedString(forKey: "multi_device_join_linked_successfully_title"),
+                            title: "multi_device_join_linked_successfully_title".localized,
                             description: String.localizedStringWithFormat(
-                                BundleUtil.localizedString(forKey: "multi_device_join_linked_successfully_info"),
+                                "multi_device_join_linked_successfully_info".localized,
                                 ThreemaApp.appName
                             )
                         )
@@ -60,7 +60,7 @@ struct DeviceJoinSuccessView: View {
             Button {
                 showWizard = false
             } label: {
-                Text(BundleUtil.localizedString(forKey: "continue"))
+                Text("continue".localized)
                     .font(.title3) // This is a little bit too big
                     .bold()
                     .padding(8)

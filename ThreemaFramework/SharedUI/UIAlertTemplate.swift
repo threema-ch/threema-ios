@@ -106,7 +106,6 @@ import Foundation
         confirm.addAction(UIAlertAction(title: titleOk, style: .destructive, handler: actionOk))
         let popOver = confirm.popoverPresentationController
         popOver?.sourceView = popOverSource
-        popOver?.sourceRect = popOverSource.bounds
         popOver?.permittedArrowDirections = .any
         owner.present(confirm, animated: true)
     }
@@ -255,6 +254,57 @@ import Foundation
         alert.addAction(UIAlertAction(title: cancelTitle, style: .cancel, handler: cancelAction))
         
         owner.present(alert, animated: true)
+    }
+    
+    /// Show a custom alert with two actions, that become enabled after a certain time
+    ///
+    /// See HIG for guidance: <https://developer.apple.com/design/human-interface-guidelines/ios/views/alerts/>
+    ///
+    /// - Warning: Try to not use it. Use two action alerts whenever possible.
+    ///
+    /// - Parameters:
+    ///   - owner: View controller to present alert on
+    ///   - title: Tile shown in alert
+    ///   - message: Optional message shown in alert
+    ///   - action1: First action
+    ///   - action2: Second action
+    ///   - enableActionsAfter: Seconds before the actions are enabled
+    public static func showTimedAlert(
+        owner: UIViewController,
+        title: String,
+        message: String,
+        action1: UIAlertAction,
+        action2: UIAlertAction,
+        enableActionsAfter seconds: Int
+    ) {
+        let initialMessage =
+            "\(message) \n\n \(String.localizedStringWithFormat("alert_enable_actions".localized, seconds))"
+        let alert = UIAlertController(title: title, message: initialMessage, preferredStyle: .alert)
+        
+        alert.addAction(action1)
+        action1.isEnabled = false
+        alert.addAction(action2)
+        action2.isEnabled = false
+        
+        var secondsPassed = 0
+        
+        owner.present(alert, animated: true) {
+            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                secondsPassed += 1
+                
+                if secondsPassed == seconds {
+                    action1.isEnabled = true
+                    action2.isEnabled = true
+                    alert.message = message
+                    timer.invalidate()
+                }
+                else {
+                    alert
+                        .message =
+                        "\(message) \n\n \(String.localizedStringWithFormat("alert_enable_actions".localized, seconds - secondsPassed))"
+                }
+            }
+        }
     }
 }
 

@@ -22,15 +22,18 @@ import SwiftUI
 import ThreemaFramework
 
 class ThemedTableViewControllerSwiftUI: ThemedTableViewController {
-    private var observing = false
-    private var state: ConnectionState = .disconnected
+    private static var connectionStateProvider = ConnectionStateProvider()
     private var hostedViewVC: UIViewController
     private var navTitle: String
     
     init(navTitle: String, hostedView: some View) {
-        self.hostedViewVC = UIHostingController(rootView: hostedView)
-        self.navTitle = navTitle
+        self
+            .hostedViewVC = UIHostingController(
+                rootView: hostedView
+                    .environmentObject(ThemedTableViewControllerSwiftUI.connectionStateProvider)
+            )
         
+        self.navTitle = navTitle
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -52,8 +55,6 @@ class ThemedTableViewControllerSwiftUI: ThemedTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        navigationController?.navigationBar.prefersLargeTitles = false
         
         NotificationCenter.default.addObserver(
             self,
@@ -82,14 +83,10 @@ class ThemedTableViewControllerSwiftUI: ThemedTableViewController {
         
         navigationItem.largeTitleDisplayMode = UINavigationItem
             .LargeTitleDisplayMode(rawValue: (UserSettings.shared()?.largeTitleDisplayMode)!)!
-        
-        registerObserver()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
-        unregisterObserver()
     }
         
     @objc func colorThemeChanged(notification: Notification) {
@@ -123,24 +120,6 @@ extension ThemedTableViewControllerSwiftUI {
             return
         }
         updateTitle()
-    }
-}
-
-extension ThemedTableViewControllerSwiftUI {
-    // MARK: Private Functions
-    
-    private func registerObserver() {
-        if observing == false {
-            ServerConnector.shared().registerConnectionStateDelegate(delegate: self)
-            observing = true
-        }
-    }
-    
-    private func unregisterObserver() {
-        if observing == true {
-            ServerConnector.shared().unregisterConnectionStateDelegate(delegate: self)
-            observing = false
-        }
     }
 }
 
@@ -188,12 +167,34 @@ class WrappedView: UIView {
     }
 }
 
-// MARK: - ThemedTableViewControllerSwiftUI + ConnectionStateDelegate
+// MARK: - ConnectionStateProvider
 
-extension ThemedTableViewControllerSwiftUI: ConnectionStateDelegate {
-    func changed(connectionState state: ConnectionState) {
+class ConnectionStateProvider: ObservableObject {
+    @Published var connectionState: ConnectionState = .disconnected
+  
+    private lazy var observer = Observer { [weak self] state in
         DispatchQueue.main.async {
-            self.state = state
+            self?.connectionState = state
+        }
+    }
+    
+    init() {
+        ServerConnector.shared().registerConnectionStateDelegate(delegate: observer)
+    }
+    
+    deinit {
+        ServerConnector.shared().unregisterConnectionStateDelegate(delegate: observer)
+    }
+    
+    private class Observer: NSObject, ConnectionStateDelegate {
+        var changed: (ConnectionState) -> Void
+        
+        init(changed: @escaping (ConnectionState) -> Void) {
+            self.changed = changed
+        }
+
+        func changed(connectionState state: ConnectionState) {
+            changed(state)
         }
     }
 }

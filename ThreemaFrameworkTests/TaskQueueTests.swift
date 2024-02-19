@@ -53,7 +53,7 @@ class TaskQueueTests: XCTestCase {
     }
     
     func testInterrupt() {
-        let msg = BoxTextMessage()
+        let msg = ContactDeletePhotoMessage()
         msg.messageID = MockData.generateMessageID()
 
         let task = TaskDefinitionSendAbstractMessage(message: msg, isPersistent: false)
@@ -119,10 +119,10 @@ class TaskQueueTests: XCTestCase {
             renewFrameworkInjector: false
         )
 
-        let message = BoxTextMessage()
+        let message = TypingIndicatorMessage()
         message.fromIdentity = myIdentityStoreMock.identity
         message.toIdentity = expectedReceiverIdentity
-        message.text = "test 123"
+        message.typing = true
 
         let expec = expectation(description: "spool")
 
@@ -141,7 +141,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertTrue(
                 self.ddLoggerMock
                     .exists(
-                        message: "<TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> done"
+                        message: "<TaskDefinitionSendAbstractMessage (type: typingIndicator; id: \(message.messageID.hexString))> done"
                     )
             )
         }
@@ -236,6 +236,89 @@ class TaskQueueTests: XCTestCase {
         }
     }
     
+    func testSpoolExecuteNextTaskExponentialBackoff() throws {
+
+        let maxSpoolingDelayAttempts = 3
+        var spoolingDelayAttempts = 0
+
+        let expectedReflectID = MockData.generateReflectID()
+        let expectedEnvelop = D2d_Envelope()
+
+        let serverConnectorMock = ServerConnectorMock(
+            connectionState: .loggedIn,
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
+        )
+        serverConnectorMock.reflectMessageClosure = { _ in
+            guard spoolingDelayAttempts >= maxSpoolingDelayAttempts else {
+                spoolingDelayAttempts += 1
+
+                return ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError
+            }
+
+            return nil
+        }
+
+        let mediatorMessageProtocolMock = MediatorMessageProtocolMock(
+            deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
+            returnValues: [
+                try MediatorMessageProtocolMock.ReflectData(
+                    id: expectedReflectID,
+                    message: expectedEnvelop.serializedData()
+                ),
+            ]
+        )
+
+        let mediatorReflectedProcessorMock = MediatorReflectedProcessorMock()
+        mediatorReflectedProcessorMock.error = ThreemaError.threemaError(
+            "Not logged in",
+            withCode: ThreemaProtocolError.notLoggedIn.rawValue
+        ) as? NSError
+
+        let frameworkInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
+            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            serverConnector: serverConnectorMock,
+            mediatorMessageProtocol: mediatorMessageProtocolMock,
+            mediatorReflectedProcessor: mediatorReflectedProcessorMock
+        )
+
+        let tq = TaskQueue(
+            queueType: .incoming,
+            supportedTypes: [TaskDefinitionReceiveReflectedMessage.self],
+            frameworkInjector: frameworkInjectorMock,
+            renewFrameworkInjector: false
+        )
+
+        let expect = expectation(description: "spool")
+
+        let task = TaskDefinitionReceiveReflectedMessage(
+            reflectID: expectedReflectID,
+            reflectedEnvelope: expectedEnvelop,
+            reflectedAt: Date(),
+            receivedAfterInitialQueueSend: true,
+            maxBytesToDecrypt: 0,
+            timeoutDownloadThumbnail: 0
+        )
+
+        try? tq.enqueue(task: task) { _, error in
+            XCTAssertNil(error)
+            DDLog.flushLog()
+            expect.fulfill()
+        }
+
+        tq.spool()
+
+        wait(for: [expect], timeout: 6)
+
+        XCTAssertTrue(ddLoggerMock.exists(message: "Waiting 0.5 seconds before execute next task"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "Waiting 1.0 seconds before execute next task"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "Waiting 2.0 seconds before execute next task"))
+    }
+
     func testSpoolTaskDefinitionSendAbstractMessageReflectFailedWithRetry() {
         let expectedReceiver = "ECHOECHO"
 
@@ -259,10 +342,9 @@ class TaskQueueTests: XCTestCase {
                 renewFrameworkInjector: false
             )
 
-            let message = BoxTextMessage()
+            let message = ContactDeletePhotoMessage()
             message.fromIdentity = "TESTER01"
             message.toIdentity = expectedReceiver
-            message.text = "test 123"
 
             let expec = expectation(description: "spool")
 
@@ -285,14 +367,14 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertTrue(
                     self.ddLoggerMock
                         .exists(
-                            message: "<TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> failed sendMessageFailed(message: \"Contact not found for identity Optional(\\\"\(expectedReceiver)\\\") ((type: text; id: \(message.messageID.hexString)))\")"
+                            message: "<TaskDefinitionSendAbstractMessage (type: contactDeleteProfilePicture; id: \(message.messageID.hexString))> failed sendMessageFailed(message: \"Contact not found for identity Optional(\\\"\(expectedReceiver)\\\") ((type: contactDeleteProfilePicture; id: \(message.messageID.hexString)))\")"
                         )
                 )
                 if task.retry {
                     XCTAssertTrue(
                         self.ddLoggerMock
                             .exists(
-                                message: "Retry of <TaskDefinitionSendAbstractMessage (type: text; id: \(message.messageID.hexString))> after execution failing"
+                                message: "Retry of <TaskDefinitionSendAbstractMessage (type: contactDeleteProfilePicture; id: \(message.messageID.hexString))> after execution failing"
                             )
                     )
                 }
@@ -353,6 +435,9 @@ class TaskQueueTests: XCTestCase {
             deviceID: MockData.deviceID,
             deviceGroupKeys: MockData.deviceGroupKeys
         )
+        serverConnectorMock.reflectMessageClosure = { _ in
+            ThreemaError.threemaError("Not logged in", withCode: ThreemaProtocolError.notLoggedIn.rawValue) as? NSError
+        }
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
@@ -391,10 +476,15 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertEqual(tq.list.count, 1)
                 XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, test[1] as! Int)
                 XCTAssertEqual(task.retryCount, test[2] as! Int)
+
+                self.ddLoggerMock.logMessages.forEach { m in
+                    print(m.message)
+                }
+
                 XCTAssertTrue(
                     self.ddLoggerMock
                         .exists(
-                            message: "<TaskDefinitionDeleteContactSync> failed reflectMessageFailed(message: Optional(\"type: lock\"))"
+                            message: "<TaskDefinitionDeleteContactSync> failed reflectMessageFailed(message: Optional(\"message type: lock / Error Domain=ThreemaErrorDomain Code=675 \\\"Not logged in\\\" UserInfo={NSLocalizedDescription=Not logged in}\"))"
                         )
                 )
                 if task.retry {
@@ -415,15 +505,27 @@ class TaskQueueTests: XCTestCase {
 
     func testSpoolChatServerMessageWithErrors() throws {
         let tests: [(
-            expectedErrors: [Error],
+            expectedMessageProcessorErrors: [Error],
+            expectedSendMessage: Bool,
             expectedLogMessages: [String],
             expectedAck: Bool,
-            expectedTaskFailed: Bool
+            expectedTaskDequeued: Bool
         )] = [
+            (
+                [Error](),
+                true,
+                [
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
+                ],
+                true,
+                true
+            ),
             (
                 [
                     TaskExecutionError.wrongTaskDefinitionType,
                 ],
+                false,
                 ["<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> failed %@"],
                 false,
                 true
@@ -441,94 +543,113 @@ class TaskQueueTests: XCTestCase {
                         withCode: ThreemaProtocolError.messageAlreadyProcessed.rawValue
                     ),
                 ],
+                true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> discard incoming message: %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
                 ],
                 true,
-                false
+                true
             ),
             (
                 [
                     ThreemaProtocolError.pendingGroupMessage,
                 ],
+                true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
                 ],
                 false,
-                false
+                true
             ),
             (
                 [
                     MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage,
                 ],
+                true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
                 ],
                 false,
-                false
+                true
             ),
             (
                 [
                     TaskExecutionError.conversationNotFound(for: TaskDefinition(isPersistent: false)),
                 ],
+                true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> failed: %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
                 ],
                 false,
-                false
+                true
             ),
             (
                 [
                     TaskExecutionError.createAbstractMessageFailed,
                     TaskExecutionError.messageReceiverBlockedOrUnknown,
                 ],
+                true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> outgoing message failed: %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
                 ],
                 false,
-                false
+                true
             ),
             (
                 [
                     TaskExecutionTransactionError.shouldSkip,
                 ],
+                true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> skipped: %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
                 ],
                 false,
-                false
+                true
             ),
         ]
 
         for test in tests {
-            test.expectedErrors.forEach { expectedError in
+            if test.expectedMessageProcessorErrors.isEmpty {
                 spoolChatServerMessageWithError(
-                    expectedError: expectedError,
-                    expectedLogMessages: test.expectedLogMessages,
-                    expectedAck: test.expectedAck,
-                    expectedTaskFailed: test.expectedTaskFailed
+                    nil,
+                    test.expectedSendMessage,
+                    test.expectedLogMessages,
+                    test.expectedAck,
+                    test.expectedTaskDequeued
                 )
+            }
+            else {
+                test.expectedMessageProcessorErrors.forEach { expectedMessageProcessorError in
+                    spoolChatServerMessageWithError(
+                        expectedMessageProcessorError,
+                        test.expectedSendMessage,
+                        test.expectedLogMessages,
+                        test.expectedAck,
+                        test.expectedTaskDequeued
+                    )
+                }
             }
         }
     }
 
     func spoolChatServerMessageWithError(
-        expectedError: Error,
-        expectedLogMessages: [String],
-        expectedAck: Bool,
-        expectedTaskFailed: Bool
+        _ expectedMessageProcessorError: Error?,
+        _ expectedSendMessage: Bool,
+        _ expectedLogMessages: [String],
+        _ expectedAck: Bool,
+        _ expectedTaskDequeue: Bool
     ) {
         let incomingBoxedMessage = BoxedMessage()
         incomingBoxedMessage.messageID = MockData.generateMessageID()
@@ -541,9 +662,12 @@ class TaskQueueTests: XCTestCase {
             deviceID: MockData.deviceID,
             deviceGroupKeys: MockData.deviceGroupKeys
         )
+        serverConnectorMock.sendMessageClosure = { _ in
+            expectedSendMessage
+        }
         let nonceGuardMock = NonceGuardMock()
         let messageProcessorMock = MessageProcessorMock()
-        messageProcessorMock.error = expectedError
+        messageProcessorMock.error = expectedMessageProcessorError
 
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
@@ -559,7 +683,7 @@ class TaskQueueTests: XCTestCase {
         serverConnectorMock.reflectMessageCalls.removeAll()
 
         let taskQueue = TaskQueue(
-            queueType: .outgoing,
+            queueType: .incoming,
             supportedTypes: [TaskDefinitionReceiveMessage.self],
             frameworkInjector: frameworkInjectorMock,
             renewFrameworkInjector: false
@@ -575,10 +699,7 @@ class TaskQueueTests: XCTestCase {
         )
 
         try? taskQueue.enqueue(task: task) { _, error in
-            if expectedTaskFailed {
-                XCTAssertNotNil(error)
-            }
-            else {
+            if expectedSendMessage {
                 XCTAssertNil(error)
             }
             DDLog.flushLog()
@@ -589,8 +710,11 @@ class TaskQueueTests: XCTestCase {
 
         waitForExpectations(timeout: 10) { error in
             XCTAssertNil(error)
-            XCTAssertEqual(taskQueue.list.count, expectedTaskFailed ? 1 : 0)
-            XCTAssertEqual(nonceGuardMock.processedCalls.count, expectedAck ? 1 : 0)
+            XCTAssertEqual(taskQueue.list.count, expectedTaskDequeue ? 0 : 1)
+            XCTAssertEqual(
+                nonceGuardMock.processedCalls.count,
+                expectedMessageProcessorError != nil && expectedAck ? 1 : 0
+            )
             XCTAssertEqual(serverConnectorMock.completedProcessingMessageCalls.count, expectedAck ? 1 : 0)
             XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, 0)
 
@@ -599,19 +723,252 @@ class TaskQueueTests: XCTestCase {
             }
 
             expectedLogMessages.forEach { expectedLogMessage in
-                XCTAssertTrue(
-                    self.ddLoggerMock
-                        .starts(with: String(
-                            format: expectedLogMessage,
-                            incomingBoxedMessage.messageID.hexString,
-                            "\(expectedError)"
-                        ))
-                )
+                if let expectedMessageProcessorError {
+                    print(String(
+                        format: expectedLogMessage,
+                        incomingBoxedMessage.messageID.hexString,
+                        "\(expectedMessageProcessorError)"
+                    ))
+
+                    XCTAssertTrue(
+                        self.ddLoggerMock
+                            .starts(with: String(
+                                format: expectedLogMessage,
+                                incomingBoxedMessage.messageID.hexString,
+                                "\(expectedMessageProcessorError)"
+                            ))
+                    )
+                }
+                else {
+                    print(String(
+                        format: expectedLogMessage,
+                        incomingBoxedMessage.messageID.hexString
+                    ))
+
+                    XCTAssertTrue(
+                        self.ddLoggerMock
+                            .starts(with: String(
+                                format: expectedLogMessage,
+                                incomingBoxedMessage.messageID.hexString
+                            ))
+                    )
+                }
             }
         }
     }
 
-    func testSpoolMediatorMessageWithError() throws {
+    func testSpoolMediatorMessageWithErrors() throws {
+        let tests: [(
+            expectedTestIndex: Int,
+            expectedMediatorReflectedProcessorErrors: [Error],
+            expectedServerConnectorError: Error?,
+            expectedLogMessages: [String],
+            expectedAck: Bool,
+            expectedNonceProcessed: Bool,
+            expectedTaskDequeued: Bool
+        )] = [
+            (
+                0,
+                [Error](),
+                nil,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> dequeue",
+                ],
+                true,
+                false, // In this case message nonce already stored
+                true
+            ),
+            (
+                1,
+                [Error](),
+                ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> failed Error Domain=ThreemaErrorDomain Code=675 \"Not logged in\" UserInfo={NSLocalizedDescription=Not logged in}",
+                    "Waiting 0.5 seconds before execute next task",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> failed",
+                ],
+                true,
+                false, // In this case message nonce already stored
+                true
+            ),
+            (
+                2,
+                [
+                    TaskExecutionError.wrongTaskDefinitionType,
+                ],
+                nil,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> dequeue",
+                ],
+                true,
+                true,
+                true
+            ),
+            (
+                3,
+                [
+                    ThreemaProtocolError.badMessage,
+                    ThreemaProtocolError.blockUnknownContact,
+                    ThreemaProtocolError.messageAlreadyProcessed,
+                    ThreemaProtocolError.messageBlobDecryptionFailed,
+                    ThreemaProtocolError.messageNonceReuse,
+                    ThreemaProtocolError.unknownMessageType,
+                    ThreemaError.threemaError(
+                        "Message already processed",
+                        withCode: ThreemaProtocolError.messageAlreadyProcessed.rawValue
+                    ),
+                ],
+                nil,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> dequeue",
+                ],
+                true,
+                true,
+                true
+            ),
+            (
+                4,
+                [
+                    ThreemaProtocolError.badMessage,
+                    ThreemaProtocolError.blockUnknownContact,
+                    ThreemaProtocolError.messageAlreadyProcessed,
+                    ThreemaProtocolError.messageBlobDecryptionFailed,
+                    ThreemaProtocolError.messageNonceReuse,
+                    ThreemaProtocolError.unknownMessageType,
+                    ThreemaError.threemaError(
+                        "Message already processed",
+                        withCode: ThreemaProtocolError.messageAlreadyProcessed.rawValue
+                    ),
+                ],
+                ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> failed Error Domain=ThreemaErrorDomain Code=675 \"Not logged in\" UserInfo={NSLocalizedDescription=Not logged in}",
+                    "Waiting 0.5 seconds before execute next task",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> failed",
+                ],
+                true,
+                true,
+                true
+            ),
+            (
+                5,
+                [
+                    MediatorReflectedProcessorError.conversationNotFound(message: ""),
+                ],
+                nil,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
+                ],
+                true,
+                true,
+                true
+            ),
+            (
+                6,
+                [
+                    MediatorReflectedProcessorError.conversationNotFound(message: ""),
+                ],
+                ThreemaError.threemaError(
+                    "Not logged in",
+                    withCode: ThreemaProtocolError.notLoggedIn.rawValue
+                ) as? NSError,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> failed Error Domain=ThreemaErrorDomain Code=675 \"Not logged in\" UserInfo={NSLocalizedDescription=Not logged in}",
+                    "Waiting 0.5 seconds before execute next task",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> failed",
+                ],
+                true,
+                true,
+                true
+            ),
+            (
+                7,
+                [
+                    MediatorReflectedProcessorError.conversationNotFound(message: ""),
+                ],
+                ThreemaError.threemaError(
+                    "Not connected to mediator",
+                    withCode: ThreemaProtocolError.notConnectedToMediator.rawValue
+                ) as? NSError,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> sending server ack of incoming reflected message failed: Error Domain=ThreemaErrorDomain Code=676 \"Not connected to mediator\" UserInfo={NSLocalizedDescription=Not connected to mediator}",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
+                ],
+                true,
+                true,
+                true
+            ),
+            (
+                8,
+                [
+                    MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage,
+                ],
+                nil,
+                [
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> %@",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
+                ],
+                false,
+                false,
+                true
+            ),
+        ]
+
+        for test in tests {
+            if test.expectedMediatorReflectedProcessorErrors.isEmpty {
+                try spoolMediatorMessageWithError(
+                    test.expectedTestIndex,
+                    nil,
+                    test.expectedServerConnectorError,
+                    test.expectedLogMessages,
+                    test.expectedAck,
+                    test.expectedNonceProcessed,
+                    test.expectedTaskDequeued
+                )
+            }
+            else {
+                for expectedMediatorReflectedProcessorError in test.expectedMediatorReflectedProcessorErrors {
+                    try spoolMediatorMessageWithError(
+                        test.expectedTestIndex,
+                        expectedMediatorReflectedProcessorError,
+                        test.expectedServerConnectorError,
+                        test.expectedLogMessages,
+                        test.expectedAck,
+                        test.expectedNonceProcessed,
+                        test.expectedTaskDequeued
+                    )
+                }
+            }
+        }
+    }
+
+    func spoolMediatorMessageWithError(
+        _ expectedTestIndex: Int,
+        _ expectedMediatorReflectedProcessorError: Error?,
+        _ expectedServerConnectorError: Error?,
+        _ expectedLogMessages: [String],
+        _ expectedAck: Bool,
+        _ expectedNonceProcessed: Bool,
+        _ expectedTaskDequeued: Bool
+    ) throws {
+        let assertTestMessage = "Test index \(expectedTestIndex)"
+        print("\(assertTestMessage) start")
+
         var incomingMessage = D2d_IncomingMessage()
         incomingMessage.messageID = try MockData.generateMessageID().littleEndian()
         incomingMessage.nonce = MockData.generateMessageNonce()
@@ -626,6 +983,24 @@ class TaskQueueTests: XCTestCase {
             deviceID: MockData.deviceID,
             deviceGroupKeys: deviceGroupKeys
         )
+
+        let maxSpoolingDelayAttempts = 1
+        var spoolingDelayAttempts = 0
+
+        serverConnectorMock.reflectMessageClosure = { _ in
+            if let error = expectedServerConnectorError as? NSError,
+               error.code == ThreemaProtocolError.notLoggedIn.rawValue {
+                guard spoolingDelayAttempts >= maxSpoolingDelayAttempts else {
+                    spoolingDelayAttempts += 1
+
+                    return expectedServerConnectorError as? NSError
+                }
+                return nil
+            }
+
+            return expectedServerConnectorError as? NSError
+        }
+
         let mediatorMessageProtocolMock = MediatorMessageProtocolMock(
             deviceGroupKeys: deviceGroupKeys,
             returnValues: [
@@ -634,7 +1009,7 @@ class TaskQueueTests: XCTestCase {
             ]
         )
         let mediatorReflectedProcessorMock = MediatorReflectedProcessorMock()
-        mediatorReflectedProcessorMock.error = TaskExecutionError.wrongTaskDefinitionType
+        mediatorReflectedProcessorMock.error = expectedMediatorReflectedProcessorError
 
         let nonceGuardMock = NonceGuardMock()
         let frameworkInjectorMock = BusinessInjectorMock(
@@ -652,13 +1027,14 @@ class TaskQueueTests: XCTestCase {
         serverConnectorMock.reflectMessageCalls.removeAll()
 
         let taskQueue = TaskQueue(
-            queueType: .outgoing,
+            queueType: .incoming,
             supportedTypes: [TaskDefinitionReceiveReflectedMessage.self],
             frameworkInjector: frameworkInjectorMock,
             renewFrameworkInjector: false
         )
 
         let expect = expectation(description: "spool")
+        expect.assertForOverFulfill = expectedServerConnectorError == nil // Because of retry after error
 
         let task = TaskDefinitionReceiveReflectedMessage(
             reflectID: reflectID,
@@ -670,7 +1046,9 @@ class TaskQueueTests: XCTestCase {
         )
 
         try? taskQueue.enqueue(task: task) { _, error in
-            XCTAssertNil(error)
+            if expectedServerConnectorError == nil {
+                XCTAssertNil(error)
+            }
             DDLog.flushLog()
             expect.fulfill()
         }
@@ -678,31 +1056,58 @@ class TaskQueueTests: XCTestCase {
         taskQueue.spool()
 
         waitForExpectations(timeout: 10) { error in
-            XCTAssertNil(error)
-            XCTAssertEqual(taskQueue.list.count, 0)
-            XCTAssertEqual(nonceGuardMock.processedCalls.count, 1)
-            XCTAssertEqual(serverConnectorMock.completedProcessingMessageCalls.count, 0)
-            XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, 1)
+            XCTAssertNil(error, assertTestMessage)
+            XCTAssertEqual(taskQueue.list.count, expectedTaskDequeued ? 0 : 1, assertTestMessage)
+            XCTAssertEqual(nonceGuardMock.processedCalls.count, expectedNonceProcessed ? 1 : 0, assertTestMessage)
+            XCTAssertEqual(serverConnectorMock.completedProcessingMessageCalls.count, 0, assertTestMessage)
+            if expectedAck {
+                XCTAssertTrue(!serverConnectorMock.reflectMessageCalls.isEmpty, assertTestMessage)
+            }
+            else {
+                XCTAssertTrue(serverConnectorMock.reflectMessageCalls.isEmpty, assertTestMessage)
+            }
 
-            XCTAssertTrue(
-                self.ddLoggerMock
-                    .exists(
-                        message: "<TaskDefinitionReceiveReflectedMessage (type: text; id: \(incomingMessage.messageID.littleEndianData.hexString))> discard reflected message: \(TaskExecutionError.wrongTaskDefinitionType)"
+            self.ddLoggerMock.logMessages.forEach { msg in
+                print(msg.message)
+            }
+
+            expectedLogMessages.forEach { expectedLogMessage in
+                if let expectedMediatorReflectedProcessorError {
+                    print(String(
+                        format: expectedLogMessage,
+                        incomingMessage.messageID.littleEndianData.hexString,
+                        "\(expectedMediatorReflectedProcessorError)"
+                    ))
+
+                    XCTAssertTrue(
+                        self.ddLoggerMock
+                            .starts(with: String(
+                                format: expectedLogMessage,
+                                incomingMessage.messageID.littleEndianData.hexString,
+                                "\(expectedMediatorReflectedProcessorError)"
+                            )),
+                        assertTestMessage
                     )
-            )
-            XCTAssertTrue(
-                self.ddLoggerMock
-                    .exists(
-                        message: "<TaskDefinitionReceiveReflectedMessage (type: text; id: \(incomingMessage.messageID.littleEndianData.hexString))> done"
+                }
+                else {
+                    print(String(
+                        format: expectedLogMessage,
+                        incomingMessage.messageID.littleEndianData.hexString
+                    ))
+
+                    XCTAssertTrue(
+                        self.ddLoggerMock
+                            .starts(with: String(
+                                format: expectedLogMessage,
+                                incomingMessage.messageID.littleEndianData.hexString
+                            )),
+                        assertTestMessage
                     )
-            )
-            XCTAssertTrue(
-                self.ddLoggerMock
-                    .exists(
-                        message: "<TaskDefinitionReceiveReflectedMessage (type: text; id: \(incomingMessage.messageID.littleEndianData.hexString))> dequeue"
-                    )
-            )
+                }
+            }
         }
+
+        print("\(assertTestMessage) end")
     }
 
     func testEncodeDecodeWithAllTaskTypes() throws {
@@ -774,11 +1179,15 @@ class TaskQueueTests: XCTestCase {
 
         // Add TaskDefinitionSendAbstractMessage
         let expectedAbstractMessageID = MockData.generateMessageID()
-        let expectedAbstractText = "test 123!!!"
+        let expectedAbstractBallotCreator = "CONTACT1"
+        let expectedAbstractBallotID = MockData.generateBallotID()
+        let expectedAbstractBallotJSONChoiceData = Data(repeating: 0x12, count: 10)
 
-        let expectedAbstractMessage = BoxTextMessage()
+        let expectedAbstractMessage = BoxBallotVoteMessage()
         expectedAbstractMessage.messageID = expectedAbstractMessageID
-        expectedAbstractMessage.text = expectedAbstractText
+        expectedAbstractMessage.ballotCreator = expectedAbstractBallotCreator
+        expectedAbstractMessage.ballotID = expectedAbstractBallotID
+        expectedAbstractMessage.jsonChoiceData = expectedAbstractBallotJSONChoiceData
         expectedAbstractMessage.toIdentity = "ECHOECHO"
 
         let taskAbstract = TaskDefinitionSendAbstractMessage(message: expectedAbstractMessage)
@@ -802,8 +1211,8 @@ class TaskQueueTests: XCTestCase {
 
         let taskBase = TaskDefinitionSendBaseMessage(
             messageID: expectedBaseMessageID,
-            receiverIdentity: nil,
             group: expectedGroup,
+            receivers: expectedGroup.members.map(\.identity),
             sendContactProfilePicture: false
         )
         taskBase.groupName = expectedBaseMessageGroupName
@@ -1102,7 +1511,9 @@ class TaskQueueTests: XCTestCase {
         if let task = tq.list[1].taskDefinition as? TaskDefinitionSendAbstractMessage {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertTrue(expectedAbstractMessageID.elementsEqual(task.message.messageID))
-            XCTAssertEqual(expectedAbstractText, (task.message as! BoxTextMessage).text)
+            XCTAssertEqual(expectedAbstractBallotCreator, (task.message as! BoxBallotVoteMessage).ballotCreator)
+            XCTAssertEqual(expectedAbstractBallotID, (task.message as! BoxBallotVoteMessage).ballotID)
+            XCTAssertEqual(expectedAbstractBallotJSONChoiceData, (task.message as! BoxBallotVoteMessage).jsonChoiceData)
             XCTAssertTrue(task.retry)
         }
         else {
@@ -1127,7 +1538,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedBaseMessageGroupName, task.groupName)
-            XCTAssertEqual(expectedGroup.allMemberIdentities, try XCTUnwrap(task.allGroupMembers))
+            XCTAssertEqual(Set(expectedGroup.members.map(\.identity.string)), try XCTUnwrap(task.receivingGroupMembers))
             XCTAssertEqual(expectedBaseMessageIsNoteGroup, task.isNoteGroup)
             XCTAssertTrue(expectedBaseMessageID.elementsEqual(task.messageID))
             XCTAssertTrue(task.retry)

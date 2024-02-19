@@ -89,4 +89,24 @@ extension SQLDHSessionStore {
         
         DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
     }
+    
+    func downgradeFromV5(_ db: Connection) throws {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        
+        assert(db.userVersion == 5)
+        
+        defer { assert(db.userVersion == 4) }
+        
+        DDLogNotice("Downgrade from \(String(describing: db.userVersion)) to 4")
+        
+        let schemaChanger = SchemaChanger(connection: db)
+        try schemaChanger.alter(table: "session") { tableDefinition in
+            tableDefinition.drop(column: "newSessionCommitted")
+            tableDefinition.drop(column: "lastMessageSent")
+        }
+        
+        db.userVersion = 4
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+    }
 }

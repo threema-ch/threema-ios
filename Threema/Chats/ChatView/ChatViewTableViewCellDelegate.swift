@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaFramework
 import UIKit
 
@@ -36,7 +37,6 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?)
     func didAccessibilityTapOnCell()
     
-    func resendMessage(withID messageID: NSManagedObjectID)
     func showQuoteView(message: QuoteMessage)
     func startMultiselect(with messageObjectID: NSManagedObjectID)
     
@@ -48,7 +48,7 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     func willDeleteMessage(with objectID: NSManagedObjectID)
     func didDeleteMessages()
     func sendAck(for message: BaseMessage, ack: Bool)
-    func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID)
+    func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID, from sourceView: UIView)
     
     func didSelectText(in textView: MessageTextView?)
     
@@ -207,7 +207,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             return
         }
         
-        IDNSafetyHelper.safeOpen(url: url, viewController: chatViewController)
+        IDNASafetyHelper.safeOpen(url: url, viewController: chatViewController)
     }
     
     func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?) {
@@ -247,29 +247,6 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     func didDeleteMessages() {
         chatViewController?.didDeleteMessages()
-    }
-    
-    func resendMessage(withID messageID: NSManagedObjectID) {
-        let businessInjector = BusinessInjector()
-        guard let message = businessInjector.entityManager.performAndWait({
-            let fetchedMessage = businessInjector.entityManager.entityFetcher
-                .existingObject(with: messageID) as? BaseMessage
-            fetchedMessage?.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
-            return fetchedMessage
-        })
-        else {
-            DDLogError("Message to be re-sent could not be loaded.")
-            return
-        }
-        
-        switch message {
-        case is FileMessage:
-            Task {
-                await BlobManager.shared.syncBlobs(for: messageID)
-            }
-        default:
-            businessInjector.messageSender.sendMessage(baseMessage: message)
-        }
     }
     
     // MARK: - Multi-Select
@@ -368,49 +345,26 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         }
     }
     
-    // MARK: - Retry
-    
+    // MARK: - Retry & cancel
+        
     /// Method which tries to resend an unsent message. In case of BlobMessages the method cancels the resending if the
     /// message is already uploading
     /// - Parameter messageObjectID: Managed object ID of the message to be loaded
-    func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID) {
+    func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID, from sourceView: UIView) {
         guard let message = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage else {
             DDLogError("Message could not be loaded.")
             return
         }
         
         // If it is not a message of type BlobData, we simply resend
-        guard let fileMessage = message as? BlobData else {
-            resendMessage(withID: messageID)
+        guard let blobDataMessage = message as? BlobData else {
+            resendMessage(withID: messageID, from: sourceView)
             return
         }
       
-        switch fileMessage.blobDisplayState {
-
-        case .pending:
-            Task {
-                await BlobManager.shared.syncBlobs(for: message.objectID)
-            }
-        case .sendingError:
-            // If a message could not be sent we might only have missed the ack from the chat server
-            // If this is the case a message with the same message ID as the previously sent one will be rejected
-            // This also applied to messages that have been rejected by the receiver due to missing or incorrect session
-            // state
-            let businessInjector = BusinessInjector()
-            guard let message = businessInjector.entityManager.performAndWait({
-                let fetchedMessage = businessInjector.entityManager.entityFetcher
-                    .existingObject(with: message.objectID) as? BaseMessage
-                fetchedMessage?.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
-                return fetchedMessage
-            })
-            else {
-                DDLogError("Message to be re-sent could not be loaded.")
-                return
-            }
-            
-            Task {
-                await BlobManager.shared.syncBlobs(for: message.objectID)
-            }
+        switch blobDataMessage.blobDisplayState {
+        case .pending, .sendingError:
+            resendMessage(withID: messageID, from: sourceView)
         case .uploading:
             Task {
                 await BlobManager.shared.cancelBlobsSync(for: message.objectID)
@@ -418,6 +372,58 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         default:
             assertionFailure("RetryAndCancelButton should not have been visible")
             DDLogError("RetryAndCancelButton button should not have been visible")
+        }
+    }
+    
+    private func resendMessage(withID messageID: NSManagedObjectID, from sourceView: UIView) {
+        let businessInjector = BusinessInjector()
+        let backgroundEntityManger = businessInjector.backgroundEntityManager
+        
+        let rejectedByGroupMembers = backgroundEntityManger.performAndWait {
+            let message = backgroundEntityManger.entityFetcher.existingObject(with: messageID) as? BaseMessage
+            
+            var rejectedBy: Set<ContactEntity>? = nil
+            if message?.conversation.isGroup() ?? false, !(message?.rejectedBy?.isEmpty ?? true) {
+                rejectedBy = message?.rejectedBy
+            }
+            
+            return rejectedBy?.map { Contact(contactEntity: $0) }
+        }
+        
+        // If the message was rejected (FS) by a set of group members ask for confirmation before doing resend
+        if let rejectedByGroupMembers, !rejectedByGroupMembers.isEmpty {
+            let rejectedMemberNames = rejectedByGroupMembers.map(\.displayName)
+            let rejectedMemberIdentities = rejectedByGroupMembers.map(\.identity)
+            
+            guard let chatViewController else {
+                DDLogError("No chat view controller to ask for resend confirmation")
+                return
+            }
+            
+            UIAlertTemplate.showConfirm(
+                owner: chatViewController,
+                popOverSource: sourceView,
+                title: "chat_view_resend_group_message_confirmation_title".localized,
+                message: String.localizedStringWithFormat(
+                    "chat_view_resend_group_message_confirmation_message".localized,
+                    rejectedMemberNames.formatted()
+                ),
+                titleOk: "chat_view_resend_group_message_confirmation_button".localized,
+                actionOk: { _ in
+                    Task {
+                        await businessInjector.messageSender.sendBaseMessage(
+                            with: messageID,
+                            to: .groupMembers(rejectedMemberIdentities)
+                        )
+                    }
+                },
+                titleCancel: "cancel".localized
+            )
+        }
+        else {
+            Task {
+                await businessInjector.messageSender.sendBaseMessage(with: messageID)
+            }
         }
     }
 }

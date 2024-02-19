@@ -76,7 +76,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             notificationPresenterWrapper: NotificationPresenterWrapper.shared,
             groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcher.shared,
             groupCallSessionHelper: GroupCallSessionHelper.shared,
-            groupCallBundleUtil: GroupCallsBundleUtil.shared
+            groupCallBundleUtil: GroupCallsBundleUtil.shared,
+            isRunningForScreenshots: ProcessInfoHelper.isRunningForScreenshots
         ),
         businessInjector: BusinessInjectorProtocol = BusinessInjector()
     ) {
@@ -96,7 +97,7 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         
         super.init()
         
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
             return
         }
         
@@ -111,8 +112,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
     // MARK: - Public functions
     
     public func initialCallsFromDBLoaded() async {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
+            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
         
@@ -128,8 +129,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
     }
     
     @objc public func handleCallsFromDB() async {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
+            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
         
@@ -202,8 +203,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         receiveDate: Date,
         onCompletion: (() -> Void)?
     ) {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
+            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             onCompletion?()
             return
         }
@@ -236,8 +237,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         receiveDate: Date,
         in groupConversation: Conversation
     ) async {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
+            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
         
@@ -287,8 +288,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         in group: Group,
         intent: GroupCallUserIntent
     ) {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
+            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
         
@@ -343,8 +344,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         for wrappedMessage: WrappedGroupCallStartMessage,
         with receiveDate: Date = Date.now
     ) async {
-        guard ThreemaEnvironment.groupCalls, businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not yet enabled. Skip.")
+        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
+            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
         let addedObject: NSManagedObjectID? = await currentBusinessInjector.backgroundEntityManager.performSave {
@@ -671,6 +672,30 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
                     identifier: groupModel.groupIdentity.id.hexString
                 )
             }
+        }
+    }
+    
+    public func showGroupCallFullAlert(maxParticipants: Int?, onOK: @escaping () -> Void) {
+        uiDelegate?.showGroupCallFullAlert(maxParticipants: maxParticipants, onOK: onOK)
+    }
+}
+
+extension GlobalGroupCallsManagerSingleton {
+    /// Only use when running screenshots
+    public func startGroupCallForScreenshots(group: Group) {
+        guard ProcessInfoHelper.isRunningForScreenshots else {
+            assertionFailure("This should only be called during screenshots.")
+            return
+        }
+        
+        Task {
+            let groupCallViewControllerForScreenshots = await groupCallManager.groupCallViewControllerForScreenshots(
+                groupName: group.name!,
+                localID: businessInjector.myIdentityStore.identity,
+                participantThreemaIdentities: group.members.map(\.identity)
+            )
+            
+            uiDelegate?.showViewController(groupCallViewControllerForScreenshots)
         }
     }
 }

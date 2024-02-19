@@ -153,9 +153,12 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: Date()]
                 )
-                return true
+                return nil
             }
-            return false
+            return ThreemaError.threemaError(
+                "Not logged in",
+                withCode: ThreemaProtocolError.notLoggedIn.rawValue
+            ) as? NSError
         }
 
         let frameworkInjectorMock = BusinessInjectorMock(

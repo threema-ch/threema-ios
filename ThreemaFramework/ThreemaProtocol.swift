@@ -62,6 +62,8 @@ public enum ThreemaProtocol {
     case messageBlobDecryptionFailed = 673
     case messageNonceReuse = 674
     case messageProcessingFailed = 669
+    case notConnectedToMediator = 676
+    case notLoggedIn = 675
     case pendingGroupMessage = 670
     case safePasswordEmpty = 672
     case unknownMessageType = 668
@@ -84,6 +86,10 @@ public enum ThreemaProtocol {
             return "\(rawError) 'Reuse of message nonce'"
         case .messageProcessingFailed:
             return "\(rawError) 'Processing of message failed'"
+        case .notConnectedToMediator:
+            return "\(rawError) 'Not connected to mediator'"
+        case .notLoggedIn:
+            return "\(rawError) 'Not logged in'"
         case .pendingGroupMessage:
             return "\(rawError) 'Group not found to process message'"
         case .safePasswordEmpty:
@@ -94,17 +100,42 @@ public enum ThreemaProtocol {
     }
 }
 
-extension ForwardSecurityMode {
-    public var localizedLabel: String {
+// MARK: - ForwardSecurityMode + CustomStringConvertible
+
+extension ForwardSecurityMode: CustomStringConvertible {
+    public var description: String {
         switch self {
         case .none:
-            return BundleUtil.localizedString(forKey: "forward_security_none")
+            return "none"
         case .twoDH:
-            return BundleUtil.localizedString(forKey: "forward_security_2dh")
+            return "2DH"
         case .fourDH:
-            return BundleUtil.localizedString(forKey: "forward_security_4dh")
+            return "4DH"
+        case .outgoingGroupNone:
+            return "outgoing group: none"
+        case .outgoingGroupPartial:
+            return "outgoing group: partial"
+        case .outgoingGroupFull:
+            return "outgoing group: full"
         @unknown default:
-            return BundleUtil.localizedString(forKey: "forward_security_none")
+            return "unknown"
+        }
+    }
+
+    public var localizedLabel: String {
+        switch self {
+        case .none, .outgoingGroupNone:
+            return "forward_security_none".localized
+        case .twoDH:
+            return "forward_security_2dh".localized
+        case .fourDH:
+            return "forward_security_4dh".localized
+        case .outgoingGroupPartial:
+            return "forward_security_outgoing_group_partial".localized
+        case .outgoingGroupFull:
+            return "forward_security_outgoing_group_full".localized
+        @unknown default:
+            return "forward_security_none".localized
         }
     }
 }

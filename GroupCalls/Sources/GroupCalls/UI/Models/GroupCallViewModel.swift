@@ -96,6 +96,10 @@ public final class GroupCallViewModel: Sendable {
     
     private var localParticipant: ViewModelParticipant? = nil
     
+    // Screenshot
+    private var isRunningForScreenshots = false
+    private var screenshotGroupName = ""
+    
     // MARK: - Lifecycle
 
     init(groupCallActor: GroupCallActor) {
@@ -104,6 +108,18 @@ public final class GroupCallViewModel: Sendable {
         DDLogNotice("[GroupCall] Created view model with address \(Unmanaged.passUnretained(self).toOpaque())")
         
         subscribeToEvents()
+    }
+    
+    // Only use when running screenshots
+    init(
+        screenshotGroupName: String,
+        localParticipant: ViewModelParticipant,
+        participantsList: [ViewModelParticipant]
+    ) {
+        self.localParticipant = localParticipant
+        self.participantsList = participantsList
+        self.isRunningForScreenshots = true
+        self.screenshotGroupName = screenshotGroupName
     }
     
     // MARK: - Public setter
@@ -133,9 +149,38 @@ public final class GroupCallViewModel: Sendable {
         participantsList.count
     }
     
+    func updateForScreenshots() {
+        guard isRunningForScreenshots else {
+            assertionFailure("This should only be called during screenshots.")
+            return
+        }
+        
+        Task {
+            self.ownVideoMuteState = .unmuted
+            self.ownAudioMuteState = .unmuted
+            
+            let update = GroupCallNavigationBarContentUpdate(
+                title: screenshotGroupName,
+                participantCount: 4,
+                timeInterval: 546
+            )
+            await self.viewDelegate?.updateNavigationContent(update)
+            
+            await publishSnapshot()
+        }
+    }
+    
     // MARK: - ToolBar button actions
     
     func leaveCall() {
+        // When running for screenshots we simply dismiss the view.
+        guard !isRunningForScreenshots else {
+            Task {
+                await viewDelegate?.dismissGroupCallView(animated: false)
+            }
+            return
+        }
+        
         /// **Leave Call** 1. The user tapped the leave button, we begin leaving the call
         DDLogNotice("[GroupCall] User tapped leave call button")
         
@@ -317,9 +362,7 @@ public final class GroupCallViewModel: Sendable {
             await publishSnapshot(reconfigure: [localParticipant.participantID])
             
         @unknown default:
-            #if DEBUG
-                fatalError()
-            #endif
+            assertionFailure()
         }
     }
     
@@ -348,9 +391,7 @@ public final class GroupCallViewModel: Sendable {
             await publishSnapshot(reconfigure: [localParticipant.participantID])
             
         @unknown default:
-            #if DEBUG
-                fatalError()
-            #endif
+            assertionFailure()
         }
     }
     

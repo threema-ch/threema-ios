@@ -48,8 +48,14 @@ struct Joining: GroupCallState {
         ///  Note: Join Steps 3 & 4 are within the `.join()` below.
         let joinResponse = try await groupCallActor.sfuHTTPConnection.join(with: certificate)
         DDLogNotice("[GroupCall] [JoinSteps] JoinResponse was \(joinResponse).")
+
         switch joinResponse {
-        case .notDetermined, .notRunning, .timeout, .full:
+        case .notDetermined, .notRunning, .timeout:
+            return Ending(groupCallActor: groupCallActor)
+            
+        case .full:
+            await groupCallActor
+                .showGroupCallFullAlert(maxParticipants: groupCallActor.groupCallBaseState.maxParticipants)
             return Ending(groupCallActor: groupCallActor)
             
         case let .running(joinResponse):

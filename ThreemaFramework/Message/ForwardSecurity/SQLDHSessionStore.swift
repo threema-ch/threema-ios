@@ -66,8 +66,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     let myEphemeralPrivateKeyColumn = Expression<Data?>("myEphemeralPrivateKey")
     let myEphemeralPublicKeyColumn = Expression<Data>("myEphemeralPublicKey")
     // Note: Should be named `myCurrentVersion_4dh` but it's too late now
-    let myCurrentVersion4DH = Expression<Int?>("negotiatedVersion")
-    let peerCurrentVersion4DH = Expression<Int?>("peerCurrentVersion_4dh")
+    let myCurrentVersion4DHColumn = Expression<Int?>("negotiatedVersion")
+    let peerCurrentVersion4DHColumn = Expression<Int?>("peerCurrentVersion_4dh")
     let newSessionCommitted = Expression<Bool>("newSessionCommitted")
     let lastMessageSent = Expression<Date?>("lastMessageSent")
     
@@ -285,8 +285,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter),
                 myEphemeralPrivateKeyColumn <- self.keyWrapper.wrap(key: session.myEphemeralPrivateKey),
                 myEphemeralPublicKeyColumn <- session.myEphemeralPublicKey!,
-                myCurrentVersion4DH <- (session.current4DHVersions?.local ?? .v10).rawValue,
-                peerCurrentVersion4DH <- session.current4DHVersions?.remote.rawValue
+                myCurrentVersion4DHColumn <- (session.current4DHVersions?.local ?? .v10).rawValue,
+                peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue
             ))
             DDLogNotice("[ForwardSecurity] Stored DH Session with id: \(session.description)")
         }
@@ -328,8 +328,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         peerCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.peerRatchet4DH?.currentChainKey),
                         peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter),
-                        myCurrentVersion4DH <- (session.current4DHVersions?.local ?? .v10).rawValue,
-                        peerCurrentVersion4DH <- session.current4DHVersions?.remote.rawValue
+                        myCurrentVersion4DHColumn <- (session.current4DHVersions?.local ?? .v10).rawValue,
+                        peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue
                     )
                 )
             }
@@ -352,8 +352,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         myCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.myRatchet4DH?.currentChainKey),
                         myCounter4DHColumn <- uInt64ToInt64(value: session.myRatchet4DH?.counter),
-                        myCurrentVersion4DH <- (session.current4DHVersions?.local ?? .v10).rawValue,
-                        peerCurrentVersion4DH <- session.current4DHVersions?.remote.rawValue
+                        myCurrentVersion4DHColumn <- (session.current4DHVersions?.local ?? .v10).rawValue,
+                        peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue
                     )
                 )
             }
@@ -407,6 +407,16 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         }
     }
     
+    public func hasInvalidDHSessions(myIdentity: String, peerIdentity: String) throws -> Bool {
+        try dbQueue.sync {
+            let numberInvalidDHSessions = try db.scalar(
+                filterInvalidSessions(myIdentity: myIdentity, peerIdentity: peerIdentity).count
+            )
+            
+            return numberInvalidDHSessions > 0
+        }
+    }
+    
     // MARK: Private functions
     
     private func createSessionTable() throws {
@@ -444,8 +454,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             t.column(peerCounter4DHColumn)
             t.column(myEphemeralPrivateKeyColumn)
             t.column(myEphemeralPublicKeyColumn)
-            t.column(myCurrentVersion4DH)
-            t.column(peerCurrentVersion4DH)
+            t.column(myCurrentVersion4DHColumn)
+            t.column(peerCurrentVersion4DHColumn)
             t.primaryKey(myIdentityColumn, peerIdentityColumn, sessionIDColumn)
         })
     }
@@ -495,6 +505,22 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 myIdentityColumn == myIdentity && peerIdentityColumn == peerIdentity && sessionIDColumn !=
                     excludeSessionID.data()
             )
+    }
+    
+    private func filterInvalidSessions(
+        myIdentity: String,
+        peerIdentity: String
+    ) -> SchemaType {
+        sessionTable.filter(
+            myIdentityColumn == myIdentity && peerIdentityColumn == peerIdentity &&
+                // Check if any version is smaller than the min supported version or bigger than the max supported
+                (
+                    myCurrentVersion4DHColumn < Int(ThreemaEnvironment.fsVersion.min) ||
+                        myCurrentVersion4DHColumn > Int(ThreemaEnvironment.fsVersion.max) ||
+                        peerCurrentVersion4DHColumn < Int(ThreemaEnvironment.fsVersion.min) ||
+                        peerCurrentVersion4DHColumn > Int(ThreemaEnvironment.fsVersion.max)
+                )
+        )
     }
     
     private func dhSessionFromRow(row: Row) throws -> DHSession? {
@@ -578,9 +604,9 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     private func dhVersions(
         from row: Row
     ) throws -> DHVersions? {
-        guard let rawMyCurrentVersion4DH = try row.get(myCurrentVersion4DH),
+        guard let rawMyCurrentVersion4DH = try row.get(myCurrentVersion4DHColumn),
               let local = CspE2eFs_Version(rawValue: rawMyCurrentVersion4DH),
-              let rawPeerCurrentVersion4DH = try row.get(peerCurrentVersion4DH),
+              let rawPeerCurrentVersion4DH = try row.get(peerCurrentVersion4DHColumn),
               let remote = CspE2eFs_Version(rawValue: rawPeerCurrentVersion4DH) else {
             return nil
         }

@@ -108,5 +108,9 @@ extension SQLDHSessionStore {
         db.userVersion = 4
         
         DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        
+        AppUpdateSteps().run {
+            DDLogNotice("[ForwardSecurity] Completed app update steps")
+        }
     }
 }

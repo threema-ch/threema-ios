@@ -38,6 +38,16 @@ actor GroupCallActor: Sendable {
     
     let groupCallBaseState: GroupCallBaseState
     
+    // TODO: (IOS-4427)
+    nonisolated var groupCallBaseStateCopy: GroupCallBaseState {
+        try! GroupCallBaseState(
+            group: group,
+            startedAt: groupCallBaseState.startedAt,
+            dependencies: dependencies,
+            groupCallStartData: groupCallStartData
+        )
+    }
+    
     // MARK: Protocol Peek Steps Helper Variables
 
     var tokenRefreshed = false

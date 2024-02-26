@@ -77,6 +77,13 @@ typedef enum : NSUInteger {
 
 - (NSArray *)allContacts;
 
+/// A set of the identities of all contacts
+///
+/// This doesn't fetch the full `ContactEntity` managed objects. Thus this is about 3x faster than using `allContacts` and reading all identities.
+///
+/// - returns: A set of identity strings. If there are no contacts the set is empty.
+- (nonnull NSSet<NSString *> *)allContactIdentities;
+
 - (NSArray *)contactsFilteredByWords:(NSArray *)searchWords forContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 
 // Does a contact exist that contains my identity?

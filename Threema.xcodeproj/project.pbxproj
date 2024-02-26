@@ -2094,6 +2094,7 @@
 		42507F2928FDB85600742867 /* IDColorDebugViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507F2828FDB85600742867 /* IDColorDebugViewController.swift */; };
 		4258E3352A0CE9C5006C339B /* Rendezvous.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4258E3342A0CE9C5006C339B /* Rendezvous.swift */; };
 		4258E3392A0D36CE006C339B /* EncryptedRendezvousWebSocketConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4258E3382A0D36CE006C339B /* EncryptedRendezvousWebSocketConnection.swift */; };
+		4264B7EF2B83497C003A8F4E /* AppUpdateStepsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4264B7EE2B83497C003A8F4E /* AppUpdateStepsTests.swift */; };
 		426B454429F808BC005B2CF5 /* RendezvousProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426B454329F808BC005B2CF5 /* RendezvousProtocol.swift */; };
 		426B456929F96090005B2CF5 /* EncryptedRendezvousConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426B456829F96090005B2CF5 /* EncryptedRendezvousConnection.swift */; };
 		426B456B29F9613D005B2CF5 /* RendezvousWebSocketConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426B456A29F9613D005B2CF5 /* RendezvousWebSocketConnection.swift */; };
@@ -2140,6 +2141,8 @@
 		428D99282A0A91E000B83C9E /* RendezvousCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428D99272A0A91E000B83C9E /* RendezvousCrypto.swift */; };
 		428D992C2A0B7EC000B83C9E /* DefaultRendezvousCryptoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428D992B2A0B7EC000B83C9E /* DefaultRendezvousCryptoTests.swift */; };
 		428D99302A0B8B3F00B83C9E /* NaClCrypto+KeyPair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428D992F2A0B8B3F00B83C9E /* NaClCrypto+KeyPair.swift */; };
+		428F52C42B7D034900B6D5C4 /* ForwardSecuritySessionTerminatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428F52C32B7D034900B6D5C4 /* ForwardSecuritySessionTerminatorTests.swift */; };
+		428F52C82B7D1B8300B6D5C4 /* AppUpdateSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428F52C72B7D1B8300B6D5C4 /* AppUpdateSteps.swift */; };
 		429176DA2A581E78001066A7 /* RendezvousEmoji.strings in Resources */ = {isa = PBXBuildFile; fileRef = 429176E02A581E78001066A7 /* RendezvousEmoji.strings */; };
 		429176DB2A581E78001066A7 /* RendezvousEmoji.strings in Resources */ = {isa = PBXBuildFile; fileRef = 429176E02A581E78001066A7 /* RendezvousEmoji.strings */; };
 		429176DC2A581E78001066A7 /* RendezvousEmoji.strings in Resources */ = {isa = PBXBuildFile; fileRef = 429176E02A581E78001066A7 /* RendezvousEmoji.strings */; };
@@ -6355,6 +6358,7 @@
 		42507F2828FDB85600742867 /* IDColorDebugViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDColorDebugViewController.swift; sourceTree = "<group>"; };
 		4258E3342A0CE9C5006C339B /* Rendezvous.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rendezvous.swift; sourceTree = "<group>"; };
 		4258E3382A0D36CE006C339B /* EncryptedRendezvousWebSocketConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedRendezvousWebSocketConnection.swift; sourceTree = "<group>"; };
+		4264B7EE2B83497C003A8F4E /* AppUpdateStepsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateStepsTests.swift; sourceTree = "<group>"; };
 		426B452E29F67E47005B2CF5 /* ThreemaArgon2 */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ThreemaArgon2; sourceTree = "<group>"; };
 		426B454329F808BC005B2CF5 /* RendezvousProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RendezvousProtocol.swift; sourceTree = "<group>"; };
 		426B456829F96090005B2CF5 /* EncryptedRendezvousConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedRendezvousConnection.swift; sourceTree = "<group>"; };
@@ -6372,6 +6376,8 @@
 		428D99272A0A91E000B83C9E /* RendezvousCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RendezvousCrypto.swift; sourceTree = "<group>"; };
 		428D992B2A0B7EC000B83C9E /* DefaultRendezvousCryptoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultRendezvousCryptoTests.swift; sourceTree = "<group>"; };
 		428D992F2A0B8B3F00B83C9E /* NaClCrypto+KeyPair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NaClCrypto+KeyPair.swift"; sourceTree = "<group>"; };
+		428F52C32B7D034900B6D5C4 /* ForwardSecuritySessionTerminatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardSecuritySessionTerminatorTests.swift; sourceTree = "<group>"; };
+		428F52C72B7D1B8300B6D5C4 /* AppUpdateSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateSteps.swift; sourceTree = "<group>"; };
 		429176E22A581EA5001066A7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/RendezvousEmoji.strings; sourceTree = "<group>"; };
 		429176E32A581ED9001066A7 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/RendezvousEmoji.strings; sourceTree = "<group>"; };
 		429176E42A581EE5001066A7 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/RendezvousEmoji.strings; sourceTree = "<group>"; };
@@ -8880,6 +8886,7 @@
 				2477D9842B32DC4500A99527 /* ThreemaFrameworkFast.xctestplan */,
 				2DCB92C22487DA680013D8C5 /* AbstractMessageEncodeDecodeTests.swift */,
 				7E697F1B28770336003BE925 /* AppMigrationVersionTests.swift */,
+				4264B7EE2B83497C003A8F4E /* AppUpdateStepsTests.swift */,
 				E12022E227AA95E400C1BF43 /* BaseMessageDisplayTests.swift */,
 				E1FBA1BA27A2A97600910217 /* BaseMessageStateTests.swift */,
 				8DA9D76627B147DD0071E74C /* BallotMessageCoderTests.swift */,
@@ -9542,6 +9549,7 @@
 				7ED9499B26FDB1B100FF8D81 /* AppInfo.swift */,
 				7E697F152876DC3D003BE925 /* AppMigrationVersion.swift */,
 				2D5523E22303DA8600A21671 /* AppSetupState.swift */,
+				428F52C72B7D1B8300B6D5C4 /* AppUpdateSteps.swift */,
 				D7D84EFB27EC98020001BFEB /* BallotManager.swift */,
 				2DC02FB6255BD5020013C907 /* BlobURL.swift */,
 				7E09745726B921E700DCC321 /* BusinessInjector.swift */,
@@ -10902,6 +10910,7 @@
 				4D4941FA28B90E59003FFC9B /* DHSessionTests.swift */,
 				4DC9F44E28C0E4F9009EB7F5 /* ForwardSecurityDataTests.swift */,
 				4DE2855D28C634FC002AC410 /* ForwardSecurityMessageProcessorTests.swift */,
+				428F52C32B7D034900B6D5C4 /* ForwardSecuritySessionTerminatorTests.swift */,
 				4D4941F728B8FF17003FFC9B /* KDFRatchetTests.swift */,
 				4D4941E428B8C2DA003FFC9B /* SQLDHSessionStoreTests.swift */,
 				4DEFAF3328C7815600058DEA /* InMemoryDHSessionStore.swift */,
@@ -15254,6 +15263,7 @@
 				0A3864B61C63439B00924A29 /* GroupTextMessage.m in Sources */,
 				7EF6BEEF2774D24A00454704 /* MediatorReflectedIncomingMessageProcessor.swift in Sources */,
 				4A67DFE528E5B43800F80651 /* String+textAlignment.swift in Sources */,
+				428F52C82B7D1B8300B6D5C4 /* AppUpdateSteps.swift in Sources */,
 				4AB365EA29FF938000825E74 /* TaskDefinitionSendGroupCallStartMessage.swift in Sources */,
 				CEA7F86A27623AC5002E148E /* OnPremConfigWeb.swift in Sources */,
 				2DDABBDE246017EC0032E482 /* TaskManager.swift in Sources */,
@@ -15282,6 +15292,7 @@
 				7E901064270EF2910081858A /* MessageReceiverTests.swift in Sources */,
 				7EC7C5D029276D5D00334DD1 /* NonceGuardTests.swift in Sources */,
 				7E31BCFE293E1706000FB996 /* EntityFetcherTests.swift in Sources */,
+				4264B7EF2B83497C003A8F4E /* AppUpdateStepsTests.swift in Sources */,
 				4D74574D2612119C00DDC098 /* MetadataCoderTests.swift in Sources */,
 				2DFA94BA24B49A73005ED180 /* MediatorMessageProtocolMock.swift in Sources */,
 				248597B6286D9FA100CF84DD /* TestSessionProvider.swift in Sources */,
@@ -15377,6 +15388,7 @@
 				2DCB92C32487DA680013D8C5 /* AbstractMessageEncodeDecodeTests.swift in Sources */,
 				2D1E44A223B0AC51008AD579 /* FulltextSearchTests.m in Sources */,
 				240D01E12874380800FE961A /* BlobDownloaderTests.swift in Sources */,
+				428F52C42B7D034900B6D5C4 /* ForwardSecuritySessionTerminatorTests.swift in Sources */,
 				2DEE7CC42590EBA900A5DF0E /* VoIPCallIDTests.swift in Sources */,
 				4A21CFBF2A08DE5D00A42DA3 /* FeatureMaskTests.swift in Sources */,
 				2422FAA128636BC500C9B86F /* URLSessionTests.swift in Sources */,

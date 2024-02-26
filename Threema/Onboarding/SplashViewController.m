@@ -955,8 +955,7 @@
 #pragma mark - ZSWTappableLabel delegate
 
 - (void)tappableLabel:(ZSWTappableLabel *)tappableLabel tappedAtIndex:(NSInteger)idx withAttributes:(NSDictionary *)attributes {
-    UIStoryboard *storyboard = [AppDelegate getSettingsStoryboard];
-    UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"PrivacyPolicyViewController"];
+    UIViewController *vc = [[PrivacyPolicyViewController alloc]init];
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:vc];
     [self presentViewController:nc animated:YES completion:nil];
 }

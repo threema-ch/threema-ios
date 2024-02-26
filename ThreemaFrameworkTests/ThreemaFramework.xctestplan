@@ -42,7 +42,9 @@
     {
       "skippedTests" : [
         "BlobManagerTests\/testIncomingDataWithThumbnailNoDone()",
-        "EntityCreatorTests\/testCreateFileMessageEntityVideo()"
+        "EntityCreatorTests\/testCreateFileMessageEntityVideo()",
+        "EntityFetcherTests\/testAllContactIdentitiesFetchingPerformance()",
+        "EntityFetcherTests\/testAllContactsFetchingPerformance()"
       ],
       "target" : {
         "containerPath" : "container:Threema.xcodeproj",

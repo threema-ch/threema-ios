@@ -206,6 +206,27 @@
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate:nil];
 }
 
+// This is about 3x faster than loading all contacts and then getting their identities
+- (nonnull NSSet<NSString *> *)allContactIdentities {
+    NSString *entityName = @"Contact";
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:entityName];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:entityName inManagedObjectContext:self.managedObjectContext];
+
+    NSString *propertyKey = @"identity";
+    fetchRequest.resultType = NSDictionaryResultType;
+    fetchRequest.propertiesToFetch = [NSArray arrayWithObject:[[entity propertiesByName] objectForKey:propertyKey]];
+    fetchRequest.returnsDistinctResults = YES;
+    
+    NSArray *fetchedIdentities = [self.managedObjectContext executeFetchRequest:fetchRequest error:nil];
+    
+    NSMutableSet *allIdentities = [[NSMutableSet alloc] initWithCapacity:fetchedIdentities.count];
+    for (NSDictionary<NSString *, NSString *> *fetchedIdentity in fetchedIdentities) {
+        [allIdentities addObject:fetchedIdentity[propertyKey]];
+    }
+    
+    return allIdentities;
+}
+
 - (NSArray *)allGatewayContacts {
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"identity beginswith '*'"];
 }

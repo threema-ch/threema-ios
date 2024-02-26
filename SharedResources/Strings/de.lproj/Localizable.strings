@@ -1735,7 +1735,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "forward_security_status_enabled_outgoing" = "Perfect Forward Secrecy für ausgehende Nachrichten aktiviert.";
 "forward_security_status_disabled_outgoing" = "Perfect Forward Secrecy ist für diesen Chat deaktiviert.";
 "forward_security_contact_has_downgraded_to_an_incompatible_version" = "Perfect Forward Secrecy wurde in dieser Konversation deaktiviert, weil die App-Version des Chat-Partners dies nicht unterstützt.";
-"forward_security_illegal_session_state" = "Die Perfect-Forward-Secrecy-Sitzung wurde wegen Ungültigkeit zurückgesetzt";
+"forward_security_illegal_session_state" = "Die Perfect-Forward-Secrecy-Sitzung wurde wegen Ungültigkeit zurückgesetzt.";
 
 // Profile view
 "accessibility_profile_button_hint_contact" = "Öffnet Kontaktdetails";

@@ -104,6 +104,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
         mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessorMock(),
         messageProcessor: MessageProcessorProtocol = MessageProcessorMock(),
+        dhSessionStore: DHSessionStoreProtocol = InMemoryDHSessionStore(),
         userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManagerMock(),
         nonceGuard: NonceGuardProtocol = NonceGuardMock(),
         blobUploader: BlobUploaderProtocol = BlobUploaderMock(),
@@ -128,7 +129,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.mediatorMessageProtocol = mediatorMessageProtocol
         self.mediatorReflectedProcessor = mediatorReflectedProcessor
         self.messageProcessor = messageProcessor
-        self.dhSessionStore = InMemoryDHSessionStore()
+        self.dhSessionStore = dhSessionStore
         self.fsmp = ForwardSecurityMessageProcessor(
             dhSessionStore: dhSessionStore,
             identityStore: myIdentityStore,

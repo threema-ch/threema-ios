@@ -46,7 +46,7 @@ extension BallotMessage: MessageAccessibility {
     
     public var customAccessibilityHint: String? {
         guard let ballot else {
-            return ""
+            return nil
         }
 
         if ballot.isClosed() {

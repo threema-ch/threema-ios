@@ -135,7 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)linkedIdentitiesForEmail:(NSString *)email AndMobileNo:(NSString *)mobileNo onCompletion:(void(^)(NSArray *identities))onCompletion
     NS_SWIFT_NAME(linkedIdentities(for:and:onCompletion:));
 
-- (nullable NSArray *)allIdentities;
+- (nullable NSArray *)allIdentities DEPRECATED_MSG_ATTRIBUTE("Use `allContactIdentities` on `EntityFetcher` instead");
 - (nullable NSArray<NSString *> *)contactsWithFeatureMaskNil;
 - (nullable NSArray *)allContacts;
 

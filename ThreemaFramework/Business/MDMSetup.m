@@ -172,7 +172,7 @@ static NSDictionary *_mdmCacheSetup;
 
 - (NSString *)webHosts {
     NSString *webHosts = [self getMdmConfigurationValueForKey:MDM_KEY_WEB_HOSTS];
-    return [webHosts isKindOfClass:[NSString class]] ? webHosts : nil;
+    return [webHosts isKindOfClass:[NSString class]] && webHosts.length > 0 ? webHosts : nil;
 }
 
 - (BOOL)disableCreateGroup {
@@ -212,22 +212,22 @@ static NSDictionary *_mdmCacheSetup;
 
 - (NSString*)safePassword {
     NSString *safePassword = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_PASSWORD];
-    return [safePassword isKindOfClass:[NSString class]] ? safePassword : nil;
+    return [safePassword isKindOfClass:[NSString class]] && safePassword.length > 0 ? safePassword : nil;
 }
 
 - (NSString*)safeServerUrl {
     NSString *safeServerUrl = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_SERVER_URL];
-    return [safeServerUrl isKindOfClass:[NSString class]] ? safeServerUrl : nil;
+    return [safeServerUrl isKindOfClass:[NSString class]] && safeServerUrl.length > 0 ? safeServerUrl : nil;
 }
 
 - (NSString*)safeServerUsername {
     NSString *safeServerUsername = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_SERVER_USERNAME];
-    return [safeServerUsername isKindOfClass:[NSString class]] ? safeServerUsername : nil;
+    return [safeServerUsername isKindOfClass:[NSString class]] && safeServerUsername.length > 0 ? safeServerUsername : nil;
 }
 
 - (NSString*)safeServerPassword {
     NSString *safeServerPassword = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_SERVER_PASSWORD];
-    return [safeServerPassword isKindOfClass:[NSString class]] ? safeServerPassword : nil;
+    return [safeServerPassword isKindOfClass:[NSString class]] && safeServerPassword.length > 0 ? safeServerPassword : nil;
 }
 
 - (BOOL)safeRestoreEnable {
@@ -237,17 +237,17 @@ static NSDictionary *_mdmCacheSetup;
 
 - (NSString*)safeRestoreId {
     NSString *safeRestoreId = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_RESTORE_ID];
-    return [safeRestoreId isKindOfClass:[NSString class]] ? safeRestoreId : nil;
+    return [safeRestoreId isKindOfClass:[NSString class]] && safeRestoreId.length > 0 ? safeRestoreId : nil;
 }
 
 - (NSString *)safePasswordPattern {
     NSString *safePasswordPattern = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_PASSWORD_PATTERN];
-    return [safePasswordPattern isKindOfClass:[NSString class]] ? safePasswordPattern : nil;
+    return [safePasswordPattern isKindOfClass:[NSString class]] && safePasswordPattern.length > 0 ? safePasswordPattern : nil;
 }
 
 - (NSString *)safePasswordMessage {
     NSString *safePasswordMessage = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_PASSWORD_MESSAGE];
-    return [safePasswordMessage isKindOfClass:[NSString class]] ? safePasswordMessage : nil;
+    return [safePasswordMessage isKindOfClass:[NSString class]] && safePasswordMessage.length > 0 ? safePasswordMessage : nil;
 }
 
 - (NSNumber *)keepMessagesDays {

@@ -70,20 +70,11 @@ public class BallotManager: NSObject {
             DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
             return
         }
-        
-        // TODO: (IOS-4254) Remove once resolved
-        DDLogInfo(
-            "[Ballot] Updating incoming choice \(choiceID) of contact \(contactID) in ballot \(ballot.id.hexString)."
-        )
-        
+               
         updateChoice(choice, with: newValue, for: contactID)
     }
     
     @objc public func updateOwnChoice(_ choice: BallotChoice, with newValue: NSNumber) {
-        
-        // TODO: (IOS-4254) Remove once resolved
-        DDLogInfo("[Ballot] Updating own choice \(newValue) in ballot \(choice.ballot.id.hexString) .")
-        
         updateChoice(choice, with: newValue, for: MyIdentityStore.shared().identity)
     }
     

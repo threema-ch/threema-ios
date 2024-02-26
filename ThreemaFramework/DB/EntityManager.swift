@@ -366,7 +366,10 @@ public class EntityManager: NSObject {
         }
         
         performBlockAndWait {
+            let stalenessInterval: TimeInterval = self.dbContext.current.stalenessInterval
+            self.dbContext.current.stalenessInterval = 0.0
             self.dbContext.current.refresh(object, mergeChanges: mergeChanges)
+            self.dbContext.current.stalenessInterval = stalenessInterval
         }
     }
 }

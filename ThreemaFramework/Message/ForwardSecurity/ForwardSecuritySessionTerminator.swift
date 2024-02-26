@@ -23,10 +23,13 @@ import Foundation
 import ThreemaProtocols
 
 public class ForwardSecuritySessionTerminator {
-    let businessInjector: BusinessInjector
-    let store: SQLDHSessionStore
+    let businessInjector: BusinessInjectorProtocol
+    let store: DHSessionStoreProtocol
     
-    public init(businessInjector: BusinessInjector = BusinessInjector(), store: SQLDHSessionStore? = nil) throws {
+    public init(
+        businessInjector: BusinessInjectorProtocol = BusinessInjector(),
+        store: DHSessionStoreProtocol? = nil
+    ) throws {
         self.businessInjector = businessInjector
         
         let newStore = try SQLDHSessionStore()
@@ -59,13 +62,11 @@ public class ForwardSecuritySessionTerminator {
                 
                 DDLogVerbose("Terminate FS session with id \(session.id.description)")
                 
-                if try self.store.deleteDHSession(
+                try self.store.deleteDHSession(
                     myIdentity: self.businessInjector.myIdentityStore.identity,
                     peerIdentity: contact.identity,
                     sessionID: session.id
-                ) {
-                    return
-                }
+                )
             }
         }
     }
@@ -98,13 +99,11 @@ public class ForwardSecuritySessionTerminator {
         ) {
             DDLogVerbose("Delete FS session with id \(session.id.description)")
             
-            if try store.deleteDHSession(
+            try store.deleteDHSession(
                 myIdentity: businessInjector.myIdentityStore.identity,
                 peerIdentity: contact.identity,
                 sessionID: session.id
-            ) {
-                return
-            }
+            )
         }
     }
 }

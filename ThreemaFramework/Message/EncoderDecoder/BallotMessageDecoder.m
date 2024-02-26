@@ -51,15 +51,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
-    // TODO: (IOS-4254) Remove once resolved
-    DDLogInfo(@"[Ballot] Start Processing BoxBallotCreateMessage for ballot with ID: %@.", [NSString stringWithHexData:boxMessage.ballotId]);
     return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
 
 - (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
-    // TODO: (IOS-4254) Remove once resolved
-    DDLogInfo(@"[Ballot] Start Processing GroupBallotCreateMessage for ballot with ID: %@.", [NSString stringWithHexData:boxMessage.ballotId]);
     return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
@@ -115,35 +111,34 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             } else {
                 ballot = [self createNewBallotWithId:ballotId creatorId:boxMessage.fromIdentity jsonData:jsonData];
             }
-
+            
             // error parsing data
             if (ballot == nil) {
                 if (message) {
                     [[_entityManager entityDestroyer] deleteObjectWithObject:message];
-
+                    
                     // do not use the conversation function 'updateLastMessageWith', because we are already in a perform block
                     MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
-                     BaseMessage *lastMessage = messageFetcher.lastMessage;
-
+                    BaseMessage *lastMessage = messageFetcher.lastMessage;
+                    
                     if (lastMessage != conversation.lastMessage) {
                         conversation.lastMessage = lastMessage;
                     }
-
+                    
                     // Set lastUpdate to the old value
                     conversation.lastUpdate = conversationLastUpdate;
                 }
-
+                
                 onError([ThreemaError threemaError:[NSString stringWithFormat:@"[Ballot] Parsing of ballot failed, message deleted for message (ID: %@)", boxMessage.messageId] withCode:ThreemaProtocolErrorMessageProcessingFailed]);
                 return;
             }
-
+            
             ballot.modifyDate = [NSDate date];
             ballot.conversation = conversation;
             ((BallotMessage *)message).ballot = ballot;
         }];
         onCompletion(message);
     } onError:onError];
-
 }
 
 
@@ -258,7 +253,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
     } else {
         if ([state isEqualToNumber:@1]) {
-            DDLogError(@"[Ballot] [%@] Error ballot not found and state is closed", [NSString stringWithHexData:ballot.id]);
+            DDLogError(@"[Ballot] [%@] Do not update ballot because its state is closed", [NSString stringWithHexData:ballot.id]);
             return NO;
         }
         ballot.title = [json objectForKey: JSON_KEY_TITLE];

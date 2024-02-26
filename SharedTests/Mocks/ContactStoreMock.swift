@@ -26,6 +26,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     private var contact: ContactEntity?
     private let errorHandler: NSError?
 
+    private(set) var numberOfSynchronizeAddressBookCalls = 0
     var deleteContactCalls = [String]()
 
     required init(callOnCompletion: Bool, _ contact: ContactEntity? = nil, errorHandler: NSError? = nil) {
@@ -98,7 +99,14 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         onCompletion: ((Bool) -> Void)?,
         onError: ((Error?) -> Void)?
     ) {
-        // no-op
+        numberOfSynchronizeAddressBookCalls += 1
+        
+        if let errorHandler, let onError {
+            onError(errorHandler)
+        }
+        else if callOnCompletion {
+            onCompletion?(true)
+        }
     }
     
     func reflect(_ contact: ContactEntity?) {

@@ -23,7 +23,11 @@ import Foundation
 
 /// Dummy DH session store for testing purposes only (not optimized).
 class InMemoryDHSessionStore: DHSessionStoreProtocol {
-    private var dhSessionList: [DHSession] = []
+    
+    // The identifier works as follows: "myIdentity+peerIdentity"
+    var hasInvalidSessions = [String: Bool]()
+    
+    private(set) var dhSessionList: [DHSession] = []
     
     weak var errorHandler: ThreemaFramework.SQLDHSessionStoreErrorHandler?
     
@@ -130,6 +134,10 @@ class InMemoryDHSessionStore: DHSessionStoreProtocol {
         let numDeleted = dhSessionList.count - newDhSessionList.count
         dhSessionList = newDhSessionList
         return numDeleted
+    }
+    
+    func hasInvalidDHSessions(myIdentity: String, peerIdentity: String) throws -> Bool {
+        hasInvalidSessions["\(myIdentity)+\(peerIdentity)"] ?? false
     }
     
     func executeNull() throws {

@@ -91,4 +91,57 @@ final class EntityFetcherTests: XCTestCase {
         XCTAssertTrue(duplicatesResult.contains("ECHOECHO"))
         XCTAssertTrue(duplicatesResult.contains("PUPSIDUP"))
     }
+    
+    // The following two methods are just for basic performance evaluation and disabled by default
+    
+    func testAllContactsFetchingPerformance() {
+        let numberOfContacts = 90000 // Up to 5 digits allowed
+        
+        let databasePreparer = DatabasePreparer(context: mainCnx)
+        
+        let numberFormatter = NumberFormatter()
+        numberFormatter.minimumIntegerDigits = 5
+        
+        databasePreparer.save {
+            for index in 0..<numberOfContacts {
+                databasePreparer.createContact(identity: "ABC\(numberFormatter.string(from: NSNumber(value: index))!)")
+            }
+        }
+        
+        let entityFetcher = EntityFetcher(mainCnx, myIdentityStore: MyIdentityStoreMock())!
+
+        measure {
+            let allContacts = entityFetcher.allContacts() ?? [Any]()
+            let allContactIdentities: [String] = allContacts.compactMap {
+                guard let contact = $0 as? ContactEntity else {
+                    return nil
+                }
+                
+                return contact.identity
+            }
+            XCTAssertEqual(numberOfContacts, allContactIdentities.count)
+        }
+    }
+    
+    func testAllContactIdentitiesFetchingPerformance() {
+        let numberOfContacts = 90000 // Up to 5 digits allowed
+        
+        let databasePreparer = DatabasePreparer(context: mainCnx)
+        
+        let numberFormatter = NumberFormatter()
+        numberFormatter.minimumIntegerDigits = 5
+        
+        databasePreparer.save {
+            for index in 0..<numberOfContacts {
+                databasePreparer.createContact(identity: "ABC\(numberFormatter.string(from: NSNumber(value: index))!)")
+            }
+        }
+        
+        let entityFetcher = EntityFetcher(mainCnx, myIdentityStore: MyIdentityStoreMock())!
+        
+        measure {
+            let allContactIdentities = entityFetcher.allContactIdentities()
+            XCTAssertEqual(numberOfContacts, allContactIdentities.count)
+        }
+    }
 }

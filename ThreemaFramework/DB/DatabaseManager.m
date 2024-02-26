@@ -658,9 +658,23 @@ BOOL doMigrateInProgress = false;
             NSManagedObjectID *objectID = [_persistentStoreCoordinator managedObjectIDForURIRepresentation:url];
             if (objectID) {
                 NSManagedObject *object = [[dbContext main] objectWithID:objectID];
-                [[dbContext main] refreshObject:object mergeChanges:YES];
-                DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", objectID);
-                [notifyObjectIds addObject:objectID];
+                if ([object isKindOfClass:[Ballot class]]) {
+                    [self refreshBallot:(Ballot *)object mainContext:[dbContext main] notifyObjectIds:notifyObjectIds];
+                }
+                else if ([object isKindOfClass:[BallotMessage class]]) {
+                    [[dbContext main] refreshObject:object mergeChanges:NO];
+                    DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", objectID);
+                    [notifyObjectIds addObject:objectID];
+                    
+                    [self refreshBallot:((BallotMessage *)object).ballot mainContext:[dbContext main] notifyObjectIds:notifyObjectIds];
+                }
+                else {
+                    [[dbContext main] refreshObject:object mergeChanges:YES];
+                    
+                    DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", objectID);
+                    [notifyObjectIds addObject:objectID];
+
+                }
             }
         }
 
@@ -681,6 +695,18 @@ BOOL doMigrateInProgress = false;
     if ([notifyObjectIds count] > 0) {
         DDLogInfo(@"[t-dirty-objects] Notify refresh object with nil");
         [self notifyObjectRefresh:nil];
+    }
+}
+
+- (void)refreshBallot:(Ballot *)ballot mainContext:(TMAManagedObjectContext *)mainContext notifyObjectIds:(NSMutableSet *)notifyObjectIds {
+    [mainContext refreshObject:ballot mergeChanges:NO];
+    DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", ballot.objectID);
+    [notifyObjectIds addObject:ballot.objectID];
+    
+    for (BallotChoice *ballotChoice in ballot.choices) {
+        [mainContext refreshObject:ballotChoice mergeChanges:NO];
+        DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", ballotChoice.objectID);
+        [notifyObjectIds addObject:ballotChoice.objectID];
     }
 }
 

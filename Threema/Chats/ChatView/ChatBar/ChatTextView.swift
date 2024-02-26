@@ -680,22 +680,24 @@ extension ChatTextView: UITextViewDelegate {
                 attributedString: customTextStorage.getRawText(),
                 currentReplacementRange: currentReplacementRange
             )
-            var textRange: UITextRange?
-            if let cursorLocation = position(
-                from: textView.beginningOfDocument,
-                offset: currentReplacementRange.location + lastTextChange.utf16.count + diff
-            ) {
-                textRange = self.textRange(from: cursorLocation, to: cursorLocation)
-            }
-            else if let cursorLocation = position(
-                from: textView.beginningOfDocument,
-                offset: customTextStorage.length
-            ) {
-                textRange = self.textRange(from: cursorLocation, to: cursorLocation)
-            }
-
-            if let textRange {
-                selectedTextRange = textRange
+            if diff > 0 {
+                var textRange: UITextRange?
+                if let cursorLocation = position(
+                    from: textView.beginningOfDocument,
+                    offset: currentReplacementRange.location + lastTextChange.utf16.count + diff
+                ) {
+                    textRange = self.textRange(from: cursorLocation, to: cursorLocation)
+                }
+                else if let cursorLocation = position(
+                    from: textView.beginningOfDocument,
+                    offset: customTextStorage.length
+                ) {
+                    textRange = self.textRange(from: cursorLocation, to: cursorLocation)
+                }
+                
+                if let textRange {
+                    selectedTextRange = textRange
+                }
             }
         }
 

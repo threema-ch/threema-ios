@@ -281,10 +281,6 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 if !AppDelegate.shared().active {
                     let databaseManager = DatabaseManager()
                     databaseManager.addDirtyObject(msg)
-                    if let ballotMessage = msg as? BallotMessage,
-                       let ballot = ballotMessage.ballot {
-                        databaseManager.addDirtyObject(ballot)
-                    }
                     if let conversation = msg.conversation {
                         databaseManager.addDirtyObject(conversation)
                         if let contact = conversation.contact {

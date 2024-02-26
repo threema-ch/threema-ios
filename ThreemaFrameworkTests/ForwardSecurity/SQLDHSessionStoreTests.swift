@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -27,9 +28,11 @@ class SQLDHSessionStoreTests: XCTestCase {
     
     private static let aliceIdentity = "AAAAAAAA"
     private static let bobIdentity = "BBBBBBBB"
+    private static let carolIdentity = "CCCCCCCC"
+    private static let danIdentity = "DDDDDDDD"
     
     private var storePath: String?
-    private var store: SQLDHSessionStore?
+    private var store: SQLDHSessionStore!
     
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -350,6 +353,156 @@ class SQLDHSessionStoreTests: XCTestCase {
         let resourceValues = try fileURL.resourceValues(forKeys: [URLResourceKey.isExcludedFromBackupKey])
         XCTAssertTrue(resourceValues.isExcludedFromBackup!)
     }
+    
+    func testHasNoInvalidDHSessions() throws {
+        for _ in 1...5 {
+            let session = makeRandomDHSession(
+                myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+                peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+                fourDh: true
+            )
+            try store.storeDHSession(session: session)
+        }
+        
+        for _ in 1...2 {
+            let session = makeRandomDHSession(
+                myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+                peerIdentity: SQLDHSessionStoreTests.carolIdentity,
+                fourDh: true
+            )
+            try store.storeDHSession(session: session)
+        }
+        
+        // Validate
+        
+        XCTAssertFalse(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity
+        ))
+        XCTAssertFalse(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.carolIdentity
+        ))
+        // Test ID with no session at all
+        XCTAssertFalse(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.danIdentity
+        ))
+    }
+    
+    func testHasOneInvalidDHSessionTooLow() throws {
+        // Two Bob sessions: One too low.
+        
+        try {
+            let session = makeRandomDHSession(
+                myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+                peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+                fourDh: true
+            )
+            try store.storeDHSession(session: session)
+        }()
+        
+        try {
+            let session = makeRandomDHSession(
+                myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+                peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+                fourDh: true
+            )
+            
+            let processedVersions = ProcessedVersions(
+                offeredVersion: .UNRECOGNIZED(2),
+                appliedVersion: .UNRECOGNIZED(2),
+                pending4DHVersion: DHVersions(local: .UNRECOGNIZED(2), remote: .UNRECOGNIZED(2))
+            )
+            let updatesVersionsSnapshot = session.commitVersion(processedVersions: processedVersions)
+            XCTAssertNotNil(updatesVersionsSnapshot)
+            
+            try store.storeDHSession(session: session)
+        }()
+        
+        // One valid Carol session
+        
+        try {
+            let session = makeRandomDHSession(
+                myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+                peerIdentity: SQLDHSessionStoreTests.carolIdentity,
+                fourDh: true
+            )
+            try store.storeDHSession(session: session)
+        }()
+        
+        // Validate
+        
+        XCTAssertTrue(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity
+        ))
+        XCTAssertFalse(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.carolIdentity
+        ))
+        // Test ID with no session at all
+        XCTAssertFalse(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.danIdentity
+        ))
+    }
+    
+    func testHasOneInvalidDHSessionTooHigh() throws {
+        ThreemaEnvironment.fsVersion = CspE2eFs_VersionRange.with {
+            $0.min = UInt32(CspE2eFs_Version.v10.rawValue)
+            $0.max = UInt32(CspE2eFs_Version.v11.rawValue)
+        }
+        
+        // One invalid Bob session. Too high.
+        
+        try {
+            let session = makeRandomDHSession(
+                myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+                peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+                fourDh: true
+            )
+            
+            let processedVersions = ProcessedVersions(
+                offeredVersion: .v11,
+                appliedVersion: .v11,
+                pending4DHVersion: DHVersions(local: .v12, remote: .v12)
+            )
+            let updatesVersionsSnapshot = session.commitVersion(processedVersions: processedVersions)
+            XCTAssertNotNil(updatesVersionsSnapshot)
+            
+            try store.storeDHSession(session: session)
+        }()
+        
+        // One valid Carol session
+        
+        try {
+            let session = makeRandomDHSession(
+                myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+                peerIdentity: SQLDHSessionStoreTests.carolIdentity,
+                fourDh: true
+            )
+            try store.storeDHSession(session: session)
+        }()
+        
+        // Validate
+        
+        XCTAssertTrue(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity
+        ))
+        XCTAssertFalse(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.carolIdentity
+        ))
+        // Test ID with no session at all
+        XCTAssertFalse(try store.hasInvalidDHSessions(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.danIdentity
+        ))
+    }
+    
+    // MARK: - Private helper
     
     private func makeRandomDHSession(myIdentity: String, peerIdentity: String, fourDh: Bool) -> DHSession {
         if fourDh {

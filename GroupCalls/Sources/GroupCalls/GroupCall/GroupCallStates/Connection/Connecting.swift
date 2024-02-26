@@ -68,7 +68,7 @@ struct Connecting: GroupCallState {
             dtlsParameters: dtlsParameters
         )
         
-        let groupCallDescription = groupCallActor.groupCallBaseState
+        let groupCallDescription = groupCallActor.groupCallBaseStateCopy
         
         self.connectionContext = try ConnectionContext(
             certificate: certificate,

@@ -777,7 +777,7 @@ final class ChatViewController: ThemedViewController {
             name: NSNotification.Name(rawValue: kNotificationWallpaperChanged),
             object: nil
         )
-        
+
         if businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on deinit
             startGroupCallObserver()

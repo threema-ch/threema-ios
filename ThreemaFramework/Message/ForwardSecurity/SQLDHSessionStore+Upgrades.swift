@@ -48,7 +48,7 @@ extension SQLDHSessionStore {
         DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 2")
         
         do {
-            try db.run(sessionTable.addColumn(myCurrentVersion4DH, defaultValue: CspE2eFs_Version.v10.rawValue))
+            try db.run(sessionTable.addColumn(myCurrentVersion4DHColumn, defaultValue: CspE2eFs_Version.v10.rawValue))
         }
         catch {
             if case .error(
@@ -81,7 +81,9 @@ extension SQLDHSessionStore {
         // In all other cases adding the column will fail and we will ignore the error
         if try db.scalar(sessionTable.count) == 0 {
             do {
-                try db.run(sessionTable.addColumn(myCurrentVersion4DH, defaultValue: CspE2eFs_Version.v10.rawValue))
+                try db.run(
+                    sessionTable.addColumn(myCurrentVersion4DHColumn, defaultValue: CspE2eFs_Version.v10.rawValue)
+                )
             }
             catch {
                 if case .error(
@@ -116,7 +118,7 @@ extension SQLDHSessionStore {
         
         // Create remote 4DH version column with default value 0x0100 (Version 1.0)
         do {
-            try db.run(sessionTable.addColumn(peerCurrentVersion4DH, defaultValue: CspE2eFs_Version.v10.rawValue))
+            try db.run(sessionTable.addColumn(peerCurrentVersion4DHColumn, defaultValue: CspE2eFs_Version.v10.rawValue))
         }
         catch {
             if case .error(

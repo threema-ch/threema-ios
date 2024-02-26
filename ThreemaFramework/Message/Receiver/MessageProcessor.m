@@ -465,6 +465,9 @@ Process incoming message.
     } else if ([amsg isKindOfClass:[BoxVoIPCallRingingMessage class]]) {
         [self processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)amsg onCompletion:onCompletion onError:onError];
     }
+    else if ([amsg isKindOfClass:[UnknownTypeMessage class]]) {
+        onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType]);
+    }
     else {
         // Do not Ack message, try process this message later because of protocol changes
         onError([ThreemaError threemaError:@"Invalid message class"]);

@@ -28,7 +28,7 @@ final class TaskDefinitionReflectIncomingMessage: TaskDefinition, TaskDefinition
         TaskExecutionReflectIncomingMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

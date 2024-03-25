@@ -34,7 +34,7 @@ class MessageSenderTests: XCTestCase {
     private lazy var taskManagerMock = TaskManagerMock()
     private lazy var entityManager = EntityManager(databaseContext: dbMainCnx)
     private lazy var blobMessageSender = BlobMessageSender(
-        businessInjector: BusinessInjectorMock(backgroundEntityManager: entityManager, entityManager: entityManager),
+        businessInjector: BusinessInjectorMock(entityManager: entityManager),
         taskManager: taskManagerMock
     )
     

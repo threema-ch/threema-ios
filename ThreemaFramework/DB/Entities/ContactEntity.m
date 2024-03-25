@@ -36,11 +36,11 @@ static NSString *fieldTypingIndicators = @"typingIndicators";
 static NSString *fieldReadReceipts = @"readReceipts";
 static NSString *fieldImportStatus = @"importStatus";
 static NSString *fieldHidden = @"hidden";
-static NSString *fieldFeatureLevel = @"featureLevel";
 
 @implementation ContactEntity
 
 @dynamic abRecordId;
+@dynamic featureMask;
 @dynamic firstName;
 @dynamic identity;
 @dynamic imageData;
@@ -201,10 +201,15 @@ static NSString *fieldFeatureLevel = @"featureLevel";
 }
 
 - (NSNumber *)featureMask {
-    return [self valueForKey:fieldFeatureLevel] != nil ? (NSNumber *)[self valueForKey:fieldFeatureLevel] : @0;
+    
+    [self willAccessValueForKey:@"featureMask"];
+    NSNumber *mask = [self primitiveValueForKey:@"featureMask"];
+    [self didAccessValueForKey:@"featureMask"];
+    
+    return mask != nil ? mask : @0;
 }
 
-- (void)setFeatureMask:(NSNumber *)featureMask {
+- (void)setFeatureMask:(NSNumber *)newFeatureMask {
     // Post a system message if we have an existing chat and enabled PFS for this contact
     // but he has downgraded to a version which does not yet support PFS.
     // This can happen in regular operation for example when someone switches between the release version
@@ -213,7 +218,7 @@ static NSString *fieldFeatureLevel = @"featureLevel";
     if ([self.conversations count] > 0) {
         if ((FEATURE_MASK_FORWARD_SECURITY & [self.featureMask intValue])) {
             // Old value had forward security
-            if (!(FEATURE_MASK_FORWARD_SECURITY & [featureMask intValue])) {
+            if (!(FEATURE_MASK_FORWARD_SECURITY & [newFeatureMask intValue])) {
                 // New value does not have forward security
                 
                 // Post system message only if a session with this contact exists
@@ -226,9 +231,9 @@ static NSString *fieldFeatureLevel = @"featureLevel";
         }
     }
     
-    [self willChangeValueForKey:fieldFeatureLevel];
-    [self setPrimitiveValue:featureMask != nil ? featureMask : @0 forKey:fieldFeatureLevel];
-    [self didChangeValueForKey:fieldFeatureLevel];
+    [self willChangeValueForKey:@"featureMask"];
+    [self setPrimitiveValue:newFeatureMask != nil ? newFeatureMask : @0 forKey:@"featureMask"];
+    [self didChangeValueForKey:@"featureMask"];
 }
 
 - (void)postPFSNotSupportedSystemMessage {

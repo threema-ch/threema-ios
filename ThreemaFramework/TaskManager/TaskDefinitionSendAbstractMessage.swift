@@ -30,7 +30,7 @@ import Foundation
         TaskExecutionSendAbstractMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

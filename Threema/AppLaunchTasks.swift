@@ -29,16 +29,38 @@ class AppLaunchTasks: NSObject {
         case willEnterForeground
     }
 
-    private let businessInjector: BusinessInjectorProtocol
+    private let backgroundBusinessInjector: BusinessInjectorProtocol
     private static var isRunning = false
     private static let isRunningQueue = DispatchQueue(label: "ch.threema.AppLaunchTasks.isRunningQueue")
-
-    @objc override convenience init() {
-        self.init(businessInjector: BusinessInjector())
+    
+    // Did the version or build change since the last launch? (This also detects changes between Store, TestFlight and
+    // Xcode builds.)
+    private static var lastLaunchedVersionChanged: Bool {
+        let lastVersion = AppGroup.userDefaults().string(forKey: "LastLaunchedAppVersionAndBuild")
+        let currentVersion = ThreemaUtility.appAndBuildVersion
+        
+        guard let lastVersion else {
+            DDLogNotice("Version has changed since last launch of app. Last: nil, current: \(currentVersion)")
+            return true
+        }
+        
+        if lastVersion != ThreemaUtility.appAndBuildVersion {
+            DDLogNotice(
+                "Version has changed since last launch of app. Last: \(lastVersion), current: \(currentVersion)"
+            )
+            return true
+        }
+        
+        // No change
+        return false
     }
 
-    required init(businessInjector: BusinessInjectorProtocol) {
-        self.businessInjector = businessInjector
+    @objc override convenience init() {
+        self.init(backgroundBusinessInjector: BusinessInjector(forBackgroundProcess: true))
+    }
+
+    required init(backgroundBusinessInjector: BusinessInjectorProtocol) {
+        self.backgroundBusinessInjector = backgroundBusinessInjector
     }
 
     /// Runs some tasks/procedures when the App will be launched or will enter foreground. Especially DB repairing and
@@ -56,20 +78,41 @@ class AppLaunchTasks: NSObject {
             // Repairs database integrity only on app start and synchronously,
             // must be finished before running other tasks and returning to the caller
             if launchEvent == .didFinishLaunching {
-                businessInjector.entityManager.repairDatabaseIntegrity()
+                backgroundBusinessInjector.entityManager.repairDatabaseIntegrity()
+                if AppLaunchTasks.lastLaunchedVersionChanged {
+                    Task {
+                        do {
+                            try await AppUpdateSteps().run()
+                            // Only persist last launched version if update steps were successful
+                            AppLaunchTasks.updateLastLaunchedVersion()
+                        }
+                        catch {
+                            DDLogWarn("Failed to run application update steps. Try again on next launch. \(error)")
+                        }
+                    }
+                }
             }
 
             // All other tasks runs in a background thread
             Task {
                 await self.checkLastMessageOfAllConversations()
-                await businessInjector.messageRetentionManager.deleteOldMessages()
-                NotificationManager().updateUnreadMessagesCount()
-                
+                await backgroundBusinessInjector.messageRetentionManager.deleteOldMessages()
+                NotificationManager(businessInjector: backgroundBusinessInjector).updateUnreadMessagesCount()
+
                 AppLaunchTasks.isRunningQueue.async {
                     AppLaunchTasks.isRunning = false
                 }
             }
         }
+    }
+    
+    private static func updateLastLaunchedVersion() {
+        guard AppLaunchTasks.lastLaunchedVersionChanged else {
+            return
+        }
+        let currentVersion = ThreemaUtility.appAndBuildVersion
+        DDLogNotice("Update last launched version to: \(currentVersion)")
+        AppGroup.userDefaults().setValue(currentVersion, forKey: "LastLaunchedAppVersionAndBuild")
     }
 
     /// Checks if the currently assigned last message of given Conversations is actually the correct one and fixes it
@@ -77,8 +120,8 @@ class AppLaunchTasks: NSObject {
     private func checkLastMessageOfAllConversations() async {
         var doUpdateUnreadMessagesCount = false
 
-        await businessInjector.backgroundEntityManager.performSave {
-            guard let conversations = self.businessInjector.backgroundEntityManager.entityFetcher
+        await backgroundBusinessInjector.entityManager.performSave {
+            guard let conversations = self.backgroundBusinessInjector.entityManager.entityFetcher
                 .allConversations() as? [Conversation] else {
                 return
             }
@@ -86,7 +129,7 @@ class AppLaunchTasks: NSObject {
             for conversation in conversations {
                 guard let effectiveLastMessage = MessageFetcher(
                     for: conversation,
-                    with: self.businessInjector.backgroundEntityManager
+                    with: self.backgroundBusinessInjector.entityManager
                 ).lastMessage() else {
                     conversation.lastMessage = nil
                     continue
@@ -98,7 +141,7 @@ class AppLaunchTasks: NSObject {
                     )
                     conversation.lastMessage = effectiveLastMessage
 
-                    self.businessInjector.backgroundUnreadMessages.count(for: conversation)
+                    self.backgroundBusinessInjector.unreadMessages.count(for: conversation)
 
                     doUpdateUnreadMessagesCount = true
                 }
@@ -106,7 +149,7 @@ class AppLaunchTasks: NSObject {
         }
 
         if doUpdateUnreadMessagesCount {
-            NotificationManager(businessInjector: businessInjector).updateUnreadMessagesCount()
+            NotificationManager(businessInjector: backgroundBusinessInjector).updateUnreadMessagesCount()
         }
     }
 }

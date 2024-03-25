@@ -197,6 +197,74 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(bobContext.dummySender.sentAbstractMessagesQueue.count, 0)
     }
     
+    func testUnsupportedFSMessage() async throws {
+        try await test4DH()
+        
+        // Set last FS/session message sent to 23h ago
+        let session = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
+            myIdentity: aliceContext.identityStore.identity,
+            peerIdentity: aliceContext.peerContact.identity
+        ))
+        session.lastMessageSent = Date(timeIntervalSinceNow: -(60 * 60 * 23))
+        try aliceContext.dhSessionStore.updateNewSessionCommitLastMessageSentDateAndVersions(session: session)
+        
+        // Create a message that doesn't support FS and send it
+        try sendUnsupportedFSMessage(senderContext: aliceContext)
+        
+        // The message itself should be sent without FS (empty messages are only prepended when the last FS message was
+        // sent more than 24h ago)
+        XCTAssertEqual(aliceContext.dummySender.sentAbstractMessagesQueue.count, 1)
+        
+        // Validate unsupported message
+        let unsupportedMessage = aliceContext.dummySender.sentAbstractMessagesQueue.removeFirst()
+        XCTAssertFalse(unsupportedMessage is ForwardSecurityEnvelopeMessage)
+        XCTAssertEqual(unsupportedMessage.minimumRequiredForwardSecurityVersion(), .unspecified)
+        
+        // Now all messages should be processed
+        XCTAssertEqual(aliceContext.dummySender.sentAbstractMessagesQueue.count, 0)
+    }
+    
+    func testEmptyMessage() async throws {
+        try await test4DH()
+        
+        // Set last FS/session message sent date to more than 24h ago
+        let session = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
+            myIdentity: aliceContext.identityStore.identity,
+            peerIdentity: aliceContext.peerContact.identity
+        ))
+        session.lastMessageSent = Date(timeIntervalSinceNow: -(60 * 60 * 25))
+        try aliceContext.dhSessionStore.updateNewSessionCommitLastMessageSentDateAndVersions(session: session)
+        
+        // Create a message that doesn't support FS and send it
+        try sendUnsupportedFSMessage(senderContext: aliceContext)
+        
+        // An empty message with FS and the message itself should be sent
+        XCTAssertEqual(aliceContext.dummySender.sentAbstractMessagesQueue.count, 2)
+        
+        // Validate empty message
+        
+        let encapsulatedEmptyMessage = aliceContext.dummySender.sentAbstractMessagesQueue.removeFirst()
+        let (emptyMessage, fsMessageInfo) = try await bobContext.fsmp.processEnvelopeMessage(
+            sender: bobContext.peerContact,
+            envelopeMessage: encapsulatedEmptyMessage as! ForwardSecurityEnvelopeMessage
+        )
+        if let fsMessageInfo {
+            _ = fsMessageInfo.updateVersionsIfNeeded()
+            try bobContext.dhSessionStore.storeDHSession(session: fsMessageInfo.session)
+        }
+        
+        XCTAssertTrue(emptyMessage is BoxEmptyMessage)
+        XCTAssertNotNil(emptyMessage)
+        
+        // Validate unsupported message
+        let unsupportedMessage = aliceContext.dummySender.sentAbstractMessagesQueue.removeFirst()
+        XCTAssertFalse(unsupportedMessage is ForwardSecurityEnvelopeMessage)
+        XCTAssertEqual(unsupportedMessage.minimumRequiredForwardSecurityVersion(), .unspecified)
+        
+        // Now all messages should be processed
+        XCTAssertEqual(aliceContext.dummySender.sentAbstractMessagesQueue.count, 0)
+    }
+    
     func testMissingMessage() async throws {
         try await test4DH()
         
@@ -382,27 +450,23 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(try bobsSession.state, .RL44)
     }
     
-    func testSendAuxFailure() throws {
+    func testSendFailure() throws {
         makeAliceContext()
 
-        let encapMessages = try makeEncapTextMessage(text: "Test", senderContext: aliceContext)
+        _ = try makeEncapTextMessage(text: "Test", senderContext: aliceContext)
 
         // Alice should now have a 2DH session with Bob
-        let alicesInitiatorSession = try aliceContext.dhSessionStore.bestDHSession(
+        let alicesInitiatorSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
             myIdentity: aliceContext.identityStore.identity,
             peerIdentity: aliceContext.peerContact.identity
-        )!
+        ))
         XCTAssertNotNil(alicesInitiatorSession.myRatchet2DH)
 
-        // Simulate init message send failure
-        encapMessages.sendAuxFailure()
-
-        // Alice's session should now be deleted
-        let alicesInitiatorSession2 = try aliceContext.dhSessionStore.bestDHSession(
-            myIdentity: aliceContext.identityStore.identity,
-            peerIdentity: aliceContext.peerContact.identity
-        )
-        XCTAssertNil(alicesInitiatorSession2)
+        // As the the session was never marked as committed the next try to create a message should generate an `Init`
+        // aux message again
+        let encapMessages2 = try makeEncapTextMessage(text: "Test", senderContext: aliceContext)
+        let auxMessage2 = try XCTUnwrap(encapMessages2.auxMessage)
+        XCTAssertTrue(auxMessage2.data is ForwardSecurityDataInit)
     }
     
     func testRaceConditions() async throws {
@@ -795,7 +859,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             text: ForwardSecurityMessageProcessorTests.aliceMessage2,
             senderContext: aliceContext
         )
-        aliceContext.dummySender.sendMessage(abstractMessage: message.message, isPersistent: true)
+        aliceContext.dummySender.sendMessage(abstractMessage: message.outerMessage, isPersistent: true)
         
         // Now Bob processes the text message from Alice. This should not fail, even if the applied version is not
         // known.
@@ -918,7 +982,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             text: ForwardSecurityMessageProcessorTests.aliceMessage2,
             senderContext: aliceContext
         )
-        aliceContext.dummySender.sendMessage(abstractMessage: message.message, isPersistent: true)
+        aliceContext.dummySender.sendMessage(abstractMessage: message.outerMessage, isPersistent: true)
         
         // Now Bob processes the text message from Alice. Note that the message should be rejected and therefore return
         // an empty list.
@@ -1002,15 +1066,15 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     
     private func assertMessageTypeSupport(_ message: AbstractMessage, context: UserContext, supported: Bool) throws {
         do {
-            _ = try aliceContext.fsmp.makeMessage(contact: aliceContext.peerContact, innerMessage: message)
+            let (_, outerMessage) = try aliceContext.fsmp.makeMessage(
+                receiver: aliceContext.peerContact,
+                innerMessage: message
+            )
             
-            if !supported {
-                XCTFail()
-            }
+            XCTAssertEqual(outerMessage is ForwardSecurityEnvelopeMessage, supported)
         }
         catch {
-            let fsError = try XCTUnwrap(error as? ForwardSecurityError)
-            XCTAssertEqual(fsError, ForwardSecurityError.messageTypeNotSupported)
+            XCTFail()
         }
     }
     
@@ -1023,15 +1087,15 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         message.groupCreator = groupIdentity.creator.string
         
         do {
-            _ = try aliceContext.fsmp.makeMessage(contact: aliceContext.peerContact, innerMessage: message)
+            let (_, outerMessage) = try aliceContext.fsmp.makeMessage(
+                receiver: aliceContext.peerContact,
+                innerMessage: message
+            )
             
-            if !supported {
-                XCTFail()
-            }
+            XCTAssertEqual(outerMessage is ForwardSecurityEnvelopeMessage, supported)
         }
         catch {
-            let fsError = try XCTUnwrap(error as? ForwardSecurityError)
-            XCTAssertEqual(fsError, ForwardSecurityError.messageTypeNotSupported)
+            XCTFail()
         }
     }
     
@@ -1235,13 +1299,19 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     @discardableResult private func sendTextMessage(
         message: String,
         senderContext: UserContext
-    ) throws -> ForwardSecurityEnvelopeMessage {
+    ) throws -> AbstractMessage {
         let encapMessages = try makeEncapTextMessage(text: message, senderContext: senderContext)
         if let auxMessage = encapMessages.auxMessage {
             senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
         }
-        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.message, isPersistent: true)
-        return encapMessages.message
+        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.outerMessage, isPersistent: true)
+        
+        // "Commit" message and set last update date if any message was an FS message
+        if encapMessages.auxMessage != nil || encapMessages.outerMessage is ForwardSecurityEnvelopeMessage {
+            try commitSentFSMessage(senderContext: senderContext)
+        }
+        
+        return encapMessages.outerMessage
     }
     
     private func sendGroupTextMessage(
@@ -1257,7 +1327,37 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         if let auxMessage = encapMessages.auxMessage {
             senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
         }
-        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.message, isPersistent: true)
+        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.outerMessage, isPersistent: true)
+        
+        // "Commit" message and set last update date if any message was an FS message
+        if encapMessages.auxMessage != nil || encapMessages.outerMessage is ForwardSecurityEnvelopeMessage {
+            try commitSentFSMessage(senderContext: senderContext)
+        }
+    }
+    
+    private func sendUnsupportedFSMessage(senderContext: UserContext) throws {
+        let encapMessages = try makeEncapUnsupportedFSMessage(senderContext: senderContext)
+        if let auxMessage = encapMessages.auxMessage {
+            senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
+        }
+        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.outerMessage, isPersistent: true)
+        
+        // "Commit" message and set last update date if any message was an FS message
+        if encapMessages.auxMessage != nil || encapMessages.outerMessage is ForwardSecurityEnvelopeMessage {
+            try commitSentFSMessage(senderContext: senderContext)
+        }
+    }
+    
+    private func commitSentFSMessage(senderContext: UserContext) throws {
+        let session = try XCTUnwrap(senderContext.dhSessionStore.bestDHSession(
+            myIdentity: senderContext.identityStore.identity,
+            peerIdentity: senderContext.peerContact.identity
+        ))
+        
+        session.newSessionCommitted = true
+        session.lastMessageSent = .now
+        
+        try senderContext.dhSessionStore.updateNewSessionCommitLastMessageSentDateAndVersions(session: session)
     }
     
     private func processReceivedMessages(
@@ -1287,12 +1387,13 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         
         let message = senderContext.dummySender.sentAbstractMessagesQueue.removeFirst()
         
-        let (decap, dhSession) = try await recipientContext.fsmp.processEnvelopeMessage(
+        let (decap, fsMessageInfo) = try await recipientContext.fsmp.processEnvelopeMessage(
             sender: recipientContext.peerContact,
             envelopeMessage: message as! ForwardSecurityEnvelopeMessage
         )
-        if let dhSession {
-            try recipientContext.dhSessionStore.storeDHSession(session: dhSession)
+        if let fsMessageInfo {
+            _ = fsMessageInfo.updateVersionsIfNeeded() // Is this what we want?
+            try recipientContext.dhSessionStore.storeDHSession(session: fsMessageInfo.session)
         }
         
         return decap
@@ -1337,13 +1438,12 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         senderContext: UserContext
     ) throws -> (
         auxMessage: ForwardSecurityEnvelopeMessage?,
-        message: ForwardSecurityEnvelopeMessage,
-        sendAuxFailure: () -> Void
+        outerMessage: AbstractMessage
     ) {
         let textMessage = BoxTextMessage()
         textMessage.text = text
         textMessage.toIdentity = senderContext.peerContact.identity
-        return try senderContext.fsmp.makeMessage(contact: senderContext.peerContact, innerMessage: textMessage)
+        return try senderContext.fsmp.makeMessage(receiver: senderContext.peerContact, innerMessage: textMessage)
     }
     
     private func makeEncapGroupTextMessage(
@@ -1352,15 +1452,24 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         groupIdentity: GroupIdentity
     ) throws -> (
         auxMessage: ForwardSecurityEnvelopeMessage?,
-        message: ForwardSecurityEnvelopeMessage,
-        sendAuxFailure: () -> Void
+        outerMessage: AbstractMessage
     ) {
         let groupTextMessage = GroupTextMessage()
         groupTextMessage.text = text
         groupTextMessage.toIdentity = senderContext.peerContact.identity
         groupTextMessage.groupID = groupIdentity.id
         groupTextMessage.groupCreator = groupIdentity.creator.string
-        return try senderContext.fsmp.makeMessage(contact: senderContext.peerContact, innerMessage: groupTextMessage)
+        return try senderContext.fsmp.makeMessage(receiver: senderContext.peerContact, innerMessage: groupTextMessage)
+    }
+    
+    private func makeEncapUnsupportedFSMessage(senderContext: UserContext) throws -> (
+        auxMessage: ForwardSecurityEnvelopeMessage?,
+        outerMessage: AbstractMessage
+    ) {
+        let unsupportedMessage = BoxAudioMessage()
+        unsupportedMessage.toIdentity = senderContext.peerContact.identity
+        XCTAssertEqual(unsupportedMessage.minimumRequiredForwardSecurityVersion(), .unspecified)
+        return try senderContext.fsmp.makeMessage(receiver: senderContext.peerContact, innerMessage: unsupportedMessage)
     }
     
     private func makeTestUserContext(

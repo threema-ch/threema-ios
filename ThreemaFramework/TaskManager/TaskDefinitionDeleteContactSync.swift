@@ -30,7 +30,7 @@ final class TaskDefinitionDeleteContactSync: TaskDefinition, TaskDefinitionTrans
         TaskExecutionDeleteContactSync(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

@@ -50,7 +50,7 @@ class DeviceLinking: NSObject {
         self.safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -210,27 +210,19 @@ class DeviceLinking: NSObject {
         }
         
         switch ThreemaEnvironment.env() {
-        case .appStore:
-            // Enable it for all app store versions except onprem
-            if ThreemaApp.current == .onPrem {
-                autoDisableMultiDevice()
-            }
         case .testFlight:
             switch ThreemaApp.current {
-            case .threema:
-                // Disable it if we downgrade consumer from 5.0
+            case .threema, .work, .onPrem:
+                // Disable it if we downgrade consumer, work or onprem from 5.0
                 if AppInfo.version.major < 5 {
                     autoDisableMultiDevice()
                 }
-            case .onPrem:
-                // Always disable it for onprem
-                autoDisableMultiDevice()
-            case .work, .red, .workRed:
-                // Never disable it for work, red & work red
+            case .red, .workRed:
+                // Never disable it for red & work red
                 break
             }
-        case .xcode:
-            // Never disable it of Xcode builds
+        case .appStore, .xcode:
+            // Never disable it of Xcode and App store builds
             break
         }
     }
@@ -278,7 +270,7 @@ class DeviceLinking: NSObject {
                             self.businessInjector.serverConnector.deactivateMultiDevice()
 
                             // Update feature mask to activate forward secrecy
-                            FeatureMask.update()
+                            FeatureMask.updateLocal()
 
                             // In this case explicit disconnect is not necessary, because Mediator server makes a
                             // disconnect after dropping this device

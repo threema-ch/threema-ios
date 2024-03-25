@@ -88,12 +88,11 @@ public struct NotificationPresenterType {
         self.notificationText = notificationText
         self.notificationStyle = notificationStyle
     }
-    
+
     public static let generalSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "Done"),
         notificationStyle: .success
     )
-    
     public static let copySuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_copying_succeeded"),
         notificationStyle: .success
@@ -106,7 +105,6 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_copying_failed"),
         notificationStyle: .error
     )
-    
     public static let saveSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_saving_succeeded"),
         notificationStyle: .success
@@ -115,7 +113,6 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_saving_failed"),
         notificationStyle: .error
     )
-    
     public static let saveToPhotosSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_saving_to_photos_succeeded"),
         notificationStyle: .success
@@ -124,27 +121,22 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_saving_to_photos_failed"),
         notificationStyle: .error
     )
-    
     public static let autosaveMediaError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_autosave_failed"),
         notificationStyle: .error
     )
-    
     public static let sendingError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_sending_failed"),
         notificationStyle: .error
     )
-    
     public static let sendingErrorSize = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_sending_failed_size"),
         notificationStyle: .error
     )
-    
     public static let playingError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_cannot_play_video"),
         notificationStyle: .error
     )
-    
     public static let connectedCallError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_call_failed_connected"),
         notificationStyle: .error
@@ -161,7 +153,6 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_call_creation_disabled"),
         notificationStyle: .error
     )
-    
     public static let profilePictureSentSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_sending_profile_picture_succeeded"),
         notificationStyle: .success
@@ -170,7 +161,6 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_sending_profile_picture_failed"),
         notificationStyle: .error
     )
-    
     public static let settingsSyncPending = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_pending"),
         notificationStyle: .none
@@ -179,7 +169,6 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_succeeded"),
         notificationStyle: .success
     )
-    
     public static let groupSyncSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_group_sync_succeeded"),
         notificationStyle: .success
@@ -188,7 +177,10 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_group_sync_failed"),
         notificationStyle: .success
     )
-    
+    public static let groupCallStartError = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_group_call_start_failed"),
+        notificationStyle: .error
+    )
     public static let interactionDeleteSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_interaction_delete_succeeded"),
         notificationStyle: .success

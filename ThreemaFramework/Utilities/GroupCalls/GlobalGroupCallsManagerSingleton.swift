@@ -35,8 +35,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
     public let globalGroupCallObserver = AsyncStreamContinuationToSharedPublisher<GroupCallBannerButtonUpdate>()
     
     // TODO: (IOS-4029) Is this needed?
-    public var processBusinessInjector: BusinessInjectorProtocol?
-    
+    public var processBackgroundBusinessInjector: BusinessInjectorProtocol?
+
     public let httpHelper = GroupCallsSFUTokenFetcher()
     
     public weak var uiDelegate: GroupCallManagerSingletonUIDelegate?
@@ -47,10 +47,10 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         
     // TODO: (IOS-4029) Is this needed?
     fileprivate var currentBusinessInjector: BusinessInjectorProtocol {
-        guard let processBusinessInjector else {
+        guard let processBackgroundBusinessInjector else {
             return businessInjector
         }
-        return processBusinessInjector
+        return processBackgroundBusinessInjector
     }
     
     fileprivate let businessInjector: BusinessInjectorProtocol
@@ -72,17 +72,17 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             groupCallCrypto: GroupCallCrypto(),
             groupCallDateFormatter: GroupCallDateFormatterAdapter(),
             userSettings: GroupCallUserSettings(ipv6Enabled: UserSettings.shared().enableIPv6),
-            groupCallSystemMessageAdapter: GroupCallSystemMessageAdapter<BusinessInjector>(businessInjector: BusinessInjector()),
+            groupCallSystemMessageAdapter: GroupCallSystemMessageAdapter<BusinessInjector>(businessInjector: BusinessInjector(forBackgroundProcess: true)),
             notificationPresenterWrapper: NotificationPresenterWrapper.shared,
             groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcher.shared,
             groupCallSessionHelper: GroupCallSessionHelper.shared,
             groupCallBundleUtil: GroupCallsBundleUtil.shared,
             isRunningForScreenshots: ProcessInfoHelper.isRunningForScreenshots
         ),
-        businessInjector: BusinessInjectorProtocol = BusinessInjector()
+        backgroundBusinessInjector: BusinessInjectorProtocol = BusinessInjector(forBackgroundProcess: true)
     ) {
         self.dependencies = dependencies
-        self.businessInjector = businessInjector
+        self.businessInjector = backgroundBusinessInjector
         
         let identity = ThreemaIdentity(businessInjector.myIdentityStore.identity)
         let localContactModel = ContactModel(
@@ -137,8 +137,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         DDLogNotice("[GroupCall] [DB] Start loading calls from database")
         
         // We fetch all calls, that could still be running, from the db an insert them into an array
-        let entityManager = currentBusinessInjector.backgroundEntityManager
-        let groupManager = GroupManager()
+        let entityManager = currentBusinessInjector.entityManager
+        let groupManager = currentBusinessInjector.groupManager
         let proposedGroupCalls = await entityManager.perform {
             entityManager.entityFetcher
                 .allGroupCallEntities()
@@ -297,6 +297,11 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             uiDelegate?.showAlert(for: GroupCallError.alreadyInCall)
             return
         }
+        
+        guard group.hasAtLeastOneMemberSupporting(.groupCallSupport) else {
+            NotificationPresenterWrapper.shared.present(type: .groupCallStartError)
+            return
+        }
                 
         Task(priority: .userInitiated) {
             do {
@@ -348,9 +353,9 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
-        let addedObject: NSManagedObjectID? = await currentBusinessInjector.backgroundEntityManager.performSave {
-            
-            guard let groupEntity = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.groupEntity(
+        let addedObject: NSManagedObjectID? = await currentBusinessInjector.entityManager.performSave {
+
+            guard let groupEntity = self.currentBusinessInjector.entityManager.entityFetcher.groupEntity(
                 for: wrappedMessage.groupIdentity.id,
                 with: wrappedMessage.groupIdentity.creator.string
             ) else {
@@ -361,7 +366,7 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             assert(!groupEntity.groupID.isEmpty)
             
             // Setup group call
-            let groupCallEntity = self.currentBusinessInjector.backgroundEntityManager.entityCreator.groupCallEntity()
+            let groupCallEntity = self.currentBusinessInjector.entityManager.entityCreator.groupCallEntity()
             groupCallEntity?.group = groupEntity
             groupCallEntity?.gck = wrappedMessage.startMessage.gck
             groupCallEntity?.protocolVersion = NSNumber(value: wrappedMessage.startMessage.protocolVersion)
@@ -374,7 +379,7 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         }
         
         // Mark entity as dirty
-        currentBusinessInjector.backgroundEntityManager.performBlock {
+        currentBusinessInjector.entityManager.performBlock {
             guard let addedObject else {
                 DDLogError("[GroupCall] Could not mark added group call as dirty.")
                 return
@@ -456,8 +461,8 @@ extension GlobalGroupCallsManagerSingleton {
         var memberDict = [[String: String]]()
         
         let businessInjector = BusinessInjector()
-        businessInjector.backgroundEntityManager.performBlockAndWait {
-            let conversation = businessInjector.backgroundEntityManager.entityFetcher
+        businessInjector.entityManager.performBlockAndWait {
+            let conversation = businessInjector.entityManager.entityFetcher
                 .existingObject(with: conversationObjectID) as! Conversation
             
             if UserSettings.shared().groupCallsDebugMessages {
@@ -488,8 +493,8 @@ extension GlobalGroupCallsManagerSingleton {
             return
         }
         
-        businessInjector.backgroundEntityManager.performBlockAndWait {
-            let conversation = businessInjector.backgroundEntityManager.entityFetcher
+        businessInjector.entityManager.performBlockAndWait {
+            let conversation = businessInjector.entityManager.entityFetcher
                 .existingObject(with: conversationObjectID) as! Conversation
             
             businessInjector.messageSender.sendTextMessage(text: "*CallID*", in: conversation, quickReply: false)
@@ -549,8 +554,8 @@ extension GlobalGroupCallsManagerSingleton {
 
 extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProtocol {
     public func removeFromStoredCalls(_ proposedGroupCall: ProposedGroupCall) {
-        currentBusinessInjector.backgroundEntityManager.performBlockAndWait {
-            let toDeleteGroupCalls = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
+        currentBusinessInjector.entityManager.performBlockAndWait {
+            let toDeleteGroupCalls = self.currentBusinessInjector.entityManager.entityFetcher
                 .allGroupCallEntities().compactMap { groupCallEntity -> GroupCallEntity? in
                     guard let groupCallEntity = groupCallEntity as? GroupCallEntity else {
                         return nil
@@ -584,9 +589,9 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProt
                 }
             
             // Delete found old calls
-            self.currentBusinessInjector.backgroundEntityManager.performSyncBlockAndSafe {
+            self.currentBusinessInjector.entityManager.performSyncBlockAndSafe {
                 for toDeleteGroupCall in toDeleteGroupCalls {
-                    self.currentBusinessInjector.backgroundEntityManager.entityDestroyer
+                    self.currentBusinessInjector.entityManager.entityDestroyer
                         .deleteObject(object: toDeleteGroupCall)
                 }
                 DDLogNotice("[GroupCall] [DB] Deleted \(toDeleteGroupCalls.count)")
@@ -633,8 +638,8 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
             return
         }
         
-        currentBusinessInjector.backgroundEntityManager.performBlock {
-            guard let conversation = self.currentBusinessInjector.backgroundEntityManager.entityFetcher.conversation(
+        currentBusinessInjector.entityManager.performBlock {
+            guard let conversation = self.currentBusinessInjector.entityManager.entityFetcher.conversation(
                 for: groupModel.groupIdentity.id,
                 creator: groupModel.groupIdentity.creator.string
             ) else {
@@ -652,7 +657,7 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerSingletonDelegate {
                 return
             }
             
-            guard let contact = self.currentBusinessInjector.backgroundEntityManager.entityFetcher
+            guard let contact = self.currentBusinessInjector.entityManager.entityFetcher
                 .contact(for: senderThreemaID.string) else {
                 return
             }

@@ -69,6 +69,6 @@ final class TaskExecutionDeleteContactSync: TaskExecutionTransaction {
     }
     
     private func checkPrecondition(identity: String) -> Bool {
-        frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: identity) == nil
+        frameworkInjector.entityManager.entityFetcher.contact(for: identity) == nil
     }
 }

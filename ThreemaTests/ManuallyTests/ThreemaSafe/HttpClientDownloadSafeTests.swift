@@ -42,7 +42,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
         let store = SafeStore(
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: GroupManagerMock()
         )
         if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
@@ -91,7 +91,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
         let store = SafeStore(
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: GroupManagerMock()
         )
         if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
@@ -139,7 +139,7 @@ extension HttpClientDownloadSafeTests: URLSessionDataDelegate {
                 let store = SafeStore(
                     safeConfigManager: SafeConfigManager(),
                     serverApiConnector: ServerAPIConnector(),
-                    groupManager: GroupManager()
+                    groupManager: GroupManagerMock()
                 )
                 if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar") {
                     

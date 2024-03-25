@@ -38,7 +38,7 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
         // no-op
     }
 
-    func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) {
+    func incomingMessageFinished(_ message: AbstractMessage) {
         // no-op
     }
 
@@ -63,10 +63,6 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
     }
 
     func reflectionQueueDry() {
-        // no-op
-    }
-
-    func pendingGroup(_ message: AbstractMessage) {
         // no-op
     }
 

@@ -386,4 +386,46 @@ class SafeTests: XCTestCase {
             XCTAssertEqual(URL(string: serverURLTest[3]!)!, safeServerAuth.server)
         }
     }
+    
+    func testEncodeDecodeSafeData() {
+        let key: [UInt8] = [23]
+        let customServer = "customServer"
+        let server = "server"
+        let maxBackupBytes = 64
+        let retentionDays = 31
+        let backupSize: Int64 = 64
+        let backupStartedAt: Date = .now
+        let lastBackup: Date = .distantPast
+        let lastResult = "success"
+        let lastChecksum: [UInt8] = [20]
+        let lastAlertBackupFailed: Date = .distantFuture
+        let isTriggered = true
+        
+        let safeConfigManager = SafeConfigManager()
+        safeConfigManager.setKey(key)
+        safeConfigManager.setCustomServer(customServer)
+        safeConfigManager.setServer(server)
+        safeConfigManager.setMaxBackupBytes(maxBackupBytes)
+        safeConfigManager.setRetentionDays(retentionDays)
+        safeConfigManager.setBackupSize(backupSize)
+        safeConfigManager.setBackupStartedAt(backupStartedAt)
+        safeConfigManager.setLastBackup(lastBackup)
+        safeConfigManager.setLastResult(lastResult)
+        safeConfigManager.setLastChecksum(lastChecksum)
+        safeConfigManager.setLastAlertBackupFailed(lastAlertBackupFailed)
+        safeConfigManager.setIsTriggered(isTriggered)
+        
+        XCTAssertEqual(safeConfigManager.getKey(), key)
+        XCTAssertEqual(safeConfigManager.getCustomServer(), customServer)
+        XCTAssertEqual(safeConfigManager.getServer(), server)
+        XCTAssertEqual(safeConfigManager.getMaxBackupBytes(), maxBackupBytes)
+        XCTAssertEqual(safeConfigManager.getRetentionDays(), retentionDays)
+        XCTAssertEqual(safeConfigManager.getBackupSize(), backupSize)
+        XCTAssertEqual(safeConfigManager.getBackupStartedAt(), backupStartedAt)
+        XCTAssertEqual(safeConfigManager.getLastBackup(), lastBackup)
+        XCTAssertEqual(safeConfigManager.getLastResult(), lastResult)
+        XCTAssertEqual(safeConfigManager.getLastChecksum(), lastChecksum)
+        XCTAssertEqual(safeConfigManager.getLastAlertBackupFailed(), lastAlertBackupFailed)
+        XCTAssertEqual(safeConfigManager.getIsTriggered(), isTriggered)
+    }
 }

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,20 +18,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import TipKit
 
-class NormalRemoteParticipant: NormalParticipant, RemoteParticipantProtocol {
-    func setRemoteContext(_ remoteContext: RemoteContext) async {
-        fatalError()
-    }
-    
-    func getRemoteContext() async -> RemoteContext? {
-        fatalError()
-    }
-    
-    var remoteContext: RemoteContext?
-    
-    override var mirrorRenderer: Bool {
-        false
+@available(iOS 17.0, *)
+@objc public class TipKitManager: NSObject {
+ 
+    // MARK: - Lifecycle
+
+    @objc public static func configureTips() {
+        do {
+            /// Comment in the line below for testing
+            // try Tips.resetDatastore()
+            try Tips.configure()
+        }
+        catch {
+            DDLogWarn("Could not configure TipKitManager")
+        }
     }
 }

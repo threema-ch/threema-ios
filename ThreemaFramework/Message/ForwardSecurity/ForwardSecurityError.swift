@@ -29,4 +29,5 @@ enum ForwardSecurityError: Error {
     case noDHModeNegotiated
     case messageTypeNotSupported
     case missingGroupIdentity
+    case existingSession
 }

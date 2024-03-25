@@ -55,15 +55,19 @@ class TaskExecution: NSObject {
     required init(
         taskContext: TaskContextProtocol,
         taskDefinition: TaskDefinitionProtocol,
-        frameworkInjector: FrameworkInjectorProtocol
+        backgroundFrameworkInjector: FrameworkInjectorProtocol
     ) {
         self.taskContext = taskContext
         self.taskDefinition = taskDefinition
-        self.frameworkInjector = frameworkInjector
+        self.frameworkInjector = backgroundFrameworkInjector
     }
     
     required convenience init(taskContext: TaskContextProtocol, taskDefinition: TaskDefinitionProtocol) {
-        self.init(taskContext: taskContext, taskDefinition: taskDefinition, frameworkInjector: BusinessInjector())
+        self.init(
+            taskContext: taskContext,
+            taskDefinition: taskDefinition,
+            backgroundFrameworkInjector: BusinessInjector(forBackgroundProcess: true)
+        )
     }
 
     // MARK: Promises
@@ -212,6 +216,55 @@ class TaskExecution: NSObject {
         ltSend: LoggingTag,
         ltAck: LoggingTag
     ) -> Promise<AbstractMessage?> {
+        // This is implemented as a separated promise step as there was no easy way to implement a way to wait for the
+        // fetch of the feature mask to complete, if needed.
+        // TODO: (IOS-4348) See if we can optimize that more
+        firstly { () -> Promise<Void> in
+            self.frameworkInjector.entityManager.performAndWait {
+                guard let toContact = self.frameworkInjector.entityManager.entityFetcher.contact(
+                    for: message.toIdentity
+                ) else {
+                    return Promise(error: TaskExecutionError.sendMessageFailed(
+                        message: "Contact not found for identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
+                    ))
+                }
+                
+                // If the contact has a feature mask that is 0 it was probably never fetched. This can happen if the
+                // field changes after an update to 5.9 (IOS-4220). This is a problem, because eligibility for sending
+                // FS messages is determined base on the feature mask. Thus we try to fetch the feature mask if it is 0.
+                if toContact.featureMask == 0 {
+                    return Promise { seal in
+                        DDLogNotice("Fetch feature mask of \(toContact.identity), because it is currently 0.")
+                        self.frameworkInjector.contactStore.updateFeatureMasks(forIdentities: [toContact.identity]) {
+                            seal.fulfill_()
+                        } onError: { _ in
+                            DDLogWarn(
+                                "Failed to update feature mask of \(toContact.identity). Current value \(toContact.featureMask)"
+                            )
+                            // This is a best effort, thus we will always succeed
+                            seal.fulfill_()
+                        }
+                    }
+                }
+                
+                return Promise()
+            }
+        }
+        .then { _ in
+            self.sendMessageInternal(message: message, ltSend: ltSend, ltAck: ltAck)
+        }
+    }
+    
+    /// Internal part of `sendMessage(message:ltSend:ltAck:)`
+    ///
+    /// This is left as is to reduce the changes introduced with the feature mask check in
+    /// `sendMessage(message:ltSend:ltAck:)` with IOS-4475
+    /// TODO: (IOS-4348) Try to clean this up
+    private func sendMessageInternal(
+        message: AbstractMessage,
+        ltSend: LoggingTag,
+        ltAck: LoggingTag
+    ) -> Promise<AbstractMessage?> {
         Promise { seal in
             assert(ltSend != .none && ltAck != .none)
             
@@ -222,11 +275,11 @@ class TaskExecution: NSObject {
                 return
             }
 
-            frameworkInjector.backgroundEntityManager.performBlock {
-                guard let toContact = self.frameworkInjector.backgroundEntityManager.entityFetcher
+            frameworkInjector.entityManager.performBlock {
+                guard let toContact = self.frameworkInjector.entityManager.entityFetcher
                     .contact(for: message.toIdentity) else {
                     seal.reject(TaskExecutionError.sendMessageFailed(
-                        message: "Contact not found for identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
+                        message: "Contact not found for identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
                     ))
                     return
                 }
@@ -255,36 +308,45 @@ class TaskExecution: NSObject {
                     }
                 }
 
-                var messageToSend = message
                 var auxMessage: ForwardSecurityEnvelopeMessage?
-                // Call after sending of any message failed
-                var sendingFailure: (() -> Void)?
+                var messageToSend = message
 
-                // Check whether the message and the destination contact support forward security
-                if ThreemaUtility.supportsForwardSecurity, toContact.isForwardSecurityAvailable() {
+                // Check whether the message is not already an FS message and the destination contact supports forward
+                // security (Common Send Steps (6.1))
+                if ThreemaUtility.supportsForwardSecurity,
+                   !(message is ForwardSecurityEnvelopeMessage),
+                   toContact.isForwardSecurityAvailable() {
                     do {
                         let fsContact = ForwardSecurityContact(
                             identity: toContact.identity,
                             publicKey: toContact.publicKey
                         )
                         
-                        // TODO: (IOS-4278) Remove check
-                        // If this is a message which we can send in this session make the fs message
-                        // Otherwise do nothing
-                        if try self.frameworkInjector.fsmp.canSend(message, to: fsContact) {
-                            (
-                                auxMessage: auxMessage,
-                                message: messageToSend,
-                                sendAuxFailure: sendingFailure
-                            ) = try self.frameworkInjector.fsmp.makeMessage(
-                                contact: fsContact,
-                                innerMessage: message
-                            )
-                        }
+                        (auxMessage, messageToSend) = try self.frameworkInjector.fsmp.makeMessage(
+                            receiver: fsContact,
+                            innerMessage: message
+                        )
                     }
                     catch {
                         seal.reject(error)
                         return
+                    }
+                }
+                else {
+                    if !ThreemaUtility.supportsForwardSecurity {
+                        DDLogNotice(
+                            "[ForwardSecurity] Don't try sending (\(message.loggingDescription)) with FS, because FS is not supported"
+                        )
+                    }
+                    else if message is ForwardSecurityEnvelopeMessage {
+                        DDLogNotice(
+                            "[ForwardSecurity] Don't try sending (\(message.loggingDescription)) with FS, because it is already an FS message"
+                        )
+                    }
+                    else if !toContact.isForwardSecurityAvailable() {
+                        DDLogNotice(
+                            "[ForwardSecurity] Don't try sending (\(message.loggingDescription)) with FS, because \(toContact.identity) doesn't support FS: FeatureMask=\(toContact.featureMask)"
+                        )
                     }
                 }
 
@@ -299,13 +361,12 @@ class TaskExecution: NSObject {
                     if let auxMessage {
                         
                         let failure = {
-                            sendingFailure?()
                             let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
                             seal.reject(err)
                         }
                         
                         // We have an auxiliary (control) message to send before the actual message
-                        guard let boxAuxMsg = self.frameworkInjector.backgroundEntityManager.performAndWait({
+                        guard let boxAuxMsg = self.frameworkInjector.entityManager.performAndWait({
                             auxMessage.makeBox(
                                 toContact,
                                 myIdentityStore: self.frameworkInjector.myIdentityStore,
@@ -332,13 +393,12 @@ class TaskExecution: NSObject {
                         }
                     }
                     
-                    self.frameworkInjector.backgroundEntityManager.performBlock {
+                    self.frameworkInjector.entityManager.performBlock {
                         var nonce: Data
                         do {
                             nonce = try self.messageNonce(for: toContact.identity)
                         }
                         catch {
-                            sendingFailure?()
                             seal.reject(
                                 TaskExecutionError.sendMessageFailed(message: "\(error) \(message.loggingDescription)")
                             )
@@ -350,7 +410,6 @@ class TaskExecution: NSObject {
                             myIdentityStore: self.frameworkInjector.myIdentityStore,
                             nonce: nonce
                         ) else {
-                            sendingFailure?()
                             seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
                             return
                         }
@@ -360,7 +419,6 @@ class TaskExecution: NSObject {
                                 try self.frameworkInjector.nonceGuard.processed(boxedMessage: boxMsg)
                             }
                             catch {
-                                sendingFailure?()
                                 seal.reject(error)
                                 return
                             }
@@ -378,9 +436,20 @@ class TaskExecution: NSObject {
                                 )
                             }
                             catch {
-                                sendingFailure?()
                                 seal.reject(error)
                                 return
+                            }
+                            
+                            // Commit new session (if needed) and update last message sent date if any message was an FS
+                            // message.
+                            // We do these checks independent of the `ForwardSecurityMessageProcessor` call because a
+                            // message passed to `sendMessage(message:ltSend:ltAck:)` (most likely an FS control
+                            // message) might already be of type `ForwardSecurityEnvelopeMessage`.
+                            if let auxMessage {
+                                self.commitNewSessionAndUpdateLastMessageSentDate(for: auxMessage)
+                            }
+                            else if let sentMessage = messageToSend as? ForwardSecurityEnvelopeMessage {
+                                self.commitNewSessionAndUpdateLastMessageSentDate(for: sentMessage)
                             }
 
                             // We now know the FS mode so we also set it for the "inner" message
@@ -393,6 +462,94 @@ class TaskExecution: NSObject {
         }
     }
     
+    /// Send an `empty` message in the passed FS session
+    ///
+    /// Only use if you specifically want to send an `empty` message to enforce an session upgrade if possible. In
+    /// general use `sendMessage()`.
+    ///
+    /// - Parameter session: Session to send `empty` message in
+    /// - Returns: Promise that fulfills if sending completed with server ack and updated own ratchets, last sent and
+    /// versions in `session`. Throws various errors if validation or sending fails
+    func sendEmptyFSMessage(in session: DHSession) -> Promise<Void> {
+        Promise { seal in
+            let message: ForwardSecurityEnvelopeMessage
+            do {
+                message = try self.frameworkInjector.fsmp.makeEmptyMessage(for: session)
+            }
+            catch {
+                seal.reject(error)
+                return
+            }
+            
+            guard message.toIdentity != self.frameworkInjector.myIdentityStore.identity else {
+                seal.reject(TaskExecutionError.sendMessageFailed(
+                    message: "Do not sending message to own identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
+                ))
+                return
+            }
+                
+            // TODO: (IOS-4348) Maybe optimize messages sending here, too
+            
+            // Send message in own thread, because of possible network latency
+            DispatchQueue.global().async {
+                self.frameworkInjector.entityManager.performBlock {
+                    guard let toContact = self.frameworkInjector.entityManager.entityFetcher
+                        .contact(for: message.toIdentity) else {
+                        seal.reject(TaskExecutionError.sendMessageFailed(
+                            message: "Contact not found for identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
+                        ))
+                        return
+                    }
+                    
+                    guard toContact.isValid() else {
+                        let msg =
+                            "Do not sending message to invalid identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
+                        seal.reject(TaskExecutionError.invalidContact(message: msg))
+                        return
+                    }
+                    
+                    guard let boxMsg = message.makeBox(
+                        toContact,
+                        myIdentityStore: self.frameworkInjector.myIdentityStore,
+                        // TODO: (IOS-4242)
+                        nonce: NaClCrypto.shared().randomBytes(Int32(kNaClCryptoNonceSize))
+                    ) else {
+                        seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
+                        return
+                    }
+                    
+                    do {
+                        try self.sendAndWait(
+                            abstractMessage: message,
+                            boxMessage: boxMsg,
+                            ltSend: .sendOutgoingMessageToChat,
+                            ltAck: .receiveOutgoingMessageAckFromChat,
+                            isAuxMessage: true
+                        )
+                    }
+                    catch {
+                        seal.reject(error)
+                        return
+                    }
+                    
+                    // Commit update last message sent date and versions
+                    do {
+                        session.lastMessageSent = .now
+                        try self.frameworkInjector.dhSessionStore
+                            .updateNewSessionCommitLastMessageSentDateAndVersions(session: session)
+                    }
+                    catch {
+                        DDLogError(
+                            "[ForwardSecrecy] Unable to persist send date and versions for sent empty message"
+                        )
+                    }
+                    
+                    seal.fulfill_()
+                }
+            }
+        }
+    }
+
     private func sendAndWait(
         abstractMessage: AbstractMessage,
         boxMessage: BoxedMessage,
@@ -451,6 +608,35 @@ class TaskExecution: NSObject {
         }
     }
 
+    private func commitNewSessionAndUpdateLastMessageSentDate(for message: ForwardSecurityEnvelopeMessage) {
+        do {
+            if let session = try frameworkInjector.dhSessionStore.exactDHSession(
+                myIdentity: frameworkInjector.myIdentityStore.identity,
+                peerIdentity: message.toIdentity,
+                sessionID: message.data.sessionID
+            ) {
+                assert(
+                    session.newSessionCommitted || message.data is ForwardSecurityDataInit,
+                    "If the session was not committed before we should have sent out an Init"
+                )
+
+                // At this point we commit the session
+                session.newSessionCommitted = true
+                session.lastMessageSent = .now
+                
+                try frameworkInjector.dhSessionStore.updateNewSessionCommitLastMessageSentDateAndVersions(
+                    session: session
+                )
+            }
+            else {
+                DDLogError("No session found for DH session with ID \(message.data.sessionID)")
+            }
+        }
+        catch {
+            DDLogError("Unable to commit and update session last message state: \(error)")
+        }
+    }
+    
     private func isMessageAlreadySentTo(identity: String) -> Bool {
         guard let task = taskDefinition as? TaskDefinitionSendMessageProtocol else {
             return false
@@ -527,7 +713,7 @@ class TaskExecution: NSObject {
                 identities = members
             }
             else {
-                guard let identity = try frameworkInjector.backgroundEntityManager.performAndWait({
+                guard let identity = try frameworkInjector.entityManager.performAndWait({
                     try self.getConversation(for: task).contact?.identity
                 }) else {
                     throw TaskExecutionError.missingMessageInformation
@@ -634,36 +820,36 @@ class TaskExecution: NSObject {
 
         if let task = task as? TaskDefinitionSendBaseMessage,
            let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
-            conversation = task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
+            conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
                 .conversation(
                     for: task.groupID!,
                     creator: groupCreatorIdentity
-                ) : frameworkInjector.backgroundEntityManager.entityFetcher
+                ) : frameworkInjector.entityManager.entityFetcher
                 .conversation(forIdentity: task.receiverIdentity)
         }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage {
-            conversation = frameworkInjector.backgroundEntityManager.entityFetcher
+            conversation = frameworkInjector.entityManager.entityFetcher
                 .ballot(for: task.ballotID)?.conversation
         }
         else if let task = task as? TaskDefinitionReflectIncomingMessage {
-            conversation = frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
+            conversation = frameworkInjector.entityManager.conversation(forMessage: task.message)
         }
         else if let task = task as? TaskDefinitionSendAbstractMessage {
-            conversation = frameworkInjector.backgroundEntityManager.conversation(forMessage: task.message)
+            conversation = frameworkInjector.entityManager.conversation(forMessage: task.message)
         }
         else if let task = task as? TaskDefinitionSendDeliveryReceiptsMessage {
             if task.toIdentity != frameworkInjector.myIdentityStore.identity {
-                conversation = frameworkInjector.backgroundEntityManager.entityFetcher
+                conversation = frameworkInjector.entityManager.entityFetcher
                     .conversation(forIdentity: task.toIdentity)
             }
             else if task.fromIdentity != frameworkInjector.myIdentityStore.identity {
-                conversation = frameworkInjector.backgroundEntityManager.entityFetcher
+                conversation = frameworkInjector.entityManager.entityFetcher
                     .conversation(forIdentity: task.fromIdentity)
             }
         }
         else if let task = task as? TaskDefinitionSendGroupDeliveryReceiptsMessage,
                 let groupID = task.groupID, let creator = task.groupCreatorIdentity {
-            conversation = frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+            conversation = frameworkInjector.entityManager.entityFetcher.conversation(
                 for: groupID,
                 creator: creator
             )
@@ -692,13 +878,13 @@ class TaskExecution: NSObject {
     ) -> AbstractMessage? {
         
         if let task = task as? TaskDefinitionSendBaseMessage,
-           let conversation = task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
+           let conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
            .conversation(
                for: task.groupID!,
                creator: task.groupCreatorIdentity!
-           ) : frameworkInjector.backgroundEntityManager.entityFetcher
+           ) : frameworkInjector.entityManager.entityFetcher
            .conversation(forIdentity: task.receiverIdentity),
-           let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(
+           let message = frameworkInjector.entityManager.entityFetcher.message(
                with: task.messageID,
                conversation: conversation
            ) {
@@ -761,7 +947,7 @@ class TaskExecution: NSObject {
 
                 guard let groupID = task.groupID,
                       let groupCreatorIdentity = task.groupCreatorIdentity,
-                      frameworkInjector.backgroundGroupManager
+                      frameworkInjector.groupManager
                       .getConversation(for: GroupIdentity(
                           id: groupID,
                           creator: ThreemaIdentity(groupCreatorIdentity)
@@ -876,13 +1062,13 @@ class TaskExecution: NSObject {
             }
         }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage,
-                let ballot = frameworkInjector.backgroundEntityManager.entityFetcher
+                let ballot = frameworkInjector.entityManager.entityFetcher
                 .ballot(for: task.ballotID) {
 
             let msg: BoxBallotVoteMessage = BallotMessageEncoder.encodeVoteMessage(for: ballot)
             guard let groupID = task.groupID,
                   let groupCreatorIdentity = task.groupCreatorIdentity,
-                  frameworkInjector.backgroundGroupManager
+                  frameworkInjector.groupManager
                   .getConversation(for: GroupIdentity(
                       id: groupID,
                       creator: ThreemaIdentity(groupCreatorIdentity)

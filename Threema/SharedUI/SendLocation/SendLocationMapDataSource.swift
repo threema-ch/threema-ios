@@ -236,25 +236,29 @@ extension SendLocationMapDataSource: CLLocationManagerDelegate {
             return
         }
         
-        // Update CurrentLocationPOI
-        sendLocationVC.currentLocationPOI.location = location
-        fetchAddress(for: location) { address in
-            self.sendLocationViewController?.currentLocationPOI.address = address
-            self.refresh(poi: sendLocationVC.currentLocationPOI)
-            self.delegate?.currentLocationPOIDidChange(select: false)
-        }
-        
-        // Update distance labels
-        updateDistanceLabel(of: pointsOfInterest, from: location)
-        updateDistanceLabel(of: [sendLocationVC.markedLocationPOI], from: location)
-        
         // Load POIS around user location on first update
         if !initialFetchCompleted {
             initialFetchCompleted = true
+            
+            // Update CurrentLocationPOI
+            sendLocationVC.currentLocationPOI.location = location
+            fetchAddress(for: location) { address in
+                self.sendLocationViewController?.currentLocationPOI.address = address
+                self.refresh(poi: sendLocationVC.currentLocationPOI)
+                self.delegate?.currentLocationPOIDidChange(select: false)
+            }
+            
+            // Update distance labels
+            updateDistanceLabel(of: pointsOfInterest, from: location)
+            updateDistanceLabel(of: [sendLocationVC.markedLocationPOI], from: location)
+            
             delegate?.didReceiveInitialLocation()
             requestPOIsAround(location: location, radius: 10000) {
                 sendLocationVC.selectPOI(poi: sendLocationVC.currentLocationPOI)
             }
+        }
+        else {
+            sendLocationVC.currentLocationPOI.updatedLocation = location
         }
     }
     

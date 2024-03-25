@@ -396,12 +396,8 @@
 "chat_search_searching" = "Bezig met zoeken...";
 "chat_search_no_matches" = "Geen overeenkomsten";
 "chat_search_matches" = "%d van %d overeenkomsten";
-"chat_search_note" = "Let op: bijschriften voor media worden niet opgenomen in de zoekresultaten.";
 
 "choose_recipient" = "Ontvanger kiezen";
-
-"msg_unknown_group_request_sync_x_title" = "Bericht ontvangen in onbekende groep";
-"msg_unknown_group_request_sync_x_message" = "Er is een bericht ontvangen in een onbekende groep. De groepsinformatie is aangevraagd bij de aanmaker van de groep (%@). De groep verschijnt zodra de aanmaker weer online is.";
 
 "tap_to_cancel" = "Tikken om te annuleren";
 "previous" = "Vorige";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Geblokkeerde contactpersoon";
 "call_status_failed_title" = "Threema-Oproep";
 
-"call_threema_initiator_video_info" = "Tik hier om de camera in te schakelen";
-"call_threema_remote_video_activated_info_title" = "Video-oproep";
-"call_threema_remote_video_activated_info" = "De andere partij heeft een video-oproep gestart. Tik hier om je camera in te schakelen.";
-"call_threema_speaker_info" = "Tik hier om de luidspreker in te schakelen";
-"call_threema_camera_disabled_info" = "Deze contactpersoon heeft geen bijgewerkte appversie of staat geen video-oproepen toe.";
-
-"call_threema_video_in_chat_info_title" = "Nieuw: Video-oproepen";
-
 "call_threema_cellular_instead_of_wifi_title" = "Oproep via mobiel netwerk";
 "call_threema_cellular_instead_of_wifi_text" = "Waarschuwing: deze oproep zal gegevens naar het mobiele netwerk overdragen.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Gearchiveerde chats";
 
 "archived_title" = "Gearchiveerd";
-"conversations_search_placeholder" = "Contactpersonen, Groepen, ID's…";
+"conversations_global_search_placeholder" = "Zoeken";
+"one_to_one_chat" = "1:1-chat";
 
 "select_all" = "Alles selecteren";
 "deselect_all" = "Selectie opheffen";
@@ -1613,8 +1602,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "poi_current_location" = "Mijn locatie";
 "poi_marked_location" = "Geplaatste markering";
 
-"notification_threemaweb_connectionlost_title" = "Verbinding met Threema Web verbroken";
-"notification_threemaweb_connectionlost_body" = "Heropen de app om Threema Web te blijven gebruiken.";
+"notification_threemaweb_connectionlost_title" = "Verbinding met de desktop-app/webclient verbroken";
+"notification_threemaweb_connectionlost_body" = "Heropen de app om de desktop-app/webclient te blijven gebruiken.";
 
 "settings_threema_web_connected" = "Verbonden met desktop/web";
 "settings_threema_web_connectioninfo" = "Je apparaat moet zijn vrijgegeven en %@ moet in de voorgrond actief zijn om verbonden te blijven. Zo lang je verbonden bent, zal je apparaat niet automatisch worden vergrendeld.";
@@ -1698,6 +1687,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 "notification_group_sync_succeeded" = "Groep gesynchroniseerd";
 "notification_group_sync_failed" = "Groep niet gesynchroniseerd";
+"notification_group_call_start_failed" = "Geen van de leden ondersteunt groepsgesprekken";
 
 "notification_settings_sync_pending" = "Wordt gesynchroniseerd...";
 "notification_settings_sync_succeeded" = "Instellingen zijn gesynchroniseerd";
@@ -1724,7 +1714,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 // Forward security status messages
 "forward_security_message_without" = "Er is een bericht zonder Perfect forward secrecy ontvangen. Controleer of de afzender Perfect forward secrecy opzettelijk heeft uitgeschakeld.";
-"forward_security_session_established" = "De berichten in deze chat zijn nu beschermd met Perfect forward secrecy.";
+"forward_security_session_established" = "De berichten met deze chatpartner zijn nu beschermd met Perfect forward secrecy.";
 "forward_security_session_established_rx" = "De ontvangen berichten in deze chat zijn nu beschermd met Perfect forward secrecy. Zorg dat u Perfect forward secrecy in de contactgegevens inschakelt om verzonden berichten ook te beschermen.";
 "forward_security_messages_skipped_1" = "Er is één bericht verloren gegaan sinds het laatste bericht.";
 "forward_security_messages_skipped_x" = "Er zijn %d berichten verloren gegaan sinds het laatste bericht.";

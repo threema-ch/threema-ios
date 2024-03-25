@@ -41,7 +41,6 @@ static ErrorNotificationHandler *singleton;
     if (self) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleServerMessage:) name:kNotificationServerMessage object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleConnectionFailed:) name:kNotificationErrorConnectionFailed object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleUnknownGroup:) name:kNotificationErrorUnknownGroup object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handlePublicKeyMismatch:) name:kNotificationErrorPublicKeyMismatch object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleRogueDevice:) name:kNotificationErrorRogueDevice object:nil];
     }
@@ -55,15 +54,6 @@ static ErrorNotificationHandler *singleton;
 - (void)handleConnectionFailed:(NSNotification*)notification {
     NSString *title = [notification.userInfo objectForKey:kKeyTitle] ? [notification.userInfo objectForKey:kKeyTitle] : @"Connection error";
     NSString *message = [notification.userInfo objectForKey:kKeyMessage];
-    
-    [self showAlertWithTitle:title message:message actionOk:nil];
-}
-
-- (void)handleUnknownGroup:(NSNotification*)notification {
-    NSString *contactDisplayName = [notification.userInfo objectForKey:kKeyContact];
-    
-    NSString *title = [BundleUtil localizedStringForKey:@"msg_unknown_group_request_sync_x_title"];
-    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"msg_unknown_group_request_sync_x_message"], contactDisplayName];
     
     [self showAlertWithTitle:title message:message actionOk:nil];
 }

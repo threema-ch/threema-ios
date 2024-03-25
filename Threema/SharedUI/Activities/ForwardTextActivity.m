@@ -64,14 +64,14 @@
 }
 
 - (void)sendMessageToConversation:(Conversation *)conversation {
-    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:[[EntityManager alloc] init]];
+    MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
     [messageSender sendTextMessageWithText:_text in:conversation quickReply:NO requestID:nil completion:nil];
 }
 
 #pragma mark - ContactPickerDelegate
 
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
-    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:[[EntityManager alloc] init]];
+    MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
     for (Conversation *conversation in conversations) {
         [self sendMessageToConversation:conversation];
         

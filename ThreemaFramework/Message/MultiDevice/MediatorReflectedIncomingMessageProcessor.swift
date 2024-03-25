@@ -126,9 +126,10 @@ class MediatorReflectedIncomingMessageProcessor {
         case is GroupCallStartMessage:
             return try process(incomingMessage: imsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
         default:
-            return Promise { $0.reject(
-                MediatorReflectedProcessorError.messageDecodeFailed(message: imsg.loggingDescription)
-            ) }
+            return Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
+                message: "Reflected incoming message type \(imsg.loggingDescription) will be not processed"
+            ))
+            }
         }
     }
 
@@ -154,14 +155,13 @@ class MediatorReflectedIncomingMessageProcessor {
         // TODO: Because fromIdentity is missing of reflected messages
         amsg.fromIdentity = imsg.senderIdentity
 
-        try messageStore.save(
+        return try messageStore.save(
             ballotCreateMessage: amsg,
             conversationIdentity: getSenderIdentity(for: imsg),
             createdAt: getCreatedAt(for: imsg),
             reflectedAt: reflectedAt,
             isOutgoing: false
         )
-        return Promise()
     }
 
     private func process(
@@ -348,14 +348,14 @@ class MediatorReflectedIncomingMessageProcessor {
         groupBallotCreateMessage amsg: GroupBallotCreateMessage
     ) throws -> Promise<Void> {
         try getGroup(for: amsg)
-        try messageStore.save(
+
+        return try messageStore.save(
             groupBallotCreateMessage: amsg,
             senderIdentity: getSenderIdentity(for: imsg),
             createdAt: getCreatedAt(for: imsg),
             reflectedAt: reflectedAt,
             isOutgoing: false
         )
-        return Promise()
     }
 
     private func process(
@@ -539,7 +539,7 @@ class MediatorReflectedIncomingMessageProcessor {
 
             messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
                 if !isOutgoing {
-                    delegate.incomingMessageFinished(amsg, isPendingGroup: false)
+                    delegate.incomingMessageFinished(amsg)
                 }
 
                 if AppGroup.getCurrentType() == AppGroupTypeNotificationExtension,
@@ -585,8 +585,8 @@ class MediatorReflectedIncomingMessageProcessor {
     // MARK: Misc
 
     private func getSenderIdentity(for imsg: D2d_IncomingMessage) throws -> String {
-        try frameworkInjector.backgroundEntityManager.performAndWait {
-            guard let senderIdentity = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(
+        try frameworkInjector.entityManager.performAndWait {
+            guard let senderIdentity = self.frameworkInjector.entityManager.entityFetcher.contact(
                 for: imsg.senderIdentity
             )?.identity else {
                 throw MediatorReflectedProcessorError.contactNotFound(identity: imsg.senderIdentity)
@@ -598,8 +598,8 @@ class MediatorReflectedIncomingMessageProcessor {
 
     @discardableResult
     private func getGroup(for amsg: AbstractGroupMessage) throws -> (groupID: Data, groupCreatorIdentity: String) {
-        try frameworkInjector.backgroundEntityManager.performAndWait {
-            guard let group = self.frameworkInjector.backgroundGroupManager.getGroup(
+        try frameworkInjector.entityManager.performAndWait {
+            guard let group = self.frameworkInjector.groupManager.getGroup(
                 amsg.groupID,
                 creator: amsg.groupCreator
             ) else {

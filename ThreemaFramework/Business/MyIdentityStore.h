@@ -39,6 +39,7 @@
  * When the setup is completed, we have to set this value to false. Otherwise it can't connect to the server.
  */
 
+@property (strong, nonatomic, readonly) NSData *publicKey;
 @property (strong, nonatomic, readwrite) NSString *firstName;
 @property (strong, nonatomic, readwrite) NSString *lastName;
 @property (strong, nonatomic, readwrite) NSString *csi;
@@ -55,6 +56,10 @@
 - (BOOL)isProvisioned;
 
 - (NSString * _Nonnull)displayName;
+- (NSString*)backupIdentityWithPassword:(NSString*)password;
+
+@property (strong, nonatomic, readwrite) NSDate *revocationPasswordSetDate;
+@property (strong, nonatomic, readwrite) NSDate *revocationPasswordLastCheck;
 
 @property (strong, nonatomic, readwrite) NSString *licenseSupportUrl NS_SWIFT_NAME(licenseSupportURL);
 
@@ -63,8 +68,6 @@
 @end
 
 @interface MyIdentityStore : NSObject <MyIdentityStoreProtocol>
-
-@property (strong, nonatomic, readonly) NSData *publicKey;
 
 @property (strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
 
@@ -79,9 +82,6 @@
 @property (strong, nonatomic, readwrite) NSDate *privateIdentityInfoLastUpdate;
 
 @property (nonatomic, readwrite) NSInteger lastSentFeatureMask;
-
-@property (strong, nonatomic, readwrite) NSDate *revocationPasswordSetDate;
-@property (strong, nonatomic, readwrite) NSDate *revocationPasswordLastCheck;
 
 @property (strong, nonatomic, readwrite) NSDate *licenseLastCheck;
 @property (strong, nonatomic, readwrite) NSString *licenseLogoLightUrl NS_SWIFT_NAME(licenseLogoLightURL);
@@ -115,10 +115,11 @@
 - (BOOL)isProvisioned;
 - (void)generateKeyPairWithSeed:(NSData*)seed;
 - (void)destroy;
+/// For testing: Destroy all keychain items that are available on this device only (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+- (void)destroyDeviceOnlyKeychainItems;
 - (void)storeInKeychain;
 - (NSArray *)directoryCategoryIdsSortedByName NS_SWIFT_NAME(directoryCategoryIDsSortedByName());
 
-- (NSString*)backupIdentityWithPassword:(NSString*)password;
 - (NSString*)addBackupGroupDashes:(NSString*)backup;
 - (void)restoreFromBackup:(NSString*)backup withPassword:(NSString*)password onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
 - (void)restoreFromBackup:(NSString*)myIdentity withSecretKey:(NSData*)mySecretKey onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;

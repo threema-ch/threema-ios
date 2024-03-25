@@ -124,6 +124,14 @@ import Foundation
     }
 }
 
+@objcMembers public class RendezvousServerInfo: NSObject {
+    public let url: String
+
+    init(url: String) {
+        self.url = url
+    }
+}
+
 @objc public protocol ServerInfoProvider {
     func chatServer(ipv6: Bool, completionHandler: @escaping (ChatServerInfo?, Error?) -> Void)
     func directoryServer(ipv6: Bool, completionHandler: @escaping (DirectoryServerInfo?, Error?) -> Void)
@@ -136,4 +144,5 @@ import Foundation
         completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void
     )
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void)
+    func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void)
 }

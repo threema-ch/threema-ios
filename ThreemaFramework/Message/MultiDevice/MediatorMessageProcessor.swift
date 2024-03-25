@@ -140,7 +140,7 @@ class MediatorMessageProcessor: NSObject {
                     }
                 }
                 else {
-                    DDLogError("Mediator encryption of challange failed")
+                    DDLogError("Mediator encryption of challenge failed")
                 }
             }
         case .serverInfo:
@@ -153,7 +153,7 @@ class MediatorMessageProcessor: NSObject {
                     name: .init(rawValue: kNotificationSettingStoreSynchronization),
                     object: nil
                 )
-                FeatureMask.update()
+                FeatureMask.updateLocal()
             }
 
             if let serverInfo = mediatorMessageProtocol.decodeServerInfo(message: message) {

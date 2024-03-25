@@ -206,15 +206,14 @@ struct AdvancedSettingsView: View {
             if SettingsBundleHelper.safeMode {
                 Section {
                     Button {
-                        let businessInjector = BusinessInjector()
-                        businessInjector.backgroundEntityManager.performAndWaitSave {
-                            let unreadMessages = UnreadMessages(entityManager: businessInjector.backgroundEntityManager)
-                            
+                        let businessInjector = BusinessInjector(forBackgroundProcess: true)
+                        businessInjector.entityManager.performAndWaitSave {
+
                             let batch = NSBatchUpdateRequest(entityName: "Message")
                             batch.resultType = .statusOnlyResultType
                             batch.predicate = NSPredicate(format: "read == false && isOwn == false")
                             batch.propertiesToUpdate = ["read": true]
-                            if let batchResult = businessInjector.backgroundEntityManager.entityFetcher.execute(batch) {
+                            if let batchResult = businessInjector.entityManager.entityFetcher.execute(batch) {
                                 if let success = batchResult.result as? Bool,
                                    success {
                                     DDLogNotice("[Advanced Support Mode] Succeeded to set all unread messages to read.")
@@ -232,16 +231,16 @@ struct AdvancedSettingsView: View {
                             }
                                                         
                             if let allConversations = NSSet(
-                                array: businessInjector.backgroundEntityManager
+                                array: businessInjector.entityManager
                                     .entityFetcher.allConversations()
                             ) as? Set<Conversation> {
-                                unreadMessages.totalCount(
+                                businessInjector.unreadMessages.totalCount(
                                     doCalcUnreadMessagesCountOf: allConversations,
                                     withPerformBlockAndWait: true
                                 )
                                 for conversation in allConversations {
                                     // print all unread messages after set all to read
-                                    let unreadMessagesCount = businessInjector.backgroundEntityManager.entityFetcher
+                                    let unreadMessagesCount = businessInjector.entityManager.entityFetcher
                                         .countUnreadMessages(for: conversation)
                                     DDLogNotice(
                                         "[Advanced Support Mode] Conversation \(conversation.displayName ?? "?") has \(unreadMessagesCount) unread messages. Unread message state on conversation is \(conversation.unreadMessageCount)"
@@ -324,7 +323,7 @@ struct AdvancedSettingsView: View {
                 activityViewController.popoverPresentationController?.sourceView = currentWindow.view
                 activityViewController.popoverPresentationController?.sourceRect = CGRectMake(
                     currentWindow.view.bounds.maxX,
-                    currentWindow.view.bounds.center.y,
+                    currentWindow.view.bounds.midY,
                     0,
                     0
                 )

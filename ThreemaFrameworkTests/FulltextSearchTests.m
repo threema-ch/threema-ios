@@ -72,12 +72,12 @@ NSInteger count = 10000;
     Conversation *conversation = [[em entityFetcher] conversationForContact:contact];
     
     CFTimeInterval startTime = CACurrentMediaTime();
-    [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversation:conversation fetchLimit:0];
+    [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversation:conversation filterPredicate:nil fetchLimit:0];
     CFTimeInterval duration = CACurrentMediaTime() - startTime;
     XCTAssert(duration < 0.1);
 
     startTime = CACurrentMediaTime();
-    [em.entityFetcher textMessagesContaining:@"yz" inConversation:conversation fetchLimit:0];
+    [em.entityFetcher textMessagesContaining:@"yz" inConversation:conversation filterPredicate:nil fetchLimit:0];
     duration = CACurrentMediaTime() - startTime;
     XCTAssert(duration < 0.1);
 }

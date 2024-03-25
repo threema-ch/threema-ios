@@ -61,7 +61,7 @@ final class TaskExecutionReflectIncomingMessage: TaskExecution, TaskExecutionPro
             }
 
             // Set received date (delivery date) for incoming message
-            self.frameworkInjector.backgroundEntityManager.markMessageAsReceived(
+            self.frameworkInjector.entityManager.markMessageAsReceived(
                 task.message,
                 receivedAt: reflectedAt ?? .now
             )

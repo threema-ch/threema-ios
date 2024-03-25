@@ -206,8 +206,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 to.attachments.append(attachment)
             }
         }
-        
-        let unreadMessages = UnreadMessages(entityManager: entityManager)
+
+        let unreadMessages = UnreadMessages(entityManager: entityManager, taskManager: TaskManager())
         var badge = unreadMessages.totalCount()
         
         // Update app badge, +1 if message is not saved in core data
@@ -337,7 +337,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     private func groupInfos(for pendingUserNotification: PendingUserNotification)
         -> (groupID: String, groupCreator: String)? {
         if let baseMessage = pendingUserNotification.baseMessage,
-           let group = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation) {
+           let conversation = baseMessage.conversation,
+           let group = entityManager.entityFetcher.groupEntity(for: conversation) {
             return (group.groupID.base64EncodedString(), group.groupCreator ?? MyIdentityStore.shared().identity)
         }
         else if let abstractMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {

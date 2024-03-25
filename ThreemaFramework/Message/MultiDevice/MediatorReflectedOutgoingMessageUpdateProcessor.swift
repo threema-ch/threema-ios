@@ -33,7 +33,7 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
 
     func process(outgoingMessageUpdate: D2d_OutgoingMessageUpdate, reflectedAt: Date) -> Promise<Void> {
         Promise { seal in
-            frameworkInjector.backgroundEntityManager.performAndWait {
+            frameworkInjector.entityManager.performAndWait {
                 do {
                     for item in outgoingMessageUpdate.updates {
                         switch item.update {
@@ -71,9 +71,9 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
     private func saveMessageSent(messageID: UInt64, receiverIdentity: String, reflectedAt: Date) throws {
         let id = messageID.littleEndianData
 
-        guard let conversation = frameworkInjector.backgroundEntityManager.entityFetcher
+        guard let conversation = frameworkInjector.entityManager.entityFetcher
             .conversation(forIdentity: receiverIdentity),
-            let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(
+            let message = frameworkInjector.entityManager.entityFetcher.ownMessage(
                 with: id,
                 conversation: conversation
             ) else {
@@ -85,7 +85,7 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
         }
 
-        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+        frameworkInjector.entityManager.performAndWaitSave {
             message.sent = NSNumber(booleanLiteral: true)
             message.remoteSentDate = reflectedAt
         }
@@ -99,23 +99,23 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
     ) throws {
         let id = messageID.littleEndianData
 
-        guard let conversation = frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+        guard let conversation = frameworkInjector.entityManager.entityFetcher.conversation(
             for: receiverGroupID.littleEndianData,
             creator: receiverGroupCreator
         ),
-            let message = frameworkInjector.backgroundEntityManager.entityFetcher
+            let message = frameworkInjector.entityManager.entityFetcher
             .ownMessage(with: id, conversation: conversation) else {
             DDLogError("Own message ID \(messageID.littleEndianData.hexString) to set as sent not found")
             return
         }
 
-        guard let group = frameworkInjector.backgroundGroupManager.getGroup(conversation: message.conversation),
+        guard let group = frameworkInjector.groupManager.getGroup(conversation: message.conversation),
               group.groupID.elementsEqual(receiverGroupID.littleEndianData),
               group.groupCreatorIdentity == receiverGroupCreator else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
         }
 
-        frameworkInjector.backgroundEntityManager.performAndWaitSave {
+        frameworkInjector.entityManager.performAndWaitSave {
             message.sent = NSNumber(booleanLiteral: true)
             message.remoteSentDate = reflectedAt
         }

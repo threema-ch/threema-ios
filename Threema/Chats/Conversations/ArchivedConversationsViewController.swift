@@ -63,17 +63,7 @@ class ArchivedConversationsViewController: ThemedTableViewController {
     }()
     
     private lazy var utilities = ConversationActions(businessInjector: businessInjector)
-    
-    private lazy var searchController: UISearchController = {
-               
-        var searchController = UISearchController()
-        searchController.searchResultsUpdater = self
-        searchController.delegate = self
-        searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = BundleUtil.localizedString(forKey: "conversations_search_placeholder")
-        return searchController
-    }()
-    
+        
     public var selectedConversation: Conversation?
     private var allSelected = false
     private var didStartMultiselect = false
@@ -108,7 +98,6 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         navigationItem.largeTitleDisplayMode = .never
         
         navigationItem.rightBarButtonItem = editButton
-        navigationItem.searchController = searchController
         
         tableView.allowsMultipleSelectionDuringEditing = true
         // Removes empty cells
@@ -135,11 +124,7 @@ class ArchivedConversationsViewController: ThemedTableViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         hideToolbar()
-        
-        if searchController.isActive {
-            searchController.isActive = false
-        }
-        
+                
         // This and the opposite in `viewWillAppear` is needed to make a search controller work that is added in a
         // child view controller using the same navigation bar. See ChatSearchController for details.
         definesPresentationContext = false
@@ -293,7 +278,6 @@ extension ArchivedConversationsViewController {
                 of: conversation,
                 owner: self,
                 cell: cell,
-                entityManager: self.businessInjector.entityManager,
                 handler: handler
             )
         }
@@ -374,7 +358,6 @@ extension ArchivedConversationsViewController {
         
         navigationItem.rightBarButtonItem = cancelButton
         navigationItem.leftBarButtonItem = selectAllButton
-        navigationItem.searchController = nil
         
         // Toolbar
         let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
@@ -392,7 +375,6 @@ extension ArchivedConversationsViewController {
         navigationController?.setToolbarHidden(true, animated: true)
 
         // NavBar
-        navigationItem.searchController = searchController
         navigationItem.leftBarButtonItem = nil
         navigationItem.rightBarButtonItem = editButton
         navigationItem.title = BundleUtil.localizedString(forKey: "archived_title")
@@ -464,74 +446,6 @@ extension ArchivedConversationsViewController {
             navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "select_all")
             navigationItem.title = BundleUtil.localizedString(forKey: "archived_title")
             toolbarUnarchiveButton.isEnabled = false
-        }
-    }
-}
-
-// MARK: - UISearchResultsUpdating, UISearchControllerDelegate
-
-extension ArchivedConversationsViewController: UISearchResultsUpdating, UISearchControllerDelegate {
-    
-    func didDismissSearchController(_ searchController: UISearchController) {
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            setSelection(for: selectedConversation)
-        }
-    }
-    
-    func updateSearchResults(for searchController: UISearchController) {
-        
-        guard let searchText = searchController.searchBar.text else {
-            return
-        }
-        
-        let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
-        let archivedPredicate = NSPredicate(format: "visibility == %d", ConversationVisibility.archived.rawValue)
-        
-        if !searchText.isEmpty {
-            let groupPredicate = NSPredicate(format: "groupId != nil AND groupName contains[c] %@", searchText)
-            let firstNamePredicate = NSPredicate(
-                format: "groupId == nil AND contact.firstName contains[c] %@",
-                searchText
-            )
-            let lastNamePredicate = NSPredicate(
-                format: "groupId == nil AND contact.lastName contains[c] %@",
-                searchText
-            )
-            let publicNamePredicate = NSPredicate(
-                format: "groupId == nil AND contact.publicNickname contains[c] %@",
-                searchText
-            )
-            let identityPredicate = NSPredicate(
-                format: "groupId == nil AND contact.identity contains[c] %@",
-                searchText
-            )
-            
-            let searchCompound = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                groupPredicate,
-                firstNamePredicate,
-                lastNamePredicate,
-                publicNamePredicate,
-                identityPredicate,
-            ])
-
-            if UserSettings.shared().hidePrivateChats {
-                let privateCompound =
-                    NSCompoundPredicate(andPredicateWithSubpredicates: [
-                        searchCompound,
-                        notPrivatePredicate,
-                        archivedPredicate,
-                    ])
-                fetchedResultsController.fetchRequest.predicate = privateCompound
-            }
-            else {
-                let archivedCompound =
-                    NSCompoundPredicate(andPredicateWithSubpredicates: [searchCompound, archivedPredicate])
-                fetchedResultsController.fetchRequest.predicate = archivedCompound
-            }
-            refreshData()
-        }
-        else {
-            updatePredicates()
         }
     }
 }
@@ -636,12 +550,6 @@ extension ArchivedConversationsViewController {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(colorThemeChanged),
-            name: NSNotification.Name(rawValue: kNotificationColorThemeChanged),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(showProfilePictureChanged),
             name: NSNotification.Name(rawValue: kNotificationShowProfilePictureChanged),
             object: nil
@@ -687,11 +595,7 @@ extension ArchivedConversationsViewController {
             }
         }
     }
-    
-    @objc private func colorThemeChanged() {
-        Colors.update(searchBar: searchController.searchBar)
-    }
-    
+        
     @objc private func updateDraftForCell() {
         guard let selectedConversation,
               let indexPath = fetchedResultsController.indexPath(forObject: selectedConversation),

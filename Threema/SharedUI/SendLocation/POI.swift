@@ -89,6 +89,7 @@ public class PointOfInterest: Equatable, Hashable {
     public var detailCategory: String
     public var address: String?
     public var image: UIImage
+    public var updatedLocation: CLLocation
     
     // MARK: - Lifecycle
     
@@ -96,6 +97,7 @@ public class PointOfInterest: Equatable, Hashable {
         self.type = .threemaPOI(id: receivedPOI.id)
         self.name = receivedPOI.name
         self.location = CLLocation(latitude: receivedPOI.lat, longitude: receivedPOI.lon)
+        self.updatedLocation = location
         self.distance = .distance(receivedPOI.dist)
         self.category = receivedPOI.category
         self.detailCategory = receivedPOI.subcategory
@@ -113,6 +115,7 @@ public class PointOfInterest: Equatable, Hashable {
         self.type = type
         self.name = name
         self.location = location
+        self.updatedLocation = location
         self.distance = .distance(distance)
         self.category = category
         self.detailCategory = detailCategory
@@ -130,6 +133,7 @@ public class PointOfInterest: Equatable, Hashable {
         self.type = type
         self.name = name
         self.location = location
+        self.updatedLocation = location
         self.distance = distance
         self.category = category
         self.detailCategory = detailCategory

@@ -92,8 +92,7 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
         }
 
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(

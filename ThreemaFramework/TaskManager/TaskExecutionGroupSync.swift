@@ -153,7 +153,7 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
             return groupEntity.state.intValue == GroupState.left.rawValue
         }
 
-        guard let group = frameworkInjector.backgroundGroupManager.getGroup(
+        guard let group = frameworkInjector.groupManager.getGroup(
             groupIdentity.id,
             creator: groupIdentity.creator.string
         ) else {
@@ -201,8 +201,8 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
         var category: ConversationCategory?
         var visibility: ConversationVisibility?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+        frameworkInjector.entityManager.performSyncBlockAndSafe {
+            let conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(
                 for: group.groupID,
                 creator: group.groupCreatorIdentity
             )

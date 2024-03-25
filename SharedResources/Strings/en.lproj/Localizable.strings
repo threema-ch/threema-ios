@@ -396,12 +396,8 @@
 "chat_search_searching" = "Searching…";
 "chat_search_no_matches" = "No matches";
 "chat_search_matches" = "%d of %d matches";
-"chat_search_note" = "Note: Media captions are not included in search results.";
 
 "choose_recipient" = "Choose Recipient";
-
-"msg_unknown_group_request_sync_x_title" = "Message received in unknown group";
-"msg_unknown_group_request_sync_x_message" = "A message in an unknown group has been received. The group information has been requested from the group creator (%@). The group will appear as soon as the creator is online again.";
 
 "tap_to_cancel" = "Tap to cancel";
 "previous" = "Previous";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Blocked Contact";
 "call_status_failed_title" = "Threema Call";
 
-"call_threema_initiator_video_info" = "Tap here to turn on the camera";
-"call_threema_remote_video_activated_info_title" = "Video Call";
-"call_threema_remote_video_activated_info" = "The other party has started a video call. Tap here to turn on your camera as well.";
-"call_threema_speaker_info" = "Tap here to turn on speakerphone";
-"call_threema_camera_disabled_info" = "This contact doesn’t use a current app version or doesn’t allow video calls.";
-
-"call_threema_video_in_chat_info_title" = "New: Video Calls";
-
 "call_threema_cellular_instead_of_wifi_title" = "Call via Cellular Network";
 "call_threema_cellular_instead_of_wifi_text" = "Warning: This call causes data transfer in the cellular network.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Archived Chats";
 
 "archived_title" = "Archived";
-"conversations_search_placeholder" = "Contacts, Groups, IDs…";
+"conversations_global_search_placeholder" = "Search";
+"one_to_one_chat" = "Singlechat";
 
 "select_all" = "Select All";
 "deselect_all" = "Deselect All";
@@ -1614,8 +1603,8 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "poi_current_location" = "My Location";
 "poi_marked_location" = "Dropped Pin";
 
-"notification_threemaweb_connectionlost_title" = "Connection to Threema Web Lost";
-"notification_threemaweb_connectionlost_body" = "To continue using Threema Web, please reopen the app.";
+"notification_threemaweb_connectionlost_title" = "Connection to the desktop app / web client lost";
+"notification_threemaweb_connectionlost_body" = "To continue using the desktop app / web client, please reopen the app.";
 
 "settings_threema_web_connected" = "Desktop/Web connected";
 "settings_threema_web_connectioninfo" = "Your device must be unlocked with %@ running in the foreground to stay connected. While connected, your device will not lock automatically.";
@@ -1699,6 +1688,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 
 "notification_group_sync_succeeded" = "Group Synced";
 "notification_group_sync_failed" = "Group Sync Failed";
+"notification_group_call_start_failed" = "No members support group calls";
 
 "notification_settings_sync_pending" = "Syncing…";
 "notification_settings_sync_succeeded" = "Settings synchronized";
@@ -1725,7 +1715,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 
 // Forward security status messages
 "forward_security_message_without" = "A message without Perfect Forward Secrecy has been received. Verify that the sender has intentionally disabled Perfect Forward Secrecy.";
-"forward_security_session_established" = "Messages in this chat are now protected by Perfect Forward Secrecy.";
+"forward_security_session_established" = "Messages with this chat partner are now protected by Perfect Forward Secrecy.";
 "forward_security_session_established_rx" = "Messages received in this chat are now protected by Perfect Forward Secrecy. Enable Perfect Forward Secrecy in contact details to protect sent messages as well.";
 "forward_security_messages_skipped_1" = "One message has been lost since the last message.";
 "forward_security_messages_skipped_x" = "%d messages have been lost since the last message.";

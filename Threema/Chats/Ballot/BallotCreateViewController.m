@@ -30,7 +30,6 @@
 #import "BallotCreateDetailViewController.h"
 #import "ContactStore.h"
 #import "AppGroup.h"
-#import "FeatureMask.h"
 #import "BundleUtil.h"
 #import "ThreemaFramework.h"
 #import <ThreemaFramework/ThreemaFramework-Swift.h>
@@ -350,8 +349,7 @@
     
     [_entityManager performSyncBlockAndSafe:nil];
 
-    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:_entityManager];
-    [messageSender sendBallotMessageFor:_ballot];
+    [[[[BusinessInjector alloc] initWithEntityManager:_entityManager] messageSenderObjC] sendBallotMessageFor:_ballot];
 
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }

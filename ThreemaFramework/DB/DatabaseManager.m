@@ -220,13 +220,9 @@ BOOL doMigrateInProgress = false;
     dispatch_once(&onceToken, ^{
         
         if (_persistentStoreCoordinator == nil) {
-    
-#ifdef DEBUG
-            if ([AppGroup getCurrentType] == AppGroupTypeApp) {
-                [FileUtility logDirectoriesAndFilesWithPath:[FileUtility appDataDirectory] logFileName:LogManager.dbMigrationBeforeLogFilename];
-            }
-#endif
-    
+            
+            [GroupDeliveryReceiptValueTransformer register];
+        
             double startTime = CACurrentMediaTime();
             
             NSURL *storeURL = [DatabaseManager storeUrl];
@@ -354,10 +350,6 @@ BOOL doMigrateInProgress = false;
                 double endTime = CACurrentMediaTime();
                 DDLogInfo(@"DB setup time %f s", (endTime - startTime));
     
-#ifdef DEBUG
-                [FileUtility logDirectoriesAndFilesWithPath:[FileUtility appDataDirectory] logFileName:LogManager.dbMigrationAfterLogFilename];
-#endif
-
                 _persistentStoreCoordinator = persistentStoreCoordinator;
             }
         }
@@ -614,13 +606,15 @@ BOOL doMigrateInProgress = false;
     DDLogInfo(@"[t-dirty-objects] Refresh all objects");
     
     DatabaseContext *dbContext = [self getDatabaseContext];
-    
-    NSTimeInterval stalenessInterval = dbContext.main.stalenessInterval;
-    [dbContext main].stalenessInterval = 0.0;
-    
-    [[dbContext main] refreshAllObjects];
-
-    [dbContext main].stalenessInterval = stalenessInterval;
+        
+    [dbContext.main performBlockAndWait:^{
+        NSTimeInterval stalenessInterval = dbContext.main.stalenessInterval;
+        [dbContext main].stalenessInterval = 0.0;
+        
+        [[dbContext main] refreshAllObjects];
+        
+        [dbContext main].stalenessInterval = stalenessInterval;
+    }];
 }
 
 - (void)refreshDirtyObjectIDs:(NSDictionary *)changes intoContext:(NSManagedObjectContext *)context {

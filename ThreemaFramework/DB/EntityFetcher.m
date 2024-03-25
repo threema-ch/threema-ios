@@ -125,15 +125,17 @@
 ///   - searchText: The text to search for
 ///   - conversation: The conversation to search in
 ///   - fetchLimit: The maximum number of items to fetch for each kind of item. This currently results in |{textMessages U ballotMessages U fileMessages}| items, i.e. no more than 3 times the fetchLimit.
-- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit {
-    NSArray *textMessages = [self textMessagesContaining:searchText inConversation:conversation fetchLimit:fetchLimit];
-    NSArray *ballotMessages = [self ballotMessagesContaining:searchText inConversation:conversation fetchLimit:fetchLimit];
-    NSArray *fileMessages = [self fileMessagesContaining:searchText inConversation:conversation fetchLimit:fetchLimit];
+- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *textMessages = [self textMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *ballotMessages = [self ballotMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *fileMessages = [self fileMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *locationMessages = [self locationMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
     
-    if ([ballotMessages count] > 0 || [fileMessages count] > 0) {
+    if ([ballotMessages count] > 0 || [fileMessages count] > 0 || [locationMessages count] > 0) {
         NSMutableArray *allMessages = [NSMutableArray arrayWithArray:textMessages];
         [allMessages addObjectsFromArray:ballotMessages];
         [allMessages addObjectsFromArray:fileMessages];
+        [allMessages addObjectsFromArray:locationMessages];
         
         NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
         [allMessages sortUsingDescriptors:(NSArray *)sortDescriptors];
@@ -143,19 +145,54 @@
     }
 }
 
-- (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"text contains[cd] %@ && conversation.category != %d", searchText, ConversationCategoryPrivate];
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"TextMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
     return [self entitiesNamed:@"TextMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"text contains[cd] %@ AND conversation == %@", searchText, conversation];
 }
 
-- (NSArray *)ballotMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)ballotMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"ballot.title contains[cd] %@ && conversation.category != %d", searchText, ConversationCategoryPrivate];
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"BallotMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
     return [self entitiesNamed:@"BallotMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"ballot.title contains[cd] %@ AND conversation == %@", searchText, conversation];
 }
 
-- (NSArray *)fileMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)fileMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
-    return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"fileName contains[cd] %@ AND conversation == %@", searchText, conversation];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(fileName contains[cd] %@ || caption contains[cd] %@) && conversation.category != %d", searchText, searchText, ConversationCategoryPrivate];
+
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
+    return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"(fileName contains[cd] %@ || caption contains[cd] %@) AND conversation == %@", searchText, searchText, conversation];
+}
+
+- (NSArray *)locationMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(poiName contains[cd] %@ || poiAddress contains[cd] %@) && conversation.category != %d", searchText, searchText, ConversationCategoryPrivate];
+
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"LocationMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
+    return [self entitiesNamed:@"LocationMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"(poiName contains[cd] %@ || poiAddress contains[cd] %@) AND conversation == %@", searchText, searchText, conversation];
 }
 
 - (Conversation *)conversationForContact:(ContactEntity *)contact {
@@ -227,6 +264,123 @@
     return allIdentities;
 }
 
+// This implements the following protocol specification which are part of the _Application Setup Steps_:
+// 1. If the `contact`'s activity state is _invalid_ (i.e. it does not
+//    exist or has been revoked), remove `contact` from the list.
+// 2. If `contact` is part of a group that is not marked as _left_, add
+//    `contact` to the list and abort these sub-steps.
+// 3. Lookup the 1:1 conversation with `contact` and let `last-update`
+//    be the associated _last update_ timestamp.
+// 4. If `last-update` is defined, add `contact` to the list and abort
+//    these sub-steps.
+// 5. Remove `contact` from the list.
+//
+// We need multiple and complex queries because there's a to many relation ship between `Contact`s `conversations` & 
+// `Conversation` and because there is no CD relation between `Group` and `Conversation`
+// (see `allActiveGroupConversations` for details).
+//
+// If this doesn't perform well:
+// 1. Check query plans using the CD debug flags and see if a query can be optimized or a Fetch Index added (there is
+//    already one)
+// 2. Try loading all valid contacts and filtering them by iterating over them. Idea: Use a set of already matched
+//    identities and add all group members if you fetch an active group. Then you can skip contacts already in there to 
+//    prevent some CD fetches.
+// 3. Get creative...
+- (nonnull NSSet<NSString *> *)allSolicitedContactIdentities {
+    // Fetch relevant conversations
+    NSArray *nonGroupConversationsWithLastUpdate = [self allEntitiesNamed:@"Conversation" sortedBy:nil withPredicate:@"groupId == nil AND lastUpdate != nil"];
+    NSArray<Conversation *> *allActiveGroupConversations = [self allActiveGroupConversations];
+
+    // Prepare predicates
+    
+    NSPredicate *validContactsOnly = [NSPredicate predicateWithFormat:@"state != %d", kStateInvalid];
+    
+    NSPredicate *contactsWithActiveOneToOneConversation = [NSPredicate predicateWithFormat:@"SUBQUERY(conversations, $conversation, $conversation IN %@).@count > 0", nonGroupConversationsWithLastUpdate];
+    NSPredicate *contactsWithActiveGroupConversation = [NSPredicate predicateWithFormat:@"SUBQUERY(groupConversations, $conversation, $conversation IN %@).@count > 0", allActiveGroupConversations];
+    
+    NSCompoundPredicate *conversationsPredicates = [NSCompoundPredicate orPredicateWithSubpredicates:@[contactsWithActiveOneToOneConversation, contactsWithActiveGroupConversation]];
+    
+    // Prepare contact fetch request
+        
+    NSString *entityName = @"Contact";
+    
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:entityName];
+    fetchRequest.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[validContactsOnly, conversationsPredicates]];
+    
+    NSEntityDescription *entity = [NSEntityDescription entityForName:entityName inManagedObjectContext:self.managedObjectContext];
+    
+    NSString *propertyKey = @"identity";
+    fetchRequest.resultType = NSDictionaryResultType;
+    fetchRequest.propertiesToFetch = [NSArray arrayWithObject:[[entity propertiesByName] objectForKey:propertyKey]];
+    fetchRequest.returnsDistinctResults = YES;
+    
+    // Fetch!
+    
+    NSArray *fetchedIdentities = [self.managedObjectContext executeFetchRequest:fetchRequest error:nil];
+    
+    // Map
+    
+    NSMutableSet *allIdentities = [[NSMutableSet alloc] initWithCapacity:fetchedIdentities.count];
+    for (NSDictionary<NSString *, NSString *> *fetchedIdentity in fetchedIdentities) {
+        [allIdentities addObject:fetchedIdentity[propertyKey]];
+    }
+    
+    return allIdentities;
+}
+
+// Private workaround to get all active group conversations
+//
+// Because there is no relationship between `Conversation` and `Group` and the group `state` is part of `Group` we have 
+// to load all active groups and group conversations and then match them against each other.
+//
+// This is private for now, but might be made public in the future if it is needed in another place.
+- (nonnull NSArray<Conversation *> *)allActiveGroupConversations {
+    NSArray *allActiveGroups = [self allActiveGroups];
+
+    if (allActiveGroups.count == 0) {
+        return [[NSArray alloc] init];
+    }
+    
+    NSString *groupIdentityFormatString = @"%@-%@";
+    
+    NSMutableSet<NSString *> *allActiveGroupIDsAndCreators = [[NSMutableSet alloc] initWithCapacity:allActiveGroups.count];
+    for (GroupEntity *group in allActiveGroups) {
+        NSString *idAndCreator = nil;
+        if (group.groupCreator != nil) {
+            idAndCreator = [NSString stringWithFormat:groupIdentityFormatString, group.groupId, group.groupCreator];
+        }
+        else {
+            idAndCreator = [NSString stringWithFormat:groupIdentityFormatString, group.groupId, myIdentityStore.identity];
+        }
+        
+        [allActiveGroupIDsAndCreators addObject:idAndCreator];
+    }
+    
+    // All group conversations
+    NSArray *allGroupConversations = [self allEntitiesNamed:@"Conversation" sortedBy:nil withPredicate:@"groupId != nil"];
+    
+    if (allGroupConversations == nil || allGroupConversations.count == 0) {
+        return [[NSArray alloc] init];
+    }
+    
+    NSMutableArray<Conversation *> *allActiveGroupConversations = [[NSMutableArray alloc] initWithCapacity:allActiveGroupIDsAndCreators.count];
+    for (Conversation *conversation in allGroupConversations) {
+        NSString *idAndCreator = nil;
+        if (conversation.contact != nil) {
+            idAndCreator = [NSString stringWithFormat:groupIdentityFormatString, conversation.groupId, conversation.contact.identity];
+        }
+        else {
+            idAndCreator = [NSString stringWithFormat:groupIdentityFormatString, conversation.groupId, myIdentityStore.identity];
+        }
+        
+        if ([allActiveGroupIDsAndCreators containsObject:idAndCreator]) {
+            [allActiveGroupConversations addObject:conversation];
+        }
+    }
+    
+    return allActiveGroupConversations;
+}
+
 - (NSArray *)allGatewayContacts {
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"identity beginswith '*'"];
 }
@@ -236,7 +390,7 @@
 }
 
 - (NSArray<ContactEntity *> *)contactsWithFeatureMaskNil {
-    return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"featureLevel == nil"];
+    return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"featureMask == nil"];
 }
     
 - (NSArray *)contactsWithCustomReadReceipt {
@@ -366,6 +520,16 @@
     return [self allEntitiesNamed:@"Conversation" sortedBy:sortDescriptors withPredicate:@"groupId != nil"];
 }
 
+- (nonnull NSArray<GroupEntity *> *)allActiveGroups {
+    NSArray *allActiveGroups = [self allEntitiesNamed:@"Group" sortedBy:nil withPredicate:@"NOT (state == %ld OR state == %ld)", GroupStateLeft, GroupStateForcedLeft];
+
+    if (allActiveGroups == nil) {
+        return [[NSArray alloc] init];
+    }
+    
+    return allActiveGroups;
+}
+
 - (NSArray *)groupConversationsForContact:(ContactEntity *)contact {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%@ IN members", contact];
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Conversation"];
@@ -395,6 +559,10 @@
 
 - (NSArray *)allConversations {
     return [self allEntitiesNamed:@"Conversation" sortedBy:nil withPredicate:nil];
+}
+
+- (NSArray *)conversationsWithPredicate:(NSString *)predicate {
+    return [self allEntitiesNamed:@"Conversation" sortedBy:nil withPredicate:predicate];
 }
 
 - (NSArray *)notArchivedConversations {
@@ -878,6 +1046,11 @@
 
 - (NSArray *)allGroupCallEntities {
     return [self allEntitiesNamed:@"GroupCallEntity" sortedBy:nil withPredicate:nil];
+}
+
+- (NSArray *)allFileMessagesWithJsonCaptionButEmptyCaption {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
+    return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"caption == nil && json contains[cd] %@", @"\"d\":\""];
 }
 
 #pragma mark - private

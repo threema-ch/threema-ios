@@ -30,10 +30,11 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
+        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
+            .devNullContext(withChildContextForBackgroundProcess: true)
         dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        dbPreparer = DatabasePreparer(context: backgroundCnx!)
     }
 
     func testContactReadReceiptSendAndDoNotSend() throws {
@@ -61,11 +62,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(
-                databaseContext: dbBackgroundCnx,
-                myIdentityStore: myIdentityStoreMock
-            ),
-            entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, myIdentityStore: myIdentityStoreMock),
             messageSender: messageSenderMock,
             serverConnector: serverConnectorMock
         )
@@ -162,11 +159,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         }
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(
-                databaseContext: dbBackgroundCnx,
-                myIdentityStore: myIdentityStoreMock
-            ),
-            entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, myIdentityStore: myIdentityStoreMock),
             messageSender: messageSenderMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,

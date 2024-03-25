@@ -47,7 +47,7 @@
     _onCompletion  = onCompletion;
 
     entityManager = [[EntityManager alloc] init];
-    groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
+    groupManager = [[BusinessInjector new] groupManagerObjC];
     group = [groupManager getGroupWithConversation:_conversation];
     
     // If a group, ask for confirmation

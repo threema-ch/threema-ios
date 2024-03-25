@@ -26,11 +26,7 @@ import WebRTC
 
 /// The participant of this this device (i.e. me)
 @GlobalGroupCallActor
-final class LocalParticipant: NormalParticipant, Sendable {
-    
-    enum Error: Swift.Error {
-        case existingPendingMediaKeys
-    }
+final class LocalParticipant: Participant, Sendable {
 
     let threemaIdentity: ThreemaIdentity
     let nickname: String
@@ -80,27 +76,6 @@ final class LocalParticipant: NormalParticipant, Sendable {
         pendingMediaKeys?.protocolMediaKey
     }
     
-    override var mirrorRenderer: Bool {
-        localCameraPosition == .front
-    }
-    
-//    override func subscribeCamera(renderer: SurfaceViewRenderer, width: Int, height: Int, fps: Int) -> DetachSinkFn {
-//        logger.trace("Subscribe local camera")
-//        return localContext.cameraVideoContext.renderTo(renderer)
-//    }
-    
-    override func unsubscribeCamera() {
-        // no-op: Detach is performed in DetachSinkFn returned from subscribeCamera
-    }
-    
-    func flipCamera() {
-//        do {
-//            try await localContext.cameraVideoContext.flipCamera()
-//        } catch {
-//            logger.warn("Could not toggle front/back camera", error)
-//        }
-    }
-    
     func applyMediaKeys(to encryptor: ThreemaGroupCallFrameCryptoEncryptorProtocol) throws {
         try mediaKeys.applyMediaKeys(to: encryptor)
     }
@@ -122,7 +97,7 @@ extension LocalParticipant {
             /// Leave 2. If `pendingMediaKeys` exists, additionally mark `pendingMediaKeys` as stale and abort these
             /// steps.
             pendingMediaKeysIsStale = true
-            throw Error.existingPendingMediaKeys
+            throw GroupCallError.existingPendingMediaKeys
         }
         /// **Protocol Step: Join/Leave of Other Participants (Leave 3.)**
         /// Leave 3. Let current-pcmk (`mediaKeys`) be the currently _applied_ PCMK with the associated context.

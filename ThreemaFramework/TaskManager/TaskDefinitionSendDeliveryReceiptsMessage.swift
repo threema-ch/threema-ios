@@ -29,7 +29,7 @@ final class TaskDefinitionSendDeliveryReceiptsMessage: TaskDefinitionSendMessage
         TaskExecutionSendDeliveryReceiptsMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

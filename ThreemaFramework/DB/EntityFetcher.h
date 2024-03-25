@@ -64,9 +64,9 @@ typedef enum : NSUInteger {
 
 - (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversation:(Conversation *)conversation;
 
-- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit;
+- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
-- (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit;
+- (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
 - (ContactEntity *)contactForId:(NSString *)identity NS_SWIFT_NAME(contact(for:));
 
@@ -84,6 +84,13 @@ typedef enum : NSUInteger {
 /// - returns: A set of identity strings. If there are no contacts the set is empty.
 - (nonnull NSSet<NSString *> *)allContactIdentities;
 
+/// All valid contact identities that have a 1:1 conversation with `lastUpdate` set or are part of group that is not marked as left
+///
+/// See _Application Setup Steps_ of Threema Protocols for full specification of `solicited-contacts`.
+///
+/// - returns: A set of identity strings. If there are no matches the set is empty.
+- (nonnull NSSet<NSString *> *)allSolicitedContactIdentities;
+
 - (NSArray *)contactsFilteredByWords:(NSArray *)searchWords forContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 
 // Does a contact exist that contains my identity?
@@ -98,6 +105,11 @@ typedef enum : NSUInteger {
 - (BOOL)hasDuplicateContactsWithDuplicateIdentities:(NSSet **)duplicateIdentities;
 
 - (NSArray *)allGroupConversations;
+
+/// All active groups (i.e. not marked as (force) left)
+///
+/// - returns: An array of group entities for all active groups
+- (nonnull NSArray<GroupEntity *> *)allActiveGroups;
 
 - (NSArray *)allGatewayContacts;
 
@@ -119,6 +131,8 @@ typedef enum : NSUInteger {
 - (NSArray *)groupConversationsForContact:(ContactEntity *)contact NS_SWIFT_NAME(groupConversations(for:));
 
 - (NSArray *)allConversations;
+
+- (NSArray *)conversationsWithPredicate:(NSString *)predicate;
 
 - (NSArray *)allMessages;
 
@@ -233,6 +247,8 @@ typedef enum : NSUInteger {
 - (NSArray *)allLastGroupSyncRequests;
 
 - (nonnull NSArray *)allCallsWith:(nonnull NSString *)identity callID:(uint32_t)callID;
+
+- (NSArray *)allFileMessagesWithJsonCaptionButEmptyCaption;
 
 - (nullable Conversation *)legacyConversationForGroupId:(nullable NSData *)groupId NS_SWIFT_NAME(legacyConversation(for:)); DEPRECATED_MSG_ATTRIBUTE("This is deprecated and will be removed together with the web client code. DO NOT USE THIS!");
 

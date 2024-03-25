@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
+import ThreemaProtocols
 
 /// Business representation of a Threema Contact
 public class Contact: NSObject {
@@ -53,6 +54,7 @@ public class Contact: NSObject {
         self.state = contactEntity.state?.intValue ?? kStateInactive
         self.isWorkContact = contactEntity.isWorkContact()
         self.isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable()
+        self.featureMask = contactEntity.featureMask.intValue
 
         super.init()
 
@@ -95,6 +97,9 @@ public class Contact: NSObject {
                 if self?.isWorkContact != contactEntity.isWorkContact() {
                     self?.isWorkContact = contactEntity.isWorkContact()
                 }
+                if self?.featureMask != contactEntity.featureMask.intValue {
+                    self?.featureMask = contactEntity.featureMask.intValue
+                }
             }
         }
     }
@@ -112,6 +117,7 @@ public class Contact: NSObject {
     @objc public private(set) dynamic var publicNickname: String?
     public private(set) var verificationLevel = 0
     @objc public private(set) dynamic var state = 0
+    private(set) dynamic var featureMask: Int
 
     public var isActive: Bool {
         state == kStateActive
@@ -245,40 +251,6 @@ public class Contact: NSObject {
         }
     }
     
-    public var forwardSecurityState: ForwardSecrecyState? {
-        guard isForwardSecurityAvailable else {
-            return .unsupportedByRemote
-        }
-        
-        do {
-            let businessInjector = BusinessInjector()
-            guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
-                myIdentity: MyIdentityStore.shared().identity,
-                peerIdentity: identity.string
-            ) else {
-                return .noSession
-            }
-            
-            let state = try dhSession.state
-            let current4DHVersions = dhSession.current4DHVersions
-            
-            switch state {
-            case .L20:
-                return .L20(current4DHVersions)
-            case .RL44:
-                return .RL44(current4DHVersions)
-            case .R20:
-                return .R20(current4DHVersions)
-            case .R24:
-                return .R24(current4DHVersions)
-            }
-        }
-        catch {
-            DDLogError("Could not get ForwardSecurityState for contact with identity: \(identity).")
-            return nil
-        }
-    }
-    
     public var forwardSecurityMode: ForwardSecurityMode {
         
         guard isForwardSecurityAvailable else {
@@ -295,7 +267,6 @@ public class Contact: NSObject {
             }
             
             let state = try dhSession.state
-            let current4DHVersions = dhSession.current4DHVersions
             
             switch state {
             case .L20:

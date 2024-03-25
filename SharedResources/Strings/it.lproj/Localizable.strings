@@ -396,12 +396,8 @@
 "chat_search_searching" = "Cerca...";
 "chat_search_no_matches" = "Nessun resultato";
 "chat_search_matches" = "%d resultato su %d ";
-"chat_search_note" = "Avviso: le didascalie dei media non vengono esaminate.";
 
 "choose_recipient" = "Seleziona destinatario";
-
-"msg_unknown_group_request_sync_x_title" = "Ricevere messaggio in gruppo sconosciuto";
-"msg_unknown_group_request_sync_x_message" = "È stato ricevuto un messaggio in un gruppo sconosciuto. Le informazioni di gruppo sono state richieste al creatore del gruppo (%@). Il gruppo riapparirà non appena il creatore sarà di nuovo online.";
 
 "tap_to_cancel" = "Tocca per annullare";
 "previous" = "Precedente";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Contatto bloccato";
 "call_status_failed_title" = "Chiamata Threema";
 
-"call_threema_initiator_video_info" = "Tocca qui per attivare fotocamera";
-"call_threema_remote_video_activated_info_title" = "Videochiamata";
-"call_threema_remote_video_activated_info" = "Il tuo interlocutore ha avviato una videochiamata. Tocca qui per attivare la fotocamera.";
-"call_threema_speaker_info" = "Tocca qui per attivare vivavoce";
-"call_threema_camera_disabled_info" = "Questo contatto usa una vecchia versione di Threema o non accetta videochiamate.";
-
-"call_threema_video_in_chat_info_title" = "Novità: videochiamate";
-
 "call_threema_cellular_instead_of_wifi_title" = "Chiamata tramite rete di telefonia mobile";
 "call_threema_cellular_instead_of_wifi_text" = "Avviso: questa chiamata comporta un trasferimento di dati nella rete di telefonia mobile.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Chat archiviate";
 
 "archived_title" = "Archiviato";
-"conversations_search_placeholder" = "Contatti, gruppi, ID ...";
+"conversations_global_search_placeholder" = "Cerca";
+"one_to_one_chat" = "Chat singola";
 
 "select_all" = "Seleziona tutto";
 "deselect_all" = "Deseleziona tutto";
@@ -1211,7 +1200,7 @@
 "delete_messages_confirm" = "Vuoi eliminare tutti i messaggi più vecchi di %@ in modo definitivo?";
 "delete_messages_confirm_all" = "Vuoi eliminare tutti i messaggi in modo definitivo?";
 "delete_messages_explain" = "Sono inclusi tutti i tipi di messaggio (messaggi di testo e vocale, multimediale, file, sondaggi, ecc...).";
-"automatic_delete_explain" = "Utilizza la cancellazione automatica per liberare spazio sul disco. I sondaggi aperti e i gruppi di note sono esclusi dalla cancellazione automatica.";
+"automatic_delete_explain" = "Per liberare la memoria stabilisci se e dopo quale periodo di tempo i messaggi e i media devono essere eliminati. I sondaggi aperti e i gruppi di note sono esclusi da questa opzione.";
 "automatic_delete_on_confirmation_title" = "Vuoi attivare la cancellazione automatica?";
 "automatic_delete_off_confirmation_title" = "Vuoi disattivare la cancellazione automatica?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1333,8 +1322,8 @@
 "my_profile_delete_bullet_linked" = "Collegamento numero di telefono e/o e-mail";
 
 "my_profile_delete_info_title" = "Cancella ID e dati";
-"my_profile_delete_info_delete" = "Tutti i tuoi dati Threema verranno cancellati da questo dispositivo:";
-"my_profile_delete_info_keep" = "Il tuo Threema ID non sarà revocato. Se hai creato un backup Threema Safe o esportato il tuo ID, potrai ripristinarlo su un altro dispositivo.";
+"my_profile_delete_info_delete" = "Tutti i tuoi dati Threema verranno cancellati da questo dispositivo.";
+"my_profile_delete_info_keep" = "Se hai creato un backup Threema Safe o esportato il tuo ID, potrai ripristinarlo su un altro dispositivo.";
 "my_profile_delete_info_revoke_info" = "Se non vuoi più utilizzare il tuo Threema ID su altri dispositivi, è possibile eliminarlo in modo definitivo:";
 "my_profile_delete_info_revoke_info_link" = "[Revocare Threema-ID](link)";
 "my_profile_delete_info_button" = "Cancella ID e dati";
@@ -1342,17 +1331,17 @@
 "my_profile_delete_info_alert_title" = "Hai perso il tuo Threema ID e non hai un backup.";
 "my_profile_delete_info_alert_confirm" = "Cancella dati";
 
-"my_profile_revoke_identity_view_title" = "Cancellare ID e dati?";
-"my_profile_revoke_info_delete" = "Tutti i tuoi dati Threema verranno cancellati da questo dispositivo:";
+"my_profile_revoke_identity_view_title" = "Cancella ID e dati";
+"my_profile_revoke_info_delete" = "Tutti i tuoi dati Threema verranno eliminati da questo dispositivo, e i seguenti dati Threema verranno cancellati dal server:";
 
-"my_profile_delete_info_revoke" = "Il tuo Threema ID verrà revocato e non c'è possibilità di ripristinarlo.";
+"my_profile_delete_info_revoke" = "Non è possibile ripristinare il tuo Threema ID.";
 "my_profile_revoke_identity_view_enter_id" = "Inserisci il tuo Threema ID «%@» per cancellare tutto in modo definitivo:";
 "my_profile_revoke_identity_view_placeholder" = "Il tuo Threema ID";
 "my_profile_revoke_identity_view_button_revoke" = "Cancella ID e dati";
 
 "my_profile_delete_identity_summary_view_removed_title" = "ID e dati cancellati";
 "my_profile_delete_identity_summary_view_removed_success" = "Tutti i tuoi dati Threema sono stati cancellati da questo dispositivo:";
-"my_profile_delete_identity_summary_view_removed_server_success" = "Tutti i tuoi dati Threema sono stati cancellati dal server:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "Tutti i tuoi dati Threema verranno eliminati da questo dispositivo, e i seguenti dati Threema sono stati cancellati dal server:";
 "my_profile_delete_identity_summary_view_removed_threema_id" = "Il tuo ID Threema è stato revocato";
 "my_profile_delete_identity_summary_view_restart" = "Riavvia l'app per continuare a utilizzarla";
 "my_profile_delete_identity_summary_view_restart_new" = "Riavvia l'app per creare un nuovo Threema ID.";
@@ -1393,7 +1382,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "settings_advanced_contacts_cleanup_no_duplicates" = "Non sono presenti contatti duplicati.";
 "settings_advanced_contacts_cleanup_error_title" = "Impossibile rimuovere i contatti";
 "settings_advanced_contacts_cleanup_in_use_error_title" = "Cancella chat manualmente";
-"settings_advanced_contacts_cleanup_still_used_error" = "Pulizia annullata. Non è stato possibile eliminare %i contatti duplicati poiché nei duplicati sono presenti ancora messaggi o perché risultano membri di un gruppo.\n";
+"settings_advanced_contacts_cleanup_still_used_error" = "L'operazione non è stata completata (%i duplicati cancellati, restano ancora %i).\n\nAlcune chat singole devono essere cancellate manualmente:\n\n%@\n\nCancellale e riprova.\n\n";
 "settings_advanced_contacts_multi_device_enabled_error" = "Vi sono dispositivi collegati. Rimuovi tutti i dispositivi collegati prima di avviare la pulizia dei contatti.";
 "settings_advanced_contacts_cleanup_success_title" = "Pulizia contatti completata";
 "settings_advanced_contacts_cleanup_success_exit" = "Esci";
@@ -1613,8 +1602,8 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "poi_current_location" = "La mia posizione";
 "poi_marked_location" = "Spillo";
 
-"notification_threemaweb_connectionlost_title" = "Il collegamento con Threema Web è stato interrotto";
-"notification_threemaweb_connectionlost_body" = "Per continuare a utilizzare Threema Web, apri l'app.";
+"notification_threemaweb_connectionlost_title" = "Il collegamento con l'app desktop e il client web è stato interrotto";
+"notification_threemaweb_connectionlost_body" = "Per continuare a utilizzare l'app desktop e il client web, apri l'app.";
 
 "settings_threema_web_connected" = "Desktop/Web collegato";
 "settings_threema_web_connectioninfo" = "Per mantenere il collegamento, il tuo dispositivo deve essere sbloccato e %@ posto in primo piano. In caso di collegamento attivo, il dispositivo non viene bloccato automaticamente.";
@@ -1698,6 +1687,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 
 "notification_group_sync_succeeded" = "Sincronizzazione gruppo effettuata";
 "notification_group_sync_failed" = "Sincronizzazione non riuscita";
+"notification_group_call_start_failed" = "Nessun membro accetta le chiamate di gruppo";
 
 "notification_settings_sync_pending" = "Sincronizza...";
 "notification_settings_sync_succeeded" = "Sincronizzazione impostazioni effettuata";
@@ -1724,7 +1714,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 
 // Forward security status messages
 "forward_security_message_without" = "Hai ricevuto un messaggio senza Perfect Forward Secrecy. Assicurati che il mittente abbia volutamente disattivato il Perfect Forward Secrecy.";
-"forward_security_session_established" = "I messaggi in questa chat sono d'ora in poi protetti da Perfect Forward Secrecy.";
+"forward_security_session_established" = "I messaggi con questo contatto sono d'ora in poi protetti da Perfect Forward Secrecy.";
 "forward_security_session_established_rx" = "I messaggi ricevuti in questa chat sono d'ora in poi protetti da Perfect Forward Secrecy. Attiva Perfect Forward Secrecy nei dettagli contatto per proteggere anche i messaggi inviati.";
 "forward_security_messages_skipped_1" = "Dall'ultimo messaggio è andato perso un messaggio.";
 "forward_security_messages_skipped_x" = "Dall'ultimo messaggio sono andati persi %d messaggi.";

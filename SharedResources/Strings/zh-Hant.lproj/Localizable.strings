@@ -396,12 +396,8 @@
 "chat_search_searching" = "搜尋中…";
 "chat_search_no_matches" = "没有相符項";
 "chat_search_matches" = "%d 個相符項，共 %d 個";
-"chat_search_note" = "注意：搜尋結果中不包括媒體描述。";
 
 "choose_recipient" = "選擇收件者";
-
-"msg_unknown_group_request_sync_x_title" = "在未知群組中收到的訊息";
-"msg_unknown_group_request_sync_x_message" = "在未知群組中收到訊息。已向群組建立者(%@)要求群組資訊。一旦建立者再次上線，該群組就會再次出現。";
 
 "tap_to_cancel" = "點擊以取消";
 "previous" = "上一步";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "被封鎖的聯絡人";
 "call_status_failed_title" = "Threema 通話";
 
-"call_threema_initiator_video_info" = "點擊這裡開啟攝影機";
-"call_threema_remote_video_activated_info_title" = "視訊通話";
-"call_threema_remote_video_activated_info" = "對方已發起視訊通話，點擊這裡開啟攝影機。";
-"call_threema_speaker_info" = "點擊這裡開啟電話揚聲器";
-"call_threema_camera_disabled_info" = "這個聯絡人沒有使用最新的應用程式版本，或者不允許進行視訊通話。";
-
-"call_threema_video_in_chat_info_title" = "新增功能：視訊通話";
-
 "call_threema_cellular_instead_of_wifi_title" = "透過行動網路通話";
 "call_threema_cellular_instead_of_wifi_text" = "警告：這個通話將透過行動網路進行。";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "已封存對話";
 
 "archived_title" = "已封存";
-"conversations_search_placeholder" = "聯絡人、群組、ID……";
+"conversations_global_search_placeholder" = "搜尋";
+"one_to_one_chat" = "單獨對話";
 
 "select_all" = "選擇所有";
 "deselect_all" = "取消選擇所有";
@@ -1614,8 +1603,8 @@
 "poi_current_location" = "我的位置";
 "poi_marked_location" = "圖釘已放置";
 
-"notification_threemaweb_connectionlost_title" = "與 Threema 網頁版失去連線";
-"notification_threemaweb_connectionlost_body" = "如要繼續使用 Threema 網頁版，請重新啟動應用程式。";
+"notification_threemaweb_connectionlost_title" = "與桌面版應用程式 / 網頁版用戶端失去連線";
+"notification_threemaweb_connectionlost_body" = "如要繼續使用桌面版應用程式 / 網頁版用戶端，請重新啟動應用程式。";
 
 "settings_threema_web_connected" = "已連線至桌面版/網頁版";
 "settings_threema_web_connectioninfo" = "為了保持與桌面版/網頁版的連結，您的裝置必須解鎖，並在前景執行 %@。連結後，您的裝置將不會自動鎖定。";
@@ -1699,6 +1688,7 @@
 
 "notification_group_sync_succeeded" = "群組已同步";
 "notification_group_sync_failed" = "群組同步失敗";
+"notification_group_call_start_failed" = "沒有成員支援群組通話功能";
 
 "notification_settings_sync_pending" = "同步中…";
 "notification_settings_sync_succeeded" = "設定已同步";
@@ -1725,7 +1715,7 @@
 
 // Forward security status messages
 "forward_security_message_without" = "您收到一則沒有完全正向保密的訊息，您可以驗證寄件者是否主動停用完全正向保密。";
-"forward_security_session_established" = "此對話中的訊息現正受完全正向保密的保護。";
+"forward_security_session_established" = "與對方之間傳送的訊息現正受「完全正向保密」的保護。";
 "forward_security_session_established_rx" = "在此對話中收到的訊息現正受完全正向保密的保護，您可以在聯絡人詳細資訊中啟用完全正向保密來保護以後傳送的訊息。";
 "forward_security_messages_skipped_1" = "自上一則訊息以來，有一則訊息已經丟失。";
 "forward_security_messages_skipped_x" = "自上一則訊息以來，有%d則訊息已經丟失。";

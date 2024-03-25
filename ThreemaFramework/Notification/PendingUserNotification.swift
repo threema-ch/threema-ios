@@ -37,7 +37,6 @@ public class PendingUserNotification: NSObject, NSCoding {
     }
     
     internal var baseMessageID: Data?
-    public internal(set) var isPendingGroup = false
     public internal(set) var stage: UserNotificationStage = .initial
     var fireDate: Date?
     
@@ -46,7 +45,6 @@ public class PendingUserNotification: NSObject, NSCoding {
         static let threemaPushNotification = "threemaPushNotification"
         static let abstractMessage = "abstractMessage"
         static let baseMessageID = "baseMessageId"
-        static let isPendingGroup = "isPendingGroup"
         static let stage = "stage"
         static let fireDate = "fireDate"
     }
@@ -73,7 +71,6 @@ public class PendingUserNotification: NSObject, NSCoding {
             self.stage = UserNotificationStage(rawValue: stageRawValue) ?? .initial
         }
         self.fireDate = coder.decodeObject(forKey: Keys.fireDate) as? Date
-        self.isPendingGroup = coder.decodeBool(forKey: Keys.isPendingGroup)
     }
     
     public func encode(with coder: NSCoder) {
@@ -83,7 +80,6 @@ public class PendingUserNotification: NSObject, NSCoding {
         coder.encode(baseMessageID, forKey: Keys.baseMessageID)
         coder.encode(stage.rawValue, forKey: Keys.stage)
         coder.encode(fireDate, forKey: Keys.fireDate)
-        coder.encode(isPendingGroup, forKey: Keys.isPendingGroup)
     }
     
     public var isGroupMessage: Bool? {
@@ -142,10 +138,10 @@ extension PendingUserNotification {
             return nil
         }
 
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector(forBackgroundProcess: true)
         let intentCreator = IntentCreator(
             userSettings: businessInjector.userSettings,
-            entityManager: businessInjector.backgroundEntityManager
+            entityManager: businessInjector.entityManager
         )
 
         // Differentiate between groups and 1-1 conversation

@@ -79,17 +79,17 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
     ) throws {
         var readMessageConversations = Set<Conversation>()
 
-        try frameworkInjector.backgroundEntityManager.performAndWait {
+        try frameworkInjector.entityManager.performAndWait {
             let conversation: Conversation
             if let senderIdentity,
-               let contactConversation = self.frameworkInjector.backgroundEntityManager.conversation(
+               let contactConversation = self.frameworkInjector.entityManager.conversation(
                    for: senderIdentity.string,
                    createIfNotExisting: false
                ) {
                 conversation = contactConversation
             }
             else if let senderGroupIdentity,
-                    let groupConversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+                    let groupConversation = self.frameworkInjector.entityManager.entityFetcher.conversation(
                         for: senderGroupIdentity.id,
                         creator: senderGroupIdentity.creator.string
                     ) {
@@ -103,7 +103,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
             }
             
             let id = messageID.littleEndianData
-            if let message = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
+            if let message = self.frameworkInjector.entityManager.entityFetcher.message(
                 with: id,
                 conversation: conversation
             ) {
@@ -111,7 +111,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                 // If it is not a message from myself then update as read and refresh unread badge
                 if !message.isOwnMessage {
                     DDLogNotice("Message ID \(message.id.hexString) has been read by other device")
-                    self.frameworkInjector.backgroundEntityManager.performAndWaitSave {
+                    self.frameworkInjector.entityManager.performAndWaitSave {
                         message.read = true
                         message.readDate = readDate
                     }

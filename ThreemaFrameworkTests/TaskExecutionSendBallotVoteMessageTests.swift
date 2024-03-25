@@ -77,9 +77,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let groupManagerMock = GroupManagerMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
@@ -192,8 +191,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         }
         
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
@@ -302,9 +300,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let groupManagerMock = GroupManagerMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,

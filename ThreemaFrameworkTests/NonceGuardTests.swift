@@ -22,8 +22,7 @@ import XCTest
 @testable import ThreemaFramework
 
 class NonceGuardTests: XCTestCase {
-    private var dbMainCnx: DatabaseContext!
-    private var dbBackgroundCnx: DatabaseContext!
+    private var entityManager: EntityManager!
     private var dbPreparer: DatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
@@ -32,9 +31,9 @@ class NonceGuardTests: XCTestCase {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
+
+        entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil))
         dbPreparer = DatabasePreparer(context: mainCnx)
 
         ddLoggerMock = DDLoggerMock()
@@ -48,9 +47,8 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessed() throws {
         let nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))!
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
-        entityManager.performSyncBlockAndSafe {
-            entityManager.entityCreator.nonce(with: nonce)
+        entityManager.performAndWaitSave {
+            _ = self.entityManager.entityCreator.nonce(with: nonce)
         }
 
         let expectedIncomingMessage = BoxTextMessage()
@@ -66,7 +64,7 @@ class NonceGuardTests: XCTestCase {
         let expectedIncomingMessage = BoxTextMessage()
         expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
 
-        let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
+        let nonceGuard = NonceGuard(entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertFalse(result)
@@ -75,7 +73,7 @@ class NonceGuardTests: XCTestCase {
     func testIsProcessedNonceIsNil() throws {
         let expectedIncomingMessage = BoxTextMessage()
 
-        let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
+        let nonceGuard = NonceGuard(entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
@@ -87,9 +85,8 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessedReflected() throws {
         let nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))!
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
-        entityManager.performSyncBlockAndSafe {
-            entityManager.entityCreator.nonce(with: nonce)
+        entityManager.performAndWaitSave {
+            _ = self.entityManager.entityCreator.nonce(with: nonce)
         }
 
         let expectedIncomingMessage = BoxTextMessage()
@@ -105,7 +102,7 @@ class NonceGuardTests: XCTestCase {
         let expectedIncomingMessage = BoxTextMessage()
         expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
 
-        let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
+        let nonceGuard = NonceGuard(entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertFalse(result)
@@ -115,9 +112,7 @@ class NonceGuardTests: XCTestCase {
         let expectedIncomingMessage = BoxTextMessage()
         expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
         let nonceGuard = NonceGuard(entityManager: entityManager)
-
         try nonceGuard.processed(message: expectedIncomingMessage)
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
@@ -126,7 +121,7 @@ class NonceGuardTests: XCTestCase {
     func testProcessedNonceIsNil() throws {
         let expectedIncomingMessage = BoxTextMessage()
 
-        let nonceGuard = NonceGuard(entityManager: EntityManager(databaseContext: dbMainCnx))
+        let nonceGuard = NonceGuard(entityManager: entityManager)
 
         XCTAssertThrowsError(
             try nonceGuard.processed(message: expectedIncomingMessage),
@@ -146,9 +141,7 @@ class NonceGuardTests: XCTestCase {
         let expectedIncomingMessage = BoxTextMessage()
         expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
         let nonceGuard = NonceGuard(entityManager: entityManager)
-
         try nonceGuard.processed(message: expectedIncomingMessage)
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
@@ -157,9 +150,7 @@ class NonceGuardTests: XCTestCase {
     func testDoNotStoreSameNonceTwice() throws {
         let nonce = MockData.generateMessageNonce()
         
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
         let nonceGuard = NonceGuard(entityManager: entityManager)
-        
         nonceGuard.processed(nonces: [nonce, nonce])
 
         let matchedDBNonces = entityManager.entityFetcher.allNonces()?.filter {

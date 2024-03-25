@@ -27,7 +27,6 @@
 #import "NaClCrypto.h"
 #import "ThreemaUtilityObjC.h"
 #import "ThreemaError.h"
-#import "FeatureMask.h"
 #import "UserSettings.h"
 #import "MyIdentityStore.h"
 #import "LicenseStore.h"
@@ -51,7 +50,7 @@
                               @"deviceId": [[[UIDevice currentDevice] identifierForVendor] UUIDString]
                               }];
     
-    // add App Store receipt if available (but not for Work)
+    // Add App Store receipt if available (but not for Work)
     NSURL *receiptUrl = [[NSBundle mainBundle] appStoreReceiptURL];
     if (receiptUrl && [[NSFileManager defaultManager] fileExistsAtPath:receiptUrl.path] && ![LicenseStore requiresLicenseKey]) {
         NSData *receiptData = [NSData dataWithContentsOfURL:receiptUrl];
@@ -60,7 +59,7 @@
         }
     }
     
-    // add Work license if available
+    // Add Work license if available
     NSString *licenseUsername = [[LicenseStore sharedLicenseStore] licenseUsername];
     NSString *licensePassword = [[LicenseStore sharedLicenseStore] licensePassword];
     if (licenseUsername && licensePassword) {
@@ -73,7 +72,7 @@
             identityStore.identity = response[@"identity"];
             identityStore.serverGroup = response[@"serverGroup"];
             [identityStore storeInKeychain];
-            [FeatureMask updateFeatureMask];
+            [FeatureMask updateLocalObjc];
             
             onCompletion(identityStore);
         } onError:onError];

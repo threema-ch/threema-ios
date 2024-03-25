@@ -43,6 +43,7 @@ public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
         sourceCaller: SourceCaller
     ) -> Promise<Group?>
     func getConversation(for groupIdentity: GroupIdentity) -> Conversation?
+    func getAllActiveGroups() async -> [Group]
     func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void>
     func setName(group: Group, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void>
     func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date, send: Bool) -> Promise<Void>
@@ -131,7 +132,6 @@ extension GroupManagerProtocol {
     func leave(groupID: Data, creator: String, toMembers: [String]?, systemMessageDate: Date)
     func leaveDB(groupID: Data, creator: String, member: String, systemMessageDate: Date)
     func dissolve(groupID: Data, to identities: Set<String>?)
-    func unknownGroup(groupID: Data, creator: String)
     func setNameObjc(
         groupID: Data,
         creator: String,

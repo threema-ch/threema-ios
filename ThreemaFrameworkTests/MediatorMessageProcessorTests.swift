@@ -158,7 +158,7 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     
     func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) { }
     
-    func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) { }
+    func incomingMessageFinished(_ message: AbstractMessage) { }
     
     func incomingMessageFailed(_ message: BoxedMessage) {
         // no-op
@@ -179,9 +179,7 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     func chatQueueDry() { }
     
     func reflectionQueueDry() { }
-    
-    func pendingGroup(_ message: AbstractMessage) { }
-    
+        
     func processTypingIndicator(_ message: TypingIndicatorMessage) { }
     
     func processVoIPCall(

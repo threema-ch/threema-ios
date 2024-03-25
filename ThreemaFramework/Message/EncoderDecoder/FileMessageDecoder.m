@@ -250,7 +250,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
         [entityManager performAsyncBlockAndSafe:^{
             FileMessageEntity *fileMessageEntity = (FileMessageEntity*)message;
 
-            GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
+            GroupManager *groupManager = [[[BusinessInjector alloc] initWithEntityManager:entityManager] groupManagerObjC];
             Group *group = [groupManager getGroupWithConversation:_conversation];
 
             // Blob origin for download

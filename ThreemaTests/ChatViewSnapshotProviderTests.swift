@@ -75,10 +75,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                businessInjector: BusinessInjectorMock(
-                    backgroundEntityManager: entityManager,
-                    entityManager: entityManager
-                ),
+                businessInjector: BusinessInjectorMock(entityManager: entityManager),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
@@ -142,10 +139,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                businessInjector: BusinessInjectorMock(
-                    backgroundEntityManager: entityManager,
-                    entityManager: entityManager
-                ),
+                businessInjector: BusinessInjectorMock(entityManager: entityManager),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
@@ -245,10 +239,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                businessInjector: BusinessInjectorMock(
-                    backgroundEntityManager: entityManager,
-                    entityManager: entityManager
-                ),
+                businessInjector: BusinessInjectorMock(entityManager: entityManager),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
@@ -371,10 +362,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                businessInjector: BusinessInjectorMock(
-                    backgroundEntityManager: entityManager,
-                    entityManager: entityManager
-                ),
+                businessInjector: BusinessInjectorMock(entityManager: entityManager),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),

@@ -68,7 +68,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         _entityManager = [[EntityManager alloc] init];
         _selectedGroups = [NSMutableSet set];
 
-        self->groupManager = [[GroupManager alloc] init];
+        self->groupManager = [[[BusinessInjector alloc] initWithEntityManager:_entityManager] groupManagerObjC];
 
         if (delegate) {
             _fetchedResultsControllerDelegate = delegate;

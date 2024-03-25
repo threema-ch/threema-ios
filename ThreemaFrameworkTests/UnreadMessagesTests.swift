@@ -137,10 +137,13 @@ class UnreadMessagesTests: XCTestCase {
 
     func testTotalCount() throws {
         let unreadMessages =
-            UnreadMessages(entityManager: EntityManager(databaseContext: DatabaseContext(
-                mainContext: mainCnx,
-                backgroundContext: nil
-            )))
+            UnreadMessages(
+                messageSender: MessageSenderMock(),
+                entityManager: EntityManager(databaseContext: DatabaseContext(
+                    mainContext: mainCnx,
+                    backgroundContext: nil
+                ))
+            )
         let count = unreadMessages.totalCount()
         
         XCTAssertEqual(count, 6)
@@ -148,10 +151,13 @@ class UnreadMessagesTests: XCTestCase {
 
     func testTotalCountWithRecalculateConversation1() throws {
         let unreadMessages =
-            UnreadMessages(entityManager: EntityManager(databaseContext: DatabaseContext(
-                mainContext: mainCnx,
-                backgroundContext: nil
-            )))
+            UnreadMessages(
+                messageSender: MessageSenderMock(),
+                entityManager: EntityManager(databaseContext: DatabaseContext(
+                    mainContext: mainCnx,
+                    backgroundContext: nil
+                ))
+            )
         let count = unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [testDataConversation1])
 
         XCTAssertEqual(count, 5)
@@ -160,10 +166,13 @@ class UnreadMessagesTests: XCTestCase {
 
     func testTotalCountWithRecalculateAllConversations() throws {
         let unreadMessages =
-            UnreadMessages(entityManager: EntityManager(databaseContext: DatabaseContext(
-                mainContext: mainCnx,
-                backgroundContext: nil
-            )))
+            UnreadMessages(
+                messageSender: MessageSenderMock(),
+                entityManager: EntityManager(databaseContext: DatabaseContext(
+                    mainContext: mainCnx,
+                    backgroundContext: nil
+                ))
+            )
         let count = unreadMessages
             .totalCount(doCalcUnreadMessagesCountOf: [
                 testDataConversation1,
@@ -179,10 +188,15 @@ class UnreadMessagesTests: XCTestCase {
 
     func testCountWithRecalculateConversation1() throws {
         let unreadMessages =
-            UnreadMessages(entityManager: EntityManager(databaseContext: DatabaseContext(
-                mainContext: mainCnx,
-                backgroundContext: nil
-            )))
+            UnreadMessages(
+                messageSender: MessageSenderMock(),
+                entityManager: EntityManager(
+                    databaseContext: DatabaseContext(
+                        mainContext: mainCnx,
+                        backgroundContext: nil
+                    )
+                )
+            )
         let count = unreadMessages.count(for: testDataConversation1)
 
         XCTAssertEqual(count, 1)

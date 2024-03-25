@@ -31,6 +31,7 @@
 // Attributes
 @property (nullable, nonatomic, retain) NSData * blobId NS_SWIFT_NAME(blobID);
 @property (nullable, nonatomic, retain) NSData * blobThumbnailId NS_SWIFT_NAME(blobThumbnailID);
+@property (nullable, nonatomic, retain) NSString * caption;
 @property (nullable, nonatomic, retain) NSData * encryptionKey;
 @property (nullable, nonatomic, retain) NSString * fileName;
 @property (nullable, nonatomic, retain) NSNumber * fileSize;
@@ -45,7 +46,6 @@
 @property (nullable, nonatomic, retain) ImageData *thumbnail;
 
 // Not stored in core data
-@property (nullable, nonatomic, retain) NSString *caption;
 @property (nullable, nonatomic, retain) NSString *correlationId NS_SWIFT_NAME(correlationID);
 @property (nullable, nonatomic, retain) NSString *mimeTypeThumbnail;
 @property (nullable, nonatomic, retain) NSNumber *duration;
@@ -70,6 +70,7 @@
 - (BOOL)sendAsFileGifMessage;
 
 - (BOOL)shouldShowCaption;
+- (NSString *)getJSONCaption;
 
 /// Returns `true` if this FileMessageEntity has a thumbnail and `false` otherwise
 ///

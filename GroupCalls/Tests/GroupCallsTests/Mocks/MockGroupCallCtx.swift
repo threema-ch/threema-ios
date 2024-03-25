@@ -49,7 +49,7 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
                 isExistingParticipant: existingParticipants
             )
             
-            pendingParticipants.append(participant)
+            pendingParticipants.insert(participant)
         }
     }
     
@@ -82,13 +82,13 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
                 isExistingParticipant: true
             )
             
-            pendingParticipants.append(participant)
+            pendingParticipants.insert(participant)
         }
     }
     
-    var pendingParticipants = [GroupCalls.RemoteParticipant]()
+    var pendingParticipants = Set<GroupCalls.RemoteParticipant>()
     
-    var participants = [GroupCalls.RemoteParticipant]()
+    var participants = Set<GroupCalls.RemoteParticipant>()
     
     func participant(with participantID: GroupCalls.ParticipantID) -> GroupCalls.RemoteParticipant? {
         nil
@@ -149,8 +149,8 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
     }
     
     func handle(_ message: ThreemaProtocols.Groupcall_ParticipantToParticipant.OuterEnvelope) async -> GroupCalls
-        .RemoteParticipant.MessageResponseAction {
-        GroupCalls.RemoteParticipant.MessageResponseAction.none
+        .MessageResponseAction {
+        GroupCalls.MessageResponseAction.none
     }
     
     func startStateUpdateTaskIfNecessary() throws {

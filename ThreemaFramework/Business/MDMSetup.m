@@ -22,8 +22,6 @@
 #import "LicenseStore.h"
 #import "UserSettings.h"
 #import "MyIdentityStore.h"
-#import "ServerAPIConnector.h"
-#import "ValidationLogger.h"
 #import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 #ifdef DEBUG
@@ -250,7 +248,7 @@ static NSDictionary *_mdmCacheSetup;
     return [safePasswordMessage isKindOfClass:[NSString class]] && safePasswordMessage.length > 0 ? safePasswordMessage : nil;
 }
 
-- (NSNumber *)keepMessagesDays {
+- (nullable NSNumber *)keepMessagesDays {
     NSNumber *keepMessagesDays = [self getMdmConfigurationValueForKey:MDM_KEY_KEEP_MESSAGE_DAYS];
     return [keepMessagesDays isKindOfClass:[NSNumber class]] ? keepMessagesDays : nil;
 }
@@ -547,7 +545,6 @@ static NSDictionary *_mdmCacheSetup;
         return;
     }
         
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *workData = [NSMutableDictionary new];
     NSDictionary *threemaMdm = [self getThreemaMDM];
     if (threemaMdm != nil) {
@@ -560,18 +557,19 @@ static NSDictionary *_mdmCacheSetup;
     if (!isLicenseRequired) {
         return;
     }
-    
+
     dispatch_sync(queue, ^{
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSDictionary *threemaMdm = nil;
 
         // Only update MDM settings if key exists in work data
         // This means MDM settings are only reset if the key is returned with no settings in it.
         if (workData != nil && [[workData allKeys] containsObject:MDM_KEY_THREEMA_CONFIGURATION]) {
-            NSDictionary *threemaMdm = [defaults dictionaryForKey:MDM_THREEMA_CONFIGURATION_KEY];
-            
+            threemaMdm = [defaults dictionaryForKey:MDM_THREEMA_CONFIGURATION_KEY];
+
             NSDictionary *newThreemaMdm = workData[MDM_KEY_THREEMA_CONFIGURATION];
             NSMutableDictionary *currentThreemaMdm = [[NSMutableDictionary alloc] initWithDictionary:threemaMdm];
-            
+
             if([currentThreemaMdm isEqualToDictionary:newThreemaMdm] == NO) {
                 // remove missing Threema MDM parameters
                 NSMutableArray *missingMdmKeys = [[NSMutableArray alloc] init];
@@ -583,17 +581,17 @@ static NSDictionary *_mdmCacheSetup;
                 }];
                 [currentThreemaMdmParameters removeObjectsForKeys:missingMdmKeys];
                 [currentThreemaMdm setObject:currentThreemaMdmParameters forKey:MDM_KEY_THREEMA_PARAMS];
-                
+
                 // apply new Threema MDM parameters
                 BOOL override = ((NSNumber *)newThreemaMdm[MDM_KEY_THREEMA_OVERRIDE]).boolValue;
                 NSDictionary *newThreemaMdmParameters = [self applyMdmParameters:currentThreemaMdm[MDM_KEY_THREEMA_PARAMS] source:newThreemaMdm[MDM_KEY_THREEMA_PARAMS] override:override];
-                
+
                 NSMutableDictionary *newThreemaMdmConfiguration = [[NSMutableDictionary alloc] initWithDictionary:threemaMdm];
                 [newThreemaMdmConfiguration setObject:newThreemaMdmParameters forKey:MDM_KEY_THREEMA_PARAMS];
                 [newThreemaMdmConfiguration setObject:[NSNumber numberWithBool:override] forKey:MDM_KEY_THREEMA_OVERRIDE];
                 threemaMdm = newThreemaMdmConfiguration;
             }
-            
+
             // store Threema MDM
             [defaults setObject:threemaMdm forKey:MDM_THREEMA_CONFIGURATION_KEY];
             [defaults synchronize];
@@ -606,6 +604,8 @@ static NSDictionary *_mdmCacheSetup;
     [self loadRenewableValues];
 
     [[LicenseStore sharedLicenseStore] performUpdateWorkInfoForce:sendForce];
+
+    [self sync];
 }
 
 - (NSDictionary*)getCompanyMDM {

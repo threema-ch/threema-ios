@@ -29,8 +29,8 @@ import WebRTC
 protocol GroupCallContextProtocol: AnyObject {
     // MARK: Internal Properties
     
-    var pendingParticipants: [RemoteParticipant] { get }
-    var participants: [RemoteParticipant] { get }
+    var pendingParticipants: Set<RemoteParticipant> { get }
+    var participants: Set<RemoteParticipant> { get }
     
     func localParticipant() -> LocalParticipant?
 
@@ -78,7 +78,7 @@ protocol GroupCallContextProtocol: AnyObject {
     func verifyReceiver(for message: Groupcall_ParticipantToParticipant.OuterEnvelope) -> Bool
     
     func handle(_ message: Groupcall_ParticipantToParticipant.OuterEnvelope) async throws
-        -> RemoteParticipant.MessageResponseAction
+        -> MessageResponseAction
     
     func mapLocalTransceivers(ownAudioMuteState: OwnMuteState, ownVideoMuteState: OwnMuteState) async throws
     
@@ -104,7 +104,7 @@ final class GroupCallContext<
     // MARK: Private variables
     
     private let connectionContext: ConnectionContext<PeerConnectionCtxImpl, RTCRtpTransceiverImpl>
-    private let participantState: ParticipantStateActor
+    private let participantState: ParticipantState
     private let groupCallBaseState: GroupCallBaseState
     
     private var dependencies: Dependencies
@@ -123,7 +123,7 @@ final class GroupCallContext<
         DDLogNotice("[GroupCall] \(#function)")
         
         self.connectionContext = connectionContext
-        self.participantState = ParticipantStateActor(localParticipant: localParticipant)
+        self.participantState = ParticipantState(localParticipant: localParticipant)
         self.dependencies = dependencies
         self.groupCallBaseState = groupCallDescription
         
@@ -177,14 +177,14 @@ final class GroupCallContext<
             /// When a participant leaves, all other participants run the following steps:
             try participantState.localParticipant.replaceAndApplyNewMediaKeys()
         }
-        catch LocalParticipant.Error.existingPendingMediaKeys {
+        catch GroupCallError.existingPendingMediaKeys {
             /// **Protocol Step: Join/Leave of Other Participants (Leave 2. second part)**
             /// [...] abort these steps.
             return
         }
         catch {
             let message = "[GroupCall] An unexpected error happened during media key replacement: \(error)"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             throw error
         }
@@ -298,7 +298,7 @@ extension GroupCallContext {
 extension GroupCallContext {
     func handle(
         _ message: Groupcall_ParticipantToParticipant.OuterEnvelope
-    ) async throws -> RemoteParticipant.MessageResponseAction {
+    ) async throws -> MessageResponseAction {
         
         /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 1.)**
         /// Receiving 1. If the `receiver` is not the user's assigned participant id, discard the message and abort
@@ -445,12 +445,12 @@ extension GroupCallContext {
 // MARK: - Call State
 
 extension GroupCallContext {
-    var pendingParticipants: [RemoteParticipant] {
+    var pendingParticipants: Set<RemoteParticipant> {
         // TODO: (IOS-4059) Properly separate pending and other participants
         participantState.getPendingParticipants()
     }
     
-    var participants: [RemoteParticipant] {
+    var participants: Set<RemoteParticipant> {
         participantState.getCurrentParticipants()
     }
     
@@ -527,7 +527,7 @@ extension GroupCallContext {
 // MARK: - Protobuf Helpers
 
 extension GroupCallContext {
-    private func encryptedCallState(from allParticipants: [RemoteParticipant]) throws -> Data {
+    private func encryptedCallState(from allParticipants: Set<RemoteParticipant>) throws -> Data {
         let callState = groupCallState(from: allParticipants)
         let serialized = try callState.ownSerializedData()
         let nonce = dependencies.groupCallCrypto.randomBytes(of: 24)
@@ -542,7 +542,7 @@ extension GroupCallContext {
         return encrypted
     }
     
-    private func groupCallState(from participants: [RemoteParticipant]) -> Groupcall_CallState {
+    private func groupCallState(from participants: Set<RemoteParticipant>) -> Groupcall_CallState {
         var callState = Groupcall_CallState()
         callState.stateCreatedAt = UInt64(Date().timeIntervalSinceReferenceDate)
         callState.stateCreatedBy = participantState.localParticipant.participantID.id
@@ -551,7 +551,7 @@ extension GroupCallContext {
         return callState
     }
     
-    private func groupCallParticipants(from participants: [RemoteParticipant])
+    private func groupCallParticipants(from participants: Set<RemoteParticipant>)
         -> [UInt32: Groupcall_CallState.Participant] {
         var dict = [UInt32: Groupcall_CallState.Participant]()
         

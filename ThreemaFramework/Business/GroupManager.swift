@@ -71,24 +71,24 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         self.groupPhotoSender = groupPhotoSender
     }
     
-    @objc public convenience init(entityManager: EntityManager) {
+    convenience init(entityManager: EntityManager, taskManager: TaskManagerProtocol = TaskManager()) {
         self.init(
             MyIdentityStore.shared(),
             ContactStore.shared(),
-            TaskManager(),
+            taskManager,
             UserSettings.shared(),
             entityManager,
             GroupPhotoSender()
         )
     }
-    
-    override public convenience init() {
+
+    @objc convenience init(entityManager: EntityManager, taskManagerObjc: TaskManager) {
         self.init(
             MyIdentityStore.shared(),
             ContactStore.shared(),
-            TaskManager(),
+            taskManagerObjc,
             UserSettings.shared(),
-            EntityManager(),
+            entityManager,
             GroupPhotoSender()
         )
     }
@@ -115,8 +115,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             return Promise(error: GroupError.notCreator)
         }
         
-        removeUnknownGroupFromAlertList(groupIdentity)
-
         // Is oldMembers nil, means the group is new and there aren't old members
         var oldMembers: [String]?
         var removedMembers = [String]()
@@ -242,8 +240,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 return Promise(error: GroupError.contactForCreatorMissing)
             }
         }
-
-        removeUnknownGroupFromAlertList(groupIdentity)
 
         var group: Group?
 
@@ -1220,11 +1216,11 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // 5. Send a group-setup message with the current group members, ...
         let createTask = createGroupCreateSyncTask(for: group, conversation: conversation, to: toMembers)
         taskManager.add(taskDefinition: createTask)
-        
+
         // ...followed by a group-name message to the sender.
         let sendNameTask = createGroupRenameTask(for: group, to: toMembers)
         taskManager.add(taskDefinition: sendNameTask)
-        
+
         // 7. If the group has no profile picture, send a `delete-profile-picture` group control message to the sender.
         if group.profilePicture == nil {
             let deletePhotoTask = createDeletePhotoTask(for: group, to: toMembers)
@@ -1312,6 +1308,32 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
         return group
     }
+    
+    public func getAllActiveGroups() async -> [Group] {
+        await entityManager.perform {
+            let allActiveGroupEntities = self.entityManager.entityFetcher.allActiveGroups()
+            
+            return allActiveGroupEntities.compactMap { groupEntity in
+                // Because the entity fetcher for group conversations needs a creator identity we set them to our own
+                // identity. If our ID changed in the meantime (e.g. through a restore were the data is restored, but a
+                // new ID created) we will still fetch the correct group, that we're not really part of anymore, but
+                // might be still marked as active...
+                
+                guard let creatorIdentity = groupEntity.groupCreator ?? self.myIdentityStore.identity else {
+                    return nil
+                }
+            
+                guard let conversation = self.entityManager.entityFetcher.conversation(
+                    for: groupEntity.groupID,
+                    creator: creatorIdentity
+                ) else {
+                    return nil
+                }
+                
+                return self.getGroup(groupEntity: groupEntity, conversation: conversation)
+            }
+        }
+    }
 
     private func getGroup(groupEntity: GroupEntity, conversation: Conversation) -> Group {
         let creator: String = groupEntity.groupCreator ?? myIdentityStore.identity
@@ -1350,45 +1372,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
         return conversation.members.filter { member -> Bool in
             !member.identity.elementsEqual(myIdentityStore.identity)
-        }
-    }
-    
-    /// Show alert of unknown group, if after 5 sec. no group create message arrived.
-    ///
-    /// - Parameters:
-    ///   - groupID: Group id of unknown group
-    ///   - creator: Creator identity of unknown group
-    @objc public func unknownGroup(groupID: Data, creator: String) {
-        DispatchQueue.main.async {
-            Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { _ in
-                DispatchQueue.global(qos: .default).async {
-                    guard self.getGroup(groupID, creator: creator) == nil else {
-                        return
-                    }
-                    
-                    var userInfo: [String: String]?
-                    self.entityManager.performBlockAndWait {
-                        if let contact = self.entityManager.entityFetcher.contact(for: creator) {
-                            userInfo = [kKeyContact: contact.displayName]
-                        }
-                        else {
-                            userInfo = [kKeyContact: creator]
-                        }
-                    }
-                    
-                    let unknownGroupAlertList = self.userSettings.unknownGroupAlertList!
-                    let groupDict: [String: AnyHashable] = ["groupid": groupID, "creator": creator]
-                    if !unknownGroupAlertList.contains(groupDict) {
-                        NotificationCenter.default.post(
-                            name: Notification.Name(rawValue: kNotificationErrorUnknownGroup),
-                            object: nil,
-                            userInfo: userInfo
-                        )
-                        unknownGroupAlertList.add(groupDict)
-                        self.userSettings.unknownGroupAlertList = unknownGroupAlertList
-                    }
-                }
-            }
         }
     }
     
@@ -1619,15 +1602,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         
         let task = TaskDefinitionSendAbstractMessage(message: msg)
         taskManager.add(taskDefinition: task)
-    }
-    
-    private func removeUnknownGroupFromAlertList(_ groupIdentity: GroupIdentity) {
-        let unknownGroupAlertList = userSettings.unknownGroupAlertList!
-        let groupDict = ["groupid": groupIdentity.id, "creator": groupIdentity.creator.string] as [String: AnyHashable]
-        if unknownGroupAlertList.map({ $0 as! [String: AnyHashable] == groupDict }).contains(true) {
-            unknownGroupAlertList.remove(groupDict)
-            userSettings.unknownGroupAlertList = unknownGroupAlertList
-        }
     }
     
     private func removeContactHiddenFlags(for conversation: Conversation) {

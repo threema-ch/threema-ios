@@ -78,6 +78,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     TaskDefinitionSendAbstractMessage *task = [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:msg];
     TaskManager *tm = [[TaskManager alloc] init];
     [tm addObjcWithTaskDefinition:task];
+    
+    ContactStore *contactStore = [ContactStore sharedContactStore];
+    [contactStore removeProfilePictureRequest:toIdentity];
 }
 
 // MARK: - Profile picture send/upload
@@ -127,8 +130,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if ([contactStore existsProfilePictureRequestForIdentity:message.toIdentity]) {
             // send profile picture request
             [ContactPhotoSender sendProfilePictureRequest:message.toIdentity];
-
-            [contactStore removeProfilePictureRequest:message.toIdentity];
         }
     }
 }

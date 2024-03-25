@@ -44,9 +44,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var sendMessageFeedback = true
     
     var chatFontSize: Float = 0.0
-    
-    var unknownGroupAlertList: NSMutableArray! = NSMutableArray()
-    
+        
     var enableIPv6 = true
     
     var syncContacts = false

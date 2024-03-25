@@ -41,7 +41,6 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     
     func testNoDeviceGroupPathKey() {
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx)
         )
 
@@ -77,7 +76,6 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
             deviceGroupKeys: MockData.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
@@ -244,7 +242,6 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
 
             let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let framworkInjectorMock = BusinessInjectorMock(
-                backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
                 entityManager: EntityManager(databaseContext: databaseMainCnx),
                 myIdentityStore: test.initialConfig.identityStore,
                 userSettings: test.initialConfig.userSettings,

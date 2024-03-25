@@ -2369,6 +2369,89 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(actualGroup.conversation, expectedGroup.conversation)
     }
     
+    func testGetAllActiveGroupsOwnGroup() async throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+        
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
+        
+        for member in expectedMembers {
+            databasePreparer.createContact(identity: member)
+        }
+        
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
+            groupPhotoSenderMock
+        )
+        
+        _ = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroupIdentity,
+                members: expectedMembers
+            )
+        )
+
+        let actualActiveGroups = await groupManager.getAllActiveGroups()
+        
+        XCTAssertEqual(actualActiveGroups.count, 1)
+        XCTAssertEqual(actualActiveGroups[0].groupIdentity, expectedGroupIdentity)
+        XCTAssertFalse(actualActiveGroups[0].didLeave)
+        XCTAssertFalse(actualActiveGroups[0].didForcedLeave)
+    }
+    
+    func testGetAllActiveGroupsOtherGroup() async throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+        
+        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER01", "MEMBER02", "MEMBER03"]
+        
+        for member in expectedMembers {
+            databasePreparer.createContact(identity: member)
+        }
+        
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
+            groupPhotoSenderMock
+        )
+        
+        _ = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroupIdentity,
+                members: expectedMembers
+            )
+        )
+        
+        let actualActiveGroups = await groupManager.getAllActiveGroups()
+        
+        XCTAssertEqual(actualActiveGroups.count, 1)
+        XCTAssertEqual(actualActiveGroups[0].groupIdentity, expectedGroupIdentity)
+        XCTAssertFalse(actualActiveGroups[0].didLeave)
+        XCTAssertFalse(actualActiveGroups[0].didForcedLeave)
+    }
+    
+    func testGetAllActiveGroupsMultipleGroups() async throws {
+        // TODO: (IOS-4280) Add more tests
+    }
+    
     func testAddMemberToGroupWithOpenBallot() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
@@ -2749,83 +2832,6 @@ class GroupManagerTests: XCTestCase {
             }
 
         wait(for: [expect], timeout: 1)
-    }
-    
-    func testAddUnknownGroupToAlertList() {
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
-        let taskManagerMock = TaskManagerMock()
-        let userSettingsMock = UserSettingsMock()
-        
-        let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
-            creator: ThreemaIdentity(myIdentityStoreMock.identity)
-        )
-
-        let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
-        )
-        
-        groupManager.unknownGroup(groupID: expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
-
-        let expec = XCTestExpectation(description: "Wait till alert is added to the list after 5 seconds")
-        Timer.scheduledTimer(withTimeInterval: 6, repeats: false) { _ in
-            expec.fulfill()
-        }
-        wait(for: [expec], timeout: 10.0, enforceOrder: false)
-        
-        let unknownGroupAlertList = userSettingsMock.unknownGroupAlertList!
-        let groupDict = [
-            "groupid": expectedGroupIdentity.id,
-            "creator": expectedGroupIdentity.creator.string,
-        ] as [String: AnyHashable]
-        XCTAssertTrue(unknownGroupAlertList.map { $0 as! [String: AnyHashable] == groupDict }.contains(true))
-    }
-    
-    func testRemoveUnknownGroupFromAlertList() {
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
-        let taskManagerMock = TaskManagerMock()
-        let userSettingsMock = UserSettingsMock()
-        
-        let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
-            creator: ThreemaIdentity(myIdentityStoreMock.identity)
-        )
-
-        let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
-        )
-        
-        groupManager.unknownGroup(groupID: expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
-
-        let expec = XCTestExpectation(description: "Wait till alert is added to the list after 5 seconds")
-        Timer.scheduledTimer(withTimeInterval: 6, repeats: false) { _ in
-            expec.fulfill()
-        }
-        wait(for: [expec], timeout: 10.0, enforceOrder: false)
-        
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
-        )
-        let unknownGroupAlertList = userSettingsMock.unknownGroupAlertList!
-        let groupDict = [
-            "groupid": expectedGroupIdentity.id,
-            "creator": expectedGroupIdentity.creator.string,
-        ] as [String: AnyHashable]
-        XCTAssertFalse(unknownGroupAlertList.map { $0 as! [String: AnyHashable] == groupDict }.contains(true))
     }
 
     func testCreateOrUpdateBlockUnknownContact() throws {

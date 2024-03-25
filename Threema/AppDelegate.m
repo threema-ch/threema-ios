@@ -46,7 +46,6 @@
 #import "GatewayAvatarMaker.h"
 #import "ErrorHandler.h"
 #import "DatabaseManager.h"
-#import "FeatureMask.h"
 #import "TouchIdAuthentication.h"
 #import "ErrorNotificationHandler.h"
 #import "SplashViewController.h"
@@ -399,8 +398,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 NSError *error;
                 // AppMigration makes sure to only throw erros that are considered fatal i.e. the migration failed and we expect
                 // the app to not be usable without it.
-                [[[AppMigration alloc] initWithBusinessInjectorObjc:[BusinessInjector new]] runAndReturnError:&error];
-                
+                [[AppMigration new] runAndReturnError:&error];
+
                 if (error != nil) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [ErrorHandler abortWithError: error additionalText:[BundleUtil localizedStringForKey:@"database_migration_error_hints"]];
@@ -479,7 +478,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      }
     
 #if DEBUG
-    GroupManager *groupManager = [GroupManager new];
+    GroupManager *groupManager = [[BusinessInjector new] groupManagerObjC];
     [groupManager deleteAllSyncRequestRecords];
 #endif
 
@@ -495,6 +494,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [IdentityBackupStore syncKeychainWithFile];
     
     [self cleanInbox];
+    
+    if (@available(iOS 17.0, *)) {
+        [TipKitManager configureTips];
+    }
 }
 
 #pragma mark - Storyboards
@@ -712,7 +715,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
                               
             // Perform Threema Safe launch checks
-            SafeManager *safeManager = [[SafeManager alloc] initWithGroupManager:[[GroupManager alloc] init]];
+            SafeManager *safeManager = [[SafeManager alloc] initWithGroupManager:[[BusinessInjector new] groupManagerObjC]];
             [safeManager performThreemaSafeLaunchChecks];
         }
     }
@@ -931,7 +934,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         }
     }
         
-    [FeatureMask updateFeatureMask];
+    [FeatureMask updateLocalObjc];
 
     [AppDelegate registerForLocalNotifications];
 }
@@ -1093,6 +1096,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      */
     DDLogNotice(@"AppState: applicationDidEnterBackground");
     
+    [self scheduleBackgroundTasks];
+    
     [self showLockScreen];
     
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
@@ -1224,7 +1229,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [[DatabaseManager dbManager] refreshDirtyObjects: YES];
     
     [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
-    [FeatureMask updateFeatureMask];
+    [FeatureMask updateLocalObjc];
     [AppDelegate registerForLocalNotifications];
     
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
@@ -1321,7 +1326,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [[VoIPCallStateManager shared] presentCallViewController];
     } else {
         // If not a call, then trigger Threema Safe backup (it will show an alert here, if last successful backup older than 7 days)
-        SafeManager *safeManager = [[SafeManager alloc]initWithGroupManager:[[GroupManager alloc] init]];
+        SafeManager *safeManager = [[SafeManager alloc]initWithGroupManager:[[BusinessInjector new] groupManagerObjC]];
         [safeManager initTrigger];
     }
     
@@ -1372,7 +1377,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         EntityManager *entityManager = [[EntityManager alloc] init];
         ContactEntity *contact = [entityManager.entityFetcher contactForId:personHandle.value];
         if (contact) {
-            [FeatureMask checkFeatureMask:FEATURE_MASK_VOIP forContacts:[NSSet setWithObjects:contact, nil] onCompletion:^(NSArray *unsupportedContacts) {
+            [FeatureMask checkObjcWithContacts:[NSSet setWithObjects:contact, nil] for:FEATURE_MASK_VOIP completion:^(NSArray *unsupportedContacts) {
                 if (unsupportedContacts.count == 0) {
                     VoIPCallUserAction *action = [[VoIPCallUserAction alloc] initWithAction:ActionCall contactIdentity:contact.identity callID:nil completion:nil];
                     [[VoIPCallStateManager shared] processUserAction:action];

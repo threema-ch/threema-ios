@@ -61,6 +61,7 @@ class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion5_5()
         setupDataForMigrationVersion5_6()
         setupDataForMigrationVersion5_7()
+        setupDataForMigrationVersion5_9()
 
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
@@ -70,7 +71,6 @@ class AppMigrationTests: XCTestCase {
         userSettingsMock.appMigratedToVersion = AppMigrationVersion.none.rawValue
 
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
@@ -104,10 +104,12 @@ class AppMigrationTests: XCTestCase {
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.6 successfully finished"))
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.7 started"))
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.7 successfully finished"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.9 started"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.9 successfully finished"))
 
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         let conversations: [Conversation] = entityManager.entityFetcher.allConversations() as! [Conversation]
-        XCTAssertEqual(conversations.count, 4)
+        XCTAssertEqual(conversations.count, 5)
 
         // Checks for 4.8 migration
         for conversation in ["SENDER01", "SENDER02"]
@@ -137,7 +139,13 @@ class AppMigrationTests: XCTestCase {
         let pushSettings = userSettingsMock.pushSettings
         XCTAssertEqual(pushSettings.count, 4)
 
-        let pushSettingManager = PushSettingManager(userSettingsMock, GroupManagerMock(), EntityManager(), false)
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            EntityManager(),
+            TaskManager(),
+            false
+        )
         var pushSetting1 = pushSettingManager.find(forContact: ThreemaIdentity("ECHOECHO"))
         XCTAssertEqual(pushSetting1.type, .offPeriod)
         XCTAssertFalse(pushSetting1.mentioned)
@@ -165,6 +173,17 @@ class AppMigrationTests: XCTestCase {
         XCTAssertFalse(pushSetting4.mentioned)
         XCTAssertFalse(pushSetting4.muted)
         XCTAssertNil(pushSetting4.periodOffTillDate)
+        
+        // Checks for 5.9 migration
+        let conversation = entityManager.entityFetcher.conversation(forIdentity: "FILEID01")
+        let fileMessages = entityManager.entityFetcher.fileMessages(for: conversation) as? [FileMessageEntity]
+        XCTAssertNotNil(fileMessages)
+        
+        for fileMessage in fileMessages! {
+            XCTAssertEqual(fileMessage.caption, "Caption as database field")
+        }
+        
+        XCTAssertNil(AppGroup.userDefaults().array(forKey: "UnknownGroupAlertList"))
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -353,5 +372,74 @@ class AppMigrationTests: XCTestCase {
         mutablePushSettingsList.add(dic4)
 
         AppGroup.userDefaults().setValue(mutablePushSettingsList.array, forKey: "PushSettingsList")
+    }
+    
+    private func setupDataForMigrationVersion5_9() {
+        // Caption migration
+
+        // Setup mocks
+        let calendar = Calendar.current
+        
+        let addFileMessage: (Conversation, String) -> Void = { conversation, caption in
+            let testBundle = Bundle(for: DBLoadTests.self)
+            let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
+            let testImageData = try? Data(contentsOf: testImageURL!)
+            let dbFile: FileData = self.dbPreparer.createFileData(data: testImageData!)
+
+            let testThumbnailData = MediaConverter.getThumbnailFor(UIImage(data: testImageData!)!)?
+                .jpegData(compressionQuality: 1.0)
+            let testThumbnailFile: ImageData = self.dbPreparer.createImageData(
+                data: testThumbnailData!,
+                height: 100,
+                width: 100
+            )
+            
+            let date = calendar.date(byAdding: .second, value: +1, to: Date())!
+            let encryptionKey = BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!
+            let messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+            
+            let fileMessageEntity = self.dbPreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: encryptionKey,
+                data: dbFile,
+                thumbnail: testThumbnailFile,
+                mimeType: "image/jpeg",
+                type: NSNumber(integerLiteral: 1),
+                messageID: messageID,
+                date: Date(),
+                isOwn: true,
+                sent: true,
+                delivered: true,
+                read: true,
+                userack: false
+            )
+            
+            if let jsonWithoutCaption = FileMessageEncoder.jsonString(for: fileMessageEntity),
+               let dataWithoutCaption = jsonWithoutCaption.data(using: .utf8),
+               var dict = try? JSONSerialization.jsonObject(with: dataWithoutCaption) as? [String: AnyObject] {
+                dict["d"] = caption as AnyObject
+                let dataWithCaption = try? JSONSerialization.data(withJSONObject: dict)
+                fileMessageEntity.json = String(data: dataWithCaption!, encoding: .utf8)
+            }
+        }
+                
+        dbPreparer.save {
+            let contact = dbPreparer.createContact(
+                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                identity: "FILEID01",
+                verificationLevel: 0
+            )
+            dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                    conversation.contact = contact
+                    addFileMessage(conversation, "Caption as database field")
+                    addFileMessage(conversation, "Caption as database field")
+                    addFileMessage(conversation, "Caption as database field")
+                }
+        }
+
+        // Unknown group message removal
+        AppGroup.userDefaults()
+            .setValue(["groupid": MockData.generateGroupID(), "creator": "CREATOR1"], forKey: "UnknownGroupAlertList")
     }
 }

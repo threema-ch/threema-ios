@@ -52,10 +52,7 @@ class EntityCreatorTests: XCTestCase {
         )
         entityManager = EntityManager(databaseContext: databaseContext)
         
-        businessInjector = BusinessInjectorMock(
-            backgroundEntityManager: entityManager,
-            entityManager: entityManager
-        )
+        businessInjector = BusinessInjectorMock(entityManager: entityManager)
     }
 
     func testCreateFileMessageEntityImage() async throws {

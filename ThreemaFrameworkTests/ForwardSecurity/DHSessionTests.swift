@@ -31,6 +31,7 @@ class DHSessionTests: XCTestCase {
     
     override func setUp() {
         continueAfterFailure = false
+        
         aliceIdentityStore = MyIdentityStoreMock(
             identity: "AAAAAAAA",
             secretKey: Data(base64Encoded: "2Hi7lA4boz9eLl0ozdeb2uKj2+i/wD2PUTRczwshp1Y=")!
@@ -49,6 +50,10 @@ class DHSessionTests: XCTestCase {
             identityStore: aliceIdentityStore
         )
         
+        // Validate default initial initiator values
+        XCTAssertFalse(initiatorDHSession.newSessionCommitted)
+        XCTAssertNil(initiatorDHSession.lastMessageSent)
+        
         // Bob gets an init message from Alice with her ephemeral public key
         responderDHSession = try DHSession(
             id: initiatorDHSession.id,
@@ -61,6 +66,10 @@ class DHSessionTests: XCTestCase {
             },
             identityStore: bobIdentityStore
         )
+        
+        // Validate default initial responder values
+        XCTAssertTrue(responderDHSession.newSessionCommitted)
+        XCTAssertNil(responderDHSession.lastMessageSent)
     }
     
     func test2DHKeyExchange() throws {

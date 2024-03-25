@@ -35,10 +35,17 @@ extension SingleDetailsDataSource {
 
 final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails.Section, SingleDetails.Row> {
     
+    /// Increase counter if tap happened that eventually should show FS reset & debug infos
+    var showDebugInfoTapCounter = 0 {
+        didSet {
+            if showDebugInfo {
+                configureData(isInitialConfiguration: false)
+            }
+        }
+    }
+    
     // MARK: - Properties
-    
-    var tapsOnThreemaID = 0
-    
+        
     private let state: SingleDetails.State
     
     private let contact: ContactEntity
@@ -66,6 +73,12 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     }()
     
     private let configuration = Configuration()
+    
+    // Keep track of debug info taps and configure threshold after how many taps to show debug info
+    private let showDebugInfoThreshold = 5
+    private var showDebugInfo: Bool {
+        showDebugInfoTapCounter >= showDebugInfoThreshold || ThreemaEnvironment.env() == .xcode
+    }
     
     // MARK: - Lifecycle
     
@@ -105,9 +118,6 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             )
         }
         .store(in: &cancellables)
-        
-        let cont = Contact(contactEntity: contact)
-        DDLogNotice("DH session state with contact: \(cont.forwardSecurityState?.description ?? "nil")")
     }
     
     @available(*, unavailable)
@@ -261,7 +271,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         snapshot.appendSections([.contactActions])
         snapshot.appendItems(contactActions)
         
-        if ThreemaEnvironment.env() == .xcode {
+        if showDebugInfo {
             snapshot.appendSections([.debugInfo])
             snapshot.appendItems([.coreDataDebugInfo(contact: contact)])
             snapshot.appendItems(fsSessionDebugInfo)
@@ -501,11 +511,10 @@ extension SingleDetailsDataSource {
             let contactSet = Set<ContactEntity>([strongSelf.contact])
             FeatureMask
                 .check(
-                    Int(FEATURE_MASK_VOIP),
-                    forContacts: contactSet
+                    contacts: contactSet,
+                    for: Int(FEATURE_MASK_VOIP)
                 ) { [weak self, weak viewController] unsupportedContacts in
-                    
-                    if let strongSelf = self, unsupportedContacts?.isEmpty == true {
+                    if let strongSelf = self, unsupportedContacts.isEmpty == true {
                         // Happy path: Start call
                         let action = VoIPCallUserAction(
                             action: .call,
@@ -1197,7 +1206,7 @@ extension SingleDetailsDataSource {
         }
         
         // We only show the clear forward security action in debug mode or if manually enabled by the user
-        guard ThreemaEnvironment.env() == .xcode || tapsOnThreemaID >= 10 else {
+        guard showDebugInfo else {
             return nil
         }
         

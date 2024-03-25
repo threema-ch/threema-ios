@@ -206,7 +206,7 @@ final class ConnectionContext<
         }
     }
     
-    func updateCall(call: ParticipantStateActor, remove: Set<ParticipantID>, add: Set<ParticipantID>) async throws {
+    func updateCall(call: ParticipantState, remove: Set<ParticipantID>, add: Set<ParticipantID>) async throws {
         guard !Task.isCancelled else {
             return
         }
@@ -472,7 +472,7 @@ extension ConnectionContext {
     private func remapAddedRemoteTransceivers(
         unmapped: inout TransceiverMapActor<RTCRtpTransceiverImpl>,
         add: Set<ParticipantID>,
-        participantState: ParticipantStateActor
+        participantState: ParticipantState
     ) async throws {
         
         // Create all newly added (pending) remote participant states and map their

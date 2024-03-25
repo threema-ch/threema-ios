@@ -238,6 +238,21 @@ static MyIdentityStore *instance;
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationDestroyedIdentity object:nil];
 }
 
+- (void)destroyDeviceOnlyKeychainItems {
+    if ([ThreemaEnvironment env] == EnvironmentTypeXcode) {
+        [[KeychainKeyWrapper new] deleteWrappingKey];
+        [DeviceCookieManager deleteDeviceCookie];
+        
+        [self deleteFromKeychain];
+        
+        DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:self];
+        [deviceGroupKeyManager destroy];
+    }
+    else {
+        DDLogWarn(@"destroyDeviceOnlyKeychainItems is for testing only");
+    }
+}
+
 - (void)removeIdentityUserDefaults {
     [[KeychainKeyWrapper new] deleteWrappingKey];
     [DeviceCookieManager deleteDeviceCookie];

@@ -31,7 +31,7 @@ class PublicServerInfoProvider: ServerInfoProvider {
             publicKeyAlt: chatServerPublicKeyAlt()
         ), nil)
     }
-    
+
     private func chatServerNamePrefix(ipv6: Bool) -> String {
         var keyName = LicenseStore.requiresLicenseKey() ? "ThreemaWork" : "Threema"
         keyName += "ServerNamePrefix"
@@ -40,23 +40,23 @@ class PublicServerInfoProvider: ServerInfoProvider {
         }
         return BundleUtil.object(forInfoDictionaryKey: keyName) as! String
     }
-    
+
     private func chatServerNameSuffix(ipv6: Bool) -> String {
         BundleUtil.object(forInfoDictionaryKey: "ThreemaServerNameSuffix") as! String
     }
-    
+
     private func chatServerPorts() -> [Int] {
         BundleUtil.object(forInfoDictionaryKey: "ThreemaServerPorts") as! [Int]
     }
-    
+
     private func chatServerPublicKey() -> Data {
         BundleUtil.object(forInfoDictionaryKey: "ThreemaServerPublicKey") as! Data
     }
-    
+
     private func chatServerPublicKeyAlt() -> Data {
         BundleUtil.object(forInfoDictionaryKey: "ThreemaServerAltPublicKey") as! Data
     }
-    
+
     func directoryServer(ipv6: Bool, completionHandler: @escaping (DirectoryServerInfo?, Error?) -> Void) {
         var keyName = "ThreemaAPIURL"
         if ipv6 {
@@ -65,10 +65,10 @@ class PublicServerInfoProvider: ServerInfoProvider {
         if LicenseStore.requiresLicenseKey() {
             keyName += "Work"
         }
-        
+
         completionHandler(DirectoryServerInfo(url: BundleUtil.object(forInfoDictionaryKey: keyName) as! String), nil)
     }
-    
+
     func blobServer(ipv6: Bool, completionHandler: @escaping (BlobServerInfo?, Error?) -> Void) {
         completionHandler(BlobServerInfo(
             downloadURL: blobServerDownloadURL(ipv6: ipv6),
@@ -76,19 +76,19 @@ class PublicServerInfoProvider: ServerInfoProvider {
             doneURL: blobServerDoneURL(ipv6: ipv6)
         ), nil)
     }
-    
+
     private func blobServerDownloadURL(ipv6: Bool) -> String {
         blobServerURL(infoKeyPrefix: "ThreemaBlobURL", ipv6: ipv6)
     }
-    
+
     private func blobServerUploadURL(ipv6: Bool) -> String {
         blobServerURL(infoKeyPrefix: "ThreemaBlobUploadURL", ipv6: ipv6)
     }
-    
+
     private func blobServerDoneURL(ipv6: Bool) -> String {
         blobServerURL(infoKeyPrefix: "ThreemaBlobDoneURL", ipv6: ipv6)
     }
-    
+
     private func blobServerURL(infoKeyPrefix: String, ipv6: Bool) -> String {
         var keyName = infoKeyPrefix
         if ipv6 {
@@ -96,30 +96,30 @@ class PublicServerInfoProvider: ServerInfoProvider {
         }
         return BundleUtil.object(forInfoDictionaryKey: keyName) as! String
     }
-    
+
     func workServer(ipv6: Bool, completionHandler: @escaping (WorkServerInfo?, Error?) -> Void) {
         var keyName = "ThreemaWorkAPIURL"
         if ipv6 {
             keyName += "v6"
         }
-        
+
         completionHandler(WorkServerInfo(url: BundleUtil.object(forInfoDictionaryKey: keyName) as! String), nil)
     }
-    
+
     func avatarServer(ipv6: Bool, completionHandler: @escaping (AvatarServerInfo?, Error?) -> Void) {
         completionHandler(
             AvatarServerInfo(url: BundleUtil.object(forInfoDictionaryKey: "ThreemaAvatarURL") as! String),
             nil
         )
     }
-    
+
     func safeServer(ipv6: Bool, completionHandler: @escaping (SafeServerInfo?, Error?) -> Void) {
         completionHandler(
             SafeServerInfo(url: BundleUtil.object(forInfoDictionaryKey: "ThreemaSafeURL") as! String),
             nil
         )
     }
-    
+
     func mediatorServer(
         deviceGroupIDFirstByteHex: String,
         completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void
@@ -140,6 +140,12 @@ class PublicServerInfoProvider: ServerInfoProvider {
             url: BundleUtil.object(forInfoDictionaryKey: "ThreemaWebURL") as! String,
             overrideSaltyRtcHost: nil,
             overrideSaltyRtcPort: nil
+        ), nil)
+    }
+
+    func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void) {
+        completionHandler(RendezvousServerInfo(
+            url: BundleUtil.object(forInfoDictionaryKey: "ThreemaRendezvousServerURL") as! String
         ), nil)
     }
 }

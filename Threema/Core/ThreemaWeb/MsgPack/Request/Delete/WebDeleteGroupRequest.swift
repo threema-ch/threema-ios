@@ -37,16 +37,16 @@ class WebDeleteGroupRequest: WebAbstractMessage {
     
     func deleteOrLeave() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
-        guard let conversation = entityManager.entityFetcher.legacyConversation(for: id) else {
+        let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
+        guard let conversation = backgroundBusinessInjector.entityManager.entityFetcher.legacyConversation(for: id)
+        else {
             ack!.success = false
             ack!.error = "invalidGroup"
             return
         }
         
         if conversation.isGroup() {
-            let groupManager = GroupManager(entityManager: entityManager)
-            guard let group = groupManager.getGroup(conversation: conversation) else {
+            guard let group = backgroundBusinessInjector.groupManager.getGroup(conversation: conversation) else {
                 ack!.success = false
                 ack!.error = "invalidGroup"
                 return
@@ -58,7 +58,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
                 return
             }
 
-            groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
+            backgroundBusinessInjector.groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
 
             MessageDraftStore.deleteDraft(for: conversation)
             
@@ -66,10 +66,10 @@ class WebDeleteGroupRequest: WebAbstractMessage {
             
             if deleteType == "delete" {
 
-                groupManager.dissolve(groupID: group.groupID, to: nil)
+                backgroundBusinessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
 
-                entityManager.performSyncBlockAndSafe {
-                    entityManager.entityDestroyer.deleteObject(object: conversation)
+                backgroundBusinessInjector.entityManager.performSyncBlockAndSafe {
+                    backgroundBusinessInjector.entityManager.entityDestroyer.deleteObject(object: conversation)
                 }
                 
                 DispatchQueue.main.async {

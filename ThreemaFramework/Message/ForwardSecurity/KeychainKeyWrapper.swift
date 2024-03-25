@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
+/// Encrypt Forward Security keys with a keychain key that cannot be restored on a different device.
 @objc class KeychainKeyWrapper: NSObject, KeyWrapperProtocol {
     public static let unwrappedKeyLength = 32
     

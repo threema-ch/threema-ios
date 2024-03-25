@@ -289,10 +289,10 @@ extension VoIPCallPeerConnectionClient {
             self.rtcAudioSession.lockForConfiguration()
             do {
                 try self.rtcAudioSession.setCategory(
-                    AVAudioSession.Category.playAndRecord.rawValue,
+                    AVAudioSession.Category.playAndRecord,
                     with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
-                try self.rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat.rawValue)
+                try self.rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
                 try self.rtcAudioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
                 try self.rtcAudioSession.setActive(true)
             }
@@ -315,10 +315,10 @@ extension VoIPCallPeerConnectionClient {
             self.rtcAudioSession.lockForConfiguration()
             do {
                 try self.rtcAudioSession.setCategory(
-                    AVAudioSession.Category.playAndRecord.rawValue,
+                    AVAudioSession.Category.playAndRecord,
                     with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
-                try self.rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat.rawValue)
+                try self.rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
                 try self.rtcAudioSession.overrideOutputAudioPort(.none)
                 try self.rtcAudioSession.setActive(true)
             }
@@ -341,10 +341,10 @@ extension VoIPCallPeerConnectionClient {
             self.rtcAudioSession.lockForConfiguration()
             do {
                 try self.rtcAudioSession.setCategory(
-                    AVAudioSession.Category.playAndRecord.rawValue,
+                    AVAudioSession.Category.playAndRecord,
                     with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
-                try self.rtcAudioSession.setMode(AVAudioSession.Mode.videoChat.rawValue)
+                try self.rtcAudioSession.setMode(AVAudioSession.Mode.videoChat)
                 try self.rtcAudioSession.overrideOutputAudioPort(.speaker)
                 try self.rtcAudioSession.setActive(true)
             }
@@ -621,10 +621,10 @@ extension VoIPCallPeerConnectionClient {
         rtcAudioSession.lockForConfiguration()
         do {
             try rtcAudioSession.setCategory(
-                AVAudioSession.Category.playAndRecord.rawValue,
+                AVAudioSession.Category.playAndRecord,
                 with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
-            try rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat.rawValue)
+            try rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
         }
         catch {
             debugPrint("Error changeing AVAudioSession category: \(error)")

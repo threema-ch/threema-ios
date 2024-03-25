@@ -129,6 +129,8 @@ final class DetailsHeaderView: UIStackView {
         if !mediaAndPollsQuickActions.isEmpty {
             addArrangedSubview(mediaAndPollsQuickActionsView)
         }
+        
+        bringSubviewToFront(detailsHeaderProfileView)
     }
     
     private func addObservers() {
@@ -157,7 +159,7 @@ final class DetailsHeaderView: UIStackView {
     
     // MARK: - Action
     
-    func autoShowThreemaTypeInfo() {
-        detailsHeaderProfileView.autoShowThreemaTypeInfo()
+    func showThreemaTypeTip() {
+        detailsHeaderProfileView.showThreemaTypeTip()
     }
 }

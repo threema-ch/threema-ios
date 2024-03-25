@@ -39,6 +39,15 @@ extension Colors {
         }
     }
     
+    @objc public class var plainBackgroundTableView: UIColor {
+        switch theme {
+        case .light, .undefined:
+            return Asset.SharedColors.white.color
+        case .dark:
+            return Asset.SharedColors.black.color
+        }
+    }
+    
     @objc public class var backgroundTableHeaderView: UIColor {
         switch theme {
         case .light, .undefined:

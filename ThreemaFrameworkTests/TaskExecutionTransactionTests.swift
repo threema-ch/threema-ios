@@ -162,8 +162,7 @@ class TaskExecutionTransactionTests: XCTestCase {
                 ) as? NSError
             }
             let frameworkInjectorMock = BusinessInjectorMock(
-                backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-                entityManager: EntityManager(databaseContext: databaseMainCnx),
+                entityManager: EntityManager(databaseContext: databaseBackgroundCnx),
                 userSettings: UserSettingsMock(enableMultiDevice: true),
                 serverConnector: serverConnectorMock
             )
@@ -225,7 +224,7 @@ class TaskExecutionTransactionTests: XCTestCase {
             let taskExecutionTransaction = TaskExecutionTransactionToTest(
                 taskContext: TaskContext(),
                 taskDefinition: task,
-                frameworkInjector: frameworkInjectorMock
+                backgroundFrameworkInjector: frameworkInjectorMock
             )
 
             taskExecutionTransaction.execute()
@@ -255,12 +254,9 @@ class TaskExecutionTransactionTests: XCTestCase {
             deviceGroupKeys: deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
             contactStore: ContactStoreMock(),
             conversationStore: ConversationStoreMock(),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             groupManager: GroupManagerMock(),
             licenseStore: LicenseStore.shared(),
             messageSender: MessageSenderMock(),
@@ -279,7 +275,7 @@ class TaskExecutionTransactionTests: XCTestCase {
         let taskExecutionTransaction = TaskExecutionTransactionToTest(
             taskContext: TaskContext(),
             taskDefinition: task,
-            frameworkInjector: frameworkInjectorMock
+            backgroundFrameworkInjector: frameworkInjectorMock
         )
 
         taskExecutionTransaction.execute()

@@ -752,6 +752,15 @@
             msg = groupCallStartMessage;
             break;
         }
+        case MSGTYPE_EMPTY: {
+            if ([body length] != 0) {
+                DDLogWarn(@"Wrong length %lu for empty message", (unsigned long)[body length]);
+                break;
+            }
+            
+            msg = [[BoxEmptyMessage alloc] init];
+            break;
+        }
         default: {
             DDLogWarn(@"Unsupported message type %d", type);
             msg = [[UnknownTypeMessage alloc] init];

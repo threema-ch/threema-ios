@@ -23,29 +23,23 @@ import XCTest
 @testable import ThreemaFramework
 
 class TaskQueueTests: XCTestCase {
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
-    private var databasePreparer: DatabasePreparer!
+    private var dbBackgroundCnx: DatabaseContext!
+    private var dbPreparer: DatabasePreparer!
     private var ddLoggerMock: DDLoggerMock!
-    private var frameworkInjectorMock: FrameworkInjectorProtocol!
 
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        databasePreparer = DatabasePreparer(context: mainCnx)
+        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
+            .devNullContext(withChildContextForBackgroundProcess: true)
+
+        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        dbPreparer = DatabasePreparer(context: mainCnx)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
-
-        frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx)
-        )
     }
     
     override func tearDownWithError() throws {
@@ -53,6 +47,8 @@ class TaskQueueTests: XCTestCase {
     }
     
     func testInterrupt() {
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
+
         let msg = ContactDeletePhotoMessage()
         msg.messageID = MockData.generateMessageID()
 
@@ -61,7 +57,7 @@ class TaskQueueTests: XCTestCase {
         let tq = TaskQueue(
             queueType: .outgoing,
             supportedTypes: [TaskDefinitionSendAbstractMessage.self],
-            frameworkInjector: frameworkInjectorMock
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         try? tq.enqueue(task: task, completionHandler: nil)
@@ -78,11 +74,12 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testSpoolServerConnectorDisconnected() {
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
+
         let tq = TaskQueue(
             queueType: .outgoing,
             supportedTypes: [TaskDefinitionSendAbstractMessage.self],
-            frameworkInjector: frameworkInjectorMock,
-            renewFrameworkInjector: false
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         tq.spool()
@@ -94,20 +91,19 @@ class TaskQueueTests: XCTestCase {
     func testSpoolTaskDefinitionSendAbstractMessage() {
         let expectedReceiverIdentity = "ECHOECHO"
 
-        databasePreparer.save {
-            let contactEntity = databasePreparer.createContact(
+        dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: expectedReceiverIdentity,
                 verificationLevel: 0
             )
-            databasePreparer.createConversation(contactEntity: contactEntity)
+            dbPreparer.createConversation(contactEntity: contactEntity)
         }
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             myIdentityStore: myIdentityStoreMock,
             serverConnector: serverConnectorMock
         )
@@ -115,8 +111,7 @@ class TaskQueueTests: XCTestCase {
         let tq = TaskQueue(
             queueType: .outgoing,
             supportedTypes: [TaskDefinitionSendAbstractMessage.self],
-            frameworkInjector: frameworkInjectorMock,
-            renewFrameworkInjector: false
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         let message = TypingIndicatorMessage()
@@ -151,7 +146,7 @@ class TaskQueueTests: XCTestCase {
         let expectedReceiver = "ECHOECHO"
         let expectedError = NSError(domain: "Test domain", code: 1, userInfo: nil)
 
-        databasePreparer.createContact(
+        dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
             identity: expectedReceiver,
             verificationLevel: 0
@@ -161,8 +156,7 @@ class TaskQueueTests: XCTestCase {
         let messageProcessorMock = MessageProcessorMock()
         messageProcessorMock.error = expectedError
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: serverConnectorMock,
             messageProcessor: messageProcessorMock
         )
@@ -177,8 +171,7 @@ class TaskQueueTests: XCTestCase {
             let tq = TaskQueue(
                 queueType: .incoming,
                 supportedTypes: [TaskDefinitionReceiveMessage.self],
-                frameworkInjector: frameworkInjectorMock,
-                renewFrameworkInjector: false
+                frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
             )
 
             let message = BoxedMessage()
@@ -279,8 +272,7 @@ class TaskQueueTests: XCTestCase {
         ) as? NSError
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             mediatorReflectedProcessor: mediatorReflectedProcessorMock
@@ -289,8 +281,7 @@ class TaskQueueTests: XCTestCase {
         let tq = TaskQueue(
             queueType: .incoming,
             supportedTypes: [TaskDefinitionReceiveReflectedMessage.self],
-            frameworkInjector: frameworkInjectorMock,
-            renewFrameworkInjector: false
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         let expect = expectation(description: "spool")
@@ -324,8 +315,7 @@ class TaskQueueTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: serverConnectorMock
         )
 
@@ -338,8 +328,7 @@ class TaskQueueTests: XCTestCase {
             let tq = TaskQueue(
                 queueType: .outgoing,
                 supportedTypes: [TaskDefinitionSendAbstractMessage.self],
-                frameworkInjector: frameworkInjectorMock,
-                renewFrameworkInjector: false
+                frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
             )
 
             let message = ContactDeletePhotoMessage()
@@ -367,7 +356,7 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertTrue(
                     self.ddLoggerMock
                         .exists(
-                            message: "<TaskDefinitionSendAbstractMessage (type: contactDeleteProfilePicture; id: \(message.messageID.hexString))> failed sendMessageFailed(message: \"Contact not found for identity Optional(\\\"\(expectedReceiver)\\\") ((type: contactDeleteProfilePicture; id: \(message.messageID.hexString)))\")"
+                            message: "<TaskDefinitionSendAbstractMessage (type: contactDeleteProfilePicture; id: \(message.messageID.hexString))> failed sendMessageFailed(message: \"Contact not found for identity \(expectedReceiver) ((type: contactDeleteProfilePicture; id: \(message.messageID.hexString)))\")"
                         )
                 )
                 if task.retry {
@@ -393,16 +382,14 @@ class TaskQueueTests: XCTestCase {
     func testSpoolMultiDeviceNotActivated() {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: serverConnectorMock
         )
 
         let tq = TaskQueue(
             queueType: .outgoing,
             supportedTypes: [TaskDefinitionDeleteContactSync.self],
-            frameworkInjector: frameworkInjectorMock,
-            renewFrameworkInjector: false
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         let expec = expectation(description: "spool")
@@ -439,8 +426,7 @@ class TaskQueueTests: XCTestCase {
             ThreemaError.threemaError("Not logged in", withCode: ThreemaProtocolError.notLoggedIn.rawValue) as? NSError
         }
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -454,8 +440,7 @@ class TaskQueueTests: XCTestCase {
             let tq = TaskQueue(
                 queueType: .outgoing,
                 supportedTypes: [TaskDefinitionDeleteContactSync.self],
-                frameworkInjector: frameworkInjectorMock,
-                renewFrameworkInjector: false
+                frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
             )
 
             let expec = expectation(description: "spool")
@@ -550,19 +535,6 @@ class TaskQueueTests: XCTestCase {
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
                 ],
                 true,
-                true
-            ),
-            (
-                [
-                    ThreemaProtocolError.pendingGroupMessage,
-                ],
-                true,
-                [
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> %@",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
-                ],
-                false,
                 true
             ),
             (
@@ -670,8 +642,7 @@ class TaskQueueTests: XCTestCase {
         messageProcessorMock.error = expectedMessageProcessorError
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             messageProcessor: messageProcessorMock,
@@ -685,8 +656,7 @@ class TaskQueueTests: XCTestCase {
         let taskQueue = TaskQueue(
             queueType: .incoming,
             supportedTypes: [TaskDefinitionReceiveMessage.self],
-            frameworkInjector: frameworkInjectorMock,
-            renewFrameworkInjector: false
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         let expect = expectation(description: "spool")
@@ -1013,8 +983,7 @@ class TaskQueueTests: XCTestCase {
 
         let nonceGuardMock = NonceGuardMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
@@ -1029,8 +998,7 @@ class TaskQueueTests: XCTestCase {
         let taskQueue = TaskQueue(
             queueType: .incoming,
             supportedTypes: [TaskDefinitionReceiveReflectedMessage.self],
-            frameworkInjector: frameworkInjectorMock,
-            renewFrameworkInjector: false
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         let expect = expectation(description: "spool")
@@ -1111,13 +1079,13 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testEncodeDecodeWithAllTaskTypes() throws {
-        let expectedContactEntity = databasePreparer.save {
-            let expectedContactEntity = databasePreparer.createContact(
+        let expectedContactEntity = dbPreparer.save {
+            let expectedContactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
-            databasePreparer.createConversation(
+            dbPreparer.createConversation(
                 typing: false,
                 unreadMessageCount: 0,
                 visibility: .default
@@ -1128,7 +1096,7 @@ class TaskQueueTests: XCTestCase {
             return expectedContactEntity
         }
 
-        let (_, groupEntity, conversation) = try databasePreparer.createGroup(
+        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
             groupID: MockData.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["MEMBER01", "MEMBER02", "MEMBER03"]
@@ -1143,6 +1111,8 @@ class TaskQueueTests: XCTestCase {
 
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER02", "MEMBER03"]
+
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
 
         let tq = TaskQueue(
             queueType: .outgoing,
@@ -1166,8 +1136,7 @@ class TaskQueueTests: XCTestCase {
                 TaskDefinitionReceiveMessage.self,
                 TaskDefinitionReceiveReflectedMessage.self,
             ],
-            frameworkInjector: frameworkInjectorMock,
-            renewFrameworkInjector: false
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         // Add TaskDefinitionGroupDissolve
@@ -1704,5 +1673,13 @@ class TaskQueueTests: XCTestCase {
         else {
             XCTFail()
         }
+    }
+
+    final class FrameworkInjectorResolverMock: FrameworkInjectorResolverProtocol {
+        init(frameworkInjector: BusinessInjectorMock) {
+            self.backgroundFrameworkInjector = frameworkInjector
+        }
+
+        private(set) var backgroundFrameworkInjector: FrameworkInjectorProtocol
     }
 }

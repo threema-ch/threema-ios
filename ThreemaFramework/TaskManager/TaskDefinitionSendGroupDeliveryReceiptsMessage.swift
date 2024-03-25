@@ -28,7 +28,7 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
         TaskExecutionSendGroupDeliveryReceiptsMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

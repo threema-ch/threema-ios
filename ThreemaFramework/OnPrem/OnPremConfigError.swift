@@ -34,6 +34,7 @@ enum OnPremConfigError: Error {
     case missingAvatarConfig
     case missingSafeConfig
     case missingMediatorConfig
+    case missingRendezvousConfig
     case licenseExpired
 }
 

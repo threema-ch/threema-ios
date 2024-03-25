@@ -186,8 +186,15 @@ protocol MediatorReflectedProcessorProtocol {
                 frameworkInjector: frameworkInjector
             )
             return processor.process(settingsSync: settingsSync)
-        case .mdmParameterSync:
-            DDLogWarn("MDM parameter sync not implemented")
+        case let .mdmParameterSync(mdmParameterSync):
+            DDLogNotice("MDM parameter sync")
+            for mdmParameter in mdmParameterSync.update.parameters.externalParameters {
+                DDLogVerbose("External MDM parameter key: \(mdmParameter.key) value: \(mdmParameter.value)")
+            }
+            for mdmParameter in mdmParameterSync.update.parameters.threemaParameters {
+                DDLogVerbose("Threema MDM parameter key: \(mdmParameter.key) value: \(mdmParameter.value)")
+            }
+
             return Promise()
         case .none:
             return Promise()

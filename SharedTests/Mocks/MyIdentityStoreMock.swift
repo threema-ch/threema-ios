@@ -23,51 +23,51 @@ import ThreemaFramework
 
 class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     var csi: String!
-    
+
     var category: String!
-    
+
     var firstName: String!
-    
+
     var lastName: String!
-    
+
     func displayName() -> String {
         if let name = ContactUtil.name(fromFirstname: firstName, lastname: lastName) {
             return name as String
         }
-        
+
         if let pushFromName, !pushFromName.isEmpty, pushFromName != identity {
             return pushFromName
         }
 
         return "\(identity) (\(BundleUtil.localizedString(forKey: "me")))"
     }
-    
+
     var pushFromName: String!
-    
+
     var linkEmailPending = false
-    
+
     var linkedEmail: String?
-    
+
     var linkMobileNoPending = false
-    
+
     var linkedMobileNo: String?
-    
+
     var profilePicture: NSMutableDictionary?
-    
+
     func encryptData(_ data: Data!, withNonce nonce: Data!, publicKey: Data!) -> Data! {
         NaClCrypto.shared()?.encryptData(data, withPublicKey: publicKey, signKey: secretKey, nonce: nonce)
     }
-    
+
     func decryptData(_ data: Data!, withNonce nonce: Data!, publicKey _publicKey: Data!) -> Data! {
         NaClCrypto.shared()?.decryptData(data, withSecretKey: secretKey, signKey: _publicKey, nonce: nonce)
     }
-    
+
     func sharedSecret(withPublicKey publicKey: Data!) -> Data! {
         NaClCrypto.shared().sharedSecret(forPublicKey: publicKey, secretKey: secretKey)
     }
-    
+
     private let secretKey: Data!
-    
+
     init(identity: String, secretKey: Data) {
         self.identity = identity
         self.secretKey = secretKey
@@ -76,13 +76,13 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     override convenience init() {
         self.init(identity: "TESTERID", secretKey: Data(base64Encoded: "WAXm465d3CNnP1pf84RF0mYRgV/Umqwe/8Hun9ntTdQ=")!)
     }
-    
+
     var identity: String
-     
+
     func keySecret() -> Data! {
         secretKey
     }
-    
+
     func isKeychainLocked() -> Bool {
         false
     }
@@ -90,16 +90,24 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     func updateConnectionRights() {
         // no-op
     }
-    
+
     var publicKey: Data {
         NaClCrypto.shared().derivePublicKey(fromSecretKey: secretKey)
     }
-    
+
     func isProvisioned() -> Bool {
         false
     }
 
     var licenseSupportURL = ""
-    
+
     var serverGroup: String!
+
+    func backupIdentity(withPassword password: String!) -> String! {
+        ""
+    }
+
+    var revocationPasswordSetDate: Date!
+
+    var revocationPasswordLastCheck: Date!
 }

@@ -24,94 +24,177 @@ import Foundation
 /// If your code is run in the notification extension (`NotificationService`) you should in general use already created
 /// instance of business injector.
 /// Otherwise inconsistencies might occur in the database.
-public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
+public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
+
+    private let taskManager: TaskManagerProtocol
+    // Will be used for none public services, that must be running in the background anyway
+    private let backgroundEntityManager: EntityManager
+
+    @objc required init(entityManager: EntityManager) {
+        self.runsInBackground = entityManager.hasBackgroundChildContext
+        self.entityManager = entityManager
+
+        if entityManager.hasBackgroundChildContext {
+            self.backgroundEntityManager = entityManager
+        }
+        else {
+            self.backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
+        }
+
+        self.taskManager = TaskManager(backgroundEntityManager: backgroundEntityManager)
+    }
+
+    /// Create `BusinessInjector` for main thread or background (Core Data child context) thread.
+    ///
+    /// - Parameter forBackgroundProcess: Use this only for special cases (like Notification Extension), in general use
+    /// the functions `runInBackground` and `runInBackgroundAndWait` for background threads
+    public convenience init(forBackgroundProcess: Bool) {
+        if forBackgroundProcess {
+            self.init(entityManager: EntityManager(withChildContextForBackgroundProcess: true))
+        }
+        else {
+            self.init(entityManager: EntityManager())
+        }
+    }
+
+    @objc override public convenience init() {
+        self.init(forBackgroundProcess: false)
+    }
 
     // MARK: BusinessInjectorProtocol
 
-    @objc public lazy var backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
+    public let runsInBackground: Bool
 
-    public lazy var backgroundGroupManager: GroupManagerProtocol = GroupManager(
-        myIdentityStore,
-        contactStore,
-        TaskManager(frameworkInjector: self),
-        userSettings,
-        backgroundEntityManager,
-        GroupPhotoSender()
-    )
-    
-    public lazy var backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessages(
-        entityManager: backgroundEntityManager
-    )
+    public private(set) lazy var contactStore: ContactStoreProtocol = ContactStore.shared()
 
-    public lazy var backgroundPushSettingManager: PushSettingManagerProtocol = PushSettingManager(
-        userSettings,
-        backgroundGroupManager,
-        backgroundEntityManager,
-        licenseStore.getRequiresLicenseKey()
-    )
-
-    public lazy var contactStore: ContactStoreProtocol = ContactStore.shared()
-
-    public lazy var conversationStore: any ConversationStoreProtocol = ConversationStore(
+    public private(set) lazy var conversationStore: any ConversationStoreProtocol = ConversationStore(
         userSettings: userSettings,
         pushSettingManager: pushSettingManager,
         groupManager: groupManager,
         entityManager: entityManager,
-        taskManager: TaskManager(frameworkInjector: self)
+        taskManager: taskManager
     )
-    
-    public lazy var entityManager = EntityManager()
 
-    public lazy var groupManager: GroupManagerProtocol = GroupManager(
+    @available(*, deprecated, message: "Only use from Objective-C", renamed: "conversationStore")
+    @objc public private(set) lazy var conversationStoreObjC = ConversationStore(
+        userSettings: userSettings,
+        pushSettingManager: pushSettingManager,
+        groupManager: groupManager,
+        entityManager: entityManager,
+        taskManager: taskManager
+    )
+
+    @objc public let entityManager: EntityManager
+
+    public private(set) lazy var groupManager: GroupManagerProtocol = GroupManager(
         myIdentityStore,
         contactStore,
-        TaskManager(frameworkInjector: self),
+        taskManager,
         userSettings,
         entityManager,
         GroupPhotoSender()
     )
 
-    public lazy var licenseStore = LicenseStore.shared()
+    @available(*, deprecated, message: "Only use from Objective-C", renamed: "groupManager")
+    @objc public private(set) lazy var groupManagerObjC = GroupManager(
+        myIdentityStore,
+        contactStore,
+        taskManager,
+        userSettings,
+        entityManager,
+        GroupPhotoSender()
+    )
 
-    public lazy var messageSender: MessageSenderProtocol = MessageSender(
+    public private(set) lazy var licenseStore = LicenseStore.shared()
+
+    public private(set) lazy var messageSender: MessageSenderProtocol = MessageSender(
         serverConnector: serverConnector,
         myIdentityStore: myIdentityStore,
         userSettings: userSettings,
         groupManager: groupManager,
-        taskManager: TaskManager(frameworkInjector: self),
+        taskManager: taskManager,
         entityManager: entityManager
     )
 
-    public lazy var multiDeviceManager: MultiDeviceManagerProtocol =
-        MultiDeviceManager(serverConnector: serverConnector, userSettings: userSettings)
+    @available(*, deprecated, message: "Only use from Objective-C", renamed: "messageSender")
+    @objc public private(set) lazy var messageSenderObjC = MessageSender(
+        serverConnector: serverConnector,
+        myIdentityStore: myIdentityStore,
+        userSettings: userSettings,
+        groupManager: groupManager,
+        taskManager: taskManager,
+        entityManager: entityManager
+    )
 
-    public lazy var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
+    public private(set) lazy var multiDeviceManager: MultiDeviceManagerProtocol =
+        MultiDeviceManager(
+            serverConnector: serverConnector,
+            contactStore: contactStore,
+            userSettings: userSettings,
+            entityManager: entityManager
+        )
+
+    public private(set) lazy var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
 
     public lazy var unreadMessages: UnreadMessagesProtocol = UnreadMessages(
-        entityManager: entityManager
+        entityManager: entityManager,
+        taskManager: taskManager
     )
     
-    public lazy var messageRetentionManager: MessageRetentionManagerModelProtocol =
-        MessageRetentionManagerModel(businessInjector: self)
+    @available(*, deprecated, message: "Only use from Objective-C", renamed: "unreadMessages")
+    @objc public private(set) lazy var unreadMessagesObjC = UnreadMessages(
+        entityManager: entityManager,
+        taskManager: taskManager
+    )
 
-    @objc public lazy var userSettings: UserSettingsProtocol = UserSettings.shared()
+    public private(set) lazy var messageRetentionManager: MessageRetentionManagerModelProtocol =
+        MessageRetentionManagerModel(
+            userSettings: userSettings,
+            unreadMessages: unreadMessages,
+            groupManager: groupManager,
+            entityManager: entityManager
+        )
 
-    public lazy var settingsStore: any SettingsStoreProtocol = SettingsStore(
+    @objc public private(set) lazy var userSettings: UserSettingsProtocol = UserSettings.shared()
+
+    public private(set) lazy var settingsStore: any SettingsStoreProtocol = SettingsStore(
         serverConnector: serverConnector,
         myIdentityStore: myIdentityStore,
         contactStore: contactStore,
         userSettings: userSettings,
-        taskManager: TaskManager(frameworkInjector: self)
+        taskManager: taskManager
     )
     
-    public lazy var serverConnector: ServerConnectorProtocol = ServerConnector.shared()
+    public private(set) lazy var serverConnector: ServerConnectorProtocol = ServerConnector.shared()
 
-    public lazy var pushSettingManager: PushSettingManagerProtocol = PushSettingManager(
+    public private(set) lazy var pushSettingManager: PushSettingManagerProtocol = PushSettingManager(
         userSettings,
         groupManager,
         entityManager,
+        taskManager,
         licenseStore.getRequiresLicenseKey()
     )
+
+    public func runInBackground<T>(
+        _ block: @escaping (BusinessInjectorProtocol) async throws -> T
+    ) async rethrows
+        -> T {
+        if entityManager.hasBackgroundChildContext {
+            return try await block(self)
+        }
+        else {
+            return try await block(BusinessInjector(forBackgroundProcess: true))
+        }
+    }
+
+    public func runInBackgroundAndWait<T>(_ block: (BusinessInjectorProtocol) throws -> T) rethrows -> T {
+        if entityManager.hasBackgroundChildContext {
+            return try block(self)
+        }
+        else {
+            return try block(BusinessInjector(forBackgroundProcess: true))
+        }
+    }
 
     // MARK: BusinessInternalInjectorProtocol
 
@@ -122,12 +205,12 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     
     private static var dhSessionStoreInstance: DHSessionStoreProtocol = try! SQLDHSessionStore()
 
-    lazy var mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocol(
+    private(set) lazy var mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocol(
         deviceGroupKeys: self
             .serverConnector.deviceGroupKeys
     )
 
-    lazy var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessor(
+    private(set) lazy var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessor(
         frameworkInjector: self,
         messageProcessorDelegate: serverConnector
     )
@@ -136,6 +219,14 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         if messageProcessorInstance == nil {
             messageProcessorInstance = MessageProcessor(
                 serverConnector,
+                groupManager: GroupManager(
+                    myIdentityStore,
+                    contactStore,
+                    taskManager,
+                    userSettings,
+                    backgroundEntityManager,
+                    GroupPhotoSender()
+                ),
                 entityManager: backgroundEntityManager,
                 fsmp: fsmp,
                 nonceGuard: nonceGuard as? NSObject
@@ -162,15 +253,17 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         BusinessInjector.dhSessionStoreInstance
     }
 
-    lazy var conversationStoreInternal: ConversationStoreInternalProtocol =
+    private(set) lazy var conversationStoreInternal: ConversationStoreInternalProtocol =
         conversationStore as! ConversationStoreInternalProtocol
 
-    lazy var settingsStoreInternal: SettingsStoreInternalProtocol = settingsStore as! SettingsStoreInternalProtocol
+    private(set) lazy var settingsStoreInternal: SettingsStoreInternalProtocol =
+        settingsStore as! SettingsStoreInternalProtocol
 
-    lazy var userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManager()
+    private(set) lazy var userNotificationCenterManager: UserNotificationCenterManagerProtocol =
+        UserNotificationCenterManager()
 
-    lazy var nonceGuard: NonceGuardProtocol = NonceGuard(entityManager: backgroundEntityManager)
+    private(set) lazy var nonceGuard: NonceGuardProtocol = NonceGuard(entityManager: backgroundEntityManager)
 
-    lazy var blobUploader: BlobUploaderProtocol =
+    private(set) lazy var blobUploader: BlobUploaderProtocol =
         BlobUploader(blobURL: BlobURL(serverConnector: self.serverConnector, userSettings: self.userSettings))
 }

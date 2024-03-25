@@ -87,12 +87,12 @@ import Foundation
 
 extension CallHistoryManager {
     @objc public static func removeCallsOlderThanChatServerTimeout() {
-        removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjector())
+        removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjector(forBackgroundProcess: true))
     }
     
     public static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) {
-        businessInjector.backgroundEntityManager.performAsyncBlockAndSafe {
-            businessInjector.backgroundEntityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()
+        businessInjector.entityManager.performAsyncBlockAndSafe {
+            businessInjector.entityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()
         }
     }
     

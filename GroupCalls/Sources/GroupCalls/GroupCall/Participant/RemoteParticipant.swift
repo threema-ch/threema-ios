@@ -28,22 +28,6 @@ import WebRTC
 
 @GlobalGroupCallActor
 final class RemoteParticipant: Participant {
-    
-    // MARK: - Types
-    
-    enum MessageResponseAction {
-        case none
-        
-        case epHelloAndAuth(RemoteParticipant, (Data, Data))
-        case sendAuth(RemoteParticipant, Data)
-        case handshakeCompleted(RemoteParticipant)
-        
-        case participantToSFU(Groupcall_ParticipantToSfu.Envelope, RemoteParticipant, ParticipantStateChange)
-        case participantToParticipant(RemoteParticipant, Data)
-        
-        case muteStateChanged(RemoteParticipant, ParticipantStateChange)
-        case rekeyReceived(RemoteParticipant, MediaKeys)
-    }
 
     // TODO: (IOS-4059) Have a mute state on Participant, only yield .participantChanged and retrieve current value in UIUpdate
 
@@ -543,7 +527,7 @@ extension RemoteParticipant {
         guard handshakeState == .done else {
             let msg = "Cannot send audio mute message to participant in state \(handshakeState)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             
             throw GroupCallError.badParticipantState
         }
@@ -583,7 +567,7 @@ extension RemoteParticipant {
         guard handshakeState == .done else {
             let msg = "Cannot send video unmute message to participant in state \(handshakeState)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             
             throw GroupCallError.badParticipantState
         }
@@ -623,7 +607,7 @@ extension RemoteParticipant {
         guard handshakeState == .done else {
             let msg = "Cannot send rekey message to participant in state \(handshakeState)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             
             throw GroupCallError.badParticipantState
         }
@@ -645,7 +629,7 @@ extension RemoteParticipant {
         guard handshakeState == .done else {
             let msg = "Cannot send audio mute message to participant in state \(handshakeState)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             
             throw GroupCallError.badParticipantState
         }
@@ -676,7 +660,7 @@ extension RemoteParticipant {
         guard handshakeState == .done else {
             let msg = "Cannot subscribe to audio of participant in state \(handshakeState)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             
             throw GroupCallError.badParticipantState
         }
@@ -701,7 +685,7 @@ extension RemoteParticipant {
         guard handshakeState == .done else {
             let msg = "Cannot subscribe to video of participant in state \(handshakeState)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             
             throw GroupCallError.badParticipantState
         }
@@ -740,7 +724,7 @@ extension RemoteParticipant {
         guard handshakeState == .done else {
             let msg = "Cannot unsubscribe to video of participant in state \(handshakeState)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             
             throw GroupCallError.badParticipantState
         }
@@ -759,9 +743,7 @@ extension RemoteParticipant {
     }
 }
 
-// MARK: - RemoteParticipantProtocol
-
-extension RemoteParticipant: RemoteParticipantProtocol {
+extension RemoteParticipant {
     func getID() async -> ParticipantID {
         DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
         

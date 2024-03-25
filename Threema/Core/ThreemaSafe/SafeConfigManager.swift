@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 protocol SafeConfigManagerProtocol {
@@ -49,16 +50,16 @@ protocol SafeConfigManagerProtocol {
 }
 
 @objc class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
-    
+
     private static let safeConfigMutaionLock = DispatchQueue(label: "safeConfigMutaionLock")
     private static var safeConfig: SafeData?
 
     // MARK: - safe config
-    
+
     @objc public func destroy() {
         SafeConfigManager.safeConfig = nil
     }
-    
+
     public func getKey() -> [UInt8]? {
         getConfig().key
     }
@@ -68,7 +69,7 @@ protocol SafeConfigManagerProtocol {
         config.key = value
         setConfig(config)
     }
-    
+
     public func getCustomServer() -> String? {
         getConfig().customServer
     }
@@ -78,7 +79,7 @@ protocol SafeConfigManagerProtocol {
         config.customServer = value
         setConfig(config)
     }
-    
+
     @objc public func getServer() -> String? {
         getConfig().server
     }
@@ -88,7 +89,7 @@ protocol SafeConfigManagerProtocol {
         config.server = value
         setConfig(config)
     }
-    
+
     public func getMaxBackupBytes() -> Int? {
         getConfig().maxBackupBytes
     }
@@ -98,7 +99,7 @@ protocol SafeConfigManagerProtocol {
         config.maxBackupBytes = value
         setConfig(config)
     }
-    
+
     public func getRetentionDays() -> Int? {
         getConfig().retentionDays
     }
@@ -108,7 +109,7 @@ protocol SafeConfigManagerProtocol {
         config.retentionDays = value
         setConfig(config)
     }
-    
+
     public func getBackupSize() -> Int64? {
         getConfig().backupSize
     }
@@ -118,7 +119,7 @@ protocol SafeConfigManagerProtocol {
         config.backupSize = value
         setConfig(config)
     }
-    
+
     public func getBackupStartedAt() -> Date? {
         getConfig().backupStartedAt
     }
@@ -128,7 +129,7 @@ protocol SafeConfigManagerProtocol {
         config.backupStartedAt = value
         setConfig(config)
     }
-    
+
     public func getLastBackup() -> Date? {
         getConfig().lastBackup
     }
@@ -138,7 +139,7 @@ protocol SafeConfigManagerProtocol {
         config.lastBackup = value
         setConfig(config)
     }
-    
+
     public func getLastResult() -> String? {
         getConfig().lastResult
     }
@@ -148,7 +149,7 @@ protocol SafeConfigManagerProtocol {
         config.lastResult = value
         setConfig(config)
     }
-    
+
     public func getLastChecksum() -> [UInt8]? {
         getConfig().lastChecksum
     }
@@ -158,7 +159,7 @@ protocol SafeConfigManagerProtocol {
         config.lastChecksum = value
         setConfig(config)
     }
-    
+
     public func getLastAlertBackupFailed() -> Date? {
         getConfig().lastAlertBackupFailed
     }
@@ -168,7 +169,7 @@ protocol SafeConfigManagerProtocol {
         config.lastAlertBackupFailed = value
         setConfig(config)
     }
-    
+
     @objc public func getIsTriggered() -> Bool {
         getConfig().isTriggered != 0
     }
@@ -178,14 +179,14 @@ protocol SafeConfigManagerProtocol {
         config.isTriggered = value ? 1 : 0
         setConfig(config)
     }
-    
+
     private func getConfig() -> SafeData {
         SafeConfigManager.safeConfigMutaionLock.sync {
             if SafeConfigManager.safeConfig == nil {
                 if let data = UserSettings.shared().safeConfig,
                    !data.isEmpty {
-                    
-                    SafeConfigManager.safeConfig = NSKeyedUnarchiver.unarchiveObject(with: data) as? SafeData
+
+                    SafeConfigManager.safeConfig = decode(safeData: data)
                 }
                 else {
                     SafeConfigManager.safeConfig = SafeData(
@@ -202,23 +203,56 @@ protocol SafeConfigManagerProtocol {
                         lastAlertBackupFailed: nil,
                         isTriggered: 0
                     )
-                    UserSettings.shared().safeConfig = NSKeyedArchiver
-                        .archivedData(withRootObject: SafeConfigManager.safeConfig as Any)
+                    UserSettings.shared().safeConfig = encode(safeData: SafeConfigManager.safeConfig)
                 }
             }
         }
         return SafeConfigManager.safeConfig!
     }
-    
+
     private func setConfig(_ config: SafeData?) {
         SafeConfigManager.safeConfigMutaionLock.sync {
             if let data = config {
-                UserSettings.shared().safeConfig = NSKeyedArchiver.archivedData(withRootObject: data)
+                UserSettings.shared().safeConfig = encode(safeData: SafeConfigManager.safeConfig)
             }
             else {
                 UserSettings.shared().safeConfig = nil
                 destroy()
             }
         }
+    }
+
+    private func encode(safeData: SafeData?) -> Data? {
+        guard let safeData else {
+            return nil
+        }
+
+        var data: Data?
+
+        do {
+            data = try NSKeyedArchiver
+                .archivedData(withRootObject: safeData as Any, requiringSecureCoding: true)
+        }
+        catch {
+            DDLogError("Encoding of `SafeData` failed: \(error)")
+        }
+
+        return data
+    }
+
+    private func decode(safeData data: Data) -> SafeData? {
+        var safeData: SafeData?
+
+        do {
+            safeData = try NSKeyedUnarchiver.unarchivedObject(
+                ofClasses: [SafeData.self, NSArray.self, NSDate.self, NSNumber.self, NSString.self],
+                from: data
+            ) as? SafeData
+        }
+        catch {
+            DDLogError("Decoding for `SafeData` failed: \(error)")
+        }
+
+        return safeData
     }
 }

@@ -43,7 +43,6 @@ final class AppUpdateStepsTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let sessionStore = InMemoryDHSessionStore()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: entityManager,
             contactStore: contactStoreMock,
             entityManager: entityManager,
             dhSessionStore: sessionStore
@@ -107,18 +106,14 @@ final class AppUpdateStepsTests: XCTestCase {
         
         // Run
         
-        let expectation = expectation(description: "Steps completed")
-        
         let appUpdateSteps = AppUpdateSteps(backgroundBusinessInjector: businessInjectorMock)
-        appUpdateSteps.run {
-            expectation.fulfill()
-        }
-        
-        await fulfillment(of: [expectation])
+        try await appUpdateSteps.run()
         
         // Validate
         
-        XCTAssertEqual(1, contactStoreMock.numberOfSynchronizeAddressBookCalls)
+        // TODO: (IOS-4449) Mock `FeatureMask` and verify the call
+        
+        XCTAssertEqual(1, contactStoreMock.numberOfUpdateStatusCalls)
 
         XCTAssertEqual(1, sessionStore.dhSessionList.count)
 

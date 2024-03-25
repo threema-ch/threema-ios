@@ -67,7 +67,7 @@ final class ChatSearchResultsViewController: ThemedViewController {
     private lazy var tableView: UITableView = {
         // .grouped so the footer appears after the last search result
         // instead of floating above the results
-        let tableView = UITableView(frame: .zero, style: .grouped)
+        let tableView = UITableView(frame: .zero, style: .plain)
         tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
         return tableView
@@ -96,17 +96,6 @@ final class ChatSearchResultsViewController: ThemedViewController {
             }
             
             return searchResultsCell
-            
-        } headerProvider: { _, _ in
-            // We don't actually need a header, but specifying a footer triggers an
-            // empty header to be shown.
-            //
-            // Solution: return a dummy value so we can set the height to 0 in
-            // UITableViewDelegate. An empty space or nil doesn't work, these cause
-            // an empty header to be shown even if we set the height to 0.
-            " "
-        } footerProvider: { _, _ in
-            BundleUtil.localizedString(forKey: "chat_search_note")
         }
         
         dataSource.defaultRowAnimation = .top
@@ -163,11 +152,6 @@ final class ChatSearchResultsViewController: ThemedViewController {
 // MARK: - UITableViewDelegate
 
 extension ChatSearchResultsViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        // Don't show the header (see headerProvider definition above)
-        0
-    }
-
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         defer {
             tableView.deselectRow(at: indexPath, animated: false)

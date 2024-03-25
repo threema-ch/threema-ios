@@ -110,7 +110,7 @@ class SafeServerViewController: IDCreationPageViewController {
             let safeStore = SafeStore(
                 safeConfigManager: safeConfigManager,
                 serverApiConnector: ServerAPIConnector(),
-                groupManager: GroupManager()
+                groupManager: BusinessInjector().groupManager
             )
             
             if let customServer = serverField.text,

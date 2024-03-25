@@ -160,11 +160,14 @@ extension SettingsView {
     // MARK: - ConnectionSection
     
     struct ConnectionSection: View {
-        @EnvironmentObject var connectionStateProvider: ConnectionStateProvider
- 
+        @Environment(\.appContainer.appEnvironment.connectionStateProvider) var connectionStateProvider
+        @State var connectionState: ConnectionState = .disconnected
+                
         var body: some View {
             Section {
                 connection
+                    .onReceive(connectionStateProvider.$connectionState, perform: didChange)
+                    .onAppear { didChange() }
                 version
                 if LicenseStore.requiresLicenseKey() {
                     license
@@ -174,7 +177,7 @@ extension SettingsView {
        
         private var connection: some View {
             let sc = ServerConnector.shared()
-            let statusText = "status_\(sc.name(for: connectionStateProvider.connectionState))"
+            let statusText = "status_\(sc.name(for: connectionState))"
                 .localized
                 .appending(sc.isIPv6Connection ? " (IPv6)" : "")
                 .appending(sc.isProxyConnection ? " (Proxy)" : "")
@@ -203,6 +206,10 @@ extension SettingsView {
                 cellTitle: "settings_list_settings_license_username_title".localized,
                 accessoryText: LicenseStore.shared().licenseUsername
             )
+        }
+        
+        private func didChange(_ connectionState: ConnectionState = ServerConnector.shared().connectionState) {
+            self.connectionState = connectionState
         }
     }
     

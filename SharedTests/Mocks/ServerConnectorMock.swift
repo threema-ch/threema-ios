@@ -54,7 +54,7 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     // MARK: - ServerConnectorProtocol
 
-    var businessInjectorForMessageProcessing: NSObject?
+    var backgroundEntityManagerForMessageProcessing: NSObject?
 
     var connectionState: ConnectionState
 
@@ -192,7 +192,7 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     
     func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) { }
     
-    func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) { }
+    func incomingMessageFinished(_ message: AbstractMessage) { }
 
     func readMessage(inConversations: Set<Conversation>?) {
         // no-op
@@ -213,9 +213,7 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     func chatQueueDry() { }
     
     func reflectionQueueDry() { }
-    
-    func pendingGroup(_ message: AbstractMessage) { }
-    
+        
     func processTypingIndicator(_ message: TypingIndicatorMessage) { }
     
     func processVoIPCall(

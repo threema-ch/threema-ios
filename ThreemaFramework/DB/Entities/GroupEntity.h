@@ -35,6 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface GroupEntity : TMAManagedObject
 
 @property (nonatomic, retain) NSNumber *state;
+/// `nil` if I am the group creator
 @property (nonatomic, retain, nullable) NSString *groupCreator;
 @property (nonatomic, retain) NSData *groupId NS_SWIFT_NAME(groupID);
 @property (nonatomic, retain, nullable) NSDate *lastPeriodicSync;

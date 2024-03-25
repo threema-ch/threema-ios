@@ -67,7 +67,7 @@
             BaseMessage *message = [[entityManager entityFetcher] existingObjectWithID:messageObjectID];
 
             // don't show toast for suppressed group ids
-            if (![PushSettingManagerObjc canSendPushFor:message]) {
+            if (![PushSettingManagerObjc canSendPushFor:message entityManager:entityManager]) {
                 return;
             }
 

@@ -38,6 +38,11 @@
 }
 
 - (void)setContact:(ContactEntity *)contact {
+
+    if (contact.willBeDeleted) {
+        return;
+    }
+
     _contact = contact;
     
     self.nameLabel.contact = contact;

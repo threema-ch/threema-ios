@@ -29,7 +29,7 @@ final class TaskDefinitionSendGroupCallStartMessage: TaskDefinitionSendMessage {
         TaskExecutionSendGroupCallStartMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

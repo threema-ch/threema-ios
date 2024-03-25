@@ -841,7 +841,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
             [[em entityDestroyer] deleteObjectWithObject:contact];
 
-            [PushSettingManagerObjc deleteWithThreemaIdentity:contact.identity];
+            [PushSettingManagerObjc deleteWithThreemaIdentity:contact.identity entityManager:em];
 
             doReflect = YES;
         }
@@ -1733,11 +1733,22 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 }
 
 - (void)updateStatusForAllContacts {
+    [self updateStatusForAllContactsIgnoreInterval:NO onCompletion:^{
+        DDLogNotice(@"Successfully updated status for all contacts");
+    } onError:^(NSError * _Nonnull error) {
+        DDLogError(@"Contact multi device sync failed: %@", [error localizedDescription]);
+    }];
+}
+
+- (void)updateStatusForAllContactsIgnoreInterval:(BOOL)ignoreInterval onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * _Nonnull error))onError {
     MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-    [self updateStatusForAllContactsIgnoreInterval:NO contactSyncer:mediatorSyncableContacts onCompletion:^{
+    [self updateStatusForAllContactsIgnoreInterval:ignoreInterval contactSyncer:mediatorSyncableContacts onCompletion:^{
         [mediatorSyncableContacts syncObjcWithCompletionHandler:^(NSError * _Nullable error) {
             if (error) {
-                DDLogError(@"Contact multi device sync failed: %@", [error localizedDescription]);
+                onError(error);
+            }
+            else {
+                onCompletion();
             }
         }];
     }];
@@ -1753,18 +1764,24 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     } else {
         if ([self needCheckStatus:ignoreInterval] == NO) {
             DDLogNotice(@"[ContactSync] Do not update status and featuremasks");
-            if (onCompletion) onCompletion();
+            if (onCompletion) {
+                onCompletion();
+            }
             return;
         }
         
         [self updateStatusWithContactSyncer:mediatorSyncableContacts onCompletion:^() {
             [self setupCheckStatusTimer];
-            if (onCompletion) onCompletion();
             DDLogNotice(@"[ContactSync] Update status and featuremasks finished");
+            if (onCompletion) {
+                onCompletion();
+            }
         } onError:^(){
-            DDLogNotice(@"[ContactSync] Update status featuremasks finished with error");
             [self setupCheckStatusTimer];
-            if (onCompletion) onCompletion();
+            DDLogNotice(@"[ContactSync] Update status featuremasks finished with error");
+            if (onCompletion) {
+                onCompletion();
+            }
         }];
     }
 }

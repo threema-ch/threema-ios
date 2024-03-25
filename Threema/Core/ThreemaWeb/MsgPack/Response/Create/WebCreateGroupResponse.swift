@@ -41,7 +41,7 @@ class WebCreateGroupResponse: WebAbstractMessage {
             return
         }
         
-        let groupManager: GroupManagerProtocol = GroupManager()
+        let groupManager: GroupManagerProtocol = BusinessInjector().groupManager
         
         groupManager.createOrUpdate(
             for: GroupIdentity(

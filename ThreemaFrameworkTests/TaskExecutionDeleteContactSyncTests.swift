@@ -23,8 +23,8 @@ import XCTest
 @testable import ThreemaFramework
 
 class TaskExecutionDeleteContactSyncTests: XCTestCase {
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
+    private var dbMainCnx: DatabaseContext!
+    private var dbBackgroundCnx: DatabaseContext!
 
     private let timeout: Double = 30
     
@@ -32,20 +32,21 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
+            .devNullContext(withChildContextForBackgroundProcess: true)
+
+        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
     }
     
     func testShouldSkip() throws {
-        let contact = ContactEntity(context: databaseMainCnx.main)
+        let contact = ContactEntity(context: dbMainCnx.main)
         contact.identity = "ECHOECHO"
         contact.publicNickname = "ECHOECHO"
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             contactStore: ContactStoreMock(callOnCompletion: false, contact),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: MockData.deviceID,
@@ -62,13 +63,12 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
     }
     
     func testSuccessPrecondition() throws {
-        let contact = ContactEntity(context: databaseMainCnx.main)
+        let contact = ContactEntity(context: dbMainCnx.main)
         contact.identity = "ECHOECHO"
         contact.publicNickname = "ECHOECHO"
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: MockData.deviceID,
@@ -85,8 +85,7 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
     
     func testReflectTransactionMessages() throws {
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: MockData.deviceID,

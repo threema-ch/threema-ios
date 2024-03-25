@@ -70,12 +70,13 @@ final class AutomaticDeleteTests: XCTestCase {
                 print("\(option.localizedTitleDescription)\(index + 1)/\(total)")
             }
         }
-        let bi = BusinessInjectorMock(
-            backgroundEntityManager: entityManager,
-            entityManager: entityManager,
-            userSettings: UserSettingsMock()
+        let userSettingsMock = UserSettingsMock()
+        let mrm = MessageRetentionManagerModel(
+            userSettings: userSettingsMock,
+            unreadMessages: UnreadMessagesMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager
         )
-        let mrm = MessageRetentionManagerModel(businessInjector: bi)
         let CONTACT = "ECHOECHO"
         _ = createContacts(for: [CONTACT])
         
@@ -84,8 +85,8 @@ final class AutomaticDeleteTests: XCTestCase {
             
             let days = option.days ?? -1
             mrm.selection = days
-            bi.userSettings.keepMessagesDays = days
-            
+            userSettingsMock.keepMessagesDays = days
+
             let messagesToBeCreated = option.days ?? 0
             let date = option.date ?? Date.currentDate
             var conversation: Conversation!
@@ -96,7 +97,7 @@ final class AutomaticDeleteTests: XCTestCase {
                 
                 createMessages(option, conversation)
                 
-                let unreadCount = UnreadMessages(entityManager: entityManager)
+                let unreadCount = UnreadMessages(messageSender: MessageSenderMock(), entityManager: entityManager)
                     .count(for: conversation, withPerformBlockAndWait: true)
                 XCTAssertEqual(messagesToBeCreated, unreadCount)
             }

@@ -64,6 +64,7 @@ class DatabasePreparer {
     @discardableResult func createContact(
         publicKey: Data = MockData.generatePublicKey(),
         identity: String,
+        featureMask: Int = 1, // Voice calls
         verificationLevel: Int = 0,
         nickname: String? = nil,
         state: NSNumber? = NSNumber(value: kStateActive)
@@ -71,6 +72,7 @@ class DatabasePreparer {
         let contact = createEntity(objectType: ContactEntity.self)
         contact.publicKey = publicKey
         contact.identity = identity
+        contact.featureMask = NSNumber(integerLiteral: featureMask)
         contact.verificationLevel = NSNumber(integerLiteral: verificationLevel)
         if let nickname {
             contact.publicNickname = nickname

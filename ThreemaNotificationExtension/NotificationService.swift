@@ -32,7 +32,7 @@ class NotificationService: UNNotificationServiceExtension {
 
     var contentHandler: ((UNNotificationContent) -> Void)?
     
-    private lazy var businessInjector = BusinessInjector()
+    private lazy var backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
     private var pendingUserNotificationManager: PendingUserNotificationManagerProtocol?
 
     private static var stopProcessingTimer: Timer?
@@ -73,7 +73,7 @@ class NotificationService: UNNotificationServiceExtension {
         self.contentHandler = contentHandler
 
         guard !NotificationService.didJustReportCall else {
-            businessInjector.serverConnector.disconnect(initiator: .notificationExtension)
+            backgroundBusinessInjector.serverConnector.disconnect(initiator: .notificationExtension)
 
             DDLogNotice("[Push] Suppressing push because we have just reported an incoming call")
             applyContent()
@@ -125,43 +125,41 @@ class NotificationService: UNNotificationServiceExtension {
             if threemaPushNotification != nil || isAliveCheck {
                 
                 // Exit if connected already
-                if businessInjector.serverConnector.connectionState == .connecting ||
-                    businessInjector.serverConnector.connectionState == .connected ||
-                    businessInjector.serverConnector.connectionState == .loggedIn {
+                if backgroundBusinessInjector.serverConnector.connectionState == .connecting ||
+                    backgroundBusinessInjector.serverConnector.connectionState == .connected ||
+                    backgroundBusinessInjector.serverConnector.connectionState == .loggedIn {
                     DDLogWarn("[Push] Suppressing push because already connected")
                     applyContent()
                     return
                 }
                 
-                businessInjector.serverConnector.businessInjectorForMessageProcessing = businessInjector
-                
-                if businessInjector.settingsStore.enableThreemaGroupCalls {
-                    GlobalGroupCallsManagerSingleton.shared.processBusinessInjector = businessInjector
+                backgroundBusinessInjector.serverConnector
+                    .backgroundEntityManagerForMessageProcessing = backgroundBusinessInjector.entityManager
+
+                if backgroundBusinessInjector.settingsStore.enableThreemaGroupCalls {
+                    GlobalGroupCallsManagerSingleton.shared
+                        .processBackgroundBusinessInjector = backgroundBusinessInjector
                 }
-                
-                // Caution: DB main context reset when start Notification Extension,
-                // because the context can become corrupt and don't save any data anymore.
-                DatabaseContext.reset()
                 
                 // Refresh all DB objects before access it
                 DatabaseManager.db()?.refreshAllObjects()
-                businessInjector.backgroundEntityManager.refreshAll()
-                
-                businessInjector.contactStore.resetEntityManager()
+                backgroundBusinessInjector.entityManager.refreshAll()
+
+                backgroundBusinessInjector.contactStore.resetEntityManager()
                 
                 pendingUserNotificationManager = PendingUserNotificationManager(
                     UserNotificationManager(
-                        businessInjector.settingsStore,
-                        businessInjector.userSettings,
-                        businessInjector.myIdentityStore,
-                        businessInjector.backgroundPushSettingManager,
-                        businessInjector.contactStore,
-                        businessInjector.backgroundGroupManager,
-                        businessInjector.backgroundEntityManager,
-                        businessInjector.licenseStore.getRequiresLicenseKey()
+                        backgroundBusinessInjector.settingsStore,
+                        backgroundBusinessInjector.userSettings,
+                        backgroundBusinessInjector.myIdentityStore,
+                        backgroundBusinessInjector.pushSettingManager,
+                        backgroundBusinessInjector.contactStore,
+                        backgroundBusinessInjector.groupManager,
+                        backgroundBusinessInjector.entityManager,
+                        backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
                     ),
-                    businessInjector.backgroundPushSettingManager,
-                    businessInjector.backgroundEntityManager
+                    backgroundBusinessInjector.pushSettingManager,
+                    backgroundBusinessInjector.entityManager
                 )
                 
                 // Create pendingUserNotification only for message notifications, not for keep alive checks
@@ -204,10 +202,10 @@ class NotificationService: UNNotificationServiceExtension {
                     }
                     
                     // Register message processor delegate and connect to server
-                    self.businessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
-                    self.businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
+                    self.backgroundBusinessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
+                    self.backgroundBusinessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
                     
-                    self.businessInjector.serverConnector.connect(initiator: .notificationExtension)
+                    self.backgroundBusinessInjector.serverConnector.connect(initiator: .notificationExtension)
                 }
                 
                 let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + 25)
@@ -220,9 +218,9 @@ class NotificationService: UNNotificationServiceExtension {
                     }
                 }
                 
-                businessInjector.serverConnector.unregisterMessageProcessorDelegate(delegate: self)
-                businessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
-                businessInjector.serverConnector.disconnectWait(initiator: .notificationExtension)
+                backgroundBusinessInjector.serverConnector.unregisterMessageProcessorDelegate(delegate: self)
+                backgroundBusinessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
+                backgroundBusinessInjector.serverConnector.disconnectWait(initiator: .notificationExtension)
             }
             
             applyContent()
@@ -233,17 +231,17 @@ class NotificationService: UNNotificationServiceExtension {
             // Show test notification (necessary for customer support)
             pendingUserNotificationManager = PendingUserNotificationManager(
                 UserNotificationManager(
-                    businessInjector.settingsStore,
-                    businessInjector.userSettings,
-                    businessInjector.myIdentityStore,
-                    businessInjector.backgroundPushSettingManager,
-                    businessInjector.contactStore,
-                    businessInjector.backgroundGroupManager,
-                    businessInjector.backgroundEntityManager,
-                    businessInjector.licenseStore.getRequiresLicenseKey()
+                    backgroundBusinessInjector.settingsStore,
+                    backgroundBusinessInjector.userSettings,
+                    backgroundBusinessInjector.myIdentityStore,
+                    backgroundBusinessInjector.pushSettingManager,
+                    backgroundBusinessInjector.contactStore,
+                    backgroundBusinessInjector.groupManager,
+                    backgroundBusinessInjector.entityManager,
+                    backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
                 ),
-                businessInjector.backgroundPushSettingManager,
-                businessInjector.backgroundEntityManager
+                backgroundBusinessInjector.pushSettingManager,
+                backgroundBusinessInjector.entityManager
             )
             
             if bestAttemptContent.userInfo["3mw"] is [AnyHashable: Any] {
@@ -294,18 +292,18 @@ class NotificationService: UNNotificationServiceExtension {
         if recalculateBadgeCount {
             conversationsChangedQueue.sync {
                 var recalculateConversations: Set<Conversation>?
-                if let conversationsChanged, let conversations = businessInjector.backgroundEntityManager.entityFetcher
+                if let conversationsChanged, let conversations = backgroundBusinessInjector.entityManager.entityFetcher
                     .notArchivedConversations() as? [Conversation] {
 
                     recalculateConversations = Set(conversations.filter { conversationsChanged.contains($0.objectID) })
                 }
 
                 if let recalculateConversations, !recalculateConversations.isEmpty {
-                    badge = businessInjector.backgroundUnreadMessages
+                    badge = backgroundBusinessInjector.unreadMessages
                         .totalCount(doCalcUnreadMessagesCountOf: Set(recalculateConversations))
                 }
                 else {
-                    badge = businessInjector.backgroundUnreadMessages.totalCount()
+                    badge = backgroundBusinessInjector.unreadMessages.totalCount()
                 }
             }
             DDLogNotice("[Push] Unread messages: \(badge)")
@@ -369,7 +367,8 @@ class NotificationService: UNNotificationServiceExtension {
             return false
         }
 
-        guard isDBReady(), !AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) else {
+        guard isDBReady(),
+              !AppMigrationVersion.isMigrationRequired(userSettings: backgroundBusinessInjector.userSettings) else {
             DDLogWarn("[Push] DB not ready, requires migration")
 
             ThreemaUtility.showLocalNotification(
@@ -384,7 +383,7 @@ class NotificationService: UNNotificationServiceExtension {
             return false
         }
 
-        guard !businessInjector.userSettings.blockCommunication else {
+        guard !backgroundBusinessInjector.userSettings.blockCommunication else {
             DDLogWarn("[Push] Communication is blocked")
 
             let content = UNMutableNotificationContent()
@@ -409,7 +408,7 @@ class NotificationService: UNNotificationServiceExtension {
     ///   - reportedCall: Exit due to Threema Call was reported to the App, `NotificationService.didJustReportCall` will
     ///                   be set to `true` for 5s
     private func exitIfAllTasksProcessed(force: Bool = false, reportedCall: Bool = false) {
-        let isMultiDeviceRegistered = businessInjector.settingsStore.isMultiDeviceRegistered
+        let isMultiDeviceRegistered = backgroundBusinessInjector.settingsStore.isMultiDeviceRegistered
         if force ||
             (
                 isChatQueueDry &&
@@ -422,14 +421,8 @@ class NotificationService: UNNotificationServiceExtension {
             DDLog.flushLog()
 
             // Gives a little time to remove notification from notification center
-            // or has pending group messages (waiting for possible "group sync request" answer)
             var delay: Double = 2
-            if let pendingUserNotificationManager,
-               pendingUserNotificationManager.hasPendingGroupUserNotifications() {
-                DDLogNotice("Push] Delay timeout for bc. has Pending notifications")
-                delay = 5
-            }
-            else if reportedCall {
+            if reportedCall {
                 DDLogNotice("Push] Delay timeout for incoming call")
                 delay = 5
                 NotificationService.didJustReportCall = reportedCall
@@ -499,7 +492,7 @@ class NotificationService: UNNotificationServiceExtension {
         
         // Check if blocked
         guard let identity,
-              !businessInjector.userSettings.blacklist.contains(identity) else {
+              !backgroundBusinessInjector.userSettings.blacklist.contains(identity) else {
             onCompletion?(self)
             return
         }
@@ -527,7 +520,7 @@ class NotificationService: UNNotificationServiceExtension {
         DDLogNotice("[Push] Memory: \(memoryTotal) in use \(memoryInUse)")
     }
     
-    private func showNoAccessToKeychainLocalNotification(onComletion: @escaping () -> Void) {
+    private func showNoAccessToKeychainLocalNotification(onCompletion: @escaping () -> Void) {
         let title = BundleUtil.localizedString(forKey: "new_message_no_access_title")
         let message = String.localizedStringWithFormat(
             BundleUtil.localizedString(forKey: "new_message_no_access_message"),
@@ -540,7 +533,7 @@ class NotificationService: UNNotificationServiceExtension {
             body: message,
             badge: 1,
             userInfo: nil,
-            completionHandler: onComletion
+            completionHandler: onCompletion
         )
     }
 }
@@ -557,14 +550,13 @@ extension NotificationService: MessageProcessorDelegate {
     }
     
     func incomingMessageStarted(_ message: AbstractMessage) {
-        businessInjector.backgroundEntityManager.performBlockAndWait {
+        backgroundBusinessInjector.entityManager.performBlockAndWait {
             let msgID = message.messageID.hexString
             DDLogNotice("[Push] Message processor started for message id: \(msgID)")
 
             if let pendingUserNotification = self.pendingUserNotificationManager?.pendingUserNotification(
                 for: message,
-                stage: .abstract,
-                isPendingGroup: false
+                stage: .abstract
             ) {
                 DDLogInfo("[Push] Message processor started for message id: \(msgID) found")
                 _ = self.pendingUserNotificationManager?
@@ -574,8 +566,8 @@ extension NotificationService: MessageProcessorDelegate {
     }
     
     func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
-        businessInjector.backgroundEntityManager.performBlockAndWait {
-            if let msg = self.businessInjector.backgroundEntityManager.entityFetcher
+        backgroundBusinessInjector.entityManager.performBlockAndWait {
+            if let msg = self.backgroundBusinessInjector.entityManager.entityFetcher
                 .getManagedObject(by: message.objectID) as? BaseMessage {
                 let msgID = msg.id?.hexString
                 DDLogNotice("[Push] Message processor changed for message id: \(msgID ?? "nil")")
@@ -590,7 +582,7 @@ extension NotificationService: MessageProcessorDelegate {
                         databaseManager.addDirtyObject(contact)
                     }
 
-                    self.businessInjector.backgroundUnreadMessages
+                    self.backgroundBusinessInjector.unreadMessages
                         .totalCount(doCalcUnreadMessagesCountOf: [conversation])
 
                     // Add conversation as change to recalculate unread messages
@@ -612,15 +604,14 @@ extension NotificationService: MessageProcessorDelegate {
         }
     }
     
-    func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) {
-        businessInjector.backgroundEntityManager.performBlockAndWait {
+    func incomingMessageFinished(_ message: AbstractMessage) {
+        backgroundBusinessInjector.entityManager.performBlockAndWait {
             let msgID = message.messageID.hexString
             DDLogNotice("[Push] Message processor finished for message id: \(msgID)")
 
             if let pendingUserNotification = self.pendingUserNotificationManager?.pendingUserNotification(
                 for: message,
-                stage: .final,
-                isPendingGroup: isPendingGroup
+                stage: .final
             ) {
                 DDLogNotice("[Push] Message processor finished for message id: \(msgID) found")
                 self.pendingUserNotificationManager?
@@ -660,8 +651,7 @@ extension NotificationService: MessageProcessorDelegate {
     func incomingAbstractMessageFailed(_ message: AbstractMessage) {
         if let pendingUserNotification = pendingUserNotificationManager?.pendingUserNotification(
             for: message,
-            stage: .abstract,
-            isPendingGroup: false
+            stage: .abstract
         ) {
             pendingUserNotificationManager?.addAsProcessed(pendingUserNotification: pendingUserNotification)
             pendingUserNotificationManager?
@@ -688,19 +678,6 @@ extension NotificationService: MessageProcessorDelegate {
         exitIfAllTasksProcessed()
     }
     
-    func pendingGroup(_ message: AbstractMessage) {
-        if let pendingUserNotification = pendingUserNotificationManager?.pendingUserNotification(
-            for: message,
-            stage: .abstract,
-            isPendingGroup: true
-        ) {
-            DDLogInfo("[Push] Group not found for pending user notification")
-
-            pendingUserNotificationManager?
-                .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
-        }
-    }
-    
     func processTypingIndicator(_ message: TypingIndicatorMessage) { }
     
     func processVoIPCall(
@@ -717,14 +694,14 @@ extension NotificationService: MessageProcessorDelegate {
                 onCompletion?(self)
                 return
             }
-            guard businessInjector.userSettings.enableThreemaCall else {
+            guard backgroundBusinessInjector.userSettings.enableThreemaCall else {
                 offerMessage.contactIdentity = identity
                 rejectCall(offer: offerMessage)
                 onCompletion?(self)
                 return
             }
             
-            let displayName = businessInjector.entityManager.entityFetcher.displayName(for: identity)!
+            let displayName = backgroundBusinessInjector.entityManager.entityFetcher.displayName(for: identity)!
             
             reportVoIPCall(
                 for: ["NotificationExtensionOffer": identity, "NotificationExtensionCallerName": displayName],
@@ -737,7 +714,7 @@ extension NotificationService: MessageProcessorDelegate {
             CallSystemMessageHelper
                 .maybeAddMissedCallNotificationToConversation(
                     with: message,
-                    on: businessInjector
+                    on: backgroundBusinessInjector
                 ) { conversation, systemMessage in
                     if let systemMessage, let conversation {
                         let databaseManager = DatabaseManager()
@@ -759,8 +736,8 @@ extension NotificationService: MessageProcessorDelegate {
     /// - Parameter offer: VoIPCallOfferMessage
     private func rejectCall(offer: VoIPCallOfferMessage) {
         let voIPCallSender = VoIPCallSender(
-            messageSender: businessInjector.messageSender,
-            myIdentityStore: businessInjector.myIdentityStore
+            messageSender: backgroundBusinessInjector.messageSender,
+            myIdentityStore: backgroundBusinessInjector.myIdentityStore
         )
         let reason: VoIPCallAnswerMessage.MessageRejectReason = .disabled
         let answer = VoIPCallAnswerMessage(
@@ -784,7 +761,7 @@ extension NotificationService: MessageProcessorDelegate {
         CallSystemMessageHelper.addRejectedMessageToConversation(
             contactIdentity: contactIdentity,
             reason: kSystemMessageCallMissed,
-            on: businessInjector
+            on: backgroundBusinessInjector
         ) { conversation, systemMessage in
             let databaseManager = DatabaseManager()
             databaseManager.addDirtyObject(conversation)
@@ -801,8 +778,8 @@ extension NotificationService: MessageProcessorDelegate {
             return
         }
         
-        let contact = businessInjector.entityManager.entityFetcher.contact(for: contactIdentity)
-        let notificationType = businessInjector.settingsStore.notificationType
+        let contact = backgroundBusinessInjector.entityManager.entityFetcher.contact(for: contactIdentity)
+        let notificationType = backgroundBusinessInjector.settingsStore.notificationType
         let content = UNMutableNotificationContent()
         
         if case .restrictive = notificationType {
@@ -834,7 +811,7 @@ extension NotificationService: ConnectionStateDelegate {
     func changed(connectionState state: ConnectionState) {
         if state == .disconnecting || state == .disconnected {
             DDLogWarn(
-                "[Push] Server connection is disconnected (state: \(businessInjector.serverConnector.name(for: state)))) stop processing"
+                "[Push] Server connection is disconnected (state: \(backgroundBusinessInjector.serverConnector.name(for: state)))) stop processing"
             )
 
             guard !NotificationService.didJustReportCall else {

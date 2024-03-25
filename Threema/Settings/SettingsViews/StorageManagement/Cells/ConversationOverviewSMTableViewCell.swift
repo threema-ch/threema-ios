@@ -193,8 +193,8 @@ class ConversationOverviewSMTableViewCell: ThemedCodeStackTableViewCell {
         self.conversation = conversation
         
         DispatchQueue.global(qos: .background).async {
-            let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.backgroundEntityManager)
             DispatchQueue.main.async {
+                let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
                 self.messagesLabel.text = "\(messageFetcher.count()) \("messages".localized)"
                 self.storageLabel.text = "\(messageFetcher.mediaCount()) \("files".localized)"
             }

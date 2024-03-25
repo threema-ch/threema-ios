@@ -28,7 +28,11 @@ class TaskDefinitionNewDeviceSync: TaskDefinition,
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
     ) -> TaskExecutionProtocol {
-        TaskExecutionNewDeviceSync(taskContext: taskContext, taskDefinition: self, frameworkInjector: frameworkInjector)
+        TaskExecutionNewDeviceSync(
+            taskContext: taskContext,
+            taskDefinition: self,
+            backgroundFrameworkInjector: frameworkInjector
+        )
     }
     
     override func create(frameworkInjector: FrameworkInjectorProtocol) -> TaskExecutionProtocol {

@@ -121,7 +121,7 @@ class SafeActivatedViewController: ThemedTableViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -180,7 +180,7 @@ class SafeActivatedViewController: ThemedTableViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -260,7 +260,7 @@ class SafeActivatedViewController: ThemedTableViewController {
     ) {
         super.tableView(tableView, willDisplay: cell, forRowAt: indexPath)
         
-        let safeManager = SafeManager(groupManager: GroupManager())
+        let safeManager = SafeManager(groupManager: BusinessInjector().groupManager)
         if indexPath.section == 2, indexPath.row == 2, safeManager.isSafePasswordDefinedByAdmin() {
             cell.isUserInteractionEnabled = false
             changePasswordButtonLabel.isEnabled = false

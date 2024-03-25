@@ -136,6 +136,11 @@
     if (self.view.frame.size.height < 500.0) {
         _stackView.spacing = 25.0;
     }
+    
+    UITapGestureRecognizer *feedbackImageViewRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedFeedbackImageView:)];
+    feedbackImageViewRecognizer.numberOfTapsRequired = 2;
+    _feedbackImageView.userInteractionEnabled = YES;
+    [_feedbackImageView addGestureRecognizer:feedbackImageViewRecognizer];
 }
 
 - (void)dealloc {
@@ -346,11 +351,16 @@
 
 #pragma mark - UITapGestureRecognizer
 
-- (void)tappedMainView:(UITapGestureRecognizer *)sender
-{
+- (void)tappedMainView:(UITapGestureRecognizer *)sender {
     if (sender.state == UIGestureRecognizerStateEnded) {
         [self hideKeyboard];
     }
+}
+
+- (void)tappedFeedbackImageView:(UITapGestureRecognizer *)sender {
+    NSString *title = [NSString stringWithFormat:@"%i", _licenseStore.error.code];
+    NSString *message = [NSString stringWithFormat:@"%@", _licenseStore.error.description];
+    [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];
 }
 
 #pragma mark - ZSWTappableLabel delegate

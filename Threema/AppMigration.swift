@@ -63,13 +63,8 @@ import ThreemaFramework
 
     private let osPOILog = OSLog(subsystem: "ch.threema.iapp.appMigration", category: .pointsOfInterest)
     
+    // BusinessInjector for main or background thread
     private let businessInjector: BusinessInjectorProtocol
-
-    // Entity manager for main or background thread
-    private var entityManager: EntityManager {
-        Thread.isMainThread ? businessInjector.entityManager : businessInjector
-            .backgroundEntityManager
-    }
 
     private var migratedTo: AppMigrationVersion {
         get {
@@ -80,18 +75,25 @@ import ThreemaFramework
         }
     }
 
-    init(businessInjector: BusinessInjectorProtocol, reset: Bool = false) {
-        self.businessInjector = businessInjector
+    #if DEBUG
+        init(businessInjector: BusinessInjectorProtocol) {
+            self.businessInjector = businessInjector
+        }
+    #endif
+
+    init(reset: Bool = false) {
+        self.businessInjector = BusinessInjector(forBackgroundProcess: !Thread.isMainThread)
+        super.init()
 
         if reset {
             businessInjector.userSettings.appMigratedToVersion = AppMigrationVersion.none.rawValue
         }
     }
 
-    @objc convenience init(businessInjectorObjc: NSObject) {
-        self.init(businessInjector: businessInjectorObjc as! BusinessInjectorProtocol)
+    @objc override init() {
+        self.businessInjector = BusinessInjector(forBackgroundProcess: !Thread.isMainThread)
     }
-    
+
     @available(
         *,
         deprecated,
@@ -158,6 +160,11 @@ import ThreemaFramework
                 try migrateTo5_7()
                 migratedTo = .v5_7
             }
+            if migratedTo < .v5_9 {
+                try migrateTo5_9()
+                migratedTo = .v5_9
+            }
+            
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
@@ -200,21 +207,20 @@ import ThreemaFramework
         MessageDraftStore.cleanupDrafts()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyDeletedOldDrafts")
 
-        entityManager.performSyncBlockAndSafe {
-            let unreadMessages = UnreadMessages(entityManager: self.entityManager)
-
-            for conversation in self.entityManager.entityFetcher.allConversations() {
+        businessInjector.entityManager.performSyncBlockAndSafe {
+            for conversation in self.businessInjector.entityManager.entityFetcher.allConversations() {
                 guard let conversation = conversation as? Conversation else {
                     continue
                 }
                     
-                let messageFetcher = MessageFetcher(for: conversation, with: self.entityManager)
+                let messageFetcher = MessageFetcher(for: conversation, with: self.businessInjector.entityManager)
                 let calendar = Calendar.current
                 
                 // Check has conversation unread messages
-                guard self.entityManager.entityFetcher.countUnreadMessages(for: conversation) > 0 else {
+                guard self.businessInjector.entityManager.entityFetcher.countUnreadMessages(for: conversation) > 0
+                else {
                     if conversation.unreadMessageCount != 0 {
-                        unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
+                        self.businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
                     }
                     continue
                 }
@@ -247,7 +253,7 @@ import ThreemaFramework
                 
                 batch.propertiesToUpdate = ["readDate": Date(), "read": true]
                 // if there was a error, the execute function will return nil or a result with the result 0
-                if let result = self.entityManager.entityFetcher.execute(batch) {
+                if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
                     if let success = result.result as? Int,
                        success == 0 {
                         DDLogError(
@@ -261,7 +267,7 @@ import ThreemaFramework
                     )
                 }
                 
-                unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
+                self.businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
             }
         }
         
@@ -293,8 +299,8 @@ import ThreemaFramework
     private func migrateTo5_2() throws {
         DDLogNotice("[AppMigration] App migration to version 5.2 started")
         os_signpost(.begin, log: osPOILog, name: "5.2 migration")
-        entityManager.performSyncBlockAndSafe {
-            
+        businessInjector.entityManager.performSyncBlockAndSafe {
+
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
             batch.resultType = .statusOnlyResultType
             batch
@@ -308,7 +314,7 @@ import ThreemaFramework
                 "visibility": ConversationVisibility.pinned.rawValue,
             ]
             // if there was a error, the execute function will return nil or a result with the result 0
-            if let result = self.entityManager.entityFetcher.execute(batch) {
+            if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
                 if let success = result.result as? Int,
                    success == 0 {
                     DDLogError(
@@ -347,7 +353,7 @@ import ThreemaFramework
         
         try BusinessInjector().dhSessionStore.executeNull()
         
-        entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performSyncBlockAndSafe {
             // Set for all conversations the last update
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
             batch.resultType = .statusOnlyResultType
@@ -361,7 +367,7 @@ import ThreemaFramework
                 "lastUpdate": Date(timeIntervalSince1970: 0),
             ]
             // if there was a error, the execute function will return nil or a result with the result 0
-            if let result = self.entityManager.entityFetcher.execute(batch) {
+            if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
                 if let success = result.result as? Int,
                    success == 0 {
                     DDLogError(
@@ -391,9 +397,9 @@ import ThreemaFramework
         DDLogNotice("[AppMigration] App migration to version 5.5 started")
         os_signpost(.begin, log: osPOILog, name: "5.5 migration")
         
-        entityManager.performAndWaitSave {
-            if let ownContact = self.entityManager.entityFetcher.contactsContainOwnIdentity() {
-                self.entityManager.entityDestroyer.deleteObject(object: ownContact)
+        businessInjector.entityManager.performAndWaitSave {
+            if let ownContact = self.businessInjector.entityManager.entityFetcher.contactsContainOwnIdentity() {
+                self.businessInjector.entityManager.entityDestroyer.deleteObject(object: ownContact)
                 DDLogNotice("[AppMigration] Removed own contact from contact list")
             }
         }
@@ -555,5 +561,39 @@ import ThreemaFramework
 
         os_signpost(.end, log: osPOILog, name: "5.7 migration")
         DDLogNotice("[AppMigration] App migration to version 5.7 successfully finished")
+    }
+    
+    /// Migrate to version 5.9:
+    /// - Migrate captions from json into the core data caption field
+    /// - Update the FS session data base to database version 5
+    /// - Remove unknown group alert list for pending group messages
+    private func migrateTo5_9() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.9 started")
+        os_signpost(.begin, log: osPOILog, name: "5.9 migration")
+        
+        businessInjector.entityManager.performSyncBlockAndSafe {
+            if let allFileMessages =
+                self.businessInjector.entityManager.entityFetcher
+                    .allFileMessagesWithJsonCaptionButEmptyCaption() as?
+                    [FileMessageEntity] {
+                for fileMessage in allFileMessages {
+                    fileMessage.caption = fileMessage.getJSONCaption()
+                }
+            }
+        }
+        
+        // Remove deprecated user settings
+        AppGroup.userDefaults().removeObject(forKey: "VideoCallInChatInfoShown")
+        AppGroup.userDefaults().removeObject(forKey: "VideoCallInfoShown")
+        AppGroup.userDefaults().removeObject(forKey: "VideoCallSpeakerInfoShown")
+
+        // Upgrade FS session data base to database version 5
+        try BusinessInjector().dhSessionStore.executeNull()
+        
+        // Remove unknown group alert list for pending group messages
+        AppGroup.userDefaults().removeObject(forKey: "UnknownGroupAlertList")
+        
+        os_signpost(.end, log: osPOILog, name: "5.9 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.9 successfully finished")
     }
 }

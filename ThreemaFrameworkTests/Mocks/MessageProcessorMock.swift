@@ -33,14 +33,14 @@ class MessageProcessorMock: NSObject, MessageProcessorProtocol {
         receivedAfterInitialQueueSend: Bool,
         maxBytesToDecrypt: Int32,
         timeoutDownloadThumbnail: Int32
-    ) -> Promise<AbstractMessageAndPFSSession?> {
+    ) -> Promise<AbstractMessageAndFSMessageInfo?> {
         processIncomingBoxedMessageCalls.append(boxedMessage)
 
         if let abstractMessage {
-            return Promise { $0.fulfill(AbstractMessageAndPFSSession(message: abstractMessage)) }
+            return Promise { $0.fulfill(AbstractMessageAndFSMessageInfo(message: abstractMessage, fsMessageInfo: nil)) }
         }
         else if let error {
-            return Promise<AbstractMessageAndPFSSession?>(error: error)
+            return Promise(error: error)
         }
         return Promise { $0.fulfill(nil) }
     }

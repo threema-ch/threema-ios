@@ -58,7 +58,7 @@
 {
     self = [super initWithCoder:coder];
     if (self) {
-        self->groupManager = [[GroupManager alloc] init];
+        self->groupManager = [[BusinessInjector new] groupManagerObjC];
     }
     return self;
 }

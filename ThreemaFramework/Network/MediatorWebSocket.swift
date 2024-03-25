@@ -105,7 +105,7 @@ import Starscream
 // MARK: - WebSocketDelegate
 
 extension MediatorWebSocket: WebSocketDelegate {
-    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocket) {
+    func didReceive(event: Starscream.WebSocketEvent, client: Starscream.WebSocketClient) {
         switch event {
         case .connected:
             lastError = nil
@@ -157,6 +157,9 @@ extension MediatorWebSocket: WebSocketDelegate {
         case .ping, .pong, .viabilityChanged, .reconnectSuggested:
             DDLogVerbose("ping, pong, viabilityChanged or reconnectSuggested")
             lastError = nil
+        case .peerClosed:
+            DDLogWarn("peerClosed")
+            delegate.didDisconnect(errorCode: lastError?.code ?? 0)
         }
     }
 }
@@ -167,6 +170,12 @@ extension MediatorWebSocket: CertificatePinning {
     public func evaluateTrust(trust: SecTrust, domain: String?, completion: (PinningState) -> Void) {
         guard let domain else {
             completion(.failed(nil))
+            return
+        }
+
+        // TODO: Remove this if is IOS-4359 (Use fingerprints from OPPF for certificate pinning of MD connections) implemented
+        guard ThreemaApp.current != .onPrem else {
+            completion(.success)
             return
         }
 

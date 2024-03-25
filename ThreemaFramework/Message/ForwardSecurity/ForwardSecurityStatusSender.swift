@@ -84,7 +84,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         hasForwardSecuritySupport: Bool
     ) {
         let msg =
-            "Reject received for session \(session?.description ?? "nil") (session-id=\(sessionID), rejected-message-id=\(rejectedMessageID.hexString), cause=\(rejectCause)"
+            "Reject received for session \(session?.description ?? "nil") (session-id=\(sessionID), rejected-message-id=\(rejectedMessageID.hexString), cause=\(rejectCause))"
         DDLogNotice("[ForwardSecurity] \(msg)")
         
         if ThreemaEnvironment.fsDebugStatusMessages {
@@ -180,10 +180,12 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             }
             
             if group.isOwnGroup {
-                groupManager.sync(group: group, to: Set([sender.string]), withoutCreateMessage: false)
-                    .catch { error in
-                        DDLogError("Error while syncing group: \(error)")
-                    }
+                entityManager.performBlock {
+                    groupManager.sync(group: group, to: Set([sender.string]), withoutCreateMessage: false)
+                        .catch { error in
+                            DDLogError("Error while syncing group: \(error)")
+                        }
+                }
             }
         }
     }
@@ -214,7 +216,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 message.sendFailed = NSNumber(booleanLiteral: true)
             // TODO: (IOS-4253) Handle call offer, call answer & call ringing and abort call.
             default:
-                let errorMessage = "Not handled message type for rejected group message: \(message.loggingDescription)"
+                let errorMessage = "Not handled message type for rejected message: \(message.loggingDescription)"
                 assertionFailure(errorMessage)
                 DDLogError(errorMessage)
             }
@@ -239,6 +241,10 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
     
     func messagesSkipped(sessionID: DHSessionID, contact: ForwardSecurityContact, numSkipped: Int) {
         // No-op
+        assert(numSkipped < 10)
+        DDLogDebug(
+            "[ForwardSecurity] Skipped \(numSkipped) ratchet turns. This is normal for missed non-queued or short lived messages (e.g. typing indicators) received when in the background. But should not happen all the time. Check if the ratchet is actually persisted after the message is processed"
+        )
     }
     
     func messageOutOfOrder(sessionID: DHSessionID, contact: ForwardSecurityContact, messageID: Data) {
@@ -488,13 +494,22 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
     
     func updateFeatureMask(for contact: ForwardSecurityContact) async -> Bool {
         await withCheckedContinuation { continuation in
-            entityManager.performAsyncBlockAndSafe {
-                let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity)
-                FeatureMask
-                    .check(Int(FEATURE_MASK_FORWARD_SECURITY), forContacts: [contactEntity], forceRefresh: true) { _ in
-                        // Feature mask has been updated in DB, will be respected on next message send
-                        continuation.resume(returning: contactEntity?.isForwardSecurityAvailable() ?? false)
+            entityManager.performAndWaitSave {
+                guard let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity) else {
+                    continuation.resume(returning: false)
+                    return
+                }
+                
+                FeatureMask.check(
+                    contacts: [contactEntity],
+                    for: Int(FEATURE_MASK_FORWARD_SECURITY),
+                    force: true
+                ) { _ in
+                    // Feature mask has been updated in DB, will be respected on next message send
+                    self.entityManager.performAndWait {
+                        continuation.resume(returning: contactEntity.isForwardSecurityAvailable())
                     }
+                }
             }
         }
     }

@@ -60,6 +60,7 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
     
     case localProtocolViolation
     case promotionError
+    case existingPendingMediaKeys
     
     case badMessage
     case badParticipantState
@@ -81,7 +82,7 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
              .sendStartMessageError,
              .keyDerivationError,
              .keyRatchetError, .frameCryptoFailure,
-             .localProtocolViolation, .promotionError,
+             .localProtocolViolation, .promotionError, .existingPendingMediaKeys,
              .badMessage, .badParticipantState, .firstMessageNotReceived, .invalidToken, .unsupportedMessage,
              .serializationFailure, .encryptionFailure, .decryptionFailure,
              .streamCreationError, .endedInMeantime:

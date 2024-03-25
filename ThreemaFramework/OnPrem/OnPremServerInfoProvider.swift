@@ -156,13 +156,14 @@ class OnPremServerInfoProvider: ServerInfoProvider {
                 switch result {
                 case let .success(config):
                     if let mediatorConfig = config.mediator {
+                        let params = "?deviceId={deviceId}&deviceGroupId={deviceGroupId}&scope={origin}"
                         completionHandler(MediatorServerInfo(
                             deviceGroupIDFirstByteHex: deviceGroupIDFirstByteHex,
                             url: mediatorConfig.url,
                             blob: BlobServerInfo(
-                                downloadURL: mediatorConfig.blob.downloadUrl,
-                                uploadURL: mediatorConfig.blob.uploadUrl,
-                                doneURL: mediatorConfig.blob.doneUrl
+                                downloadURL: mediatorConfig.blob.downloadUrl + params,
+                                uploadURL: mediatorConfig.blob.uploadUrl + params,
+                                doneURL: mediatorConfig.blob.doneUrl + params
                             )
                         ), nil)
                     }
@@ -203,6 +204,29 @@ class OnPremServerInfoProvider: ServerInfoProvider {
         }
     }
     
+    func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void) {
+        switch prepareConfigFetcher() {
+        case let .success(fetcher):
+            fetcher.fetch { result in
+                switch result {
+                case let .success(config):
+                    if let rendezvousConfig = config.rendezvous {
+                        completionHandler(RendezvousServerInfo(
+                            url: rendezvousConfig.url
+                        ), nil)
+                    }
+                    else {
+                        completionHandler(nil, OnPremConfigError.missingRendezvousConfig)
+                    }
+                case let .failure(err):
+                    completionHandler(nil, err)
+                }
+            }
+        case let .failure(err):
+            completionHandler(nil, err)
+        }
+    }
+
     private var onPremConfigFetcher: OnPremConfigFetcher?
     
     private var lastConfigURLAuth: URL?

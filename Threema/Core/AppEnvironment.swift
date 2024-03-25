@@ -33,4 +33,5 @@ public struct AppEnvironment {
     var identityLinked
     @NotificationPublisher(UIApplication.willEnterForegroundNotification)
     var enteredForeground
+    var connectionStateProvider = ConnectionStateProvider()
 }

@@ -119,9 +119,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize safeIntroShown;
 
 @synthesize workInfoShown;
-@synthesize videoCallInChatInfoShown;
-@synthesize videoCallInfoShown;
-@synthesize videoCallSpeakerInfoShown;
 
 @synthesize sentryAppDevice;
 
@@ -132,8 +129,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize enableVideoCall;
 @synthesize threemaVideoCallQualitySetting;
-
-@synthesize unknownGroupAlertList;
 
 @synthesize evaluatedPolicyDomainStateApp;
 @synthesize evaluatedPolicyDomainStateShareExtension;
@@ -155,6 +150,10 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `GroupCallsDeveloper`
 /// - `NewProfileActive`
 /// - `NewSettingsActive`
+/// - `UnknownGroupAlertList`
+/// - `VideoCallInChatInfoShown`
+/// - `VideoCallInfoShown`
+/// - `VideoCallSpeakerInfoShown`
 
 static UserSettings *instance;
 
@@ -248,9 +247,6 @@ static UserSettings *instance;
                                         [NSData data], @"SafeConfig",
                                         [NSNumber numberWithBool:NO], @"SafeIntroShown",
                                         [NSNumber numberWithBool:defaultWorkInfoShown], @"WorkInfoShown",
-                                        [NSNumber numberWithBool:NO], @"VideoCallInChatInfoShown",
-                                        [NSNumber numberWithBool:NO], @"VideoCallInfoShown",
-                                        [NSNumber numberWithBool:NO], @"VideoCallSpeakerInfoShown",
                                         [NSNumber numberWithBool:NO], @"EnableMasterDnd",
                                         [NSArray array], @"MasterDNDWorkingDays",
                                         @"08:00", @"MasterDNDStartTime",
@@ -258,7 +254,6 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
-                                        [NSMutableArray array], @"UnknownGroupAlertList",
                                         [NSNumber numberWithInt:ThreemaAudioMessagePlaySpeedSingle], @"ThreemaAudioMessagePlaySpeed",
                                         [NSNumber numberWithBool:NO], @"HidePrivateChats",
                                         [NSNumber numberWithBool:NO], @"BlockCommunication",
@@ -361,9 +356,6 @@ static UserSettings *instance;
     evaluatedPolicyDomainStateShareExtension = [defaults dataForKey:@"EvaluatedPolicyDomainStateShareExtension"];
     
     workInfoShown = [defaults boolForKey:@"WorkInfoShown"];
-    videoCallInChatInfoShown = [defaults boolForKey:@"VideoCallInChatInfoShown"];
-    videoCallInfoShown = [defaults boolForKey:@"VideoCallInfoShown"];
-    videoCallSpeakerInfoShown = [defaults boolForKey:@"VideoCallSpeakerInfoShown"];
     
     NSString *tmpSentryAppDevice = [defaults stringForKey:@"SentryAppDevice"];
     if (tmpSentryAppDevice != nil) {
@@ -382,9 +374,7 @@ static UserSettings *instance;
     
     enableVideoCall = [defaults boolForKey:@"EnableVideoCall"];
     threemaVideoCallQualitySetting = [[defaults objectForKey:@"ThreemaVideoCallQualitySetting"] intValue];
-        
-    unknownGroupAlertList = [[NSMutableArray alloc] initWithArray:[defaults arrayForKey:@"UnknownGroupAlertList"]];
-    
+            
     threemaAudioMessagePlaySpeed = [[defaults objectForKey:@"ThreemaAudioMessagePlaySpeed"] intValue];
     
     hidePrivateChats = [defaults boolForKey:@"HidePrivateChats"];
@@ -801,24 +791,6 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setVideoCallInChatInfoShown:(BOOL)newVideoCallInChatInfoShown {
-    videoCallInChatInfoShown = newVideoCallInChatInfoShown;
-    [defaults setBool:videoCallInChatInfoShown forKey:@"VideoCallInChatInfoShown"];
-    [defaults synchronize];
-}
-
-- (void)setVideoCallInfoShown:(BOOL)newVideoCallInfoShown {
-    videoCallInfoShown = newVideoCallInfoShown;
-    [defaults setBool:videoCallInfoShown forKey:@"VideoCallInfoShown"];
-    [defaults synchronize];
-}
-
-- (void)setVideoCallSpeakerInfoShown:(BOOL)newVideoCallSpeakerInfoShown {
-    videoCallSpeakerInfoShown = newVideoCallSpeakerInfoShown;
-    [defaults setBool:videoCallSpeakerInfoShown forKey:@"VideoCallSpeakerInfoShown"];
-    [defaults synchronize];
-}
-
 - (void)setSentryAppDevice:(NSString *)newSentryAppDevice {
     sentryAppDevice = newSentryAppDevice;
     [defaults setObject:sentryAppDevice forKey:@"SentryAppDevice"];
@@ -858,12 +830,6 @@ static UserSettings *instance;
 - (void)setThreemaVideoCallQualitySetting:(enum ThreemaVideoCallQualitySetting)newThreemaVideoCallQualitySetting {
     threemaVideoCallQualitySetting = newThreemaVideoCallQualitySetting;
     [defaults setObject:[NSNumber numberWithInt:threemaVideoCallQualitySetting] forKey:@"ThreemaVideoCallQualitySetting"];
-    [defaults synchronize];
-}
-
-- (void)setUnknownGroupAlertList:(NSMutableArray *)newUnknownGroupAlertList {
-    unknownGroupAlertList = newUnknownGroupAlertList;
-    [defaults setObject:unknownGroupAlertList forKey:@"UnknownGroupAlertList"];
     [defaults synchronize];
 }
 

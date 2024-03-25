@@ -61,6 +61,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)synchronizeAddressBookForceFullSync:(BOOL)forceFullSync ignoreMinimumInterval:(BOOL)ignoreMinimumInterval onCompletion:(nullable void(^)(BOOL addressBookAccessGranted))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
     NS_SWIFT_NAME(synchronizeAddressBook(forceFullSync:ignoreMinimumInterval:onCompletion:onError:));
 
+- (void)updateFeatureMasksForIdentities:(nonnull NSArray<NSString *> *)Identities onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
+
 - (void)reflectContact:(nullable ContactEntity *)contact NS_SWIFT_NAME(reflect(_:));
 
 - (void)reflectDeleteContact:(nullable NSString *)identity;
@@ -69,6 +71,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)deleteProfilePicture:(nullable NSString *)identity shouldReflect:(BOOL)shouldReflect;
 - (void)removeProfilePictureFlagForIdentity:(NSString *)identity
     NS_SWIFT_NAME(removeProfilePictureFlag(for:));
+
+/// Update state, type and feature mask of all valid contacts
+/// - Parameters:
+///   - ignoreInterval: Force the update and ignore the refresh interval
+///   - onCompletion: Called when update has completed
+///   - onError: Called when MD sync failed
+- (void)updateStatusForAllContactsIgnoreInterval:(BOOL)ignoreInterval onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * _Nonnull error))onError;
 
 - (void)updateAllContactsToCNContact;
 - (void)updateAllContacts;
@@ -129,7 +138,6 @@ NS_ASSUME_NONNULL_BEGIN
     NS_SWIFT_NAME(synchronizeAddressBook(forceFullSync:onCompletion:onError:));
 
 - (void)updateFeatureMasksForContacts:(nonnull NSArray *)contacts contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
-- (void)updateFeatureMasksForIdentities:(nonnull NSArray<NSString *> *)Identities onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
 - (void)updateFeatureMasksForIdentities:(nonnull NSArray *)identities contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
 
 - (void)linkedIdentitiesForEmail:(NSString *)email AndMobileNo:(NSString *)mobileNo onCompletion:(void(^)(NSArray *identities))onCompletion

@@ -396,12 +396,8 @@
 "chat_search_searching" = "Поиск…";
 "chat_search_no_matches" = "Нет совпадений";
 "chat_search_matches" = "%d из %d совпадений";
-"chat_search_note" = "Примечание. Заголовки мультимедиа не включаются в результаты поиска";
 
 "choose_recipient" = "Выбор получателя";
-
-"msg_unknown_group_request_sync_x_title" = "Сообщение получено в неизвестной группе";
-"msg_unknown_group_request_sync_x_message" = "Сообщение получено в неизвестной группе. Информация о группе запрошена у создателя группы (%@). Группа появится сразу после того, как создатель снова будет в сети.";
 
 "tap_to_cancel" = "Коснитесь для отмены";
 "previous" = "Назад";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Заблокированный контак";
 "call_status_failed_title" = "Звонок Threema";
 
-"call_threema_initiator_video_info" = "Нажмите здесь, чтобы включить камеру";
-"call_threema_remote_video_activated_info_title" = "Видеозвонок";
-"call_threema_remote_video_activated_info" = "Собеседник начал видеозвонок. Нажмите здесь, чтобы также включить свою камеру.";
-"call_threema_speaker_info" = "Нажмите здесь, чтобы включить громкоговоритель";
-"call_threema_camera_disabled_info" = "Этот контакт не использует текущую версию приложения или не разрешает видеозвонки.";
-
-"call_threema_video_in_chat_info_title" = "Новинка: видеозвонки";
-
 "call_threema_cellular_instead_of_wifi_title" = "Звоните через мобильную сеть";
 "call_threema_cellular_instead_of_wifi_text" = "Внимание: при звонке происходит передача данных через мобильную сеть.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Архивные чаты";
 
 "archived_title" = "Архивные";
-"conversations_search_placeholder" = "Контакты, группы, ID...";
+"conversations_global_search_placeholder" = "Поиск";
+"one_to_one_chat" = "Одиночный чат";
 
 "select_all" = "Выбрать все";
 "deselect_all" = "Отменить выбор";
@@ -1613,8 +1602,8 @@
 "poi_current_location" = "Мое местоположение";
 "poi_marked_location" = "Поставлена шпилька";
 
-"notification_threemaweb_connectionlost_title" = "Соединение с веб-клиентом Threema утеряно";
-"notification_threemaweb_connectionlost_body" = "Чтобы и далее пользоваться веб-клиентом Threema, откройте приложение снова.";
+"notification_threemaweb_connectionlost_title" = "Соединение с версией для ПК/веб-клиентом утеряно";
+"notification_threemaweb_connectionlost_body" = "Чтобы и далее пользоваться версией для ПК / веб-клиентом, откройте приложение снова.";
 
 "settings_threema_web_connected" = "Установлено подключение к ПК/веб-клиенту";
 "settings_threema_web_connectioninfo" = "Для поддержания соединения ваше устройство должно быть разблокировано с работающим не в фоновом режиме приложением %@. Во время соединения ваше устройство не будет блокироваться автоматически.";
@@ -1698,6 +1687,7 @@
 
 "notification_group_sync_succeeded" = "Группа синхронизирована";
 "notification_group_sync_failed" = "Не удалось синхронизировать группу";
+"notification_group_call_start_failed" = "Участники не поддерживают групповые звонки";
 
 "notification_settings_sync_pending" = "Синхронизация...";
 "notification_settings_sync_succeeded" = "Настройки синхронизированы";
@@ -1724,7 +1714,7 @@
 
 // Forward security status messages
 "forward_security_message_without" = "Получено сообщение, не использующее протокол Perfect Forward Secrecy. Проверьте, что отправитель намеренно отключил Perfect Forward Secrecy.";
-"forward_security_session_established" = "Сообщения в этом чате теперь защищены протоколом Perfect Forward Secrecy.";
+"forward_security_session_established" = "Сообщения с этим партнером в чате теперь защищены протоколом Perfect Forward Secrecy.";
 "forward_security_session_established_rx" = "Сообщения, получаемые в этом чате, теперь защищаются протоколом Perfect Forward Secrecy. Активируйте Perfect Forward Secrecy на окне сведений о контакте, чтобы защитить также отправляемые сообщения.";
 "forward_security_messages_skipped_1" = "После получения последнего сообщения одно сообщение было утеряно.";
 "forward_security_messages_skipped_x" = "После получения последнего сообщения несколько сообщений (%d) были утеряны.";

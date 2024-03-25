@@ -74,6 +74,17 @@ public struct PreviewableMessageConfiguration {
         includeSender: true
     )
     
+    public static let searchCell = PreviewableMessageConfiguration(
+        symbolConfiguration: UIImage.SymbolConfiguration(
+            textStyle: .subheadline,
+            scale: .small
+        ),
+        font: UIFont.preferredFont(forTextStyle: .subheadline),
+        tintColor: { Colors.textLight },
+        trimmingCount: 200,
+        includeSender: true
+    )
+    
     public static let `default` = PreviewableMessageConfiguration(
         symbolConfiguration: UIImage.SymbolConfiguration(
             textStyle: .caption1,

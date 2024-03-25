@@ -68,7 +68,7 @@ final class TaskExecutionGroupDissolve: TaskExecution, TaskExecutionProtocol {
             // Send group create messages with empty members to group members
             var sendMessages = [Promise<AbstractMessage?>]()
 
-            self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            self.frameworkInjector.entityManager.performBlockAndWait {
                 for toMember in task.toMembers {
                     guard toMember != self.frameworkInjector.myIdentityStore.identity else {
                         continue

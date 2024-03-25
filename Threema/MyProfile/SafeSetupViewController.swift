@@ -40,7 +40,7 @@ class SafeSetupViewController: ThemedViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

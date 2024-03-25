@@ -136,7 +136,7 @@ public class CustomWallpaperSelectionViewController: UIViewController {
         let view = CustomWallpaperSelectionView(
             conversationID: conversationID,
             onDismiss: onDismiss
-        ).environmentObject(SettingsStore())
+        ).environmentObject(BusinessInjector().settingsStore as! SettingsStore)
         let hostingController = UIHostingController(rootView: view)
         let action = UIAction { _ in
             hostingController.dismiss(animated: true)

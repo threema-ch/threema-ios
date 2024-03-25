@@ -26,7 +26,7 @@ public struct AppUpdateSteps {
     private let backgroundBusinessInjector: FrameworkInjectorProtocol
     
     public init() {
-        self.init(backgroundBusinessInjector: BusinessInjector())
+        self.init(backgroundBusinessInjector: BusinessInjector(forBackgroundProcess: true))
     }
     
     init(backgroundBusinessInjector: FrameworkInjectorProtocol) {
@@ -34,59 +34,65 @@ public struct AppUpdateSteps {
     }
     
     /// Run _Application Update Steps_ as defined by Threema Protocols
-    public func run(completion: @escaping () -> Void) {
+    public func run() async throws {
         // TODO: (IOS-4425) This _might_ also be integrated in a new `ContactStore` providing a new `runApplicationUpdateSteps()` function
+        DDLogNotice("Start App Update Steps")
+        defer { DDLogNotice("Exit App Update Steps") }
         
         // The following steps are defined as _Application Update Steps_ and must be
         // run as a persistent task when the application has just been updated to a new
         // version or downgraded to a previous version:
         
-        // 2. Let `contacts` be the list of all contacts (regardless of the acquaintance level).
-        // 3. Refresh the state, type and feature mask of all `contacts` from the
+        // 2. Update the user's feature mask on the directory server.
+        await FeatureMask.updateLocal()
+        
+        // 3. Let `contacts` be the list of all contacts (regardless of the acquaintance level).
+        // 4. Refresh the state, type and feature mask of all `contacts` from the
         //    directory server and make any changes persistent.
-        backgroundBusinessInjector.contactStore.synchronizeAddressBook(
-            forceFullSync: false,
-            ignoreMinimumInterval: true
-        ) { _ in
-            runFourthStep(completion: completion)
-        } onError: { error in
-            DDLogWarn("Address book sync failed: \(error ?? NSError())")
-            // We should still try the next step if this fails
-            runFourthStep(completion: completion)
+        
+        do {
+            DDLogNotice("Contact status update start")
+            
+            let updateTask: Task<Void, Error> = Task {
+                try await backgroundBusinessInjector.contactStore.updateStatusForAllContacts(ignoreInterval: true)
+            }
+            
+            // The request time out is 30s thus we wait for 40s for it to complete
+            switch try await Task.timeout(updateTask, 40) {
+            case .result:
+                break
+            case let .error(error):
+                DDLogError("Contact status update error: \(error ?? "nil")")
+            case .timeout:
+                DDLogWarn("Contact status update time out")
+            }
+        }
+        catch {
+            // We should still try the next steps if this fails and don't report this error back to the caller
+            DDLogWarn("Contact status update error: \(error)")
+        }
+        
+        // 5. For each `contact` of `contacts`:
+        //    1. If an associated FS session with `contact` exists and any of the FS
+        //       states is unknown or any of the stored FS versions (local or remote)
+        //       is unknown, terminate the FS session by sending a
+        //       `csp-e2e-fs.Terminate` message with cause `RESET`.
+        
+        let terminator = try ForwardSecuritySessionTerminator(
+            businessInjector: backgroundBusinessInjector,
+            store: backgroundBusinessInjector.dhSessionStore
+        )
+        
+        let allContactIdentities = await backgroundBusinessInjector.entityManager.perform {
+            backgroundBusinessInjector.entityManager.entityFetcher.allContactIdentities()
+        }
+        
+        for contactIdentity in allContactIdentities {
+            await validateSessionsAndTerminateIfNeeded(with: contactIdentity, using: terminator)
         }
     }
     
     // MARK: - Private helper
-    
-    private func runFourthStep(completion: @escaping () -> Void) {
-        // 4. For each `contact` of `contacts`:
-        //    1. If an associated FS session with `contact` exists and any of the FS
-        //       states is unknown or any of the stored FS versions (local or remote)
-        //       is unknown, terminate the FS session by sending a
-        //       `csp-e2e-fs.Terminate` message.
-        Task {
-            do {
-                let terminator = try ForwardSecuritySessionTerminator(
-                    businessInjector: backgroundBusinessInjector,
-                    store: backgroundBusinessInjector.dhSessionStore
-                )
-                
-                let allContactIdentities = await backgroundBusinessInjector.backgroundEntityManager.perform {
-                    backgroundBusinessInjector.backgroundEntityManager.entityFetcher.allContactIdentities()
-                }
-                
-                for contactIdentity in allContactIdentities {
-                    await validateSessionsAndTerminateIfNeeded(with: contactIdentity, using: terminator)
-                }
-                
-                completion()
-            }
-            catch {
-                DDLogError("[ForwardSecurity] Failed to run fourth step")
-                completion()
-            }
-        }
-    }
     
     private func validateSessionsAndTerminateIfNeeded(
         with contactIdentity: String,
@@ -110,13 +116,13 @@ public struct AppUpdateSteps {
     }
     
     private func postSystemMessage(for contactIdentity: String) async {
-        await backgroundBusinessInjector.backgroundEntityManager.performSave {
-            if let conversation = backgroundBusinessInjector.backgroundEntityManager.conversation(
+        await backgroundBusinessInjector.entityManager.performSave {
+            if let conversation = backgroundBusinessInjector.entityManager.conversation(
                 for: contactIdentity,
                 createIfNotExisting: false,
                 setLastUpdate: false
             ) {
-                let systemMessage = backgroundBusinessInjector.backgroundEntityManager.entityCreator.systemMessage(
+                let systemMessage = backgroundBusinessInjector.entityManager.entityCreator.systemMessage(
                     for: conversation
                 )
                 systemMessage?.type = NSNumber(value: kSystemMessageFsIllegalSessionState)

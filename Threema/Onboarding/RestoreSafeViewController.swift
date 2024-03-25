@@ -84,7 +84,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
                 let safeStore = SafeStore(
                     safeConfigManager: safeConfigManager,
                     serverApiConnector: ServerAPIConnector(),
-                    groupManager: GroupManager()
+                    groupManager: BusinessInjector().groupManager
                 )
 
                 restoreCustomServer = mdmSetup.safeServerURL()
@@ -263,7 +263,7 @@ extension RestoreSafeViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

@@ -108,8 +108,10 @@ class ConversationsViewControllerHelper {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
             }
-            let utilities = ConversationActions(businessInjector: businessInjector)
-            utilities.read(conversation)
+            Task {
+                let utilities = ConversationActions(businessInjector: businessInjector)
+                await utilities.read(conversation, isAppInBackground: AppDelegate.shared().isAppInBackground())
+            }
         }
         completion()
     }
@@ -152,8 +154,7 @@ class ConversationsViewControllerHelper {
     private static func deleteConversation(
         conversation: Conversation,
         group: Group?,
-        deleteHiddenContacts: Bool,
-        entityManager: EntityManager
+        deleteHiddenContacts: Bool
     ) {
         if let group {
             guard group.state != .active, group.state != .requestedSync else {
@@ -168,6 +169,7 @@ class ConversationsViewControllerHelper {
         ChatScrollPosition.shared.removeSavedPosition(for: conversation)
 
         var hiddenContacts = [String]()
+        let entityManager = EntityManager()
         entityManager.performSyncBlockAndSafe {
             if deleteHiddenContacts {
                 hiddenContacts = conversation.members.filter(\.isContactHidden).map(\.identity)
@@ -196,13 +198,11 @@ class ConversationsViewControllerHelper {
     /// - Parameters:
     ///   - conversation: Conversation to Delete
     ///   - owner: ViewController to Display Alert
-    ///   - entityManager: EntityManager Handling the Deletion
     ///   - handler: Handler to execute when action Completes
     static func handleDeletion(
         of conversation: Conversation,
         owner: UIViewController,
         cell: UITableViewCell? = nil,
-        entityManager: EntityManager,
         singleFunction: SingleFunction? = nil,
         handler: @escaping (Bool) -> Void
     ) {
@@ -223,7 +223,6 @@ class ConversationsViewControllerHelper {
             
             let singleConversationDeleteAction = createSingleConversationDeleteAlertAction(
                 conversation: conversation,
-                entityManager: entityManager,
                 handler: handler
             )
             actions.append(singleConversationDeleteAction)
@@ -242,7 +241,6 @@ class ConversationsViewControllerHelper {
                 of: conversation,
                 owner: owner,
                 cell: cell,
-                entityManager: entityManager,
                 singleFunction: singleFunction,
                 handler: handler
             )
@@ -254,7 +252,6 @@ class ConversationsViewControllerHelper {
     ///   - conversation: Conversation to Delete
     ///   - owner: ViewController to Display Alert
     ///   - cell: Cell to handle the popover action on iPads
-    ///   - entityManager: EntityManager Handling the Deletion
     ///   - singleFunction: If function should only do a single function
     ///   - handler: Handler to execute when action Completes
     /// - See also: DeleteConversationAction (legacy code)
@@ -262,7 +259,6 @@ class ConversationsViewControllerHelper {
         of conversation: Conversation,
         owner: UIViewController,
         cell: UITableViewCell?,
-        entityManager: EntityManager,
         singleFunction: SingleFunction?,
         handler: @escaping (Bool) -> Void
     ) {
@@ -270,7 +266,7 @@ class ConversationsViewControllerHelper {
         var sheetMessage: String?
         var actions = [UIAlertAction]()
         
-        guard let group = GroupManager().getGroup(conversation: conversation) else {
+        guard let group = BusinessInjector().groupManager.getGroup(conversation: conversation) else {
             return
         }
         
@@ -289,7 +285,6 @@ class ConversationsViewControllerHelper {
                         sheetMessage = BundleUtil.localizedString(forKey: "group_dissolve_delete_sheet_message")
                         let dissolveAndDeleteAction = createGroupConversationDissolveAndDeleteAlertAction(
                             group: group,
-                            entityManager: entityManager,
                             handler: handler
                         )
                         actions.append(dissolveAndDeleteAction)
@@ -301,7 +296,6 @@ class ConversationsViewControllerHelper {
                         sheetMessage = BundleUtil.localizedString(forKey: "group_dissolve_sheet_message")
                         let dissolveAction = createGroupConversationDissolveAlertAction(
                             group: group,
-                            entityManager: entityManager,
                             handler: handler
                         )
                         actions.append(dissolveAction)
@@ -318,7 +312,6 @@ class ConversationsViewControllerHelper {
                         
                         let leaveAndDeleteAction = createGroupConversationLeaveAndDeleteAlertAction(
                             group: group,
-                            entityManager: entityManager,
                             handler: handler
                         )
                         actions.append(leaveAndDeleteAction)
@@ -347,13 +340,11 @@ class ConversationsViewControllerHelper {
                     sheetMessage = BundleUtil.localizedString(forKey: "group_dissolve_sheet_message")
                     let dissolveAction = createGroupConversationDissolveAlertAction(
                         group: group,
-                        entityManager: entityManager,
                         handler: handler
                     )
                     actions.append(dissolveAction)
                     let dissolveAndDeleteAction = createGroupConversationDissolveAndDeleteAlertAction(
                         group: group,
-                        entityManager: entityManager,
                         handler: handler
                     )
                     actions.append(dissolveAndDeleteAction)
@@ -373,7 +364,6 @@ class ConversationsViewControllerHelper {
 
                     let leaveAndDeleteAction = createGroupConversationLeaveAndDeleteAlertAction(
                         group: group,
-                        entityManager: entityManager,
                         handler: handler
                     )
                     actions.append(leaveAndDeleteAction)
@@ -388,7 +378,6 @@ class ConversationsViewControllerHelper {
             
             let deleteAction = createSingleConversationDeleteAlertAction(
                 conversation: group.conversation,
-                entityManager: entityManager,
                 handler: handler
             )
             actions.append(deleteAction)
@@ -411,7 +400,6 @@ class ConversationsViewControllerHelper {
     /// - Returns: UIAlertAction
     private static func createSingleConversationDeleteAlertAction(
         conversation: Conversation,
-        entityManager: EntityManager,
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let deleteAction = UIAlertAction(
@@ -422,8 +410,7 @@ class ConversationsViewControllerHelper {
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: conversation,
                 group: nil,
-                deleteHiddenContacts: true,
-                entityManager: entityManager
+                deleteHiddenContacts: true
             )
             handler(true)
         }
@@ -444,7 +431,7 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
             
-            GroupManager().leave(groupIdentity: group.groupIdentity, toMembers: nil)
+            BusinessInjector().groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
             handler(true)
         }
         return leaveAction
@@ -453,26 +440,23 @@ class ConversationsViewControllerHelper {
     /// Creates a Group Conversation Leave & Delete Action for an Alert
     /// - Parameters:
     ///   - group: Group to be Left & Deleted
-    ///   - entityManager: EntityManager handling the Deletion
     ///   - handler: Handler to be called after Action is completed
     /// - Returns: UIAlertAction
     private static func createGroupConversationLeaveAndDeleteAlertAction(
         group: Group,
-        entityManager: EntityManager,
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let leaveAndDeleteAction = UIAlertAction(
             title: BundleUtil.localizedString(forKey: "group_leave_and_delete_button"),
             style: .destructive
         ) { _ in
-            GroupManager().leave(groupIdentity: group.groupIdentity, toMembers: nil)
+            BusinessInjector().groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
 
             // the task added by the previous leave call takes care of deleting hidden contacts
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: group.conversation,
                 group: group,
-                deleteHiddenContacts: false,
-                entityManager: entityManager
+                deleteHiddenContacts: false
             )
             handler(true)
         }
@@ -486,15 +470,13 @@ class ConversationsViewControllerHelper {
     /// - Returns: UIAlertAction
     private static func createGroupConversationDissolveAlertAction(
         group: Group,
-        entityManager: EntityManager,
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let dissolveAction = UIAlertAction(
             title: BundleUtil.localizedString(forKey: "group_dissolve_button"),
             style: .destructive
         ) { _ in
-
-            GroupManager(entityManager: entityManager).dissolve(groupID: group.groupID, to: nil)
+            BusinessInjector().groupManager.dissolve(groupID: group.groupID, to: nil)
             handler(true)
         }
         return dissolveAction
@@ -508,17 +490,16 @@ class ConversationsViewControllerHelper {
     /// - Returns: UIAlertAction
     private static func createGroupConversationDissolveAndDeleteAlertAction(
         group: Group,
-        entityManager: EntityManager,
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let dissolveAndDeleteAction = UIAlertAction(
             title: BundleUtil.localizedString(forKey: "group_dissolve_and_delete_button"),
             style: .destructive
         ) { _ in
-            
-            GroupManager(entityManager: entityManager).dissolve(groupID: group.groupID, to: nil)
+            let businessInjector = BusinessInjector()
+            businessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
 
-            guard let conversation = entityManager.entityFetcher.conversation(
+            guard let conversation = businessInjector.entityManager.entityFetcher.conversation(
                 for: group.groupIdentity.id,
                 creator: group.groupIdentity.creator.string
             ) else {
@@ -531,8 +512,7 @@ class ConversationsViewControllerHelper {
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: conversation,
                 group: group,
-                deleteHiddenContacts: false,
-                entityManager: entityManager
+                deleteHiddenContacts: false
             )
             handler(true)
         }

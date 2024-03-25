@@ -28,7 +28,7 @@ final class TaskDefinitionSendGroupRenameMessage: TaskDefinitionSendMessage {
         TaskExecutionSendGroupRenameMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

@@ -41,7 +41,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         let expectedResult: CommonGroupReceiveSteps.Result = .discardMessage
         
         let businessInjector = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(),
             entityManager: EntityManager()
         )
 
@@ -61,7 +60,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         let expectedResult: CommonGroupReceiveSteps.Result = .discardMessage
         
         let businessInjector = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(),
             entityManager: EntityManager()
         )
 
@@ -90,8 +88,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainContext),
-            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: databaseMainContext),
             groupManager: groupManagerMock
         )
@@ -163,8 +159,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainContext),
-            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: databaseMainContext),
             groupManager: groupManagerMock
         )
@@ -236,8 +230,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainContext),
-            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: databaseMainContext),
             groupManager: groupManagerMock
         )
@@ -318,8 +310,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainContext),
-            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: databaseMainContext),
             groupManager: groupManagerMock
         )
@@ -402,8 +392,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainContext),
-            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: databaseMainContext),
             groupManager: groupManagerMock
         )
@@ -474,8 +462,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainContext),
-            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: databaseMainContext),
             groupManager: groupManagerMock
         )
@@ -554,8 +540,6 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainContext),
-            backgroundGroupManager: groupManagerMock,
             entityManager: EntityManager(databaseContext: databaseMainContext),
             groupManager: groupManagerMock
         )

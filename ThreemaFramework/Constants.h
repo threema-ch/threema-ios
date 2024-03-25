@@ -90,7 +90,6 @@
 #define kNotificationServerMessage @"ThreemaServerMessage"
 #define kNotificationQueueSendComplete @"ThreemaQueueSendComplete"
 #define kNotificationErrorConnectionFailed @"ThreemaErrorConnectionFailed"
-#define kNotificationErrorUnknownGroup @"ThreemaErrorUnknownGroup"
 #define kNotificationErrorPublicKeyMismatch @"ThreemaErrorPublicKeyMismatch"
 #define kNotificationErrorRogueDevice @"ThreemaErrorRogueDevice"
 

@@ -22,16 +22,20 @@ import Foundation
 @testable import ThreemaFramework
 
 class BusinessInjectorMock: FrameworkInjectorProtocol {
+    func runInBackground<T>(
+        _ block: @escaping (ThreemaFramework.BusinessInjectorProtocol) async throws
+            -> T
+    ) async rethrows -> T {
+        try await block(self)
+    }
+    
+    func runInBackgroundAndWait<T>(_ block: (ThreemaFramework.BusinessInjectorProtocol) throws -> T) rethrows -> T {
+        try block(self)
+    }
 
     // MARK: BusinessInjectorProtocol
 
-    var backgroundEntityManager: EntityManager
-
-    var backgroundGroupManager: GroupManagerProtocol
-
-    var backgroundUnreadMessages: UnreadMessagesProtocol
-
-    var backgroundPushSettingManager: ThreemaFramework.PushSettingManagerProtocol
+    var runsInBackground: Bool
 
     var contactStore: ContactStoreProtocol
 
@@ -66,7 +70,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol
 
     var messageProcessor: MessageProcessorProtocol
-    
+
     var fsmp: ForwardSecurityMessageProcessor
     
     var dhSessionStore: DHSessionStoreProtocol
@@ -84,10 +88,6 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var messageRetentionManager: any MessageRetentionManagerModelProtocol
 
     init(
-        backgroundEntityManager: EntityManager,
-        backgroundGroupManager: GroupManagerProtocol = GroupManagerMock(),
-        backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
-        backgroundPushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
         contactStore: ContactStoreProtocol = ContactStoreMock(),
         conversationStore: ConversationStoreProtocol & ConversationStoreInternalProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
@@ -110,10 +110,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         blobUploader: BlobUploaderProtocol = BlobUploaderMock(),
         messageRetentionManager: MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock()
     ) {
-        self.backgroundEntityManager = backgroundEntityManager
-        self.backgroundGroupManager = backgroundGroupManager
-        self.backgroundUnreadMessages = backgroundUnreadMessages
-        self.backgroundPushSettingManager = backgroundPushSettingManager
+        self.runsInBackground = entityManager.hasBackgroundChildContext
         self.contactStore = contactStore
         self.conversationStore = conversationStore
         self.entityManager = entityManager

@@ -142,7 +142,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
         }
         
         if conversation != nil {
-            let groupManager = GroupManager(entityManager: entityManager)
+            let groupManager = BusinessInjector().groupManager
             let messagePermission = MessagePermission(
                 myIdentityStore: MyIdentityStore.shared(),
                 userSettings: UserSettings.shared(),

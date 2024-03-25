@@ -89,7 +89,7 @@
 "settings" = "Configuraziuns";
 "loadMore" = "Chargiar dapli";
 "all" = "Tuts";
-"myIdentity" = "Mes profil";
+"myIdentity" = "Profil";
 "share_id" = "Parter tia ID da Threema";
 "close" = "Serrar";
 "threema_id" = "ID da Threema";
@@ -103,7 +103,6 @@
 "file_message_video" = "Video";
 "file_message_voice" = "Messadi discurrì";
 "file_message_file" = "Datoteca";
-
 "chat_back_button_accessibility" = "Betg legì %d";
 
 "show_in_google_maps" = "Mussar en Google Maps";
@@ -124,7 +123,6 @@
 "fileNotDownloaded" = "La datoteca è vegnida stizzada u betg telechargiada.";
 "include_media_title" = "Trametter medias (fotos, videos) sco agiuntas?";
 "include_media_message" = "Ti dovras in tool da ZIP modern che sustegna AES per avrir la datoteca, p.ex. 7-Zip u The Unarchiver (Mac).";
-
 
 /* image sizes */
 "image_size_title" = "Grondezza dal maletg";
@@ -276,7 +274,7 @@
 "messages_delete_all_button" = "Stizzar tut ils messadis";
 "messages_delete_all_confirm_title" = "Stizzar tut ils messadis en quest chat sin quest apparat?";
 "messages_delete_all_confirm_message" = "Quai vul dir era tut las medias e tut ils documents.";
-"messages_delete_selected_confirm" = "Vuls ti propi stizzar ils messadis tschernids sin quest apparat?";
+"messages_delete_selected_confirm" = "Es ti segir che ti vuls stizzar ils messadis tschernids?";
 "conversation_delete_confirm" = "Es ti segir che ti vuls stizzar quest chat sin quest apparat?";
 "delete_n" = "Stizzar (%d)";
 
@@ -390,10 +388,8 @@
 "chat_search_searching" = "Tschertgar ...";
 "chat_search_no_matches" = "Nagins resultats";
 "chat_search_matches" = "%d da %d resultats";
-"choose_recipient" = "Tscherner il destinatur";
 
-"msg_unknown_group_request_sync_x_title" = "Survegnì in messadi en ina gruppa nunenconuschenta";
-"msg_unknown_group_request_sync_x_message" = "Ti has survegnì in messadi en ina gruppa nunenconuschenta. Igl è vegnì dumandà il creader da la gruppa (%@) per las infurmaziuns davart la gruppa. La gruppa cumpara, uschespert ch'il creader è puspè online.";
+"choose_recipient" = "Tscherner il destinatur";
 
 "tap_to_cancel" = "Tippar per interrumper";
 "previous" = "Precedents";
@@ -495,12 +491,11 @@
 "exclude_deleted_id_exclude_button" = "Excluder";
 
 "forward_security" = "Perfect Forward Secrecy";
-"forward_security_none" = "nagina";
-"forward_security_2dh" = "unilateral";
-"forward_security_4dh" = "cumplet";
-"forward_security_clear_sessions" = "Stizzar tut las sesidas";
-"forward_security_explainer_footer" = "Perfect Forward Secrecy (PFS) protegia ina communicaziun registrada d'ina decodaziun posteriura, era sche la codaziun a lunga durada è enconuschenta.
-L'opziun pon ins activar, sche l'app sustegna PFS da tuttas duas varts.";
+"forward_security_none" = "nagina"; /* sent to _none_ with PFS (_no(ne)_ PFS) */
+"forward_security_2dh" = "unilateral"; /* _uniliteral_ PFS */
+"forward_security_4dh" = "cumplet"; /* _complete_ PFS */
+"forward_security_clear_sessions" = "Redefinir Perfect Forward Secrecy per quest contact";
+"forward_security_explainer_footer" = "Faschai questa acziun mo, sch’il support Threema As ha dumandà explicitamain.";
 /* create id */
 "lets_get_started" = "Dai!";
 "setup_threema" = "Endrizzar Threema";
@@ -622,7 +617,7 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 /* reminder messages */
 "push_reminder_title" = "Betg activà ils avis da push";
 "push_reminder_message" = "Sco quai ch’i para n’è %@ betg autorisà da tramettar a tai avis da push. Ti na vegns pia betg infurmà davart novs messadis, sche %@ è serrà. Avra las configuraziuns dad iOS ed activescha sut «Messadis» ils avis per %@ per che ti na manchentias nagins messadis.";
-"updating_database" = "La banca da datas vegn actualisada ...\n\nP.pl. betg interrumper quest process. Per grondas bancas da datas po quai durar pliras minutas.";
+"updating_database" = "La banca da datas vegn actualisada…\n\nP.pl. laschar ir Threema fin ch’il pass da lavur è terminà.\n\nTut tenor la dimensiun da Voss chats po quest process durar in pèr minutas.";
 "database_migration_error_hints" = "P.pl. verifitgar che ti has avunda capacitad da memorisar libra sin tes apparat. Reaviescha tes apparat ed emprova anc ina giada.";
 "database_migration_storage_warning_title" = "Memia pauc capacitad da memorisar libra";
 "database_migration_storage_warning_message" = "Per actualisar la banca da datas dovras ti temporarmain almain %.1f GB capacitad da memorisar libra. Tes apparat ha mumentan mo %.1f GB capacitad da memorisar libra. Dai liber capacitad da memorisar cun stizzar objects en las configuraziuns d'utilisaziun ed emprova anc ina giada.";
@@ -652,7 +647,7 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "go_to_position" = "tar";
 "draft" = "Sboz";
 "new_message_accessibility" = "Nov messadi: ";
-"quote_interaction_hint" = "Tippar per ir al messadi cità.";
+"quote_interaction_hint" = "Siglia tar il messadi cità";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Avrir en ...";
@@ -735,14 +730,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "call_status_blocked" = "Contact bloccà";
 "call_status_failed_title" = "Telefonats da Threema";
 
-"call_threema_initiator_video_info" = "Cliccar qua per activar la camera";
-"call_threema_remote_video_activated_info_title" = "Videotelefonat";
-"call_threema_remote_video_activated_info" = "Tes partenari da discussiun ha cumenzà in videotelefonat. Smatga qua per medemamain activar la camera.";
-"call_threema_speaker_info" = "Smatgar qua per activar l’opziun da telefonar a maun liber";
-"call_threema_camera_disabled_info" = "Quest contact utilisescha ina versiun da Threema betg actuala u na permetta nagins videotelefonats.";
-
-"call_threema_video_in_chat_info_title" = "Nov: videotelefonats";
-
 "call_threema_cellular_instead_of_wifi_title" = "Telefonat sur la rait per telefonia mobila";
 "call_threema_cellular_instead_of_wifi_text" = "Attenziun: quest telefonat chaschuna in transfer da datas en la rait per telefonia mobila.";
 
@@ -770,8 +757,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "archived_chats" = "Chats archivads";
 
 "archived_title" = "Archivà";
-"conversations_search_placeholder" = "Contacts, gruppas, IDs ...";
-
 "select_all" = "Selecziunar tuts";
 "deselect_all" = "Selecziunar nagut";
 "no_archived_chats" = "Nagins chats archivads";
@@ -981,7 +966,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "url_warning_title" = "Avertiment da phishing";
 "url_warning_body" = "La pagina-web che ti vuls avrir è dubiusa:\n\nNum dal host inditgà: %@\nNum dal host effectiv: %@\n\nQuai pudess esser in’emprova da manar tai sin ina pagina-web falsifitgada.\n\nVuls ti tuttina cuntinuar?";
 
-
 "settings_threema_calls" = "Telefonats da Threema";
 "settings_advanced" = "Extendì";
 "settings_threema_work" = "Threema Work";
@@ -1000,13 +984,13 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 
 // Notification Settings
 "settings_notifications_inapp_section" = "En l’app";
-"settings_notifications_inapp_sounds" = "Tuns";
-"settings_notifications_inapp_vibrate" = "Vibraziuns";
-"settings_notifications_inapp_preview" = "Prevista";
+"settings_notifications_inapp_sounds" = "Tuns in-app";
+"settings_notifications_inapp_vibrate" = "Vibraziuns in-app";
+"settings_notifications_inapp_preview" = "Mussar revista";
 "settings_notifications_push_section" = "Avis da push";
 "settings_notifications_push_sound" = "Tun";
 "settings_notifications_push_groupsound" = "Tun da las gruppas";
-"settings_notifications_push_preview" = "Prevista";
+"settings_notifications_push_preview" = "Mussar Prevista";
 "settings_notifications_masterDnd_section_header" = "Regulaziun dal temp da paus";
 "settings_notifications_masterDnd" = "Betg disturbar durant il temp da paus";
 "settings_notifications_masterDnd_section_footer" = "Na mussar nagins messadis e refusar telefonats ordaifer il temp da lavur.";
@@ -1212,7 +1196,7 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "default_setting" = "Configuraziun da standard";
 
 /* Multi Device */
-"multi_device_linked_devices_title" = "Apparats colliads";
+"multi_device_linked_devices_title" = "Prevista multi-device";
 "multi_device_linked_devices_refresh" = "Trair engiu per actualisar";
 "multi_device_linked_devices_loading_failed" = "Betg reussì da chargiar ils apparats: %@";
 "multi_device_linked_devices_failed_to_load_message" = "Betg stà pussaivel da chargiar ils apparats colliads. P.pl. controllar tia colliaziun d'internet ed empruvar anc ina giada.";

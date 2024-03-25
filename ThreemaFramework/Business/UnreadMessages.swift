@@ -59,14 +59,14 @@ extension UnreadMessagesProtocolObjc {
     private let messageSender: MessageSenderProtocol
     private let entityManager: EntityManager
     
-    public required init(messageSender: MessageSenderProtocol, entityManager: EntityManager) {
+    required init(messageSender: MessageSenderProtocol, entityManager: EntityManager) {
         self.messageSender = messageSender
         self.entityManager = entityManager
     }
 
-    @objc public convenience init(entityManager: EntityManager) {
+    convenience init(entityManager: EntityManager, taskManager: TaskManagerProtocol) {
         self.init(
-            messageSender: MessageSender(entityManager: entityManager),
+            messageSender: MessageSender(entityManager: entityManager, taskManager: taskManager),
             entityManager: entityManager
         )
     }

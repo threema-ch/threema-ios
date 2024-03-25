@@ -28,7 +28,7 @@ final class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
         TaskExecutionGroupDissolve(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

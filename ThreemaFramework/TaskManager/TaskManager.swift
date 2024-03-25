@@ -29,8 +29,8 @@ enum TaskManagerError: Error {
 typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
 typealias TaskReceiverNonce = [String: Data]
 
-@objc public final class TaskManager: NSObject, TaskManagerProtocol {
-    fileprivate let frameworkInjector: FrameworkInjectorProtocol
+public final class TaskManager: NSObject, TaskManagerProtocol {
+    private let entityManager: EntityManager?
 
     private static var incomingQueue: TaskQueue?
     private static var outgoingQueue: TaskQueue?
@@ -38,19 +38,15 @@ typealias TaskReceiverNonce = [String: Data]
     private static let dispatchIncomingQueue = DispatchQueue(label: "ch.threema.TaskManager.dispatchIncomingQueue")
     private static let dispatchOutgoingQueue = DispatchQueue(label: "ch.threema.TaskManager.dispatchOutgoingQueue")
 
-    required init(frameworkInjector: FrameworkInjectorProtocol) {
-        self.frameworkInjector = frameworkInjector
+    @objc required init(backgroundEntityManager entityManager: EntityManager?) {
+        self.entityManager = entityManager
         super.init()
 
         load()
     }
 
-    @objc convenience init(frameworkInjectorObjc: NSObject) {
-        self.init(frameworkInjector: frameworkInjectorObjc as! FrameworkInjectorProtocol)
-    }
-
-    override public convenience init() {
-        self.init(frameworkInjector: BusinessInjector())
+    override convenience init() {
+        self.init(backgroundEntityManager: nil)
     }
 
     func add(taskDefinition: TaskDefinitionProtocol) {
@@ -171,10 +167,10 @@ typealias TaskReceiverNonce = [String: Data]
                         TaskDefinitionReceiveMessage.self,
                         TaskDefinitionReceiveReflectedMessage.self,
                     ],
-                    frameworkInjector: self.frameworkInjector
+                    frameworkInjectorResolver: FrameworkInjectorResolver(backgroundEntityManager: self.entityManager)
                 )
 
-                load(queue: TaskManager.incomingQueue)
+                self.load(queue: TaskManager.incomingQueue)
             }
         }
 
@@ -200,12 +196,13 @@ typealias TaskReceiverNonce = [String: Data]
                         TaskDefinitionUpdateContactSync.self,
                         TaskDefinitionGroupSync.self,
                         TaskDefinitionSettingsSync.self,
+                        TaskDefinitionMdmParameterSync.self,
                         TaskDefinitionSendGroupCallStartMessage.self,
                     ],
-                    frameworkInjector: self.frameworkInjector
+                    frameworkInjectorResolver: FrameworkInjectorResolver(backgroundEntityManager: self.entityManager)
                 )
 
-                load(queue: TaskManager.outgoingQueue)
+                self.load(queue: TaskManager.outgoingQueue)
             }
         }
     }

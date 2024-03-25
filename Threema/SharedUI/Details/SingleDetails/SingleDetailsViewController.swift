@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import TipKit
 import UIKit
 
 final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewController {
@@ -167,7 +168,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         if ThreemaUtility.supportsForwardSecurity {
             // Update feature mask for FS so that user can enable it if the contact has just updated the app
-            FeatureMask.check(Int(FEATURE_MASK_FORWARD_SECURITY), forContacts: [contact]) { _ in
+            FeatureMask.check(contacts: [contact], for: Int(FEATURE_MASK_FORWARD_SECURITY)) { _ in
                 // Feature mask has been updated in DB, observer will take care of updating the UI
             }
         }
@@ -175,8 +176,8 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // Shows Threema type info if it was never shown before
-        headerView.autoShowThreemaTypeInfo()
+        // Shows Threema type tip if it was never shown before
+        headerView.showThreemaTypeTip()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -279,8 +280,11 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             self?.dataSource.refresh(sections: [.privacySettings])
             self?.dataSource.reload(sections: [.privacySettings])
         }
+
+        // Is needed when willBeDeleted changed, to close this view
+        observeContact(\.willBeDeleted) { }
     }
-    
+
     private func removeObservers() {
         // Invalidate all observers
         for observer in observers {
@@ -676,11 +680,7 @@ extension SingleDetailsViewController: UITableViewDelegate {
             publicKeyView.show()
             
         case .value(label: _, value: contact.identity):
-            dataSource.tapsOnThreemaID += 1
-            DDLogVerbose("dataSource.tapsOnThreemaID \(dataSource.tapsOnThreemaID)")
-            if dataSource.tapsOnThreemaID >= 10 {
-                dataSource.configureData(isInitialConfiguration: false)
-            }
+            dataSource.showDebugInfoTapCounter += 1
             
         case .linkedContact:
             guard let cell = tableView.cellForRow(at: indexPath) else {
@@ -706,6 +706,11 @@ extension SingleDetailsViewController: UITableViewDelegate {
             }
             
             action.run(cell)
+            
+        case let .booleanAction(action):
+            if action.title == "notification_sound_title".localized {
+                dataSource.showDebugInfoTapCounter += 1
+            }
             
         default:
             // No action possible

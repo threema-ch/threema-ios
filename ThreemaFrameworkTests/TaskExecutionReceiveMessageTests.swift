@@ -22,9 +22,9 @@ import XCTest
 @testable import ThreemaFramework
 
 class TaskExecutionReceiveMessageTests: XCTestCase {
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
-    private var databasePreparer: DatabasePreparer!
+    private var dbMainCnx: DatabaseContext!
+    private var dbBackgroundCnx: DatabaseContext!
+    private var dbPreparer: DatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
 
@@ -32,10 +32,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        databasePreparer = DatabasePreparer(context: mainCnx)
+        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
+            .devNullContext(withChildContextForBackgroundProcess: true)
+        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        dbPreparer = DatabasePreparer(context: backgroundCnx!)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -51,8 +52,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         expectedBoxedMessage.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx)
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx)
         )
 
         let expect = expectation(description: "TaskDefinitionReceiveMessage")
@@ -91,11 +91,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             serverConnectorMock.completedProcessingMessageCalls
                 .filter { $0.messageID.elementsEqual(expectedBoxedMessage.messageID) }.count
         )
-        let backgroundGroupManagerMock = try XCTUnwrap(
+        let groupManagerMock = try XCTUnwrap(
             frameworkInjectorMock
-                .backgroundGroupManager as? GroupManagerMock
+                .groupManager as? GroupManagerMock
         )
-        XCTAssertEqual(0, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+        XCTAssertEqual(0, groupManagerMock.periodicSyncIfNeededCalls.count)
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
@@ -110,8 +110,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             serverConnector: serverConnectorMock
         )
 
@@ -142,11 +141,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             serverConnectorMock.completedProcessingMessageCalls
                 .filter { $0.messageID.elementsEqual(expectedBoxedMessage.messageID) }.count
         )
-        let backgroundGroupManagerMock = try XCTUnwrap(
+        let groupManagerMock = try XCTUnwrap(
             frameworkInjectorMock
-                .backgroundGroupManager as? GroupManagerMock
+                .groupManager as? GroupManagerMock
         )
-        XCTAssertEqual(0, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+        XCTAssertEqual(0, groupManagerMock.periodicSyncIfNeededCalls.count)
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
@@ -176,11 +175,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
     func testReceivedGroupTextMessage() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let groupEntity = GroupEntity(context: databaseMainCnx.current)
+        let groupEntity = GroupEntity(context: dbMainCnx.current)
         groupEntity.groupID = MockData.generateGroupID()
         groupEntity.groupCreator = nil
 
-        let conversation = Conversation(context: databaseMainCnx.current)
+        let conversation = Conversation(context: dbMainCnx.current)
         conversation.contact = nil
         conversation.groupMyIdentity = myIdentityStoreMock.identity
 
@@ -197,9 +196,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock()
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            groupManager: groupManagerMock,
             messageSender: messageSenderMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
@@ -258,11 +256,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             serverConnectorMock.completedProcessingMessageCalls
                 .filter { $0.messageID.elementsEqual(expectedBoxedMessage.messageID) }.count
         )
-        let backgroundGroupManagerMock = try XCTUnwrap(
-            frameworkInjectorMock
-                .backgroundGroupManager as? GroupManagerMock
-        )
-        XCTAssertEqual(1, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+        XCTAssertEqual(1, groupManagerMock.periodicSyncIfNeededCalls.count)
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
@@ -281,11 +275,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
     func testReceivedGroupRenameMessage() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let groupEntity = GroupEntity(context: databaseMainCnx.current)
+        let groupEntity = GroupEntity(context: dbMainCnx.current)
         groupEntity.groupID = MockData.generateGroupID()
         groupEntity.groupCreator = nil
 
-        let conversation = Conversation(context: databaseMainCnx.current)
+        let conversation = Conversation(context: dbMainCnx.current)
         conversation.contact = nil
         conversation.groupMyIdentity = myIdentityStoreMock.identity
 
@@ -302,9 +296,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock()
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            groupManager: groupManagerMock,
             messageSender: messageSenderMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
@@ -358,11 +351,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             serverConnectorMock.completedProcessingMessageCalls
                 .filter { $0.messageID.elementsEqual(expectedBoxedMessage.messageID) }.count
         )
-        let backgroundGroupManagerMock = try XCTUnwrap(
-            frameworkInjectorMock
-                .backgroundGroupManager as? GroupManagerMock
-        )
-        XCTAssertEqual(1, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+        XCTAssertEqual(1, groupManagerMock.periodicSyncIfNeededCalls.count)
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
@@ -416,8 +405,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             ]
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
             messageSender: messageSenderMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
@@ -472,11 +460,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             serverConnectorMock.completedProcessingMessageCalls
                 .filter { $0.messageID.elementsEqual(expectedBoxedMessage.messageID) }.count
         )
-        let backgroundGroupManagerMock = try XCTUnwrap(
+        let groupManagerMock = try XCTUnwrap(
             frameworkInjectorMock
-                .backgroundGroupManager as? GroupManagerMock
+                .groupManager as? GroupManagerMock
         )
-        XCTAssertEqual(0, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+        XCTAssertEqual(0, groupManagerMock.periodicSyncIfNeededCalls.count)
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
@@ -527,8 +515,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
             let messageProcessorMock = MessageProcessorMock()
             let frameworkInjectorMock = BusinessInjectorMock(
-                backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-                entityManager: EntityManager(databaseContext: databaseMainCnx),
+                entityManager: EntityManager(databaseContext: dbBackgroundCnx),
                 messageSender: messageSenderMock,
                 userSettings: userSettingsMock,
                 serverConnector: serverConnectorMock,
@@ -576,11 +563,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             )
             XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
             XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
-            let backgroundGroupManagerMock = try XCTUnwrap(
+            let groupManagerMock = try XCTUnwrap(
                 frameworkInjectorMock
-                    .backgroundGroupManager as? GroupManagerMock
+                    .groupManager as? GroupManagerMock
             )
-            XCTAssertEqual(0, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+            XCTAssertEqual(0, groupManagerMock.periodicSyncIfNeededCalls.count)
             XCTAssertTrue(
                 ddLoggerMock
                     .exists(

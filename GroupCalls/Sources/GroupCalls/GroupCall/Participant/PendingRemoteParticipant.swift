@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,11 +18,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
-import ThreemaEssentials
-// TODO: (IOS-4059) Clean this up if not needed in the end, was this intended to differentiate future guest participants? Remove otherwise, use Participant only.
-class NormalParticipant: Participant, NormalParticipantDescription, Sendable {
-   
+
+@GlobalGroupCallActor
+final class PendingRemoteParticipant: Participant {
+    
     override init(participantID: ParticipantID) {
         super.init(participantID: participantID)
     }

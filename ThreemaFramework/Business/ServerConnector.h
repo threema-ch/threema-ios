@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  BusinessInjector for incoming message processor, will be set by Notification Extension to use the same background DB context
  */
-@property (nonatomic, readwrite, assign, nullable) NSObject *businessInjectorForMessageProcessing;
+@property (nonatomic, readwrite, assign, nullable) NSObject *backgroundEntityManagerForMessageProcessing;
 
 @property (nonatomic, readonly) ConnectionState connectionState;
 

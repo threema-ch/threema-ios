@@ -418,7 +418,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 
                 Conversation *conversation = self.chatViewController.conversation;
                 if (conversation != nil) {
-                    MessageSender *messageSender = [[MessageSender alloc] init];
+                    MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
                     [messageSender sendBlobMessageFor:item in:conversation correlationID:correlationID webRequestID:nil completion:^(NSError *error) {
                         dispatch_semaphore_signal(_sequentialSema);
                     }];
@@ -441,7 +441,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                                                                        repeats:YES];
                 
                 if (![captions[i] isEqualToString:@""]) {
-                    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:[[EntityManager alloc] init]];
+                    MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
                     [messageSender sendTextMessageWithText:captions[i]
                                                         in:self.chatViewController.conversation
                                                         quickReply:false
@@ -673,7 +673,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         Conversation *conversation = self.chatViewController.conversation;
         if (senderItem != nil && conversation != nil) {
-            MessageSender *messageSender = [[MessageSender alloc] init];
+            MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
             [messageSender sendBlobMessageFor:senderItem in:conversation correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];
@@ -722,7 +722,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         URLSenderItem *senderItem = [senderCreator senderItemFrom:asset on:exportSession];
         Conversation *conversation = self.chatViewController.conversation;
         if (senderItem != nil && conversation != nil) {
-            MessageSender *messageSender = [[MessageSender alloc] init];
+            MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
             [messageSender sendBlobMessageFor:senderItem in:conversation correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];
@@ -752,7 +752,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showVideoEncodeProgressHUDWithUnitCount:(long)unitCount text:(NSString *)text {
-    if (self.videoEncodeProgressHUD == nil) {
+    if (self.videoEncodeProgressHUD == nil && self.chatViewController.view != nil) {
         [self.chatViewController doResignFirstResponder];
         self.videoEncodeProgressHUD = [MBProgressHUD showHUDAddedTo:self.chatViewController.view animated:YES];
         self.videoEncodeProgressHUD.mode = MBProgressHUDModeAnnularDeterminate;

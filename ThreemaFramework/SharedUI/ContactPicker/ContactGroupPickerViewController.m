@@ -392,9 +392,9 @@ typedef enum : NSUInteger {
         GroupCell *groupCell = (GroupCell *)cell;
         
         groupCell.backgroundColor = [UIColor clearColor];
-
+        
         EntityManager *entityManager = [EntityManager new];
-        MessagePermission *messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] groupManager:[[GroupManager alloc] initWithEntityManager:entityManager] entityManager:entityManager];
+        MessagePermission *messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] groupManager:[[[BusinessInjector alloc] initWithEntityManager:entityManager] groupManagerObjC] entityManager:entityManager];
         
         if ([messagePermission canSendWithGroupID:groupCell.group.groupID groupCreatorIdentity:groupCell.group.groupCreatorIdentity reason:nil]) {
             groupCell.contentView.alpha = 1.0;

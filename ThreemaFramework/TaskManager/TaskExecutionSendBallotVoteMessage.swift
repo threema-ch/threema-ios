@@ -44,7 +44,7 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                     return
                 }
 
-                self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                self.frameworkInjector.entityManager.performBlockAndWait {
                     var conversation: Conversation
                     do {
                         conversation = try self.getConversation(for: task)
@@ -93,7 +93,7 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
             Promise { seal in
                 var sendMessages = [Promise<AbstractMessage?>]()
 
-                self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                self.frameworkInjector.entityManager.performBlockAndWait {
                     if task.isGroupMessage {
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
@@ -198,9 +198,9 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                 if let sentMessage,
                    let sendContactProfilePicture = task.sendContactProfilePicture,
                    sendContactProfilePicture {
-                    // TODO: Inject for testing
-                    self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                        ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
+                    // TODO: (IOS-4495) Inject for testing
+                    self.frameworkInjector.entityManager.performBlockAndWait {
+                        ContactPhotoSender(self.frameworkInjector.entityManager)
                             .sendProfilePicture(message: sentMessage)
                     }
                 }

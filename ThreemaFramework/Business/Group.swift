@@ -23,6 +23,7 @@ import Foundation
 import GroupCalls
 import Intents
 import ThreemaEssentials
+import ThreemaProtocols
 
 /// Business representation of a Threema group
 public class Group: NSObject {
@@ -455,6 +456,34 @@ public class Group: NSObject {
         )
 
         return allSortedMembers
+    }
+    
+    /// Returns an array of `Contacts` containing the members of this group supporting a given
+    /// `Common_CspFeatureMaskFlag`
+    /// - Parameter mask: `Common_CspFeatureMaskFlag` to check for
+    /// - Returns: `Contacts` supporting the `mask`
+    public func membersSupporting(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> [Contact] {
+        var supportingMembers = [Contact]()
+        for member in members {
+            if FeatureMask.check(contact: member, for: mask) {
+                supportingMembers.append(member)
+            }
+        }
+        return supportingMembers
+    }
+    
+    /// Checks if at least one member of the group supports the given mask
+    /// - Parameter mask: `Common_CspFeatureMaskFlag` to check members for
+    /// - Returns: `true` if at least one member supports the given `mask`, `false` otherwise
+    public func hasAtLeastOneMemberSupporting(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> Bool {
+        !membersSupporting(mask).isEmpty
+    }
+    
+    /// Checks if *all* member of the group support the given mask
+    /// - Parameter mask: `Common_CspFeatureMaskFlag` to check members for
+    /// - Returns: `true` all member supports the given `mask`, `false` otherwise
+    public func allMembersSupport(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> Bool {
+        membersSupporting(mask).count == members.count
     }
 
     // MARK: Comparing function

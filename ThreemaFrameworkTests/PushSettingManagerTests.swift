@@ -33,7 +33,13 @@ final class PushSettingManagerTests: XCTestCase {
 
         let groupID = MockData.generateGroupID()
 
-        let pushSettingManager = PushSettingManager(userSettingsMock, GroupManagerMock(), EntityManager(), false)
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            EntityManager(),
+            TaskManagerMock(),
+            false
+        )
         await pushSettingManager.save(pushSetting: PushSetting(identity: ThreemaIdentity("ECHOECHO")), sync: false)
         await pushSettingManager.save(
             pushSetting: PushSetting(groupIdentity: GroupIdentity(id: groupID, creator: ThreemaIdentity("ECHOECHO"))),
@@ -57,7 +63,13 @@ final class PushSettingManagerTests: XCTestCase {
 
         let groupID = MockData.generateGroupID()
 
-        let pushSettingManager = PushSettingManager(userSettingsMock, GroupManagerMock(), EntityManager(), false)
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            EntityManager(),
+            TaskManagerMock(),
+            false
+        )
         let pushSetting = PushSetting(identity: ThreemaIdentity("ECHOECHO"), groupIdentity: nil, _type: .off)
         await pushSettingManager.save(pushSetting: pushSetting, sync: false)
 
@@ -71,7 +83,13 @@ final class PushSettingManagerTests: XCTestCase {
     func testSaveAndUpdate() async throws {
         let userSettingsMock = UserSettingsMock()
 
-        let pushSettingManager = PushSettingManager(userSettingsMock, GroupManagerMock(), EntityManager(), false)
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            EntityManager(),
+            TaskManagerMock(),
+            false
+        )
         await pushSettingManager.save(pushSetting: PushSetting(identity: ThreemaIdentity("ECHOECHO")), sync: false)
 
         XCTAssertEqual(userSettingsMock.pushSettings.count, 1)
@@ -95,7 +113,13 @@ final class PushSettingManagerTests: XCTestCase {
     func testSaveIdentityAndGroupIdentity() async throws {
         let userSettingsMock = UserSettingsMock()
 
-        let pushSettingManager = PushSettingManager(userSettingsMock, GroupManagerMock(), EntityManager(), false)
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            EntityManager(),
+            TaskManagerMock(),
+            false
+        )
         await pushSettingManager.save(pushSetting: PushSetting(identity: ThreemaIdentity("TESTID01")), sync: false)
         await pushSettingManager.save(pushSetting: PushSetting(identity: ThreemaIdentity("TESTID02")), sync: false)
         await pushSettingManager.save(pushSetting: PushSetting(identity: ThreemaIdentity("TESTID02")), sync: false)

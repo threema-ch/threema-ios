@@ -51,7 +51,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     return
                 }
 
-                self.frameworkInjector.backgroundEntityManager.performBlock {
+                self.frameworkInjector.entityManager.performBlock {
                     var conversation: Conversation
                     do {
                         conversation = try self.getConversation(for: task)
@@ -101,7 +101,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             Promise { seal in
                 var sendMessages = [Promise<AbstractMessage?>]()
 
-                self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                self.frameworkInjector.entityManager.performBlockAndWait {
                     if task.isGroupMessage {
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
@@ -117,7 +117,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                             }
 
                             if let messageID = (task as? TaskDefinitionSendBaseMessage)?.messageID {
-                                self.frameworkInjector.backgroundEntityManager.markMessageAsSent(
+                                self.frameworkInjector.entityManager.markMessageAsSent(
                                     messageID,
                                     in: conversation,
                                     sentAt: reflectedAt ?? .now,
@@ -219,7 +219,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     
                     // Mark (group) message as sent
                     if let msg = filteredSentMessages.first {
-                        self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                        self.frameworkInjector.entityManager.performBlockAndWait {
                             var conversation: Conversation
                             do {
                                 conversation = try self.getConversation(for: task)
@@ -229,7 +229,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                                 return
                             }
 
-                            self.frameworkInjector.backgroundEntityManager.markMessageAsSent(
+                            self.frameworkInjector.entityManager.markMessageAsSent(
                                 msg.messageID,
                                 in: conversation,
                                 sentAt: reflectedAt ?? .now
@@ -247,7 +247,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             }
 
             do {
-                try self.frameworkInjector.backgroundEntityManager.performAndWait {
+                try self.frameworkInjector.entityManager.performAndWait {
                     let conversation = try self.getConversation(for: task)
 
                     let newMode: ForwardSecurityMode
@@ -262,7 +262,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         )
                     }
                     
-                    self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
+                    self.frameworkInjector.entityManager.setForwardSecurityMode(
                         abstractMessage.messageID,
                         in: conversation,
                         forwardSecurityMode: newMode
@@ -279,11 +279,11 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             // Remove all group receivers from rejected list
             if let msg = sentMessages.first,
                let receivingGroupMembers = task.receivingGroupMembers {
-                self.frameworkInjector.backgroundEntityManager.performAndWait {
+                self.frameworkInjector.entityManager.performAndWait {
                     do {
                         let conversation = try self.getConversation(for: task)
                         
-                        self.frameworkInjector.backgroundEntityManager.removeContacts(
+                        self.frameworkInjector.entityManager.removeContacts(
                             with: receivingGroupMembers,
                             fromRejectedListOfMessageWith: msg.messageID,
                             in: conversation
@@ -330,9 +330,9 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                 // Send profile picture to all message receiver
                 if let sendContactProfilePicture = task.sendContactProfilePicture,
                    sendContactProfilePicture {
-                    // TODO: Inject for testing
-                    self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                        ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
+                    // TODO: (IOS-4495) Inject for testing
+                    self.frameworkInjector.entityManager.performBlockAndWait {
+                        ContactPhotoSender(self.frameworkInjector.entityManager)
                             .sendProfilePicture(message: sentMessage)
                     }
                 }
@@ -379,7 +379,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
         in conversation: Conversation
     ) throws -> ForwardSecurityMode {
         guard
-            let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(
+            let message = frameworkInjector.entityManager.entityFetcher.message(
                 with: abstractMessage.messageID,
                 conversation: conversation
             ),

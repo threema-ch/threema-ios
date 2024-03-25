@@ -728,9 +728,11 @@ public class WebAbstractMessage: NSObject {
         
         if !readReceiptQueue.isEmpty {
             ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-                let conversationActions = ConversationActions(businessInjector: businessInjector)
-                // set isAppInBackground to false, because it will send receipts only if app is in foreground
-                conversationActions.read(conversation, isAppInBackground: false)
+                Task {
+                    let conversationActions = ConversationActions(businessInjector: businessInjector)
+                    // set isAppInBackground to false, because it will send receipts only if app is in foreground
+                    await conversationActions.read(conversation, isAppInBackground: false)
+                }
             } onTimeout: {
                 DDLogError("[Threema Web] Sending read receipt message timed out")
             }

@@ -85,7 +85,7 @@ final class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProt
             for identity in task.hiddenContacts {
                 self.frameworkInjector.contactStore.deleteContact(
                     identity: identity,
-                    entityManagerObject: self.frameworkInjector.backgroundEntityManager
+                    entityManagerObject: self.frameworkInjector.entityManager
                 )
             }
             return Promise()

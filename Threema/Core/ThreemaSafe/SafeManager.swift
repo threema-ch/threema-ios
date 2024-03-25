@@ -875,7 +875,7 @@ import Foundation
                                     if AppMigrationVersion
                                         .isMigrationRequired(userSettings: businessInjector.userSettings) {
                                         do {
-                                            try AppMigration(businessInjector: businessInjector, reset: true).run()
+                                            try AppMigration(reset: true).run()
                                         }
                                         catch {
                                             let msg = BundleUtil

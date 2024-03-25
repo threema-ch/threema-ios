@@ -526,7 +526,7 @@ class NotificationResponse: NSObject {
             safeStore: SafeStore(
                 safeConfigManager: safeConfig,
                 serverApiConnector: ServerAPIConnector(),
-                groupManager: GroupManager()
+                groupManager: businessInjector.groupManager
             ),
             safeApiService: SafeApiService()
         )

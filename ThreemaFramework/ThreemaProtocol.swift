@@ -28,6 +28,7 @@ public enum ThreemaProtocol {
     public static let messageIDLength = Int(kMessageIdLen)
     public static let nonceLength = Int(kNonceLen)
     public static let blobIDLength = Int(kBlobIdLen)
+    public static let blobKeyLength = Int(kBlobKeyLen)
     public static let groupIDLength = Int(kGroupIdLen)
     public static let ballotIDLength = Int(kBallotIdLen)
     public static let deviceIDLength = Int(kDeviceIdLen)
@@ -64,7 +65,6 @@ public enum ThreemaProtocol {
     case messageProcessingFailed = 669
     case notConnectedToMediator = 676
     case notLoggedIn = 675
-    case pendingGroupMessage = 670
     case safePasswordEmpty = 672
     case unknownMessageType = 668
 
@@ -90,8 +90,6 @@ public enum ThreemaProtocol {
             return "\(rawError) 'Not connected to mediator'"
         case .notLoggedIn:
             return "\(rawError) 'Not logged in'"
-        case .pendingGroupMessage:
-            return "\(rawError) 'Group not found to process message'"
         case .safePasswordEmpty:
             return "\(rawError) 'Threema Safe password is missing'"
         case .unknownMessageType:

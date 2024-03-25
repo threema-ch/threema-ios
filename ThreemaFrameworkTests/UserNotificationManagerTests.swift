@@ -225,6 +225,7 @@ class UserNotificationManagerTests: XCTestCase {
                     userSettingsMock,
                     GroupManagerMock(),
                     EntityManager(databaseContext: databaseCnx),
+                    TaskManagerMock(),
                     testData["isWorkApp"]!
                 ),
                 ContactStoreMock(),
@@ -287,6 +288,7 @@ class UserNotificationManagerTests: XCTestCase {
             userSettingsMock,
             GroupManagerMock(),
             entityManager,
+            TaskManagerMock(),
             false
         )
 
@@ -421,6 +423,7 @@ class UserNotificationManagerTests: XCTestCase {
             userSettingsMock,
             GroupManagerMock(),
             entityManager,
+            TaskManagerMock(),
             false
         )
         
@@ -428,7 +431,13 @@ class UserNotificationManagerTests: XCTestCase {
             settingsStoreMock,
             userSettingsMock,
             MyIdentityStoreMock(),
-            pushSettingManager,
+            PushSettingManager(
+                userSettingsMock,
+                GroupManagerMock(),
+                EntityManager(databaseContext: databaseCnx),
+                TaskManagerMock(),
+                false
+            ),
             ContactStoreMock(),
             GroupManagerMock(),
             entityManager,
@@ -535,6 +544,7 @@ class UserNotificationManagerTests: XCTestCase {
             userSettingsMock,
             GroupManagerMock(),
             EntityManager(databaseContext: databaseCnx),
+            TaskManagerMock(),
             false
         )
 
@@ -599,6 +609,7 @@ class UserNotificationManagerTests: XCTestCase {
             userSettingsMock,
             GroupManagerMock(),
             entityManager,
+            TaskManagerMock(),
             false
         )
         
@@ -724,6 +735,7 @@ class UserNotificationManagerTests: XCTestCase {
                 userSettingsMock,
                 GroupManagerMock(),
                 entityManager,
+                TaskManagerMock(),
                 false
             )
             
@@ -889,6 +901,7 @@ class UserNotificationManagerTests: XCTestCase {
                 userSettingsMock,
                 GroupManagerMock(),
                 entityManager,
+                TaskManagerMock(),
                 false
             )
             
@@ -1122,6 +1135,7 @@ class UserNotificationManagerTests: XCTestCase {
                 userSettingsMock,
                 GroupManagerMock(),
                 entityManager,
+                TaskManagerMock(),
                 false
             )
             
@@ -1281,6 +1295,7 @@ class UserNotificationManagerTests: XCTestCase {
                 userSettingsMock,
                 GroupManagerMock(),
                 entityManager,
+                TaskManagerMock(),
                 false
             )
             

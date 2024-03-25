@@ -149,7 +149,7 @@ struct ThreemaNavigationView<Content: View>: View {
     /// Customizes the navigation controller with a custom navigation bar and configures the large title display mode.
     /// - Parameter navigationController: The `UINavigationController` to be customized.
     private func customize(_ navigationController: UINavigationController) {
-        guard customNavigationBar == nil else {
+        guard customNavigationBar == nil, !(navigationController.navigationBar is StatusNavigationBar) else {
             return
         }
         customNavigationBar = StatusNavigationBar()

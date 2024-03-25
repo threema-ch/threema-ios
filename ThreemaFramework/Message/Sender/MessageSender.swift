@@ -78,19 +78,15 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         )
     }
 
-    @objc public convenience init(entityManager: EntityManager) {
+    convenience init(entityManager: EntityManager, taskManager: TaskManagerProtocol) {
         self.init(
             serverConnector: ServerConnector.shared(),
             myIdentityStore: MyIdentityStore.shared(),
             userSettings: UserSettings.shared(),
-            groupManager: GroupManager(entityManager: entityManager),
-            taskManager: TaskManager(),
+            groupManager: GroupManager(entityManager: entityManager, taskManager: taskManager),
+            taskManager: taskManager,
             entityManager: entityManager
         )
-    }
-
-    @objc override public convenience init() {
-        self.init(entityManager: EntityManager())
     }
 
     // MARK: - Type specific sending

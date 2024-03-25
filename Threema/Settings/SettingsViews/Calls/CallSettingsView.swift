@@ -158,6 +158,6 @@ struct CallSettingsView_Previews: PreviewProvider {
                 .navigationBarTitleDisplayMode(.inline)
         }
         .tint(UIColor.primary.color)
-        .environmentObject(SettingsStore())
+        .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
     }
 }

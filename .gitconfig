@@ -1,0 +1,3 @@
+# https://juripakaste.fi/swift-git-attributes/
+[diff "swift"]
+    xfuncname = ^[ \t]*(((private |public |internal |final |open )*class|(private |public |internal )*struct|(private |public |internal )*actor|(private |public |internal )*func|(private |public |internal )*extension|(private |public |internal )*enum)[ \t].*)$

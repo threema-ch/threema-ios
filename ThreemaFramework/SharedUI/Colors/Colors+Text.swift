@@ -72,10 +72,6 @@ extension Colors {
         Asset.SharedColors.white.color
     }
     
-    @objc public class var textMaterialShowcase: UIColor {
-        Asset.SharedColors.white.color
-    }
-    
     @objc public class var textInverted: UIColor {
         switch theme {
         case .light, .undefined:

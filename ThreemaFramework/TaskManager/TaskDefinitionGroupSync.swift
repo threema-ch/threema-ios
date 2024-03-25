@@ -34,7 +34,7 @@ final class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionPr
         TaskExecutionGroupSync(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

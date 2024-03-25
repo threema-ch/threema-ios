@@ -30,11 +30,15 @@ struct DeveloperSettingsView: View {
     @State private var showDebugDeviceJoin = false
     
     // Feature Flags
-    @State var enableFSv12 = UserSettings.shared().enableFSv12ForTesting
+    @State var enableFSv12 = true
     
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
     
+    // Confirm deletion
+    @State private var showDeleteKeychainItemsConfirmation = false
+    @State private var showDeleteAllDataConfirmation = false
+
     var body: some View {
         List {
             Section("UI") {
@@ -89,16 +93,10 @@ struct DeveloperSettingsView: View {
             }
             
             Section("Feature Flags") {
-                if ThreemaEnvironment.env() == .xcode {
-                    Toggle(isOn: $enableFSv12) {
-                        Text("Enable PFS 1.2")
-                    }
-                    .onChange(of: enableFSv12) { newValue in
-                        UserSettings.shared().enableFSv12ForTesting = newValue
-                        exit(1)
-                    }
-                    .disabled(UserSettings.shared().enableMultiDevice)
+                Toggle(isOn: $enableFSv12) {
+                    Text("Enable PFS 1.2")
                 }
+                .disabled(true)
             }
             
             Section("Group Calls") {
@@ -111,7 +109,7 @@ struct DeveloperSettingsView: View {
             }
             
             Section {
-                Button("Terminate All FS Session") {
+                Button("Terminate All FS Sessions") {
                     let businessInjector = BusinessInjector()
                     let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
                     
@@ -122,6 +120,7 @@ struct DeveloperSettingsView: View {
                         }
                     }
                 }
+                
                 Button("🚨 Delete All FS Sessions") {
                     let businessInjector = BusinessInjector()
                     let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
@@ -133,22 +132,53 @@ struct DeveloperSettingsView: View {
                         }
                     }
                 }
-                if ThreemaEnvironment.env() == .xcode {
-                    Button("🚨 Delete Database, Settings & All Files") {
-                        // DB & Files
-                        FileUtility.removeItemsInAllDirectories()
-                        AppGroup.resetUserDefaults()
-                        DatabaseManager().eraseDB()
-                        exit(0)
-                    }
-                }
-            } header: {
-                Text("🚨🚨🚨 FS State Deletion")
+            }
+            header: {
+                Text("🚨🚨 FS State Deletion")
             }
             footer: {
                 Text("This will delete data without any additional confirmation!")
                     .bold()
                     .foregroundColor(.red)
+            }
+            
+            if ThreemaEnvironment.env() == .xcode {
+                Section("🚨🚨🚨 Data Deletion") {
+                    Button("🚨 Simulate Restore (Delete Keychain)") {
+                        showDeleteKeychainItemsConfirmation = true
+                    }
+                    .confirmationDialog(
+                        "To restore your ID, you will need an ID Backup or a Threema Safe Backup.",
+                        isPresented: $showDeleteKeychainItemsConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Delete Keychain Items", role: .destructive) {
+                            MyIdentityStore.shared().destroyDeviceOnlyKeychainItems()
+                            exit(0)
+                        }
+                    }
+                    message: {
+                        Text(
+                            "ID private key, device group key and further items will be deleted. This simulates restoring a Finder/iTunes/iCloud backup to a new device (or Quick Start)."
+                        )
+                    }
+                    
+                    Button("🚨 Delete Database, Settings & All Files") {
+                        showDeleteAllDataConfirmation = true
+                    }
+                    .confirmationDialog(
+                        "Delete Database, Settings & All Files",
+                        isPresented: $showDeleteAllDataConfirmation
+                    ) {
+                        Button("Delete Everything", role: .destructive) {
+                            // DB & Files
+                            FileUtility.removeItemsInAllDirectories()
+                            AppGroup.resetUserDefaults()
+                            DatabaseManager().eraseDB()
+                            exit(0)
+                        }
+                    }
+                }
             }
         }
         .navigationBarTitle("Developer Settings", displayMode: .inline)

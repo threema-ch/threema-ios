@@ -97,8 +97,6 @@
 	<string>group.ch.threema.work.red</string>
 	<key>ThreemaAppIdentifier</key>
 	<string>ch.threema.work.red.iapp</string>
-	<key>ThreemaForwardSecurity</key>
-	<true/>
 	<key>ThreemaMaxGroupMembers</key>
 	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>

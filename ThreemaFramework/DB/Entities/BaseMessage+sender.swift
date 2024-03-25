@@ -23,7 +23,7 @@ import Foundation
 extension BaseMessage {
     
     /// Readable name of the sender
-    public var localizedSenderName: String {
+    @objc public var localizedSenderName: String {
         if isOwnMessage {
             return BundleUtil.localizedString(forKey: "me")
         }

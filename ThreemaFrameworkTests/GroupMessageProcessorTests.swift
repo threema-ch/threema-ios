@@ -56,7 +56,6 @@ class GroupMessageProcessorTests: XCTestCase {
         // 3: message sender
         // expected results:
         // 4: sync request calls
-        // 5: add to pending messages
         let tests = [
             [
                 "Send GroupRequestSyncMessage and add to pending messages, because group not found for regular group message (creator=sender)",
@@ -64,7 +63,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 "CREATOR1",
                 1,
-                true,
             ],
             [
                 "Send GroupRequestSyncMessage and add to pending messages, because group not found for regular group message",
@@ -72,7 +70,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 "JAMES007",
                 1,
-                true,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
             // Section: When receiving this message: 1.
@@ -82,7 +79,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 "CREATOR1",
                 0,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
             // Section: When receiving this message: 2.
@@ -92,7 +88,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 "JAMES007",
                 0,
-                false,
             ],
             
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
@@ -103,7 +98,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 "CREATOR1",
                 0,
-                false,
             ],
             
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
@@ -114,7 +108,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 myIdentityStoreMock.identity,
                 "JAMES007",
                 0,
-                false,
             ],
             
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
@@ -125,7 +118,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 "JAMES007",
                 1,
-                true,
             ],
         ]
 
@@ -168,14 +160,11 @@ class GroupMessageProcessorTests: XCTestCase {
             
             XCTAssertNil(resultError, testDescription)
             XCTAssertTrue(try XCTUnwrap(resultDidHandleMessage), testDescription)
-            XCTAssertEqual(0, userSettingsMock.unknownGroupAlertList.count, testDescription)
-            XCTAssertEqual(0, (groupManagerMock as! GroupManagerMock).unknownGroupCalls.count, testDescription)
             XCTAssertEqual(
                 test[4] as! Int,
                 (groupManagerMock as! GroupManagerMock).sendSyncRequestCalls.count,
                 testDescription
             )
-            XCTAssertEqual(test[5] as! Bool, groupMessageProcessor.addToPendingMessages, testDescription)
         }
     }
 
@@ -200,13 +189,11 @@ class GroupMessageProcessorTests: XCTestCase {
         // 5: sync add member
         // 6: sync remove member
         // 7: did handle message
-        // 8: add to pending messages
         let tests = [
             [
                 "Group found all good, group chat message can be processed",
                 GroupTextMessage(),
                 expectedMember01.string,
-                false,
                 false,
                 false,
                 false,
@@ -224,7 +211,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
             // Section: 1.
@@ -237,7 +223,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
             [
                 "Do nothing, because received GroupRequestSyncMessage form member but i'm not creator",
@@ -248,7 +233,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
             // Section: When receiving this message: 4.
@@ -261,7 +245,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
             // Section: When receiving this message: 4.
@@ -274,7 +257,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
         ]
 
@@ -346,7 +328,6 @@ class GroupMessageProcessorTests: XCTestCase {
             DDLog.flushLog()
 
             XCTAssertNil(resultError, testDescription)
-            XCTAssertEqual(0, userSettingsMock.unknownGroupAlertList.count, testDescription)
             XCTAssertEqual(
                 test[3] as! Bool,
                 ddLoggerMock
@@ -378,7 +359,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 testDescription
             )
             XCTAssertEqual(test[7] as! Bool, try XCTUnwrap(resultDidHandleMessage), testDescription)
-            XCTAssertEqual(test[8] as! Bool, groupMessageProcessor.addToPendingMessages, testDescription)
         }
     }
 
@@ -406,13 +386,11 @@ class GroupMessageProcessorTests: XCTestCase {
         // 5: sync add member
         // 6: sync remove member
         // 7: did handle message
-        // 8: add to pending messages
         let tests = [
             [
                 "Group found all good, process group message",
                 GroupTextMessage(),
                 expectedMember01.string,
-                false,
                 false,
                 false,
                 false,
@@ -428,7 +406,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
             // Section: 1.
@@ -441,7 +418,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
             // Section: When receiving this message: 4.
@@ -454,7 +430,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
             // Section: When receiving this message: 5.
@@ -467,7 +442,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 true,
                 false,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
             // Section: When receiving this message: 4.
@@ -480,7 +454,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
             // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
             // Section: When receiving this message: 4.
@@ -493,7 +466,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
             ],
         ]
 
@@ -559,7 +531,6 @@ class GroupMessageProcessorTests: XCTestCase {
             DDLog.flushLog()
 
             XCTAssertNil(resultError, testDescription)
-            XCTAssertEqual(0, userSettingsMock.unknownGroupAlertList.count, testDescription)
             XCTAssertEqual(
                 test[3] as! Bool,
                 ddLoggerMock
@@ -591,7 +562,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 testDescription
             )
             XCTAssertEqual(test[7] as! Bool, try XCTUnwrap(resultDidHandleMessage), testDescription)
-            XCTAssertEqual(test[8] as! Bool, groupMessageProcessor.addToPendingMessages, testDescription)
         }
     }
 
@@ -713,7 +683,6 @@ class GroupMessageProcessorTests: XCTestCase {
 
             XCTAssertNil(resultError, testDescription)
             XCTAssertTrue(try XCTUnwrap(resultDidHandleMessage), testDescription)
-            XCTAssertEqual(0, userSettingsMock.unknownGroupAlertList.count, testDescription)
             XCTAssertEqual(
                 test[5] as! Bool,
                 (taskManagerMock.addedTasks.first as? TaskDefinitionGroupDissolve)?
@@ -726,7 +695,6 @@ class GroupMessageProcessorTests: XCTestCase {
                     .toMembers.contains(where: { $0 == (test[2] as! String) }) ?? false,
                 testDescription
             )
-            XCTAssertFalse(groupMessageProcessor.addToPendingMessages, testDescription)
         }
     }
 

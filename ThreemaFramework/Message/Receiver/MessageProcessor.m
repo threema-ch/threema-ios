@@ -87,15 +87,14 @@
     id<MessageProcessorDelegate> messageProcessorDelegate;
     int maxBytesToDecrypt;
     int timeoutDownloadThumbnail;
+    GroupManager *groupManager;
     EntityManager *entityManager;
     ForwardSecurityMessageProcessor *fsmp;
     id<NonceGuardProtocolObjc> nonceGuard;
 }
 
-static dispatch_queue_t pendingGroupMessagesQueue;
-static NSMutableOrderedSet *pendingGroupMessages;
-
-- (instancetype)initWith:(id<MessageProcessorDelegate>)messageProcessorDelegate entityManager:(NSObject *)entityManagerObject fsmp:(NSObject*)fsmp nonceGuard:(NSObject*)nonceGuardObject {
+- (instancetype)initWith:(id<MessageProcessorDelegate>)messageProcessorDelegate groupManager:(NSObject *)groupManagerObject entityManager:(NSObject *)entityManagerObject fsmp:(NSObject*)fsmp nonceGuard:(NSObject*)nonceGuardObject {
+    NSAssert([groupManagerObject isKindOfClass:[GroupManager class]], @"Object must be type of GroupManager");
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
     NSAssert([fsmp isKindOfClass:[ForwardSecurityMessageProcessor class]], @"Object must be type of ForwardSecurityMessageProcessor");
     NSAssert([nonceGuardObject conformsToProtocol:@protocol(NonceGuardProtocolObjc)], @"Object must implement NonceGuardProtocolObjc");
@@ -105,19 +104,15 @@ static NSMutableOrderedSet *pendingGroupMessages;
         self->messageProcessorDelegate = messageProcessorDelegate;
         self->maxBytesToDecrypt = 0;
         self->timeoutDownloadThumbnail = 0;
+        self->groupManager = (GroupManager*)groupManagerObject;
         self->entityManager = (EntityManager*)entityManagerObject;
         self->fsmp = (ForwardSecurityMessageProcessor*)fsmp;
         self->nonceGuard = (id<NonceGuardProtocolObjc>)nonceGuardObject;
-
-        if (pendingGroupMessages == nil) {
-            pendingGroupMessagesQueue = dispatch_queue_create("ch.threema.ServerConnector.pendingGroupMessagesQueue", NULL);
-            pendingGroupMessages = [[NSMutableOrderedSet alloc] init];
-        }
     }
     return self;
 }
 
-- (void)processIncomingBoxedMessage:(BoxedMessage*)boxedMessage receivedAfterInitialQueueSend:(BOOL)receivedAfterInitialQueueSend maxBytesToDecrypt:(int)maxBytesToDecrypt timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail onCompletion:(nonnull void (^)(NSObject * _Nullable message))onCompletion onError:(nonnull void (^)(NSError * _Nonnull error))onError {
+- (void)processIncomingBoxedMessage:(BoxedMessage*)boxedMessage receivedAfterInitialQueueSend:(BOOL)receivedAfterInitialQueueSend maxBytesToDecrypt:(int)maxBytesToDecrypt timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail onCompletion:(nonnull void (^)(AbstractMessage * _Nullable message, id _Nullable fsMessageInfo))onCompletion onError:(nonnull void (^)(NSError * _Nonnull error, id _Nullable fsMessageInfo))onError {
 
     self->maxBytesToDecrypt = maxBytesToDecrypt;
     self->timeoutDownloadThumbnail = timeoutDownloadThumbnail;
@@ -134,14 +129,16 @@ static NSMutableOrderedSet *pendingGroupMessages;
             if (amsg == nil) {
                 // Can't process message at this time, try it later
                 [messageProcessorDelegate incomingMessageFailed:boxedMessage];
-                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Bad message format or decryption error (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorBadMessage]);
+                
+                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Bad message format or decryption error (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorBadMessage], nil);
                 return;
             }
 
             if ([amsg isKindOfClass: [UnknownTypeMessage class]]) {
                 // Can't process message at this time, try it later
+                // Note: We don't get here for `UnknownTypeMessage`s encapsulated in an FS message
                 [messageProcessorDelegate incomingMessageFailed:boxedMessage];
-                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType]);
+                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType], nil);
                 return;
             }
 
@@ -151,7 +148,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
 
                 // Do not process message, send server ack
                 [messageProcessorDelegate incomingMessageFailed:boxedMessage];
-                onCompletion(nil);
+                onCompletion(nil, nil);
                 return;
             }
 
@@ -166,7 +163,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
 
                 // Do not process message, send server ack
                 [messageProcessorDelegate incomingMessageFailed:boxedMessage];
-                onCompletion(nil);
+                onCompletion(nil, nil);
                 return;
             } else {
                 if ([nonceGuard isProcessedWithMessage:amsg]) {
@@ -179,7 +176,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
 
                     // Do not process message, send server ack
                     [messageProcessorDelegate incomingMessageFailed:boxedMessage];
-                    onCompletion(nil);
+                    onCompletion(nil, nil);
                     return;
                 } else {
                     if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
@@ -192,27 +189,26 @@ static NSMutableOrderedSet *pendingGroupMessages;
 
             amsg.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend;
 
-            [self processIncomingAbstractMessage:amsg onCompletion:^(AbstractMessage *processedMsg, NSObject *pfsSession) {
+            [self processIncomingAbstractMessage:amsg onCompletion:^(AbstractMessage *processedMsg, id fsMessageInfo) {
                 // Message successfully processed
-                AbstractMessageAndPFSSession *combi = [[AbstractMessageAndPFSSession alloc] initWithSession:pfsSession message:processedMsg];
-                onCompletion(combi);
-            } onError:^(NSError * _Nullable error) {
+                onCompletion(processedMsg, fsMessageInfo);
+            } onError:^(NSError * _Nullable error,  id _Nullable fsMessageInfo) {
                 if (error) {
-                    onError(error);
+                    onError(error, fsMessageInfo);
                 }
                 else {
-                    onCompletion(nil);
+                    onCompletion(nil, nil);
                 }
             }];
         }];
     } onError:^(NSError *error) {
         [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:@"PublicKey from Threema-ID not found"];
         // Failed to process message, try it later
-        onError(error);
+        onError(error, nil);
     }];
 }
 
-- (void)processIncomingAbstractMessage:(AbstractMessage*)amsg onCompletion:(void(^)(AbstractMessage * _Nullable, NSObject * _Nullable))onCompletion onError:(void(^)(NSError * _Nullable))onError {
+- (void)processIncomingAbstractMessage:(AbstractMessage*)amsg onCompletion:(void(^)(AbstractMessage * _Nullable message, id _Nullable fsMessageInfo))onCompletion onError:(void(^)(NSError * _Nullable error, id _Nullable fsMessageInfo))onError {
     
     if ([amsg isContentValid] == NO) {
         DDLogInfo(@"Ignore invalid content, message ID %@ from %@", amsg.messageId, amsg.fromIdentity);
@@ -243,12 +239,12 @@ static NSMutableOrderedSet *pendingGroupMessages;
     }];
 
     if (fetchContactError) {
-        onError(fetchContactError);
+        onError(fetchContactError, nil);
         return;
     }
 
     // Note: This is an variable holding a block called after the PFS envelope is removed if there is any
-    void(^processAbstractMessageBlock)(AbstractMessage *, NSObject *) = ^void(AbstractMessage *amsg, NSObject *pfsSession) {
+    void(^processAbstractMessageBlock)(AbstractMessage *, id) = ^void(AbstractMessage *amsg, id fsMessageInfo) {
         [messageProcessorDelegate incomingMessageStarted:amsg];
         DDLogVerbose(@"Process incoming message: %@", amsg);
 
@@ -268,11 +264,11 @@ static NSMutableOrderedSet *pendingGroupMessages;
                     }
                 }
                 
-                [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
-                onCompletion(amsg, nil);
+                [messageProcessorDelegate incomingMessageFinished:amsg];
+                onCompletion(amsg, fsMessageInfo);
             } onError:^(NSError *error) {
-                [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:[pendingGroupMessages containsObject:amsg] == true];
-                onError(error);
+                [messageProcessorDelegate incomingMessageFinished:amsg];
+                onError(error, fsMessageInfo);
             }];
         // Process Non-Group Messages
         } else {
@@ -286,15 +282,15 @@ static NSMutableOrderedSet *pendingGroupMessages;
                 }
                 
                 if (delegate) {
-                    [delegate incomingMessageFinished:amsg isPendingGroup:false];
+                    [delegate incomingMessageFinished:amsg];
                 }
                 else {
-                    [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
+                    [messageProcessorDelegate incomingMessageFinished:amsg];
                 }
-                onCompletion(amsg, pfsSession);
+                onCompletion(amsg, fsMessageInfo);
             } onError:^(NSError *error) {
-                [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
-                onError(error);
+                [messageProcessorDelegate incomingMessageFinished:amsg];
+                onError(error, fsMessageInfo);
             }];
         }
     };
@@ -302,27 +298,24 @@ static NSMutableOrderedSet *pendingGroupMessages;
     @try {
         if ([amsg isKindOfClass:[ForwardSecurityEnvelopeMessage class]]) {
             if ([ThreemaUtility supportsForwardSecurity]) {
-                [self processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage*)amsg senderPublicKey:senderPublicKey onCompletion:^(AbstractMessage *unwrappedMessage, NSObject *pfsSession) {
+                [self processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage*)amsg senderPublicKey:senderPublicKey onCompletion:^(AbstractMessage *unwrappedMessage, id fsMessageInfo) {
 
                     // Don't allow double encapsulated forward security messages
-                    // Group messages are not supported if FS 1.2 is not enabled
                     // This is also checked when decoding messages in MessageDecoder+Swift.swift lines 26ff
-                    if (ThreemaEnvironment.fsEnableV12 && (unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]])) {
-                        processAbstractMessageBlock(unwrappedMessage, pfsSession);
-                    } else if (unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]]
-                               && ![unwrappedMessage isKindOfClass:[AbstractGroupMessage class]]) {
-                        processAbstractMessageBlock(unwrappedMessage, pfsSession);
+                    if ((unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]])) {
+                        processAbstractMessageBlock(unwrappedMessage, fsMessageInfo);
                     } else {
+                        // This is also reached if `amsg` is `nil` because it was an FS state message or the message was rejected
                         [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
-                        onError(nil); // drop message
+                        onError(nil, fsMessageInfo); // drop message
                     }
                 } onError:^(NSError *error) {
                     if ([error.userInfo objectForKey:@"ShouldRetry"]) {
-                        [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
-                        onError(error);
+                        [messageProcessorDelegate incomingMessageFinished:amsg];
+                        onError(error, nil);
                     } else {
                         [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
-                        onError(nil); // drop message
+                        onError(nil, nil); // drop message
                     }
                 }];
             } else {
@@ -330,16 +323,16 @@ static NSMutableOrderedSet *pendingGroupMessages;
                 ForwardSecurityContact *fsContact = [[ForwardSecurityContact alloc] initWithIdentity:amsg.fromIdentity publicKey:senderPublicKey];
                 [fsmp rejectEnvelopeMessageWithSender:fsContact envelopeMessage:(ForwardSecurityEnvelopeMessage*)amsg];
                 [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
-                onError(nil); // drop message
+                onError(nil, nil); // drop message
             }
         } else  {
             processAbstractMessageBlock(amsg, nil);
         }
     } @catch (NSException *exception) {
         NSError *error = [ThreemaError threemaError:exception.description withCode:ThreemaProtocolErrorMessageProcessingFailed];
-        onError(error);
+        onError(error, nil);
     } @catch (NSError *error) {
-        onError(error);
+        onError(error, nil);
     }
 }
 
@@ -464,8 +457,11 @@ Process incoming message.
         [self processIncomingVoIPCallHangupMessage:(BoxVoIPCallHangupMessage *)amsg onCompletion:onCompletion onError:onError];
     } else if ([amsg isKindOfClass:[BoxVoIPCallRingingMessage class]]) {
         [self processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)amsg onCompletion:onCompletion onError:onError];
-    }
-    else if ([amsg isKindOfClass:[UnknownTypeMessage class]]) {
+    } else if ([amsg isKindOfClass:[BoxEmptyMessage class]]) {
+        // Noting todo. Just move on...
+        // Android basically handles it the same way as an `UnknownTypeMessage`. On iOS this is too complicated for now.
+        onCompletion(nil);
+    } else if ([amsg isKindOfClass:[UnknownTypeMessage class]]) {
         onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType]);
     }
     else {
@@ -476,33 +472,9 @@ Process incoming message.
 
 - (void)processIncomingGroupMessage:(AbstractGroupMessage * _Nonnull)amsg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
-    GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
     GroupMessageProcessor *groupProcessor = [[GroupMessageProcessor alloc] initWithMessage:amsg myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] groupManager:groupManager entityManager:entityManager nonceGuard:(NSObject*)nonceGuard];
     [groupProcessor handleMessageOnCompletion:^(BOOL didHandleMessage) {
         if (didHandleMessage) {
-            if (groupProcessor.addToPendingMessages) {
-                dispatch_sync(pendingGroupMessagesQueue, ^{
-                    BOOL exists = NO;
-                    for (AbstractGroupMessage *item in pendingGroupMessages) {
-                        if ([item.messageId isEqualToData:amsg.messageId] && item.fromIdentity == amsg.fromIdentity) {
-                            exists = YES;
-                            break;
-                        }
-                    }
-                    if (exists == NO) {
-                        DDLogInfo(@"Pending group message add %@ %@", amsg.messageId, amsg.description);
-                        [pendingGroupMessages addObject:amsg];
-                    }
-                });
-                [messageProcessorDelegate pendingGroup:amsg];
-                onError([ThreemaError threemaError:[NSString stringWithFormat:@"Group not found for this message (ID: %@)", amsg.messageId]  withCode:ThreemaProtocolErrorPendingGroupMessage]);
-                return;
-            } else {
-                if ([amsg isKindOfClass:[GroupCreateMessage class]]) {
-                    /* process any pending group messages that could not be processed before this create */
-                    [self processPendingGroupMessages:(GroupCreateMessage *)amsg];
-                }
-            }
             onCompletion();
             return;
         }
@@ -532,7 +504,6 @@ Process incoming message.
         }];
 
         if ([amsg isKindOfClass:[GroupRenameMessage class]]) {
-            GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
             [groupManager setNameObjcWithGroupID:amsg.groupId creator:amsg.groupCreator name:((GroupRenameMessage *)amsg).name systemMessageDate:amsg.date send:YES completionHandler:^(NSError * _Nullable error) {
                 if (error == nil) {
                     [self changedConversationAndGroupEntityWithGroupID:amsg.groupId groupCreatorIdentity:amsg.groupCreator];
@@ -545,7 +516,6 @@ Process incoming message.
         } else if ([amsg isKindOfClass:[GroupSetPhotoMessage class]]) {
             [self processIncomingGroupSetPhotoMessage:(GroupSetPhotoMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupDeletePhotoMessage class]]) {
-            GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
             [groupManager deletePhotoObjcWithGroupID:amsg.groupId creator:amsg.groupCreator sentDate:[amsg date] send:NO completionHandler:^(NSError * _Nullable error) {
                 if (error == nil) {
                     [self changedConversationAndGroupEntityWithGroupID:amsg.groupId groupCreatorIdentity:amsg.groupCreator];
@@ -610,17 +580,18 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage * _Nonnull)amsg senderPublicKey:(NSData*)senderPublicKey onCompletion:(void(^ _Nonnull)(AbstractMessage *unwrappedMessage, NSObject *pfsSession))onCompletion onError:(void(^ _Nonnull)(NSError * error))onError {
-    NSError *error = nil;
+- (void)processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage * _Nonnull)amsg senderPublicKey:(NSData*)senderPublicKey onCompletion:(void(^ _Nonnull)(AbstractMessage *unwrappedMessage, id fsMessageInfo))onCompletion onError:(void(^ _Nonnull)(NSError * error))onError {
     ForwardSecurityContact *fsContact = [[ForwardSecurityContact alloc] initWithIdentity:amsg.fromIdentity publicKey:senderPublicKey];
 
-    [fsmp processEnvelopeMessageObjcWithSender:fsContact envelopeMessage:amsg errorP:&error completionHandler:^(AbstractMessageAndPFSSession * _Nullable unwrappedMessageAndPFSSession) {
+    [fsmp processEnvelopeMessageObjCWithSender:fsContact envelopeMessage:amsg completionHandler:^(AbstractMessageAndFSMessageInfo * _Nullable unwrappedMessageAndFSMessageInfo, NSError * _Nullable error) {
+        
         if (error != nil) {
             DDLogError(@"Processing forward security message failed: %@", error);
             onError(error);
             return;
         }
-        onCompletion(unwrappedMessageAndPFSSession.message, unwrappedMessageAndPFSSession.session);
+        
+        onCompletion(unwrappedMessageAndFSMessageInfo.message, unwrappedMessageAndFSMessageInfo.fsMessageInfo);
     }];
 }
 
@@ -837,7 +808,6 @@ Process incoming message.
 
 - (void)processIncomingGroupSetPhotoMessage:(GroupSetPhotoMessage*)msg onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *err))onError {
     
-    GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
     Group *group = [groupManager getGroup:msg.groupId creator:msg.groupCreator];
     if (group == nil) {
         DDLogInfo(@"Group ID %@ from %@ not found", msg.groupId, msg.groupCreator);
@@ -900,49 +870,6 @@ Process incoming message.
         
         onCompletion();
     }];
-}
-
-- (void)processPendingGroupMessages:(GroupCreateMessage *)groupCreateMessage {
-    DDLogVerbose(@"Processing pending group messages");
-    __block NSArray *messages;
-
-    dispatch_sync(pendingGroupMessagesQueue, ^{
-        messages = [pendingGroupMessages array];
-    });
-
-    if (messages != nil) {
-        DDLogInfo(@"[Push] Pending group count: %lu", [messages count]);
-
-        for (AbstractGroupMessage *msg in messages) {
-            if ([msg.groupId isEqualToData:groupCreateMessage.groupId] && [msg.groupCreator isEqualToString:groupCreateMessage.groupCreator]) {
-                if ([[groupCreateMessage groupMembers] containsObject:[[MyIdentityStore sharedMyIdentityStore] identity]]) {
-                    DDLogInfo(@"[Push] Pending group message process %@ %@", msg.messageId, msg.description);
-                    [self processIncomingAbstractMessage:msg onCompletion:^(AbstractMessage *amsg, NSObject *pfsSession) {
-                        if (amsg != nil) {
-                            // Successfully processed ack message
-                            [[ServerConnector sharedServerConnector] completedProcessingAbstractMessage:amsg];
-                        }
-
-                        dispatch_sync(pendingGroupMessagesQueue, ^{
-                            DDLogInfo(@"[Push] Pending group message remove %@ %@", msg.messageId, msg.description);
-                            [pendingGroupMessages removeObject:msg];
-                        });
-                    } onError:^(NSError *err) {
-                        DDLogWarn(@"Processing pending group message failed: %@", err);
-                    }];
-                }
-                else {
-                    // I am not in the group ack message
-                    [[ServerConnector sharedServerConnector] completedProcessingAbstractMessage:msg];
-
-                    dispatch_sync(pendingGroupMessagesQueue, ^{
-                        DDLogInfo(@"[Push] Pending group message remove %@ %@", msg.messageId, msg.description);
-                        [pendingGroupMessages removeObject:msg];
-                    });
-                }
-            }
-        }
-    }
 }
 
 - (void)processIncomingContactSetPhotoMessage:(ContactSetPhotoMessage *)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
@@ -1052,7 +979,6 @@ Process incoming message.
     if ([[UserSettings sharedUserSettings].blacklist containsObject:amsg.fromIdentity]) {
         if ([amsg isKindOfClass:[AbstractGroupMessage class]]) {
             AbstractGroupMessage *groupMessage = (AbstractGroupMessage *)amsg;
-            GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
             Group *group = [groupManager getGroup:groupMessage.groupId creator:groupMessage.groupCreator];
             
             // If this group is active and the message is a group control message (create, leave, requestSync, Rename, SetPhoto, DeletePhoto)

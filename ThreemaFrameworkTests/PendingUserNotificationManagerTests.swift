@@ -50,8 +50,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         )
         let pendingNotification1 = pendingManager1.pendingUserNotification(
             for: abstractMsg,
-            stage: .abstract,
-            isPendingGroup: false
+            stage: .abstract
         )
         
         XCTAssertEqual("\(expectedFromIdentity)\(expectedMessageID.hexString)", pendingNotification1?.key)
@@ -66,8 +65,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         )
         let pendingNotification2 = pendingManager2.pendingUserNotification(
             for: abstractMsg,
-            stage: .abstract,
-            isPendingGroup: false
+            stage: .abstract
         )
         
         XCTAssertEqual("\(expectedFromIdentity)\(expectedMessageID.hexString)", pendingNotification2?.key)
@@ -97,8 +95,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         )
         let pendingNotification = pendingManager.pendingUserNotification(
             for: abstractMsg,
-            stage: .abstract,
-            isPendingGroup: false
+            stage: .abstract
         )
         
         let expect = expectation(description: "startTimedUserNotification")
@@ -153,8 +150,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         )
         let pendingNotification = pendingManager.pendingUserNotification(
             for: abstractMsg,
-            stage: .abstract,
-            isPendingGroup: false
+            stage: .abstract
         )
 
         let expect = expectation(description: "startTimedUserNotification")

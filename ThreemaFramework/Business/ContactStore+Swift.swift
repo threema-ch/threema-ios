@@ -31,7 +31,13 @@ extension ContactStore {
         let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
         let mediatorSyncableContacts = MediatorSyncableContacts(
             UserSettings.shared(),
-            PushSettingManager(UserSettings.shared(), GroupManager(entityManager: entityManager), entityManager, true),
+            PushSettingManager(
+                UserSettings.shared(),
+                GroupManager(entityManager: entityManager),
+                entityManager,
+                TaskManager(),
+                true
+            ),
             TaskManager(),
             entityManager
         )
@@ -140,5 +146,16 @@ extension ContactStoreProtocol {
             mediatorSyncableContacts.updateTypingIndicator(identity: contactEntity.identity, value: typingIndicator)
         }
         mediatorSyncableContacts.syncAsync()
+    }
+    
+    /// Async version of `updateStatus(forAllContactsIgnoreInterval:onCompletion:onError:)`
+    func updateStatusForAllContacts(ignoreInterval: Bool) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            updateStatus(forAllContactsIgnoreInterval: ignoreInterval) {
+                continuation.resume()
+            } onError: { error in
+                continuation.resume(throwing: error)
+            }
+        }
     }
 }

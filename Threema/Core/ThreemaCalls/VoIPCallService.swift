@@ -340,8 +340,8 @@ extension VoIPCallService {
                 }
             case .reject, .rejectDisabled, .rejectTimeout, .rejectBusy, .rejectOffHours, .rejectUnknown:
                 rejectCall(action: action)
-                action.completion?()
                 delegate?.callServiceFinishedProcess()
+                action.completion?()
             case .end:
                 if ProcessInfoHelper.isRunningForScreenshots {
                     dismissCallView()
@@ -1321,10 +1321,9 @@ extension VoIPCallService {
                 completion()
                 return
             }
-            
-            FeatureMask.check(Int(FEATURE_MASK_VOIP_VIDEO), forContacts: [contact]) { unsupportedContacts in
+            FeatureMask.check(contacts: [contact], for: Int(FEATURE_MASK_VOIP_VIDEO)) { unsupportedContacts in
                 self.threemaVideoCallAvailable = false
-                if unsupportedContacts!.isEmpty && UserSettings.shared().enableVideoCall {
+                if unsupportedContacts.isEmpty && UserSettings.shared().enableVideoCall {
                     self.threemaVideoCallAvailable = true
                 }
                 self.peerConnectionClient.close()
@@ -1484,8 +1483,7 @@ extension VoIPCallService {
                 completion()
                 return
             }
-            
-            FeatureMask.check(Int(FEATURE_MASK_VOIP_VIDEO), forContacts: [contact]) { _ in
+            FeatureMask.check(contacts: [contact], for: Int(FEATURE_MASK_VOIP_VIDEO)) { _ in
                 if self.incomingOffer?.isVideoAvailable ?? false && UserSettings.shared().enableVideoCall {
                     self.threemaVideoCallAvailable = true
                     self.callViewController?.enableThreemaVideoCall()
@@ -1701,9 +1699,9 @@ extension VoIPCallService {
                 self.callViewController?.resetStatsTimer()
                 if rejected == true {
                     if let callViewController = self.callViewController {
-                        callViewController.endButton.isEnabled = false
-                        callViewController.speakerButton.isEnabled = false
-                        callViewController.muteButton.isEnabled = false
+                        callViewController.endButton?.isEnabled = false
+                        callViewController.speakerButton?.isEnabled = false
+                        callViewController.muteButton?.isEnabled = false
                     }
                     Timer.scheduledTimer(withTimeInterval: 4, repeats: false, block: { _ in
                         callVC.dismiss(animated: true, completion: {
@@ -1793,7 +1791,7 @@ extension VoIPCallService {
             features: nil,
             isVideoAvailable: UserSettings.shared().enableVideoCall,
             isUserInteraction: false,
-            callID: action.callID!,
+            callID: action.callID ?? VoIPCallID(callID: nil),
             completion: nil
         )
         voIPCallSender.sendVoIPCall(answer: answer)

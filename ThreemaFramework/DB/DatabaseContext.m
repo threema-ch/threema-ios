@@ -136,11 +136,4 @@ static dispatch_queue_t directContextsQueue;
     return contexts;
 }
 
-+ (void)reset {
-    dispatch_sync(mainContextQueue, ^{
-        if (mainContext != nil) {
-            mainContext = nil;
-        }
-    });
-}
 @end

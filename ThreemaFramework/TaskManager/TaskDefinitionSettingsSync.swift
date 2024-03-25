@@ -26,7 +26,11 @@ final class TaskDefinitionSettingsSync: TaskDefinition, TaskDefinitionTransactio
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
     ) -> TaskExecutionProtocol {
-        TaskExecutionSettingsSync(taskContext: taskContext, taskDefinition: self, frameworkInjector: frameworkInjector)
+        TaskExecutionSettingsSync(
+            taskContext: taskContext,
+            taskDefinition: self,
+            backgroundFrameworkInjector: frameworkInjector
+        )
     }
 
     override func create(frameworkInjector: FrameworkInjectorProtocol) -> TaskExecutionProtocol {

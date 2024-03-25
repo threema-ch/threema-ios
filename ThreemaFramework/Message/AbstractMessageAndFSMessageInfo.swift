@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2017-2023 Threema GmbH
+// Copyright (c) 2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,18 +18,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import <Foundation/Foundation.h>
+import Foundation
 
-@interface FeatureMask : NSObject
-
-+ (void)updateFeatureMask;
-
-+ (void)updateFeatureMaskOnCompletion:(void (^)(void))onCompletion;
-
-+ (void)checkFeatureMask:(NSInteger)featureMask forConversations:(NSSet *)conversations onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion;
-
-+ (void)checkFeatureMask:(NSInteger)featureMask forContacts:(NSSet *)contacts onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion;
-
-+ (void)checkFeatureMask:(NSInteger)featureMask forContacts:(NSSet *)contacts forceRefresh:(BOOL)forceRefresh onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion;
-
-@end
+/// A helper object to facilitate communication / passing (Swift) objects between `TaskExecutionReceiveMessage`,
+/// `MessageProcessor` and `ForwardSecurityMessageProcessor`
+class AbstractMessageAndFSMessageInfo: NSObject {
+    @objc let message: AbstractMessage?
+    @objc let fsMessageInfo: Any? // Must be a FSMessageInfo
+    
+    @objc init(message: AbstractMessage?, fsMessageInfo: Any?) {
+        assert(fsMessageInfo == nil || fsMessageInfo! is FSMessageInfo)
+        assert(!(fsMessageInfo != nil && message == nil))
+        
+        self.message = message
+        self.fsMessageInfo = fsMessageInfo
+    }
+}

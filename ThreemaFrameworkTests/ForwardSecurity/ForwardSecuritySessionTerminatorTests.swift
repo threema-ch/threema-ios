@@ -40,7 +40,6 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let sessionStore = InMemoryDHSessionStore()
         let entityManger = EntityManager(databaseContext: databaseMainContext)
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: entityManger,
             entityManager: entityManger
         )
         let fsSessionTerminator = try ForwardSecuritySessionTerminator(
@@ -102,7 +101,6 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let sessionStore = InMemoryDHSessionStore()
         let entityManger = EntityManager(databaseContext: databaseMainContext)
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: entityManger,
             entityManager: entityManger
         )
         let fsSessionTerminator = try ForwardSecuritySessionTerminator(

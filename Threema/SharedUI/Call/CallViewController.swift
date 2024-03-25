@@ -116,11 +116,6 @@ class CallViewController: UIViewController {
 
     private var myVolumeView: UIView?
     
-    private var initiatorVideoCallShowcase: MaterialShowcase?
-    private var remoteVideoActivatedShowcase: MaterialShowcase?
-    private var speakerShowcase: MaterialShowcase?
-    private var cameraDisabledShowcase: MaterialShowcase?
-    
     private var didRotateDevice = false
     
     private var audioPlayer: AVAudioPlayer?
@@ -274,8 +269,6 @@ class CallViewController: UIViewController {
     override internal func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        showInitiatorVideoCallInfo()
-        
         updateGradientBackground()
     }
     
@@ -297,10 +290,6 @@ class CallViewController: UIViewController {
         default:
             break
         }
-        
-        hideInitiatorVideoCallInfo()
-        hideRemoteVideoActivatedInfo()
-        hideSpeakerInfo()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -464,9 +453,6 @@ extension CallViewController {
     func disableThreemaVideoCall() {
         DispatchQueue.main.async {
             self.threemaVideoCallAvailable = false
-            if VoIPCallStateManager.shared.localVideoRenderer() != nil, UserSettings.shared().enableVideoCall {
-                self.showCameraDisabledInfo()
-            }
             self.endLocalVideo()
         }
     }
@@ -891,12 +877,6 @@ extension CallViewController {
                         self.updateVideoViews()
                     }
                 }
-                
-                if !self.isLocalVideoActive, self.isReceivingRemoteVideo, !self.viewWasHidden, self.isViewLoaded,
-                   self.view.window != nil {
-                    self.showRemoteVideoActivatedInfo()
-                    self.showSpeakerInfo()
-                }
             }
         }
     }
@@ -1296,210 +1276,6 @@ extension CallViewController {
         }
     }
     
-    private func showInitiatorVideoCallInfo() {
-        if let contact, contact.isVideoCallAvailable(), isNavigationVisible(), isCallInitiator,
-           UserSettings.shared().enableVideoCall, !UserSettings.shared().videoCallInfoShown, threemaVideoCallAvailable {
-            presentInitiatorVideoCallMaterialShowcase()
-        }
-    }
-    
-    private func presentInitiatorVideoCallMaterialShowcase(completion handler: (() -> Void)? = nil) {
-        if viewIfLoaded?.window != nil {
-            if initiatorVideoCallShowcase == nil {
-                initiatorVideoCallShowcase = MaterialShowcase()
-                initiatorVideoCallShowcase!.setTargetView(button: cameraButton)
-                
-                initiatorVideoCallShowcase!.primaryText = BundleUtil
-                    .localizedString(forKey: "call_threema_video_in_chat_info_title")
-                initiatorVideoCallShowcase!.secondaryText = BundleUtil
-                    .localizedString(forKey: "call_threema_initiator_video_info")
-                initiatorVideoCallShowcase!.backgroundPromptColor = .primary
-                
-                initiatorVideoCallShowcase!.backgroundPromptColorAlpha = 0.7
-                initiatorVideoCallShowcase!.backgroundRadius = -1
-                initiatorVideoCallShowcase!.targetHolderColor = Colors.black.withAlphaComponent(0.2)
-                initiatorVideoCallShowcase!.primaryTextSize = 24.0
-                initiatorVideoCallShowcase!.secondaryTextSize = 18.0
-                initiatorVideoCallShowcase!.primaryTextColor = Colors.textMaterialShowcase
-                
-                initiatorVideoCallShowcase!.primaryTextAlignment = .right
-                initiatorVideoCallShowcase!.secondaryTextAlignment = .right
-                initiatorVideoCallShowcase!.onTapThrough = {
-                    self.startVideoAction(self.cameraButton)
-                }
-                initiatorVideoCallShowcase!.delegate = self
-            }
-            
-            initiatorVideoCallShowcase!.show(hasSkipButton: false, completion: handler)
-        }
-    }
-    
-    private func hideInitiatorVideoCallInfo() {
-        if let showcase = initiatorVideoCallShowcase {
-            showcase.completeShowcase()
-        }
-    }
-    
-    private func showRemoteVideoActivatedInfo() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            if !self.isLocalVideoActive {
-                if let contact = self.contact, self.isNavigationVisible(), contact.isVideoCallAvailable(),
-                   UserSettings.shared().enableVideoCall, self.threemaVideoCallAvailable {
-                    self.presentRemoteVideoActivatedMaterialShowcase {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
-                            self.hideRemoteVideoActivatedInfo()
-                        }
-                    }
-                }
-            }
-        }
-    }
-        
-    private func presentRemoteVideoActivatedMaterialShowcase(completion handler: (() -> Void)?) {
-        if viewIfLoaded?.window != nil {
-            if remoteVideoActivatedShowcase == nil {
-                remoteVideoActivatedShowcase = MaterialShowcase()
-                remoteVideoActivatedShowcase!.setTargetView(button: cameraButton)
-                remoteVideoActivatedShowcase!.primaryText = BundleUtil
-                    .localizedString(forKey: "call_threema_remote_video_activated_info_title")
-                remoteVideoActivatedShowcase!.secondaryText = BundleUtil
-                    .localizedString(forKey: "call_threema_remote_video_activated_info")
-                remoteVideoActivatedShowcase!.backgroundPromptColor = Colors.backgroundMaterialShowcasePrompt
-                
-                remoteVideoActivatedShowcase!.backgroundPromptColorAlpha = 0.7
-                remoteVideoActivatedShowcase!.backgroundRadius = -1
-                remoteVideoActivatedShowcase!.targetHolderColor = Colors.black.withAlphaComponent(0.2)
-                remoteVideoActivatedShowcase!.primaryTextSize = 24.0
-                remoteVideoActivatedShowcase!.secondaryTextSize = 18.0
-                remoteVideoActivatedShowcase!.primaryTextColor = Colors.textMaterialShowcase
-                remoteVideoActivatedShowcase!.primaryTextAlignment = .right
-                remoteVideoActivatedShowcase!.secondaryTextAlignment = .right
-                remoteVideoActivatedShowcase!.onTapThrough = {
-                    self.startVideoAction(self.cameraButton)
-                }
-            }
-            remoteVideoActivatedShowcase!.show(hasSkipButton: false, completion: handler)
-        }
-    }
-    
-    private func hideRemoteVideoActivatedInfo() {
-        if let showcase = remoteVideoActivatedShowcase {
-            showcase.completeShowcase()
-        }
-    }
-    
-    private func showSpeakerInfo() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-            var showSpeakerInfo = true
-            let currentRoute = AVAudioSession.sharedInstance().currentRoute
-            for output in currentRoute.outputs {
-                if output.portType == AVAudioSession.Port.builtInSpeaker {
-                    showSpeakerInfo = false
-                }
-                else if output.portType == AVAudioSession.Port.headphones {
-                    showSpeakerInfo = false
-                }
-                else if output.portType == AVAudioSession.Port.bluetoothA2DP || output.portType == AVAudioSession.Port
-                    .bluetoothHFP || output.portType == AVAudioSession.Port.bluetoothLE {
-                    showSpeakerInfo = false
-                }
-            }
-            if !self.isLocalVideoActive, showSpeakerInfo {
-                if let contact = self.contact, self.isNavigationVisible(), contact.isVideoCallAvailable(),
-                   UserSettings.shared().enableVideoCall, !UserSettings.shared().videoCallSpeakerInfoShown,
-                   self.threemaVideoCallAvailable, self.isViewLoaded, self.view.window != nil {
-                    self.presentSpaekerMaterialShowcase {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                            self.hideSpeakerInfo()
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    private func presentSpaekerMaterialShowcase(completion handler: (() -> Void)?) {
-        if viewIfLoaded?.window != nil {
-            if speakerShowcase == nil {
-                speakerShowcase = MaterialShowcase()
-                speakerShowcase!.setTargetView(button: speakerButton)
-                speakerShowcase!.primaryText = ""
-                speakerShowcase!.secondaryText = BundleUtil.localizedString(forKey: "call_threema_speaker_info")
-                speakerShowcase!.backgroundPromptColor = Colors.backgroundMaterialShowcasePrompt
-                
-                speakerShowcase!.backgroundPromptColorAlpha = 0.7
-                speakerShowcase!.backgroundRadius = -1
-                speakerShowcase!.targetHolderColor = Colors.black.withAlphaComponent(0.2)
-                speakerShowcase!.secondaryTextSize = 18.0
-                speakerShowcase!.primaryTextColor = Colors.textMaterialShowcase
-                speakerShowcase!.primaryTextAlignment = .left
-                speakerShowcase!.secondaryTextAlignment = .left
-                speakerShowcase!.onTapThrough = {
-                    UserSettings.shared().videoCallSpeakerInfoShown = true
-                    self.speakerShowcase!.completeShowcase()
-                    self.speakerAction(self.speakerButton, forEvent: UIEvent())
-                }
-                speakerShowcase!.skipButton = {
-                    UserSettings.shared().videoCallSpeakerInfoShown = true
-                    self.speakerShowcase!.completeShowcase()
-                }
-            }
-            
-            speakerShowcase!.layoutMargins = UIEdgeInsets(
-                top: (speakerShowcase!.containerView.frame.size.height / 3) * 2,
-                left: 0.0,
-                bottom: 0.0,
-                right: 0.0
-            )
-            speakerShowcase!.show(hasSkipButton: true, completion: handler)
-        }
-    }
-    
-    private func hideSpeakerInfo() {
-        if let showcase = speakerShowcase {
-            showcase.completeShowcase()
-        }
-    }
-    
-    private func showCameraDisabledInfo() {
-        if isNavigationVisible() {
-            presentCameraDisabledMaterialShowcase {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                    self.hideCameraDisalbedInfo()
-                }
-            }
-        }
-    }
-    
-    private func presentCameraDisabledMaterialShowcase(completion handler: (() -> Void)?) {
-        if viewIfLoaded?.window != nil {
-            if cameraDisabledShowcase == nil {
-                cameraDisabledShowcase = MaterialShowcase()
-                cameraDisabledShowcase!.setTargetView(button: cameraButton)
-                cameraDisabledShowcase!.primaryText = ""
-                cameraDisabledShowcase!.secondaryText = BundleUtil
-                    .localizedString(forKey: "call_threema_camera_disabled_info")
-                cameraDisabledShowcase!.backgroundPromptColor = Colors.backgroundMaterialShowcasePrompt
-                
-                cameraDisabledShowcase!.backgroundPromptColorAlpha = 0.7
-                cameraDisabledShowcase!.backgroundRadius = -1
-                cameraDisabledShowcase!.targetHolderColor = Colors.black.withAlphaComponent(0.2)
-                cameraDisabledShowcase!.secondaryTextSize = 18.0
-                cameraDisabledShowcase!.primaryTextColor = Colors.textMaterialShowcase
-                cameraDisabledShowcase!.primaryTextAlignment = .right
-                cameraDisabledShowcase!.secondaryTextAlignment = .right
-            }
-            
-            cameraDisabledShowcase!.show(hasSkipButton: false, completion: handler)
-        }
-    }
-    
-    private func hideCameraDisalbedInfo() {
-        if let showcase = cameraDisabledShowcase {
-            showcase.completeShowcase()
-        }
-    }
-    
     private func blurImage(image: UIImage, blurRadius: CGFloat) -> UIImage {
         let context = CIContext(options: nil)
         let inputImage = CIImage(cgImage: image.cgImage!)
@@ -1772,19 +1548,14 @@ extension CallViewController {
             setupForVideoCallTest()
         }
         else {
-            if threemaVideoCallAvailable {
-                if hasCameraAccess() {
-                    isLocalVideoActive = !isLocalVideoActive
-                    if isLocalVideoActive == true {
-                        startLocalVideo()
-                    }
-                    else {
-                        endLocalVideo()
-                    }
+            if threemaVideoCallAvailable, hasCameraAccess() {
+                isLocalVideoActive = !isLocalVideoActive
+                if isLocalVideoActive == true {
+                    startLocalVideo()
                 }
-            }
-            else {
-                showCameraDisabledInfo()
+                else {
+                    endLocalVideo()
+                }
             }
         }
     }
@@ -1861,16 +1632,6 @@ extension CallViewController: RTCVideoViewDelegate {
         if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer(),
            localRenderer.isEqual(videoView) {
             updateConstraintsAfterRotation(size: size)
-        }
-    }
-}
-
-// MARK: - MaterialShowcaseDelegate
-
-extension CallViewController: MaterialShowcaseDelegate {
-    func showCaseDidDismiss(showcase: MaterialShowcase, didTapTarget: Bool) {
-        if showcase == initiatorVideoCallShowcase {
-            UserSettings.shared().videoCallInfoShown = true
         }
     }
 }

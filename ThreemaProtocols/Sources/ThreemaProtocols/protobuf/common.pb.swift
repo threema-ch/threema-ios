@@ -120,6 +120,9 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
   /// Invalid message type
   case invalidType // = 0
 
+  /// [`empty`](ref:e2e.empty)
+  case empty // = 252
+
   /// [`text`](ref:e2e.text)
   case text // = 1
 
@@ -295,6 +298,7 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
     case 129: self = .groupDeliveryReceipt
     case 144: self = .typingIndicator
     case 160: self = .forwardSecurityEnvelope
+    case 252: self = .empty
     case 254: self = .webSessionResume
     default: self = .UNRECOGNIZED(rawValue)
     }
@@ -340,6 +344,7 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
     case .groupDeliveryReceipt: return 129
     case .typingIndicator: return 144
     case .forwardSecurityEnvelope: return 160
+    case .empty: return 252
     case .webSessionResume: return 254
     case .UNRECOGNIZED(let i): return i
     }
@@ -353,6 +358,7 @@ extension Common_CspE2eMessageType: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
   public static var allCases: [Common_CspE2eMessageType] = [
     .invalidType,
+    .empty,
     .text,
     .deprecatedImage,
     .location,
@@ -711,6 +717,7 @@ extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
     129: .same(proto: "GROUP_DELIVERY_RECEIPT"),
     144: .same(proto: "TYPING_INDICATOR"),
     160: .same(proto: "FORWARD_SECURITY_ENVELOPE"),
+    252: .same(proto: "EMPTY"),
     254: .same(proto: "WEB_SESSION_RESUME"),
   ]
 }

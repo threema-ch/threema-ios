@@ -39,7 +39,7 @@ class MediatorSyncableContacts: NSObject {
 
     private let userSettings: UserSettingsProtocol
     private let pushSettingManager: PushSettingManagerProtocol
-    private var taskManager: TaskManagerProtocol
+    private let taskManager: TaskManagerProtocol
     private let entityManager: EntityManager
     
     init(
@@ -55,11 +55,16 @@ class MediatorSyncableContacts: NSObject {
     }
     
     @objc override convenience init() {
+        let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
+
         self.init(
             UserSettings.shared(),
-            PushSettingManager(),
+            PushSettingManager(
+                entityManager: entityManager,
+                taskManager: TaskManager(backgroundEntityManager: entityManager)
+            ),
             TaskManager(),
-            EntityManager(withChildContextForBackgroundProcess: true)
+            entityManager
         )
     }
     

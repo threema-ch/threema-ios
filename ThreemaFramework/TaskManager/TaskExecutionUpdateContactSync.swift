@@ -34,7 +34,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             return Promise<Void> { $0.reject(TaskExecutionError.wrongTaskDefinitionType) }
         }
         
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
+        frameworkInjector.entityManager.performBlockAndWait {
             taskDefinition.deltaSyncContacts = taskDefinition.deltaSyncContacts
                 .filter { self.checkPrecondition(delta: $0) }
         }
@@ -195,7 +195,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             throw TaskExecutionError.wrongTaskDefinitionType
         }
         
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
+        frameworkInjector.entityManager.performBlockAndWait {
             task.deltaSyncContacts = task.deltaSyncContacts
                 .filter { self.checkPrecondition(delta: $0) }
         }
@@ -216,14 +216,14 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
 
         var allTrue = false
 
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
-            guard let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
+        frameworkInjector.entityManager.performBlockAndWait {
+            guard let contact = self.frameworkInjector.entityManager.entityFetcher
                 .contact(for: sContact.identity) else {
                 DDLogInfo("Contact was deleted. Do not sync")
                 return
             }
 
-            let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(for: contact)
+            let conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(for: contact)
 
             let samePublicKey = (sContact.hasPublicKey && sContact.publicKey == contact.publicKey) || !sContact
                 .hasPublicKey

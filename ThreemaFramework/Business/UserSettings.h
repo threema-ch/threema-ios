@@ -71,8 +71,6 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL hidePrivateChats;
 @property (nonatomic, readwrite) BOOL voiceMessagesShowTimeRemaining;
 
-@property (nonatomic, strong) NSMutableArray *unknownGroupAlertList;
-
 @property (nonatomic, readwrite) BOOL enableMasterDnd;
 @property (nonatomic, strong) NSOrderedSet *masterDndWorkingDays;
 @property (nonatomic, strong) NSString *masterDndStartTime;
@@ -142,9 +140,6 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateShareExtension;
 
 @property (nonatomic, readwrite) BOOL workInfoShown;
-@property (nonatomic, readwrite) BOOL videoCallInChatInfoShown;
-@property (nonatomic, readwrite) BOOL videoCallInfoShown;
-@property (nonatomic, readwrite) BOOL videoCallSpeakerInfoShown;
 
 + (UserSettings*)sharedUserSettings;
 - (instancetype) __unavailable init;

@@ -25,12 +25,20 @@ public class ShowConversationInformation: NSObject {
     @objc public let forceCompose: Bool
     @objc public let precomposedText: String?
     @objc public let image: UIImage?
+    @objc public let messageObjectID: NSManagedObjectID?
 
-    init(conversation: Conversation, forceCompose: Bool = true, precomposedText: String? = nil, image: UIImage? = nil) {
+    init(
+        conversation: Conversation,
+        forceCompose: Bool = true,
+        precomposedText: String? = nil,
+        image: UIImage? = nil,
+        messageObjectID: NSManagedObjectID? = nil
+    ) {
         self.conversation = conversation
         self.forceCompose = forceCompose
         self.precomposedText = precomposedText
         self.image = image
+        self.messageObjectID = messageObjectID
     }
     
     @objc static func createInfo(for notification: NSNotification) -> ShowConversationInformation? {
@@ -62,12 +70,14 @@ public class ShowConversationInformation: NSObject {
         let forceCompose: Bool = info[kKeyForceCompose] as? Bool ?? true
         let text = info[kKeyText] as? String
         let image = info[kKeyImage] as? UIImage
+        let baseMessage = info[kKeyMessage] as? BaseMessage
         
         return ShowConversationInformation(
             conversation: resolvedConversation,
             forceCompose: forceCompose,
             precomposedText: text,
-            image: image
+            image: image,
+            messageObjectID: baseMessage?.objectID
         )
     }
 }

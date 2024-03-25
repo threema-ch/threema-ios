@@ -23,28 +23,14 @@ import XCTest
 @testable import ThreemaFramework
 
 class TaskDefinitionTests: XCTestCase {
-    private var dbMainCnx: DatabaseContext!
     private var dbPreparer: DatabasePreparer!
-    private var frameworkInjectorMock: FrameworkInjectorProtocol!
 
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
         dbPreparer = DatabasePreparer(context: mainCnx)
-        
-        frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(
-                databaseContext:
-                DatabaseContext(
-                    mainContext: mainCnx,
-                    backgroundContext: backgroundCnx
-                )
-            ),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
     }
 
     func testTaskDefinitionEncodeDecode() throws {

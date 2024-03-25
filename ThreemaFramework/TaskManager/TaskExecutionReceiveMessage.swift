@@ -40,10 +40,10 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             maxBytesToDecrypt: task.maxBytesToDecrypt,
             timeoutDownloadThumbnail: task.timeoutDownloadThumbnail
         )
-        .then { (abstractMessageAndPFSSession: Any?)
-            -> Promise<AbstractMessageAndPFSSession?> in
-            guard let abstractMessageAndPFSSession = abstractMessageAndPFSSession as? AbstractMessageAndPFSSession,
-                  let processedMsg = abstractMessageAndPFSSession.message else {
+        // Validate message
+        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?)
+            -> Promise<AbstractMessageAndFSMessageInfo?> in
+            guard let processedMsg = abstractMessageAndFSMessageInfo?.message else {
                 DDLogWarn("Won't processing this message, because is invalid")
                 return Promise { $0.fulfill(nil) }
             }
@@ -53,10 +53,48 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                     .reflectMessageFailed(message: "Wrong receiver identity \(processedMsg.toIdentity ?? "-")")
             }
             
-            return Promise { $0.fulfill(abstractMessageAndPFSSession) }
+            return Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
         }
-        .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<AbstractMessageAndPFSSession?> in
-            guard let processedMsg = abstractMessageAndPFSSession?.message else {
+        // Update FS version if needed and send empty message if any upgrade happened
+        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?)
+            -> Promise<AbstractMessageAndFSMessageInfo?> in
+            guard let processedMsg = abstractMessageAndFSMessageInfo?.message,
+                  let fsMessageInfo = abstractMessageAndFSMessageInfo?.fsMessageInfo as? FSMessageInfo else {
+                DDLogWarn(
+                    "[ForwardSecurity] FS version upgrade not processed, because message or FS message info is empty"
+                )
+                return Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
+            }
+            
+            if fsMessageInfo.updateVersionsIfNeeded() {
+                return Promise { seal in
+                    // TODO: (IOS-4417) This might reset the commit state in case of a race condition with a new session created while sending a message
+                    if !fsMessageInfo.session.newSessionCommitted {
+                        DDLogWarn("[ForwardSecurity] (IOS-4417) Versions upgrade in uncommitted session")
+                    }
+                    
+                    // This will persist our own ratchets, the commit state and last sent date and versions (if same or
+                    // bigger)
+                    self.sendEmptyFSMessage(in: fsMessageInfo.session)
+                        .done { _ in
+                            DDLogNotice("[ForwardSecurity] Upgraded versions and successfully send out empty message")
+                            seal.fulfill(abstractMessageAndFSMessageInfo)
+                        }
+                        .catch { error in
+                            // TODO: (IOS-4421) In this case the message already shows up in the chat but does not complete processing (no delivery receipt & server ack). This can be improved: IOS-4421
+                            DDLogNotice(
+                                "[ForwardSecurity] Upgraded versions, but no persisted them, because failed to send out empty message."
+                            )
+                            seal.reject(error)
+                        }
+                }
+            }
+            else {
+                return Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
+            }
+        }
+        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?) -> Promise<AbstractMessageAndFSMessageInfo?> in
+            guard let processedMsg = abstractMessageAndFSMessageInfo?.message else {
                 DDLogWarn("Message would not be processed (skip reflecting message)")
                 return Promise { $0.fulfill(nil) }
             }
@@ -71,24 +109,24 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 logReceiveMessageAckFromChat: .none
             )).execute()
                 .then {
-                    Promise { $0.fulfill(abstractMessageAndPFSSession) }
+                    Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
                 }
         }
-        .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<AbstractMessageAndPFSSession?> in
-            guard let processedMsg = abstractMessageAndPFSSession?.message else {
+        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?) -> Promise<AbstractMessageAndFSMessageInfo?> in
+            guard let processedMsg = abstractMessageAndFSMessageInfo?.message else {
                 DDLogWarn("Message would not be processed (skip send delivery receipt)")
                 return Promise { $0.fulfill(nil) }
             }
 
             // Send and delivery receipt
             return self.frameworkInjector.messageSender.sendDeliveryReceipt(for: processedMsg)
-                .then { _ -> Promise<AbstractMessageAndPFSSession?> in
-                    Promise { $0.fulfill(abstractMessageAndPFSSession) }
+                .then { _ -> Promise<AbstractMessageAndFSMessageInfo?> in
+                    Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
                 }
         }
-        .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<Void> in
+        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?) -> Promise<Void> in
             if AppGroup.getActiveType() == AppGroupTypeNotificationExtension,
-               let processedMsg = abstractMessageAndPFSSession?.message,
+               let processedMsg = abstractMessageAndFSMessageInfo?.message,
                processedMsg.flagIsVoIP() == true,
                let fromIdentity = processedMsg.fromIdentity,
                !self.frameworkInjector.userSettings.blacklist.contains(fromIdentity) {
@@ -98,31 +136,37 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 // Ack message
                 if !self.frameworkInjector.serverConnector.completedProcessingMessage(task.message) {
                     throw TaskExecutionError.processIncomingMessageFailed(
-                        message: abstractMessageAndPFSSession?.message?.loggingDescription ?? task.message
+                        message: abstractMessageAndFSMessageInfo?.message?.loggingDescription ?? task.message
                             .loggingDescription
                     )
                 }
 
                 DDLogNotice(
-                    "\(LoggingTag.sendIncomingMessageAckToChat.hexString) \(LoggingTag.sendIncomingMessageAckToChat) \(abstractMessageAndPFSSession?.message?.loggingDescription ?? task.message.loggingDescription)"
+                    "\(LoggingTag.sendIncomingMessageAckToChat.hexString) \(LoggingTag.sendIncomingMessageAckToChat) \(abstractMessageAndFSMessageInfo?.message?.loggingDescription ?? task.message.loggingDescription)"
                 )
                 
-                if let processedMsg = abstractMessageAndPFSSession?.message {
+                if let processedMsg = abstractMessageAndFSMessageInfo?.message {
                     // Message is processed, store message nonce
                     if !processedMsg.flagDontQueue() {
                         try self.frameworkInjector.nonceGuard.processed(message: processedMsg)
                     }
                     
-                    // Commit the peer ratchet. Call this method after an incoming message has been processed
-                    // completely.
-                    if let session = abstractMessageAndPFSSession?.session as? DHSession {
-                        try self.frameworkInjector.fsmp.updateRatchetCounters(session: session)
+                    // Commit the peer ratchet & session version. Call this method after an incoming message has been
+                    // processed completely.
+                    if let fsMessageInfo = abstractMessageAndFSMessageInfo?.fsMessageInfo as? FSMessageInfo {
+                        // TODO: (IOS-4417) This might reset the commit state in case of a race condition with a new session created while sending a message
+                        if !fsMessageInfo.session.newSessionCommitted {
+                            DDLogWarn("[ForwardSecurity] (IOS-4417) Received message in uncommitted session.")
+                        }
+                        
+                        try self.frameworkInjector.fsmp
+                            .updatePeerRatchetsNewSessionCommittedSendDateAndVersions(session: fsMessageInfo.session)
                     }
                     
-                    self.frameworkInjector.backgroundEntityManager.performAndWait {
+                    self.frameworkInjector.entityManager.performAndWait {
                         // Unarchive conversation if message type can unarchive a conversation and is archived
                         if processedMsg.canUnarchiveConversation(),
-                           let conversation = self.frameworkInjector.backgroundEntityManager
+                           let conversation = self.frameworkInjector.entityManager
                            .conversation(forMessage: processedMsg),
                            conversation.conversationVisibility == .archived {
                             self.frameworkInjector.conversationStore.unarchive(conversation)
@@ -130,11 +174,11 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
 
                         // Attempt periodic group sync
                         if let abstractGroupMessage = processedMsg as? AbstractGroupMessage,
-                           let group = self.frameworkInjector.backgroundGroupManager.getGroup(
+                           let group = self.frameworkInjector.groupManager.getGroup(
                                abstractGroupMessage.groupID,
                                creator: abstractGroupMessage.groupCreator
                            ) {
-                            self.frameworkInjector.backgroundGroupManager.periodicSyncIfNeeded(for: group)
+                            self.frameworkInjector.groupManager.periodicSyncIfNeeded(for: group)
                         }
                     }
                 }

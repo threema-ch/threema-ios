@@ -40,7 +40,6 @@ final class VoIPCallServiceTests: XCTestCase {
 
         let voIPCallService = VoIPCallService(
             businessInjector: BusinessInjectorMock(
-                backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
                 entityManager: EntityManager(databaseContext: dbMainCnx)
             ),
             peerConnectionClient: voIPCallPeerConnectionClientMock

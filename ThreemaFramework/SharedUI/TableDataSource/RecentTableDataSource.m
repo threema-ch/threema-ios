@@ -52,7 +52,7 @@
 {
     self = [super init];
     if (self) {
-        self->groupManager = [[GroupManager alloc] init];
+        self->groupManager = [[BusinessInjector new] groupManagerObjC];
         [self initFetchedResultsController];
         _selectedConversations = [NSMutableSet set];
     }

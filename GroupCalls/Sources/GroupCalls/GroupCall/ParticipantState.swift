@@ -21,26 +21,24 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@GlobalGroupCallActor
 /// Manages lists of participants and whether they are in normal or pending state
-final class ParticipantStateActor {
+@GlobalGroupCallActor
+final class ParticipantState {
     // MARK: - Internal Properties
     
     let localParticipant: LocalParticipant
     
     // MARK: - Private Properties
     
-    // TODO: (IOS-4059) These should/could be sets. It doesn't make sense to have the same participant twice.
-    // We also don't need ordering.
-    private var pendingParticipants = [RemoteParticipant]()
-    private var participants = [RemoteParticipant]()
+    private var pendingParticipants = Set<RemoteParticipant>()
+    private var participants = Set<RemoteParticipant>()
     
     // MARK: - Lifecycle
     
     init(
         localParticipant: LocalParticipant,
-        pendingParticipants: [RemoteParticipant] = [RemoteParticipant](),
-        participants: [RemoteParticipant] = [RemoteParticipant]()
+        pendingParticipants: Set<RemoteParticipant> = Set<RemoteParticipant>(),
+        participants: Set<RemoteParticipant> = Set<RemoteParticipant>()
     ) {
         self.localParticipant = localParticipant
         self.pendingParticipants = pendingParticipants
@@ -50,15 +48,15 @@ final class ParticipantStateActor {
     // MARK: - Update Functions
     
     func add(pending: RemoteParticipant) {
-        DDLogNotice("[GroupCall] [Rekey] \(#function) Added pending participant \(pending.participantID.id)")
-        pendingParticipants.append(pending)
+        DDLogNotice("[GroupCall] \(#function) Added pending participant \(pending.participantID.id)")
+        pendingParticipants.insert(pending)
     }
     
     /// Promotes the participant from pending to normal participant
     /// - Parameter participant: The participant to promote
     /// - Returns: True if promoted, false if was already promoted
     func promote(_ participant: RemoteParticipant) throws -> Bool {
-        DDLogNotice("[GroupCall] [Rekey] \(#function) Promoted participant \(participant.participantID.id)")
+        DDLogNotice("[GroupCall] \(#function) Promoted participant \(participant.participantID.id)")
         guard participant.isHandshakeCompleted else {
             throw GroupCallError.promotionError
         }
@@ -67,15 +65,31 @@ final class ParticipantStateActor {
             return false
         }
         
-        pendingParticipants.removeAll(where: { $0.participantID == participant.participantID })
-        participants.append(participant)
+        pendingParticipants.remove(participant)
+        participants.insert(participant)
         
         return true
     }
     
     func remove(_ participantID: ParticipantID) {
-        pendingParticipants.removeAll(where: { $0.participantID == participantID })
-        participants.removeAll(where: { $0.participantID == participantID })
+        removePendingParticipant(participantID)
+        removeParticipant(participantID)
+    }
+    
+    func removePendingParticipant(_ participantID: ParticipantID) {
+        guard let participant = pendingParticipants.first(where: { $0.participantID == participantID }) else {
+            return
+        }
+        
+        pendingParticipants.remove(participant)
+    }
+    
+    func removeParticipant(_ participantID: ParticipantID) {
+        guard let participant = participants.first(where: { $0.participantID == participantID }) else {
+            return
+        }
+        
+        participants.remove(participant)
     }
     
     func setRemoteContext(participantID: ParticipantID, remoteContext: RemoteContext) {
@@ -93,24 +107,24 @@ final class ParticipantStateActor {
         }
         else {
             let msg = "[GroupCall] Could not set transceivers for participant \(participantID.id)"
-            DDLogError(msg)
+            DDLogError("\(msg)")
             assertionFailure(msg)
         }
     }
 }
 
-extension ParticipantStateActor {
+extension ParticipantState {
     // State Getters; Required for Protocol Conformance
-    func getCurrentParticipants() -> [RemoteParticipant] {
+    func getCurrentParticipants() -> Set<RemoteParticipant> {
         participants
     }
     
-    func getPendingParticipants() -> [RemoteParticipant] {
+    func getPendingParticipants() -> Set<RemoteParticipant> {
         pendingParticipants
     }
     
-    func getAllParticipants() -> [RemoteParticipant] {
-        participants + pendingParticipants
+    func getAllParticipants() -> Set<RemoteParticipant> {
+        participants.union(pendingParticipants)
     }
     
     func getLocalParticipant() -> LocalParticipant {

@@ -397,12 +397,8 @@
 "chat_search_searching" = "Wyszukiwanie...";
 "chat_search_no_matches" = "Brak dopasowań";
 "chat_search_matches" = "%d z %d dopasowań";
-"chat_search_note" = "Uwaga: podpisy pod mediami nie są uwzględnione w wynikach wyszukiwania.";
 
 "choose_recipient" = "Wybierz odbiorcę";
-
-"msg_unknown_group_request_sync_x_title" = "Wiadomość otrzymana w nieznanej grupie";
-"msg_unknown_group_request_sync_x_message" = "Otrzymano wiadomość w nieznanej grupie. Poproszono o informacje o grupie od twórcy grupy (% @). Grupa pojawi się, gdy twórca ponownie będzie online.";
 
 "tap_to_cancel" = "Dotknij, aby anulować";
 "previous" = "Poprzedni";
@@ -765,14 +761,6 @@
 "call_status_blocked" = "Zablokowany kontakt";
 "call_status_failed_title" = "Połączenie Threema";
 
-"call_threema_initiator_video_info" = "Stuknij tutaj, aby włączyć aparat";
-"call_threema_remote_video_activated_info_title" = "Połączenia Wideo";
-"call_threema_remote_video_activated_info" = "Druga strona rozpoczęła połączenie wideo. Stuknij tutaj, aby włączyć również aparat.";
-"call_threema_speaker_info" = "Naciśnij tutaj, aby włączyć zestaw głośnomówiący";
-"call_threema_camera_disabled_info" = "Ten kontakt nie korzysta z bieżącej wersji %@ lub nie zezwala na rozmowy wideo.";
-
-"call_threema_video_in_chat_info_title" = "Nowe: Połączenia Wideo";
-
 "call_threema_cellular_instead_of_wifi_title" = "Zadzwoń przez sieć komórkową.";
 "call_threema_cellular_instead_of_wifi_text" = "Ostrzeżenie: to połączenie powoduje transfer danych w sieci komórkowej.";
 
@@ -841,7 +829,8 @@
 "archived_chats" = "Zarchiwizowane czaty";
 
 "archived_title" = "Zarchiwizowane";
-"conversations_search_placeholder" = "Kontakty, grupy, identyfikatory...";
+"conversations_global_search_placeholder" = "Wyszukaj";
+"one_to_one_chat" = "Czat indywidualny";
 
 "select_all" = "Wybierz wszystko";
 "deselect_all" = "Odznacz wszystko";
@@ -1613,8 +1602,8 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 "poi_current_location" = "Moja lokalizacja";
 "poi_marked_location" = "Wbita szpilka";
 
-"notification_threemaweb_connectionlost_title" = "Utracono połączenie z Threema Web";
-"notification_threemaweb_connectionlost_body" = "Aby kontynuować korzystanie z Threema Web, ponownie otwórz aplikację.";
+"notification_threemaweb_connectionlost_title" = "Utracono połączenie z aplikacją komputerową/klientem sieciowym";
+"notification_threemaweb_connectionlost_body" = "Aby kontynuować korzystanie z aplikacją komputerową/klientem sieciowym, ponownie otwórz aplikację.";
 
 "settings_threema_web_connected" = "Komputer/sieć połączone";
 "settings_threema_web_connectioninfo" = "Twoje urządzenie musi być odblokowane, a %@ musi działać na pierwszym planie, aby zachować połączenie. Przy połączeniu urządzenie nie zablokuje się automatycznie.";
@@ -1698,6 +1687,7 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 
 "notification_group_sync_succeeded" = "Zsynchronizowano grupę";
 "notification_group_sync_failed" = "Zsynchronizowanie grupy nie powiodło się";
+"notification_group_call_start_failed" = "Żaden z członków nie obsługuje rozmów grupowych";
 
 "notification_settings_sync_pending" = "Synchronizacja...";
 "notification_settings_sync_succeeded" = "Zsynchronizowano ustawienia";
@@ -1724,7 +1714,7 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 
 // Forward security status messages
 "forward_security_message_without" = "Otrzymano wiadomość bez PFS. Sprawdź, czy nadawca rozmyślnie wyłączył PFS.";
-"forward_security_session_established" = "Wiadomości w tym czacie są obecnie chronione przez idealne utajnienie z wyprzedzeniem (PFS).";
+"forward_security_session_established" = "Wiadomości z tym partnerem czatu są obecnie chronione przez idealne utajnienie z wyprzedzeniem (PFS).";
 "forward_security_session_established_rx" = "Wiadomości otrzymywane w tym czacie są obecnie chronione przez idealne utajnienie z wyprzedzeniem (PFS). Włącz tę opcję w szczegółach kontaktów, aby chronić również wysyłane wiadomości.";
 "forward_security_messages_skipped_1" = "Od ostatniej wiadomości utracono jedną wiadomość.";
 "forward_security_messages_skipped_x" = "Od ostatniej wiadomości utracono wiadomości %d razy.";

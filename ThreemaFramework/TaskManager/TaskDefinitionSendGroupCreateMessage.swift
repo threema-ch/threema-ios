@@ -28,7 +28,7 @@ final class TaskDefinitionSendGroupCreateMessage: TaskDefinitionSendMessage {
         TaskExecutionSendGroupCreateMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

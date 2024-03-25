@@ -20,7 +20,9 @@
 
 import Foundation
 
-@objc public class SafeData: NSObject, NSCoding {
+@objc public class SafeData: NSObject, NSSecureCoding {
+    public static var supportsSecureCoding = true
+
     public var key: [UInt8]?
     public var customServer: String?
     public var server: String?

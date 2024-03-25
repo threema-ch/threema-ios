@@ -62,8 +62,9 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
     }
     
     func sendMessage(completion: @escaping () -> Void) {
-        let entityManager = EntityManager()
-        let groupManager = GroupManager(entityManager: entityManager)
+        let businessInjector = BusinessInjector()
+        let entityManager = businessInjector.entityManager
+        let groupManager = businessInjector.groupManager
         let messagePermission = MessagePermission(
             myIdentityStore: MyIdentityStore.shared(),
             userSettings: UserSettings.shared(),

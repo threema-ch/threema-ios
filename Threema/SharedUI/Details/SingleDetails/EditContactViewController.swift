@@ -68,6 +68,8 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     
     private var entityManager = EntityManager()
     
+    private var observerContact: NSKeyValueObservation?
+
     // MARK: Subview
     
     private lazy var editAvatarView: EditAvatarView = {
@@ -146,6 +148,10 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
         super.init()
     }
     
+    deinit {
+        observerContact?.invalidate()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -162,7 +168,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
         
         updateEditAvatarFrameHeight()
     }
-    
+
     // MARK: - Configuration
     
     private func configureController() {
@@ -212,6 +218,26 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     }
     
     private func addObservers() {
+
+        // Observe `ContactEntity.willBeDeleted` to close this view
+        observerContact = contact.observe(\.willBeDeleted) { [weak self] contact, _ in
+            guard let strongSelf = self else {
+                return
+            }
+
+            if contact.willBeDeleted {
+                // Hide myself
+                if strongSelf.isPresentedInModalAndRootView {
+                    // Call dismiss twice to close image picker if it open
+                    strongSelf.dismiss(animated: true)
+                    strongSelf.dismiss(animated: true)
+                }
+                else {
+                    strongSelf.navigationController?.popViewController(animated: true)
+                }
+            }
+        }
+
         // Dynamic type
         NotificationCenter.default.addObserver(
             self,
@@ -236,7 +262,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
             object: nil
         )
     }
-    
+
     // MARK: - Updates
     
     private func updateEditAvatarFrameHeight() {

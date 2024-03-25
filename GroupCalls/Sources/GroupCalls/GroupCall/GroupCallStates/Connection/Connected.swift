@@ -142,7 +142,7 @@ struct Connected: GroupCallState {
 // - MARK: Configuration Functions
 
 extension Connected {
-    private func sendInitialHandshakeHellos(to remoteParticipants: [RemoteParticipant]) throws {
+    private func sendInitialHandshakeHellos(to remoteParticipants: Set<RemoteParticipant>) throws {
         DDLogNotice("[GroupCall] Number of initially pending participants \(remoteParticipants.count)")
         
         for pendingParticipant in remoteParticipants {

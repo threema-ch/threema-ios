@@ -130,7 +130,7 @@ static dispatch_queue_t backgroundQueue;
                 return;
             }
             
-            GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
+            GroupManager *groupManager = [[[BusinessInjector alloc] initWithEntityManager:entityManager] groupManagerObjC];
             Group *group = [groupManager getGroupWithConversation:self.conversation];
             
             BlobOrigin origin = BlobOriginPublic;

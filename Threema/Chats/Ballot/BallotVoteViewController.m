@@ -163,7 +163,7 @@
         _voteButton.enabled = NO;
     }
 
-    GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:_entityManager];
+    GroupManager *groupManager = [[[BusinessInjector alloc] initWithEntityManager:_entityManager] groupManagerObjC];
     MessagePermission *messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] groupManager:groupManager entityManager:_entityManager];
 
     Group *group = [groupManager getGroupWithConversation:_ballot.conversation];
@@ -281,7 +281,7 @@
     
     [_entityManager performSyncBlockAndSafe:nil];
 
-    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:_entityManager];
+    MessageSender *messageSender = [[[BusinessInjector alloc] initWithEntityManager:_entityManager] messageSenderObjC];
     [messageSender sendBallotMessageFor:_ballot];
     
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
@@ -295,7 +295,7 @@
     _ballot.modifyDate = [NSDate date];
     [_entityManager performSyncBlockAndSafe:nil];
     
-    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:_entityManager];
+    MessageSender *messageSender = [[[BusinessInjector alloc] initWithEntityManager:_entityManager] messageSenderObjC];
     [messageSender sendBallotVoteMessageFor:_ballot];
     
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];

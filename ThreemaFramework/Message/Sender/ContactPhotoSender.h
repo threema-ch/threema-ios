@@ -24,13 +24,9 @@
 
 @class Conversation, ContactEntity;
 
-@interface ContactPhotoSender : NSObject <Old_BlobUploadDelegate>
-
 NS_ASSUME_NONNULL_BEGIN
 
-- (instancetype)init NS_UNAVAILABLE;
-
-- (instancetype)initWith:(nonnull NSObject *)entityManagerObject;
+@protocol ContactPhotoSenderProtocol <NSObject>
 
 + (void)sendProfilePictureRequest:(NSString *)toIdentity;
 
@@ -43,6 +39,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)startWithImageToMember:(ContactEntity*)toMember onCompletion:(void (^ _Nullable)(void))onCompletion onError:(void (^ _Nullable) ( NSError * _Nullable ))onError;
 
-NS_ASSUME_NONNULL_END
+@end
+
+@interface ContactPhotoSender : NSObject <ContactPhotoSenderProtocol, Old_BlobUploadDelegate>
+
+- (instancetype)init NS_UNAVAILABLE;
+
+- (instancetype)initWith:(nonnull NSObject *)entityManagerObject;
 
 @end
+
+NS_ASSUME_NONNULL_END

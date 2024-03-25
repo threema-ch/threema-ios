@@ -20,7 +20,8 @@
 
 import Foundation
 
-@objc public class GroupDeliveryReceipt: NSObject, NSCoding {
+@objc public class GroupDeliveryReceipt: NSObject, NSSecureCoding {
+    public static var supportsSecureCoding = true
     
     /// Do not change the string of the key because it is used in core data on the message object as transformable
     enum CodingKeys: String, CodingKey {
@@ -75,22 +76,37 @@ import Foundation
         }
     }
     
-    // MARK: NSCoding
+    // MARK: NSSecureCoding
 
-    public required init?(coder aDecoder: NSCoder) {
-        guard let identity = aDecoder.decodeObject(forKey: CodingKeys.identity.rawValue) as? String,
-              let date = aDecoder.decodeObject(forKey: CodingKeys.date.rawValue) as? Date else {
+    public required init?(coder: NSCoder) {
+        guard let identity = coder.decodeObject(of: NSString.self, forKey: CodingKeys.identity.rawValue),
+              let date = coder.decodeObject(of: NSDate.self, forKey: CodingKeys.date.rawValue) else {
             return nil
         }
         
-        self.identity = identity
-        self.deliveryReceiptTypeValue = aDecoder.decodeInteger(forKey: CodingKeys.deliveryReceiptTypeValue.rawValue)
-        self.date = date
+        self.identity = String(identity)
+        self.deliveryReceiptTypeValue = coder.decodeInteger(forKey: CodingKeys.deliveryReceiptTypeValue.rawValue)
+        self.date = date as Date
     }
     
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(identity, forKey: CodingKeys.identity.rawValue)
         aCoder.encode(deliveryReceiptTypeValue, forKey: CodingKeys.deliveryReceiptTypeValue.rawValue)
         aCoder.encode(date, forKey: CodingKeys.date.rawValue)
+    }
+}
+
+@objc(GroupDeliveryReceiptValueTransformer)
+final class GroupDeliveryReceiptValueTransformer: NSSecureUnarchiveFromDataTransformer {
+
+    static let name = NSValueTransformerName(rawValue: String(describing: GroupDeliveryReceiptValueTransformer.self))
+
+    override static var allowedTopLevelClasses: [AnyClass] {
+        [NSArray.self, GroupDeliveryReceipt.self]
+    }
+
+    @objc public static func register() {
+        let transformer = GroupDeliveryReceiptValueTransformer()
+        ValueTransformer.setValueTransformer(transformer, forName: name)
     }
 }

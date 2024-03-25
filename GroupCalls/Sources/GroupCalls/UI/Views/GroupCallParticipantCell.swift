@@ -85,6 +85,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
         statusSymbolView.preferredSymbolConfiguration = cellConfig.stateImageConfig
         statusSymbolView.tintColor = .white
         statusSymbolView.translatesAutoresizingMaskIntoConstraints = false
+        statusSymbolView.setContentCompressionResistancePriority(.required, for: .horizontal)
         return statusSymbolView
     }()
     

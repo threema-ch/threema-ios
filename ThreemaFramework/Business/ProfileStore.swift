@@ -41,7 +41,7 @@ import ThreemaProtocols
     private let contactStore: ContactStoreProtocol
     private let userSettings: UserSettingsProtocol
     private let taskManager: TaskManagerProtocol?
-    
+
     init(
         serverConnector: ServerConnectorProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
@@ -56,7 +56,7 @@ import ThreemaProtocols
         self.taskManager = taskManager
     }
     
-    @objc override public convenience init() {
+    override public convenience init() {
         self.init(
             serverConnector: ServerConnector.shared(),
             myIdentityStore: MyIdentityStore.shared(),

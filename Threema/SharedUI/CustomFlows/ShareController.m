@@ -91,7 +91,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
         
         if (item != nil) {
-            MessageSender *messageSender = [[MessageSender alloc] init];
+            MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
             [messageSender sendBlobMessageFor:item in:conversation correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];

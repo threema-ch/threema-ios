@@ -13,9 +13,6 @@
 // Forward Security, and wrap the message contained within using a separate
 // cryptographic layer that provides Forward Security.
 //
-// TODO(SE-221): Add a section that describes when this subprotocol is being
-// triggered and to which messages it is being applied.
-//
 // ## Terminology
 //
 // - `CK`: Client Key (permanent secret key associated to the Threema ID)
@@ -284,7 +281,7 @@
 // session into `R24` state, followed by any number of `Encapsulated` messages
 // in 4DH mode.
 //
-//     SI <----------- Accept ------------- SI   [1]
+//     SI <----------- Accept ------------- SR   [1]
 //     SI <----- Encapsulated (4DH) ------- SR   [1..N]
 //
 // When SI receives the `Accept`, it will move the session into `L44` state,
@@ -384,15 +381,6 @@
 // - `local-2dhk`: Current key state of the `local-2DHK` for outgoing messages
 //   (using version `version-range.min`, immutable)
 //
-// `L44` properties:
-//
-// - `local-4dhv`: Current version used for outgoing messages (mutable)
-// - `local-4dhk`: Current key state of the `local-4DHK` for outgoing messages
-//   (mutable).
-// - `remote-4dhv`: Current version used for incoming messages (mutable)
-// - `remote-4dhk`: Current key state of the `remote-4DHK` for incoming messages
-//   (mutable)
-//
 // `R20` properties:
 //
 // - `version-range`: Supported version range as announced in the `Init` by
@@ -406,13 +394,14 @@
 // - `remote-2dhv`: Current version used for incoming messages (immutable)
 // - `remote-2dhk`: Current key state of the `remote-2DHK` for incoming messages
 //   still in flight (mutable).
-// - `local-4dhv`: Current version used for outgoing messages (mutable)
+// - `local-4dhv`: Current version used for outgoing messages (immutable)
 // - `local-4dhk`: Current key state of the `local-4DHK` for outgoing messages
 //   (mutable).
-// - `remote-4dhv`: Version used for incoming messages in `R44` state (immutable)
+// - `remote-4dhv`: Version used for incoming messages in `R44` state
+//   (immutable)
 // - `remote-4dhk`: Key for incoming messages in `R44` state (immutable).
 //
-// `R44` properties:
+// `L44` and `R44` properties:
 //
 // - `local-4dhv`: Current version used for outgoing messages (mutable).
 // - `local-4dhk`: Current key state of the `local-4DHK` for outgoing messages
@@ -490,8 +479,8 @@ enum Version {
   // V1.2
   //
   // - Builds on V1.1 with backwards compatibility.
-  // - If the remote side offered support for V1.2, all local Group E2E messages
-  //   will be encapsulated.
+  // - If the remote side offered support for V1.2, all local group E2E messages
+  //   will be encapsulated (i.e. all messages are now encapsulated).
   V1_2 = 0x0102;
 };
 
@@ -509,6 +498,29 @@ message VersionRange {
 
 // A forward security envelope associated to an FS session, containing session
 // signalling or an `Encapsulated` message.
+//
+// When receiving this message with FS unsupported by the client¹:
+//
+// 1. Let `sender` be the sender of this message.
+// 2. If the `content` variant is not `Encapsulated`, discard the message and
+//    abort these steps.
+// 3. Run the steps to send a `Reject` with cause `DISABLED_BY_LOCAL`.
+//
+// ¹: The steps require basic support for FS (at least decoding the `Envelope`).
+// Outdated apps may not provide that in which case case we rely on the feature
+// mask correctly excluding FS.
+//
+// When receiving this message with FS supported by the client:
+//
+// 1. Let `sender` be the sender of this message.
+// 2. Lookup a session with the sender with `envelope.session_id` and let
+//    `session` be the result.
+// 3. If the `content` variant is unknown, discard the message, log a warning
+//    and abort these steps.
+// 4. Invoke the steps associated to receiving the `content` variant. If
+//    `content` is `Encapsulated`, return the inner message type as
+//    `inner-type`, the decapsulated message as `inner-message` and the
+//    `fs-commit-fn` function.
 message Envelope {
   // Forward security session ID, 16 bytes
   bytes session_id = 1;
@@ -526,12 +538,17 @@ message Envelope {
 //
 // When receiving this variant:
 //
-// 1. [...]
-// 2. If the `supported_version` range does not include a supported version,
-//    log a warning, discard the message and abort these steps.
-// 3. Ensure that `fssk` contains a valid Curve25519 public key, otherwise log
+// 1. Let `session` be the associated FS session or undefined.
+// 2. If `session` is defined, log a warning that the `Init` has been repeated,
+//    discard the message and abort these steps.
+// 3. If the `supported_version` range does not include a supported version, log
 //    a warning, discard the message and abort these steps.
-// 4. [...]
+// 4. Ensure that `fssk` contains a valid Curve25519 public key, otherwise log a
+//    warning, discard the message and abort these steps.
+// 5. [...]
+// 6. Send an `Accept` and await acknowledgement of the `Accept` message.
+// 7. _Acknowledge_ the message that contained this variant.
+// 8. Commit the R24 session to storage.
 message Init {
   // The version range supported by the initiator.
   //
@@ -547,11 +564,13 @@ message Init {
 // When receiving this variant:
 //
 // 1. [...]
-// 2. If the `supported_version` range does not include a supported version,
-//    log a warning, discard the message and abort these steps.
-// 3. Ensure that `fssk` contains a valid Curve25519 public key, otherwise log
+// 2. If the `supported_version` range does not include a supported version, log
 //    a warning, discard the message and abort these steps.
+// 3. Ensure that `fssk` contains a valid Curve25519 public key, otherwise log a
+//    warning, discard the message and abort these steps.
 // 4. [...]
+// 5. _Acknowledge_ the message that contained this variant.
+// 6. Commit the session transition to L44 to storage.
 message Accept {
   // The version range supported by the responder.
   //
@@ -572,22 +591,98 @@ message Accept {
 // 2. Set `message_id` to `encapsulated.message_id`.`
 // 3. Set `group_identity` to `encapsulated.group_identity`.
 //
+// When sending this variant:
+//
+// 1. Let `session` be the associated session (if any).
+// 2. Await acknowledgement of this message.
+// 3. If `session` is defined, terminate `session` due to `cause` and remove
+//    `session` from storage.
+//
 // When receiving this variant:
 //
-// 1. If `group_identity` has not been provided:
-//    1. Lookup the message for `message_id` and let `message` be the result.
-//    2. If `message` is defined, follow the _reject_ logic associated to the
-//       message type.
-// 2. If `group_identity` has been provided:
-//     1. Run the _Common Group Receive Steps_. If the message has been
-//        discarded, abort these steps.
-//     2. Lookup the message for `message_id` in the group for `group_identity`
-//        and let `message` be the result.
-//     3. If `message` is defined, follow the _reject_ logic associated to the
-//        message type.
-//     4. If `message` is not defined and the user is the creator of the group,
-//        assume that a `group-sync-request` has been received from the sender
-//        and run the associated steps.
+// 1. Let `session` be the associated session (if any).
+// 2. If `session` is defined or `cause` is `DISABLED_BY_LOCAL`, schedule a task
+//    to refresh the feature mask of the sender.
+// 3. If `session` is defined, terminate `session` due to `cause` and remove
+//    `session` from storage.
+// 4. If `group_identity` has not been provided:
+//    1. Lookup the message for `message_id` in the associated 1:1 conversation
+//       and let `message` be the result.
+//    2. If `message` is not defined or the user is not the sender of `message`,
+//       abort these steps.
+//    3. If the _when rejected_ property associated to `message` allows to
+//       re-send after confirmation, mark `message` with _re-send requested_.
+// 5. If `group_identity` has been provided:
+//    1. Run the _Common Group Receive Steps_ and let `group` be the associated
+//       group to `group_identity`. If the message has been discarded, abort
+//       these steps.
+//    2. Lookup the message for `message_id` in the `group` and let `message` be
+//       the result.
+//    3. If `message` is not defined:
+//       1. If the user is the creator of the group, assume that a
+//          `group-sync-request` has been received from the sender and run the
+//          associated steps.
+//       2. Abort these steps.
+//    4. If the user is not the sender of (the original) `message`, abort these
+//       steps.
+//    5. If the _when rejected_ property associated to `message` allows to
+//       re-send after confirmation, mark `message` with _re-send requested_ and
+//       add `sender` to the list of group members requesting a re-send for
+//       `message`.
+//
+// When the user signals that a message marked with _re-send requested_ should
+// be re-sent, run the following steps¹:
+//
+// 1. Let `message` be the message to be re-sent.
+// 2. If `message` is part of a 1:1 conversation:
+//    1. Let `receivers` be a list of a single entry with the other party.
+//    2. Remove the _re-send requested_ mark on `message`
+// 3. If `message` is part of a group conversation:
+//    1. Let `receivers` be a copy of the list of group members requesting a
+//       re-send of `message`.
+//    2. Request consent from the user to re-send the message to all `receivers`
+//       and (asynchronously) wait for the response. If the request was denied,
+//       abort these steps.
+//    3. If `receivers` includes the list of group members requesting a re-send
+//       of `message`², remove the _re-send requested_ mark on `message` (but
+//       retain the list of group members requiring a re-send).
+// 4. Schedule a persistent task that runs the following steps with `message`
+//    and `receivers`:
+//    1. If `message` has since been removed from the device, discard the task
+//       and abort these steps.
+//    2. Let `receivers` be the provided (snapshot of) receivers that requested
+//       a re-sent.
+//    3. Run the _Common Send Steps_ with `message` and `receivers` (and discard
+//       the resulting receivers list).
+//    4. Remove all `receivers` from the list of receivers requiring a re-send
+//       for `message`.
+//
+// The following steps are defined as the _Rejected Messages Refresh Steps_ and
+// will be run every time the group members are being updated:
+//
+// 1. Let `group` be the group conversation.
+// 2. If `group` is marked as _left_:
+//    1. For each `message` of `group` that has a _re-send requested_ mark,
+//       remove the mark and the list of receivers requiring a re-send.
+// 3. If `group` is not marked as _left_:
+//    1. Let `members` be the current list of members for `group`.
+//    2. For each `message` of `group` that has a _re-send requested_ mark:
+//       1. Let `receivers` be the list of receivers requiring a re-send for
+//          `message`.
+//       2. Remove all entries from `receivers` that are not present in
+//          `members`.
+//       3. If `receivers` is now empty, remove the _re-send requested_ mark on
+//          `message`.
+//
+// ¹: The steps ensure that multiple tasks scheduled to re-send the same message
+// but with potential different receivers have no ill-effect. In edge cases,
+// this may result in sending the same message more than once to a remote party
+// which requested a re-send. This is deemed acceptable.
+//
+// ²: While requesting consent from the user, the list of group members
+// requesting a re-send for the message may be asynchronously updated, making
+// this check necessary so that a subsequent re-send for the remaining group
+// members can be triggered.
 message Reject {
   // Message ID of the `Encapsulated` message that could not be decrypted and
   // that should be sent again in a new session or without a session.
@@ -618,6 +713,22 @@ message Reject {
 // Signals that the sender will not send any further `Encapsulated` messages in
 // this session. The recipient should discard all key material related to this
 // session.
+//
+// When sending this variant:
+//
+// 1. Let `session` be the associated session.
+// 2. Await acknowledgement of this message.
+// 3. Terminate `session` due to `cause` and remove `session` from storage.
+// 4. If `cause` is `UNKNOWN_SESSION` or `RESET`, schedule initiating a new
+//    session with the receiver.
+//
+// When receiving this variant:
+//
+// 1. Let `session` be the associated session (if any).
+// 2. If `session` is defined or `cause` is `DISABLED_BY_LOCAL`, schedule a task
+//    to refresh the feature mask of the sender.
+// 3. If `session` is defined, terminate `session` due to `cause` and remove
+//    `session` from storage.
 message Terminate {
   // Cause for termination.
   enum Cause {
@@ -640,42 +751,98 @@ message Terminate {
 
 // A forward security encapsulated CSP E2EE message or a control message.
 //
+// The following steps are defined as the _FS Refresh Steps_:
+//
+// 1. Let `contacts` be the provided list of contacts.
+// 2. For each `contact` of `contacts`:
+//    1. If the `contact` does not support FS, abort these sub-steps.
+//    2. Lookup a session with `contact` and let `session` be the result.
+//    3. If `session` is undefined, initiate a new `L20` session and set
+//       `session` to the newly created session. Set `message` to the `Init`
+//       message for `session` with type `0xa0`.
+//    4. If `session` is not a newly created session, create an `Encapsulated`
+//       message using `session` from inner type `0xfc` (_empty_) and set
+//       `message` to the encrypted and encoded result with type `0xa0`.
+//    5. Send `message` to `contact` and wait for acknowledgement.
+//    6. Set `session`'s _updated_ mark to the current timestamp and commit the
+//       `session` changes to storage.
+//
+// The following steps are defined as the _FS Encapsulation Steps_:
+//
+// 1. Let `inner-type` be any message type except `0xa0` and `inner-message` be
+//    the associated data of the message. Let `receiver` be the receiver of the
+//    message (which is assumed to support FS).
+// 2. Let `outer-messages` be an empty list.
+// 3. Lookup a session with `receiver` and let `session` be the result.
+// 4. If `session` is undefined, initiate a new `L20` session and set `session`
+//    to the newly created session. Append the `Init` message for `session` to
+//    `outer-messages` with type `0xa0`.
+// 5. If `inner-type` is not eligible to be encapsulated by `session`:
+//    1. If `session` is not a newly created session and the `session`'s
+//       _updated_ mark is older than 24h ago, create an `Encapsulated` message
+//       using `session` from inner type `0xfc` (_empty_) and append the
+//       encrypted and encoded result to `outer-messages` with type `0xa0`.
+//    2. Append `inner-message` as a non-encapsulated message to
+//       `outer-messages` with type `inner-type`.
+// 6. If `inner-type` is eligible to be encapsulated by `session`, create an
+//    `Encapsulated` message using `session` from `inner-type` and
+//    `inner-message` and append the encrypted and encoded result to
+//    `outer-messages` with type `0xa0`.
+// 7. Return `outer-messages` and an `fs-commit-fn` function that sets the
+//    `session`'s _updated_ mark to the current timestamp and commits the
+//    `session` changes to storage when called.
+//
 // When receiving this variant:
 //
-// 1. [...]
-// 2. If `offered_version` is `0`, set it to V1.0.
-// 3. If `applied_version` is `0`, set it to `offered_version`.
-// 4. If `applied_version` is > `offered_version`, `Reject` the message with a
-//    `STATE_MISMATCH`, terminate the session and abort these steps.
-// 5. Let `state` be the current session state.
-// 6. If `dh_type` is `TWODH`:
-//    1. If `state` is not `R20` or `R24`, `Reject` the message with a
-//       `STATE_MISMATCH`, terminate the session and abort these steps.
-//    2. If `state` is `R20`, let `expected-version` be
-//       `state.version-range.min`.
-//    3. If `state` is `R24`, let `expected-version` be `state.remote-2dhv`.
+// 1. Let `session` be the associated session (if any).
+// 2. If `session` is not defined, `Reject` the message with `UNKNOWN_SESSION`
+//    and abort these steps.
+// 3. [...]
+// 4. If `offered_version` is `0`, set it to V1.0.
+// 5. If `applied_version` is `0`, set it to `offered_version`.
+// 6. If `applied_version` is > `offered_version`, `Reject` the `session` and
+//    the message with a `STATE_MISMATCH` and abort these steps.
+// 7. If `session.state.dh_type` is `TWODH`:
+//    1. If `session.state` is not `R20` and not `R24`, `Reject` the `session`
+//       and the message with a `STATE_MISMATCH` and abort these steps.
+//    2. If `session.state` is `R20`, let `expected-version` be
+//       `session.state.version-range.min`.
+//    3. If `session.state` is `R24`, let `expected-version` be
+//       `session.state.remote-2dhv`.
 //    4. If `offered_version` and `applied_version` are not equal to
-//       `expected-version`, `Reject` the message with a `STATE_MISMATCH`,
-//       terminate the session and abort these steps.
-// 7. If `dh_type` is `FOURDH`:
-//    1. If `state` is not `L44`, `R44` or `R24`, `Reject` the message with a
-//       `STATE_MISMATCH`, terminate the session and abort these steps.
+//       `expected-version`, `Reject` the `session` and the message with a
+//       `STATE_MISMATCH`, and abort these steps.
+// 8. If `session.state.dh_type` is `FOURDH`:
+//    1. If `session.state` is not any of `L44`, `R44` or `R24`, `Reject` the
+//       `session` and the message with a `STATE_MISMATCH` and abort these
+//       steps.¹
 //    2. Let `pending-versions` be a set of local and remote versions to be
 //       filled by the following steps.
 //    3. If `offered_version` has a different major version, or is lower than
-//       `state.local-4dhv`, `Reject` the message with a `STATE_MISMATCH`,
-//       terminate the session and abort these steps.
+//       `session.state.local-4dhv`, `Reject` the `session` and the message with
+//       a `STATE_MISMATCH`, and abort these steps.
 //    4. If `offered_version` has a higher minor version than
-//       `state.local-4dhv`, set `pending-versions.local-4dhv` to the maximum
-//       commonly supported version with `offered_version`.
+//       `session.state.local-4dhv`, let `commonly-supported-version` be the
+//       maximum commonly supported version with `offered_version`.
 //    5. If `applied_version` has a different major version, or is lower than
-//       `state.remote-4dhv`, or is not a supported version, `Reject` the
-//       message with a `STATE_MISMATCH`, terminate the session and abort these
+//       `session.state.remote-4dhv`, or is not a supported version, `Reject`
+//       the `session` and the message with a `STATE_MISMATCH` and abort these
 //       steps.
 //    6. If `applied_version` has a higher minor version than
-//       `state.remote-4dhv`, set `pending-versions.remote-4dhv` to
+//       `session.state.remote-4dhv`, set `pending-versions.remote-4dhv` to
 //       `applied_version`.
-// 8. [...]
+//    7. If `commonly-supported-version` is defined and different to
+//       `pending-versions.local-4dhv`, update it with that value, create an
+//       `Encapsulated` message using `session` from inner type `0xfc`
+//       (_empty_), send the encrypted and encoded result with type `0xa0` to
+//       the sender and wait for acknowledgement of that message.¹
+//     8. Update `session.state` with `pending-versions`.
+// 9. Return an `fs-commit-fn` function that sets the `session`'s _updated_ mark
+//    to the current timestamp and commits the `session` changes to storage when
+//    called.
+//
+// ¹: This an exception to the silent ping rule which ensures that FS sessions
+// are updated to use the highest available version ASAP.
 message Encapsulated {
   // Encryption scheme applied to the encapsulated message.
   enum DHType {

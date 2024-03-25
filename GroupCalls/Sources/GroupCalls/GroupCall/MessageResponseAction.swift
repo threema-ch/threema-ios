@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -19,18 +19,18 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
-/// A helper object to facilitate communication / passing Swift objects between TaskExecutionReceiveMessage and
-/// MessageProcessor
-@objc class AbstractMessageAndPFSSession: NSObject {
-    @objc let session: AnyObject? // Must be a DHSession
-    @objc let message: AbstractMessage?
+enum MessageResponseAction {
+    case none
     
-    @objc init(session: AnyObject? = nil, message: AbstractMessage? = nil) {
-        assert(session == nil || session!.isKind(of: DHSession.self))
-        assert(!(session != nil && message == nil))
-        
-        self.session = session
-        self.message = message
-    }
+    case epHelloAndAuth(RemoteParticipant, (Data, Data))
+    case sendAuth(RemoteParticipant, Data)
+    case handshakeCompleted(RemoteParticipant)
+    
+    case participantToSFU(Groupcall_ParticipantToSfu.Envelope, RemoteParticipant, ParticipantStateChange)
+    case participantToParticipant(RemoteParticipant, Data)
+    
+    case muteStateChanged(RemoteParticipant, ParticipantStateChange)
+    case rekeyReceived(RemoteParticipant, MediaKeys)
 }

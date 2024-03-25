@@ -294,7 +294,7 @@
 
 - (void)enableSafeWithCompletion:(nullable void(^)(BOOL enabled))onCompletion {
     SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager: [[GroupManager alloc] init]];
+    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager: [[BusinessInjector new] groupManagerObjC]];
     SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
     
     // apply Threema Safe password and server config from MDM

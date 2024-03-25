@@ -279,7 +279,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
         reconnect()
         
         // Update feature mask to disable forward secrecy
-        FeatureMask.updateMask {
+        FeatureMask.updateLocal {
             // Terminate all existing sessions
             // Contacts will react by fetching new feature mask
             self.terminateAllPFSSessions()

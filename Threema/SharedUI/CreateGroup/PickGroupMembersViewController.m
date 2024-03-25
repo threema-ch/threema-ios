@@ -56,16 +56,16 @@ typedef enum : NSUInteger {
 {
     self = [super initWithCoder:coder];
     if (self) {
-        self->groupManager = [[GroupManager alloc] init];
+        self->groupManager = [[BusinessInjector new] groupManagerObjC];
     }
     return self;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+
     _mode = ModeContact;
-    
+
     self.searchController = [[UISearchController alloc]initWithSearchResultsController:nil];
     self.searchController.delegate = self;
     self.searchController.searchBar.showsScopeBar = NO;
@@ -77,13 +77,15 @@ typedef enum : NSUInteger {
     [self.searchController.searchBar sizeToFit];
     self.searchController.obscuresBackgroundDuringPresentation = NO;
     self.definesPresentationContext = YES;
-    
+
     self.searchController.hidesNavigationBarDuringPresentation = false;
-            
+
     self.navigationItem.searchController = _searchController;
     self.navigationItem.hidesSearchBarWhenScrolling = false;
-    
+
     [self updateColors];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedContact:) name:kNotificationDeletedContact object:nil];
 }
 
 - (void)updateColors {
@@ -128,6 +130,13 @@ typedef enum : NSUInteger {
     [super viewWillDisappear:animated];
     
     [_delegate group:_group updatedMembers:_selectedMembers];
+}
+
+- (void)deletedContact:(NSNotification*)notification {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
+        [self.tableView reloadData];
+    });
 }
 
 - (void)setGroup:(Group *)group {
@@ -263,6 +272,10 @@ typedef enum : NSUInteger {
     // Update group members
     NSMutableSet *groupMemberIdentities = [[NSMutableSet alloc] init];
     for (ContactEntity *contact in _selectedMembers) {
+        if (contact.willBeDeleted) {
+            continue;
+        }
+
         [groupMemberIdentities  addObject:contact.identity];
     }
 

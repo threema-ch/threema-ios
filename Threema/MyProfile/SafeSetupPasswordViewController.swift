@@ -51,7 +51,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         self.safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -168,16 +168,22 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     titleCancel: BundleUtil.localizedString(forKey: "try_again"),
                     actionCancel: { _ in
                         self.passwordField.becomeFirstResponder()
+                        MBProgressHUD.hide(for: self.view, animated: true)
+                        self.navigationItem.leftBarButtonItem?.isEnabled = true
+                        self.navigationItem.rightBarButtonItem?.isEnabled = true
+                        self.view.isUserInteractionEnabled = true
                     }
                 )
-                MBProgressHUD.hide(for: view, animated: true)
-                navigationItem.leftBarButtonItem?.isEnabled = true
-                navigationItem.rightBarButtonItem?.isEnabled = true
-                view.isUserInteractionEnabled = true
             }
             else {
                 activate(password: password)
             }
+        }
+        else {
+            MBProgressHUD.hide(for: view, animated: true)
+            navigationItem.leftBarButtonItem?.isEnabled = true
+            navigationItem.rightBarButtonItem?.isEnabled = true
+            view.isUserInteractionEnabled = true
         }
     }
     
@@ -330,7 +336,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             let safeStore = SafeStore(
                 safeConfigManager: SafeConfigManager(),
                 serverApiConnector: ServerAPIConnector(),
-                groupManager: GroupManager()
+                groupManager: BusinessInjector().groupManager
             )
             
             if let customServer = serverField.text,

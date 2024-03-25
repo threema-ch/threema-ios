@@ -28,7 +28,7 @@ import Foundation
         TaskExecutionSendBallotVoteMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

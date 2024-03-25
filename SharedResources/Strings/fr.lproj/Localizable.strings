@@ -396,12 +396,8 @@
 "chat_search_searching" = "Recherche en cours…";
 "chat_search_no_matches" = "Aucun résultat…";
 "chat_search_matches" = "%d de %d éléments correspondants";
-"chat_search_note" = "Remarque : les légendes des médias ne sont pas incluses dans les résultats de recherche.";
 
 "choose_recipient" = "Choisir le destinataire";
-
-"msg_unknown_group_request_sync_x_title" = "Message reçu dans un groupe inconnu";
-"msg_unknown_group_request_sync_x_message" = "Un message dans un groupe inconnu a été reçu. Les informations du groupe ont été demandées au créateur du groupe (%@). Le groupe apparaît dès que le créateur est de nouveau en ligne.";
 
 "tap_to_cancel" = "Taper pour annuler";
 "previous" = "Précédent";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Contact bloqué";
 "call_status_failed_title" = "Appel Threema";
 
-"call_threema_initiator_video_info" = "Touchez ici pour activer la caméra";
-"call_threema_remote_video_activated_info_title" = "Appel vidéo";
-"call_threema_remote_video_activated_info" = "L’autre partie a commencé un appel vidéo. Touchez ici pour activer aussi votre caméra.";
-"call_threema_speaker_info" = "Touchez ici pour activer le haut-parleur";
-"call_threema_camera_disabled_info" = "Ce contact n’utilise pas une version actuelle de l’application ou n’autorise pas les appels vidéo.";
-
-"call_threema_video_in_chat_info_title" = "Nouveauté : Appels vidéo";
-
 "call_threema_cellular_instead_of_wifi_title" = "Appel via réseau cellulaire";
 "call_threema_cellular_instead_of_wifi_text" = "Avertissement : Cet appel entraîne un transfert de données via le réseau cellulaire.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Discussions archivées";
 
 "archived_title" = "Archivé";
-"conversations_search_placeholder" = "Contacts, Groupes, IDs…";
+"conversations_global_search_placeholder" = "Recherche";
+"one_to_one_chat" = "Discussion unique";
 
 "select_all" = "Sélectionner tout";
 "deselect_all" = "Tout déselectionner";
@@ -1336,7 +1325,7 @@
 "my_profile_delete_info_delete" = "Toutes vos données Threema seront retirées de cet appareil.";
 "my_profile_delete_info_keep" = "Si vous avez créé une sauvegarde Threema Safe ou exporté votre ID, vous pouvez la restaurer sur un autre appareil.";
 "my_profile_delete_info_revoke_info" = "Si vous ne voulez pas utiliser cet ID Threema sur tout autre appareil, vous pouvez le supprimer de manière irréversible : ";
-"my_profile_delete_info_revoke_info_link" = "[Révoquer l'ID Threema](lien)";
+"my_profile_delete_info_revoke_info_link" = "[Révoquer l'ID Threema ID](lien)";
 "my_profile_delete_info_button" = "Supprimer l'ID et les données";
 
 "my_profile_delete_info_alert_title" = "Vous perdez votre ID Threema si vous n'avez pas de sauvegarde.";
@@ -1613,8 +1602,8 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "poi_current_location" = "Ma position";
 "poi_marked_location" = "Épingle placée";
 
-"notification_threemaweb_connectionlost_title" = "Connexion à Threema Web perdue";
-"notification_threemaweb_connectionlost_body" = "Pour continuer à utiliser Threema Web, veuillez rouvrir l'application.";
+"notification_threemaweb_connectionlost_title" = "Perte de connexion à l'application de bureau/au client Web";
+"notification_threemaweb_connectionlost_body" = "Pour continuer à utiliser l'application de bureau/le client Web, veuillez rouvrir l'application.";
 
 "settings_threema_web_connected" = "Desktop/Web connecté";
 "settings_threema_web_connectioninfo" = "Votre appareil doit être déverrouillé avec %@ fonctionnant en premier plan pour rester connecté. En étant connecté, votre appareil ne sera pas automatiquement verrouillé.";
@@ -1698,6 +1687,7 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 
 "notification_group_sync_succeeded" = "Groupe synchronisé";
 "notification_group_sync_failed" = "Échec de la synchronisation du groupe";
+"notification_group_call_start_failed" = "Aucun membre n'accepte les appels de groupe";
 
 "notification_settings_sync_pending" = "Synchronisation…";
 "notification_settings_sync_succeeded" = "Réglages synchronisés";
@@ -1724,7 +1714,7 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 
 // Forward security status messages
 "forward_security_message_without" = "Un message sans Confidentialité de transmission parfaite a été reçu. Vérifiez que l'expéditeur a intentionnellement désactivé l’option de Confidentialité de transmission parfaite.";
-"forward_security_session_established" = "Les messages de cette conversation sont maintenant protégés par la Confidentialité de transmission parfaite.";
+"forward_security_session_established" = "Les messages avec ce partenaire de discussion sont maintenant protégés par la Confidentialité de transmission parfaite.";
 "forward_security_session_established_rx" = "Les messages reçus dans cette conversation sont maintenant protégés par la Confidentialité de transmission parfaite. Activez la Confidentialité de transmission parfaite dans les coordonnées afin de protéger aussi les messages envoyés.";
 "forward_security_messages_skipped_1" = "Un message a été perdu depuis le dernier message.";
 "forward_security_messages_skipped_x" = "%d messages ont été perdus depuis le dernier message.";

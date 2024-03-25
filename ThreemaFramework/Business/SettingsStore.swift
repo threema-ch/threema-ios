@@ -28,7 +28,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     // MARK: Public Attributes
     
-    public var wallpaperStore = WallpaperStore.shared
+    public lazy var wallpaperStore = WallpaperStore.shared
 
     // MARK: Private Attributes
 
@@ -37,10 +37,10 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     private let contactStore: ContactStoreProtocol
     private let userSettings: UserSettingsProtocol
     private let taskManager: TaskManagerProtocol?
-    
+
     // MARK: - Lifecycle
 
-    public convenience init() {
+    convenience init() {
         self.init(
             serverConnector: ServerConnector.shared(),
             myIdentityStore: MyIdentityStore.shared(),

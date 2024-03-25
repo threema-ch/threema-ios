@@ -418,7 +418,7 @@ class DBLoadTests: XCTestCase {
         }
 
         if let groupConversations = entityManager.entityFetcher.allGroupConversations() as? [Conversation] {
-            let unreadMessages = UnreadMessages(entityManager: entityManager)
+            let unreadMessages = UnreadMessages(messageSender: MessageSenderMock(), entityManager: entityManager)
             unreadMessages.totalCount(doCalcUnreadMessagesCountOf: Set(groupConversations))
         }
     }
@@ -521,17 +521,25 @@ class DBLoadTests: XCTestCase {
             }
         }
         
-        for i in 0..<1000 {
-            print("\(i)/1000")
+        let imageCount = 100_000
+        
+        for i in 0..<imageCount {
+            let log = "Image: \(i) / \(imageCount)"
+            print(log)
             let testBundle = Bundle(for: DBLoadTests.self)
             let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
             let testImageData = try? Data(contentsOf: testImageURL!)
             
-            loadImage(with: testImageData!, conversation!, entityManager)
+            loadImage(with: testImageData!, conversation!, entityManager, log)
         }
     }
     
-    func loadImage(with imageData: Data, _ conversation: Conversation, _ entityManager: EntityManager) {
+    func loadImage(
+        with imageData: Data,
+        _ conversation: Conversation,
+        _ entityManager: EntityManager,
+        _ caption: String
+    ) {
         
         entityManager.performSyncBlockAndSafe {
             let dbFile: FileData = (entityManager.entityCreator.fileData())!
@@ -549,11 +557,26 @@ class DBLoadTests: XCTestCase {
             message.mimeType = "image/jpeg"
             message.type = NSNumber(integerLiteral: 1)
             message.date = Date(timeIntervalSinceReferenceDate: TimeInterval(-1 * Int.random(in: 0...223_456_789)))
+            message.deliveryDate = message.date
             message.sender = conversation.contact
-            message.sent = true
-            message.delivered = true
-            message.read = true
+            message.sent = NSNumber(booleanLiteral: true)
+            message.delivered = NSNumber(booleanLiteral: true)
+            message.read = NSNumber(booleanLiteral: true)
             message.remoteSentDate = Date()
+            message.encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)
+            
+            do {
+                if let jsonWithoutCaption = FileMessageEncoder.jsonString(for: message),
+                   let dataWithoutCaption = jsonWithoutCaption.data(using: .utf8),
+                   var dict = try JSONSerialization.jsonObject(with: dataWithoutCaption) as? [String: AnyObject] {
+                    dict["d"] = caption as AnyObject
+                    let dataWithCaption = try JSONSerialization.data(withJSONObject: dict)
+                    message.json = String(data: dataWithCaption, encoding: .utf8)
+                }
+            }
+            catch {
+                // do nothing
+            }
         }
     }
     
@@ -1354,8 +1377,11 @@ class DBLoadTests: XCTestCase {
         
         // Create group
         let group = try createGroup(named: "System Messages", with: [], entityManager: entityManager)
-        let groupManager: GroupManagerProtocol = GroupManager(entityManager: entityManager)
-        
+        let groupManager: GroupManagerProtocol = GroupManager(
+            entityManager: entityManager,
+            taskManager: TaskManager(backgroundEntityManager: entityManager)
+        )
+
         // Add system messages by doing different group updates
         
         var expectations = [XCTestExpectation]()
@@ -1504,8 +1530,11 @@ class DBLoadTests: XCTestCase {
     // TODO: Helper
     
     private func createGroup(named: String, with members: [String], entityManager: EntityManager) throws -> Group {
-        let groupManager: GroupManagerProtocol = GroupManager(entityManager: entityManager)
-            
+        let groupManager: GroupManagerProtocol = GroupManager(
+            entityManager: entityManager,
+            taskManager: TaskManager(backgroundEntityManager: entityManager)
+        )
+
         let groupIdentity = try GroupIdentity(
             id: XCTUnwrap(BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)),
             creator: ThreemaIdentity(XCTUnwrap(MyIdentityStore.shared().identity))

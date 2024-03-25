@@ -96,6 +96,19 @@ class InMemoryDHSessionStore: DHSessionStoreProtocol {
         }
     }
     
+    func updateNewSessionCommitLastMessageSentDateAndVersions(session: DHSession) throws {
+        guard let localSession = try exactDHSession(
+            myIdentity: session.myIdentity,
+            peerIdentity: session.peerIdentity,
+            sessionID: session.id
+        ) else {
+            return
+        }
+        
+        localSession.newSessionCommitted = session.newSessionCommitted
+        localSession.lastMessageSent = session.lastMessageSent
+    }
+    
     @discardableResult func deleteDHSession(
         myIdentity: String,
         peerIdentity: String,

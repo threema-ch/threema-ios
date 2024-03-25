@@ -48,6 +48,8 @@
 	<string>https://ds-blobp-upload.threema.ch/upload</string>
 	<key>ThreemaCoreDataVersion</key>
 	<string>$(COREDATA_VERSION)</string>
+	<key>ThreemaRendezvousServerURL</key>
+	<string></string>
 	<key>ThreemaMediatorServerURL</key>
 	<string></string>
 	<key>ThreemaMediatorBlobDoneURL</key>

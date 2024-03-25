@@ -21,36 +21,32 @@
 import Foundation
 import ThreemaEssentials
 
-class Participant: ParticipantDescription {
+class Participant {
+    
+    // MARK: - Public properties
+
     let participantID: ParticipantID
-
-    var mirrorRenderer: Bool {
-        false
-    }
     
-    var type: String {
-        fatalError("Must override")
-    }
-
     var localCameraPosition: CameraPosition = .front
-    
+
+    // MARK: - Lifecycle
+
     init(participantID: ParticipantID) {
         self.participantID = participantID
     }
-    
-    // TODO: (IOS-4081) Replace NSObject with actual valid object
-    func subscribeCamera(renderer: NSObject, width: Int, height: Int, fps: Int = 30) {
-        fatalError("Must override")
-    }
-    
-    func unsubscribeCamera() {
-        fatalError("Must override")
-    }
-    
+}
+
+// MARK: - Equatable
+
+extension Participant: Equatable {
     static func == (lhs: Participant, rhs: Participant) -> Bool {
         lhs.participantID == rhs.participantID
     }
-    
+}
+
+// MARK: - Hashable
+
+extension Participant: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(participantID)
     }

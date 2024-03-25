@@ -19,6 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaFramework
+import TipKit
 import UIKit
 
 // MARK: - DetailsHeaderProfileView.Configuration
@@ -33,9 +35,6 @@ extension DetailsHeaderProfileView {
         let customSpacingAfterAvatar: CGFloat = 10
 
         let verificationLevelHeight: CGFloat = 12
-                
-        let threemaTypeInfoShowcasePrimaryTextSize: CGFloat = 24
-        let threemaTypeInfoShowcaseSecondaryTextSize: CGFloat = 20
         
         let defaultAvatarImage = BundleUtil.imageNamed("Unknown")
     }
@@ -95,9 +94,9 @@ final class DetailsHeaderProfileView: UIStackView {
     // `invalidate()` is automatically called on destruction of the observers
     // (according to the `invalidate()` header documentation).
     private var observers = [NSKeyValueObservation]()
-    
-    private let isWorkApp = LicenseStore.requiresLicenseKey()
-    
+        
+    private var tipObservationTask: Task<Void, Never>?
+
     // MARK: Gesture recognizer
     
     private let avatarImageTappedHandler: () -> Void
@@ -139,20 +138,18 @@ final class DetailsHeaderProfileView: UIStackView {
     }()
     
     /// Threema work or private icon next to avatar
-    private lazy var threemaTypeIcon: UIButton = {
-        let button = UIButton()
+    private lazy var threemaTypeIcon: UIImageView = {
+        let imageView = UIImageView()
         
-        button.setImage(ThreemaUtility.otherThreemaTypeIcon, for: .normal)
-        button.isHidden = true
+        imageView.image = ThreemaUtility.otherThreemaTypeIcon
+        imageView.isHidden = true
         // Aspect ratio: 1:1
-        button.widthAnchor.constraint(equalTo: button.heightAnchor).isActive = true
+        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
+                
+        imageView.accessibilityLabel = ThreemaUtility.otherThreemaTypeAccessibilityLabel
+        imageView.accessibilityIgnoresInvertColors = true
         
-        button.addTarget(self, action: #selector(showThreemaTypeInfo(autoDismiss:)), for: .touchUpInside)
-        
-        button.accessibilityLabel = ThreemaUtility.otherThreemaTypeAccessibilityLabel
-        button.accessibilityIgnoresInvertColors = true
-        
-        return button
+        return imageView
     }()
     
     /// Name of contact or group
@@ -182,36 +179,6 @@ final class DetailsHeaderProfileView: UIStackView {
                 
         return imageView
     }()
-    
-    // MARK: Modal subview
-    
-    private lazy var threemaTypeInfoShowcase: MaterialShowcase = {
-        let materialShowcase = MaterialShowcase()
-        
-        materialShowcase.setTargetView(button: threemaTypeIcon)
-        
-        if !isWorkApp {
-            materialShowcase.primaryText = BundleUtil.localizedString(forKey: "contact_threema_work_title")
-            materialShowcase.secondaryText = BundleUtil.localizedString(forKey: "contact_threema_work_info")
-            materialShowcase.backgroundPromptColor = Colors.blue
-        }
-        else {
-            materialShowcase.primaryText = BundleUtil.localizedString(forKey: "contact_threema_title")
-            materialShowcase.secondaryText = BundleUtil.localizedString(forKey: "contact_threema_info")
-            materialShowcase.backgroundPromptColor = Colors.green
-        }
-        
-        materialShowcase.backgroundPromptColorAlpha = 0.93
-        materialShowcase.primaryTextSize = DetailsHeaderProfileView.configuration.threemaTypeInfoShowcasePrimaryTextSize
-        materialShowcase.secondaryTextSize = DetailsHeaderProfileView.configuration
-            .threemaTypeInfoShowcaseSecondaryTextSize
-        materialShowcase.primaryTextColor = Colors.textMaterialShowcase
-        materialShowcase.secondaryTextColor = Colors.textMaterialShowcase
-        
-        materialShowcase.targetHolderRadius = threemaTypeIcon.bounds.width
-        
-        return materialShowcase
-    }()
 
     // MARK: - Initialization
     
@@ -233,6 +200,8 @@ final class DetailsHeaderProfileView: UIStackView {
     
     deinit {
         DDLogDebug("\(#function)")
+        tipObservationTask?.cancel()
+        tipObservationTask = nil
     }
     
     // MARK: - Configuration
@@ -349,48 +318,45 @@ final class DetailsHeaderProfileView: UIStackView {
         avatarImageTappedHandler()
     }
     
-    /// Show Threema type info if it was never shown before
-    func autoShowThreemaTypeInfo() {
+    func showThreemaTypeTip() {
         
         guard !ProcessInfoHelper.isRunningForScreenshots else {
             return
         }
         
-        guard let infoShown = UserSettings.shared()?.workInfoShown,
-              !infoShown,
-              !contentConfiguration.hideThreemaTypeIcon else {
+        guard !UIAccessibility.isVoiceOverRunning else {
             return
         }
         
-        // Short delay so it appears in the right place on iPad
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            self.showThreemaTypeInfo(autoDismiss: true)
-        }
-    }
-    
-    /// Show threema type info if icon is shown
-    ///
-    /// - Parameter autoDismiss: Automatically dismiss overlay after some seconds
-    @objc func showThreemaTypeInfo(autoDismiss: Bool = false) {
-        
-        guard !ProcessInfoHelper.isRunningForScreenshots else {
+        guard !UserSettings.shared().workInfoShown,!contentConfiguration.hideThreemaTypeIcon else {
             return
         }
         
-        guard !threemaTypeIcon.isHidden else {
-            return
-        }
-        
-        threemaTypeIcon.isHighlighted = false
-        threemaTypeIcon.isSelected = false
-        
-        threemaTypeInfoShowcase.show(hasShadow: false, hasSkipButton: false) {
-            UserSettings.shared()?.workInfoShown = true
-        }
-        
-        if autoDismiss {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
-                self.threemaTypeInfoShowcase.completeShowcase()
+        if #available(iOS 17, *) {
+            let typeTip = TipKitManager.ThreemaTypeTip()
+            let threemaTypeTipView = TipUIView(typeTip, arrowEdge: .top)
+            threemaTypeTipView.backgroundColor = .tertiarySystemBackground
+            threemaTypeTipView.translatesAutoresizingMaskIntoConstraints = false
+            
+            tipObservationTask = tipObservationTask ?? Task(priority: .userInitiated) { @MainActor in
+                for await shouldDisplay in typeTip.shouldDisplayUpdates {
+                    if shouldDisplay {
+                        
+                        addSubview(threemaTypeTipView)
+                        
+                        NSLayoutConstraint.activate([
+                            threemaTypeTipView.topAnchor.constraint(equalTo: threemaTypeIcon.bottomAnchor),
+                            threemaTypeTipView.leadingAnchor
+                                .constraint(greaterThanOrEqualTo: safeAreaLayoutGuide.leadingAnchor),
+                            threemaTypeTipView.trailingAnchor
+                                .constraint(lessThanOrEqualTo: safeAreaLayoutGuide.trailingAnchor),
+                            threemaTypeTipView.centerXAnchor.constraint(equalTo: threemaTypeIcon.centerXAnchor),
+                        ])
+                    }
+                    else {
+                        threemaTypeTipView.removeFromSuperview()
+                    }
+                }
             }
         }
     }

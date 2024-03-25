@@ -137,4 +137,44 @@ extension SQLDHSessionStore {
         
         DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
     }
+    
+    func upgradeToV5(_ db: Connection) throws {
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        
+        assert(db.userVersion == 4)
+        
+        defer { assert(db.userVersion == 5) }
+        
+        DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 5")
+        
+        // We assume that we can execute the upgrade exactly once.
+        
+        do {
+            // Create new session committed column with default value `true` as we assume all existing sessions already
+            // had an init sent
+            try db.run(sessionTable.addColumn(newSessionCommitted, defaultValue: true))
+            
+            // Create last message sent column with default value `nil` as we don't know when the last FS message was
+            // sent
+            try db.run(sessionTable.addColumn(lastMessageSent))
+        }
+        catch SQLite.Result.error(
+            message: "duplicate column name: newSessionCommitted",
+            code: 1,
+            statement: nil
+        ) {
+            DDLogNotice("Ignore error duplicate column name: newSessionCommitted")
+        }
+        catch SQLite.Result.error(
+            message: "duplicate column name: lastMessageSent",
+            code: 1,
+            statement: nil
+        ) {
+            DDLogNotice("Ignore error duplicate column name: lastMessageSent")
+        }
+        
+        db.userVersion = 5
+        
+        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+    }
 }

@@ -39,6 +39,7 @@ static NSString *fieldOrigin = @"origin";
 
 @dynamic blobId;
 @dynamic blobThumbnailId;
+@dynamic caption;
 @dynamic encryptionKey;
 @dynamic fileName;
 @dynamic fileSize;
@@ -51,7 +52,6 @@ static NSString *fieldOrigin = @"origin";
 @dynamic data;
 @dynamic thumbnail;
 
-@synthesize caption = _caption;
 @synthesize correlationId = _correlationId;
 @synthesize mimeTypeThumbnail = _mimeTypeThumbnail;
 @synthesize duration = _duration;
@@ -96,7 +96,7 @@ static NSString *fieldOrigin = @"origin";
     
     if (fileTypeDescriptionText != nil) {
         if ([self caption] != nil) {
-            fileTypeDescriptionText = [fileTypeDescriptionText stringByAppendingString:[NSString stringWithFormat:@"\n%@", _caption]];
+            fileTypeDescriptionText = [fileTypeDescriptionText stringByAppendingString:[NSString stringWithFormat:@"\n%@", self.caption]];
         }
         
         return fileTypeDescriptionText;
@@ -271,25 +271,16 @@ static NSString *fieldOrigin = @"origin";
     return true;
 }
 
-// Will return the caption. If it does not exist it will return the JSON caption.
-- (NSString *)caption {
-    if (_caption == nil && self.json != nil) {
-        NSError *error;
-        NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
-        NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
-        if (json == nil) {
-            DDLogError(@"Error parsing json data %@, %@", error, [error userInfo]);
-        } else {
-            NSString *caption = [json objectForKey:JSON_FILE_KEY_DESCRIPTION];
-            _caption = caption;
-        }
-    }
-    
-    if ([_caption length] == 0) {
+- (NSString *)getJSONCaption {
+    NSError *error;
+    NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+    if (json == nil) {
+        DDLogError(@"Error parsing json data %@, %@", error, [error userInfo]);
         return nil;
+    } else {
+        return [json objectForKey:JSON_FILE_KEY_DESCRIPTION];
     }
-    
-    return _caption;
 }
 
 // Will return the correlationId. If it does not exist it will return the JSON correlationId.
@@ -391,7 +382,7 @@ static NSString *fieldOrigin = @"origin";
     return _width;
 }
 - (NSString *)quotePreviewText {
-    NSString *quoteCaption = _caption;
+    NSString *quoteCaption = self.caption;
     if (!quoteCaption) {
         if ([self renderFileAudioMessage] == true) {
             if (self.duration != nil) {

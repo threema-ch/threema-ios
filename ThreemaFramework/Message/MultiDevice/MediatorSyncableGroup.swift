@@ -42,12 +42,12 @@ actor MediatorSyncableGroup {
         self.groupManager = groupManager
     }
 
-    init() {
+    init(entityManager: EntityManager, taskManager: TaskManagerProtocol) {
         self.init(
             UserSettings.shared(),
-            PushSettingManager(),
-            TaskManager(),
-            GroupManager()
+            PushSettingManager(entityManager: entityManager, taskManager: taskManager),
+            taskManager,
+            GroupManager(entityManager: entityManager, taskManager: taskManager)
         )
     }
 

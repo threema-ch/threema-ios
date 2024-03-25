@@ -427,6 +427,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
 
     // MARK: - Configuration
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        updateColors()
+    }
+    
     override func configureCell() {
         super.configureCell()
         
@@ -701,8 +707,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                     }
                     
                     var isEqual: Bool?
-                    strongSelf.businessInjector.backgroundEntityManager.performBlockAndWait {
-                        guard let tempConversation = strongSelf.businessInjector.backgroundEntityManager.entityFetcher
+                    strongSelf.businessInjector.entityManager.performBlockAndWait {
+                        guard let tempConversation = strongSelf.businessInjector.entityManager.entityFetcher
                             .existingObject(with: conversation.objectID) as? Conversation else {
                             return
                         }

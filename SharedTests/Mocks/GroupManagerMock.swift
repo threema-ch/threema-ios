@@ -41,7 +41,6 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
 
     private(set) var syncCalls = [SyncCall]()
     
-    var unknownGroupCalls = [Data: String]()
     var sendSyncRequestCalls = [GroupIdentity]()
     var periodicSyncIfNeededCalls = [Group]()
     
@@ -96,8 +95,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         members: Set<String>,
         systemMessageDate: Date
     ) -> Promise<(Group, Set<String>?)> {
-        unknownGroupCalls.removeValue(forKey: groupIdentity.id)
-        return Promise(error: GroupManager.GroupError.notCreator)
+        Promise(error: GroupManager.GroupError.notCreator)
     }
 
     func createOrUpdateObjc(
@@ -108,7 +106,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         completionHandler: @escaping (Group, Set<String>?) -> Void,
         errorHandler: @escaping (Error?) -> Void
     ) {
-        unknownGroupCalls.removeValue(forKey: groupID)
+        // no-op
     }
 
     @discardableResult func createOrUpdateDB(
@@ -172,6 +170,10 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
 
         return getGroup(groupID, creator: conversation.contact?.identity ?? myIdentityStore.identity)
     }
+    
+    func getAllActiveGroups() async -> [Group] {
+        getGroupReturns.filter(\.isSelfMember)
+    }
 
     func leave(groupID: Data, creator: String, toMembers: [String]?, systemMessageDate: Date) {
         leaveCalls.append(LeaveCall(
@@ -186,10 +188,6 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
 
     func dissolve(groupID: Data, to identities: Set<String>?) {
         dissolveCalls.append(DissolveCall(groupID: groupID, receivers: identities))
-    }
-
-    func unknownGroup(groupID: Data, creator: String) {
-        unknownGroupCalls[groupID] = creator
     }
 
     func setNameObjc(

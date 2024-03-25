@@ -396,12 +396,8 @@
 "chat_search_searching" = "Пошук…";
 "chat_search_no_matches" = "Немає збігів";
 "chat_search_matches" = "%d з %d збігів";
-"chat_search_note" = "Примітка: підписи в медіафайлах не включені в результати пошуку.";
 
 "choose_recipient" = "Обрати отримувача";
-
-"msg_unknown_group_request_sync_x_title" = "Повідомлення отримано у невідомій групі";
-"msg_unknown_group_request_sync_x_message" = "Отримано повідомлення в невідомій групі. Інформацію про групу запитано в автора групи (%@). Група з'явиться щойно її автор буде в мережі.";
 
 "tap_to_cancel" = "Торкніться для скасування";
 "previous" = "Попередні";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Заблокований контакт";
 "call_status_failed_title" = "Виклик Threema";
 
-"call_threema_initiator_video_info" = "Торкніться для увімкнення камери";
-"call_threema_remote_video_activated_info_title" = "Відеовиклик";
-"call_threema_remote_video_activated_info" = "Співрозмовник розпочав відеовиклик. Торкніться тут для увімкнення своєї камери.";
-"call_threema_speaker_info" = "Торкніться для увімкнення гучномовця";
-"call_threema_camera_disabled_info" = "Цей контакт не використовує поточну версію застосунку або не дозволив відеовиклики.";
-
-"call_threema_video_in_chat_info_title" = "Нове: Відеовиклики";
-
 "call_threema_cellular_instead_of_wifi_title" = "Виклик через стільник";
 "call_threema_cellular_instead_of_wifi_text" = "Увага: цей виклик передає дані у стільниковій мережі.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Архівовані чати";
 
 "archived_title" = "Архівовані";
-"conversations_search_placeholder" = "Контакти, групи, ID...";
+"conversations_global_search_placeholder" = "Пошук";
+"one_to_one_chat" = "Персональний діалог";
 
 "select_all" = "Обрати усі";
 "deselect_all" = "Зняти виділення";
@@ -1700,6 +1689,7 @@
 
 "notification_group_sync_succeeded" = "Групу синхронізовано";
 "notification_group_sync_failed" = "Не вдалося синхронізувати групу";
+"notification_group_call_start_failed" = "Жоден з учасників групи не має функцію групового дзвінка";
 
 "notification_settings_sync_pending" = "Синхронізація...";
 "notification_settings_sync_succeeded" = "Налаштування синхронізовані";

@@ -68,34 +68,39 @@ public protocol NotificationManagerProtocol {
     /// - Parameter baseMessage: Recalculate unread messages count for underlying conversation
     @objc final func updateUnreadMessagesCount(baseMessage: BaseMessage?) {
         // Calc and update unread messages badge in background
-        businessInjector.backgroundEntityManager.performBlock {
-            let unreadMessages = UnreadMessages(entityManager: self.businessInjector.backgroundEntityManager)
-            var totalCount = 0
-                
-            if let baseMessageObjectID = baseMessage?.objectID,
-               let localBaseMessage = self.businessInjector.backgroundEntityManager.entityFetcher
-               .existingObject(with: baseMessageObjectID) as? BaseMessage,
-               let conversation = localBaseMessage.conversation {
-                totalCount = unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
-            }
-            else {
-                totalCount = unreadMessages.totalCount()
-            }
+        Task {
+            await businessInjector.runInBackground { backgroundBusinessInjector in
+                let badgeTotalCount = await backgroundBusinessInjector.entityManager.perform {
+                    let unreadMessages = backgroundBusinessInjector.unreadMessages
+                    var totalCount = 0
 
-            NotificationCenter.default.post(
-                name: NSNotification.Name(rawValue: kNotificationMessagesCountChanged),
-                object: nil,
-                userInfo: [kKeyUnread: totalCount]
-            )
+                    if let baseMessageObjectID = baseMessage?.objectID,
+                       let localBaseMessage = backgroundBusinessInjector.entityManager.entityFetcher
+                       .existingObject(with: baseMessageObjectID) as? BaseMessage,
+                       let conversation = localBaseMessage.conversation {
+                        totalCount = unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
+                    }
+                    else {
+                        totalCount = unreadMessages.totalCount()
+                    }
 
-            let badgeTotalCount = totalCount
-            DispatchQueue.main.async {
-                if let mainTabBar = AppDelegate.getMainTabBarController(),
-                   let item = mainTabBar.tabBar.items?[Int(kChatTabBarIndex)] {
-                    item.badgeValue = badgeTotalCount > 0 ? String(badgeTotalCount) : nil
+                    return totalCount
                 }
 
-                UIApplication.shared.applicationIconBadgeNumber = badgeTotalCount
+                NotificationCenter.default.post(
+                    name: NSNotification.Name(rawValue: kNotificationMessagesCountChanged),
+                    object: nil,
+                    userInfo: [kKeyUnread: badgeTotalCount]
+                )
+
+                Task { @MainActor in
+                    if let mainTabBar = AppDelegate.getMainTabBarController(),
+                       let item = mainTabBar.tabBar.items?[Int(kChatTabBarIndex)] {
+                        item.badgeValue = badgeTotalCount > 0 ? String(badgeTotalCount) : nil
+                    }
+
+                    UIApplication.shared.applicationIconBadgeNumber = badgeTotalCount
+                }
             }
         }
     }

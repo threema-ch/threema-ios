@@ -70,10 +70,6 @@ import ThreemaProtocols
     func build() -> Int {
         mask
     }
-    
-    @objc func build() -> Int32 {
-        Int32(mask)
-    }
 }
 
 @objc extension FeatureMaskBuilder {

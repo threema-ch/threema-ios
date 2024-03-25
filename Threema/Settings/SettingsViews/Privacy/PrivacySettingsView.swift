@@ -222,7 +222,7 @@ struct PrivacySettingsView_Previews: PreviewProvider {
             PrivacySettingsView()
         }
         .tint(UIColor.primary.color)
-        .environmentObject(SettingsStore())
+        .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
     }
 }
 

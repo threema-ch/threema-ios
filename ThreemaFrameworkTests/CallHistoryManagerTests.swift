@@ -44,7 +44,6 @@ class CallHistoryManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
             userSettings: userSettingsMock
         )
@@ -84,7 +83,6 @@ class CallHistoryManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainCnx),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
             userSettings: userSettingsMock
         )

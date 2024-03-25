@@ -182,7 +182,7 @@ public final class DeviceJoin {
         // Disable MD again if it was not enabled before
         if !(wasMultiDeviceEnabled ?? true) {
             businessInjector.serverConnector.deactivateMultiDevice()
-            FeatureMask.update() // Needed to activate PFS again
+            FeatureMask.updateLocal() // Needed to activate PFS again
         }
         wasMultiDeviceEnabled = nil
         
@@ -271,6 +271,8 @@ public final class DeviceJoin {
             
             $0.cspHashedNonces = cspNonces
             // $0.d2DHashedNonces // IOS-3978: Send nonces from D2D scope
+
+            $0.mdmParameters = gatherMdmParameters()
         }
         
         let edToNdEssentialData = Join_EdToNd.with {
@@ -353,8 +355,8 @@ public final class DeviceJoin {
     ) async throws -> [Join_EssentialData.AugmentedGroup] {
         
         // Load groups from Core Data and map them to business objects
-        let allGroups = try await businessInjector.backgroundEntityManager.perform {
-            guard let allGroupConversations = self.businessInjector.backgroundEntityManager.entityFetcher
+        let allGroups = try await businessInjector.entityManager.perform {
+            guard let allGroupConversations = self.businessInjector.entityManager.entityFetcher
                 .allGroupConversations() else {
                 throw Error.failedToGatherData
             }
@@ -447,8 +449,8 @@ public final class DeviceJoin {
     }
     
     private func gatherCSPNonces() async throws -> [Data] {
-        try await businessInjector.backgroundEntityManager.perform {
-            guard let allNonces = self.businessInjector.backgroundEntityManager.entityFetcher.allNonces() else {
+        try await businessInjector.entityManager.perform {
+            guard let allNonces = self.businessInjector.entityManager.entityFetcher.allNonces() else {
                 throw Error.failedToGatherData
             }
             
@@ -466,7 +468,11 @@ public final class DeviceJoin {
             return filteredNonces
         }
     }
-    
+
+    private func gatherMdmParameters() -> Sync_MdmParameters {
+        MDMSetup(setup: false).mdmParameters()
+    }
+
     private func sendBlobImage(
         data: Data,
         over connection: EncryptedRendezvousConnection
@@ -514,7 +520,7 @@ public final class DeviceJoin {
     
     private func updateFeatureMask() async {
         await withCheckedContinuation { continuation in
-            FeatureMask.updateMask {
+            FeatureMask.updateLocal {
                 continuation.resume()
             }
         }

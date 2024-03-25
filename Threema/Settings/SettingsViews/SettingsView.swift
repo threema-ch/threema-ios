@@ -24,8 +24,7 @@ import ThreemaFramework
 struct SettingsView: View {
     @StateObject var settingsStore = BusinessInjector().settingsStore as! SettingsStore
     @ObservedObject var settingsViewModel = SettingsViewModel()
-    @ObservedObject var connectionStateProvider = ConnectionStateProvider()
-    
+
     // MARK: - Body
     
     var body: some View {
@@ -35,7 +34,6 @@ struct SettingsView: View {
                 GeneralSection()
                 CallWebSection()
                 ConnectionSection()
-                    .environmentObject(connectionStateProvider)
                 #if !THREEMA_WORK && !THREEMA_ONPREM
                     if !LicenseStore.requiresLicenseKey() {
                         ThreemaWorkSection()

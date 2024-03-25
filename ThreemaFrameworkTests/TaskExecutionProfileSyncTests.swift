@@ -25,8 +25,7 @@ import XCTest
 @testable import ThreemaFramework
 
 class TaskExecutionProfileSyncTests: XCTestCase {
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
+    private var dbBackgroundCnx: DatabaseContext!
 
     // TODO: (IOS-3875) Timeout
     private let timeout: Double = 600
@@ -35,9 +34,10 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
+            .devNullContext(withChildContextForBackgroundProcess: true)
+
+        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
     }
     
     func testAlreadyLocked() {
@@ -184,8 +184,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             }
 
             let frameworkInjectorMock = BusinessInjectorMock(
-                backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-                entityManager: EntityManager(databaseContext: databaseMainCnx),
+                entityManager: EntityManager(databaseContext: dbBackgroundCnx),
                 myIdentityStore: test.initialConfig.identityStore,
                 userSettings: test.initialConfig.userSettings,
                 serverConnector: serverConnectorMock,

@@ -396,12 +396,8 @@
 "chat_search_searching" = "検索中…";
 "chat_search_no_matches" = "一致なし";
 "chat_search_matches" = "%d/%d一致";
-"chat_search_note" = "注：検索結果にはメディアのキャプションは含まれません。";
 
 "choose_recipient" = "受信者の選択";
-
-"msg_unknown_group_request_sync_x_title" = "未知のグループからメッセージがあります";
-"msg_unknown_group_request_sync_x_message" = "未知のグループのメッセージを受信しました。グループの情報は、グループ作成者（%@）に要求されています。グループは作成者が再びオンラインになり次第、表示されます。";
 
 "tap_to_cancel" = "タップしてキャンセル";
 "previous" = "前";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "連絡先をブロック";
 "call_status_failed_title" = "Threema通話";
 
-"call_threema_initiator_video_info" = "ここをタップするとカメラが起動します";
-"call_threema_remote_video_activated_info_title" = "ビデオ通話";
-"call_threema_remote_video_activated_info" = "相手がビデオ通話を開始しました。ここをタップすると、あなたのカメラも起動します。";
-"call_threema_speaker_info" = "ここをタップしてスピーカーを有効にする";
-"call_threema_camera_disabled_info" = "この連絡先は、最新のアプリのバージョンを使用していないか、ビデオ通話を許可していません。";
-
-"call_threema_video_in_chat_info_title" = "新規: ビデオ通話";
-
 "call_threema_cellular_instead_of_wifi_title" = "モバイル回線経由での通話";
 "call_threema_cellular_instead_of_wifi_text" = "警告: この通話は、モバイルデータ通信で行われます。";
 
@@ -840,8 +828,6 @@
 "archived_chats" = "トークをアーカイブ";
 
 "archived_title" = "アーカイブしました";
-"conversations_search_placeholder" = "連絡先, グループ, ID…";
-
 "select_all" = "すべて選択";
 "deselect_all" = "すべての選択を解除";
 "no_archived_chats" = "アーカイブしたトークがありません";
@@ -1698,7 +1684,6 @@ iTunesのバックアップを作成してから行ってください。";
 
 "notification_group_sync_succeeded" = "グループを同期";
 "notification_group_sync_failed" = "グループ同期に失敗しました";
-
 "notification_settings_sync_pending" = "同期中…";
 "notification_settings_sync_succeeded" = "設定を同期しました";
 

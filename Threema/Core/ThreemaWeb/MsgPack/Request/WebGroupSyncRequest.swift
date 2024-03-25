@@ -33,15 +33,14 @@ class WebGroupSyncRequest: WebAbstractMessage {
     
     func syncGroup() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        let entityManager = EntityManager()
-        guard let conversation = entityManager.entityFetcher.legacyConversation(for: id) else {
+        let businessInjector = BusinessInjector()
+        guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversation(for: id) else {
             ack!.success = false
             ack!.error = "invalidGroup"
             return
         }
 
-        let groupManager = GroupManager(entityManager: entityManager)
-        guard let group = groupManager.getGroup(conversation: conversation) else {
+        guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
             ack!.success = false
             ack!.error = "invalidGroup"
             return
@@ -54,7 +53,7 @@ class WebGroupSyncRequest: WebAbstractMessage {
         }
         
         DispatchQueue.main.async {
-            groupManager.sync(group: group)
+            businessInjector.groupManager.sync(group: group)
                 .catch { error in
                     DDLogError("Unable to sync group: \(error.localizedDescription)")
                 }

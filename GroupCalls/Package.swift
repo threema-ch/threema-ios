@@ -43,8 +43,9 @@ let package = Package(
             
             swiftSettings: [
                 .unsafeFlags([
-                    "-Xfrontend", "-warn-concurrency",
-                    "-Xfrontend", "-enable-actor-data-race-checks",
+                    // TODO: (IOS-4047) Leads to errors in swift 5.10
+                    // "-Xfrontend", "-warn-concurrency",
+                    // "-Xfrontend", "-enable-actor-data-race-checks",
                     "-Xfrontend", "-warn-long-function-bodies=100",
                     "-Xfrontend", "-warn-long-expression-type-checking=100",
                 ]),

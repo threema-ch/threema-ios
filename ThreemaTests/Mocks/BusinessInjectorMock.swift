@@ -23,15 +23,20 @@ import Foundation
 
 class BusinessInjectorMock: BusinessInjectorProtocol {
 
+    func runInBackground<T>(
+        _ block: @escaping (ThreemaFramework.BusinessInjectorProtocol) async throws
+            -> T
+    ) async rethrows -> T {
+        try await block(self)
+    }
+    
+    func runInBackgroundAndWait<T>(_ block: (ThreemaFramework.BusinessInjectorProtocol) throws -> T) rethrows -> T {
+        try block(self)
+    }
+
     // MARK: BusinessInjectorProtocol
 
-    var backgroundEntityManager: EntityManager
-
-    var backgroundGroupManager: GroupManagerProtocol
-
-    var backgroundUnreadMessages: UnreadMessagesProtocol
-
-    var backgroundPushSettingManager: ThreemaFramework.PushSettingManagerProtocol
+    var runsInBackground: Bool
 
     var contactStore: ContactStoreProtocol
 
@@ -62,10 +67,7 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
     var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
 
     init(
-        backgroundEntityManager: EntityManager,
-        backgroundGroupManager: GroupManagerProtocol = GroupManagerMock(),
-        backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
-        backgroundPushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
+        runsInBackground: Bool = false,
         contactStore: ContactStoreProtocol = ContactStoreMock(),
         conversationStore: ConversationStoreProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
@@ -81,10 +83,7 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         messageRetentionManager: any MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
         pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock()
     ) {
-        self.backgroundEntityManager = backgroundEntityManager
-        self.backgroundGroupManager = backgroundGroupManager
-        self.backgroundUnreadMessages = backgroundUnreadMessages
-        self.backgroundPushSettingManager = backgroundPushSettingManager
+        self.runsInBackground = runsInBackground
         self.contactStore = contactStore
         self.conversationStore = conversationStore
         self.entityManager = entityManager

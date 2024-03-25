@@ -37,9 +37,8 @@ final class ProfileViewModel: ObservableObject {
     @Published private(set) var revocationDetail: String
     @Published private(set) var isThreemaSafeActivated: Bool
  
+    private let businessInjector: BusinessInjectorProtocol
     private let safeStore: SafeStore
-    private let myIdentityStore: MyIdentityStore
-    private let serverConnector: ServerConnectorProtocol
     private let safeConfigManager: SafeConfigManager
     private let serverAPIConnector: ServerAPIConnector
     
@@ -56,7 +55,7 @@ final class ProfileViewModel: ObservableObject {
             updateRevocationDetail: loadRevocationDetail,
             didDismissModal: load
         ) { [weak self] password in
-            self?.myIdentityStore.backupIdentity(withPassword: password)
+            self?.businessInjector.myIdentityStore.backupIdentity(withPassword: password)
         }
     
     var hasProfile: Bool {
@@ -72,11 +71,11 @@ final class ProfileViewModel: ObservableObject {
     }
 
     var linkMobileNoPending: Bool {
-        myIdentityStore.linkMobileNoPending
+        businessInjector.myIdentityStore.linkMobileNoPending
     }
     
     public var publicKey: (key: Data, identity: String) {
-        (key: myIdentityStore.publicKey, identity: myIdentityStore.identity)
+        (key: businessInjector.myIdentityStore.publicKey, identity: businessInjector.myIdentityStore.identity)
     }
     
     public var shareThreemaID: String {
@@ -85,27 +84,24 @@ final class ProfileViewModel: ObservableObject {
    
     convenience init() {
         self.init(
-            serverConnector: BusinessInjector().serverConnector,
-            myIdentityStore: BusinessInjector().myIdentityStore as! MyIdentityStore,
+            businessInjector: BusinessInjector(),
             safeConfigManager: SafeConfigManager(),
             serverAPIConnector: ServerAPIConnector()
         )
     }
     
     init(
-        serverConnector: ServerConnectorProtocol,
-        myIdentityStore: MyIdentityStore,
+        businessInjector: BusinessInjectorProtocol,
         safeConfigManager: SafeConfigManager,
         serverAPIConnector: ServerAPIConnector
     ) {
-        self.serverConnector = serverConnector
-        self.myIdentityStore = myIdentityStore
+        self.businessInjector = businessInjector
         self.safeConfigManager = safeConfigManager
         self.serverAPIConnector = serverAPIConnector
         self.safeStore = .init(
             safeConfigManager: safeConfigManager,
             serverApiConnector: serverAPIConnector,
-            groupManager: GroupManager()
+            groupManager: businessInjector.groupManager
         )
         self.nickname = ""
         self.threemaID = ""
@@ -129,7 +125,7 @@ final class ProfileViewModel: ObservableObject {
                 activityViewController.popoverPresentationController?.sourceView = currentWindow.view
                 activityViewController.popoverPresentationController?.sourceRect = CGRectMake(
                     currentWindow.view.bounds.maxX,
-                    currentWindow.view.bounds.center.y,
+                    currentWindow.view.bounds.midY,
                     0,
                     0
                 )
@@ -168,20 +164,23 @@ final class ProfileViewModel: ObservableObject {
     }
     
     private func loadLinkedEmail() {
-        guard let linkedEmail = myIdentityStore.linkedEmail else {
+        guard let linkedEmail = businessInjector.myIdentityStore.linkedEmail else {
             self.linkedEmail = ""
             return
         }
         
-        if myIdentityStore.linkEmailPending {
+        if businessInjector.myIdentityStore.linkEmailPending {
             self.linkedEmail = BundleUtil.localizedString(forKey: "pending")
             
-            serverAPIConnector.checkLinkEmailStatus(myIdentityStore, email: linkedEmail) { [weak self] linked in
+            serverAPIConnector.checkLinkEmailStatus(
+                businessInjector.myIdentityStore as! MyIdentityStore,
+                email: linkedEmail
+            ) { [weak self] linked in
                 guard let self, linked else {
                     return
                 }
-                self.myIdentityStore.linkEmailPending = false
-                self.linkedEmail = self.myIdentityStore.linkedEmail
+                self.businessInjector.myIdentityStore.linkEmailPending = false
+                self.linkedEmail = self.businessInjector.myIdentityStore.linkedEmail
             } onError: { _ in }
         }
         else {
@@ -190,11 +189,11 @@ final class ProfileViewModel: ObservableObject {
     }
     
     private func loadLinkedMobile() {
-        if myIdentityStore.linkMobileNoPending {
+        if businessInjector.myIdentityStore.linkMobileNoPending {
             linkedMobile = BundleUtil.localizedString(forKey: "enter_code")
         }
         else {
-            if let linkedMobile = myIdentityStore.linkedMobileNo {
+            if let linkedMobile = businessInjector.myIdentityStore.linkedMobileNo {
                 self.linkedMobile = "+\(linkedMobile)"
             }
             else {
@@ -204,7 +203,7 @@ final class ProfileViewModel: ObservableObject {
     }
     
     private func loadQRCode() {
-        guard myIdentityStore.isProvisioned() else {
+        guard businessInjector.myIdentityStore.isProvisioned() else {
             return
         }
         
@@ -216,7 +215,7 @@ final class ProfileViewModel: ObservableObject {
     }
     
     private func loadNickname() {
-        if let pushFromName = myIdentityStore.pushFromName, !pushFromName.isEmpty {
+        if let pushFromName = businessInjector.myIdentityStore.pushFromName, !pushFromName.isEmpty {
             nickname = pushFromName
             threemaID = publicKey.identity
         }
@@ -227,7 +226,7 @@ final class ProfileViewModel: ObservableObject {
     }
     
     private func userProfile() -> Data? {
-        guard let profilePicture = myIdentityStore.profilePicture,
+        guard let profilePicture = businessInjector.myIdentityStore.profilePicture,
               let imageData = profilePicture["ProfilePicture"] as? Data else {
             return nil
         }
@@ -246,18 +245,21 @@ final class ProfileViewModel: ObservableObject {
     
     private func loadRevocationDetail() {
         let updateDetail: () -> Void = { [weak self] in
-            guard let setDate = self?.myIdentityStore.revocationPasswordSetDate else {
+            guard let setDate = self?.businessInjector.myIdentityStore.revocationPasswordSetDate else {
                 self?.revocationDetail = BundleUtil.localizedString(forKey: "revocation_password_not_set")
                 return
             }
             self?.revocationDetail = DateFormatter.getShortDate(setDate)
         }
         
-        guard let _ = myIdentityStore.revocationPasswordLastCheck else {
+        guard let _ = businessInjector.myIdentityStore.revocationPasswordLastCheck else {
             serverAPIConnector
-                .checkRevocationPassword(for: myIdentityStore) { [weak self] revocationPasswordSet, lastChanged in
-                    self?.myIdentityStore.revocationPasswordLastCheck = Date.now
-                    self?.myIdentityStore.revocationPasswordSetDate = revocationPasswordSet ? lastChanged : nil
+                .checkRevocationPassword(
+                    for: businessInjector.myIdentityStore as! MyIdentityStore
+                ) { [weak self] revocationPasswordSet, lastChanged in
+                    self?.businessInjector.myIdentityStore.revocationPasswordLastCheck = Date.now
+                    self?.businessInjector.myIdentityStore
+                        .revocationPasswordSetDate = revocationPasswordSet ? lastChanged : nil
                     updateDetail()
                 
                 } onError: { [weak self] _ in

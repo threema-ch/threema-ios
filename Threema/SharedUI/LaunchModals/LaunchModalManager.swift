@@ -29,7 +29,7 @@ import Foundation
     private lazy var safeStore = SafeStore(
         safeConfigManager: safeConfigManager,
         serverApiConnector: ServerAPIConnector(),
-        groupManager: GroupManager()
+        groupManager: BusinessInjector().groupManager
     )
     private lazy var safeManager = SafeManager(
         safeConfigManager: safeConfigManager,

@@ -536,7 +536,7 @@ static const NSUInteger newMaxLength = 6;
             [[AppGroup userDefaults] setInteger:0 forKey:@"FailedCodeAttempts"];
             [[AppGroup userDefaults] synchronize];
             
-            ConversationStore * conversationStore = [[ConversationStore alloc] init];
+            ConversationStore * conversationStore = [[BusinessInjector new] conversationStoreObjC];
             [conversationStore unmarkAllPrivateConversations];
             
             [self dismissViewControllerAnimated:YES completion:nil];

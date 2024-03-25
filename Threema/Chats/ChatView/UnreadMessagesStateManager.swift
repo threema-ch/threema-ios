@@ -186,9 +186,9 @@ final class UnreadMessagesStateManager {
         Promise { seal in
             updateQueue.async { [self] in
                 let shouldMarkAsRead = threadSafeDelegateShouldMarkMessagesAsRead
-                
+
                 let (unreadMessageObjectIDs, newestUnreadMessageObjectID) = currentUnreadDBState
-                
+
                 if !unreadMessageObjectIDs.isEmpty, newestUnreadMessageObjectID == nil {
                     fatalError("Illegal unread message state")
                 }
@@ -196,10 +196,10 @@ final class UnreadMessagesStateManager {
                    firstUnreadMessageObjectID != newestUnreadMessageObjectID {
                     fatalError("Illegal unread message state")
                 }
-                
+
                 let previousCount: Int
                 let oldestConsecutiveUnreadMessage: NSManagedObjectID?
-                
+
                 if let unreadMessagesState, unreadMessagesState.numberOfUnreadMessages > 0 {
                     previousCount = unreadMessagesState.numberOfUnreadMessages
                     oldestConsecutiveUnreadMessage = unreadMessagesState.oldestConsecutiveUnreadMessage
@@ -208,9 +208,9 @@ final class UnreadMessagesStateManager {
                     previousCount = 0
                     oldestConsecutiveUnreadMessage = newestUnreadMessageObjectID
                 }
-                
+
                 let newState: UnreadMessagesState
-                
+
                 let numberOfMessagesMarkedAsRead: Int
                 if shouldMarkAsRead {
                     numberOfMessagesMarkedAsRead = markAsReadAndWait(unreadMessageObjectIDs)
@@ -218,12 +218,12 @@ final class UnreadMessagesStateManager {
                 else {
                     numberOfMessagesMarkedAsRead = 0
                 }
-                
+
                 if willStayAtBottomOfView,
                    let unreadMessagesState,
                    unreadMessagesState.numberOfUnreadMessages == 0,
                    unreadMessagesState.oldestConsecutiveUnreadMessage == nil {
-                    
+
                     DDLogVerbose("Keep at zero because it was zero before and we're at the bottom of the view")
                     newState = UnreadMessagesState(
                         oldestConsecutiveUnreadMessage: nil,
@@ -260,9 +260,9 @@ final class UnreadMessagesStateManager {
                     )
                     firstRoundCompleted = true
                 }
-                
+
                 maybeUpdate(to: newState)
-                
+
                 seal.fulfill_()
             }
         }
@@ -296,36 +296,14 @@ final class UnreadMessagesStateManager {
             }
         }
         
-        var numberOfMessagesMarkedAsRead = 0
         let shouldMarkMessagesAsRead = threadSafeDelegateShouldMarkMessagesAsRead
 
         guard shouldMarkMessagesAsRead else {
             return 0
         }
-        
-        let dispatchGroup = DispatchGroup()
-        dispatchGroup.enter()
-        
-        _ = ConversationActions(businessInjector: businessInjector)
+
+        return ConversationActions(businessInjector: businessInjector)
             .read(conversation.objectID, messageObjectIDs: unreadMessageObjectIDs)
-            .done { markedAsRead in
-                DDLogNotice(
-                    "Requested mark as read for  \(unreadMessageObjectIDs.count) messages and marked \(markedAsRead) messages as read"
-                )
-                numberOfMessagesMarkedAsRead = markedAsRead
-            }
-            .ensure {
-                dispatchGroup.leave()
-            }
-            .catch { err in
-                let msg = "Could not mark messages as read due to an error \(err)"
-                DDLogError(msg)
-                fatalError(msg)
-            }
-        
-        dispatchGroup.wait()
-        
-        return numberOfMessagesMarkedAsRead
     }
     
     @discardableResult

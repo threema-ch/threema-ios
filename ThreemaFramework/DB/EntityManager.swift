@@ -87,10 +87,15 @@ public class EntityManager: NSObject {
     
     // MARK: - General actions
 
+    var hasBackgroundChildContext: Bool {
+        dbContext.current !== dbContext.main
+    }
+
     func isEqualWithCurrentContext(managedObjectContext: NSManagedObjectContext) -> Bool {
         dbContext.current === managedObjectContext
     }
 
+    @available(*, deprecated, renamed: "performSave(_:)")
     @objc public func performAsyncBlockAndSafe(_ block: (() -> Void)?) {
         // perform always runs on the correct queue for `current`
         dbContext.current.perform {
@@ -99,6 +104,7 @@ public class EntityManager: NSObject {
         }
     }
     
+    @available(*, deprecated, renamed: "performAndWaitSave(_:)")
     @objc public func performSyncBlockAndSafe(_ block: (() -> Void)?) {
         dbContext.current.performAndWait {
             block?()
@@ -106,12 +112,14 @@ public class EntityManager: NSObject {
         }
     }
     
+    @available(*, deprecated, renamed: "perform(_:)")
     @objc public func performBlock(_ block: (() -> Void)?) {
         dbContext.current.perform {
             block?()
         }
     }
 
+    @available(*, deprecated, renamed: "performAndWait(_:)")
     @objc public func performBlockAndWait(_ block: (() -> Void)?) {
         dbContext.current.performAndWait {
             block?()
@@ -331,18 +339,18 @@ public class EntityManager: NSObject {
                 DDLogWarn("No own message to be found for \(messageID)")
                 return
             }
-            
+
             // Only remove all possible contacts if there are any rejected
             guard !(dbMsg.rejectedBy?.isEmpty ?? true) else {
                 return
             }
-            
+
             for contactID in contactIDs {
                 // For example if your own ID happens to be in contactIDs the contact cannot be loaded
                 guard let contact = self.entityFetcher.contact(for: contactID) else {
                     continue
                 }
-                
+
                 dbMsg.removeRejectedBy(contact)
             }
         }

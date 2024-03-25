@@ -396,12 +396,8 @@
 "chat_search_searching" = "Vyhledávání...";
 "chat_search_no_matches" = "Žádné shody";
 "chat_search_matches" = "%d z %d shod";
-"chat_search_note" = "Poznámka: Popisky médií nejsou zahrnuty do výsledků vyhledávání.";
 
 "choose_recipient" = "Vyberte příjemce";
-
-"msg_unknown_group_request_sync_x_title" = "Přijetí zprávy v neznámé skupině";
-"msg_unknown_group_request_sync_x_message" = "Zpráva v neznámé skupině byla přijata. Od tvůrce skupiny (%@) byly vyžádány informace o skupině. Skupina se zobrazí, jakmile bude její tvůrce opět online.";
 
 "tap_to_cancel" = "Klepnutím zrušit";
 "previous" = "Předchozí";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Blokovaný kontakt";
 "call_status_failed_title" = "Hovor Threema";
 
-"call_threema_initiator_video_info" = "Klepnutím sem, zapnete kameru";
-"call_threema_remote_video_activated_info_title" = "Videohovor";
-"call_threema_remote_video_activated_info" = "Druhá strana zahájila videohovor. Klepnutím sem, zapnete kameru.";
-"call_threema_speaker_info" = "Klepnutím sem, zapnete hlasitý poslech";
-"call_threema_camera_disabled_info" = "Tento kontakt nepoužívá aktuální verzi aplikace nebo nedovoluje videohovory.";
-
-"call_threema_video_in_chat_info_title" = "Novinka: videohovory";
-
 "call_threema_cellular_instead_of_wifi_title" = "Volání přes mobilní síť";
 "call_threema_cellular_instead_of_wifi_text" = "Varování: Toto volání využívá k přenosu data mobilní sítě.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Archivované chaty";
 
 "archived_title" = "Archivováno";
-"conversations_search_placeholder" = "Kontakty, skupiny, ID...";
+"conversations_global_search_placeholder" = "Hledat";
+"one_to_one_chat" = "Osobní chat";
 
 "select_all" = "Vybrat vše";
 "deselect_all" = "Zrušit výběr všeho";
@@ -1613,8 +1602,8 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "poi_current_location" = "Moje poloha";
 "poi_marked_location" = "Umístěný špendlík";
 
-"notification_threemaweb_connectionlost_title" = "Ztráta připojení k webu Threema";
-"notification_threemaweb_connectionlost_body" = "Chcete-li pokračovat v používání webu Threema, znovu jej otevřete.";
+"notification_threemaweb_connectionlost_title" = "Připojení k desktopové aplikaci / webovému klientovi bylo ztraceno";
+"notification_threemaweb_connectionlost_body" = "Chcete-li pokračovat v používání desktopové aplikace / webového klienta, znovu aplikaci otevřete.";
 
 "settings_threema_web_connected" = "Připojení desktopu/webu";
 "settings_threema_web_connectioninfo" = "Abyste mohli zůstat připojeni, musí být vaše zařízení odemčené a v popředí musí být spuštěna aplikace %@. Během připojení se zařízení automaticky nezamkne.";
@@ -1698,6 +1687,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 "notification_group_sync_succeeded" = "Skupina synchronizována";
 "notification_group_sync_failed" = "Synchronizace skupiny se nezdařila";
+"notification_group_call_start_failed" = "Žádní člen nepodporuje skupinové hovory";
 
 "notification_settings_sync_pending" = "Synchronizace…";
 "notification_settings_sync_succeeded" = "Nastavení bylo synchronizováno";
@@ -1724,7 +1714,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 // Forward security status messages
 "forward_security_message_without" = "Byla přijata zpráva bez dopředné bezpečnosti. Ověřte, zda odesílatel záměrně vypnul funkci PFS.";
-"forward_security_session_established" = "Zprávy v tomto chatu jsou nyní chráněny technologií dopředné bezpečnosti.";
+"forward_security_session_established" = "Zprávy s tímto partnerem v chatu jsou nyní chráněny technologií dopředné bezpečnosti.";
 "forward_security_session_established_rx" = "Zprávy přijaté v tomto chatu jsou nyní chráněny technologií dopředné bezpečnosti. Povolením funkce PFS v kontaktních údajích ochráníte i odeslané zprávy.";
 "forward_security_messages_skipped_1" = "Od poslední zprávy se jedna zpráva ztratila.";
 "forward_security_messages_skipped_x" = "Od poslední zprávy se ztratily zprávy v počtu %d.";

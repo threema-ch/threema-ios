@@ -43,22 +43,31 @@ public actor PushSettingManager: PushSettingManagerProtocol {
     private let userSettings: UserSettingsProtocol
     private let groupManager: GroupManagerProtocol
     private let entityManager: EntityManager
+    private let taskManager: TaskManagerProtocol
     private let isWorkApp: Bool
 
-    public init(
+    init(
         _ userSettings: UserSettingsProtocol,
         _ groupManager: GroupManagerProtocol,
         _ entityManager: EntityManager,
+        _ taskManager: TaskManagerProtocol,
         _ isWorkApp: Bool
     ) {
         self.userSettings = userSettings
         self.groupManager = groupManager
         self.entityManager = entityManager
+        self.taskManager = taskManager
         self.isWorkApp = isWorkApp
     }
 
-    public init() {
-        self.init(UserSettings.shared(), GroupManager(), EntityManager(), LicenseStore.shared().getRequiresLicenseKey())
+    init(entityManager: EntityManager = EntityManager(), taskManager: TaskManagerProtocol = TaskManager()) {
+        self.init(
+            UserSettings.shared(),
+            GroupManager(entityManager: entityManager, taskManager: taskManager),
+            entityManager,
+            taskManager,
+            LicenseStore.shared().getRequiresLicenseKey()
+        )
     }
 
     /// Get stored or default push setting for contact
@@ -176,8 +185,8 @@ public actor PushSettingManager: PushSettingManagerProtocol {
                     let mediatorSyncableGroup = MediatorSyncableGroup(
                         userSettings,
                         self,
-                        TaskManager(),
-                        GroupManager(entityManager: entityManager)
+                        taskManager,
+                        groupManager
                     )
                     await mediatorSyncableGroup.updateNotificationSound(
                         identity: groupIdentity,
@@ -314,16 +323,16 @@ public actor PushSettingManager: PushSettingManagerProtocol {
 
 @objc public class PushSettingManagerObjc: NSObject {
     @available(*, deprecated, message: "Use PushSettingManager instead")
-    @objc public static func canSendPush(for message: BaseMessage) -> Bool {
-        let pushSettingManager = PushSettingManager()
-        return pushSettingManager.canSendPush(for: message)
+    @objc public static func canSendPush(for message: BaseMessage, entityManager: EntityManager) -> Bool {
+        BusinessInjector(entityManager: entityManager)
+            .pushSettingManager.canSendPush(for: message)
     }
 
     @available(*, deprecated, message: "Use PushSettingManager instead")
-    @objc public static func delete(threemaIdentity identity: String) {
+    @objc public static func delete(threemaIdentity identity: String, entityManager: EntityManager) {
         Task {
-            let pushSettingManager = PushSettingManager()
-            await pushSettingManager.delete(forContact: ThreemaIdentity(identity))
+            await BusinessInjector(entityManager: entityManager)
+                .pushSettingManager.delete(forContact: ThreemaIdentity(identity))
         }
     }
 }

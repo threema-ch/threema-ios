@@ -96,7 +96,6 @@
 
             // If group creator it's me the message couldn't processed because of missing group
             if (![_message.groupCreator isEqualToString:myIdentityStore.identity]) {
-                // Just store this message in memory and request group sync
                 [self sendSyncRequest];
             }
             else {
@@ -177,9 +176,8 @@
         !([_message isKindOfClass:[GroupLeaveMessage class]] == YES && [_message.groupCreator isEqualToString:_message.fromIdentity])) {
 
         // do that only if it's not from notification extension file
-        DDLogInfo(@"%@ is not member of group %@, add to pending messages and request group sync", _message.fromIdentity, [NSString stringWithHexData:_message.groupId]);
+        DDLogWarn(@"Group (id: %@ creator: %@) not found for message from %@. Discard message.", [NSString stringWithHexData:_message.groupId], _message.groupCreator, _message.fromIdentity);
         [groupManager sendSyncRequestWithGroupID:_message.groupId creator:_message.groupCreator force:false];
-        _addToPendingMessages = YES;
     }
 }
 

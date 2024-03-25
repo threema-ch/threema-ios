@@ -18,8 +18,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 public protocol MultiDeviceManagerProtocol {
     var thisDevice: DeviceInfo { get }
@@ -34,15 +36,29 @@ public enum MultiDeviceManagerError: Error {
 
 public class MultiDeviceManager: MultiDeviceManagerProtocol {
     private let serverConnector: ServerConnectorProtocol
+    private let contactStore: ContactStoreProtocol
     private let userSettings: UserSettingsProtocol
+    private let entityManager: EntityManager
 
-    required init(serverConnector: ServerConnectorProtocol, userSettings: UserSettingsProtocol) {
+    required init(
+        serverConnector: ServerConnectorProtocol,
+        contactStore: ContactStoreProtocol,
+        userSettings: UserSettingsProtocol,
+        entityManager: EntityManager
+    ) {
         self.serverConnector = serverConnector
+        self.contactStore = contactStore
         self.userSettings = userSettings
+        self.entityManager = entityManager
     }
 
     public convenience init() {
-        self.init(serverConnector: ServerConnector.shared(), userSettings: UserSettings.shared())
+        self.init(
+            serverConnector: ServerConnector.shared(),
+            contactStore: ContactStore.shared(),
+            userSettings: UserSettings.shared(),
+            entityManager: EntityManager()
+        )
     }
 
     /// Get device info from this device.
@@ -100,24 +116,66 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         try await withCheckedThrowingContinuation { continuation in
             otherDevices()
                 .then { otherDevices -> Promise<Void> in
-                    self.drop(devices: otherDevices)
+                    DDLogNotice("Drop other devices")
+                    return self.drop(devices: otherDevices)
                 }
                 .then { () -> Promise<Void> in
-                    self.drop(device: self.thisDevice)
+                    DDLogNotice("Drop this device")
+                    return self.drop(device: self.thisDevice)
                 }
                 .then { () -> Promise<Void> in
+                    DDLogNotice("Deactivate multi device")
                     self.serverConnector.deactivateMultiDevice()
-                    
-                    FeatureMask.update()
-                                        
+                                                            
                     return Promise()
                 }
                 .done {
                     continuation.resume()
                 }
                 .catch { error in
+                    DDLogWarn("Disable multi device failed: \(error)")
                     continuation.resume(throwing: error)
                 }
         }
+        
+        // TODO: (SE-199) Remove everything below
+        
+        // Update feature masks
+        
+        await FeatureMask.updateLocal()
+        
+        do {
+            DDLogNotice("Contact status update start")
+            
+            let updateTask: Task<Void, Error> = Task {
+                try await contactStore.updateStatusForAllContacts(ignoreInterval: true)
+            }
+            
+            // The request time out is 30s thus we wait for 40s for it to complete
+            switch try await Task.timeout(updateTask, 40) {
+            case .result:
+                break
+            case let .error(error):
+                DDLogError("Contact status update error: \(error ?? "nil")")
+            case .timeout:
+                DDLogWarn("Contact status update time out")
+            }
+        }
+        catch {
+            // We should still try the next steps if this fails and don't report this error back to the caller
+            DDLogWarn("Contact status update error: \(error)")
+        }
+        
+        // Run refresh steps for all solicitedContactIdentities.
+        // (See _Application Update Steps_ in the Threema Protocols for details.)
+        
+        DDLogNotice("Fetch solicited contacts")
+        let solicitedContactIdentities = await entityManager.perform {
+            self.entityManager.entityFetcher.allSolicitedContactIdentities()
+        }
+        
+        await ForwardSecurityRefreshSteps().run(for: solicitedContactIdentities.map {
+            ThreemaIdentity($0)
+        })
     }
 }

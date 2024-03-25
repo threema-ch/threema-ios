@@ -56,6 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Relationships
 @property (nonatomic, retain, nullable) NSOrderedSet *ballots;
+/// For group conversations this is `nil` if I am the creator 
 @property (nonatomic, retain, nullable) ContactEntity *contact;
 @property (nonatomic, retain, nullable) ImageData *groupImage;
 @property (nonatomic, retain, nullable) BaseMessage *lastMessage;

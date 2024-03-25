@@ -41,17 +41,17 @@ import Foundation
             super.delete(object)
         }
     }
-    
+
     // MARK: - Private Helper Function
-    
+
     private func delete(_ conversation: Conversation) {
         guard verifyNoLeftOverMessages(in: Set([conversation])) else {
             fatalError()
         }
-        
+
         super.delete(conversation)
     }
-    
+
     private func delete(_ contact: ContactEntity) {
         if let conversationsObjects = contact.conversations {
             if let conversations = conversationsObjects as? Set<Conversation> {
@@ -60,7 +60,7 @@ import Foundation
                 }
             }
         }
-        
+
         if let conversationsObjects = contact.groupConversations {
             if let conversations = conversationsObjects as? Set<Conversation> {
                 guard verifyNoLeftOverMessages(in: conversations, from: contact) else {
@@ -68,16 +68,10 @@ import Foundation
                 }
             }
         }
-        
-        if let conversations = contact.conversations {
-            guard conversations.isEmpty else {
-                fatalError()
-            }
-        }
-                
-        // We allow `contact.groupConversations` to be not empty as this will be properly handled by CoreData (nullify
-        // on delete of contact)
-        
+
+        // We allow `contact.conversations` and `contact.groupConversations` to be not empty as this will be properly
+        // handled by CoreData (nullify on delete of contact)
+
         super.delete(contact)
     }
 
@@ -92,7 +86,7 @@ import Foundation
 
         return super.delete(message)
     }
-    
+
     /// Verifies that no messages exist with a relation to the conversation
     ///  Will crash if the fetch request for messages fails
     /// - Parameter conversation: the conversation to verify

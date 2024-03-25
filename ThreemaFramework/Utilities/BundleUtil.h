@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSBundle *)frameworkBundle;
 
+/// In an extension this returns `nil` if the main app is fully terminated, but might return the main bundle if the app is just backgrounded
 + (nullable NSBundle *)mainBundle;
 
 + (nullable NSString *)threemaAppGroupIdentifier;

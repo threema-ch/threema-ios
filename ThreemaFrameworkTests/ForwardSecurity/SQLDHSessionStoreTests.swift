@@ -35,6 +35,8 @@ class SQLDHSessionStoreTests: XCTestCase {
     private var store: SQLDHSessionStore!
     
     override func setUpWithError() throws {
+        AppGroup.setGroupID("group.ch.threema")
+        
         continueAfterFailure = false
         storePath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".db").path
         store = try SQLDHSessionStore(path: storePath!, keyWrapper: DummyKeyWrapper())
@@ -157,6 +159,63 @@ class SQLDHSessionStoreTests: XCTestCase {
         XCTAssertNotEqual(secondSession.peerRatchet4DH, retrievedSession2?.peerRatchet4DH)
     }
     
+    func testUpdateDHSessionRatchetsButNotVersions() throws {
+        let mySession = makeRandomDHSession(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+            fourDh: true
+        )
+        
+        try store!.storeDHSession(session: mySession)
+                
+        mySession.myRatchet4DH!.turn()
+
+        let expectedCurrent4DHVersions = mySession.current4DHVersions
+        
+        // Upgrade version, but this should not be persisted if only ratchets are persisted
+        let processedVersions = ProcessedVersions(
+            offeredVersion: .v12,
+            appliedVersion: .v12,
+            pending4DHVersion: DHVersions(local: .v12, remote: .v12)
+        )
+        let updatesVersionsSnapshot = mySession.commitVersion(processedVersions: processedVersions)
+        XCTAssertNotNil(updatesVersionsSnapshot)
+        
+        try store!.updateDHSessionRatchets(session: mySession, peer: false)
+        
+        // Retrieve session again from DB and compare
+        let retrievedSession = try XCTUnwrap(store!.exactDHSession(
+            myIdentity: mySession.myIdentity,
+            peerIdentity: mySession.peerIdentity,
+            sessionID: mySession.id
+        ))
+        XCTAssertEqual(retrievedSession.id, mySession.id)
+        XCTAssertEqual(retrievedSession.myRatchet2DH, mySession.myRatchet2DH)
+        XCTAssertEqual(retrievedSession.myRatchet4DH, mySession.myRatchet4DH)
+        XCTAssertEqual(retrievedSession.peerRatchet2DH, mySession.peerRatchet2DH)
+        XCTAssertEqual(retrievedSession.peerRatchet4DH, mySession.peerRatchet4DH)
+        XCTAssertEqual(retrievedSession.current4DHVersions, expectedCurrent4DHVersions)
+        XCTAssertNotEqual(retrievedSession.current4DHVersions, mySession.current4DHVersions)
+
+        // Do the same for the peer ratchet
+        
+        mySession.peerRatchet4DH!.turn()
+        try store!.updateDHSessionRatchets(session: mySession, peer: true)
+        
+        let retrievedSession2 = try XCTUnwrap(store!.exactDHSession(
+            myIdentity: mySession.myIdentity,
+            peerIdentity: mySession.peerIdentity,
+            sessionID: mySession.id
+        ))
+        XCTAssertEqual(retrievedSession2.id, mySession.id)
+        XCTAssertEqual(retrievedSession2.myRatchet2DH, mySession.myRatchet2DH)
+        XCTAssertEqual(retrievedSession2.myRatchet4DH, mySession.myRatchet4DH)
+        XCTAssertEqual(retrievedSession2.peerRatchet2DH, mySession.peerRatchet2DH)
+        XCTAssertEqual(retrievedSession2.peerRatchet4DH, mySession.peerRatchet4DH)
+        XCTAssertEqual(retrievedSession2.current4DHVersions, expectedCurrent4DHVersions)
+        XCTAssertNotEqual(retrievedSession2.current4DHVersions, mySession.current4DHVersions)
+    }
+    
     private func copy(session: DHSession) -> DHSession {
         let myRatchet2DH: KDFRatchet?
         let myRatchet4DH: KDFRatchet?
@@ -198,8 +257,109 @@ class SQLDHSessionStoreTests: XCTestCase {
             myRatchet4DH: myRatchet4DH,
             peerRatchet2DH: peerRatchet2DH,
             peerRatchet4DH: peerRatchet4DH,
-            current4DHVersions: DHVersions(local: .v11, remote: .v11)
+            current4DHVersions: DHVersions(local: .v11, remote: .v11),
+            newSessionCommitted: session.newSessionCommitted,
+            lastMessageSent: session.lastMessageSent
         )
+    }
+    
+    func testUpdateDHSessionCommitAndLastMessageSentDate() throws {
+        let mySession = makeRandomDHSession(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+            fourDh: false
+        )
+        
+        try store!.storeDHSession(session: mySession)
+        
+        // New session should not be committed and no FS message sent
+        XCTAssertFalse(mySession.newSessionCommitted)
+        XCTAssertNil(mySession.lastMessageSent)
+
+        mySession.newSessionCommitted = true
+        mySession.lastMessageSent = .now
+        
+        try store!.updateNewSessionCommitLastMessageSentDateAndVersions(session: mySession)
+        
+        // Retrieve session again from DB and compare
+        let retrievedSession = try store!.exactDHSession(
+            myIdentity: mySession.myIdentity,
+            peerIdentity: mySession.peerIdentity,
+            sessionID: mySession.id
+        )
+        XCTAssertEqual(retrievedSession!, mySession)
+    }
+    
+    func testUpdateDHSessionLastMessageSentDateAndVersions() throws {
+        let mySession = makeRandomDHSession(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+            fourDh: true
+        )
+        
+        try store!.storeDHSession(session: mySession)
+
+        mySession.lastMessageSent = .now
+        
+        // Upgrade versions
+        let processedVersions = ProcessedVersions(
+            offeredVersion: .v12,
+            appliedVersion: .v12,
+            pending4DHVersion: DHVersions(local: .v12, remote: .v12)
+        )
+        let updatesVersionsSnapshot = mySession.commitVersion(processedVersions: processedVersions)
+        XCTAssertNotNil(updatesVersionsSnapshot)
+        
+        try store!.updateNewSessionCommitLastMessageSentDateAndVersions(session: mySession)
+        
+        // Retrieve session again from DB and compare
+        let retrievedSession = try store!.exactDHSession(
+            myIdentity: mySession.myIdentity,
+            peerIdentity: mySession.peerIdentity,
+            sessionID: mySession.id
+        )
+        XCTAssertEqual(retrievedSession!, mySession)
+    }
+    
+    func testUpdateDHSessionDoNotAllowVersionsDowngrade() throws {
+        let mySession = makeRandomDHSession(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+            fourDh: true
+        )
+        
+        try store!.storeDHSession(session: mySession)
+        
+        // Add some seconds such that we're for sure more than a second apart form the initial date set
+        mySession.lastMessageSent = Date(timeIntervalSinceNow: 2)
+        
+        let expectedCurrent4DHVersions = mySession.current4DHVersions
+        
+        // Downgrade versions, which should not be persisted
+        let processedVersions = ProcessedVersions(
+            offeredVersion: .v10,
+            appliedVersion: .v10,
+            pending4DHVersion: DHVersions(local: .v10, remote: .v10)
+        )
+        let updatesVersionsSnapshot = mySession.commitVersion(processedVersions: processedVersions)
+        XCTAssertNotNil(updatesVersionsSnapshot)
+        
+        try store!.updateNewSessionCommitLastMessageSentDateAndVersions(session: mySession)
+        
+        // Retrieve session again from DB and compare
+        let retrievedSession = try XCTUnwrap(store!.exactDHSession(
+            myIdentity: mySession.myIdentity,
+            peerIdentity: mySession.peerIdentity,
+            sessionID: mySession.id
+        ))
+
+        XCTAssertEqual(retrievedSession.id, mySession.id)
+        let actualLastMessageSent = try XCTUnwrap(retrievedSession.lastMessageSent)
+        let expectedLastMessageSent = try XCTUnwrap(mySession.lastMessageSent)
+        // As the stored date loses some precision we only compare it down to the second
+        XCTAssertTrue(actualLastMessageSent.distance(to: expectedLastMessageSent) < 1)
+        
+        XCTAssertEqual(retrievedSession.current4DHVersions, expectedCurrent4DHVersions)
     }
     
     func testBestDHSession4DH() throws {
@@ -520,6 +680,8 @@ class SQLDHSessionStoreTests: XCTestCase {
         let myRatchet4DH: KDFRatchet?
         let peerRatchet2DH: KDFRatchet?
         let peerRatchet4DH: KDFRatchet?
+        let newSessionCommitted: Bool
+        let lastMessageSent: Date?
         
         switch state {
         case .L20:
@@ -527,21 +689,32 @@ class SQLDHSessionStoreTests: XCTestCase {
             myRatchet4DH = nil
             peerRatchet2DH = nil
             peerRatchet4DH = nil
+            newSessionCommitted = false
+            lastMessageSent = nil
+            
         case .RL44:
             myRatchet2DH = nil
             myRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
             peerRatchet2DH = nil
             peerRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+            newSessionCommitted = true
+            lastMessageSent = .now
+
         case .R20:
             myRatchet2DH = nil
             myRatchet4DH = nil
             peerRatchet2DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
             peerRatchet4DH = nil
+            newSessionCommitted = true
+            lastMessageSent = .now
+
         case .R24:
             myRatchet2DH = nil
             myRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
             peerRatchet2DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
             peerRatchet4DH = KDFRatchet(counter: 1, initialChainKey: randomKey())
+            newSessionCommitted = true
+            lastMessageSent = .now
         }
         
         return try! DHSession(
@@ -554,7 +727,9 @@ class SQLDHSessionStoreTests: XCTestCase {
             myRatchet4DH: myRatchet4DH,
             peerRatchet2DH: peerRatchet2DH,
             peerRatchet4DH: peerRatchet4DH,
-            current4DHVersions: DHVersions(local: .v11, remote: .v11)
+            current4DHVersions: DHVersions(local: .v11, remote: .v11),
+            newSessionCommitted: newSessionCommitted,
+            lastMessageSent: lastMessageSent
         )
     }
     

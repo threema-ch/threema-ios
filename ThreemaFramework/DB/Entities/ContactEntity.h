@@ -65,6 +65,7 @@ enum {
 @property (nonatomic, retain, nullable) NSNumber * abRecordId NS_SWIFT_NAME(abRecordID);
 @property (nonatomic, retain, nullable) NSString * cnContactId NS_SWIFT_NAME(cnContactID);
 @property (nonatomic, retain, nullable) NSDate * createdAt;
+@property (nonatomic, retain) NSNumber * featureMask;
 @property (nonatomic, retain, nullable) NSString * firstName;
 @property (nonatomic, retain) NSString * identity;
 @property (nonatomic, retain, nullable) NSData * imageData;
@@ -102,7 +103,6 @@ enum {
 @property (readonly) NSString * displayName;
 @property (readonly) NSString * mentionName;
 @property (nonatomic) BOOL isContactHidden;
-@property (nonatomic) NSNumber * featureMask;
 @property (nonatomic) TypingIndicator typingIndicator;
 @property (nonatomic) ReadReceipt readReceipt;
 @property (nonatomic) ImportedStatus importedStatus;

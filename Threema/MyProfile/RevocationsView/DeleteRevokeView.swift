@@ -54,6 +54,9 @@ struct DeleteRevokeView: View {
         .onAppear {
             UIScrollView.appearance().isScrollEnabled = false
         }
+        .onDisappear {
+            UIScrollView.appearance().isScrollEnabled = true
+        }
         .navigationBarHidden(true)
         .dynamicTypeSize(.small ... .xxxLarge)
         .colorScheme(.dark)

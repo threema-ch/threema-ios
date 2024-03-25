@@ -137,7 +137,6 @@
 #import <ThreemaFramework/VideoMessageEntity.h>
 #import <ThreemaFramework/ValidationLogger.h>
 #import <ThreemaFramework/WebClientSession.h>
-#import <ThreemaFramework/FeatureMask.h>
 #import <ThreemaFramework/QuoteUtil.h>
 #import <ThreemaFramework/ContactGroupPickerViewController.h>
 #import <ThreemaFramework/KKPasscodeLock.h>

@@ -71,7 +71,9 @@ final class ChatViewController: ThemedViewController {
     
     private let businessInjector: BusinessInjectorProtocol
     private let entityManager: EntityManager
-    
+
+    private var observerConversation: NSKeyValueObservation?
+
     // MARK: - Debug
     
     private let initTime = CACurrentMediaTime()
@@ -567,7 +569,7 @@ final class ChatViewController: ThemedViewController {
     // MARK: - GroupCalls
     
     private lazy var groupCallGroupModel: GroupCallsThreemaGroupModel? = {
-        guard let group = GroupManager().getGroup(conversation: conversation) else {
+        guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
             return nil
         }
         
@@ -724,9 +726,11 @@ final class ChatViewController: ThemedViewController {
     
     deinit {
         DDLogVerbose("\(#function)")
-        
+
+        observerConversation?.invalidate()
+
         NotificationCenter.default.removeObserver(self)
-        
+
         DispatchQueue.global().async {
             /// Clean up temporary files that might be leftover from playing voice messages
             FileUtility.cleanTemporaryDirectory()
@@ -736,6 +740,18 @@ final class ChatViewController: ThemedViewController {
     // MARK: - Configuration
     
     private func addObservers() {
+
+        // Observe `Conversation.willBeDeleted` to close this view
+        observerConversation = conversation.observe(\.willBeDeleted) { [weak self] conversation, _ in
+            guard let strongSelf = self else {
+                return
+            }
+
+            if conversation.willBeDeleted {
+                strongSelf.navigationController?.popViewController(animated: true)
+            }
+        }
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(applicationDidEnterBackground),
@@ -777,7 +793,7 @@ final class ChatViewController: ThemedViewController {
             name: NSNotification.Name(rawValue: kNotificationWallpaperChanged),
             object: nil
         )
-
+        
         if businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on deinit
             startGroupCallObserver()
@@ -804,20 +820,19 @@ final class ChatViewController: ThemedViewController {
                 guard let strongSelf = self else {
                     return false
                 }
-                
-                var isEqual: Bool?
-                strongSelf.businessInjector.backgroundEntityManager.performBlockAndWait {
-                    guard let tempConversation = strongSelf.businessInjector.backgroundEntityManager.entityFetcher
-                        .existingObject(with: strongSelf.conversation.objectID) as? Conversation else {
-                        return
+
+                return strongSelf.businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
+                    backgroundBusinessInjector.entityManager.performAndWait {
+                        guard let tempConversation = backgroundBusinessInjector.entityManager.entityFetcher
+                            .existingObject(with: strongSelf.conversation.objectID) as? Conversation else {
+                            return false
+                        }
+                        return tempConversation.isEqualTo(
+                            groupIdentity: update.groupIdentity,
+                            myIdentity: backgroundBusinessInjector.myIdentityStore.identity
+                        )
                     }
-                    isEqual = tempConversation.isEqualTo(
-                        groupIdentity: update.groupIdentity,
-                        myIdentity: strongSelf.businessInjector.myIdentityStore.identity
-                    )
                 }
-                
-                return isEqual ?? false
             }
             .sink(receiveValue: { [weak self] update in
                 DDLogVerbose("[GroupCall] Update ChatView banner for Call")
@@ -1088,9 +1103,8 @@ extension ChatViewController {
             else if UserSettings.shared()?.enableThreemaCall == true,
                     let contact = conversation.contact {
                 let contactSet = Set<ContactEntity>([contact])
-
-                FeatureMask.check(Int(FEATURE_MASK_VOIP), forContacts: contactSet) { unsupportedContacts in
-                    if unsupportedContacts?.isEmpty == true ||
+                FeatureMask.check(contacts: contactSet, for: Int(FEATURE_MASK_VOIP)) { unsupportedContacts in
+                    if unsupportedContacts.isEmpty == true ||
                         ProcessInfoHelper.isRunningForScreenshots {
                         self.navigationItem.rightBarButtonItem = self.callBarButtonItem
                     }
@@ -1166,7 +1180,7 @@ extension ChatViewController {
         let detailsViewController: UIViewController
         
         if conversation.isGroup() {
-            guard let group = GroupManager().getGroup(conversation: conversation) else {
+            guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
                 fatalError("No group conversation found for this conversation")
             }
             
@@ -1601,6 +1615,44 @@ extension ChatViewController {
         }
         else {
             DDLogError("\(#function): Timing Error. Message was not yet applied")
+        }
+    }
+    
+    private func jumpContentLoadUnsafeAndSelect(to searchedMessageObjectID: NSManagedObjectID, animated: Bool = false) {
+        jumpContentLoadUnsafe(to: searchedMessageObjectID)
+        dataSource.initialSetupCompleted = true
+        
+        guard let indexPath = dataSource.indexPath(
+            for: ChatViewDataSource.CellType.message(objectID: searchedMessageObjectID)
+        ) else {
+            DDLogWarn("Couldn't get indexPath")
+            isJumping = false
+            dataSource.initialSetupCompleted = true
+            
+            tableView.alpha = 1.0
+            if UIAccessibility.isVoiceOverRunning {
+                UIView.setAnimationsEnabled(true)
+            }
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.dataSource.deselectAllMessages()
+            self.dataSource.didSelectRow(at: indexPath)
+            
+            // If scrollPosition is set to `.none` it will not scroll
+            self.tableView.selectRow(at: indexPath, animated: true, scrollPosition: .middle)
+            
+            self.isJumping = false
+            self.dataSource.initialSetupCompleted = true
+            
+            self.tableView.alpha = 1.0
+            if UIAccessibility.isVoiceOverRunning {
+                UIView.setAnimationsEnabled(true)
+                if let cell = self.tableView.cellForRow(at: indexPath) {
+                    UIAccessibility.post(notification: .layoutChanged, argument: cell)
+                }
+            }
         }
     }
     
@@ -2815,9 +2867,12 @@ extension ChatViewController: ChatSearchControllerDelegate {
 // Thus we move these closures into their own functions
 extension ChatViewController {
     private func chatViewDataSourceAfterFirstSnapshotApply() {
+        if let messageObjectID = showConversationInformation?.messageObjectID {
+            jumpContentLoadUnsafeAndSelect(to: messageObjectID)
+        }
         // TODO: (IOS-2014) Maybe don't show messages until restoration completes to disable flickering if restoration
         // fails and we load messages at the bottom
-        if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage {
+        else if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage {
             jumpContentLoadUnsafe(to: newestUnreadMessage)
             dataSource.initialSetupCompleted = true
             tableView.alpha = 1.0
@@ -2834,9 +2889,13 @@ extension ChatViewController {
     }
     
     private func chatViewDataSourceLoadAround() -> Date? {
-        if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage,
-           let message = entityManager.entityFetcher
-           .getManagedObject(by: newestUnreadMessage) as? BaseMessage {
+        if let globalSearchMessageID = showConversationInformation?.messageObjectID,
+           let message = entityManager.entityFetcher.getManagedObject(by: globalSearchMessageID) as? BaseMessage {
+            return message.date
+        }
+        else if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage,
+                let message = entityManager.entityFetcher
+                .getManagedObject(by: newestUnreadMessage) as? BaseMessage {
             return message.date
         }
         else {

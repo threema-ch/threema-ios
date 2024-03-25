@@ -74,7 +74,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     fileprivate let versionInfo: SQLDHSessionStoreVersionInfo
     
     fileprivate static let defaultVersionInfo = SQLDHSessionStoreVersionInfo(
-        dbVersion: 4,
+        dbVersion: 5,
         maximumSupportedDowngradeVersion: 5
     )
     
@@ -93,7 +93,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         self.versionInfo = versionInfo
         
         DDLogVerbose(
-            "[SQLDHSessionStoreMigration] [ForwardSecurity]  Initialized with version \(String(describing: db.userVersion))"
+            "[SQLDHSessionStoreMigration] [ForwardSecurity] Initialized with version \(db.userVersion ?? "unknown")"
         )
         
         // Ensure that we are securely deleting entries (no WAL mode / journal mode 'DELETE' and secure_delete on as
@@ -179,6 +179,11 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         if oldVersion < 4, newVersion >= 4 {
             DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v4")
             try upgradeToV4(db)
+        }
+        
+        if oldVersion < 5, newVersion >= 5 {
+            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v5")
+            try upgradeToV5(db)
         }
         
         DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Finished")
@@ -286,9 +291,11 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 myEphemeralPrivateKeyColumn <- self.keyWrapper.wrap(key: session.myEphemeralPrivateKey),
                 myEphemeralPublicKeyColumn <- session.myEphemeralPublicKey!,
                 myCurrentVersion4DHColumn <- (session.current4DHVersions?.local ?? .v10).rawValue,
-                peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue
+                peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue,
+                newSessionCommitted <- session.newSessionCommitted,
+                lastMessageSent <- session.lastMessageSent
             ))
-            DDLogNotice("[ForwardSecurity] Stored DH Session with id: \(session.description)")
+            DDLogNotice("[ForwardSecurity] Stored: \(session.description)")
         }
     }
     
@@ -327,9 +334,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         peerCounter2DHColumn <- uInt64ToInt64(value: session.peerRatchet2DH?.counter),
                         peerCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.peerRatchet4DH?.currentChainKey),
-                        peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter),
-                        myCurrentVersion4DHColumn <- (session.current4DHVersions?.local ?? .v10).rawValue,
-                        peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue
+                        peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter)
                     )
                 )
             }
@@ -351,14 +356,52 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         myCounter2DHColumn <- uInt64ToInt64(value: session.myRatchet2DH?.counter),
                         myCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.myRatchet4DH?.currentChainKey),
-                        myCounter4DHColumn <- uInt64ToInt64(value: session.myRatchet4DH?.counter),
-                        myCurrentVersion4DHColumn <- (session.current4DHVersions?.local ?? .v10).rawValue,
-                        peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue
+                        myCounter4DHColumn <- uInt64ToInt64(value: session.myRatchet4DH?.counter)
                     )
                 )
             }
         }
-        DDLogNotice("[ForwardSecurity] Updated DH Session with id: \(session.description)")
+        DDLogNotice("[ForwardSecurity] Updated: \(session.description)")
+    }
+    
+    public func updateNewSessionCommitLastMessageSentDateAndVersions(session: DHSession) throws {
+        // Validate that the session is now marked as committed
+        if !session.newSessionCommitted {
+            DDLogWarn(
+                "[ForwardSecurity] Updating last message date in a non-committed session. This should never happen."
+            )
+            assertionFailure()
+        }
+        
+        try dbQueue.sync {
+            _ = try db.run(
+                filterForSession(
+                    myIdentity: session.myIdentity,
+                    peerIdentity: session.peerIdentity,
+                    sessionID: session.id
+                ).update(
+                    newSessionCommitted <- session.newSessionCommitted,
+                    lastMessageSent <- session.lastMessageSent
+                )
+            )
+            
+            // Only update versions if they didn't change or increased
+            _ = try db.run(
+                filterForSession(
+                    myIdentity: session.myIdentity,
+                    peerIdentity: session.peerIdentity,
+                    sessionID: session.id,
+                    myCurrentVersion4DH: session.current4DHVersions?.local.rawValue,
+                    peerCurrentVersion4DH: session.current4DHVersions?.remote.rawValue
+                ).update(
+                    myCurrentVersion4DHColumn <- (session.current4DHVersions?.local ?? .v10).rawValue,
+                    peerCurrentVersion4DHColumn <- session.current4DHVersions?.remote.rawValue
+                )
+            )
+        }
+        DDLogNotice(
+            "[ForwardSecurity] Updated new session committed (\(session.newSessionCommitted)) and last message sent (\(String(describing: session.lastMessageSent))) in \(session.description)"
+        )
     }
     
     public func deleteDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID) throws -> Bool {
@@ -369,7 +412,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         .delete()
                 )
             DDLogNotice(
-                "[ForwardSecurity] Tried deleting DH Session with id: \(sessionID.description) peer: \(peerIdentity), success: \(numDeleted > 0)"
+                "[ForwardSecurity] Tried deleting: \(sessionID.description) peer: \(peerIdentity), success: \(numDeleted > 0)"
             )
             return numDeleted > 0
         }
@@ -403,6 +446,11 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 filter = filter.filter(myCurrentChainKey4DHColumn != nil)
             }
             let numDeleted = try db.run(filter.delete())
+            
+            DDLogNotice(
+                "[ForwardSecurity] Tried deleting all DH Session with peer: \(peerIdentity) except: \(excludeSessionID), count deleted: \(numDeleted)"
+            )
+            
             return numDeleted
         }
     }
@@ -456,6 +504,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             t.column(myEphemeralPublicKeyColumn)
             t.column(myCurrentVersion4DHColumn)
             t.column(peerCurrentVersion4DHColumn)
+            t.column(newSessionCommitted, defaultValue: false)
+            t.column(lastMessageSent)
             t.primaryKey(myIdentityColumn, peerIdentityColumn, sessionIDColumn)
         })
     }
@@ -467,14 +517,16 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         myCounter2DH: Int64? = nil,
         myCounter4DH: Int64? = nil,
         peerCounter2DH: Int64? = nil,
-        peerCounter4DH: Int64? = nil
+        peerCounter4DH: Int64? = nil,
+        myCurrentVersion4DH: Int? = nil,
+        peerCurrentVersion4DH: Int? = nil
     ) -> QueryType {
         switch sessionID {
         case let .some(dhSessionID):
             var queryType = sessionTable
                 .filter(
                     myIdentityColumn == myIdentity && peerIdentityColumn == peerIdentity && sessionIDColumn ==
-                        dhSessionID.data()
+                        dhSessionID.value
                 )
             if let myCounter2DH {
                 queryType = queryType.filter(myCounter2DHColumn <= myCounter2DH)
@@ -487,6 +539,13 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             }
             if let peerCounter4DH {
                 queryType = queryType.filter(peerCounter4DHColumn <= peerCounter4DH)
+            }
+            
+            if let myCurrentVersion4DH {
+                queryType = queryType.filter(myCurrentVersion4DHColumn <= myCurrentVersion4DH)
+            }
+            if let peerCurrentVersion4DH {
+                queryType = queryType.filter(peerCurrentVersion4DHColumn <= peerCurrentVersion4DH)
             }
             
             return queryType
@@ -503,7 +562,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         sessionTable
             .filter(
                 myIdentityColumn == myIdentity && peerIdentityColumn == peerIdentity && sessionIDColumn !=
-                    excludeSessionID.data()
+                    excludeSessionID.value
             )
     }
     
@@ -551,7 +610,9 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                     keyColumn: peerCurrentChainKey4DHColumn,
                     counterColumn: peerCounter4DHColumn
                 ),
-                current4DHVersions: dhVersions(from: row)
+                current4DHVersions: dhVersions(from: row),
+                newSessionCommitted: row.get(newSessionCommitted),
+                lastMessageSent: row.get(lastMessageSent)
             )
         }
         catch KeyWrappingError.decryptionFailed {

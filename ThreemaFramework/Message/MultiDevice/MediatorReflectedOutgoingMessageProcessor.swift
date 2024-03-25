@@ -130,9 +130,10 @@ class MediatorReflectedOutgoingMessageProcessor {
         case is BoxVoIPCallRingingMessage:
             return try process(outgoingMessage: omsg, voipCallRingingMessage: amsg as! BoxVoIPCallRingingMessage)
         default:
-            return Promise { $0.reject(
-                MediatorReflectedProcessorError.messageDecodeFailed(message: omsg.loggingDescription)
-            ) }
+            return Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
+                message: "Reflected outgoing message type \(omsg.loggingDescription) will be not processed"
+            ))
+            }
         }
     }
 
@@ -145,14 +146,13 @@ class MediatorReflectedOutgoingMessageProcessor {
         // TODO: Because fromIdentity is missing of reflected messages
         amsg.fromIdentity = frameworkInjector.myIdentityStore.identity
 
-        try messageStore.save(
+        return try messageStore.save(
             ballotCreateMessage: amsg,
             conversationIdentity: getReceiverIdentity(for: omsg),
             createdAt: getCreatedAt(for: omsg),
             reflectedAt: reflectedAt,
             isOutgoing: true
         )
-        return Promise()
     }
 
     private func process(
@@ -227,8 +227,8 @@ class MediatorReflectedOutgoingMessageProcessor {
         outgoingMessage omsg: D2d_OutgoingMessage,
         contactSetPhotoMessage amsg: ContactSetPhotoMessage
     ) -> Promise<Void> {
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
+        frameworkInjector.entityManager.performSyncBlockAndSafe {
+            let contact = self.frameworkInjector.entityManager.entityFetcher
                 .contact(for: amsg.toIdentity)
             contact?.profilePictureBlobID = amsg.blobID.base64EncodedString(options: .endLineWithLineFeed)
             contact?.profilePictureUpload = Date(timeIntervalSince1970: TimeInterval(omsg.createdAt))
@@ -314,7 +314,6 @@ class MediatorReflectedOutgoingMessageProcessor {
             reflectedAt: reflectedAt,
             isOutgoing: true
         )
-        return Promise()
     }
 
     private func process(
@@ -474,7 +473,7 @@ class MediatorReflectedOutgoingMessageProcessor {
 
         messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
             if !isOutgoing {
-                delegate.incomingMessageFinished(amsg, isPendingGroup: false)
+                delegate.incomingMessageFinished(amsg)
             }
         }
     }
@@ -482,8 +481,8 @@ class MediatorReflectedOutgoingMessageProcessor {
     // MARK: Misc
 
     private func getReceiverIdentity(for omsg: D2d_OutgoingMessage) throws -> String {
-        try frameworkInjector.backgroundEntityManager.performAndWait {
-            guard let receiverIdentity = self.frameworkInjector.backgroundEntityManager.entityFetcher
+        try frameworkInjector.entityManager.performAndWait {
+            guard let receiverIdentity = self.frameworkInjector.entityManager.entityFetcher
                 .contact(for: omsg.conversation.contact)?.identity else {
                 throw MediatorReflectedProcessorError.outgoingMessageReceiverNotFound(message: omsg.loggingDescription)
             }
@@ -494,8 +493,8 @@ class MediatorReflectedOutgoingMessageProcessor {
 
     @discardableResult
     private func getGroup(for omsg: D2d_OutgoingMessage) throws -> (groupID: Data, groupCreatorIdentity: String) {
-        try frameworkInjector.backgroundEntityManager.performAndWait {
-            guard let group = self.frameworkInjector.backgroundGroupManager.getGroup(
+        try frameworkInjector.entityManager.performAndWait {
+            guard let group = self.frameworkInjector.groupManager.getGroup(
                 omsg.conversation.group.groupID.littleEndianData,
                 creator: omsg.conversation.group.creatorIdentity
             ) else {

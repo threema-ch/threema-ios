@@ -53,9 +53,6 @@ final class TaskQueue {
     private let spoolingDelayMaxInterval: Float = 10
     private var isWaitingForSpooling = false
 
-    private let frameworkInjector: FrameworkInjectorProtocol
-    private let renewFrameworkInjector: Bool
-
     class QueueItem {
         let taskDefinition: TaskDefinition
         
@@ -81,24 +78,27 @@ final class TaskQueue {
         queue.list
     }
 
+    private let frameworkInjectorResolver: FrameworkInjectorResolverProtocol
+
+    private var frameworkInjector: FrameworkInjectorProtocol {
+        frameworkInjectorResolver.backgroundFrameworkInjector
+    }
+
     /// Task queue to handle tasks for processing incoming or outgoing messages.
     /// - Parameters:
     ///     - queueType: Set type for incoming or outgoing queue
-    ///     - frameworkInjector: Business injector will be used within task execution
-    ///     - renewFrameworkInjector: Set to false only for testing reason to use the mock class
+    ///     - supportedTypes: Supported TaskDefinition types to this queue
+    ///     - frameworkInjectorResolver: Resolver to get new `BusinessInjector` for background process
     required init(
         queueType: TaskQueueType,
         supportedTypes: [TaskDefinition.Type],
-        frameworkInjector: FrameworkInjectorProtocol,
-        renewFrameworkInjector: Bool = true
+        frameworkInjectorResolver: FrameworkInjectorResolverProtocol
     ) {
-        
         self.queueType = queueType
         self.supportedTypes = supportedTypes
-        self.frameworkInjector = frameworkInjector
-        self.renewFrameworkInjector = renewFrameworkInjector
+        self.frameworkInjectorResolver = frameworkInjectorResolver
     }
-    
+
     func enqueue(task: TaskDefinition, completionHandler: TaskCompletionHandler?) throws {
         guard supportedTypes.contains(where: { $0 === type(of: task) }) else {
             throw TaskQueueError.notSupportedType
@@ -191,16 +191,8 @@ final class TaskQueue {
                 
                 item.taskDefinition.state = .executing
                 
-                // Caution:
-                // - Use `self.frameworkInjector` only for testing reason! For every task to execute must be a new
-                //   instance, because of using EntityManager in background (means it works on private DB context)!
-                // - Do not use `self.frameworkInjector` for incoming message tasks `TaskDefinitionReceiveMessage` and
-                //   `TaskDefinitionReceiveReflectedMessage`! Must be a new instance because when is running in
-                //   Notification Extension process (see `NotificationService`) the database context is reseted and than
-                //   the `EntityManager` could be invalid.
-                let injector: FrameworkInjectorProtocol = self.renewFrameworkInjector ? BusinessInjector() :
-                    self.frameworkInjector
-                
+                let injector = self.frameworkInjectorResolver.backgroundFrameworkInjector
+
                 item.taskDefinition.create(frameworkInjector: injector).execute()
                     .done {
                         if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
@@ -224,25 +216,51 @@ final class TaskQueue {
                         self.done(item: item)
                     }
                     .catch(on: .global()) { error in
-                        if (error as NSError).code == ThreemaProtocolError.badMessage.rawValue ||
-                            (error as NSError).code == ThreemaProtocolError.blockUnknownContact.rawValue ||
-                            (error as NSError).code == ThreemaProtocolError.messageAlreadyProcessed.rawValue ||
-                            (error as NSError).code == ThreemaProtocolError.messageBlobDecryptionFailed.rawValue ||
-                            (error as NSError).code == ThreemaProtocolError.messageNonceReuse.rawValue ||
-                            (error as NSError).code == ThreemaProtocolError.unknownMessageType.rawValue {
-
-                            if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {
-                                DDLogNotice("\(task) discard incoming message: \(error)")
-
-                                try? self.frameworkInjector.nonceGuard.processed(boxedMessage: task.message)
-                                self.frameworkInjector.serverConnector.completedProcessingMessage(task.message)
-                            }
-                            else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                                DDLogNotice("\(task) discard reflected message: \(error)")
-
+                        switch error {
+                            
+                        case MessageProcessorError.unknownMessageType(session: _):
+                            self.handleReceivingError(error, for: item)
+                            
+                        case let nsError as NSError where nsError.code == ThreemaProtocolError.badMessage.rawValue ||
+                            nsError.code == ThreemaProtocolError.blockUnknownContact.rawValue ||
+                            nsError.code == ThreemaProtocolError.messageAlreadyProcessed.rawValue ||
+                            nsError.code == ThreemaProtocolError.messageBlobDecryptionFailed.rawValue ||
+                            nsError.code == ThreemaProtocolError.messageNonceReuse.rawValue ||
+                            nsError.code == ThreemaProtocolError.unknownMessageType.rawValue:
+                            
+                            self.handleReceivingError(error, for: item)
+                            
+                        case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage:
+                            DDLogWarn("\(item.taskDefinition) \(error)")
+                            self.done(item: item)
+                            
+                        case TaskExecutionError.conversationNotFound(for: _):
+                            DDLogError("\(item.taskDefinition) failed: \(error)")
+                            self.done(item: item)
+                            
+                        case TaskExecutionError.createAbstractMessageFailed:
+                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
+                            self.done(item: item)
+                            
+                        case TaskExecutionError.messageReceiverBlockedOrUnknown:
+                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
+                            self.done(item: item)
+                            
+                        case TaskExecutionTransactionError.shouldSkip:
+                            DDLogNotice("\(item.taskDefinition) skipped: \(error)")
+                            self.done(item: item)
+                            
+                        case TaskExecutionError.invalidContact(message: _):
+                            DDLogWarn("\(item.taskDefinition) \(error)")
+                            self.done(item: item)
+                        
+                        default:
+                            if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+                                DDLogNotice("\(item.taskDefinition) discard reflected message: \(error)")
+                                
                                 try? self.frameworkInjector.nonceGuard
                                     .processed(reflectedEnvelope: task.reflectedEnvelope)
-
+                                
                                 if let reflectMessageError = self.frameworkInjector.serverConnector
                                     .reflectMessage(
                                         self.frameworkInjector.mediatorMessageProtocol
@@ -253,71 +271,17 @@ final class TaskQueue {
                                         self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
                                         return
                                     }
-
-                                    DDLogError("\(item.taskDefinition) done \(reflectMessageError)")
+                                    
+                                    DDLogError(
+                                        "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
+                                    )
                                 }
+                                
+                                self.done(item: item)
                             }
                             else {
-                                DDLogError("\(item.taskDefinition) \(error)")
+                                self.failed(item: item, error: error, enableSpoolingDelay: false)
                             }
-
-                            self.done(item: item)
-                        }
-                        else if case ThreemaProtocolError.pendingGroupMessage = error {
-                            // Means processed message is pending group message
-                            DDLogWarn("\(item.taskDefinition) \(error)")
-                            self.done(item: item)
-                        }
-                        else if case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage = error {
-                            DDLogWarn("\(item.taskDefinition) \(error)")
-                            self.done(item: item)
-                        }
-                        else if case TaskExecutionError.conversationNotFound(for: _) = error {
-                            DDLogError("\(item.taskDefinition) failed: \(error)")
-                            self.done(item: item)
-                        }
-                        else if case TaskExecutionError.createAbstractMessageFailed = error {
-                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
-                            self.done(item: item)
-                        }
-                        else if case TaskExecutionError.messageReceiverBlockedOrUnknown = error {
-                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
-                            self.done(item: item)
-                        }
-                        else if let transactionError = error as? TaskExecutionTransactionError,
-                                transactionError == .shouldSkip {
-                            DDLogNotice("\(item.taskDefinition) skipped: \(error)")
-                            self.done(item: item)
-                        }
-                        else if case TaskExecutionError.invalidContact(message: _) = error {
-                            DDLogWarn("\(item.taskDefinition) \(error)")
-                            self.done(item: item)
-                        }
-                        else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                            DDLogNotice("\(item.taskDefinition) discard reflected message: \(error)")
-
-                            try? self.frameworkInjector.nonceGuard.processed(reflectedEnvelope: task.reflectedEnvelope)
-
-                            if let reflectMessageError = self.frameworkInjector.serverConnector
-                                .reflectMessage(
-                                    self.frameworkInjector.mediatorMessageProtocol
-                                        .encodeReflectedAck(reflectID: task.reflectID)
-                                ) as? NSError {
-
-                                guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
-                                    self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
-                                    return
-                                }
-
-                                DDLogError(
-                                    "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
-                                )
-                            }
-
-                            self.done(item: item)
-                        }
-                        else {
-                            self.failed(item: item, error: error, enableSpoolingDelay: false)
                         }
                     }
             }
@@ -469,6 +433,50 @@ final class TaskQueue {
     }
 
     // MARK: Private functions
+    
+    /// Handle receiving error
+    ///
+    /// Moved into extra function for better error handling readability
+    ///
+    /// - Parameters:
+    ///   - error: Error to handle
+    ///   - item: Item that threw error
+    private func handleReceivingError(_ error: Error, for item: QueueItem) {
+        if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {
+            DDLogNotice("\(task) discard incoming message: \(error)")
+            
+            frameworkInjector.serverConnector.completedProcessingMessage(task.message)
+            try? frameworkInjector.nonceGuard.processed(boxedMessage: task.message)
+            
+            // Persist ratcheted if erroring message was received in a FS session
+            // However don't persist new versions if any were negotiated, as we were unable to send an empty message to
+            // establish this new FS version.
+            if case let MessageProcessorError.unknownMessageType(session: session) = error, let session {
+                try? frameworkInjector.dhSessionStore.updateDHSessionRatchets(session: session, peer: true)
+            }
+        }
+        else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+            DDLogNotice("\(task) discard reflected message: \(error)")
+            
+            try? frameworkInjector.nonceGuard.processed(reflectedEnvelope: task.reflectedEnvelope)
+            
+            if let reflectMessageError = frameworkInjector.serverConnector.reflectMessage(
+                frameworkInjector.mediatorMessageProtocol.encodeReflectedAck(reflectID: task.reflectID)
+            ) as? NSError {
+                guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
+                    failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
+                    return
+                }
+                
+                DDLogError("\(item.taskDefinition) done \(reflectMessageError)")
+            }
+        }
+        else {
+            DDLogError("\(item.taskDefinition) \(error)")
+        }
+        
+        done(item: item)
+    }
 
     /// Processing of queue item is successfully done, task will be dequeued and execute next task.
     /// - Parameter item: Queue item

@@ -313,23 +313,21 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         -> (frameworkInjectorMock: BusinessInjectorMock, messageStoreMock: MessageStoreMock) {
 
         if let group {
-            let backgroundGroupManagerMock = GroupManagerMock()
-            backgroundGroupManagerMock.getGroupReturns.append(group)
+            let entityManager = EntityManager(databaseContext: dbBackgroundCnx)
+            let groupManagerMock = GroupManagerMock()
+            groupManagerMock.getGroupReturns.append(group)
 
             frameworkInjectorMock = BusinessInjectorMock(
-                backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-                backgroundGroupManager: backgroundGroupManagerMock,
-                backgroundUnreadMessages: UnreadMessages(
-                    entityManager: EntityManager(databaseContext: dbBackgroundCnx)
-                ),
-                entityManager: EntityManager(databaseContext: dbMainCnx)
+                entityManager: entityManager,
+                groupManager: groupManagerMock,
+                unreadMessages: UnreadMessages(
+                    entityManager: entityManager,
+                    taskManager: TaskManagerMock()
+                )
             )
         }
         else {
-            frameworkInjectorMock = BusinessInjectorMock(
-                backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-                entityManager: EntityManager(databaseContext: dbMainCnx)
-            )
+            frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbMainCnx))
         }
 
         return (frameworkInjectorMock, MessageStoreMock())

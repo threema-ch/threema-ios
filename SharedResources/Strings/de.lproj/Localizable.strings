@@ -397,12 +397,8 @@
 "chat_search_searching" = "Suchen…";
 "chat_search_no_matches" = "Keine Ergebnisse";
 "chat_search_matches" = "%d von %d Ergebnissen";
-"chat_search_note" = "Hinweis: Medienunterschriften werden nicht durchsucht.";
 
 "choose_recipient" = "Empfänger auswählen";
-
-"msg_unknown_group_request_sync_x_title" = "Nachricht in unbekannter Gruppe empfangen";
-"msg_unknown_group_request_sync_x_message" = "Eine Nachricht in einer unbekannten Gruppe wurde empfangen. Die Gruppeninformationen wurden beim Ersteller der Gruppe (%@) angefordert. Die Gruppe erscheint, sobald der Ersteller wieder online ist.";
 
 "tap_to_cancel" = "Antippen zum Abbrechen";
 "previous" = "Vorige";
@@ -765,14 +761,6 @@
 "call_status_blocked" = "Blockierter Kontakt";
 "call_status_failed_title" = "Threema-Anruf";
 
-"call_threema_initiator_video_info" = "Hier tippen, um die Kamera einzuschalten";
-"call_threema_remote_video_activated_info_title" = "Videoanruf";
-"call_threema_remote_video_activated_info" = "Ihr Gesprächspartner hat einen Videoanruf gestartet. Tippen Sie hier, um Ihre Kamera ebenfalls einzuschalten.";
-"call_threema_speaker_info" = "Hier tippen, um Freisprechen zu aktivieren";
-"call_threema_camera_disabled_info" = "Dieser Kontakt verwendet keine aktuelle App-Version oder lässt keine Videoanrufe zu.";
-
-"call_threema_video_in_chat_info_title" = "Neu: Videoanrufe";
-
 "call_threema_cellular_instead_of_wifi_title" = "Anruf über Mobilfunknetz";
 "call_threema_cellular_instead_of_wifi_text" = "Achtung: Dieser Anruf verursacht Datentransfer im Mobilfunknetz.";
 
@@ -841,7 +829,8 @@
 "archived_chats" = "Archivierte Chats";
 
 "archived_title" = "Archiviert";
-"conversations_search_placeholder" = "Kontakte, Gruppen, IDs …";
+"conversations_global_search_placeholder" = "Suchen";
+"one_to_one_chat" = "Einzelchat";
 
 "select_all" = "Alle auswählen";
 "deselect_all" = "Alle abwählen";
@@ -1615,8 +1604,8 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "poi_current_location" = "Mein Standort";
 "poi_marked_location" = "Stecknadel";
 
-"notification_threemaweb_connectionlost_title" = "Verbindung zu Threema Web wurde getrennt";
-"notification_threemaweb_connectionlost_body" = "Um Threema Web weiter zu verwenden, öffnen Sie bitte die App.";
+"notification_threemaweb_connectionlost_title" = "Verbindung mit der Desktop-App / dem Web-Client wurde getrennt";
+"notification_threemaweb_connectionlost_body" = "Um die Desktop-App / den Web-Client weiter zu verwenden, öffnen Sie bitte die App.";
 
 "settings_threema_web_connected" = "Desktop/Web verbunden";
 "settings_threema_web_connectioninfo" = "Ihr Gerät muss entsperrt und %@ im Vordergrund sein, damit die Verbindung aufrechterhalten bleibt. Bei aktiver Verbindung wird das Gerät nicht automatisch gesperrt.";
@@ -1700,6 +1689,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 
 "notification_group_sync_succeeded" = "Gruppe synchronisiert";
 "notification_group_sync_failed" = "Synchronisieren fehlgeschlagen";
+"notification_group_call_start_failed" = "Kein Mitglied unterstützt Gruppenanrufe";
 
 "notification_settings_sync_pending" = "Synchronisieren…";
 "notification_settings_sync_succeeded" = "Einstellungen synchronisiert";
@@ -1726,7 +1716,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 
 // Forward security status messages
 "forward_security_message_without" = "Eine Nachricht ohne Perfect Forward Secrecy wurde empfangen. Stellen Sie sicher, dass der Absender absichtlich Perfect Forward Secrecy deaktiviert hat.";
-"forward_security_session_established" = "Nachrichten in diesem Chat sind nun durch Perfect Forward Secrecy geschützt.";
+"forward_security_session_established" = "Nachrichten mit diesem Kontakt sind nun durch Perfect Forward Secrecy geschützt.";
 "forward_security_session_established_rx" = "Nachrichten, die in diesem Chat empfangen werden, sind nun durch Perfect Forward Secrecy geschützt. Aktivieren Sie Perfect Forward Secrecy in den Kontaktdetails, um auch gesendete Nachrichten zu schützen.";
 "forward_security_messages_skipped_1" = "Eine Nachricht ist seit der letzten Nachricht verlorengegangen.";
 "forward_security_messages_skipped_x" = "%d Nachrichten sind seit der letzten Nachricht verlorengegangen.";

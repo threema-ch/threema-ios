@@ -29,7 +29,7 @@ protocol TaskExecutionProtocol {
     init(
         taskContext: TaskContextProtocol,
         taskDefinition: TaskDefinitionProtocol,
-        frameworkInjector: FrameworkInjectorProtocol
+        backgroundFrameworkInjector: FrameworkInjectorProtocol
     )
     init(taskContext: TaskContextProtocol, taskDefinition: TaskDefinitionProtocol)
     

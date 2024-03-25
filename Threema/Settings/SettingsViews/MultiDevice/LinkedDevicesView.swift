@@ -217,7 +217,7 @@ struct EnabledMultiDeviceListView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             EnabledMultiDeviceListView(showWizard: .constant(false))
-                .environmentObject(SettingsStore())
+                .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
         }
     }
 }
@@ -335,7 +335,7 @@ struct DisabledMultiDeviceListView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             DisabledMultiDeviceListView(showWizard: .constant(false))
-                .environmentObject(SettingsStore())
+                .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
         }
     }
 }

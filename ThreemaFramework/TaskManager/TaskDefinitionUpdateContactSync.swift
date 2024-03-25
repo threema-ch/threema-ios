@@ -30,7 +30,7 @@ final class TaskDefinitionUpdateContactSync: TaskDefinition, TaskDefinitionTrans
         TaskExecutionUpdateContactSync(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

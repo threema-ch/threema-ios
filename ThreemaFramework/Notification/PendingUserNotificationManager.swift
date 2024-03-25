@@ -35,8 +35,7 @@ public protocol PendingUserNotificationManagerProtocol {
         -> PendingUserNotification?
     func pendingUserNotification(
         for abstractMessage: AbstractMessage,
-        stage: UserNotificationStage,
-        isPendingGroup: Bool
+        stage: UserNotificationStage
     ) -> PendingUserNotification?
     func pendingUserNotification(for baseMessage: BaseMessage, fromIdentity: String, stage: UserNotificationStage)
         -> PendingUserNotification?
@@ -49,7 +48,6 @@ public protocol PendingUserNotificationManagerProtocol {
     func addAsProcessed(pendingUserNotification: PendingUserNotification)
     func isProcessed(pendingUserNotification: PendingUserNotification) -> Bool
     func pendingUserNotificationsAreNotPending() -> [PendingUserNotification]?
-    func hasPendingGroupUserNotifications() -> Bool
     func isValid(pendingUserNotification: PendingUserNotification) -> Bool
     func loadAll()
 }
@@ -120,12 +118,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     /// - Parameters:
     ///     - for: Abstract message
     ///     - stage: Stage for the notification. Not used for fetching the pending notification
-    ///     - isPendingGroup: If set to true, indicates that the group for this message was not found
     /// - Returns: Pending user notification or nil, usually is 'abstract'
     public func pendingUserNotification(
         for abstractMessage: AbstractMessage,
-        stage: UserNotificationStage,
-        isPendingGroup: Bool
+        stage: UserNotificationStage
     ) -> PendingUserNotification? {
         var pendingUserNotification: PendingUserNotification?
         if let key = PendingUserNotificationKey.key(for: abstractMessage) {
@@ -133,7 +129,6 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 pendingUserNotification = getPendingUserNotification(key: key)
                 pendingUserNotification?.abstractMessage = abstractMessage
                 pendingUserNotification?.stage = stage
-                pendingUserNotification?.isPendingGroup = isPendingGroup
                 PendingUserNotificationManager.savePendingUserNotifications()
             }
         }
@@ -156,7 +151,6 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 pendingUserNotification = getPendingUserNotification(key: key)
                 pendingUserNotification?.baseMessage = baseMessage
                 pendingUserNotification?.stage = stage
-                pendingUserNotification?.isPendingGroup = false
                 PendingUserNotificationManager.savePendingUserNotifications()
             }
         }
@@ -172,7 +166,6 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
             PendingUserNotificationManager.pendingQueue.sync {
                 pendingUserNotification = getPendingUserNotification(key: key)
                 pendingUserNotification?.stage = stage
-                pendingUserNotification?.isPendingGroup = false
                 PendingUserNotificationManager.savePendingUserNotifications()
             }
         }
@@ -203,8 +196,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 return
             }
 
-            guard !pendingUserNotification.isPendingGroup,
-                  !isProcessed(pendingUserNotification: pendingUserNotification) else {
+            guard !isProcessed(pendingUserNotification: pendingUserNotification) else {
                 userNotificationCenterManager.remove(
                     key: pendingUserNotification.key,
                     exceptStage: nil,
@@ -461,14 +453,6 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         }
         
         return pendingUserNotificationsAreNotPending
-    }
-    
-    public func hasPendingGroupUserNotifications() -> Bool {
-        var count = 0
-        PendingUserNotificationManager.pendingQueue.sync {
-            count = PendingUserNotificationManager.pendingUserNotifications?.filter(\.isPendingGroup).count ?? 0
-        }
-        return count > 0
     }
 
     public func isValid(pendingUserNotification: PendingUserNotification) -> Bool {

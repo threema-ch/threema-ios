@@ -25,8 +25,6 @@
 
 @interface GroupMessageProcessor : NSObject
 
-@property BOOL addToPendingMessages;
-
 /**
  @param message: Group message to process
  @param myIdentityStore: My identity store

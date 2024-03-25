@@ -86,13 +86,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param context Context to remove
 + (void)removeDirectBackgroundContextWithContext:(nonnull __kindof NSManagedObjectContext *)context;
 
-/**
- Set main DB context to nil. [Workaround]
- 
- This should only be used in the notification extension.
- */
-+ (void)reset;
-
 @end
 
 NS_ASSUME_NONNULL_END

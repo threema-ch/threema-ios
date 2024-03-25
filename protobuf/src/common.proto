@@ -123,6 +123,9 @@ enum CspE2eMessageType {
   // Invalid message type
   _INVALID_TYPE = 0x00;
 
+  // [`empty`](ref:e2e.empty)
+  EMPTY = 0xfc;
+
   // Conversation messages
   // ---------------------
 

@@ -199,7 +199,7 @@ import UIKit
                 let safeStore = SafeStore(
                     safeConfigManager: safeConfigManager,
                     serverApiConnector: ServerAPIConnector(),
-                    groupManager: GroupManager()
+                    groupManager: BusinessInjector().groupManager
                 )
                 let safeManager = SafeManager(
                     safeConfigManager: safeConfigManager,

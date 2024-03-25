@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaFramework
 
 /// Default interaction for messages
 ///
@@ -183,9 +184,8 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         if UserSettings.shared()?.enableThreemaCall == true,
            let contact = callMessage.conversation?.contact {
             let contactSet = Set<ContactEntity>([contact])
-
-            FeatureMask.check(Int(FEATURE_MASK_VOIP), forContacts: contactSet) { unsupportedContacts in
-                if unsupportedContacts?.isEmpty == true {
+            FeatureMask.check(contacts: contactSet, for: Int(FEATURE_MASK_VOIP)) { unsupportedContacts in
+                if unsupportedContacts.isEmpty == true {
                     self.chatViewController?.startOneToOneCall()
                 }
                 else {

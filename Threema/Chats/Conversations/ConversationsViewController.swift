@@ -25,6 +25,36 @@ import ThreemaFramework
 import UIKit
 
 class ConversationsViewController: ThemedTableViewController {
+    
+    // MARK: - Config
+    
+    private let globalSearchResultFetchLimit = 5000
+    private let searchScopeButtons: [String] = [
+        SearchScopeButtonType.all.title(),
+        SearchScopeButtonType.oneToOne.title(),
+        SearchScopeButtonType.groups.title(),
+        SearchScopeButtonType.archived.title(),
+    ]
+    
+    private enum SearchScopeButtonType: Int {
+        case all
+        case oneToOne
+        case groups
+        case archived
+                
+        func title() -> String {
+            switch self {
+            case .all:
+                return "all".localized
+            case .oneToOne:
+                return "one_to_one_chat".localized
+            case .groups:
+                return "groups".localized
+            case .archived:
+                return "archived_title".localized
+            }
+        }
+    }
 
     // MARK: - Property Declaration
 
@@ -81,20 +111,21 @@ class ConversationsViewController: ThemedTableViewController {
         return fetchedResultsController
     }()
     
+    private lazy var globalSearchResultsViewController =
+        GlobalSearchResultsViewController(entityManager: businessInjector.entityManager)
+    
     private lazy var businessInjector = BusinessInjector()
     private lazy var notificationManager = NotificationManager(businessInjector: businessInjector)
-    private lazy var utilities = ConversationActions(
-        businessInjector: businessInjector,
-        notificationManager: notificationManager
-    )
+    private lazy var utilities = ConversationActions(businessInjector: businessInjector)
 
     private lazy var searchController: UISearchController = {
-        
-        var searchController = UISearchController()
+        var searchController = UISearchController(searchResultsController: globalSearchResultsViewController)
         searchController.searchResultsUpdater = self
         searchController.delegate = self
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = BundleUtil.localizedString(forKey: "conversations_search_placeholder")
+        searchController.searchBar.placeholder = BundleUtil
+            .localizedString(forKey: "conversations_global_search_placeholder")
+        searchController.searchBar.scopeButtonTitles = searchScopeButtons
         return searchController
     }()
     
@@ -110,6 +141,7 @@ class ConversationsViewController: ThemedTableViewController {
     private lazy var lockScreen = LockScreen(isLockScreenController: false)
     
     private var refreshConversationsDelay: Timer?
+    private var refreshGlobalSearchResultsDelay: Timer?
 
     // MARK: - Lifecycle
     
@@ -176,11 +208,7 @@ class ConversationsViewController: ThemedTableViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         hideToolbar()
-        
-        if searchController.isActive {
-            searchController.isActive = false
-        }
-        
+                
         // This and the opposite in `viewWillAppear` is needed to make a search controller work that is added in a
         // child view controller using the same navigation bar. See ChatSearchController for details.
         definesPresentationContext = false
@@ -364,7 +392,6 @@ extension ConversationsViewController {
                 of: conversation,
                 owner: self,
                 cell: cell,
-                entityManager: self.businessInjector.entityManager,
                 handler: handler
             )
         }
@@ -436,7 +463,9 @@ extension ConversationsViewController {
         let readAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
             
             if hasUnread {
-                self.utilities.read(conversation)
+                Task {
+                    await self.utilities.read(conversation, isAppInBackground: AppDelegate.shared().isAppInBackground())
+                }
             }
             else {
                 self.utilities.unread(conversation)
@@ -681,54 +710,166 @@ extension ConversationsViewController: UISearchResultsUpdating, UISearchControll
     }
     
     func updateSearchResults(for searchController: UISearchController) {
-        
         guard let searchText = searchController.searchBar.text else {
             return
         }
         
-        let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
+        refreshGlobalSearchResultsDelay?.invalidate()
         
-        if !searchText.isEmpty {
-            let groupPredicate = NSPredicate(format: "groupId != nil AND groupName contains[c] %@", searchText)
-            let firstNamePredicate = NSPredicate(
-                format: "groupId == nil AND contact.firstName contains[c] %@",
-                searchText
-            )
-            let lastNamePredicate = NSPredicate(
-                format: "groupId == nil AND contact.lastName contains[c] %@",
-                searchText
-            )
-            let publicNamePredicate = NSPredicate(
-                format: "groupId == nil AND contact.publicNickname contains[c] %@",
-                searchText
-            )
-            let identityPredicate = NSPredicate(
-                format: "groupId == nil AND contact.identity contains[c] %@",
-                searchText
-            )
-            
-            let searchCompound = NSCompoundPredicate(orPredicateWithSubpredicates: [
+        refreshGlobalSearchResultsDelay = Timer
+            .scheduledTimer(withTimeInterval: TimeInterval(0.2), repeats: false) { _ in
+                guard !searchText.isEmpty else {
+                    return
+                }
+                
+                let searchScopeButtonType = SearchScopeButtonType(
+                    rawValue: searchController.searchBar
+                        .selectedScopeButtonIndex
+                ) ?? SearchScopeButtonType.all
+                let searchCompound = self.buildConversationsSearchCompound(
+                    searchText: searchText,
+                    searchScopeButtonType: searchScopeButtonType
+                )
+                
+                var searchResults = GlobalSearchResultsViewController.GlobalSearchResult(
+                    conversations: [],
+                    baseMessages: []
+                )
+                if let conversations = self.businessInjector.entityManager.entityFetcher
+                    .conversations(withPredicate: searchCompound.predicateFormat) as? [Conversation] {
+                    searchResults.conversations = self.sortedConversations(conversations: conversations)
+                }
+                
+                if let messages = self.businessInjector.entityManager.entityFetcher.messagesContaining(
+                    searchText,
+                    in: nil,
+                    filterPredicate: self.buildMessagesSearchCompound(searchScopeButtonType: searchScopeButtonType),
+                    fetchLimit: self.globalSearchResultFetchLimit
+                ) as? [BaseMessage] {
+                    searchResults.baseMessages = messages
+                }
+                
+                self.globalSearchResultsViewController.searchResults = searchResults
+            }
+    }
+    
+    private func sortedConversations(conversations: [Conversation]) -> [Conversation] {
+        conversations.sorted(by: { a, b in
+            if a.conversationVisibility == .pinned,
+               b.conversationVisibility == .default || b.conversationVisibility == .archived {
+                return true
+            }
+            else if a.conversationVisibility == .default,
+                    b.conversationVisibility == .pinned {
+                return false
+            }
+            else if a.conversationVisibility == .default,
+                    b.conversationVisibility == .archived {
+                return true
+            }
+            else if a.conversationVisibility == .archived,
+                    b.conversationVisibility == .pinned ||
+                    b.conversationVisibility == .default {
+                return false
+            }
+            else {
+                guard let aLastUpdate = a.lastUpdate,
+                      let bLastUpdate = b.lastUpdate else {
+                    return a.lastUpdate != nil
+                    
+                    return false
+                }
+                return aLastUpdate > bLastUpdate
+            }
+        })
+    }
+    
+    private func buildConversationsSearchCompound(
+        searchText: String,
+        searchScopeButtonType: SearchScopeButtonType
+    ) -> NSPredicate {
+        var finalCompound: NSPredicate
+        let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
+
+        let groupPredicate = NSPredicate(format: "groupId != nil AND groupName contains[c] %@", searchText)
+        let firstNamePredicate = NSPredicate(
+            format: "groupId == nil AND contact.firstName contains[c] %@",
+            searchText
+        )
+        let lastNamePredicate = NSPredicate(
+            format: "groupId == nil AND contact.lastName contains[c] %@",
+            searchText
+        )
+        let publicNamePredicate = NSPredicate(
+            format: "groupId == nil AND contact.publicNickname contains[c] %@",
+            searchText
+        )
+        let identityPredicate = NSPredicate(
+            format: "groupId == nil AND contact.identity contains[c] %@",
+            searchText
+        )
+        let archivedPredicate =
+            NSPredicate(format: "visibility == \(NSNumber(value: ConversationVisibility.archived.rawValue))")
+        
+        switch searchScopeButtonType {
+        case .all:
+            finalCompound = NSCompoundPredicate(orPredicateWithSubpredicates: [
                 groupPredicate,
                 firstNamePredicate,
                 lastNamePredicate,
                 publicNamePredicate,
                 identityPredicate,
             ])
-            
-            if UserSettings.shared().hidePrivateChats {
-                let privateCompound = NSCompoundPredicate(andPredicateWithSubpredicates: [
-                    searchCompound,
-                    notPrivatePredicate,
-                ])
-                fetchedResultsController.fetchRequest.predicate = privateCompound
-            }
-            else {
-                fetchedResultsController.fetchRequest.predicate = searchCompound
-            }
-            refreshData()
+        case .oneToOne:
+            finalCompound = NSCompoundPredicate(orPredicateWithSubpredicates: [
+                firstNamePredicate,
+                lastNamePredicate,
+                publicNamePredicate,
+                identityPredicate,
+            ])
+        case .groups:
+            finalCompound = groupPredicate
+
+        case .archived:
+            let compound = NSCompoundPredicate(orPredicateWithSubpredicates: [
+                groupPredicate,
+                firstNamePredicate,
+                lastNamePredicate,
+                publicNamePredicate,
+                identityPredicate,
+            ])
+            finalCompound = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                compound,
+                archivedPredicate,
+            ])
         }
-        else {
-            updatePredicates()
+        
+        if UserSettings.shared().hidePrivateChats {
+            return NSCompoundPredicate(andPredicateWithSubpredicates: [
+                finalCompound,
+                notPrivatePredicate,
+            ])
+        }
+        return finalCompound
+    }
+    
+    private func buildMessagesSearchCompound(searchScopeButtonType: SearchScopeButtonType) -> NSPredicate? {
+        let contactsPredicate = NSPredicate(format: "conversation.groupId == nil")
+        let groupPredicate = NSPredicate(format: "conversation.groupId != nil")
+        let archivedPredicate =
+            NSPredicate(
+                format: "conversation.visibility == \(NSNumber(value: ConversationVisibility.archived.rawValue))"
+            )
+        
+        switch searchScopeButtonType {
+        case .all:
+            return nil
+        case .oneToOne:
+            return contactsPredicate
+        case .groups:
+            return groupPredicate
+        case .archived:
+            return archivedPredicate
         }
     }
 }

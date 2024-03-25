@@ -41,8 +41,8 @@ final class GroupCallSystemMessageAdapter<BusinessInjectorImpl: BusinessInjector
 extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
     func post(_ systemMessage: GroupCallsSystemMessage, in groupModel: GroupCallsThreemaGroupModel) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            self.businessInjector.backgroundEntityManager.performAsyncBlockAndSafe {
-                guard let conversation = self.businessInjector.backgroundEntityManager.entityFetcher.conversation(
+            self.businessInjector.entityManager.performAsyncBlockAndSafe {
+                guard let conversation = self.businessInjector.entityManager.entityFetcher.conversation(
                     for: groupModel.groupIdentity.id,
                     creator: groupModel.groupIdentity.creator.string
                 ) else {
@@ -52,13 +52,13 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
                 
                 switch systemMessage {
                 case let .groupCallStartedBy(threemaID):
-                    guard let contact = self.businessInjector.backgroundEntityManager.entityFetcher
+                    guard let contact = self.businessInjector.entityManager.entityFetcher
                         .contact(for: threemaID.string) else {
                         continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
                         return
                     }
                     
-                    guard let dbSystemMessage = self.businessInjector.backgroundEntityManager.entityCreator
+                    guard let dbSystemMessage = self.businessInjector.entityManager.entityCreator
                         .systemMessage(for: conversation) else {
                         continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
                         return
@@ -70,7 +70,7 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
                     conversation.lastMessage = dbSystemMessage
                     conversation.lastUpdate = Date.now
                 case .groupCallEnded:
-                    guard let dbSystemMessage = self.businessInjector.backgroundEntityManager.entityCreator
+                    guard let dbSystemMessage = self.businessInjector.entityManager.entityCreator
                         .systemMessage(for: conversation) else {
                         continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
                         return
@@ -80,7 +80,7 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
                     
                     conversation.lastMessage = dbSystemMessage
                 case .groupCallStarted:
-                    guard let dbSystemMessage = self.businessInjector.backgroundEntityManager.entityCreator
+                    guard let dbSystemMessage = self.businessInjector.entityManager.entityCreator
                         .systemMessage(for: conversation) else {
                         continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
                         return

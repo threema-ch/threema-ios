@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaFramework
 import UIKit
 
 /// Cell to show a search results
@@ -185,24 +186,9 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         nameLabel.text = message.localizedSenderName
         dateLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: message.sectionDate)
         
-        // TODO: (IOS-2906) Replace this by a generic preview string for all messages
-        // For now we only search text messages, ballot titles and file names (see `-[EntityFetcher
-        // messagesContaining:inConversation:]`)
-        switch message {
-        case let textMessage as TextMessage:
-            messagePreviewTextLabel.attributedText = markupParser.previewString(
-                for: textMessage.text,
-                font: .preferredFont(forTextStyle: .body)
-            )
-        case let ballotMessage as BallotMessage:
-            messagePreviewTextLabel.text = ballotMessage.ballot?.title ?? ""
-
-        case let fileMessageEntity as FileMessageEntity:
-            messagePreviewTextLabel.text = fileMessageEntity.fileName
-            
-        default:
-            messagePreviewTextLabel.text = nil
-            DDLogError("Unknown message type in chat search results")
+        if let previewableMessage = message as? PreviewableMessage {
+            messagePreviewTextLabel.attributedText = previewableMessage
+                .previewAttributedText(for: PreviewableMessageConfiguration.searchCell)
         }
     }
 }

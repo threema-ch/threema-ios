@@ -105,10 +105,6 @@ extension Colors {
     @objc public class var backgroundSafeImageCircle: UIColor {
         Asset.SharedColors.gray250.color
     }
-                
-    @objc public class var backgroundMaterialShowcasePrompt: UIColor {
-        Asset.SharedColors.gray750.color
-    }
     
     @objc public class var backgroundWizard: UIColor {
         Asset.SharedColors.black.color

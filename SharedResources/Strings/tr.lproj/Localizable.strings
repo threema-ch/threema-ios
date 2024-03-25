@@ -396,12 +396,8 @@
 "chat_search_searching" = "Aranıyor...";
 "chat_search_no_matches" = "Eşleşme yok";
 "chat_search_matches" = "%d / %d eşleşme";
-"chat_search_note" = "Not: Medya altyazıları arama sonuçlarına dahil edilmez.";
 
 "choose_recipient" = "Alıcı seçin";
-
-"msg_unknown_group_request_sync_x_title" = "Bilinmeyen gruptan mesaj alındı";
-"msg_unknown_group_request_sync_x_message" = "Bilinmeyen bir gruptan mesaj alındı. Grup bilgileri, grup kurucudan (%@) istendi. Grup, kurucu tekrar çevrimiçi olur olmaz görünür.";
 
 "tap_to_cancel" = "İptal etmek için dokunun";
 "previous" = "Önceki";
@@ -764,14 +760,6 @@
 "call_status_blocked" = "Engellenmiş kişi";
 "call_status_failed_title" = "Threema araması";
 
-"call_threema_initiator_video_info" = "Kamerayı açmak için buraya dokunun";
-"call_threema_remote_video_activated_info_title" = "Görüntülü arama";
-"call_threema_remote_video_activated_info" = "Karşı taraf video görüşmesi başlattı. Kameranızı açmak için buraya dokunun.";
-"call_threema_speaker_info" = "Hoparlörü açmak için buraya dokunun";
-"call_threema_camera_disabled_info" = "Bu kişi, geçerli bir uygulama sürümünü kullanmıyor veya görüntülü aramalara izin vermiyor.";
-
-"call_threema_video_in_chat_info_title" = "Yeni: Görüntülü aramalar";
-
 "call_threema_cellular_instead_of_wifi_title" = "Hücresel ağ üzerinden ara";
 "call_threema_cellular_instead_of_wifi_text" = "Uyarı: Bu arama, hücresel ağda veri aktarımına neden olur.";
 
@@ -840,7 +828,8 @@
 "archived_chats" = "Arşivlenmiş sohbetler";
 
 "archived_title" = "Arşivlendi";
-"conversations_search_placeholder" = "Kişiler, Gruplar, Kimlikler…";
+"conversations_global_search_placeholder" = "Ara";
+"one_to_one_chat" = "Teklisohbet";
 
 "select_all" = "Hepsini seç";
 "deselect_all" = "Hiçbirini seçme";
@@ -1614,8 +1603,8 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "poi_current_location" = "Konumum";
 "poi_marked_location" = "Bırakılan iğne";
 
-"notification_threemaweb_connectionlost_title" = "Threema Web bağlantısı kesildi";
-"notification_threemaweb_connectionlost_body" = "Threema Web'i kullanmaya devam etmek için lütfen uygulamayı yeniden açın.";
+"notification_threemaweb_connectionlost_title" = "Masaüstü uygulamasına / web istemcisine bağlantı kesildi";
+"notification_threemaweb_connectionlost_body" = "Masaüstü uygulamasını / web istemcisini kullanmaya devam etmek için lütfen uygulamayı yeniden başlatın.";
 
 "settings_threema_web_connected" = "Masaüstü / Web bağlandı";
 "settings_threema_web_connectioninfo" = "Bağlı kalmak için cihazınızın kilidinin %@ ön planda çalışırken açılmış olması gerekir. Bağlıyken cihazınız otomatik olarak kilitlenmeyecektir.";
@@ -1699,6 +1688,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 "notification_group_sync_succeeded" = "Grup Senkronize Edildi";
 "notification_group_sync_failed" = "Grup Senkronizasyonu Başarısız";
+"notification_group_call_start_failed" = "Üye destek grubu arama yok";
 
 "notification_settings_sync_pending" = "Senkronize ediliyor…";
 "notification_settings_sync_succeeded" = "Ayarlar senkronize edildi";
@@ -1725,7 +1715,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 // Forward security status messages
 "forward_security_message_without" = "Kusursuz İletme Gizliliği olmayan bir mesaj alındı.  Gönderenin Kusursuz İletme Gizliliğini kasıtlı olarak devre dışı bıraktığını doğrulayın.";
-"forward_security_session_established" = "Bu sohbetteki mesajlar artık Mükemmel İletme Gizliliği ile korunmaktadır.";
+"forward_security_session_established" = "Bu sohbet eşiyle yapılan mesajlaşmalar artık Mükemmel İletme Gizliliğiyle korunmaktadır.";
 "forward_security_session_established_rx" = "Bu sohbette alınan mesajlar artık Mükemmel İletme Gizliliği ile korunmaktadır. Gönderilen mesajları da korumak için kişi ayrıntılarında Mükemmel İletme Gizliliğini etkinleştirin.";
 "forward_security_messages_skipped_1" = "Son mesajdan bu yana bir mesaj kayboldu.";
 "forward_security_messages_skipped_x" = "Son mesajdan bu yana %d mesaj kayboldu.";

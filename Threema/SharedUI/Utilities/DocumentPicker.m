@@ -133,7 +133,7 @@ static DocumentPicker *pickerStrongReference;
         }
         
         if (_conversation != nil) {
-            MessageSender *messageSender = [[MessageSender alloc] init];
+            MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
             [messageSender sendBlobMessageFor:item in:_conversation correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];

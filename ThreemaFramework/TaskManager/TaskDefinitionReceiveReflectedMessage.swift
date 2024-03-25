@@ -29,7 +29,7 @@ final class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
         TaskExecutionReceiveReflectedMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

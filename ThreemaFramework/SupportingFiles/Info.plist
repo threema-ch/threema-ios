@@ -48,6 +48,8 @@
 	<string>https://ds-blobp-upload.threema.ch/upload</string>
 	<key>ThreemaCoreDataVersion</key>
 	<string>$(COREDATA_VERSION)</string>
+	<key>ThreemaRendezvousServerURL</key>
+	<string>wss://rendezvous-{prefix4}.threema.ch/{prefix8}</string>
 	<key>ThreemaMediatorServerURL</key>
 	<string>wss://mediator-{prefix4}.threema.ch/{prefix8}</string>
 	<key>ThreemaMediatorBlobDoneURL</key>
@@ -96,10 +98,10 @@
 	<key>ThreemaPOIAroundURL</key>
 	<string>https://poi.threema.ch/around/</string>
 	<key>ThreemaBackupInfo</key>
-    <string>https://threema.ch/faq/backup-options</string>
-    <key>ThreemaNotificationInfo</key>
-    <string>https://threema.ch/faq/ios-notification-types</string>
-    <key>ThreemaInteractionInfo</key>
-    <string>https://threema.ch/faq/ios-interactions</string>
+	<string>https://threema.ch/faq/backup-options</string>
+	<key>ThreemaNotificationInfo</key>
+	<string>https://threema.ch/faq/ios-notification-types</string>
+	<key>ThreemaInteractionInfo</key>
+	<string>https://threema.ch/faq/ios-interactions</string>
 </dict>
 </plist>

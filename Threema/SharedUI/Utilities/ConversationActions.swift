@@ -24,22 +24,27 @@ import PromiseKit
 
 class ConversationActions: NSObject {
     private let businessInjector: BusinessInjectorProtocol
-    private let notificationManager: NotificationManagerProtocol
+    private let notificationManagerResolve: (BusinessInjectorProtocol) -> NotificationManagerProtocol
 
+    /// Conversation actions set messages in conversation to (un)read or (un)archive.
+    ///
+    /// - Parameters:
+    ///   - businessInjector: BusinessInjector working on
+    ///   - notificationManagerResolve: Resolve `NotificationManager` for running in background or in unit tests
     init(
         businessInjector: BusinessInjectorProtocol,
-        notificationManager: NotificationManagerProtocol
+        notificationManagerResolve: @escaping (BusinessInjectorProtocol) -> NotificationManagerProtocol
     ) {
         self.businessInjector = businessInjector
-        self.notificationManager = notificationManager
+        self.notificationManagerResolve = notificationManagerResolve
     }
 
     convenience init(businessInjector: BusinessInjectorProtocol) {
         self.init(
             businessInjector: businessInjector,
-            notificationManager: NotificationManager(
-                businessInjector: businessInjector
-            )
+            notificationManagerResolve: { businessInjector in
+                NotificationManager(businessInjector: businessInjector)
+            }
         )
     }
     
@@ -53,87 +58,71 @@ class ConversationActions: NSObject {
     /// - Parameters:
     ///   - conversation: Conversation to read messages
     ///   - isAppInBackground: If app is in background, default gets current status from AppDelegate
-    @discardableResult
     func read(
         _ conversation: Conversation,
-        isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
-    ) -> Guarantee<Void> {
-        Guarantee { seal in
-            businessInjector.backgroundEntityManager.performBlock {
-                if let conv = self.businessInjector.backgroundEntityManager.entityFetcher
+        isAppInBackground: Bool
+    ) async {
+        await businessInjector.runInBackground { backgroundBusinessInjector in
+            await backgroundBusinessInjector.entityManager.perform {
+                if let conv = backgroundBusinessInjector.entityManager.entityFetcher
                     .getManagedObject(by: conversation.objectID) as? Conversation {
-                    _ = self.businessInjector.backgroundUnreadMessages.read(
+                    _ = backgroundBusinessInjector.unreadMessages.read(
                         for: conv,
                         isAppInBackground: isAppInBackground
                     )
+
                     if conv.unreadMessageCount == -1 {
-                        self.businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        backgroundBusinessInjector.entityManager.performAndWaitSave {
                             conv.unreadMessageCount = 0
                         }
                     }
                 }
-                
-                self.notificationManager.updateUnreadMessagesCount()
 
-                seal(())
+                self.notificationManagerResolve(backgroundBusinessInjector).updateUnreadMessagesCount()
             }
         }
     }
-    
+
     /// Marks the messages passed in from the argument as read
     /// This is a workaround implemented specifically for `ChatViewController`.
     /// - Parameters:
     ///   - conversationObjectID: The conversation to which the messages below
-    ///   - messages: Messages which will be marked as read
-    /// - Returns: A promise which is fulfilled after all messages were marked as read containing the number of messages
-    ///            that were marked as read or 0 if none were marked as read.
+    ///   - messageObjectIDs: Messages which will be marked as read
+    /// - Returns: The number of messages that were marked as read
     func read(
         _ conversationObjectID: NSManagedObjectID,
         messageObjectIDs: [NSManagedObjectID]
-    ) -> Guarantee<Int> {
-        Guarantee { seal in
-            businessInjector.backgroundEntityManager.performBlock {
-                let conversation = self.businessInjector.backgroundEntityManager.entityFetcher
+    ) -> Int {
+        let isAppInBackground = AppDelegate.shared().isAppInBackground()
+
+        return businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
+            backgroundBusinessInjector.entityManager.performAndWait {
+                let conversation = backgroundBusinessInjector.entityManager.entityFetcher
                     .getManagedObject(by: conversationObjectID) as! Conversation
+
                 var messages = [BaseMessage]()
                 for messageObjectID in messageObjectIDs {
-                    if let message = self.businessInjector.backgroundEntityManager.entityFetcher
+                    if let message = backgroundBusinessInjector.entityManager.entityFetcher
                         .getManagedObject(by: messageObjectID) as? BaseMessage {
                         messages.append(message)
                     }
                 }
-                self.read(conversation, messages: messages)
-                    .done { markedAsRead in
-                        seal(markedAsRead)
-                    }
-            }
-        }
-    }
-    
-    private func read(
-        _ conversation: Conversation,
-        messages: [BaseMessage],
-        isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
-    ) -> Guarantee<Int> {
-        Guarantee { seal in
-            businessInjector.backgroundEntityManager.performBlock {
-                let markedAsRead = self.businessInjector.backgroundUnreadMessages.read(
+
+                let markedAsRead = backgroundBusinessInjector.unreadMessages.read(
                     for: messages,
                     in: conversation,
                     isAppInBackground: isAppInBackground
                 )
 
-                self.businessInjector.backgroundEntityManager.performBlockAndWait {
-                    if conversation.unreadMessageCount == -1 {
-                        self.businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                            conversation.unreadMessageCount = 0
-                        }
+                if conversation.unreadMessageCount == -1 {
+                    backgroundBusinessInjector.entityManager.performAndWaitSave {
+                        conversation.unreadMessageCount = 0
                     }
                 }
-                
-                self.notificationManager.updateUnreadMessagesCount()
-                
-                seal(markedAsRead)
+
+                self.notificationManagerResolve(backgroundBusinessInjector).updateUnreadMessagesCount()
+
+                return markedAsRead
             }
         }
     }
@@ -145,24 +134,24 @@ class ConversationActions: NSObject {
             return
         }
         
-        businessInjector.entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
             conversation.unreadMessageCount = -1
         }
 
-        notificationManager.updateUnreadMessagesCount()
+        notificationManagerResolve(businessInjector).updateUnreadMessagesCount()
     }
     
     // MARK: - Archiving
     
     func archive(_ conversation: Conversation) {
         businessInjector.conversationStore.archive(conversation)
-        notificationManager.updateUnreadMessagesCount()
+        notificationManagerResolve(businessInjector).updateUnreadMessagesCount()
     }
     
     func unarchive(_ conversation: Conversation) {
         var doUpdateUnreadMessagesCount = false
 
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performAndWait {
             if conversation.conversationVisibility != .default {
                 doUpdateUnreadMessagesCount = true
             }
@@ -171,7 +160,7 @@ class ConversationActions: NSObject {
         businessInjector.conversationStore.unarchive(conversation)
 
         if doUpdateUnreadMessagesCount {
-            notificationManager.updateUnreadMessagesCount()
+            notificationManagerResolve(businessInjector).updateUnreadMessagesCount()
         }
     }
 }

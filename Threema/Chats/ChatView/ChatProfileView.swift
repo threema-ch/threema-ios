@@ -100,9 +100,7 @@ final class ChatProfileView: UIStackView {
     
     private let conversation: Conversation
     private let entityManager: EntityManager
-    private lazy var group: Group? = GroupManager(
-        entityManager: entityManager
-    ).getGroup(conversation: conversation)
+    private lazy var group: Group? = BusinessInjector().groupManager.getGroup(conversation: conversation)
 
     // We need to hold on to the observers until the object is deallocated.
     // `invalidate()` is automatically called on destruction of them (according to the `invalidate()` header
@@ -504,9 +502,9 @@ final class ChatProfileView: UIStackView {
     
     private func updateGroupMembersListLabel() {
         // TODO: (IOS-2404) Do a cleaner implementation
-        let entityManager = EntityManager()
-        entityManager.performBlockAndWait {
-            let group = GroupManager(entityManager: entityManager).getGroup(conversation: self.conversation)
+        let businessInjector = BusinessInjector()
+        businessInjector.entityManager.performBlockAndWait {
+            let group = businessInjector.groupManager.getGroup(conversation: self.conversation)
             // We always want at least one space in the label to keep it at a constant height
             self.groupMembersListLabel.text = group?.membersList ?? " "
         }

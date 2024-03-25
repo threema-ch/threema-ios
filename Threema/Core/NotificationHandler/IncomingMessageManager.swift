@@ -42,16 +42,17 @@ import ThreemaFramework
     required init(
         pendingUserNotificationManager: PendingUserNotificationManagerProtocol,
         backgroundPendingUserNotificationManager: PendingUserNotificationManagerProtocol,
-        businessInjector: BusinessInjectorProtocol
+        backgroundBusinessInjector: BusinessInjectorProtocol
     ) {
         self.pendingUserNotificationManager = pendingUserNotificationManager
         self.backgroundPendingUserNotificationManager = backgroundPendingUserNotificationManager
-        self.businessInjector = businessInjector
-        self.notificationManager = NotificationManager(businessInjector: businessInjector)
+        self.businessInjector = backgroundBusinessInjector
+        self.notificationManager = NotificationManager(businessInjector: backgroundBusinessInjector)
     }
     
     @objc override convenience init() {
         let businessInjector = BusinessInjector()
+        let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
         self.init(
             pendingUserNotificationManager: PendingUserNotificationManager(
                 UserNotificationManager(
@@ -69,19 +70,19 @@ import ThreemaFramework
             ),
             backgroundPendingUserNotificationManager: PendingUserNotificationManager(
                 UserNotificationManager(
-                    businessInjector.settingsStore,
-                    businessInjector.userSettings,
-                    businessInjector.myIdentityStore,
-                    businessInjector.backgroundPushSettingManager,
-                    businessInjector.contactStore,
-                    businessInjector.backgroundGroupManager,
-                    businessInjector.backgroundEntityManager,
-                    businessInjector.licenseStore.getRequiresLicenseKey()
+                    backgroundBusinessInjector.settingsStore,
+                    backgroundBusinessInjector.userSettings,
+                    backgroundBusinessInjector.myIdentityStore,
+                    backgroundBusinessInjector.pushSettingManager,
+                    backgroundBusinessInjector.contactStore,
+                    backgroundBusinessInjector.groupManager,
+                    backgroundBusinessInjector.entityManager,
+                    backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
                 ),
-                businessInjector.backgroundPushSettingManager,
-                businessInjector.backgroundEntityManager
+                backgroundBusinessInjector.pushSettingManager,
+                backgroundBusinessInjector.entityManager
             ),
-            businessInjector: businessInjector
+            backgroundBusinessInjector: backgroundBusinessInjector
         )
     }
 
@@ -172,9 +173,7 @@ import ThreemaFramework
                     return
                 }
                 
-                guard !pendingUserNotification.isPendingGroup,
-                      !manager.isProcessed(pendingUserNotification: pendingUserNotification)
-                else {
+                guard !manager.isProcessed(pendingUserNotification: pendingUserNotification) else {
                     manager
                         .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
                     seal(true)
@@ -257,26 +256,25 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     }
     
     func incomingMessageStarted(_ message: AbstractMessage) {
-        businessInjector.backgroundEntityManager.performBlockAndWait {
+        businessInjector.entityManager.performBlockAndWait {
             if let pendingUserNotification = self.backgroundPendingUserNotificationManager.pendingUserNotification(
                 for: message,
-                stage: .abstract,
-                isPendingGroup: false
+                stage: .abstract
             ) {
                 self.show(
                     pendingUserNotification: pendingUserNotification,
                     pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
-                    pushSettingManager: self.businessInjector.backgroundPushSettingManager,
-                    groupManager: self.businessInjector.backgroundGroupManager,
-                    entityManager: self.businessInjector.backgroundEntityManager
+                    pushSettingManager: self.businessInjector.pushSettingManager,
+                    groupManager: self.businessInjector.groupManager,
+                    entityManager: self.businessInjector.entityManager
                 )
             }
         }
     }
     
     func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
-        businessInjector.backgroundEntityManager.performAndWaitSave {
-            if let msg = self.businessInjector.backgroundEntityManager.entityFetcher
+        businessInjector.entityManager.performAndWaitSave {
+            if let msg = self.businessInjector.entityManager.entityFetcher
                 .getManagedObject(by: message.objectID) as? BaseMessage {
                 if !AppDelegate.shared().active {
                     let databaseManager = DatabaseManager()
@@ -290,7 +288,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 }
 
                 if let conversation = msg.conversation {
-                    self.businessInjector.backgroundUnreadMessages
+                    self.businessInjector.unreadMessages
                         .totalCount(doCalcUnreadMessagesCountOf: [conversation], withPerformBlockAndWait: false)
                 }
 
@@ -302,44 +300,27 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                     self.show(
                         pendingUserNotification: pendingUserNotification,
                         pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
-                        pushSettingManager: self.businessInjector.backgroundPushSettingManager,
-                        groupManager: self.businessInjector.backgroundGroupManager,
-                        entityManager: self.businessInjector.backgroundEntityManager
+                        pushSettingManager: self.businessInjector.pushSettingManager,
+                        groupManager: self.businessInjector.groupManager,
+                        entityManager: self.businessInjector.entityManager
                     )
                 }
             }
         }
     }
     
-    func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) {
+    func incomingMessageFinished(_ message: AbstractMessage) {
         if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
             for: message,
-            stage: .final,
-            isPendingGroup: isPendingGroup
+            stage: .final
         ) {
-            businessInjector.backgroundEntityManager.performBlockAndWait {
-                guard !pendingUserNotification.isPendingGroup else {
-                    self.backgroundPendingUserNotificationManager
-                        .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
-
-                    if let grpMsg = message as? AbstractGroupMessage, !AppDelegate.shared().isAppInBackground(),
-                       let groupCreator = grpMsg.groupCreator,
-                       !self.businessInjector.userSettings.blacklist.contains(groupCreator) {
-                        self.businessInjector.backgroundGroupManager.unknownGroup(
-                            groupID: grpMsg.groupID,
-                            creator: grpMsg.groupCreator
-                        )
-                    }
-
-                    return
-                }
-
+            businessInjector.entityManager.performBlockAndWait {
                 self.show(
                     pendingUserNotification: pendingUserNotification,
                     pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
-                    pushSettingManager: self.businessInjector.backgroundPushSettingManager,
-                    groupManager: self.businessInjector.backgroundGroupManager,
-                    entityManager: self.businessInjector.backgroundEntityManager
+                    pushSettingManager: self.businessInjector.pushSettingManager,
+                    groupManager: self.businessInjector.groupManager,
+                    entityManager: self.businessInjector.entityManager
                 )
                 .done(on: .global(), flags: .inheritQoS) { showed in
                     if showed {
@@ -353,7 +334,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     
     func readMessage(inConversations: Set<Conversation>?) {
         if let inConversations, !inConversations.isEmpty {
-            businessInjector.backgroundUnreadMessages.totalCount(doCalcUnreadMessagesCountOf: inConversations)
+            businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: inConversations)
         }
 
         DispatchQueue.main.async {
@@ -375,8 +356,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     func incomingAbstractMessageFailed(_ message: AbstractMessage) {
         if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
             for: message,
-            stage: .abstract,
-            isPendingGroup: false
+            stage: .abstract
         ) {
             pendingUserNotificationManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
             pendingUserNotificationManager
@@ -388,10 +368,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         let queueType = TaskQueueType.queue(name: queueTypeName)
         if queueType == .incoming {
             if completionHandler != nil {
-                // Gives a littel time to remove notification from notification center
-                // or has pending group messages (waiting for possible "group sync request" answer)
-                let delay = !pendingUserNotificationManager.hasPendingGroupUserNotifications() ? 0 : 5
-                DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(delay)) {
+                DispatchQueue.global().async {
                     // Call completionHandler just once, will be set again for new push
                     self.completionHandler?()
                     self.completionHandler = nil
@@ -399,7 +376,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
             }
         }
         else if queueType == .outgoing {
-            // Gives a littel time to process delivery receipts
+            // Gives a little time to process delivery receipts
             // Cancel possible background task for sending message when the is in background
             DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(5)) {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: kAppClosedByUserBackgroundTask)
@@ -410,23 +387,6 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     public func chatQueueDry() { }
     
     public func reflectionQueueDry() { }
-    
-    public func pendingGroup(_ message: AbstractMessage) {
-        if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
-            for: message,
-            stage: .abstract,
-            isPendingGroup: true
-        ) {
-            DDLogInfo("[Push] Group not found for pending user notification")
-
-            pendingUserNotificationManager
-                .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
-
-            DispatchQueue.main.async {
-                self.notificationManager.updateUnreadMessagesCount()
-            }
-        }
-    }
     
     public func processTypingIndicator(_ message: TypingIndicatorMessage) {
         TypingIndicatorManager.sharedInstance()?

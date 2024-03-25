@@ -55,11 +55,11 @@ public struct DHVersions: CustomStringConvertible, Equatable {
     }
     
     public var description: String {
-        "local=\(local.logDescription), remote=\(remote.logDescription)"
+        "local=\(local), remote=\(remote)"
     }
 }
 
-public class ProcessedVersions {
+public class ProcessedVersions: CustomStringConvertible {
     // In Android `offeredVersion` is an Int, in Swift its not as inconvenient to use the real type
     /// The effective offered version of the associated message
     public var offeredVersion: CspE2eFs_Version
@@ -72,6 +72,10 @@ public class ProcessedVersions {
         self.offeredVersion = offeredVersion
         self.appliedVersion = appliedVersion
         self.pending4DHVersion = pending4DHVersion
+    }
+    
+    public var description: String {
+        "offered=\(offeredVersion), applied=\(appliedVersion), pending=\(String(describing: pending4DHVersion))"
     }
 }
 
@@ -103,7 +107,7 @@ extension DHSession {
 // MARK: - DHSession.State
 
 extension DHSession {
-    public enum State {
+    public enum State: CustomStringConvertible {
         /// Locally initiated, out 2DH, in none
         case L20
         /// Remotely or locally initiated, out 4DH, in 4DH
@@ -115,6 +119,19 @@ extension DHSession {
         
         enum StateError: Error {
             case invalidStateError(String)
+        }
+        
+        public var description: String {
+            switch self {
+            case .L20:
+                return "L20"
+            case .RL44:
+                return "RL44"
+            case .R20:
+                return "R20"
+            case .R24:
+                return "R24"
+            }
         }
     }
 }
@@ -156,6 +173,24 @@ public class DHSession: CustomStringConvertible, Equatable {
     var peerRatchet2DH: KDFRatchet?
     var peerRatchet4DH: KDFRatchet?
     
+    /// Was a new session I initiated committed?
+    ///
+    /// The initial commit of an new initiated session should not happen before an `Init` and the message triggering it
+    /// are sent. However, on iOS we need to store the session immediately as with two separate queues for incoming and
+    /// outgoing messages we might have a race condition where an incoming `Accept` is processed before the message
+    /// after the `Init` is sent.
+    var newSessionCommitted: Bool {
+        didSet {
+            if newSessionCommitted == false, oldValue == true {
+                DDLogWarn("New session committed should never be reset to false")
+                assertionFailure()
+            }
+        }
+    }
+    
+    /// Time of last message sent in this session
+    var lastMessageSent: Date?
+    
     /// Version used for local (outgoing) / remote (incoming) 4DH messages.
     /// `nil` in case the 4DH message version has not been negotiated yet.
     ///  Warning: Only exported for storing the session, don't use it anywhere else!
@@ -164,14 +199,9 @@ public class DHSession: CustomStringConvertible, Equatable {
     static func supportedVersionWithin(majorVersion: CspE2eFs_Version) throws -> CspE2eFs_Version {
         switch majorVersion.rawValue & 0xFF00 {
         case CspE2eFs_Version.v10.rawValue:
-            if ThreemaEnvironment.fsEnableV12 {
-                return .v12
-            }
-            else {
-                return .v11
-            }
+            return ThreemaEnvironment.fsMaxVersion
         default:
-            throw DHSession.State.StateError.invalidStateError("Unknown major version: \(majorVersion.logDescription)")
+            throw DHSession.State.StateError.invalidStateError("Unknown major version: \(majorVersion)")
         }
     }
     
@@ -393,6 +423,9 @@ public class DHSession: CustomStringConvertible, Equatable {
         self.peerIdentity = peerIdentity
         self.localSupportedVersionRange = localVersion
         
+        self.newSessionCommitted = false
+        self.lastMessageSent = nil
+        
         var newPublicKey: NSData?
         var newPrivateKey: NSData?
         NaClCrypto.shared().generateKeyPairPublicKey(&newPublicKey, secretKey: &newPrivateKey)
@@ -427,8 +460,10 @@ public class DHSession: CustomStringConvertible, Equatable {
         self.id = id
         self.myIdentity = identityStore.identity
         self.peerIdentity = peerIdentity
-        
         self.localSupportedVersionRange = localVersion
+        
+        self.newSessionCommitted = true
+        self.lastMessageSent = nil
         
         self.myEphemeralPublicKey = completeKeyExchange(
             peerEphemeralPublicKey: peerEphemeralPublicKey,
@@ -455,6 +490,8 @@ public class DHSession: CustomStringConvertible, Equatable {
         peerRatchet2DH: KDFRatchet?,
         peerRatchet4DH: KDFRatchet?,
         current4DHVersions: DHVersions?,
+        newSessionCommitted: Bool,
+        lastMessageSent: Date?,
         localVersion: CspE2eFs_VersionRange = ThreemaEnvironment.fsVersion
     ) throws {
         
@@ -468,6 +505,8 @@ public class DHSession: CustomStringConvertible, Equatable {
         self.peerRatchet2DH = peerRatchet2DH
         self.peerRatchet4DH = peerRatchet4DH
         self.current4DHVersions = current4DHVersions
+        self.newSessionCommitted = newSessionCommitted
+        self.lastMessageSent = lastMessageSent
         self.localSupportedVersionRange = localVersion
         
         // The database may restore 4DH versions when there are none because the DB migration adds
@@ -836,15 +875,35 @@ public class DHSession: CustomStringConvertible, Equatable {
         }
     }
     
+    /// Are these two session identical? (Not only if they are the same session (this is would be given by `id`,
+    /// `myIdentity` and `peerIdentity`)).
     public static func == (lhs: DHSession, rhs: DHSession) -> Bool {
-        lhs.id == rhs.id &&
+        let directComparison = lhs.id == rhs.id &&
             lhs.myIdentity == rhs.myIdentity &&
             lhs.peerIdentity == rhs.peerIdentity &&
             lhs.myEphemeralPublicKey == rhs.myEphemeralPublicKey &&
             lhs.myRatchet2DH == rhs.myRatchet2DH &&
             lhs.myRatchet4DH == rhs.myRatchet4DH &&
             lhs.peerRatchet2DH == rhs.peerRatchet2DH &&
-            lhs.peerRatchet4DH == rhs.peerRatchet4DH
+            lhs.peerRatchet4DH == rhs.peerRatchet4DH &&
+            lhs.current4DHVersions == rhs.current4DHVersions &&
+            lhs.newSessionCommitted == rhs.newSessionCommitted
+        
+        // As the stored date loses some precision we only compare it down to the second
+        if let lhsLastMessageSent = lhs.lastMessageSent, let rhsLastMessageSent = rhs.lastMessageSent {
+            if abs(lhsLastMessageSent.distance(to: rhsLastMessageSent)) < 1 {
+                return directComparison
+            }
+            else {
+                return false
+            }
+        }
+        else if lhs.lastMessageSent == nil, rhs.lastMessageSent == nil {
+            return directComparison
+        }
+        else {
+            return false
+        }
     }
     
     public var description: String {

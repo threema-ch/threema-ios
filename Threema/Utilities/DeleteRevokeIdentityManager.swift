@@ -52,7 +52,7 @@ public class DeleteRevokeIdentityManager: NSObject {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -88,7 +88,7 @@ public class DeleteRevokeIdentityManager: NSObject {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: BusinessInjector().groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

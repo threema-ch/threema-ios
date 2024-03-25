@@ -126,17 +126,14 @@ public final class ThreemaUtility: NSObject {
         ThreemaApp.current == .workRed ||
         ThreemaApp.current == .onPrem
     
+    // TODO: (IOS-4362) Move into `ThreemaEnvironment`
     @objc public static var supportsForwardSecurity: Bool {
         let bi = BusinessInjector()
         if bi.userSettings.enableMultiDevice {
             return false
         }
         
-        guard let mainBundle = BundleUtil.mainBundle() else {
-            return false
-        }
-        
-        return (mainBundle.object(forInfoDictionaryKey: "ThreemaForwardSecurity") as? NSNumber)?.boolValue ?? false
+        return true
     }
     
     /// Icon to show if `Contact.showOtherThreemaIcon` is `true`
@@ -270,7 +267,7 @@ public final class ThreemaUtility: NSObject {
     /// Fire a local notification when disconnect from Threema Web
     /// - Parameter entityManager: EntityManager to load the unread messages count
     public static func sendThreemaWebConnectionLostLocalNotification(entityManager: EntityManager) {
-        let unreadMessages = UnreadMessages(entityManager: entityManager)
+        let unreadMessages = UnreadMessages(entityManager: entityManager, taskManager: TaskManager())
         showLocalNotification(
             identifier: "threemaWeb",
             title: BundleUtil.localizedString(forKey: "notification_threemaweb_connectionlost_title"),

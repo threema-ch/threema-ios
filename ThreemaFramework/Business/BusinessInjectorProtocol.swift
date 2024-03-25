@@ -21,10 +21,7 @@
 import Foundation
 
 public protocol BusinessInjectorProtocol {
-    var backgroundEntityManager: EntityManager { get }
-    var backgroundGroupManager: GroupManagerProtocol { get }
-    var backgroundUnreadMessages: UnreadMessagesProtocol { get }
-    var backgroundPushSettingManager: PushSettingManagerProtocol { get }
+    var runsInBackground: Bool { get }
     var contactStore: ContactStoreProtocol { get }
     var conversationStore: any ConversationStoreProtocol { get }
     var entityManager: EntityManager { get }
@@ -39,6 +36,30 @@ public protocol BusinessInjectorProtocol {
     var userSettings: UserSettingsProtocol { get }
     var settingsStore: any SettingsStoreProtocol { get }
     var pushSettingManager: PushSettingManagerProtocol { get }
+
+    /// Do work with a background business injector. This runs on the thread of the caller!
+    ///
+    /// The closure will be called with a `BusinessInjector` initialized with a background Core Data child context. All
+    /// services uses the same background Core Data child context. The closure doesn't run implicit in a Core Data
+    /// perform block, make your own Core Data perform block if you work with Core Data objects.
+    ///
+    /// - Note: If the `BusinessInjector` already runs in the background the same one will be returned. Otherwise a new
+    /// one will be created.
+    ///
+    /// - Parameter block: Closure called with background `BusinessInjector`
+    func runInBackground<T>(_ block: @escaping (BusinessInjectorProtocol) async throws -> T) async rethrows -> T
+
+    /// Do work with a background business injector. This runs on the thread of the caller!
+    ///
+    /// The closure will be called with a `BusinessInjector` initialized with a background Core Data child context. All
+    /// services uses the same background Core Data child context. The closure doesn't run implicit in a Core Data
+    /// perform block, make your own Core Data perform block if you work with Core Data objects.
+    ///
+    /// - Note: If the `BusinessInjector` already runs in the background the same one will be returned. Otherwise a new
+    /// one will be created.
+    ///
+    /// - Parameter block: Closure called with background `BusinessInjector`
+    func runInBackgroundAndWait<T>(_ block: (BusinessInjectorProtocol) throws -> T) rethrows -> T
 }
 
 protocol BusinessInternalInjectorProtocol {

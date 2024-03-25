@@ -26,30 +26,46 @@ class ConversationActionsTest: XCTestCase {
     
     // MARK: - Setup
     
-    private var mainCnx: NSManagedObjectContext!
-    private var actions: ConversationActions!
+    private var dbPreparer: DatabasePreparer!
     private var businessInjectorMock: BusinessInjectorMock!
+    private var backgroundBusinessInjectorMock: BusinessInjectorMock!
     private var notificationManagerMock: NotificationManagerMock!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
-        (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        let databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+        let (_, dbMainCnx, dbBackgroundCnx) = DatabasePersistentContext
+            .devNullContext(withChildContextForBackgroundProcess: true)
 
-        let entityManager = EntityManager(databaseContext: databaseMainCnx)
+        dbPreparer = DatabasePreparer(context: dbMainCnx)
 
+        let entityManager =
+            EntityManager(databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: nil))
         businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: databaseMainCnx),
-            conversationStore: ConversationStore(entityManager: entityManager),
+            conversationStore: ConversationStore(
+                userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
+                groupManager: GroupManagerMock(),
+                entityManager: entityManager,
+                taskManager: nil
+            ),
             entityManager: entityManager
         )
 
-        notificationManagerMock = NotificationManagerMock()
-        actions = ConversationActions(
-            businessInjector: businessInjectorMock,
-            notificationManager: notificationManagerMock
+        let backgroundEntityManager =
+            EntityManager(databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: dbBackgroundCnx))
+        backgroundBusinessInjectorMock = BusinessInjectorMock(
+            conversationStore: ConversationStore(
+                userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
+                groupManager: GroupManagerMock(),
+                entityManager: backgroundEntityManager,
+                taskManager: nil
+            ),
+            entityManager: backgroundEntityManager
         )
+
+        notificationManagerMock = NotificationManagerMock()
     }
     
     private func createConversation(
@@ -60,11 +76,10 @@ class ConversationActionsTest: XCTestCase {
         var contact: ContactEntity!
         var conversation: Conversation!
         
-        let databasePreparer = DatabasePreparer(context: mainCnx)
-        databasePreparer.save {
-            contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
+        dbPreparer.save {
+            contact = dbPreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
 
-            conversation = databasePreparer.createConversation(
+            conversation = dbPreparer.createConversation(
                 typing: false,
                 unreadMessageCount: unreadMessageCount,
                 category: category,
@@ -88,6 +103,13 @@ class ConversationActionsTest: XCTestCase {
             visibility: .pinned
         )
         
+        let actions = ConversationActions(
+            businessInjector: businessInjectorMock,
+            notificationManagerResolve: { _ in
+                self.notificationManagerMock
+            }
+        )
+
         actions.archive(conversation)
         
         let loadedConversation = try XCTUnwrap(
@@ -105,6 +127,13 @@ class ConversationActionsTest: XCTestCase {
             visibility: .archived
         )
         
+        let actions = ConversationActions(
+            businessInjector: businessInjectorMock,
+            notificationManagerResolve: { _ in
+                self.notificationManagerMock
+            }
+        )
+
         actions.archive(conversation)
         
         let loadedConversation = try XCTUnwrap(
@@ -123,6 +152,13 @@ class ConversationActionsTest: XCTestCase {
             visibility: .pinned
         )
         
+        let actions = ConversationActions(
+            businessInjector: businessInjectorMock,
+            notificationManagerResolve: { _ in
+                self.notificationManagerMock
+            }
+        )
+
         actions.unarchive(conversation)
         
         let loadedConversation = try XCTUnwrap(
@@ -141,6 +177,13 @@ class ConversationActionsTest: XCTestCase {
             visibility: .archived
         )
         
+        let actions = ConversationActions(
+            businessInjector: businessInjectorMock,
+            notificationManagerResolve: { _ in
+                self.notificationManagerMock
+            }
+        )
+
         actions.unarchive(conversation)
         
         let loadedConversation = try XCTUnwrap(
@@ -154,28 +197,28 @@ class ConversationActionsTest: XCTestCase {
     
     // MARK: Read
     
-    func testReadConversationIsMarkedUnread() throws {
-        
+    func testReadConversationIsMarkedUnread() async throws {
+
         let conversation = createConversation(
             unreadMessageCount: -1,
             category: .default,
             visibility: .default
         )
-        
-        let expect = expectation(description: "Read conversation")
 
-        actions.read(conversation, isAppInBackground: false)
-            .done {
-                expect.fulfill()
+        let actions = ConversationActions(
+            businessInjector: backgroundBusinessInjectorMock,
+            notificationManagerResolve: { _ in
+                self.notificationManagerMock
             }
+        )
 
-        wait(for: [expect], timeout: 3)
+        await actions.read(conversation, isAppInBackground: false)
 
         let loadedConversation = try XCTUnwrap(
             businessInjectorMock.entityManager
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
-        
+
         XCTAssertEqual(loadedConversation.unreadMessageCount, 0, "Conversation should be marked read.")
     }
 
@@ -185,6 +228,13 @@ class ConversationActionsTest: XCTestCase {
             unreadMessageCount: 0,
             category: .default,
             visibility: .default
+        )
+
+        let actions = ConversationActions(
+            businessInjector: businessInjectorMock,
+            notificationManagerResolve: { _ in
+                self.notificationManagerMock
+            }
         )
 
         actions.unread(conversation)

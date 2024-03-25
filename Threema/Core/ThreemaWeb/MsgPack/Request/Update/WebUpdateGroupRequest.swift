@@ -70,16 +70,15 @@ class WebUpdateGroupRequest: WebAbstractMessage {
     func updateGroup(completion: @escaping () -> Void) {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         DispatchQueue.main.sync {
-            let entityManager = EntityManager()
-            guard let conversation = entityManager.entityFetcher.legacyConversation(for: id) else {
+            let businessInjector = BusinessInjector()
+            guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversation(for: id) else {
                 ack!.success = false
                 ack!.error = "invalidGroup"
                 completion()
                 return
             }
 
-            let groupManager = GroupManager(entityManager: entityManager)
-            guard let group = groupManager.getGroup(conversation: conversation) else {
+            guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
                 ack!.success = false
                 ack!.error = "invalidGroup"
                 completion()
@@ -111,14 +110,14 @@ class WebUpdateGroupRequest: WebAbstractMessage {
                 }
             }
     
-            groupManager.createOrUpdate(
+            businessInjector.groupManager.createOrUpdate(
                 for: group.groupIdentity,
                 members: Set<String>(members),
                 systemMessageDate: Date()
             )
             .done { group, _ in
                 if self.deleteName || self.name != nil {
-                    groupManager.setName(group: group, name: self.name)
+                    businessInjector.groupManager.setName(group: group, name: self.name)
                         .done {
                             self.ack!.success = true
                             completion()
@@ -134,7 +133,7 @@ class WebUpdateGroupRequest: WebAbstractMessage {
                 if !self.deleteAvatar,
                    let photo = self.avatar {
 
-                    groupManager.setPhoto(group: group, imageData: photo, sentDate: Date())
+                    businessInjector.groupManager.setPhoto(group: group, imageData: photo, sentDate: Date())
                         .done {
                             self.ack!.success = true
                             completion()

@@ -53,7 +53,7 @@
  
  @param message Incoming message
  */
-- (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message isPendingGroup:(BOOL)isPendingGroup;
+- (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message;
 
 /**
  Message was marked as read.
@@ -87,7 +87,6 @@ NS_SWIFT_NAME(readMessage(inConversations:));
 - (void)chatQueueDry;
 - (void)reflectionQueueDry;
 
-- (void)pendingGroup:(AbstractMessage * _Nonnull)message;
 - (void)processTypingIndicator:(TypingIndicatorMessage * _Nonnull)message;
 
 /**

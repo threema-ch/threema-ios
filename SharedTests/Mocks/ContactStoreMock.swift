@@ -27,6 +27,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     private let errorHandler: NSError?
 
     private(set) var numberOfSynchronizeAddressBookCalls = 0
+    private(set) var numberOfUpdateStatusCalls = 0
     var deleteContactCalls = [String]()
 
     required init(callOnCompletion: Bool, _ contact: ContactEntity? = nil, errorHandler: NSError? = nil) {
@@ -109,6 +110,19 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         }
     }
     
+    func updateFeatureMasks(
+        forIdentities Identities: [String],
+        onCompletion: @escaping () -> Void,
+        onError: @escaping (Error) -> Void
+    ) {
+        if let errorHandler {
+            onError(errorHandler)
+        }
+        else if callOnCompletion {
+            onCompletion()
+        }
+    }
+    
     func reflect(_ contact: ContactEntity?) {
         // no-op
     }
@@ -155,6 +169,21 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
 
     func updateContact(withIdentity identity: String, avatar: Data?, firstName: String?, lastName: String?) {
         // no-op
+    }
+    
+    func updateStatus(
+        forAllContactsIgnoreInterval ignoreInterval: Bool,
+        onCompletion: @escaping () -> Void,
+        onError: @escaping (Error) -> Void
+    ) {
+        numberOfUpdateStatusCalls += 1
+        
+        if let errorHandler {
+            onError(errorHandler)
+        }
+        else {
+            onCompletion()
+        }
     }
     
     func updateAllContactsToCNContact() {

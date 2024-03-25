@@ -47,7 +47,7 @@ final class VoIPCallKitManager: NSObject {
         providerConfiguration.includesCallsInRecents = UserSettings.shared().includeCallsInRecents
         
         if let identity = contactIdentity {
-            let pushSettingManager = PushSettingManager()
+            let pushSettingManager = BusinessInjector().pushSettingManager
             let pushSetting = pushSettingManager.find(forContact: ThreemaIdentity(identity))
             if pushSetting.canSendPush(), pushSetting.muted == false {
                 let voIPSound = UserSettings.shared()?.voIPSound

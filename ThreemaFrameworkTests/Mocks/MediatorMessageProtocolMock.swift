@@ -208,6 +208,10 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         D2d_Envelope()
     }
 
+    func getEnvelopeForMdmParametersUpdate(mdmParameters: Sync_MdmParameters) -> D2d_Envelope {
+        D2d_Envelope()
+    }
+
     func decryptEnvelope(data: Data) -> D2d_Envelope? {
         nil
     }

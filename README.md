@@ -63,12 +63,12 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 - `Threema` builds and tests the consumer app. (recommended for local testing)
 - `ThreemaWork` builds and tests the enterprise version of our app.
 - `ThreemaOnPrem` builds and tests the OnPrem version of our app.
-- `ThreemaRed` only used for development and testing within Threema.
-- `ThreemaRedWork` only used for development and testing within Threema.
+- `ThreemaRed` is only used for development and testing within Threema.
+- `ThreemaRedWork` is only used for development and testing within Threema.
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (15.0.1) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (15.2) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
 ### 1. Install Dependencies
 
@@ -84,7 +84,7 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
    ./scripts/build.sh --dependencies
    ```
 
-   This downloads the WebRTC.xcframework if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
+   This downloads the `WebRTC.xcframework` if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
 
 3. Install & intialize [Rustup](https://rustup.rs) for building SaltyRTC. The build happens during the first compilation of the project which also installs the specific toolchain and targets needed.
    ```sh
@@ -126,7 +126,7 @@ _Note_: These setups are for running in the simulator.
 ### 3. Build and Run
 
 1. Build and Run
-2. To create a Threema ID see "App Store Licensing" above. (You can cancel the "Sign in with Apple ID" dialogue and import a Threema ID backup.)
+2. To create a Threema ID see "App Store Licensing" above. (You can cancel the "Sign in with Apple ID" dialog and import a Threema ID backup.)
 
 
 ## <a name="testing"></a>Testing

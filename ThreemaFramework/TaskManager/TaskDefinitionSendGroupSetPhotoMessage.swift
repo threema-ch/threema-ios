@@ -28,7 +28,7 @@ final class TaskDefinitionSendGroupSetPhotoMessage: TaskDefinitionSendMessage {
         TaskExecutionSendGroupSetPhotoMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

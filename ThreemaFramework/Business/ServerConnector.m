@@ -110,7 +110,7 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     id<TaskExecutionTransactionDelegate> clientTaskExecutionTransactionDelegate;
 }
 
-@synthesize businessInjectorForMessageProcessing;
+@synthesize backgroundEntityManagerForMessageProcessing;
 @synthesize lastRtt;
 @synthesize deviceGroupKeys;
 @synthesize deviceID;
@@ -822,8 +822,8 @@ struct pktExtension {
 
                 TaskDefinitionReceiveMessage *task = [[TaskDefinitionReceiveMessage alloc] initWithMessage:boxmsg receivedAfterInitialQueueSend:!chatServerInInitialQueueSend maxBytesToDecrypt:[AppGroup getCurrentType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION timeoutDownloadThumbnail:timeoutDownloadThumbnail];
 
-                // Use `[self businessInjectorForMessageProcessing]` if is not nil (properly setted from Notification Extension), otherwise create new instance for in App processing
-                TaskManager *tm = [[TaskManager alloc] initWithFrameworkInjectorObjc:[self businessInjectorForMessageProcessing] != nil ? [self businessInjectorForMessageProcessing] : [BusinessInjector new]];
+                // Use `[self entityManagerForMessageProcessing]` if is not nil (properly setted from Notification Extension), otherwise nil (means will be created within TaskManager) for in App processing
+                TaskManager *tm = [[TaskManager alloc] initWithBackgroundEntityManager:[self backgroundEntityManagerForMessageProcessing]];
                 [tm addObjcWithTaskDefinition:task];
             }
             break;
@@ -955,7 +955,8 @@ struct pktExtension {
     memcpy(plmsg->from_identity, [message.fromIdentity dataUsingEncoding:NSASCIIStringEncoding].bytes, kIdentityLen);
     memcpy(plmsg->to_identity, [message.toIdentity dataUsingEncoding:NSASCIIStringEncoding].bytes, kIdentityLen);
     memcpy(plmsg->message_id, message.messageId.bytes, kMessageIdLen);
-    plmsg->date = [message.date timeIntervalSince1970];
+    // Timestamp is now in encrypted metadata, so we always send 0. This will then be set by the server.
+    plmsg->date = 0;
     plmsg->flags = message.flags;
     plmsg->reserved = 0;
     plmsg->metadata_len = message.metadataBox.length;
@@ -1582,9 +1583,9 @@ struct pktExtension {
     });
 }
 
-- (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message isPendingGroup:(BOOL)isPendingGroup {
+- (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message {
     dispatch_async(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate incomingMessageFinished:message isPendingGroup:isPendingGroup];
+        [clientMessageProcessorDelegate incomingMessageFinished:message];
     });
 }
 
@@ -1621,12 +1622,6 @@ struct pktExtension {
 - (void)reflectionQueueDry {
     dispatch_async(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate reflectionQueueDry];
-    });
-}
-
-- (void)pendingGroup:(AbstractMessage * _Nonnull)message {
-    dispatch_async(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate pendingGroup:message];
     });
 }
 

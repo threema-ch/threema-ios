@@ -65,8 +65,12 @@ extension StorageManagementConversationView {
         
         /// Refresh message and media count and update the ui
         func refresh() {
-            let conversations = conversations(businessInjector.entityManager)
-            count(conversations)
+            Task {
+                await businessInjector.runInBackground { backgroundBusinessInjector in
+                    let conversations = self.conversations(backgroundBusinessInjector.entityManager)
+                    self.count(backgroundBusinessInjector.entityManager, conversations)
+                }
+            }
         }
         
         func avatarImageProvider(completion: @escaping (UIImage?) -> Void) {
@@ -89,24 +93,30 @@ extension StorageManagementConversationView {
         func messageDelete(_ option: OlderThanOption) {
             deleteInProgress = true
             Task {
-                guard let count = await businessInjector
-                    .backgroundEntityManager
-                    .entityDestroyer
-                    .deleteMessages(
-                        olderThan: option.date,
-                        for: conversation?.objectID
-                    ) else {
-                    DDLogNotice("[EntityDestroyer] no messages got deleted")
-                    await MainActor.run {
-                        deleteInProgress = false
+                await businessInjector.runInBackground { backgroundBusinessInjector in
+                    guard let count = await backgroundBusinessInjector
+                        .entityManager
+                        .entityDestroyer
+                        .deleteMessages(
+                            olderThan: option.date,
+                            for: self.conversation?.objectID
+                        ) else {
+                        DDLogNotice("[EntityDestroyer] no messages got deleted")
+                        await MainActor.run {
+                            self.deleteInProgress = false
+                        }
+
+                        return
                     }
 
-                    return
+                    DDLogNotice("[EntityDestroyer] \(count) messages deleted")
+                    self.recalculate(backgroundBusinessInjector)
+                    FileUtility.cleanTemporaryDirectory(olderThan: nil)
+
+                    await MainActor.run {
+                        self.deleteInProgress = false
+                    }
                 }
-                
-                DDLogNotice("[EntityDestroyer] \(count) messages deleted")
-                await recalculate()
-                FileUtility.cleanTemporaryDirectory(olderThan: nil)
             }
         }
         
@@ -116,62 +126,70 @@ extension StorageManagementConversationView {
         func mediaDelete(_ option: OlderThanOption) {
             deleteInProgress = true
             Task {
-                guard let count = await businessInjector
-                    .backgroundEntityManager
-                    .entityDestroyer
-                    .deleteMedias(
-                        olderThan: option.date,
-                        for: conversation?.objectID
-                    ) else {
-                    DDLogNotice("[EntityDestroyer] media files deleted")
-                    await MainActor.run {
-                        deleteInProgress = false
+                await businessInjector.runInBackground { backgroundBusinessInjector in
+                    guard let count = await backgroundBusinessInjector
+                        .entityManager
+                        .entityDestroyer
+                        .deleteMedias(
+                            olderThan: option.date,
+                            for: self.conversation?.objectID
+                        ) else {
+                        DDLogNotice("[EntityDestroyer] media files deleted")
+                        await MainActor.run {
+                            self.deleteInProgress = false
+                        }
+
+                        return
                     }
 
-                    return
+                    DDLogNotice("[EntityDestroyer] \(count) media files deleted")
+                    self.recalculate(backgroundBusinessInjector)
+                    FileUtility.cleanTemporaryDirectory(
+                        olderThan: option == OlderThanOption.everything ? Date() : nil
+                    )
+
+                    await MainActor.run {
+                        self.deleteInProgress = false
+                    }
                 }
-                
-                DDLogNotice("[EntityDestroyer] \(count) media files deleted")
-                await recalculate()
-                FileUtility.cleanTemporaryDirectory(
-                    olderThan: option == OlderThanOption.everything ? Date() : nil
-                )
             }
         }
         
         // MARK: - Private Helper
         
-        /// Recalculate the total number of messages and media within a set of conversations
+        /// Get the recalculated total number of messages and media within a set of conversations
         /// and also update the unread messages count.
-        private func recalculate() async {
-            let conversations = conversations(businessInjector.backgroundEntityManager)
-            UnreadMessages(entityManager: businessInjector.backgroundEntityManager)
-                .totalCount(doCalcUnreadMessagesCountOf: conversations)
-        
-            NotificationManager().updateUnreadMessagesCount()
-            count(conversations)
-            
-            await MainActor.run {
-                deleteInProgress = false
-            }
+        ///
+        /// - Parameter backgroundBusinessInjector: `BusinessInjector` for background thread
+        /// - Returns: Count of messages and media of the conversations
+        private func recalculate(_ backgroundBusinessInjector: BusinessInjectorProtocol) {
+            let conversations = conversations(backgroundBusinessInjector.entityManager)
+            backgroundBusinessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: conversations)
+            NotificationManager(businessInjector: backgroundBusinessInjector).updateUnreadMessagesCount()
+            count(backgroundBusinessInjector.entityManager, conversations)
         }
         
-        /// Count the total number of messages and media within a set of conversations.
-        /// Asynchronously update the `totalMessagesCount` and `totalMediaCount` properties.
+        /// Get total number of messages and media within a set of conversations.
         ///
-        /// - Parameter conversations: The set of conversations to count.
-        private func count(_ conversations: Set<Conversation>) {
-            DispatchQueue.main.async {
-                self.totalMessagesCount = 0
-                self.totalMediaCount = 0
+        /// - Parameters:
+        ///   - backgroundEntityManager: The EntityManager instance to count messages and media.
+        ///   - conversations: The set of conversations to count.
+        /// - Returns: Count of messages and media of the conversations
+        private func count(
+            _ backgroundEntityManager: EntityManager,
+            _ conversations: Set<Conversation>
+        ) {
+            var messagesCount = 0
+            var mediaCount = 0
+            conversations.forEach {
+                let fetcher = MessageFetcher(for: $0, with: backgroundEntityManager)
+                messagesCount += fetcher.count()
+                mediaCount += fetcher.mediaCount()
             }
             
-            conversations.forEach { [weak self] in
-                let fetcher = MessageFetcher(for: $0, with: businessInjector.backgroundEntityManager)
-                DispatchQueue.main.async {
-                    self?.totalMessagesCount += fetcher.count()
-                    self?.totalMediaCount += fetcher.mediaCount()
-                }
+            DispatchQueue.main.async {
+                self.totalMessagesCount = messagesCount
+                self.totalMediaCount = mediaCount
             }
         }
         
@@ -179,11 +197,11 @@ extension StorageManagementConversationView {
         /// If a specific conversation is provided, it returns a set with that single conversation.
         /// Otherwise, it fetches non-archived conversations from the entity manager.
         ///
-        /// - Parameter entityManager: The EntityManager instance to fetch conversations from.
+        /// - Parameter backgroundEntityManager: The EntityManager instance to fetch conversations from.
         /// - Returns: A set of `Conversation` objects.
-        private func conversations(_ entityManager: EntityManager) -> Set<Conversation> {
+        private func conversations(_ backgroundEntityManager: EntityManager) -> Set<Conversation> {
             guard let conversation else {
-                return Set(entityManager.entityFetcher.notArchivedConversations() as? [Conversation] ?? [])
+                return Set(backgroundEntityManager.entityFetcher.notArchivedConversations() as? [Conversation] ?? [])
             }
             
             return [conversation]

@@ -26,7 +26,11 @@ import ThreemaEssentials
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol
     ) -> TaskExecutionProtocol {
-        TaskExecutionSendMessage(taskContext: taskContext, taskDefinition: self, frameworkInjector: frameworkInjector)
+        TaskExecutionSendMessage(
+            taskContext: taskContext,
+            taskDefinition: self,
+            backgroundFrameworkInjector: frameworkInjector
+        )
     }
 
     override func create(frameworkInjector: FrameworkInjectorProtocol) -> TaskExecutionProtocol {

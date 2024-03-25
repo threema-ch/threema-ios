@@ -376,12 +376,12 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     }
     
     private func resendMessage(withID messageID: NSManagedObjectID, from sourceView: UIView) {
-        let businessInjector = BusinessInjector()
-        let backgroundEntityManger = businessInjector.backgroundEntityManager
-        
-        let rejectedByGroupMembers = backgroundEntityManger.performAndWait {
-            let message = backgroundEntityManger.entityFetcher.existingObject(with: messageID) as? BaseMessage
-            
+        let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
+
+        let rejectedByGroupMembers = backgroundBusinessInjector.entityManager.performAndWait {
+            let message = backgroundBusinessInjector.entityManager.entityFetcher
+                .existingObject(with: messageID) as? BaseMessage
+
             var rejectedBy: Set<ContactEntity>? = nil
             if message?.conversation.isGroup() ?? false, !(message?.rejectedBy?.isEmpty ?? true) {
                 rejectedBy = message?.rejectedBy
@@ -411,7 +411,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                 titleOk: "chat_view_resend_group_message_confirmation_button".localized,
                 actionOk: { _ in
                     Task {
-                        await businessInjector.messageSender.sendBaseMessage(
+                        await backgroundBusinessInjector.messageSender.sendBaseMessage(
                             with: messageID,
                             to: .groupMembers(rejectedMemberIdentities)
                         )
@@ -422,7 +422,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         }
         else {
             Task {
-                await businessInjector.messageSender.sendBaseMessage(with: messageID)
+                await backgroundBusinessInjector.messageSender.sendBaseMessage(with: messageID)
             }
         }
     }

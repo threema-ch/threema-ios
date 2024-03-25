@@ -41,7 +41,7 @@ extension GroupCallManager {
                     return
                 }
                 
-                guard let group = GroupManager().getGroup(conversation: conversation) else {
+                guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
                     continuation.resume(returning: nil)
                     return
                 }

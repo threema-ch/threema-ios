@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -19,8 +19,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaProtocols
 
-protocol RemoteParticipantProtocol {
-    func setRemoteContext(_ remoteContext: RemoteContext) async
-    func getRemoteContext() async -> RemoteContext?
+extension CspE2eFs_Version: CustomStringConvertible {
+    public var description: String {
+        let lsb = rawValue & 0xFF
+        let msb = (rawValue >> 8) & 0xFF
+        
+        return "\(msb).\(lsb)"
+    }
 }

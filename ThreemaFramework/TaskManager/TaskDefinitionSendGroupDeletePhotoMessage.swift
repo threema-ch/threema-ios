@@ -28,7 +28,7 @@ final class TaskDefinitionSendGroupDeletePhotoMessage: TaskDefinitionSendMessage
         TaskExecutionSendGroupDeletePhotoMessage(
             taskContext: taskContext,
             taskDefinition: self,
-            frameworkInjector: frameworkInjector
+            backgroundFrameworkInjector: frameworkInjector
         )
     }
 

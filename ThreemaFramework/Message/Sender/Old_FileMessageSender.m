@@ -64,7 +64,8 @@
 - (instancetype)init
 {
     EntityManager *em = [[EntityManager alloc] init];
-    return [self init:[[TaskManager alloc] init] groupManager:[[GroupManager alloc] initWithEntityManager:em] entityManager:em];
+    TaskManager *tm = [TaskManager new];
+    return [self init:tm groupManager:[[GroupManager alloc] initWithEntityManager:em taskManagerObjc:tm] entityManager:em];
 }
 
 - (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation {

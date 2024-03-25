@@ -27,17 +27,15 @@ import ThreemaFramework
     
     @objc static let shared = WCSessionManager()
     
-    private let entityManager: EntityManager
-    private let groupManager: GroupManager
-    
+    private let businessInjector: BusinessInjectorProtocol
+
     private var sessions = [Data: WCSession]()
     private(set) var running = [Data]()
     private var runningSessionsQueue = DispatchQueue(label: "ch.threema.runningSessionsQueue", attributes: [])
     private var observerAlreadySet = false
     
     override private init() {
-        self.entityManager = EntityManager()
-        self.groupManager = GroupManager(entityManager: entityManager)
+        self.businessInjector = BusinessInjector()
         super.init()
         loadSessionsFromArchive()
     }
@@ -837,7 +835,7 @@ extension WCSessionManager {
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
-            guard let currentContact = self.entityManager.entityFetcher
+            guard let currentContact = self.businessInjector.entityManager.entityFetcher
                 .getManagedObject(by: contact.objectID) as? ContactEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
@@ -850,7 +848,7 @@ extension WCSessionManager {
                 changedValues.keys.contains("publicNickname") ||
                 changedValues.keys.contains("verificationLevel") ||
                 changedValues.keys.contains("state") ||
-                changedValues.keys.contains("featureLevel") ||
+                changedValues.keys.contains("featureMask") ||
                 changedValues.keys.contains("workContact") ||
                 changedValues.keys.contains("hidden") ||
                 dirtyObjects {
@@ -874,7 +872,7 @@ extension WCSessionManager {
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
-            guard let currentMessage = self.entityManager.entityFetcher
+            guard let currentMessage = self.businessInjector.entityManager.entityFetcher
                 .getManagedObject(by: baseMessage.objectID) as? BaseMessage,
                 let conversation = currentMessage.conversation else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
@@ -945,7 +943,7 @@ extension WCSessionManager {
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
-            guard let currentConversation = self.entityManager.entityFetcher
+            guard let currentConversation = self.businessInjector.entityManager.entityFetcher
                 .getManagedObject(by: conversation.objectID) as? Conversation else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
@@ -958,12 +956,12 @@ extension WCSessionManager {
             if currentConversation.isGroup() {
                 
                 if changedValues.keys.contains("groupName") || changedValues.keys.contains("members") {
-                    if let group = self.groupManager.getGroup(conversation: currentConversation) {
+                    if let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                         self.responseUpdateGroup(group: group, objectMode: .modified)
                     }
                 }
                 else if changedValues.keys.contains("groupImage"),
-                        let group = self.groupManager.getGroup(conversation: currentConversation) {
+                        let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                     self.responseUpdateAvatar(contact: nil, group: group)
                 }
             }
@@ -998,7 +996,7 @@ extension WCSessionManager {
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
-            guard let currentContact = self.entityManager.entityFetcher
+            guard let currentContact = self.businessInjector.entityManager.entityFetcher
                 .getManagedObject(by: contact.objectID) as? ContactEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
@@ -1019,7 +1017,7 @@ extension WCSessionManager {
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
-            guard let currentConversation = self.entityManager.entityFetcher
+            guard let currentConversation = self.businessInjector.entityManager.entityFetcher
                 .getManagedObject(by: conversation.objectID) as? Conversation else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
@@ -1030,7 +1028,7 @@ extension WCSessionManager {
             )
             
             if currentConversation.isGroup(),
-               let group = self.groupManager.getGroup(conversation: currentConversation) {
+               let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                 self.responseUpdateGroup(group: group, objectMode: .new)
             }
 
@@ -1045,7 +1043,7 @@ extension WCSessionManager {
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
-            guard let currentMessage = self.entityManager.entityFetcher
+            guard let currentMessage = self.businessInjector.entityManager.entityFetcher
                 .getManagedObject(by: baseMessage.objectID) as? BaseMessage,
                 let conversation = currentMessage.conversation else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
@@ -1344,14 +1342,15 @@ extension WCSessionManager {
     
     @objc func blackListChanged(_ notification: Notification) {
         let identity = notification.object as! String
-        if let contact = entityManager.entityFetcher.contact(for: identity) {
+        if let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) {
             responseUpdateContact(contact: contact, objectMode: .modified)
         }
     }
     
     @objc func refreshDirtyObjects(_ notification: Notification) {
         if let objectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID {
-            if let managedObject = entityManager.entityFetcher.getManagedObject(by: objectID) as? NSManagedObject {
+            if let managedObject = businessInjector.entityManager.entityFetcher
+                .getManagedObject(by: objectID) as? NSManagedObject {
                 DDLogInfo("[t-dirty-objects] Send dirty object to webclient (insert and update): \(objectID)")
                 var insertedObjects = Set<NSManagedObject>()
                 insertedObjects.insert(managedObject)

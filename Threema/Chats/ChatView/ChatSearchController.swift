@@ -293,6 +293,7 @@ final class ChatSearchController: NSObject {
                     self.filteredMessageObjectIDs = self.entityFetcher.messagesContaining(
                         searchText,
                         in: self.conversation,
+                        filterPredicate: nil,
                         fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
                     )
                     .compactMap { $0 as? BaseMessage }

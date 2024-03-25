@@ -147,7 +147,7 @@ typedef enum : int {
 
 - (NSString *)safePasswordMessage;
 
-- (NSNumber *)keepMessagesDays;
+- (nullable NSNumber *)keepMessagesDays;
 
 - (BOOL)safeRestoreEnable;
 
@@ -182,6 +182,10 @@ typedef enum : int {
 - (nullable NSString *)supportDescriptionString;
 
 - (BOOL)existsMdmKey:(NSString*)mdmKey;
+
+- (NSDictionary*)getCompanyMDM;
+
+- (NSDictionary*)getThreemaMDM;
 
 /// Apply Threema MDM parameters (workData) to company MDM
 /// @param workData: Threema MDM parameters

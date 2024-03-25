@@ -42,7 +42,7 @@ class HttpClientUploadSafeTests: XCTestCase {
         let store = SafeStore(
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: GroupManagerMock()
         )
         if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
@@ -83,7 +83,7 @@ class HttpClientUploadSafeTests: XCTestCase {
         let store = SafeStore(
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManager()
+            groupManager: GroupManagerMock()
         )
         if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {

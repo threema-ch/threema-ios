@@ -35,10 +35,6 @@ public class DHSessionID: CustomStringConvertible, Equatable, Comparable {
         self.value = value
     }
     
-    public func data() -> Data {
-        value
-    }
-    
     public var description: String {
         BytesUtility.toHexString(data: value)
     }

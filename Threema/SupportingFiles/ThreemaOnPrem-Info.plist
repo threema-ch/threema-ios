@@ -97,8 +97,6 @@
 	<string>group.ch.threema.onprem</string>
 	<key>ThreemaAppIdentifier</key>
 	<string>ch.threema.onprem.iapp</string>
-	<key>ThreemaForwardSecurity</key>
-	<true/>
 	<key>ThreemaMaxGroupMembers</key>
 	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>

@@ -26,9 +26,20 @@ public protocol DHSessionStoreProtocol: AnyObject {
     func exactDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID?) throws -> DHSession?
     func bestDHSession(myIdentity: String, peerIdentity: String) throws -> DHSession?
     func storeDHSession(session: DHSession) throws
+    
+    /// Update session ratchets
+    /// - Parameters:
+    ///   - session: Session to persist ratchets for
+    ///   - peer: Own or peer ratchets?
     func updateDHSessionRatchets(session: DHSession, peer: Bool) throws
-    @discardableResult func deleteDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID) throws
-        -> Bool
+    
+    /// Persist `newSessionCommitted`, `lastMessageSent` and versions of `session`
+    /// - Parameter session: Session to persist properties for
+    func updateNewSessionCommitLastMessageSentDateAndVersions(session: DHSession) throws
+    
+    @discardableResult func deleteDHSession(
+        myIdentity: String, peerIdentity: String, sessionID: DHSessionID
+    ) throws -> Bool
     @discardableResult func deleteAllDHSessions(myIdentity: String, peerIdentity: String) throws -> Int
     @discardableResult func deleteAllDHSessionsExcept(
         myIdentity: String,

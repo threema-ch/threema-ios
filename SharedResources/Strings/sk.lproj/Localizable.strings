@@ -397,12 +397,8 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "chat_search_searching" = "Hľadá sa…";
 "chat_search_no_matches" = "Žiadna zhoda";
 "chat_search_matches" = "%d z %d zhôd";
-"chat_search_note" = "Poznámka: Titulky médií nie sú zahrnuté vo výsledkoch vyhľadávania.";
 
 "choose_recipient" = "Vybrať príjemcu";
-
-"msg_unknown_group_request_sync_x_title" = "Prijatie správy v neznámej skupine";
-"msg_unknown_group_request_sync_x_message" = "Bola prijatá správa v neznámej skupine. Od tvorcu skupiny (%@) boli vyžiadané Informácie o skupine. Skupina sa zobrazí, akonáhle bude tvorca opäť online.";
 
 "tap_to_cancel" = "Kliknutím zrušiť";
 "previous" = "Predchádzajúca";
@@ -765,14 +761,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "call_status_blocked" = "Blokovaný kontakt";
 "call_status_failed_title" = "Threema hovor";
 
-"call_threema_initiator_video_info" = "Kliknutím sem zapnete kameru";
-"call_threema_remote_video_activated_info_title" = "Video hovor";
-"call_threema_remote_video_activated_info" = "Protistrana zahájila video hovor. Kliknutím sem zapnete vašu kameru.";
-"call_threema_speaker_info" = "Kliknutím sem zapnete reproduktor";
-"call_threema_camera_disabled_info" = "Tento kontakt nepoužíva aktuálnu verziu aplikácie, alebo nemá povolené video hovory.";
-
-"call_threema_video_in_chat_info_title" = "Novinka: Video hovory";
-
 "call_threema_cellular_instead_of_wifi_title" = "Hovor cez mobilnú sieť";
 "call_threema_cellular_instead_of_wifi_text" = "Varovanie: Tento hovor využíva prenos dát cez mobilnú sieť.";
 
@@ -841,8 +829,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "archived_chats" = "Archivované konverzácie";
 
 "archived_title" = "Archivované";
-"conversations_search_placeholder" = "Kontakty, skupiny, ID...";
-
 "select_all" = "Vybrať všetko";
 "deselect_all" = "Odznačiť všetko";
 "no_archived_chats" = "Žiadne archivované konverzácie";
@@ -945,7 +931,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "webClientSession_error_voip_title" = "Platnosť relácie počítača/webu vypršala";
 "webClientSession_error_voip_message" = "%@ sa pokúsil pripojiť k vášmu počítaču. Zabudnite na reláciu na počítači a začnite novú.";
 
-"webClient_scan_error_title" = "Threema Web";
 "webClient_scan_error_message" = "Toto je QR kód pre desktopovú aplikáciu / webového klienta.  Použite skener v Nastavenia > Desktop/Web.";
 
 "webClient_scan_error_mdm_host_title" = "Nie je možné spustiť reláciu";
@@ -1700,7 +1685,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 "notification_group_sync_succeeded" = "Skupina synchronizovaná";
 "notification_group_sync_failed" = "Synchronizácia skupiny zlyhala";
-
 "notification_settings_sync_pending" = "Prebieha synchronizácia...";
 "notification_settings_sync_succeeded" = "Nastavenia synchronizované";
 

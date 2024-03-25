@@ -37,6 +37,15 @@ extension GroupDetailsDataSource {
 /// Data source for `GroupDetailsViewController`
 final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.Section, GroupDetails.Row> {
     
+    /// Increase counter if tap happened that eventually should show group debug infos
+    var showDebugInfoTapCounter = 0 {
+        didSet {
+            if showDebugInfo {
+                reload(sections: [.debugInfo])
+            }
+        }
+    }
+    
     // MARK: - Properties
     
     private let displayMode: GroupDetailsDisplayMode
@@ -66,21 +75,11 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     
     private static let contentConfigurationCellIdentifier = "contentConfigurationCellIdentifier"
     
-    // Keep tack of debug info taps and configure threshold after how many taps to show debug info
-    
+    // Keep track of debug info taps and configure threshold after how many taps to show debug info
+    private let showDebugInfoThreshold = 5
     private var showDebugInfo: Bool {
         showDebugInfoTapCounter >= showDebugInfoThreshold || ThreemaEnvironment.env() == .xcode
     }
-
-    private var showDebugInfoTapCounter = 0 {
-        didSet {
-            if showDebugInfo {
-                reload(sections: [.debugInfo])
-            }
-        }
-    }
-
-    private let showDebugInfoThreshold = 5
     
     // MARK: - Lifecycle
     
@@ -902,7 +901,6 @@ extension GroupDetailsDataSource {
                     of: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
                     cell: cell,
-                    entityManager: strongSelf.businessInjector.entityManager,
                     singleFunction: .leaveDissolve
                 ) { _ in
                     DDLogVerbose("Left group")
@@ -931,7 +929,6 @@ extension GroupDetailsDataSource {
                     of: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
                     cell: cell,
-                    entityManager: strongSelf.businessInjector.entityManager,
                     singleFunction: .leaveDissolve
                 ) { _ in
                     DDLogVerbose("Group was deleted")
@@ -960,13 +957,10 @@ extension GroupDetailsDataSource {
                 of: strongSelf.group.conversation,
                 owner: strongGroupDetailsViewController,
                 cell: cell,
-                entityManager: strongSelf.businessInjector.entityManager,
                 singleFunction: .delete
             ) { _ in
                 DDLogVerbose("Group was deleted")
             }
-            
-            strongSelf.showDebugInfoTapCounter += 1
         }
         rows.append(.action(deleteAction))
         
@@ -994,9 +988,10 @@ extension GroupDetailsDataSource {
             strongSelf.groupDetailsViewController?.present(navigationController, animated: true)
         }
         
+        let settingsStore = BusinessInjector().settingsStore
         row.append(.wallpaper(
             action: wallpaperAction,
-            isDefault: !SettingsStore().wallpaperStore.hasCustomWallpaper(for: conversation.objectID)
+            isDefault: !settingsStore.wallpaperStore.hasCustomWallpaper(for: conversation.objectID)
         ))
         return row
     }

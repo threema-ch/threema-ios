@@ -677,6 +677,16 @@ enum MediatorMessageProtocolError: Error {
         return envelope
     }
 
+    func getEnvelopeForMdmParametersUpdate(mdmParameters: Sync_MdmParameters) -> D2d_Envelope {
+        var mdmParameterSync = D2d_MdmParameterSync()
+        mdmParameterSync.update.parameters = mdmParameters
+
+        var envelope = D2d_Envelope()
+        envelope.mdmParameterSync = mdmParameterSync
+
+        return envelope
+    }
+
     // MARK: Encrypt / decrypt envelop
 
     /// Decrypt message and decode envelope.
@@ -823,6 +833,8 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_TYPING_INDICATOR
         case .groupCallStart:
             return MSGTYPE_GROUP_CALL_START
+        case .empty:
+            return MSGTYPE_EMPTY
         // Not supported types
         case .groupJoinRequest, .groupJoinResponse, .forwardSecurityEnvelope:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
@@ -905,6 +917,8 @@ enum MediatorMessageProtocolError: Error {
             return .contactRequestProfilePicture
         case MSGTYPE_TYPING_INDICATOR:
             return .typingIndicator
+        case MSGTYPE_EMPTY:
+            return .empty
         default:
             return .invalidType
         }

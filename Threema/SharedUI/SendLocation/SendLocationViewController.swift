@@ -544,6 +544,11 @@ extension SendLocationViewController: UITableViewDelegate {
             longitude: mapView.centerCoordinate.longitude
         )
         
+        if !isSameLocation(currentLocationPOI.location, currentLocationPOI.updatedLocation) {
+            currentLocationPOI.location = currentLocationPOI.updatedLocation
+            currentLocationPOIDidChange()
+        }
+        
         // If current location is center of map simply select it
         if isSameLocation(currentLocationPOI.location, location) {
             selectPOI(poi: currentLocationPOI)

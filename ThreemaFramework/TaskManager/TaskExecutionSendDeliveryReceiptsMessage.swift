@@ -38,8 +38,8 @@ final class TaskExecutionSendDeliveryReceiptsMessage: TaskExecution, TaskExecuti
             // Check has to send read receipt to contact, all other receipt types will be send anyway
             var doSendReadReceipt = false
             if task.receiptType == .read {
-                doSendReadReceipt = self.frameworkInjector.backgroundEntityManager.performAndWait {
-                    if let contactEntity = self.frameworkInjector.backgroundEntityManager.entityFetcher
+                doSendReadReceipt = self.frameworkInjector.entityManager.performAndWait {
+                    if let contactEntity = self.frameworkInjector.entityManager.entityFetcher
                         .contact(for: task.toIdentity) {
                         return self.frameworkInjector.messageSender.doSendReadReceipt(to: contactEntity)
                     }

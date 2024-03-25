@@ -19,6 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
+import ThreemaProtocols
 
 @objc class ForwardSecurityEnvelopeMessage: AbstractMessage {
     let data: ForwardSecurityData
@@ -105,5 +107,24 @@ import Foundation
 
     override static var supportsSecureCoding: Bool {
         true
+    }
+    
+    // MARK: Logging description
+    
+    override var loggingDescription: String {
+        var groupIdentity: GroupIdentity?
+        if let reject = data as? ForwardSecurityDataReject, let rejectGroupIdentity = reject.groupIdentity {
+            groupIdentity = rejectGroupIdentity
+        }
+        else if let message = data as? ForwardSecurityDataMessage, let messageGroupIdentity = message.groupIdentity {
+            groupIdentity = messageGroupIdentity
+        }
+        
+        if let groupIdentity {
+            return "(type: \(Common_CspE2eMessageType.forwardSecurityEnvelope); id: \(messageID.hexString); groupIdentity: \(groupIdentity))"
+        }
+        else {
+            return "(type: \(Common_CspE2eMessageType.forwardSecurityEnvelope); id: \(messageID.hexString))"
+        }
     }
 }

@@ -32,34 +32,9 @@ class ThreemaWebViewController: ThemedTableViewController {
     var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>?
     var selectedIndexPath: IndexPath?
     
-    private lazy var sections: [Section] = {
-        
-        // This should always be in sync with `disableMultiDeviceForVersionLessThan5()`
-        
-        switch ThreemaEnvironment.env() {
-        case .appStore:
-            // Only hide multi-device in onprem App Store releases
-            if ThreemaApp.current == .onPrem {
-                return Section.webOnly
-            }
-            else {
-                return Section.all
-            }
-        case .testFlight:
-            // Show multi-device only in consumer, work, red and work red betas
-            if ThreemaApp.current == .threema || ThreemaApp.current == .work || ThreemaApp.current == .red || ThreemaApp
-                .current == .workRed {
-                return Section.all
-            }
-            else {
-                return Section.webOnly
-            }
-        case .xcode:
-            // Always show multi-device for debug builds
-            return Section.all
-        }
-    }()
-    
+    // This should always be in sync with `disableMultiDeviceForVersionLessThan5()`
+    private lazy var sections: [Section] = Section.all
+
     fileprivate enum Section {
         case linkedDevice
         case web
@@ -69,7 +44,7 @@ class ThreemaWebViewController: ThemedTableViewController {
             .web,
             .webSessions,
         ]
-        
+
         static let all: [Section] = [
             .linkedDevice,
             .web,
@@ -79,7 +54,24 @@ class ThreemaWebViewController: ThemedTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        // Hide MD linking if is rendezvous server missing (means MD config is missing in general)
+        let factory = ServerInfoProviderFactory.makeServerInfoProvider()
+        factory.rendezvousServer { rendezvousServerInfo, _ in
+            if rendezvousServerInfo != nil {
+                // Do not show MD for OnPrem AppStore
+                if ThreemaApp.current == .onPrem, ThreemaEnvironment.env() == .appStore {
+                    self.sections = Section.webOnly
+                }
+                else {
+                    self.sections = Section.all
+                }
+            }
+            else {
+                self.sections = Section.webOnly
+            }
+        }
+
         fetchedResultsController = entityManager.entityFetcher.fetchedResultsControllerForWebClientSessions()
         fetchedResultsController!.delegate = self
         
@@ -460,7 +452,7 @@ extension ThreemaWebViewController: ThreemaWebQRcodeScannerDelegate {
         }
         if let vc = AppDelegate.shared().currentTopViewController() {
             vc.dismiss(animated: true) {
-                UIAlertTemplate.showAlert(owner: vc, title: title, message: message)
+                UIAlertTemplate.showAlert(owner: self, title: title, message: message)
             }
         }
     }

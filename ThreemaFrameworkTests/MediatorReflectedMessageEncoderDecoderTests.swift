@@ -33,7 +33,6 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(),
             entityManager: EntityManager()
         )
 

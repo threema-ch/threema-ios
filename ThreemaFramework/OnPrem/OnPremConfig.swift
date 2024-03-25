@@ -33,4 +33,5 @@ public struct OnPremConfig: Decodable {
     let work: OnPremConfigWork?
     let mediator: OnPremConfigMediator?
     let web: OnPremConfigWeb?
+    let rendezvous: OnPremConfigRendezvous?
 }

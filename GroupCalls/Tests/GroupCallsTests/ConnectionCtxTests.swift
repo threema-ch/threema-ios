@@ -170,7 +170,7 @@ final class ConnectionCtxTests: XCTestCase {
         
         let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()
 
-        let participantStateActor = ParticipantStateActor(localParticipant: localParticipant)
+        let participantStateActor = ParticipantState(localParticipant: localParticipant)
         
         mockPeerConnectionCtx.transceivers = [MockRTCRtpTransceiver]()
         let newMockTransceiver1 = MockRTCRtpTransceiver(mid: "!", mediaType: .audio, direction: .recvOnly)
@@ -248,7 +248,7 @@ final class ConnectionCtxTests: XCTestCase {
             groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: "")
         )
         
-        let participantStateActor = ParticipantStateActor(localParticipant: localParticipant)
+        let participantStateActor = ParticipantState(localParticipant: localParticipant)
         
         mockPeerConnectionCtx.transceivers = [MockRTCRtpTransceiver]()
         let newMockTransceiver1 = MockRTCRtpTransceiver(mid: "!", mediaType: .audio, direction: .sendOnly)

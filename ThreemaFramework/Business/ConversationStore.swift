@@ -58,25 +58,6 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         self.taskManager = taskManager
     }
 
-    @objc convenience init(entityManager: EntityManager) {
-        self.init(
-            userSettings: UserSettings.shared(),
-            pushSettingManager: PushSettingManager(
-                UserSettings.shared(),
-                GroupManager(entityManager: entityManager),
-                entityManager,
-                LicenseStore.shared().getRequiresLicenseKey()
-            ),
-            groupManager: GroupManager(entityManager: entityManager),
-            entityManager: entityManager,
-            taskManager: TaskManager(frameworkInjector: BusinessInjector())
-        )
-    }
-    
-    @objc override convenience init() {
-        self.init(entityManager: EntityManager())
-    }
-    
     @objc public func unmarkAllPrivateConversations() {
         entityManager.performSyncBlockAndSafe {
             for conversation in self.entityManager.entityFetcher.privateConversations() {

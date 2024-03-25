@@ -41,7 +41,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .pinned
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.unpin(conversation)
 
         let loadedConversation = try XCTUnwrap(
@@ -59,7 +65,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .default
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.unpin(conversation)
 
         let loadedConversation = try XCTUnwrap(
@@ -77,7 +89,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .pinned
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.pin(conversation)
 
         let loadedConversation = try XCTUnwrap(
@@ -95,7 +113,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .default
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.pin(conversation)
 
         let loadedConversation = try XCTUnwrap(
@@ -113,7 +137,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .default
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.makePrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(
@@ -130,7 +160,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .default
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.makeNotPrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(
@@ -147,7 +183,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .default
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.makeNotPrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(
@@ -164,7 +206,13 @@ final class ConversationStoreTests: XCTestCase {
             visibility: .default
         )
 
-        let conversationStore = ConversationStore(entityManager: entityManager)
+        let conversationStore = ConversationStore(
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            groupManager: GroupManagerMock(),
+            entityManager: entityManager,
+            taskManager: TaskManager()
+        )
         conversationStore.makePrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(

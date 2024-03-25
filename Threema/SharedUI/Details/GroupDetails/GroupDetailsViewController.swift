@@ -544,6 +544,11 @@ extension GroupDetailsViewController: UITableViewDelegate {
             
             action.run(cell)
             
+        case let .booleanAction(action):
+            if action.title == "notification_sound_title".localized {
+                dataSource.showDebugInfoTapCounter += 1
+            }
+            
         default:
             // No action possible
             break

@@ -829,6 +829,9 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "archived_chats" = "Archivované konverzácie";
 
 "archived_title" = "Archivované";
+"conversations_global_search_placeholder" = "Vyhľadať";
+"one_to_one_chat" = "Jednotlivé konverzácie";
+
 "select_all" = "Vybrať všetko";
 "deselect_all" = "Odznačiť všetko";
 "no_archived_chats" = "Žiadne archivované konverzácie";
@@ -931,6 +934,7 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "webClientSession_error_voip_title" = "Platnosť relácie počítača/webu vypršala";
 "webClientSession_error_voip_message" = "%@ sa pokúsil pripojiť k vášmu počítaču. Zabudnite na reláciu na počítači a začnite novú.";
 
+"webClient_scan_error_title" = "Desktop/Web";
 "webClient_scan_error_message" = "Toto je QR kód pre desktopovú aplikáciu / webového klienta.  Použite skener v Nastavenia > Desktop/Web.";
 
 "webClient_scan_error_mdm_host_title" = "Nie je možné spustiť reláciu";
@@ -1600,8 +1604,8 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "poi_current_location" = "Moja pozícia";
 "poi_marked_location" = "Pripnutý špendlík";
 
-"notification_threemaweb_connectionlost_title" = "Spojenie s Threema Web sa stratilo";
-"notification_threemaweb_connectionlost_body" = "Ak chcete ďalej používať Threema Web, znova otvorte aplikáciu.";
+"notification_threemaweb_connectionlost_title" = "Strata spojenia s desktopovou aplikáciou / webovým klientom";
+"notification_threemaweb_connectionlost_body" = "Ak chcete pokračovať v používaní desktopovej aplikácie / webového klienta, znovu otvorte aplikáciu.";
 
 "settings_threema_web_connected" = "Počítač/web pripojený";
 "settings_threema_web_connectioninfo" = "Ak chcete zostať v spojení, vaše zariadenie musí byť odomknuté so spusteným %@ v popredí. Počas pripojenia sa vaše zariadenie automaticky neuzamkne.";
@@ -1685,6 +1689,8 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 "notification_group_sync_succeeded" = "Skupina synchronizovaná";
 "notification_group_sync_failed" = "Synchronizácia skupiny zlyhala";
+"notification_group_call_start_failed" = "Žiadny člen nepodporuje skupinové hovory";
+
 "notification_settings_sync_pending" = "Prebieha synchronizácia...";
 "notification_settings_sync_succeeded" = "Nastavenia synchronizované";
 
@@ -1710,7 +1716,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 // Forward security status messages
 "forward_security_message_without" = "Bola prijatá správa bez ochrany Perfect Forward Secrecy. Overte, či odosielateľ úmyselne zakázal funkciu Perfect Forward Secrecy.";
-"forward_security_session_established" = "Správy v tomto rozhovore sú teraz chránené systémom Perfect Forward Secrecy.";
+"forward_security_session_established" = "Správy s týmto partnerom konverzácie sú teraz chránené technológiou Perfect Forward Secrecy.";
 "forward_security_session_established_rx" = "Správy prijaté v tomto rozhovore sú teraz chránené systémom Perfect Forward Secrecy. Povoľte Perfect Forward Secrecy v kontaktných údajoch, aby ste ochránili aj odoslané správy.";
 "forward_security_messages_skipped_1" = "Od poslednej správy sa stratila jedna správa.";
 "forward_security_messages_skipped_x" = "Od poslednej správy sa stratilo %d správ.";

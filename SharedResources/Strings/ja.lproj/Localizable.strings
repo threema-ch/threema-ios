@@ -1599,8 +1599,8 @@ iTunesのバックアップを作成してから行ってください。";
 "poi_current_location" = "自分の位置情報";
 "poi_marked_location" = "置いたピン";
 
-"notification_threemaweb_connectionlost_title" = "Threemaウェブへの接続が失われました";
-"notification_threemaweb_connectionlost_body" = "引き続きThreemaウェブをご利用いただくには、アプリを再度開いてください。";
+"notification_threemaweb_connectionlost_title" = "ウェブ/デスクトップアプリへの接続が失われました";
+"notification_threemaweb_connectionlost_body" = "引き続きウェブアプリをご利用いただくには、アプリを再度開いてください。";
 
 "settings_threema_web_connected" = "デスクトップ／ウェブ接続済み";
 "settings_threema_web_connectioninfo" = "接続を維持するには、フォアグラウンドで%@を実行した状態で端末をロック解除する必要があります。接続中は、端末は自動的にロックされません。";

@@ -829,7 +829,7 @@
 
 "archived_title" = "Archived";
 "conversations_global_search_placeholder" = "Search";
-"one_to_one_chat" = "Singlechat";
+"one_to_one_chat" = "Single Chats";
 
 "select_all" = "Select All";
 "deselect_all" = "Deselect All";
@@ -973,7 +973,7 @@
 "safe_deactivate" = "Turn off Threema Safe";
 "safe_deactivate_explain" = "If you disable Threema Safe, any existing backups will be deleted on the server. Continue?";
 "safe_disable_confirm" = "Do you want to continue without enabling Threema Safe?
-When using Threema Safe, your can restore your Threema ID, contacts ,and groups in case you loose access to your device.";
+When using Threema Safe, you can restore your Threema ID, contacts and groups in case you lose access to your device.";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "Please choose a strong password. You will need this password to restore your Threema Safe backup.";

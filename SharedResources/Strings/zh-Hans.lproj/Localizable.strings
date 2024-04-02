@@ -829,7 +829,7 @@
 
 "archived_title" = "已归档";
 "conversations_global_search_placeholder" = "搜索";
-"one_to_one_chat" = "单聊";
+"one_to_one_chat" = "单人聊天";
 
 "select_all" = "全选";
 "deselect_all" = "取消全选";

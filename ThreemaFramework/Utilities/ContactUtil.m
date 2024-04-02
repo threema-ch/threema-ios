@@ -75,7 +75,13 @@
         controller.allowsActions = ![mdmSetup disableShareMedia];
         controller.allowsEditing = NO;
         controller.contactStore = [[CNContactStore alloc] init];
-        controller.edgesForExtendedLayout = UIRectEdgeNone;
+        if (@available(iOS 17.0, *)) {
+            // do nothing
+        }
+        else {
+            controller.edgesForExtendedLayout = UIRectEdgeNone;
+        }
+
         return controller;
     } else {
         DDLogInfo(@"cannot display person details");

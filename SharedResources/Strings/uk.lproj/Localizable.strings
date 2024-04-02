@@ -829,7 +829,7 @@
 
 "archived_title" = "Архівовані";
 "conversations_global_search_placeholder" = "Пошук";
-"one_to_one_chat" = "Персональний діалог";
+"one_to_one_chat" = "Персональні діалоги";
 
 "select_all" = "Обрати усі";
 "deselect_all" = "Зняти виділення";
@@ -1202,7 +1202,7 @@
 "delete_messages_confirm" = "Бажаєте назавжди видалити усі повідомлення старіші за %@?";
 "delete_messages_confirm_all" = "Бажаєте назавжди видалити усі повідомлення?";
 "delete_messages_explain" = "Усі типи повідомлень буде видалено: текстові, голосові, медіа, файли, опитування тощо.";
-"automatic_delete_explain" = "Використовуйте автоматичне видалення, щоб звільнити місце на диску. Відкриті опитування та групи нотаток не підлягають автоматичному видаленню.";
+"automatic_delete_explain" = "Використовуйте автоматичне видалення повідомлень та медіа, щоб звільнити місце на диску. Відкриті опитування та групи нотаток не підлягають автоматичному видаленню.";
 "automatic_delete_on_confirmation_title" = "Увімкнути автоматичне видалення?";
 "automatic_delete_off_confirmation_title" = "Вимкнути автоматичне видалення?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1324,8 +1324,8 @@
 "my_profile_delete_bullet_linked" = "Прив’язані номер телефону та / або електронна пошта";
 
 "my_profile_delete_info_title" = "Вилучити ID і дані";
-"my_profile_delete_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою:";
-"my_profile_delete_info_keep" = "Ваш ідентифікатор Threema не буде відкликано. Якщо ви створили резервну копію Threema Safe або експортували свій ідентифікатор, ви можете відновити його на іншому пристрої.";
+"my_profile_delete_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою.";
+"my_profile_delete_info_keep" = "Якщо ви створили резервну копію Threema Safe або експортували свій ідентифікатор, ви можете відновити його на іншому пристрої.";
 "my_profile_delete_info_revoke_info" = "Якщо не бажаєте використовувати цей Threema ID на своїх присторях, можете видалити його безповоротно: ";
 "my_profile_delete_info_revoke_info_link" = "[Видалити Threema ID](link)";
 "my_profile_delete_info_button" = "Вилучити ID і дані";
@@ -1333,17 +1333,17 @@
 "my_profile_delete_info_alert_title" = "Ви втратите свій Threema ID, якщо не маєте резервної копії.";
 "my_profile_delete_info_alert_confirm" = "Вилучити дані";
 
-"my_profile_revoke_identity_view_title" = "Видалити ID і дані?";
-"my_profile_revoke_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою:";
+"my_profile_revoke_identity_view_title" = "Видалити ID і дані";
+"my_profile_revoke_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою, а наступні дані буде видалено з серверу Threema:";
 
-"my_profile_delete_info_revoke" = "Ваш Threema ID буде відкликано без можливості відновлення.";
-"my_profile_revoke_identity_view_enter_id" = "Введіть свій Threema ID \"%@\", щоб підтвердити видалення всього:";
+"my_profile_delete_info_revoke" = "Не буде можливості відновити ваш Threema ID.";
+"my_profile_revoke_identity_view_enter_id" = "Будь ласка, введіть свій Threema ID \n\"%@\", щоб підтвердити видалення всього:";
 "my_profile_revoke_identity_view_placeholder" = "Ваш Threema ID";
 "my_profile_revoke_identity_view_button_revoke" = "Видалити ID і дані";
 
 "my_profile_delete_identity_summary_view_removed_title" = "ID і дані вилучено";
 "my_profile_delete_identity_summary_view_removed_success" = "Усі ваші дані Threema вилучено із цього пристрою:";
-"my_profile_delete_identity_summary_view_removed_server_success" = "Усі ваші дані Threema вилучено із цього сервера:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "Усі ваші дані Threema видалено з цього пристрою, а наступні дані видалено з  серверу Threema:";
 "my_profile_delete_identity_summary_view_removed_threema_id" = "Ваш Threema ID відкликано";
 "my_profile_delete_identity_summary_view_restart" = "Перезапустіть застосунок, щоб продовжити використовувати його.";
 "my_profile_delete_identity_summary_view_restart_new" = "Перезапустіть застосунок, щоб створити новий Threema ID.";

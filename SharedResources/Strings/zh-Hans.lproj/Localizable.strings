@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "加载 Threema Work 的数据失败";
 "work_data_fetch_failed_message" = "无法加载 Threema Work 的数据，请检查您的互联网连接并重试。";
 
+"app_setup_steps_failed_title" = "无法完成设置";
+"app_setup_steps_failed_message" = "请检查您的网络连接并重试。如果问题仍然存在，请联系我们的支持人员。";
+
 /* License Key */
 "enter_license_title" = "输入凭证";
 /* MWPhotoBrowser */
@@ -1072,6 +1075,8 @@
 
 "settings_list_invite_a_friend_title" = "邀请朋友";
 "settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_rate" = "对 %@ 评分";
 
 "settings_list_support_title" = "支持";
 "settings_list_privacy_policy_title" = "隐私政策";
@@ -1882,6 +1887,7 @@
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n无法从 %d 版本降级到 %d 版本";
 "sqldhsessionstore_unknownError" = "尝试迁移时发生未知错误：%@";
+"app_migration_uncompleted" = "无法完成应用程序迁移。";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "新消息";

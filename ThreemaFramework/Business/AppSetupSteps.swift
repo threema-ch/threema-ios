@@ -35,17 +35,30 @@ enum AppSetupStepsError: Error {
 public struct AppSetupSteps: Sendable {
 
     private let backgroundBusinessInjector: FrameworkInjectorProtocol
+    // TODO: (IOS-4567) Remove
+    private let taskManager: TaskManagerProtocol
+    private let featureMask: FeatureMaskProtocol.Type
     private let contactPhotoSender: ContactPhotoSenderProtocol.Type
     
     public init() {
+        let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
         self.init(
-            backgroundBusinessInjector: BusinessInjector(forBackgroundProcess: true),
+            backgroundBusinessInjector: backgroundBusinessInjector,
+            taskManger: TaskManager(backgroundEntityManager: backgroundBusinessInjector.entityManager),
+            featureMask: FeatureMask.self,
             contactPhotoSender: ContactPhotoSender.self
         )
     }
     
-    init(backgroundBusinessInjector: FrameworkInjectorProtocol, contactPhotoSender: ContactPhotoSenderProtocol.Type) {
+    init(
+        backgroundBusinessInjector: FrameworkInjectorProtocol,
+        taskManger: TaskManagerProtocol,
+        featureMask: FeatureMaskProtocol.Type,
+        contactPhotoSender: ContactPhotoSenderProtocol.Type
+    ) {
         self.backgroundBusinessInjector = backgroundBusinessInjector
+        self.taskManager = taskManger
+        self.featureMask = featureMask
         self.contactPhotoSender = contactPhotoSender
     }
     
@@ -66,7 +79,8 @@ public struct AppSetupSteps: Sendable {
         }
         
         // 2.  Update the user's feature mask on the directory server.
-        await FeatureMask.updateLocal()
+        DDLogNotice("Update own feature mask")
+        try await featureMask.updateLocal()
         
         // 3.  Let `contacts` be the list of all contacts, including those with an
         //     acquaintance level different than `DIRECT`.
@@ -76,7 +90,6 @@ public struct AppSetupSteps: Sendable {
         DDLogNotice("Contact status update start")
         
         let updateTask: Task<Void, Error> = Task {
-            // TODO: (IOS-4280) Should we ignore the interval? Revisit this when we know the setup process before this is called
             try await backgroundBusinessInjector.contactStore.updateStatusForAllContacts(ignoreInterval: true)
         }
         
@@ -105,12 +118,16 @@ public struct AppSetupSteps: Sendable {
             backgroundBusinessInjector.entityManager.entityFetcher.allSolicitedContactIdentities()
         }
         
+        DDLogNotice("Fetched \(solicitedContactIdentities.count) solicited contacts")
+        
         // 6.  If FS is supported by the client, run the _FS Refresh Steps_ with
         //     `solicited-contacts`.
-        if ThreemaUtility.supportsForwardSecurity { // In general this should always true
-            DDLogNotice("Run FS refresh steps")
+        // In general FS should always be supported
+        if ThreemaUtility.supportsForwardSecurity, !solicitedContactIdentities.isEmpty {
+            DDLogNotice("Run FS refresh steps...")
             await ForwardSecurityRefreshSteps(
-                backgroundBusinessInjector: backgroundBusinessInjector
+                backgroundBusinessInjector: backgroundBusinessInjector,
+                taskManager: taskManager
             ).run(for: solicitedContactIdentities.map {
                 ThreemaIdentity($0)
             })
@@ -118,11 +135,13 @@ public struct AppSetupSteps: Sendable {
         
         // 7.  Send a `contact-request-profile-picture` message to each
         //     contact of `solicited-contacts`.
-        DDLogNotice("Send contact request profile picture messages")
-        // TODO: (IOS-4280) Check if this is already called when a safe backup is restored or if the IDs are only added to the `profilePictureRequestList`.
-        for solicitedContactIdentity in solicitedContactIdentities {
-            contactPhotoSender.sendProfilePictureRequest(solicitedContactIdentity)
-        }
+        // TODO: (IOS-4567) This was disabled to prevent a task creation explosion when there are many contacts.
+        // TODO: Reenable this when we improve the task persistence (IOS-4567).
+        // TODO: In the meantime we only schedule profile picture requests when Safe was used to restore the ID.
+        // DDLogNotice("Send contact request profile picture messages")
+        // for solicitedContactIdentity in solicitedContactIdentities {
+        //     contactPhotoSender.sendProfilePictureRequest(solicitedContactIdentity)
+        // }
         
         // 8.  For each group not marked as _left_:
         //     1. If the user is the creator of the group, trigger a _group sync_
@@ -131,6 +150,7 @@ public struct AppSetupSteps: Sendable {
         //        [`group-sync-request`](ref:e2e.group-sync-request) message to the
         //        creator of the group.
         let allActiveGroups = await backgroundBusinessInjector.groupManager.getAllActiveGroups()
+        DDLogNotice("Refresh \(allActiveGroups.count) active groups")
         for group in allActiveGroups {
             if group.isOwnGroup {
                 backgroundBusinessInjector.groupManager.sync(group: group)

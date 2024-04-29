@@ -250,7 +250,8 @@ final class TaskQueue {
                             DDLogNotice("\(item.taskDefinition) skipped: \(error)")
                             self.done(item: item)
                             
-                        case TaskExecutionError.invalidContact(message: _):
+                        case TaskExecutionError.invalidContact(message: _),
+                             TaskExecutionError.multiDeviceNotSupported:
                             DDLogWarn("\(item.taskDefinition) \(error)")
                             self.done(item: item)
                         
@@ -338,6 +339,11 @@ final class TaskQueue {
                         case String(describing: type(of: TaskDefinitionGroupDissolve.self)):
                             taskDefinition = try unarchiver.decodeTopLevelDecodable(
                                 TaskDefinitionGroupDissolve.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionRunForwardSecurityRefreshSteps.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionRunForwardSecurityRefreshSteps.self,
                                 forKey: "\(className)_\(i)"
                             )
                         case String(describing: type(of: TaskDefinitionSendAbstractMessage.self)):

@@ -70,7 +70,13 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     if ([mdmSetup readonlyProfile]) {
         _mobileNoTextField.enabled = NO;
-    } else {
+    }
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    if (_mobileNoTextField.enabled) {
         [_mobileNoTextField becomeFirstResponder];
     }
 }
@@ -124,7 +130,10 @@
 - (void)doLinkMobileNo {
     self.navigationItem.rightBarButtonItem.enabled = NO;
     [self.mobileNoTextField resignFirstResponder];
-    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    
+    if (self.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    }
     
     ServerAPIConnector *conn = [[ServerAPIConnector alloc] init];
     [conn linkMobileNoWithStore:[MyIdentityStore sharedMyIdentityStore] mobileNo:mobileNo onCompletion:^(BOOL linked) {

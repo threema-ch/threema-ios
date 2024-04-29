@@ -35,31 +35,19 @@
 @dynamic thumbnail;
 
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     if ([self.image getCaption] != nil) {
         return [NSString stringWithFormat:@"%@ (%@) %@ %@", [BundleUtil localizedStringForKey:@"image"], [self blobFilename], [BundleUtil localizedStringForKey:@"caption"], [self.image getCaption]];
     }
     return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"image"], [self blobFilename]];
 }
 
-- (NSString*)previewText {
+- (nonnull NSString*)previewText {
     return [BundleUtil localizedStringForKey:@"image"];
 }
 
-- (NSString *)quotePreviewText {
-    NSString *caption = nil;
-    if (self.image != nil) {
-        caption = [self.image getCaption];
-        if (caption != nil) {
-            NSString *quotePreviewString = [[caption componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
-            caption = [quotePreviewString substringWithRange:NSMakeRange(0, MIN(caption.length, 200))];
-        }
-    }
-
-    if (caption == nil || caption.length == 0) {
-        caption = self.previewText;
-    }
-    return caption;
+- (nullable NSString *)contentToCheckForMentions {
+    return [self.image getCaption];
 }
 
 #pragma mark - Misc

@@ -443,16 +443,12 @@ extension ConversationExporter {
             else {
                 log.append("\(BundleUtil.localizedString(forKey: "me")): ")
             }
-            if let previewText = quoteMessage.previewText() {
-                log.append("\"\(previewText)\"] ")
-            }
-            else {
-                log.append("] ")
-            }
+                
+            log.append("\"\(quoteMessage.previewText())\"] ")
         }
         
-        if let logText = baseMessage.logText() {
-            log.append(logText)
+        if let additionalExportInfo = baseMessage.additionalExportInfo() {
+            log.append(additionalExportInfo)
         }
         
         log.append("\r\n")

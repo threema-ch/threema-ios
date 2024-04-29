@@ -27,11 +27,11 @@
 @dynamic text;
 @dynamic quotedMessageId;
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     return self.text;
 }
 
-- (NSString*)previewText {
+- (nonnull NSString*) previewText {
     // Strip quote, if any
     if (self.quotedMessageId == nil) {
         NSString *remainingBody = nil;
@@ -41,12 +41,15 @@
         }
     }
     
-    return self.text;
+    if (self.text != nil) {
+        return self.text;
+    }
+    
+    return @"";
 }
 
-- (NSString *)quotePreviewText {
-    NSString *quotePreviewString = [[self.previewText componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
-    return [quotePreviewString substringWithRange:NSMakeRange(0, MIN(self.previewText.length, 200))];
+- (nullable NSString *)contentToCheckForMentions {
+    return self.text;
 }
 
 @end

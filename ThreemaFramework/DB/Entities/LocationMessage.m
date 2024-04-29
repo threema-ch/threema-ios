@@ -31,17 +31,18 @@
 @dynamic poiName;
 @dynamic poiAddress;
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     return [NSString stringWithFormat:@"%.6f,%.6f (+/- %.0f m), name %@", self.latitude.doubleValue, self.longitude.doubleValue, self.accuracy.doubleValue, self.poiName];
 }
 
-- (NSString*)previewText {
-    if (self.poiName != nil)
+- (nonnull NSString*)previewText {
+    if (self.poiName != nil) {
         return [NSString stringWithFormat:@"%@: %@", [BundleUtil localizedStringForKey:@"location"], self.poiName];
-    else if (self.poiAddress != nil)
+    } else if (self.poiAddress != nil) {
         return [NSString stringWithFormat:@"%@: %@", [BundleUtil localizedStringForKey:@"location"], self.poiAddress];
-    else
+    } else {
         return [BundleUtil localizedStringForKey:@"location"];
+    }
 }
 
 @end

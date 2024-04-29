@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Het laden van Threema Work-gegevens is mislukt";
 "work_data_fetch_failed_message" = "Threema Work-gegevens zijn niet geladen. Controleer uw internetverbinding en probeer het opnieuw.";
 
+"app_setup_steps_failed_title" = "Installatie is niet voltooid";
+"app_setup_steps_failed_message" = "Controleer de internetverbinding en probeer het opnieuw. Neem contact op met ondersteuning als het probleem aanhoudt.";
+
 /* License Key */
 "enter_license_title" = "Gegevens invoeren";
 /* MWPhotoBrowser */
@@ -644,7 +647,7 @@
 "push_reminder_set_now" = "Meldingen inschakelen";
 
 "updating_database" = "Database wordt bijgewerkt...\n\nZorg ervoor dat Threema actief is op de voorgrond totdat het proces is voltooid.\n\nAls u een grote chatgeschiedenis hebt, kan dit een paar minuten duren.";
-"database_migration_error_hints" = "Zorg ervoor dat je genoeg vrije opslagruimte op je apparaat hebt, herstart je apparaat en probeer het opnieuw.";
+"database_migration_error_hints" = "Zorg ervoor dat er genoeg vrije opslagruimte op uw apparaat is. Herstart uw apparaat en probeer het opnieuw.";
 "database_migration_storage_warning_title" = "Niet genoeg beschikbare opslagruimte";
 "database_migration_storage_warning_message" = "Het bijwerken van de database kost tijdelijk ten minste %.1f GB aan beschikbare opslagruimte. Je apparaat heeft momenteel slechts %.1f GB beschikbaar. Maak meer opslagruimte vrij door zaken te verwijderen via Gebruiksinstellingen en probeer het opnieuw.";
 
@@ -972,7 +975,8 @@
 "safe_backup_now" = "Back-up maken";
 "safe_deactivate" = "Threema Safe uitschakelen";
 "safe_deactivate_explain" = "Als u Threema Safe uitschakelt, worden bestaande back-ups van de server verwijderd. Doorgaan?";
-"safe_disable_confirm" = "Wilt u echt doorgaan zonder Threema Safe in te schakelen?";
+"safe_disable_confirm" = "Wilt u doorgaan zonder Threema Safe in te schakelen? 
+Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen herstellen in het geval dat u toegang tot uw apparaat verliest.";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "Kies een wachtwoord. U hebt dit wachtwoord nodig om uw back-upbestanden van Threema Safe te herstellen.";
@@ -1071,6 +1075,8 @@
 
 "settings_list_invite_a_friend_title" = "Een vriend uitnodigen";
 "settings_list_threema_channel_title" = "Threema-kanaal";
+
+"settings_list_rate" = "%@ beoordelen";
 
 "settings_list_support_title" = "Ondersteuning";
 "settings_list_privacy_policy_title" = "Privacybeleid";
@@ -1881,6 +1887,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nNiet afgewaardeerd van versie %d naar versie %d";
 "sqldhsessionstore_unknownError" = "Er is een onverwachte fout opgetreden tijdens een migratiepoging: %@";
+"app_migration_uncompleted" = "App-migratie is niet voltooid.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Nieuw bericht";

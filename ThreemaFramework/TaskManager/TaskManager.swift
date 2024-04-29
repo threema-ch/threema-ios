@@ -198,6 +198,7 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
                         TaskDefinitionSettingsSync.self,
                         TaskDefinitionMdmParameterSync.self,
                         TaskDefinitionSendGroupCallStartMessage.self,
+                        TaskDefinitionRunForwardSecurityRefreshSteps.self,
                     ],
                     frameworkInjectorResolver: FrameworkInjectorResolver(backgroundEntityManager: self.entityManager)
                 )

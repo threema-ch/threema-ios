@@ -127,8 +127,9 @@
     
     self.navigationItem.rightBarButtonItem.enabled = NO;
     [self.codeTextField resignFirstResponder];
-    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-    
+    if (self.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    }
     ServerAPIConnector *conn = [[ServerAPIConnector alloc] init];
     [conn linkMobileNoWithStore:[MyIdentityStore sharedMyIdentityStore] code:self.codeTextField.text onCompletion:^(BOOL linked) {
         [MBProgressHUD hideHUDForView:self.view animated:YES];
@@ -154,8 +155,9 @@
         [alert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"ok"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * _Nonnull action) {
             [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:YES];
             
-            [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-            
+            if (self.view != nil) {
+                [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+            }
             ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
             
             [connector linkMobileNoRequestCallWithStore:[MyIdentityStore sharedMyIdentityStore] onCompletion:^{

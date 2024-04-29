@@ -222,7 +222,9 @@
 - (IBAction)doneAction:(id)sender {
     [self hideKeyboard];
     
-    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    if (self.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    }
     
     MyIdentityStore *myIdentityStore = [MyIdentityStore sharedMyIdentityStore];
     [myIdentityStore restoreFromBackup:_backupTextView.text withPassword:_passwordTextField.text onCompletion:^{

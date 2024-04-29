@@ -82,7 +82,7 @@
 "open" = "Open";
 "call" = "Call"; /* Short version for "Start Threema Call" */
 "Info" = "Info";
-"error_abort" = "Unrecoverable error";
+"error_abort" = "Unrecoverable Error";
 "qr_code" = "QR code";
 "forward" = "Forward";
 "read" = "Read";
@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Loading Threema Work data failed";
 "work_data_fetch_failed_message" = "Could not load Threema Work data, please check your Internet connection and try again.";
 
+"app_setup_steps_failed_title" = "Unable to Complete Setup";
+"app_setup_steps_failed_message" = "Please check your Internet connection, and try again. If the problem persists, please contact our support.";
+
 /* License Key */
 "enter_license_title" = "Enter credentials";
 /* MWPhotoBrowser */
@@ -644,7 +647,7 @@
 "push_reminder_set_now" = "Enable Notifications";
 
 "updating_database" = "Updating database…\n\nPlease keep Threema running in the foreground until completion.\n\nThis may take several minutes if you have a large chat history.";
-"database_migration_error_hints" = "Please ensure that you have enough available storage on your device, restart your device and then try again.";
+"database_migration_error_hints" = "Please make sure you have enough storage space available on your device. Restart your device, and try again.";
 "database_migration_storage_warning_title" = "Not enough available storage";
 "database_migration_storage_warning_message" = "The database update temporarily requires at least %.1f GB of available storage. Your device currently has only %.1f GB available. Please make more storage available by deleting items in Usage Settings, and try again.";
 
@@ -1072,6 +1075,8 @@ When using Threema Safe, you can restore your Threema ID, contacts and groups in
 
 "settings_list_invite_a_friend_title" = "Invite a Friend";
 "settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_rate" = "Rate %@";
 
 "settings_list_support_title" = "Support";
 "settings_list_privacy_policy_title" = "Privacy Policy";
@@ -1882,6 +1887,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nCould not downgrade from version %d to version %d";
 "sqldhsessionstore_unknownError" = "An unknown error occurred when attempting a migration: %@";
+"app_migration_uncompleted" = "Unable to complete app migration.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "New message";

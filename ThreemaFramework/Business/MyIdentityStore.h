@@ -33,12 +33,6 @@
 
 @property (strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
 
-/*!
- * @field pendingCreateID
- * This property should be true if the threema id is created or restored and the setup is not completed.
- * When the setup is completed, we have to set this value to false. Otherwise it can't connect to the server.
- */
-
 @property (strong, nonatomic, readonly) NSData *publicKey;
 @property (strong, nonatomic, readwrite) NSString *firstName;
 @property (strong, nonatomic, readwrite) NSString *lastName;
@@ -53,7 +47,10 @@
 
 - (void)updateConnectionRights;
 
-- (BOOL)isProvisioned;
+/// Exists there a valid identity?
+///
+/// This might also be `true` during setup if just the app was deleted, but an identity still exists in the keychain
+@property (nonatomic, readonly) BOOL isValidIdentity;
 
 - (NSString * _Nonnull)displayName;
 - (NSString*)backupIdentityWithPassword:(NSString*)password;
@@ -87,12 +84,6 @@
 @property (strong, nonatomic, readwrite) NSString *licenseLogoLightUrl NS_SWIFT_NAME(licenseLogoLightURL);
 @property (strong, nonatomic, readwrite) NSString *licenseLogoDarkUrl NS_SWIFT_NAME(licenseLogoDarkURL);
 
-/*!
- * @field pendingCreateID
- * This property should be true if the threema id is created or restored and the setup is not completed.
- * When the setup is completed, we have to set this value to false. Otherwise it can't connect to the server.
- */
-@property (nonatomic, readwrite) BOOL pendingCreateID;
 @property (strong, nonatomic, readwrite) NSString *createIDEmail;
 @property (strong, nonatomic, readwrite) NSString *createIDPhone;
 

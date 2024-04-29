@@ -265,6 +265,7 @@ class DatabasePreparer {
         sent: Bool = true,
         delivered: Bool = false,
         read: Bool = false,
+        caption: String? = nil,
         userack: Bool = false,
         complete: ((FileMessageEntity) -> Void)? = nil
     ) -> FileMessageEntity {
@@ -279,6 +280,7 @@ class DatabasePreparer {
         fileMessage.thumbnail = thumbnail
         fileMessage.mimeType = mimeType
         fileMessage.type = type
+        fileMessage.caption = caption
         
         // Required by Core Data values
         fileMessage.id = messageID

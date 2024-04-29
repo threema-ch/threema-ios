@@ -2449,7 +2449,108 @@ class GroupManagerTests: XCTestCase {
     }
     
     func testGetAllActiveGroupsMultipleGroups() async throws {
-        // TODO: (IOS-4280) Add more tests
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+        
+        let allMembers = [
+            "MEMBER01",
+            "MEMBER02",
+            "MEMBER03",
+            "MEMBER04",
+            "MEMBER05",
+            "MEMBER06",
+            "MEMBER07",
+            "MEMBER08",
+            "MEMBER09",
+            "MEMBER10",
+            "MEMBER11",
+            "MEMBER12",
+        ]
+        
+        for member in allMembers {
+            databasePreparer.createContact(identity: member)
+        }
+        
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
+            groupPhotoSenderMock
+        )
+        
+        var expectedGroupIdentities = [GroupIdentity]()
+        
+        // Group 1: Own
+        
+        let expectedGroup1 = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+        let expectedMembers1 = Set<String>(allMembers[0..<3])
+        
+        _ = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroup1,
+                members: expectedMembers1
+            )
+        )
+        
+        expectedGroupIdentities.append(expectedGroup1)
+
+        // Group 2: Other
+        
+        let expectedGroup2 = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(allMembers[3])
+        )
+        let expectedMembers2 = Set<String>(allMembers[3...] + [myIdentityStoreMock.identity])
+        
+        _ = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroup2,
+                members: expectedMembers2
+            )
+        )
+        
+        expectedGroupIdentities.append(expectedGroup2)
+        
+        // Group 3: Left
+        
+        let expectedGroup3 = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(allMembers[3])
+        )
+        let expectedMembers3 = Set<String>(allMembers[3...] + [myIdentityStoreMock.identity])
+        
+        _ = try XCTUnwrap(
+            createOrUpdateDBWait(
+                groupManager: groupManager,
+                groupIdentity: expectedGroup3,
+                members: expectedMembers3
+            )
+        )
+        
+        groupManager.leave(groupWith: expectedGroup3, inform: .all)
+                
+        // Run
+        
+        let actualActiveGroups = await groupManager.getAllActiveGroups()
+        
+        // Validate
+        
+        XCTAssertEqual(actualActiveGroups.count, expectedGroupIdentities.count)
+        
+        for (index, expectedGroupIdentity) in expectedGroupIdentities.enumerated() {
+            XCTAssertEqual(actualActiveGroups[index].groupIdentity, expectedGroupIdentity)
+            XCTAssertFalse(actualActiveGroups[index].didLeave)
+            XCTAssertFalse(actualActiveGroups[index].didForcedLeave)
+        }
     }
     
     func testAddMemberToGroupWithOpenBallot() throws {

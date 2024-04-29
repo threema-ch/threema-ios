@@ -18,15 +18,15 @@
 
 "segmentcontrol_contacts" = "Контакты";
 "segmentcontrol_groups" = "Группы";
-"segmentcontrol_work_contacts" = "Work";
+"segmentcontrol_work_contacts" = "Работа";
 
 /* WebRTC diagnostics */
 "webrtc_diagnostics.title" = "Диагностика WebRTC";
-"webrtc_diagnostics.description" = "Запустите это средство для устранения неполадок с соединением для голосовой связи.\nЧтобы начать проверку, нажмите кнопку «Пуск».";
-"webrtc_diagnostics.start" = "Пуск";
+"webrtc_diagnostics.description" = "Запустите это средство устранения неполадок с соединением для голосовой связи.\nЧтобы начать проверку, нажмите кнопку «Старт».";
+"webrtc_diagnostics.start" = "Старт";
 "webrtc_diagnostics.copyToClipboard" = "Копировать в буфер обмена";
 "webrtc_diagnostics.copy" = "Скопировано в буфер обмена";
-"webrtc_diagnostics.done" = "Готово. Если у вас возникают неполадки с установлением соединения для связи, вышлите эти данные в службу поддержки Threema.";
+"webrtc_diagnostics.done" = "Готово. Если у вас возникают неполадки с подключением для связи, отправьте эти данные в поддержку Threema.";
 
 /* Privacy Policy */
 "privacy_poliy_url" = "https://threema.ch/en/privacy";
@@ -68,7 +68,7 @@
 "details" = "Подробно";
 "acknowledge" = "Принять";
 "decline" = "Не принимать";
-"quote" = "цити́ровать";
+"quote" = "Ответить";
 "speak" = "Говорите";
 "send" = "Отпр.";
 "image" = "Изображение";
@@ -76,9 +76,9 @@
 "gif" = "GIF";
 "video" = "Видео";
 "file" = "Файл";
-"location" = "Расположение";
+"location" = "Геолокация";
 "locating" = "Определение местоположения…";
-"unknown_location" = "неизвестное расположение";
+"unknown_location" = "неизвестное местоположение";
 "open" = "Открыть";
 "call" = "Позвонить"; /* Short version for "Start Threema Call" */
 "Info" = "Информация";
@@ -91,10 +91,10 @@
 "loadMore" = "Загрузить больше";
 "all" = "Все";
 "myIdentity" = "Профиль";
-"share_id" = "Поделиться ID Threema";
+"share_id" = "Поделиться Threema ID";
 "close" = "закрыть";
 "threema_id" = "Threema ID";
-"nickname" = "Публичный ник";
+"nickname" = "Публичное имя пользователя";
 "add_button" = "Добавить";
 "chatview_contextmenu_select" = "Выберите...";
 "learn_more" = "Подробнее...";
@@ -116,20 +116,20 @@
 "conversation_log_subject" = "Журнал беседы Threema с %@";
 "conversation_log_body" = "Журнал беседы приложен к %@. Чтобы распаковать файл, нужно современное ZIP приложение с поддержкой AES, н.п. http://7-zip.org.ua/ru или https://itunes.apple.com/ru/app/the-unarchiver/id425424353";
 "conversation_log_group_body" = "Журнал групповой беседы приложен к %@. Чтобы распаковать файл, нужно современное ZIP приложение с поддержкой AES, н.п. http://7-zip.org.ua/ru или https://itunes.apple.com/ru/app/the-unarchiver/id425424353";
-"not_enough_storage_title" = "Недостаточно места в памяти для экспорта этого чата";
+"not_enough_storage_title" = "Недостаточно свободного места для экспорта этого чата";
 "amount_of_free_storage_needed" = "Для экспорта этого чата требуется %@. Сейчас свободно %@.";
 "chat_export_failed_title" = "Не удалось экспортировать чат";
 "chat_export_failed_message" = "Сбой экспорта чата, код ошибки: %d.";
 "cancelling_export" = "Отменяем экспорт";
 "export_progress_label" = "%li / %li сообщений экспортировано";
 "caption" = "Заголовок";
-"fileNotDownloaded" = "Файл не был скачан или был удален.";
+"fileNotDownloaded" = "Файл не был загружен или был удален.";
 "include_media_title" = "Включать мультимедиа (изображения, видео) в качестве приложений?";
 "include_media_message" = "Чтобы распаковать файл, нужно современное ZIP приложение с поддержкой AES, напр., 7-Zip или The Unarchiver (Mac).";
 
 "chat_view_resend_group_message_confirmation_title" = "Повторно отправить групповое сообщение?";
 /* The placeholder will be replaced by a localized list of all receivers */
-"chat_view_resend_group_message_confirmation_message" = "Не удалось отправить это сообщение всем участника. Повторно отправить сообщение %@?";
+"chat_view_resend_group_message_confirmation_message" = "Не удалось отправить сообщение всем участникам. Повторно отправить сообщение %@?";
 "chat_view_resend_group_message_confirmation_button" = "Повторить отправку";
 
 /* image sizes */
@@ -166,16 +166,16 @@
 "sound_marimba2" = "Маримба 2";
 "sound_music_box" = "Музыкальная шкатулка";
 "sound_pulse" = "Импульс";
-"sound_sms" = "SMS";
+"sound_sms" = "СМС";
 "sound_received_message" = "Threema";
 "sound_synth" = "Синтезатор";
 "sound_trill" = "Трель";
 "sound_whoop" = "Уханье";
 
 "sound_threema_best" = "Threema";
-"sound_threema_incom" = "Game";
+"sound_threema_incom" = "Игра";
 "sound_threema_xylo" = "XYLO";
-"sound_threema_goody" = "Remix";
+"sound_threema_goody" = "Ремикс";
 "sound_threema_alphorn" = "Alphorn";
 
 "identity_none" = "нет";
@@ -188,7 +188,7 @@
 "send_profile_picture" = "Отправить аватар";
 "public_key" = "Общедоступный код";
 "public_key_of" = "Общедоступный код %@";
-"block_contact" = "Блокировать контакт";
+"block_contact" = "Заблокировать контакт";
 "profile_picture_recipient" = "Получатели аватара";
 
 "no_linked_contact_access_title" = "Нет доступа к привязанным контактам.";
@@ -201,10 +201,10 @@
 "linked_contact_not_found_title" = "Привязанный контакт не найден";
 "linked_contact_not_found_message" = "Не удалось найти привязанный контакт. Отсоедините контакт окончательно для редактирования.";
 
-"unlink_contact" = "Отсоединить контакт";
-"unlink_and_edit_contact" = "Отсоединить и изменить контакт";
+"unlink_contact" = "Отвязать контакт";
+"unlink_and_edit_contact" = "Отвязать и изменить контакт";
 "link_new_contact" = "Привязать новый контакт";
-"show_linked_contact" = "Показать привязанный контак";
+"show_linked_contact" = "Показать привязанный контакт";
 
 "link_contact" = "Привязать к контакту";
 "linked_contact" = "Привязанный контакт";
@@ -227,7 +227,7 @@
 "last_name_placeholder" = "Фамилия";
 "group_name_placeholder" = "Имя группы";
 
-"no_nickname_title" = "Не задан публичный ник";
+"no_nickname_title" = "Не указано имя пользователя";
 "no_nickname_message" = "Вы точно хотите продолжить без публичного ника? Вашим собеседникам будет сложно распознать ваши сообщения до того, как они запустят приложение.";
 
 "server_message_title" = "Сообщение сервера";
@@ -249,7 +249,7 @@
 "mobileno_linked_title" = "Номер сотового телефона привязан";
 "mobileno_linked_message" = "Ваш номер сотового телефона успешно привязан к вашему ID.";
 
-"link_email_title" = "Привязка";
+"link_email_title" = "Привязать почту";
 "link_your_email" = "Ваш эл. адрес";
 "link_email_address" = "Адрес эл. почты";
 "link_email_sent_title" = "Отправка проверочного письма";
@@ -281,7 +281,7 @@
 
 "messages_delete_all_button" = "Удалить все сообщения";
 "messages_delete_all_confirm_title" = "Удалить все сообщения в этом чате с этого устройства?";
-"messages_delete_all_confirm_message" = "Также все мультимедийные файлы и документы.";
+"messages_delete_all_confirm_message" = "Это включает все медиафайлы и документы.";
 "messages_delete_selected_confirm" = "Удалить выбранные сообщения с этого устройства?";
 "conversation_delete_confirm" = "Удалить этот чат с этого устройства?";
 "delete_n" = "Удалить (%d)";
@@ -315,9 +315,9 @@
 "edit_photos" = "Редактировать выбранные файлы";
 "delete_photo" = "Удалить фотографию";
 "delete_video" = "Удалить видео";
-"delete_file" = "Удалить Файл";
+"delete_file" = "Удалить файл";
 "send_location" = "Отправить местоположение";
-"record_audio" = "Записать звук";
+"record_audio" = "Записать голосовое сообщение";
 "scan_qr" = "Сканировать QR-код";
 "share_file" = "Поделиться файлом";
 "add_item_caption" = "Добавить заголовок";
@@ -347,35 +347,35 @@
 "without_media" = "Без мультимедиа";
 "media_overview" = "Мультимедиа";
 
-"members" = "Члены";
+"members" = "Участники";
 "group_one_member_title" = "1 участник";
 "group_multiple_members_title" = "%d участника(-ов)";
 "group_members_section_header" = "Участники (%d)";
 "group_add_members_button" = "Добавить участников";
 "group_manage_members_button" = "Управление участниками";
-"group_creator_section_header" = "Создатель";
-"group_creator_left_section_header" = "Создатель (вышел)";
-"too_many_members_title" = "Слишком много членов группы";
-"too_many_members_message" = "Максимальное количество членов группы: %d.";
-"add_member" = "Добавить члена";
-"no_more_members" = "В этой группе больше нет членов.";
+"group_creator_section_header" = "Владелец";
+"group_creator_left_section_header" = "Владелец (покинул)";
+"too_many_members_title" = "Слишком много участников группы";
+"too_many_members_message" = "Максимальное количество участников группы: %d.";
+"add_member" = "Добавить участника";
+"no_more_members" = "В этой группе больше нет участников.";
 "group_different_identity" = "Когда создавалась эта группа, вы использовали другой Threema ID. Вы не можете отправлять сообщения с текущим ID.";
-"group_is_not_member" = "Вы не можете отправить сообщение этой группе, так как вы больше не являетесь ее членом.";
+"group_is_not_member" = "Вы не можете отправить сообщение этой группе, так как вы больше не являетесь ее участником.";
 "contact_blocked_cannot_send" = "Вы не можете отправить сообщение этому контакту, т.к. он заблокирован.";
 "contact_invalid_cannot_send" = "Вы не можете отправить сообщение этому контакту, так как он недействительный.";
 "contact_betafeedback_cannot_send" = "Это не бета-версия, отправьте отзыв в *СЛУЖБУ ПОДДЕРЖКИ.";
-"group_sync_button" = "Синхронизизация членов";
+"group_sync_button" = "Синхронизация группы";
 "group_clone_button" = "Клонировать группу";
 "group_clone_title" = "Клонировать группу";
 "group_clone_message" = "Будет создан клон группы с вами, в качестве администратора. Продолжить?";
 "group_clone_action_button" = "Клонировать";
-"group_leave_button" = "Выйти из группы";
-"group_delete_confirm" = "Вы уверены, что хотите выйти из этой группы?";
+"group_leave_button" = "Покинуть группу";
+"group_delete_confirm" = "Вы уверены, что хотите покинуть эту группу?";
 "group_admin_delete_confirm" = "Вы уверены, что хотите распустить эту группу?";
 "group_dissolve_button" = "Распустить группу";
 "group_delete" = "Удалить группу";
 
-"group name" = "Имя группы";
+"group name" = "Название группы";
 "existing groups" = "Существующие группы";
 "new group" = "Новая группа";
 "edit group" = "Изменить группу";
@@ -410,7 +410,7 @@
 "verification_level_title" = "Уровень проверки";
 /* Verification level popovers in chat view */
 "verification_level_text" = "Цветные точки являются индикатором уровня проверки контакта.";
-"level0_title" = "Низкий вровень проверки";
+"level0_title" = "Низкий уровень проверки";
 /* Verification level section title */
 "verification_level_section_work" = "Контакты в вашей организации";
 "verification_level_section_other" = "Другие контакты";
@@ -418,26 +418,26 @@
 "level1_title" = "Средний уровень проверки";
 "level2_title" = "Высокий уровень проверки";
 "level3_title" = "Средний уровень проверки Work";
-"level4_title" = "Высокий уровень проверки Work";
+"level4_title" = "Высокий уровень проверки работы";
 "level0_explanation" = "Неизвестный контакт: либо этот контакт не привязал номер телефона и адрес эл. почты к своему идентификатору, либо в вашей адресной книге отсутствуют данные этого контакта.";
 "level1_explanation" = "Контакт, номер телефона и(или) адрес эл. почты которого есть в вашей адресной книге.";
 "level2_explanation" = "Контакт, личность и публичный ключ которого вы персонально проверили, сканировав QR-код.";
 "level3_explanation" = "Внутренний контакт, данные которого заранее введены вашей организацией.";
 "level4_explanation" = "Внутренний контакт, личность и публичный ключ которого вы персонально проверили, сканировав QR-код.";
 
-"id_verified_title" = "ID проверен";
+"id_verified_title" = "ID верифицирован";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Неправильный формат региона";
-"invalid_country_code_message" = "Судя по всему, формат региона на вашем устройстве имеет неправильное значение. Откройте меню Настройки, перейдите в пункт Общее > Международные настройки и выберите формат региона, чтобы избежать проблем с номером телефона.";
+"invalid_country_code_message" = "Судя по всему, формат региона на вашем устройстве имеет неправильное значение. Откройте «Настройки», перейдите в пункт «Основные» -> «Язык и регион» и выберите формат региона, чтобы избежать проблем с номером телефона.";
 
 /* Settings */
-"show_stale_contacts_on" = "Недействительные Threema ID (т.е. ID, которые не использовались больше 3 месяцев) и отозванные ID не показываются.";
-"show_stale_contacts_off" = "Все ID Threema в списке контактов.";
+"show_stale_contacts_on" = "Недействительные Threema ID и ID, которые были неактивны больше 3 месяцев в данный момент скрыты.";
+"show_stale_contacts_off" = "Все Threema IDs в списке контактов.";
 
 "backgrounding_on" = "После перехода в фоновый режим приложение будет оставаться в подключенном состоянии в течение 30 секунд.";
 "backgrounding_off" = "Приложение автоматически отключится после перехода в фоновый режим.";
-"debug_log_clear" = "Очистить журнал";
+"debug_log_clear" = "Очистить логи";
 "log_empty_message" = "Журнал отладки в настоящее время пуст.";
 "cannot_send_mail_message" = "На этом устройстве не настроен аккаунт электронной почты.";
 
@@ -462,19 +462,19 @@
 
 "synchronizing" = "Синхронизация...";
 
-"no_contacts_syncon" = "У вас еще нет контактов. Синхронизация включена, но, судя по всему, никто из контактов, имеющихся в вашей телефонной книге, не пользуется Threema (пригласите их!).";
+"no_contacts_syncon" = "У вас еще нет контактов. Синхронизация включена, но судя по всему, никто из контактов, имеющихся в вашей телефонной книге, не пользуется Threema (пригласите их!).";
 "no_contacts" = "Нет контактов";
 "no_groups" = "Нет групп";
-"no_groups_message" = "У вас пока нет групп. Добавляйте группу вручную с помощью кнопки «+».";
+"no_groups_message" = "У вас пока нет групп. Добавляйте группы вручную с помощью кнопки «+».";
 "no_work_contacts" = "Пользователи %@";
 "no_work_contacts_message" = "Проверенных администратором контактов %@ не найдено.";
 
 "no_contacts_syncoff" = "У вас еще нет контактов. Включите синхронизацию (Настройки > Приватность) или добавьте контакты вручную с помощью кнопки «+».";
 
-"my_profile_picture_title" = "Ваш аватар";
-"release_profilepicture_to" = "Открыть аватар";
-"contact_added_to_profile_picture_list" = "Этот контакт будет видеть ваш аватар, когда вы ему напишете.";
-"contact_removed_from_profile_picture_list" = "Этот контакт больше не будет видеть ваш аватар.";
+"my_profile_picture_title" = "Ваша фотография профиля";
+"release_profilepicture_to" = "Поделиться фотографией с";
+"contact_added_to_profile_picture_list" = "Этот контакт будет видеть вашу фотографию, как только вы ему напишите.";
+"contact_removed_from_profile_picture_list" = "Этот контакт больше не будет видеть вашу фотографию.";
 
 "sync_group" = "Синхронизация группы";
 
@@ -488,7 +488,7 @@
 "threema_type_icon_work_accessibility_label" = "Рабочий контакт";
 "threema_type_icon_private_accessibility_label" = "Частный контакт";
 
-"delete_contact_group_exists_title" = "Контакт все еще участвует в групповом чате";
+"delete_contact_group_exists_title" = "Невозможно удалить контакт";
 "delete_contact_group_exists_message_single" = "«%@» все еще является участником группы. Удалите контакт из группы или удалите группу.";
 "delete_contact_group_exists_message_multiple" = "«%@» все еще является участником %d групп. Удалите контакт из групп или удалите группы.";
 "delete_contact_group_exists_show_contact_button" = "Показать контакт";
@@ -514,7 +514,7 @@
 
 /* create id */
 "lets_get_started" = "Начнем!";
-"setup_threema" = "Настроить Threema";
+"setup_threema" = "Начать настройку";
 "restore_id" = "Восстановить из резервной копии";
 "restore_title_text" = "Вернулись в %@?";
 "setup_title_text" = "Вы новый пользователь %@?";
@@ -522,10 +522,10 @@
 "id_exists" = "Доступен ID Threema, который ранее использовался на этом устройстве (%@). Восстановить этот ID?";
 
 "welcome" = "Добро пожаловать в %@";
-"move_your_finger" = "Двигайте пальцем по экрану.";
+"move_your_finger" = "Двигайте пальцем по экрану для создания нового Threema ID.";
 "more_information" = "Больше информации";
 "more_information_link_id_work" = "Если вы предоставите нам свой номер телефона и электронный адрес, мы сделаем так, чтобы ваши контакты могли автоматически находить вас на %@. Эта информация хранится в защищенном и анонимном виде. Если пропустить этот шаг, ваше пользование %@ будет полностью анонимным.";
-"more_information_pick_nickname" = "Ник используется в push-уведомлениях на некоторых устройствах или в качестве дополнительного способа рассказать о себе пользователям, в адресной книге которых вы пока отсутствуете. Рекомендуем сообщать только свое имя или псевдоним. Если вы не задали ник, мы по умолчанию будем использовать ваш Threema ID.";
+"more_information_pick_nickname" = "Имя пользователя используется в push-уведомлениях на некоторых устройствах или в качестве дополнительного способа рассказать о себе пользователям, в адресной книге которых вы отсутствуете. Рекомендуем сообщать только своё имя или псевдоним. Если вы не задали имя пользователя, мы по умолчанию будет использовать ваш Threema ID.";
 "more_information_sync_contacts" = "Если включить этот параметр, %@ в одностороннем порядке шифрует (хэширует) адреса эл. почты и номера телефонов перед отправкой их на сервер для поиска соответствующих контактов. Мы не храним данные чьих-либо адресных книг.";
 "more_information_random_seed" = "Двигая пальцем по экрану, вы создаете случайные данные (\"энтропию\"), используемые для генерирования пары ключей, связанных с вашим новым уникальным Threema ID.";
 "id_confirm_description_work" = "Threema ID аналогичен номеру телефона. По этому идентификатору с вами смогут связаться ваши контакты.";
@@ -533,17 +533,17 @@
 "more_information_confirm_id" = "Вы также создали пару ключей. Открытый ключ по защищенному каналу передан на наши серверы. Закрытый ключ всегда остается на ваших устройствах. Это гарантирует, что ваши сообщения не смогут прочитать посторонние.";
 
 "id_confirm_description" = "Threema ID аналогичен номеру телефона. По этому идентификатору с вами смогут связаться ваши друзья.";
-"id_pick_nickname_description_work" = "Ваши контакты будут видеть ваш ник при получении сообщения.";
+"id_pick_nickname_description_work" = "Ваши контакты будут видеть ваше имя пользователя при получении сообщения.";
 "id_confirm_your_id" = "Это ваш Threema ID:";
 
-"id_pick_nickname_title" = "Выберите ник";
-"id_pick_nickname_description" = "Ваши друзья будут видеть ваш ник при получении сообщения.";
+"id_pick_nickname_title" = "Выберите имя пользователя";
+"id_pick_nickname_description" = "Ваши друзья будут видеть ваше имя пользователя при получении сообщения.";
 "id_link_title_work" = "Помогите своим контактам находить вас";
-"id_pick_nickname_question" = "Хотите использовать свой Threema ID в качестве ника?";
-"id_enter_nickname" = "Введите ник";
+"id_pick_nickname_question" = "Хотите использовать свой Threema ID в качестве имени пользователя?";
+"id_enter_nickname" = "Введите имя пользователя";
 
 "id_link_no_input_work" = "Вы не указали ни номера мобильного телефона, ни адреса эл. почты для привязки к вашему Threema ID. Вас не будет в списке контактов ваших контактов. Вы действительно хотите использовать %@ полностью анонимно?";
-"id_link_title" = "Помогите своим друзьям находить вас";
+"id_link_title" = "Помогите своим друзьям найти вас";
 "id_link_description_work" = "Привяжите свой номер телефона и/или эл. адрес к своему Threema ID.";
 "id_link_description" = "Привяжите свой номер телефона к своему Threema ID.";
 "id_link_no_input" = "Вы не указали номер телефона для привязки к вашему Threema ID. Вас не будет в списках контактов ваших друзей. Вы действительно хотите использовать Threema полностью анонимно?";
@@ -556,8 +556,8 @@
 "id_sync_contacts" = "Синхронизировать контакты";
 
 "id_completed_title" = "Готово! Все правильно?";
-"id_completed_nickname" = "Ваш ник";
-"id_completed_linked_to" = "Связано с";
+"id_completed_nickname" = "Ваше имя пользователя";
+"id_completed_linked_to" = "Привязано к";
 "id_completed_sync_contacts" = "Сихронизировать контакты";
 "finish" = "Готово";
 
@@ -577,13 +577,16 @@
 
 "country_code" = "Код страны";
 "enter_license_password_placeholder" = "Пароль";
-"leave_group" = "Выйти из группы";
+"leave_group" = "Покинуть группу";
 
 "work_data_fetch_failed_title" = "Не удалось загрузить данные Threema Work";
 "work_data_fetch_failed_message" = "Не удалось загрузить данные Threema Work, проверьте соединение с Интернетом и повторите попытку.";
 
+"app_setup_steps_failed_title" = "Не удалось завершить настройку";
+"app_setup_steps_failed_message" = "Проверьте соединение с Интернетом и повторите попытку. Если проблема не исчезнет, обратитесь в службу поддержки.";
+
 /* License Key */
-"enter_license_title" = "Разблокировать Threema";
+"enter_license_title" = "Введите учетные данные";
 /* MWPhotoBrowser */
 "Done" = "Готово";
 "enter_license_description" = "Введите учетные данные, предоставленные вашей компанией или организацией.";
@@ -604,7 +607,7 @@
 "enter_license_enter_new_credentials" = "Введите новые учетные данные";
 
 "Copy" = "Копировать";
-"Email" = "Емайл";
+"Email" = "Почта";
 "Saving" = "Сохранение";
 "Failed" = "Не выполнено";
 "Saved" = "Сохранено";
@@ -644,7 +647,7 @@
 "push_reminder_set_now" = "Включить уведомления";
 
 "updating_database" = "Обновление базы данных…\n\nДо завершения этой операции приложение Threema должно работать в приоритетном режиме (т.е. не в фоне).\n\nЕсли у вас большая история чата, это может занять несколько минут.";
-"database_migration_error_hints" = "Пожалуйста, убедитесь, что у вас достаточно свободной памяти на вашем устройстве, перезагрузите устройство и повторите попытку.";
+"database_migration_error_hints" = "Убедитесь, что у вас достаточно свободной памяти на устройстве. Перезагрузите устройство и повторите попытку.";
 "database_migration_storage_warning_title" = "Недостаточно места в памяти";
 "database_migration_storage_warning_message" = "Для обновления базы данных требуется не менее %.1f ГБ места в памяти. В вашем устройстве свободно только %.1f ГБ. Освободите место, удалив некоторые элементы в \"Настройках пользования\", и повторите попытку.";
 
@@ -656,26 +659,26 @@
 "group_member_x_added" = "%@ добавлен в группу";
 "group_member_x_forced_leave" = "Пользователь %@ исключен из группы";
 "group_member_self_added" = "Вас добавили в группу.";
-"group_member_self_removed" = "Вы исключены из группы.";
+"group_member_self_removed" = "Вы были исключены из группы.";
 "group_member_self_left" = "Вы покинули группу.";
 "group_member_creator_left" = "*Эта группа потеряна*\nСоздатель группы вышел из нее, и ее поддержка теперь невозможна. Один из оставшихся пользователей должен клонировать группу (из сведений о группе) и стать новым администратором.";
-"system_message_group_avatar_changed" = "Аватар группы изменен";
+"system_message_group_avatar_changed" = "Фотография группы была изменена";
 
 /* accessibility labels */
-"my_profilepicture" = "Ваш аватар";
+"my_profilepicture" = "Ваше фото";
 "my_threema_id" = "Ваш Threema ID";
-"edit_profile" = "Изменить ник";
+"edit_profile" = "Изменить имя пользователя и фото профиля";
 
 "from" = "от";
 "at" = "в";
 "seconds" = "секунд";
-"duration" = "duration";
-"current_position" = "position";
+"duration" = "продолжительность";
+"current_position" = "позиция";
 "in_reply_to" = "В ответ на";
-"go_to_position" = "at";
+"go_to_position" = "в";
 "draft" = "Проект";
 "new_message_accessibility" = "Новое сообщение: ";
-"quote_interaction_hint" = "Переход к цитируемому сообщению";
+"quote_interaction_hint" = "Переход к ответу";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Открыть в ...";
@@ -684,7 +687,7 @@
 "restore" = "Восстановить";
 
 /* PullToRefresh */
-"pull_to_refresh" = "Нажмите, чтобы обновить…";
+"pull_to_refresh" = "Потяните, чтобы обновить";
 "refreshing" = "Загрузка...";
 
 /* Threema Channel */
@@ -707,12 +710,12 @@
 "disabled_by_device_policy" = "Некоторые настройки были отключены  политикой устройства";
 
 /* Edit profile */
-"profile_picture_recipients" = "Получатели аватара";
+"profile_picture_recipients" = "Получатели фотографии профиля";
 /* Edit profile */
 "send_profileimage_off" = "Никому";
 "send_profileimage_on" = "Все, кому вы пишете";
 "send_profileimage_contacts" = "Выбранные контакты";
-"edit_profile_footer" = "Публичный ник указывается в push-уведомлениях об отправленных вами сообщениях. Мы рекомендуем использовать только имя или псевдоним.";
+"edit_profile_footer" = "Имя пользователя указывается в push-уведомлениях об отправленных вами сообщениях. Мы рекомендуем использовать только имя и псевдоним.";
 
 /* DKImagePickerView */
 "gallery_moments" = "Моменты";
@@ -723,7 +726,7 @@
 "call_speaker" = "Динамик";
 "call_earpiece" = "Наушник";
 "call_end" = "Завершить";
-"call_camera_activate_button" = "Активировать камеру";
+"call_camera_activate_button" = "Включить камеру";
 "call_camera_deactivate_button" = "Отключить камеру";
 "call_camera_switch_to_front_button" = "Переключиться на переднюю камеру";
 "call_camera_switch_to_back_button" = "Переключиться на заднюю камеру";
@@ -757,7 +760,7 @@
 "call_status_calling" = "Подключено";
 "call_status_reconnecting" = "Соединение...";
 "call_status_unknown" = "Неизвестно";
-"call_status_blocked" = "Заблокированный контак";
+"call_status_blocked" = "Заблокированный контакт";
 "call_status_failed_title" = "Звонок Threema";
 
 "call_threema_cellular_instead_of_wifi_title" = "Звоните через мобильную сеть";
@@ -766,7 +769,7 @@
 // Group Calls
 "group_call_title" = "Групповой звонок";
 /* Group Calls */
-"group_call_join_button_title" = "Приссоединиться";
+"group_call_join_button_title" = "Присоединиться";
 "group_call_open_button_title" = "Открыть";
 "group_call_participants_title" = "Участники: %@";
 
@@ -972,7 +975,7 @@
 "safe_backup_now" = "Создать копию";
 "safe_deactivate" = "Отключить Threema Safe";
 "safe_deactivate_explain" = "Если отключить Threema Safe, все существующие резервные копии будут удалены с сервера. Продолжить?";
-"safe_disable_confirm" = "Действительно продолжить без включения Threema Safe?";
+"safe_disable_confirm" = "Действительно продолжить без активации Threema Safe? При использовании Threema Safe вы можете восстановить свой Threema ID, контакты и группы в случае, если вы утратите доступ к своему устройству.";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "Выберите пароль. Этот пароль понадобится вам для восстановления данных из резервной копии Threema Safe.";
@@ -1071,6 +1074,8 @@
 
 "settings_list_invite_a_friend_title" = "Пригласить друга";
 "settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_rate" = "Оценить %@";
 
 "settings_list_support_title" = "Поддержка";
 "settings_list_privacy_policy_title" = "Политика конфиденциальности";
@@ -1881,6 +1886,7 @@
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nНельзя понизить версию приложения с %d на %d";
 "sqldhsessionstore_unknownError" = "Во время попытки переноса произошла неизвестная ошибка: %@";
+"app_migration_uncompleted" = "Не удалось завершить перенос приложения.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Новое сообщение";

@@ -79,7 +79,9 @@ static void soundCompletionCallback(SystemSoundID soundId, __unused void* __null
 }
 
 - (void)startScan {
-    [MBProgressHUD showHUDAddedTo:self.containingViewController.view animated:YES];
+    if (self.containingViewController.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.containingViewController.view animated:YES];
+    }
     
     QRScannerViewController *qrController = [[QRScannerViewController alloc] init];
     
@@ -184,10 +186,12 @@ static void soundCompletionCallback(SystemSoundID soundId, __unused void* __null
             
             [self.containingViewController dismissViewControllerAnimated:YES completion:^{
                 
-                /* don't blindly trust the public key that we scanned - get the key for this
-                 identity from the server and compare */
-                [MBProgressHUD showHUDAddedTo:self.containingViewController.view animated:YES];
+                if (self.containingViewController.view != nil) {
+                    [MBProgressHUD showHUDAddedTo:self.containingViewController.view animated:YES];
+                }
                 
+                /* Don't blindly trust the public key that we scanned - get the key for this
+                 identity from the server and compare */
                 ServerAPIConnector *conn = [[ServerAPIConnector alloc] init];
                 [conn fetchIdentityInfo:scannedIdentity onCompletion:^(NSData *publicKey, NSNumber *state, NSNumber *type, NSNumber *featureMask) {
                     [MBProgressHUD hideHUDForView:self.containingViewController.view animated:YES];

@@ -59,7 +59,7 @@ class WebCreateContactResponse: WebAbstractMessage {
                 with: identity,
                 verificationLevel: Int32(kVerificationLevelUnverified),
                 onCompletion: { theContact, _ in
-                    if MyIdentityStore.shared().isProvisioned(), self.identity == MyIdentityStore.shared().identity {
+                    if MyIdentityStore.shared().isValidIdentity, self.identity == MyIdentityStore.shared().identity {
                         self.ack!.success = false
                         self.ack!.error = "invalidIdentity"
                         self.args = ["identity": self.identity]

@@ -1019,8 +1019,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        if let lastMessage = conversation.lastMessage,
-           let preview = lastMessage.previewText() {
+        if let lastMessage = conversation.lastMessage {
             accessibilityText += "\(DateFormatter.accessibilityRelativeDayTime(lastMessage.displayDate)). "
             
             if conversation.unreadMessageCount.intValue > 0 {
@@ -1030,7 +1029,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 accessibilityText += "\(BundleUtil.localizedString(forKey: "from")) "
                 accessibilityText += "\(sender). "
             }
-            accessibilityText += "\(preview). "
+            accessibilityText += "\(lastMessage.previewText()). "
         }
         
         if conversation.conversationVisibility == .pinned {

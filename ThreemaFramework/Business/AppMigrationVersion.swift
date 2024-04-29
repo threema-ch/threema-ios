@@ -40,6 +40,7 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case v5_6 = 11
     case v5_7 = 12
     case v5_9 = 21
+    case v5_9_2 = 22
     // Add here new version for app migration...
 
     public static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {

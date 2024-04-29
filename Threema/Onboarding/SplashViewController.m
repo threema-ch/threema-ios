@@ -53,6 +53,12 @@
 #import "WorkDataFetcher.h"
 #import <StoreKit/StoreKit.h>
 
+#ifdef DEBUG
+  static const DDLogLevel ddLogLevel = DDLogLevelAll;
+#else
+  static const DDLogLevel ddLogLevel = DDLogLevelNotice;
+#endif
+
 @interface SplashViewController () <FLAnimatedImageViewDelegate, RandomSeedViewControllerDelegate, CompletedIDDelegate, RestoreOptionDataViewControllerDelegate, RestoreOptionBackupViewControllerDelegate, RestoreSafeViewControllerDelegate, RestoreIdentityViewControllerDelegate, IntroQuestionDelegate, EnterLicenseDelegate, ZSWTappableLabelTapDelegate>
 
 @property FLAnimatedImageView *animatedView;
@@ -96,7 +102,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    if ([MyIdentityStore sharedMyIdentityStore].pendingCreateID) {
+    if (AppSetup.shouldDirectlyShowSetupWizard) {
         _bgImagescale = 1.5;
     } else {
         // during intro image will be zoomed
@@ -234,8 +240,7 @@
         _privacyPolicyInfo.isAccessibilityElement = YES;
     }
     
-    AppSetupState *appSetupState = [[AppSetupState alloc] init];
-    [self setHasDataOnDevice:[appSetupState existsDatabaseFile]];
+    [self setHasDataOnDevice:[AppSetup hasPreexistingDatabaseFile]];
 }
 
 - (BOOL)prefersStatusBarHidden {
@@ -290,19 +295,19 @@
 }
 
 - (void)presentUI {
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-
     _restoreButton.hidden = [mdmSetup disableBackups];
 
     if ([mdmSetup isSafeRestoreForce]) {
         [self showRestoreSafeViewController:[self hasDataOnDevice]];
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
         [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
-    } else if ([mdmSetup hasIDBackup] && appSetupState.isAppSetupCompleted == false) {
+    } else if ([mdmSetup hasIDBackup] && AppSetup.isCompleted == false) {
+        // TODO: (IOS-4531) This will run a full Safe restore again even if the restore completed and only the steps for `.identitySetupComplete` (i.e. app setup steps) are left to run
         [self restoreIDFromMDM];
-    } else if ([MyIdentityStore sharedMyIdentityStore].pendingCreateID) {
+    } else if (AppSetup.shouldDirectlyShowSetupWizard) {
         [self presentPageViewController];
     } else {
+        // Show logo if `shouldDirectlyShowSetupWizard` is false
         _threemaLogoView.hidden = NO;
 
         [self setupAnimatedView];
@@ -659,10 +664,13 @@
 }
 
 - (void)createIdentity {    
-    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-
+    if (self.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    }
+    
     [[[ServerAPIConnector alloc] init] createIdentityWithStore:[MyIdentityStore sharedMyIdentityStore] onCompletion:^(MyIdentityStore *store) {
-        store.pendingCreateID = YES;
+        [AppSetup setState:AppSetupStateIdentityAdded];
+
         [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
 
         [MBProgressHUD hideHUDForView:self.view animated:YES];
@@ -720,7 +728,7 @@
 }
 
 - (BOOL)checkForIDExists {
-    if ([[MyIdentityStore sharedMyIdentityStore] isProvisioned]) {
+    if (AppSetup.isIdentityProvisioned) {
         [self showIDExistsQuestion];
         return YES;
     }
@@ -840,13 +848,57 @@
     
     // Delete decrypted backup data from application documents folder
     [FileUtility  deleteAt: [[FileUtility appDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
+    
+    // The App Setup Steps should be called as the last step of the onboarding and if they fail they need to be retried.
+    // We log the steps (incl. retries) to a separate file in the document directory such that this can be requested in
+    // support inquiries.
+    
+    NSURL *appSetupStepsLogFile = [LogManager appSetupStepsLogFile];
+    [LogManager deleteLogFile:appSetupStepsLogFile];
+    [LogManager addFileLogger:appSetupStepsLogFile];
+    
+    [self runAppSetupStepsWithCompletion:^{
+        [LogManager removeFileLogger:appSetupStepsLogFile];
+        
+        // The setup is only completed if the App Setup Steps are successfully completed
+        [AppSetup setState:AppSetupStateComplete];
+        
+        [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:nil onError:nil];
+        
+        [self showApplicaitonUI];
+        
+        // Delete log file again
+        [LogManager deleteLogFile:appSetupStepsLogFile];
+    }];
+}
 
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    [appSetupState appSetupCompleted];
+/// Run the App Setup Steps and show a retry alert if they fail
+/// - Parameter onCompletion: Called when App Setup Steps are successfully completed
+- (void)runAppSetupStepsWithCompletion:(nonnull void(^)(void))onCompletion {
+    if ([AppDelegate sharedAppDelegate].currentTopViewController.view) {
+        [MBProgressHUD showHUDAddedTo:[AppDelegate sharedAppDelegate].currentTopViewController.view animated:YES];
+    }
     
-    [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:nil onError:nil];
-    
-    [self showApplicaitonUI];
+    AppSetupStepsObjC *appSetupSteps = [[AppSetupStepsObjC alloc] init];
+    [appSetupSteps runWithCompletionHandler:^(NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([AppDelegate sharedAppDelegate].currentTopViewController.view) {
+                [MBProgressHUD hideHUDForView:[AppDelegate sharedAppDelegate].currentTopViewController.view animated:YES];
+            }
+            
+            if (error != nil) {
+                DDLogError(@"App Setup Steps failed: %@", error);
+                UIViewController *currentTopViewController = [[AppDelegate sharedAppDelegate] currentTopViewController];
+                [UIAlertTemplate showAlertWithOwner:currentTopViewController title:[BundleUtil localizedStringForKey:@"app_setup_steps_failed_title"] message:[BundleUtil localizedStringForKey:@"app_setup_steps_failed_message"] titleOk:[BundleUtil localizedStringForKey:@"try_again"] actionOk:^(UIAlertAction * _Nonnull action) {
+                    DDLogNotice(@"Retry App Setup Steps...");
+                    [self runAppSetupStepsWithCompletion:onCompletion];
+                }];
+            }
+            else {
+                onCompletion();
+            }
+        });
+    }];
 }
 
 - (void)cancelPressed {
@@ -941,7 +993,9 @@
 
 - (void)restoreIdentityDone {
     _restoreIdentityViewController.delegate = nil;
-    [MyIdentityStore sharedMyIdentityStore].pendingCreateID = YES;
+    
+    [AppSetup setState:AppSetupStateIdentityAdded];
+    
     [self presentPageViewController];
 }
 

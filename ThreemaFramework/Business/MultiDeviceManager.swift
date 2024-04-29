@@ -140,11 +140,11 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         
         // TODO: (SE-199) Remove everything below
         
-        // Update feature masks
-        
-        await FeatureMask.updateLocal()
-        
         do {
+            DDLogNotice("Update own feature mask")
+
+            try await FeatureMask.updateLocal()
+            
             DDLogNotice("Contact status update start")
             
             let updateTask: Task<Void, Error> = Task {
@@ -163,7 +163,7 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         }
         catch {
             // We should still try the next steps if this fails and don't report this error back to the caller
-            DDLogWarn("Contact status update error: \(error)")
+            DDLogWarn("Feature mask or contact status update error: \(error)")
         }
         
         // Run refresh steps for all solicitedContactIdentities.

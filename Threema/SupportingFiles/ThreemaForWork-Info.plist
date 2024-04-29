@@ -138,6 +138,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>ThreemaRateLink</key>
+	<string>itms-apps://itunes.apple.com/app/id1105927783?action=write-review</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>ch.threema.messageRetention</string>

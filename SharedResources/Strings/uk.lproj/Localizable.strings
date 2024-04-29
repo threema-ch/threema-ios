@@ -82,7 +82,7 @@
 "open" = "Відкрити";
 "call" = "Зателефонувати"; /* Short version for "Start Threema Call" */
 "Info" = "Інформація";
-"error_abort" = "Невиправна помилка";
+"error_abort" = "Фатальна помилка";
 "qr_code" = "QR-код";
 "forward" = "Назад";
 "read" = "Прочитане";
@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Не вдалося завантажити дані Threema Робота";
 "work_data_fetch_failed_message" = "Не вдалося завантажити дані Threema Робота. Перевірте інтернет-з'єднання та спробуйте ще раз.";
 
+"app_setup_steps_failed_title" = "Неможливо завершити встановлення";
+"app_setup_steps_failed_message" = "Будь ласка, перевірте зʼєднання з інтернетом та спробуйте знов. Якщо проблема залишається, звʼяжіться з нашою підтримкою.";
+
 /* License Key */
 "enter_license_title" = "Ввести особисті дані";
 /* MWPhotoBrowser */
@@ -644,7 +647,7 @@
 "push_reminder_set_now" = "Активувати сповіщення";
 
 "updating_database" = "Оновлення бази даних... \n\nЗастосунок Threema повинен працювати на передньому плані до завершення.\n\nЯкщо у вас велика історія чату, це може зайняти кілька хвилин.";
-"database_migration_error_hints" = "Переконайтеся, що на вашому пристрої достатньо місця, перезавантажте пристрій і повторіть спробу.";
+"database_migration_error_hints" = "Переконайтеся, що на вашому пристрої достатньо місця. Перезавантажте пристрій і повторіть спробу.";
 "database_migration_storage_warning_title" = "Недостатньо місця";
 "database_migration_storage_warning_message" = "Для оновлення бази даних тимчасово потрібно принаймні %.1f ГБ вільного місця. Зараз на вашому пристрої доступно лише %.1f ГБ. Звільніть більше місця, видаливши елементи в налаштуваннях використаного місця, та повторіть спробу.";
 
@@ -829,7 +832,7 @@
 
 "archived_title" = "Архівовані";
 "conversations_global_search_placeholder" = "Пошук";
-"one_to_one_chat" = "Персональні діалоги";
+"one_to_one_chat" = "Діалоги один на один";
 
 "select_all" = "Обрати усі";
 "deselect_all" = "Зняти виділення";
@@ -973,7 +976,7 @@
 "safe_deactivate" = "Вимкнути Threema Safe";
 "safe_deactivate_explain" = "Якщо вимкнути Threema Safe, усі наявні резервні копії будуть видалені з сервера. Продовжити?";
 "safe_disable_confirm" = "Ви бажаєте продовжити не вмикаючи Threema Safe? 
-За використання Threema Safe ви зможете відновити свій Threema ID, контакти та групи у випадку, якщо ви втратите доступ до свого пристрою.";
+За використання Threema Safe ви зможете відновити свій Threema ID, контакти та групи у випадку, якщо ви втратили доступ до свого пристрою.";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "Будь ласка, виберіть надійний пароль. Цей пароль знадобиться для відновлення резервної копії Threema Safe.";
@@ -1073,6 +1076,8 @@
 
 "settings_list_invite_a_friend_title" = "Запросити друга";
 "settings_list_threema_channel_title" = "Канал Threema";
+
+"settings_list_rate" = "Оцініть %@";
 
 "settings_list_support_title" = "Підтримка";
 "settings_list_privacy_policy_title" = "Політика конфіденційності";
@@ -1384,7 +1389,7 @@
 "settings_advanced_contacts_cleanup_no_duplicates" = "У вас немає дублікатів контактів.";
 "settings_advanced_contacts_cleanup_error_title" = "Не вдалося видалити контакти";
 "settings_advanced_contacts_cleanup_in_use_error_title" = "Видалити діалоги вручну";
-"settings_advanced_contacts_cleanup_still_used_error" = "Очищення скасовано. Дублікати контактів (%i) не можна видалити, тому що дублікати досі мають повідомлення або є членами групи.\n";
+"settings_advanced_contacts_cleanup_still_used_error" = "Очищення скасовано (%i дублікатів видалено, %i дублікатів залишилось).\nПевні діалоги мають бути видалені вручну:\n\n%@\n\nВидаліть бесіди та спробуйте знов.";
 "settings_advanced_contacts_multi_device_enabled_error" = "Зараз пристрої прив’язано. Будь ласка, видалить усі прив’язані пристрої перед видаленням.";
 "settings_advanced_contacts_cleanup_success_title" = "Контакт очищено";
 "settings_advanced_contacts_cleanup_success_exit" = "Вийти";
@@ -1604,8 +1609,8 @@
 "poi_current_location" = "Моя геопозиція";
 "poi_marked_location" = "Поставлена мітка";
 
-"notification_threemaweb_connectionlost_title" = "З'єднання з Threema Web втрачено";
-"notification_threemaweb_connectionlost_body" = "Щоб продовжити використовувати Threema Web, заново відкрийте застосунок.";
+"notification_threemaweb_connectionlost_title" = "З'єднання з застосунком на компʼютері втрачено";
+"notification_threemaweb_connectionlost_body" = "Щоб продовжити користуватись застосунком на компʼютері, відкрийте його заново.";
 
 "settings_threema_web_connected" = "Версію для комп’ютера / вебверсію під’єднано";
 "settings_threema_web_connectioninfo" = "Щоб залишатися на зв’язку, ваш пристрій має бути розблоковано, а %@ має працювати у фоновому режимі. Під’єднаний пристрій не блокуватиметься автоматично.";
@@ -1716,7 +1721,7 @@
 
 // Forward security status messages
 "forward_security_message_without" = "Отримано повідомлення без функції «Цілковита пряма секретність» (PFS). Перевірте, чи одержувач навмисно вимкнув PFS.";
-"forward_security_session_established" = "Повідомлення в цьому діалозі захищено функцією «Цілковита пряма секретність» (PFS)";
+"forward_security_session_established" = "Повідомлення в цьому діалозі відтепер захищені функцією «Цілковита пряма секретність».";
 "forward_security_session_established_rx" = "Повідомлення в цьому діалозі захищено функцією «Цілковита пряма секретність» (PFS). Активуйте PFS у даних контакта, щоб захистити й надіслані повідомлення.";
 "forward_security_messages_skipped_1" = "Одне повідомлення втрачено після останнього повідомлення.";
 "forward_security_messages_skipped_x" = "Кілька повідомлень (%d) втрачено після останнього повідомлення.";
@@ -1883,6 +1888,7 @@
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nНе вдалося перейти з версії %d на нижчу версію %d";
 "sqldhsessionstore_unknownError" = "Під час спроби міграції сталася невідома помилка: %@";
+"app_migration_uncompleted" = "Неможливо завершити перенесення застосунку.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Створити повідомлення";

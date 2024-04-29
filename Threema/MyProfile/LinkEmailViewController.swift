@@ -28,18 +28,6 @@ class LinkEmailViewController: ThemedTableViewController {
     
     // MARK: - Lifecycle
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        emailTextField.text = MyIdentityStore.shared().linkedEmail
-        
-        if let mdmSetup = MDMSetup(setup: false), mdmSetup.readonlyProfile() {
-            emailTextField.isEnabled = false
-        }
-        else {
-            emailTextField.becomeFirstResponder()
-        }
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.title = BundleUtil.localizedString(forKey: "link_email_title")
@@ -56,6 +44,23 @@ class LinkEmailViewController: ThemedTableViewController {
             }
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        emailTextField.text = MyIdentityStore.shared().linkedEmail
+        
+        if let mdmSetup = MDMSetup(setup: false), mdmSetup.readonlyProfile() {
+            emailTextField.isEnabled = false
+        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if emailTextField.isEnabled {
+            emailTextField.becomeFirstResponder()
+        }
+    }
+
     // MARK: - TableViewDelegates
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {

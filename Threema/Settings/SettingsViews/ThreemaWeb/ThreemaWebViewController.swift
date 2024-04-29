@@ -59,13 +59,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         let factory = ServerInfoProviderFactory.makeServerInfoProvider()
         factory.rendezvousServer { rendezvousServerInfo, _ in
             if rendezvousServerInfo != nil {
-                // Do not show MD for OnPrem AppStore
-                if ThreemaApp.current == .onPrem, ThreemaEnvironment.env() == .appStore {
-                    self.sections = Section.webOnly
-                }
-                else {
-                    self.sections = Section.all
-                }
+                self.sections = Section.all
             }
             else {
                 self.sections = Section.webOnly

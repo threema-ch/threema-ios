@@ -91,8 +91,8 @@ class NotificationService: UNNotificationServiceExtension {
         }
         NotificationService.isRunning = true
 
-        // Initialize app setup state (checking database file exists) as early as possible
-        _ = AppSetupState()
+        // Checking database file exists as early as possible
+        AppSetup.registerIfADatabaseFileExists()
 
         AppGroup.setActive(true, for: AppGroupTypeNotificationExtension)
         AppGroup.setActive(false, for: AppGroupTypeShareExtension)
@@ -354,8 +354,7 @@ class NotificationService: UNNotificationServiceExtension {
             return false
         }
         
-        let appSetupSate = AppSetupState(myIdentityStore: myIdentityStore)
-        guard appSetupSate.isAppSetupCompleted() else {
+        guard AppSetup.isCompleted else {
             DDLogWarn("[Push] App setup is not completed")
             
             showNoAccessToKeychainLocalNotification {

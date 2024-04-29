@@ -244,6 +244,9 @@ static NSString *fieldHidden = @"hidden";
             SystemMessage *systemMessage = [entityManager.entityCreator systemMessageForConversation:conversation];
             systemMessage.type = [NSNumber numberWithInt:kSystemMessageFsNotSupportedAnymore];
             systemMessage.remoteSentDate = [NSDate date];
+            if (systemMessage.isAllowedAsLastMessage) {
+                conversation.lastMessage = systemMessage;
+            }
         }
     }];
 }

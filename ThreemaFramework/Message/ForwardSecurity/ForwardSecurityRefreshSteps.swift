@@ -27,16 +27,28 @@ import ThreemaEssentials
 /// - If an existing session was not committed so far we send an `Init` again (instead of an encapsulated `empty`
 /// message)
 /// - The session's own ratchets are immediately updated when the message is created
+/// - Instead of running the steps here they are currently executed in `TaskDefinitionRunForwardSecurityRefreshSteps`
+/// (IOS-4567)
 struct ForwardSecurityRefreshSteps {
     
     private let backgroundBusinessInjector: FrameworkInjectorProtocol
+    // TODO: (IOS-4567) Remove
+    private let taskManager: TaskManagerProtocol
     
     public init() {
-        self.init(backgroundBusinessInjector: BusinessInjector(forBackgroundProcess: true))
+        let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
+        self.init(
+            backgroundBusinessInjector: backgroundBusinessInjector,
+            taskManager: TaskManager(backgroundEntityManager: backgroundBusinessInjector.entityManager)
+        )
     }
     
-    init(backgroundBusinessInjector: FrameworkInjectorProtocol) {
+    init(
+        backgroundBusinessInjector: FrameworkInjectorProtocol,
+        taskManager: TaskManagerProtocol
+    ) {
         self.backgroundBusinessInjector = backgroundBusinessInjector
+        self.taskManager = taskManager
     }
     
     /// Run _FS Refresh Steps_
@@ -44,7 +56,22 @@ struct ForwardSecurityRefreshSteps {
     public func run(for contactIdentities: [ThreemaIdentity]) async {
         DDLogNotice("[ForwardSecurity] Start FS Refresh Steps")
         defer { DDLogNotice("[ForwardSecurity] Exit FS Refresh Steps") }
+                
+        guard !backgroundBusinessInjector.settingsStore.isMultiDeviceRegistered else {
+            DDLogError("It is illegal to run the FS Refresh Steps (before FS 2.0) when MD is registered")
+            return
+        }
         
+        // TODO: (IOS-4567) Remove task creation and run `runFutureSteps` again
+        
+        taskManager.add(
+            taskDefinition: TaskDefinitionRunForwardSecurityRefreshSteps(with: contactIdentities)
+        )
+        
+        // await runFutureSteps(for: contactIdentities)
+    }
+    
+    private func runFutureSteps(for contactIdentities: [ThreemaIdentity]) async {
         // 1. Let `contacts` be the provided list of contacts.
         // 2. For each `contact` of `contacts`:
         await backgroundBusinessInjector.entityManager.perform {

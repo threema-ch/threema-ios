@@ -509,10 +509,8 @@ class RootNavigationController: UINavigationController {
     private func extensionIsReady() -> Bool {
         // drop shared instance, otherwise we won't notice any changes to it
         MyIdentityStore.resetSharedInstance()
-        
-        let appSetupState = AppSetupState(myIdentityStore: MyIdentityStore.shared())
-        
-        if !appSetupState.isAppSetupCompleted() {
+                
+        if !AppSetup.isCompleted {
             showNeedStartAppFirst()
         }
         
@@ -616,7 +614,7 @@ class RootNavigationController: UINavigationController {
 
         UserSettings.resetSharedInstance()
         
-        _ = AppSetupState()
+        AppSetup.registerIfADatabaseFileExists()
     }
     
     private func showProgressUI() {

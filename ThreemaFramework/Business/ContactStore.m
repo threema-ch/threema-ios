@@ -230,7 +230,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 - (void)addContactWithIdentity:(nonnull NSString*)identity publicKey:(nonnull NSData*)publicKey cnContactId:(nullable NSString *)cnContactId verificationLevel:(int32_t)verificationLevel state:(nullable NSNumber *)state type:(nullable NSNumber *)type featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel alerts:(BOOL)alerts contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(nonnull void(^)(ContactEntity * nullable))onCompletion {
 
     /* Make sure this is not our own identity */
-    if ([MyIdentityStore sharedMyIdentityStore].isProvisioned && [identity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
+    if ([MyIdentityStore sharedMyIdentityStore].isValidIdentity && [identity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
         DDLogInfo(@"Ignoring attempt to add own identity");
         onCompletion(nil);
         return;
@@ -511,7 +511,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     EntityManager *em = (EntityManager *)entityManagerObject;
 
     /* Make sure this is not our own identity */
-    if ([MyIdentityStore sharedMyIdentityStore].isProvisioned && [identity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
+    if ([MyIdentityStore sharedMyIdentityStore].isValidIdentity && [identity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
         DDLogInfo(@"Ignoring attempt to add own identity");
         return nil;
     }
@@ -753,7 +753,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                         DDLogError(@"Contact sync failed: %@", [error localizedDescription]);
                     }
                 }];
-            }];
+            } onError:nil]; // To keep the existing behavior we silently discard errors. // TODO: (IOS-4425) This should probably be changed
         }
     }];
 }
@@ -1386,7 +1386,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                     }
                 }
             }];
-        }];
+        } onError:nil]; // To keep the existing behavior we silently discard errors. // TODO: (IOS-4425) This should probably be changed
     });
 }
 
@@ -1535,7 +1535,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                             if (onCompletion) onCompletion(YES);
                         }
                     }];
-                }];
+                } onError:nil]; // To keep the existing behavior we silently discard errors. // TODO: (IOS-4425) This should probably be changed
             });
         }];
     } onError:^(NSError *error) {
@@ -1751,14 +1751,23 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 onCompletion();
             }
         }];
+    } onError:^(NSError *error) {
+        if (error != nil) {
+            onError(error);
+        }
+        // This should hardly ever happen so we just call the completion handler.
+        else {
+            DDLogWarn(@"Update status for all contact failed, but error is nil.");
+            onCompletion();
+        }
     }];
 }
 
-- (void)updateStatusForAllContactsIgnoreInterval:(BOOL)ignoreInterval contactSyncer:(MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(void(^)(void))onCompletion {
+- (void)updateStatusForAllContactsIgnoreInterval:(BOOL)ignoreInterval contactSyncer:(MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(void(^)(void))onCompletion onError:(nullable void(^)(NSError *error))onError {
     if (ProcessInfoHelper.isRunningForScreenshots)  {
         [self updateStatusWithContactSyncer:mediatorSyncableContacts onCompletion:^() {
             [self setupCheckStatusTimer];
-        } onError:^(){
+        } onError:^(NSError *error){
             [self setupCheckStatusTimer];
         }];
     } else {
@@ -1776,17 +1785,21 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             if (onCompletion) {
                 onCompletion();
             }
-        } onError:^(){
+        } onError:^(NSError *error){
             [self setupCheckStatusTimer];
-            DDLogNotice(@"[ContactSync] Update status featuremasks finished with error");
-            if (onCompletion) {
+            DDLogError(@"[ContactSync] Update status featuremasks finished with error: %@", error);
+            // For backwards compatibility the error handler is optional
+            // TODO: (IOS-4425) This should always return an error if it fails such that it can be handled by a caller if needed.
+            if (onError) {
+                onError(error);
+            } else if (onCompletion) {
                 onCompletion();
             }
         }];
     }
 }
 
-- (void)updateStatusWithContactSyncer:(MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(void(^)(void))onCompletion onError:(void(^)(void))onError  {
+- (void)updateStatusWithContactSyncer:(MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError  {
     NSArray *identities = [self validIdentities];
     ServerAPIConnector *conn = [[ServerAPIConnector alloc] init];
     [conn checkStatusOfIdentities:identities onCompletion:^(NSArray *states, NSArray *types, NSArray *featureMasks, int checkInterval) {
@@ -1826,8 +1839,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         
         onCompletion();
     } onError:^(NSError *error) {
-        DDLogError(@"Status update failed: %@", error);
-        onError();
+        onError(error);
     }];
 }
 

@@ -42,7 +42,10 @@
 
 - (void)startScan {
     [MBProgressHUD hideHUDForView:self.containingViewController.view animated:NO];
-    [MBProgressHUD showHUDAddedTo:self.containingViewController.view animated:YES];
+    
+    if (self.containingViewController.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.containingViewController.view animated:YES];
+    }
     
     QRScannerViewController *qrController = [[QRScannerViewController alloc] init];
     

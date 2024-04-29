@@ -40,6 +40,11 @@ struct SettingsView: View {
                         InviteSection()
                     }
                 #endif
+                
+                #if THREEMA_WORK
+                    RateSection()
+                #endif
+                
                 AboutSection()
             }
             .navigationDestination(for: AnyViewDestination.self)

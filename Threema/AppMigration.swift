@@ -34,6 +34,7 @@ import ThreemaFramework
 ///     - Check if the migration is as fast as possible and reduces resource usage (e.g. memory): E.g. for Core Data
 ///       operations use batch (`NSBatch...`) and try to load the least amount of Core Data-Objects possible.
 /// 3. Call the migration in `run()`
+/// 4. Extend the `AppMigrationTests` with the new migration
 ///
 /// ```swift
 /// ...
@@ -164,6 +165,10 @@ import ThreemaFramework
                 try migrateTo5_9()
                 migratedTo = .v5_9
             }
+            if migratedTo < .v5_9_2 {
+                try migrateTo5_9_2()
+                migratedTo = .v5_9_2
+            }
             
             // Add here a check if migration is necessary for a particular version...
         }
@@ -177,6 +182,17 @@ import ThreemaFramework
                     throw innerError
                 }
             }
+        }
+        
+        // Validate that we actually upgraded to the most recent version
+        guard !AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) else {
+            // We need to throw a `NSError` with a localized message shown as part of the error body to the user, but we
+            // only localize the first sentence such that the rest is easily readable by us.
+            let dict = [
+                NSLocalizedDescriptionKey: "\("app_migration_uncompleted".localized) Expected: \(AppMigrationVersion.allCases.last!.rawValue) Actual: \(businessInjector.userSettings.appMigratedToVersion)",
+            ]
+            let nsError = NSError(domain: "\(type(of: self))", code: 1, userInfo: dict)
+            throw nsError
         }
     }
     
@@ -595,5 +611,32 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "5.9 migration")
         DDLogNotice("[AppMigration] App migration to version 5.9 successfully finished")
+    }
+    
+    /// Migrate to version 5.9.2:
+    /// - Migrate from `PendingCreateID` to full `AppSetupState`
+    private func migrateTo5_9_2() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.9.2 started")
+        os_signpost(.begin, log: osPOILog, name: "5.9.2 migration")
+        
+        // Migrate from "PendingCreateID" to a full app setup state:
+        // If "PendingCreateID" is set the identity was created, but setup not completed
+        if AppGroup.userDefaults().bool(forKey: "PendingCreateID") {
+            AppSetup.state = .identityAdded
+        }
+        // If the identity is invalid or the app was deleted before we need to restart the setup
+        else if !AppSetup.hasPreexistingDatabaseFile || !MyIdentityStore.shared().isValidIdentity {
+            AppSetup.state = .notSetup
+        }
+        // By default the setup should be completed
+        else {
+            AppSetup.state = .complete
+        }
+        
+        // Remove "PendingCreateID"
+        AppGroup.userDefaults().removeObject(forKey: "PendingCreateID")
+        
+        os_signpost(.end, log: osPOILog, name: "5.9.2 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.9.2 successfully finished")
     }
 }

@@ -567,6 +567,10 @@ public final class DeviceJoin {
                     continue
                 }
                 systemMessage.type = NSNumber(value: kSystemMessageFsDisabledOutgoing)
+                systemMessage.remoteSentDate = Date()
+                if systemMessage.isAllowedAsLastMessage {
+                    conversation.lastMessage = systemMessage
+                }
             }
         }
     }

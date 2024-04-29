@@ -134,8 +134,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [LogManager initializeGlobalLoggerWithDebug:NO];
 #endif
 
-        // Initialize app setup state (checking database file exists) as early as possible
-        (void)[[AppSetupState alloc] init];
+        // Checking database file exists as early as possible
+        [AppSetup registerIfADatabaseFileExists];
     });
 }
 
@@ -183,8 +183,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     /* Instantiate various singletons now */
     [NaClCrypto sharedCrypto];
     [[ServerConnector sharedServerConnector] setIsAppInBackground:[self isAppInBackground]];
-
-    notificationManager = [[NotificationManager alloc] init];
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 
@@ -237,8 +235,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         
         [self performSelectorOnMainThread:@selector(launchImportDatabase) withObject:nil waitUntilDone:NO];
     } else {
-        AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-
         if (requiresMigration == RequiresMigrationError) {
             /* Is protected data is not available, then we show a other notification */
             if ([[MyIdentityStore sharedMyIdentityStore] isKeychainLocked]) {
@@ -254,7 +250,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 }];
             }
         }
-        else if (requiresMigration == RequiresMigration || ([AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings] && [appSetupState existsDatabaseFile])) {
+        else if (requiresMigration == RequiresMigration || ([AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings] && [AppSetup hasPreexistingDatabaseFile])) {
             DDLogVerbose(@"Store requires migration");
             migrating = YES;
             
@@ -433,6 +429,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     NSURL *logFile = [LogManager dbMigrationLogFile];
     [LogManager removeFileLogger:logFile];
 
+    notificationManager = [[NotificationManager alloc] init];
     
     incomingMessageManager = [IncomingMessageManager new];
     
@@ -446,8 +443,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [KKPasscodeLock sharedLock].attemptsAllowed = 10;
 
     /* generate key pair and register with server if not existing */
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
+    if (![AppSetup isCompleted]) {
         if ([[KKPasscodeLock sharedLock] isPasscodeRequired]) {
             [self presentPasscodeView];
         }
@@ -612,8 +608,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         UIStoryboard *launchStoryboard = [AppDelegate getLaunchStoryboard];
         self.window.rootViewController = [launchStoryboard instantiateInitialViewController];
     } else {
-        AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-        
         if (lastViewController != nil) {
             if (lockView != nil) {
                 [lockView removeFromSuperview];
@@ -624,7 +618,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             lastViewController = nil;
             lockView = nil;
         }
-        else if ([appSetupState isAppSetupCompleted]) {
+        else if ([AppSetup isCompleted]) {
             if (SYSTEM_IS_IPAD) {
                 SplitViewController *splitViewController = [[SplitViewController alloc] init];
                 [splitViewController setup];
@@ -661,7 +655,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         
         [self updateIdentityInfo];
         
-        if (![appSetupState isAppSetupCompleted]) {
+        if (![AppSetup isCompleted]) {
             return;
         }
         
@@ -1100,8 +1094,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     [self showLockScreen];
     
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
+    if (![AppSetup isCompleted]) {
         return;
     }
 
@@ -1166,8 +1159,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      */
     DDLogNotice(@"AppState: applicationWillEnterForeground");
     
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
+    if (![AppSetup isCompleted]) {
         return;
     }
 
@@ -1286,8 +1278,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
     
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
+    if (![AppSetup isCompleted]) {
         return;
     }
     
@@ -1413,8 +1404,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
  @param doBeforeExit: Will be running before possible exit
  */
 - (BOOL)isHandleNotificationAllowed:(void(^ _Nullable)(void))doBeforeExit {
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (migrating || ![appSetupState isAppSetupCompleted]) {
+    if (migrating || ![AppSetup isCompleted]) {
         return NO;
     }
     else {
@@ -1549,8 +1539,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     [self.window.rootViewController dismissViewControllerAnimated:animated completion:nil];
     
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
+    if (![AppSetup isCompleted]) {
         [self presentKeyGenerationOrProtectedDataUnavailable];
         return;
     }
@@ -1634,8 +1623,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      has been dismissed because the passcode view was presented. Therefore, we need to present the
      generate controller again */
     isLockscreenDismissed = true;
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
+    if (![AppSetup isCompleted]) {
         [self presentKeyGenerationOrProtectedDataUnavailable];
     }
 }
@@ -1740,9 +1728,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     BOOL isAliveCheck = [payload.dictionaryPayload[@"threema"][@"alive-check"] isEqual: @1];
     VoIPCallStateManager *voIPCallStateManager = [VoIPCallStateManager shared];
 
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (migrating ||
-        ![appSetupState isAppSetupCompleted] ||
+        ![AppSetup isCompleted] ||
         requiresMigration != RequiresMigrationNone ||
         isAliveCheck) {
         

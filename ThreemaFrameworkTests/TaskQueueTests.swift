@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -1135,6 +1136,7 @@ class TaskQueueTests: XCTestCase {
                 TaskDefinitionSettingsSync.self,
                 TaskDefinitionReceiveMessage.self,
                 TaskDefinitionReceiveReflectedMessage.self,
+                TaskDefinitionRunForwardSecurityRefreshSteps.self,
             ],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
@@ -1380,7 +1382,14 @@ class TaskQueueTests: XCTestCase {
         )
         try! tq.enqueue(task: taskReceiveReflectedMessage, completionHandler: nil)
         
-        let expectedItemCount = 18
+        // Add TaskDefinitionRunForwardSecurityRefreshSteps
+        let taskRunForwardSecurityRefreshSteps = TaskDefinitionRunForwardSecurityRefreshSteps(
+            with: expectedToMembers
+                .map { ThreemaIdentity($0) }
+        )
+        try! tq.enqueue(task: taskRunForwardSecurityRefreshSteps, completionHandler: nil)
+        
+        let expectedItemCount = 19
         guard tq.list.count == expectedItemCount else {
             XCTFail("TaskList has wrong number of items. Expected \(expectedItemCount) but was \(tq.list.count)")
             return
@@ -1457,7 +1466,7 @@ class TaskQueueTests: XCTestCase {
         tq.decode(data)
 
         // Check persistent tasks
-        let expectedItemCountAfterDecode = 14
+        let expectedItemCountAfterDecode = 15
         guard tq.list.count == expectedItemCountAfterDecode else {
             XCTFail(
                 "TaskList has wrong number of items. Expected \(expectedItemCountAfterDecode) but was \(tq.list.count)"
@@ -1668,6 +1677,15 @@ class TaskQueueTests: XCTestCase {
                 task.deltaSyncContacts[2].image,
                 updateableContacts[2].image
             )
+            XCTAssertTrue(task.retry)
+        }
+        else {
+            XCTFail()
+        }
+        
+        if let task = tq.list[14].taskDefinition as? TaskDefinitionRunForwardSecurityRefreshSteps {
+            XCTAssertEqual(.interrupted, task.state)
+            XCTAssertEqual(task.contactIdentities, expectedToMembers.map { ThreemaIdentity($0) })
             XCTAssertTrue(task.retry)
         }
         else {

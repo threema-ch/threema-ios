@@ -23,6 +23,25 @@ import XCTest
 @testable import ThreemaFramework
 
 final class PushSettingTests: XCTestCase {
+    private var databasePreparer: DatabasePreparer!
+    private var conversation: Conversation!
+
+    override func setUpWithError() throws {
+        AppGroup.setGroupID("group.ch.threema")
+        
+        let (_, managedObjectContext, _) = DatabasePersistentContext.devNullContext()
+        
+        databasePreparer = DatabasePreparer(context: managedObjectContext)
+        databasePreparer.save {
+            conversation = databasePreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default,
+                complete: nil
+            )
+        }
+    }
+    
     func testEncodeDecodeIdentityWithDefaultValues() throws {
         var pushSetting = PushSetting(identity: ThreemaIdentity("ECHOECHO"))
 
@@ -63,5 +82,66 @@ final class PushSettingTests: XCTestCase {
         XCTAssertEqual(result.muted, pushSetting.muted)
         XCTAssertEqual(result.mentioned, pushSetting.mentioned)
         XCTAssertTrue(result.periodOffTillDate?.compare(Date()) == .orderedDescending)
+    }
+    
+    func testMentionContents() {
+        var textMessage1: BaseMessage!
+
+        databasePreparer.save {
+            textMessage1 = databasePreparer.createTextMessage(
+                conversation: conversation,
+                text: "Hello @[@@@@@@@@]",
+                date: Date(),
+                delivered: false,
+                id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                isOwn: false,
+                read: false,
+                sent: false,
+                userack: false,
+                sender: nil,
+                remoteSentDate: Date(timeIntervalSinceNow: -100)
+            )
+        }
+        
+        XCTAssertTrue(TextStyleUtils.isMeOrAllMention(inText: textMessage1.contentToCheckForMentions()))
+        
+        var textMessage2: BaseMessage!
+
+        databasePreparer.save {
+            textMessage2 = databasePreparer.createTextMessage(
+                conversation: conversation,
+                text: "Hello!",
+                date: Date(),
+                delivered: false,
+                id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                isOwn: false,
+                read: false,
+                sent: false,
+                userack: false,
+                sender: nil,
+                remoteSentDate: Date(timeIntervalSinceNow: -100)
+            )
+        }
+        
+        XCTAssertFalse(TextStyleUtils.isMeOrAllMention(inText: textMessage2.contentToCheckForMentions()))
+
+        var fileMessage1: FileMessageEntity!
+
+        databasePreparer.save {
+            fileMessage1 = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                caption: "Hello @[@@@@@@@@]"
+            )
+        }
+        
+        XCTAssertTrue(TextStyleUtils.isMeOrAllMention(inText: fileMessage1.contentToCheckForMentions()))
+
+        var fileMessage2: FileMessageEntity!
+
+        databasePreparer.save {
+            fileMessage2 = databasePreparer.createFileMessageEntity(conversation: conversation, caption: "Hello!")
+        }
+        
+        XCTAssertFalse(TextStyleUtils.isMeOrAllMention(inText: fileMessage2.contentToCheckForMentions()))
     }
 }

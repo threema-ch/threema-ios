@@ -178,6 +178,7 @@ static NSString * const kThreemaVideoCallsQualitySettingChanged = @"ThreemaVideo
 #define kWallpaperKey @"Wallpapers"
 #define kShowed10YearsAnniversaryView @"Showed10YearsAnniversaryView"
 #define kShowedNotificationTypeSelectionView @"showedNotificationTypeSelectionView"
+#define kAppSetupStateKey @"AppSetupState"
 
 #pragma mark - Push notification keys
 

@@ -35,14 +35,14 @@
 
 @dynamic audio;
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     int seconds = self.duration.intValue;
     int minutes = seconds / 60;
     seconds -= minutes * 60;
     return [NSString stringWithFormat:@"%@ (%02d:%02d, %@)", [BundleUtil localizedStringForKey:@"file_message_voice"], minutes, seconds, [self blobFilename]];
 }
 
-- (NSString*)previewText {
+- (nonnull NSString*)previewText {
     return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:self.duration.integerValue]];
 }
 

@@ -90,25 +90,12 @@ static MyIdentityStore *instance;
     return self;
 }
 
-- (BOOL)isProvisioned {
-    /* check prerequisites */
-    if ([self isInvalidIdentity]) {
-        return false;
-    }
-    
-    if (self.pendingCreateID) {
-        return false;
-    }
-    
-    return true;
-}
-
 - (BOOL)isKeychainLocked {
     return keychainLocked;
 }
 
-- (BOOL)isInvalidIdentity {
-    return identity == nil || publicKey == nil || serverGroup == nil || (secretKey == nil && !secretKeyInKeychain);
+- (BOOL)isValidIdentity {
+    return identity != nil && publicKey != nil && serverGroup != nil && (secretKey != nil || secretKeyInKeychain);
 }
 
 - (void)generateKeyPairWithSeed:(NSData*)seed {
@@ -277,7 +264,6 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] removeObjectForKey:@"LastSentFeatureMask"];
     [[AppGroup userDefaults] removeObjectForKey:@"RevocationPasswordSetDate"];
     [[AppGroup userDefaults] removeObjectForKey:@"RevocationPasswordLastCheck"];
-    [[AppGroup userDefaults] removeObjectForKey:@"PendingCreateID"];
     [[AppGroup userDefaults] removeObjectForKey:@"CreateIDEmail"];
     [[AppGroup userDefaults] removeObjectForKey:@"CreateIDPhone"];
     [[AppGroup userDefaults] removeObjectForKey:@"FirstName"];
@@ -291,6 +277,10 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] removeObjectForKey:@"MessageDrafts"];
     [[AppGroup userDefaults] removeObjectForKey:@"PushNotificationEncryptionKey"];
     [[AppGroup userDefaults] removeObjectForKey:@"MatchToken"];
+    
+    // Reset app setup state. See `AppSetup` for usage of this key
+    [[AppGroup userDefaults] removeObjectForKey:kAppSetupStateKey];
+
     [[AppGroup userDefaults] synchronize];
 }
 
@@ -447,16 +437,6 @@ static MyIdentityStore *instance;
 
 - (void)setRevocationPasswordLastCheck:(NSDate *)revocationPasswordLastCheck {
     [[AppGroup userDefaults] setObject:revocationPasswordLastCheck forKey:@"RevocationPasswordLastCheck"];
-    [[AppGroup userDefaults] synchronize];
-}
-
-
-- (BOOL)pendingCreateID {
-    return [[AppGroup userDefaults] boolForKey:@"PendingCreateID"];
-}
-
-- (void)setPendingCreateID:(BOOL)pendingCreateID {
-    [[AppGroup userDefaults] setBool:pendingCreateID forKey:@"PendingCreateID"];
     [[AppGroup userDefaults] synchronize];
 }
 
@@ -679,7 +659,7 @@ static MyIdentityStore *instance;
 }
 
 - (NSString*)backupIdentityWithPassword:(NSString*)password {
-    if ([self isInvalidIdentity]) {
+    if (![self isValidIdentity]) {
         return nil;
     }
     

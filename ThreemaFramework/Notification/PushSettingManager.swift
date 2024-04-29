@@ -244,7 +244,7 @@ public actor PushSettingManager: PushSettingManagerProtocol {
                 var pushSetting = self.find(forGroup: group.groupIdentity)
                 if pushSetting.type == .offPeriod || pushSetting.type == .off {
                     if pushSetting.mentioned {
-                        if !TextStyleUtils.isMeOrAllMention(inText: message.logText()) {
+                        if !TextStyleUtils.isMeOrAllMention(inText: message.contentToCheckForMentions()) {
                             return false
                         }
                     }

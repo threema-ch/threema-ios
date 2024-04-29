@@ -26,7 +26,7 @@ extension MDMSetup {
     /// MD sync of MDM parameter 'th_disable_add_contact'
     @objc func sync() {
         guard UserSettings.shared().enableMultiDevice,
-              AppSetupState(myIdentityStore: MyIdentityStore.shared()).isAppSetupCompleted()
+              AppSetup.isCompleted
         else {
             return
         }

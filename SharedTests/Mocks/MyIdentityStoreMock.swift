@@ -95,7 +95,7 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
         NaClCrypto.shared().derivePublicKey(fromSecretKey: secretKey)
     }
 
-    func isProvisioned() -> Bool {
+    var isValidIdentity: Bool {
         false
     }
 

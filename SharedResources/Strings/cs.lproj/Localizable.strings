@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Načtení dat Threema Work se nezdařilo";
 "work_data_fetch_failed_message" = "Nelze načíst data Threema Work, zkontrolujte připojení k internetu a zkuste to znovu.";
 
+"app_setup_steps_failed_title" = "Nelze dokončit úvodní nastavení";
+"app_setup_steps_failed_message" = "Zkontrolujte své připojení k internetu a zkuste to znovu. Bude-li problém přetrvávat, obraťte se na naši podporu.";
+
 /* License Key */
 "enter_license_title" = "Zadejte přihlašovací údaje";
 /* MWPhotoBrowser */
@@ -644,7 +647,7 @@
 "push_reminder_set_now" = "Povolit oznámení";
 
 "updating_database" = "Aktualizace databáze…\n\nNechte aplikaci Threema spuštěnou v popředí, dokud operace nedoběhne do konce.\n\nMáte-li velkou historii chatu, může tato akce trvat i několik minut.";
-"database_migration_error_hints" = "Zkontrolujte, zda máte na zařízení dostatek volného místa, restartujte zařízení a zkuste to znovu.";
+"database_migration_error_hints" = "Zkontrolujte, zda máte na zařízení k dispozici dostatek volného místa. Pak restartujte zařízení a zkuste to znovu.";
 "database_migration_storage_warning_title" = "Nedostatek místa na úložišti";
 "database_migration_storage_warning_message" = "Aktualizace databáze dočasně potřebuje alespoň %.1f GB volného místa na úložišti. Na vašem zařízení je k dispozici jen %.1f GB. Uvolněte prosím místo smazáním položek v nabídce Nastavení využití a zkuste to znovu.";
 
@@ -972,7 +975,7 @@
 "safe_backup_now" = "Zálohovat";
 "safe_deactivate" = "Vypnout Trezor Threema";
 "safe_deactivate_explain" = "Pokud Trezor Threema deaktivujete, všechny stávající zálohy budou ze serveru smazány. Chcete pokračovat?";
-"safe_disable_confirm" = "Opravdu chcete pokračovat bez zapnutí Trezoru Threema?";
+"safe_disable_confirm" = "Opravdu chcete pokračovat bez zapnutí Trezoru Threema? Při použití Trezoru Threema si můžete v případě ztráty přístupu k zařízení obnovit své Threema ID, kontakty a skupiny.";
 
 "safe_setup_backup_title" = "Trezor Threema";
 "safe_setup_backup_description" = "Zvolte si silné heslo. To bude zapotřebí k obnovení vaší zálohy z Trezoru Threema.";
@@ -1071,6 +1074,8 @@
 
 "settings_list_invite_a_friend_title" = "Pozvat přítele";
 "settings_list_threema_channel_title" = "Kanál Threema";
+
+"settings_list_rate" = "Ohodnoťte %@";
 
 "settings_list_support_title" = "Podpora";
 "settings_list_privacy_policy_title" = "Zásady ochrany osobních údajů";
@@ -1881,6 +1886,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nNelze přejít na níže, tedy z verze %d na verzi %d.";
 "sqldhsessionstore_unknownError" = "Při pokusu o migraci došlo k neznámé chybě: %@";
+"app_migration_uncompleted" = "Nelze dokončit přesun aplikace.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Nová zpráva";

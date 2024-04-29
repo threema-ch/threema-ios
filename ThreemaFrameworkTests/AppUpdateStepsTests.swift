@@ -106,21 +106,22 @@ final class AppUpdateStepsTests: XCTestCase {
         
         // Run
         
-        let appUpdateSteps = AppUpdateSteps(backgroundBusinessInjector: businessInjectorMock)
+        FeatureMaskMock.updateLocalCalls = 0
+        let appUpdateSteps = AppUpdateSteps(
+            backgroundBusinessInjector: businessInjectorMock,
+            featureMask: FeatureMaskMock.self
+        )
         try await appUpdateSteps.run()
         
         // Validate
         
-        // TODO: (IOS-4449) Mock `FeatureMask` and verify the call
+        XCTAssertEqual(1, FeatureMaskMock.updateLocalCalls)
         
         XCTAssertEqual(1, contactStoreMock.numberOfUpdateStatusCalls)
 
         XCTAssertEqual(1, sessionStore.dhSessionList.count)
 
-        // Check if the correct system message is posted
-        let messageFetcher = MessageFetcher(for: terminateConversation, with: entityManager)
-        let lastMessage = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessage)
-        // TODO: (IOS-4429) SystemMessage.SystemMessageType is not Equatable, thus we use the "old" API
-        XCTAssertEqual(kSystemMessageFsIllegalSessionState, lastMessage.type.intValue)
+        // Possible improvement: Check if the correct system message is posted (last message won't return excluded
+        // messages)
     }
 }

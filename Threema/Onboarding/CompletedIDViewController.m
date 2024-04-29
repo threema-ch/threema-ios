@@ -167,10 +167,6 @@
     }
 }
 
-- (void)resetPersistedIDCreateState {
-    _identityStore.pendingCreateID = NO;
-}
-
 - (BOOL)linkEmail {
     if (_identityStore.createIDEmail.length < 1) {
         return NO;
@@ -465,7 +461,7 @@
     _finishButton.userInteractionEnabled = NO;
     _finishButton.alpha = 0.0;
     
-    [self resetPersistedIDCreateState];
+    [AppSetup setState:AppSetupStateIdentitySetupComplete];
     
     [self arrangeViewsForCompletion];
     

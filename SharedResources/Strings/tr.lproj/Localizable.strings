@@ -82,7 +82,7 @@
 "open" = "Açık";
 "call" = "Ara"; /* Short version for "Start Threema Call" */
 "Info" = "Bilgi";
-"error_abort" = "Kurtarılamaz hata";
+"error_abort" = "Kurtarılamaz Hata";
 "qr_code" = "Kare kod";
 "forward" = "İlet";
 "read" = "Okundu";
@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Threema Work verileri yüklenemedi";
 "work_data_fetch_failed_message" = "Threema Work verileri yüklenemedi, lütfen İnternet bağlantınızı kontrol edin ve tekrar deneyin.";
 
+"app_setup_steps_failed_title" = "Kurulum Tamamlanamadı";
+"app_setup_steps_failed_message" = "Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin. Sorun devam ederse, lütfen destek ekibimizle iletişime geçin.";
+
 /* License Key */
 "enter_license_title" = "Kimlik bilgilerini girin";
 /* MWPhotoBrowser */
@@ -644,7 +647,7 @@
 "push_reminder_set_now" = "Bildirimleri Etkinleştir";
 
 "updating_database" = "Veritabanı güncelleniyor…\n\nLütfen Threema'yı tamamlanana kadar ön planda çalışır durumda tutun.\n\nBüyük bir sohbet geçmişiniz varsa, bu birkaç dakika sürebilir. ";
-"database_migration_error_hints" = "Lütfen cihazınızda yeterli depolama alanı olduğundan emin olun, cihazınızı yeniden başlatın ve tekrar deneyin.";
+"database_migration_error_hints" = "Lütfen cihazınızda yeterli depolama alanı olduğundan emin olun. Cihazınızı yeniden başlatın ve tekrar deneyin.";
 "database_migration_storage_warning_title" = "Yeterli kullanılabilir depolama alanı yok";
 "database_migration_storage_warning_message" = "Veritabanı güncellemesi geçici olarak en az %.1f GB kullanılabilir depolama alanı gerektirir. Cihazınızda şu anda yalnızca %.1f GB kullanılabilir. Lütfen Kullanım Ayarları’ndaki öğeleri silerek daha fazla depolama alanı sağlayın ve tekrar deneyin.";
 
@@ -973,7 +976,7 @@
 "safe_deactivate" = "Threema Safe’i kapat";
 "safe_deactivate_explain" = "Threema Safe'i devre dışı bırakırsanız, sunucudaki tüm mevcut yedeklemeler silinecektir. Devam edilsin mi?";
 "safe_disable_confirm" = "Threema Safe'i etkinleştirmeden devam etmek istiyor musunuz?
-Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Threema kimliğinizi, kişilerinizi ve gruplarınızı geri yükleyebilirsiniz.";
+Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Threema Kimliğinizi, kişilerinizi ve gruplarınızı geri yükleyebilirsiniz.";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "Lütfen güçlü bir şifre seçin. Threema Safe yedeğinizi geri yüklemek için bu şifreye ihtiyacınız olacak.";
@@ -1072,6 +1075,8 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 
 "settings_list_invite_a_friend_title" = "Arkadaşını davet et";
 "settings_list_threema_channel_title" = "Threema Kanalı";
+
+"settings_list_rate" = "Oran %@";
 
 "settings_list_support_title" = "Destek";
 "settings_list_privacy_policy_title" = "Gizlilik Politikası";
@@ -1883,6 +1888,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\n%d sürümünden %d sürümüne geçilemedi";
 "sqldhsessionstore_unknownError" = "Taşınma girişimi sırasında bilinmeyen bir hata oluştu: %@";
+"app_migration_uncompleted" = "Uygulama geçişi tamamlanamadı.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Yeni mesaj";

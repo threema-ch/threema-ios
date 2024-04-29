@@ -1532,7 +1532,9 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         conversation: Conversation,
         to toMembers: [String]
     ) -> TaskDefinitionSendGroupCreateMessage {
-        let members = Set(conversation.members.map(\.identity))
+        let members = entityManager.performAndWait {
+            Set(conversation.members.map(\.identity))
+        }
         
         return TaskDefinitionSendGroupCreateMessage(
             group: group,

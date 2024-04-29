@@ -40,7 +40,7 @@ extension AppDelegate {
         
         let safeManager = SafeManager(groupManager: BusinessInjector().groupManager)
         
-        guard AppSetupState(myIdentityStore: MyIdentityStore.shared()).isAppSetupCompleted() else {
+        guard AppSetup.isCompleted else {
             return
         }
         

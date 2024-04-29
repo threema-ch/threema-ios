@@ -22,7 +22,7 @@ import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-final class ForwardSecurityRefreshStepsTests: XCTestCase {
+final class TaskExecutionRunForwardSecurityRefreshStepsTests: XCTestCase {
 
     private var databasePreparer: DatabasePreparer!
     private var backgroundEntityManager: EntityManager!
@@ -38,18 +38,15 @@ final class ForwardSecurityRefreshStepsTests: XCTestCase {
         backgroundEntityManager = EntityManager(databaseContext: databaseBackgroundContext)
     }
 
-    func testBasicRun() async throws {
+    func testExecuteGroupTextMessageResendToRejectedByContacts() async throws {
         let sessionStore = InMemoryDHSessionStore()
-        let messageSenderMock = MessageSenderMock()
+        let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let businessInjectorMock = BusinessInjectorMock(
             entityManager: backgroundEntityManager,
-            messageSender: messageSenderMock,
+            serverConnector: serverConnectorMock,
             dhSessionStore: sessionStore
         )
-                
-        // TODO: (IOS-4567) Remove
-        let taskManagerMock = TaskManagerMock()
-        
+
         // Identity with no session
         let noSessionIdentity = ThreemaIdentity("AAAAAAAA")
         _ = createFSEnabledContact(for: noSessionIdentity)
@@ -103,11 +100,6 @@ final class ForwardSecurityRefreshStepsTests: XCTestCase {
         
         // Run
         
-        let fsRefreshSteps = ForwardSecurityRefreshSteps(
-            backgroundBusinessInjector: businessInjectorMock,
-            taskManager: taskManagerMock
-        )
-        
         // The order of the identities is uses below for validation
         let expectedContactIdentities = [
             noSessionIdentity,
@@ -115,56 +107,30 @@ final class ForwardSecurityRefreshStepsTests: XCTestCase {
             committedSessionIdentity,
             noFSSupportIdentity,
         ]
-        
-        await fsRefreshSteps.run(for: expectedContactIdentities)
-        
+
+        let expect = expectation(description: "TaskDefinitionRunForwardSecurityRefreshSteps")
+        var expectError: Error?
+
+        let task = TaskDefinitionRunForwardSecurityRefreshSteps(with: expectedContactIdentities)
+        task.create(frameworkInjector: businessInjectorMock).execute()
+            .done {
+                expect.fulfill()
+            }
+            .catch { error in
+                expectError = error
+                expect.fulfill()
+            }
+
+        await fulfillment(of: [expect], timeout: 6)
+
         // Verify
         
-        // TODO: (IOS-4567) Reenable
-        
-        // There should now be 4 sessions: 3 form before and one from the no session contact
-        // XCTAssertEqual(4, sessionStore.dhSessionList.count)
-        
-        // For 3 of the 4 contacts a message should have been enqueued
-        // XCTAssertEqual(3, messageSenderMock.sentAbstractMessagesQueue.count)
-        
-        // Validate no session contact
-        // let noSessionMessage = try XCTUnwrap(
-        //     messageSenderMock.sentAbstractMessagesQueue[0] as? ForwardSecurityEnvelopeMessage
-        // )
-        // let noSessionInitMessage = try XCTUnwrap(noSessionMessage.data as? ForwardSecurityDataInit)
-        // let noSessionSession = try XCTUnwrap(sessionStore.bestDHSession(
-        //     myIdentity: businessInjectorMock.myIdentityStore.identity,
-        //     peerIdentity: noSessionIdentity.string
-        // ))
-        // XCTAssertEqual(noSessionSession.id, noSessionInitMessage.sessionID)
-        
-        // Validate non-committed session contact
-        // let nonCommittedSessionMessage = try XCTUnwrap(
-        //     messageSenderMock.sentAbstractMessagesQueue[1] as? ForwardSecurityEnvelopeMessage
-        // )
-        // let nonCommittedSessionInitMessage = try XCTUnwrap(nonCommittedSessionMessage.data as?
-        // ForwardSecurityDataInit)
-        // XCTAssertEqual(notCommittedSession.id, nonCommittedSessionInitMessage.sessionID)
-        
-        // Validate committed session contact
-        // let committedSessionMessage = try XCTUnwrap(
-        //     messageSenderMock.sentAbstractMessagesQueue[2] as? ForwardSecurityEnvelopeMessage
-        // )
-        // let committedSessionDataMessage = try XCTUnwrap(committedSessionMessage.data as? ForwardSecurityDataMessage)
-        // XCTAssertEqual(committedSession.id, committedSessionDataMessage.sessionID)
-        // There is no easy way to verify if the message is an `empty` message as `ForwardSecurityMessageProcessor` is
-        // not mockable
-        
-        // TODO: (IOS-4567) Remove
-        
-        XCTAssertEqual(1, taskManagerMock.addedTasks.count)
-        let runForwardSecurityRefreshStepsTask = try XCTUnwrap(
-            taskManagerMock.addedTasks[0] as? TaskDefinitionRunForwardSecurityRefreshSteps
-        )
-        XCTAssertEqual(expectedContactIdentities, runForwardSecurityRefreshStepsTask.contactIdentities)
+        XCTAssertNil(expectError)
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        // One contact doesn't support FS
+        XCTAssertEqual(expectedContactIdentities.count - 1, serverConnectorMock.sendMessageCalls.count)
     }
-    
+
     private func createFSEnabledContact(for identity: ThreemaIdentity) -> ContactEntity {
         databasePreparer.save {
             let contact = databasePreparer.createContact(

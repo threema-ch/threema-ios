@@ -75,7 +75,7 @@ static NSString *fieldOrigin = @"origin";
     return name;
 }
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     
     NSString *logCaption = [NSString string];
     
@@ -86,10 +86,10 @@ static NSString *fieldOrigin = @"origin";
     return [NSString stringWithFormat:@"%@: %@%@", [BundleUtil localizedStringForKey:@"file"], [self logFileName], logCaption];
 }
 
-- (NSString*)previewText {
-    
-    if (self.type.intValue == 0 && self.fileName) {
-        return self.fileName;
+- (nonnull NSString*)previewText {
+    NSString *fileName = self.fileName;
+    if (self.type.intValue == 0 && fileName != nil) {
+        return fileName;
     }
     
     NSString *fileTypeDescriptionText = [self fileTypeDescriptionText];
@@ -103,6 +103,10 @@ static NSString *fieldOrigin = @"origin";
     }
 
     return [BundleUtil localizedStringForKey:@"file"];
+}
+
+- (nullable NSString *)contentToCheckForMentions {
+    return self.caption;
 }
 
 - (NSString *)fileTypeDescriptionText {
@@ -380,26 +384,6 @@ static NSString *fieldOrigin = @"origin";
     }
     
     return _width;
-}
-- (NSString *)quotePreviewText {
-    NSString *quoteCaption = self.caption;
-    if (!quoteCaption) {
-        if ([self renderFileAudioMessage] == true) {
-            if (self.duration != nil) {
-                return [DateFormatter timeFormatted:self.duration.intValue];
-            }
-            return @"0:00";
-        }
-        else if ([self renderAsFileMessage] == true) {
-            if (self.fileName != nil) {
-                return self.fileName;
-            }
-            return @"";
-        }
-        
-        return @"";
-    }
-    return quoteCaption;
 }
 
 - (BOOL)thumbnailDownloaded {

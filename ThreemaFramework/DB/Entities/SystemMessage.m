@@ -225,12 +225,16 @@
     return nil;
 }
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     return [self format];
 }
 
-- (NSString*)previewText {
-    return [self format];
+- (nonnull NSString*)previewText {
+    NSString *format = [self format];
+    if (format != nil) {
+        return [self format];
+    }
+    return @"";
 }
 
 - (NSString *)argAsUTF8String {

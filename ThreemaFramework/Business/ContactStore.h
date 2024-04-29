@@ -76,7 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameters:
 ///   - ignoreInterval: Force the update and ignore the refresh interval
 ///   - onCompletion: Called when update has completed
-///   - onError: Called when MD sync failed
+///   - onError: Called when something failed
 - (void)updateStatusForAllContactsIgnoreInterval:(BOOL)ignoreInterval onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * _Nonnull error))onError;
 
 - (void)updateAllContactsToCNContact;

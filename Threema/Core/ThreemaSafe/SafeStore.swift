@@ -602,7 +602,8 @@ import ThreemaFramework
 
             self.serverApiConnector.update(MyIdentityStore.shared(), onCompletion: { () in
                 MyIdentityStore.shared().storeInKeychain()
-                MyIdentityStore.shared().pendingCreateID = true
+
+                AppSetup.state = .identityAdded
                 
                 if let nickname = safeBackupData.user?.nickname {
                     MyIdentityStore.shared().pushFromName = nickname
@@ -686,7 +687,9 @@ import ThreemaFramework
                 }
                 
                 LicenseStore.shared().performUpdateWorkInfo()
-                MyIdentityStore.shared().pendingCreateID = false
+                
+                AppSetup.state = .identitySetupComplete
+                
             }, onError: { _ in
                 DDLogError("Safe restore error:update identity store failed")
                 completionHandler(
@@ -959,20 +962,7 @@ import ThreemaFramework
                             }
                         }
 
-                        // Sync only group is active
-                        if group.isOwnGroup {
-                            self.groupManager.sync(group: group)
-                                .catch { error in
-                                    DDLogError("Safe restore group sync failed: \(error)")
-                                }
-                        }
-                        else {
-                            self.groupManager.sendSyncRequest(
-                                groupID: group.groupID,
-                                creator: group.groupCreatorIdentity,
-                                force: true
-                            )
-                        }
+                        // No sync is needed as this will be done in the `AppUpdateSteps`
                     }
                     .catch { error in
                         DDLogError("Safe restore group failed: \(error)")

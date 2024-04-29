@@ -364,8 +364,8 @@ struct pktExtension {
         return;
     }
 
-    if (![[MyIdentityStore sharedMyIdentityStore] isProvisioned]) {
-        DDLogNotice(@"Cannot connect - missing identity or key");
+    if (!AppSetup.isIdentityProvisioned) {
+        DDLogNotice(@"Cannot connect - identity not provisioned");
         return;
     }
     

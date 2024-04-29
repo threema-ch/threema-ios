@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Threema Workのデータ読み込みに失敗しました";
 "work_data_fetch_failed_message" = "Threema Workのデータを読み込むことができませんでした。インターネット接続を確認して、もう一度やり直してください。";
 
+"app_setup_steps_failed_title" = "セットアップを完了できません";
+"app_setup_steps_failed_message" = "インターネット接続を確認して、もう一度やり直してください。問題が解決しない場合はサポートにお問い合わせください。";
+
 /* License Key */
 "enter_license_title" = "ライセンスキーを入力";
 /* MWPhotoBrowser */
@@ -828,6 +831,9 @@
 "archived_chats" = "トークをアーカイブ";
 
 "archived_title" = "アーカイブしました";
+"conversations_global_search_placeholder" = "検索";
+"one_to_one_chat" = "シングルトーク";
+
 "select_all" = "すべて選択";
 "deselect_all" = "すべての選択を解除";
 "no_archived_chats" = "アーカイブしたトークがありません";
@@ -969,7 +975,8 @@
 "safe_backup_now" = "今すぐバックアップ";
 "safe_deactivate" = "Threema Safeを無効にする";
 "safe_deactivate_explain" = "Threema Safeを無効にすると、既存のバックアップがサーバー上から削除されます。続けますか？";
-"safe_disable_confirm" = "本当にThreema Safeを有効にせずに続行しますか？";
+"safe_disable_confirm" = "Threema Safeを有効にせずに続行しますか？
+Threema Safeを利用すると、万が一端末にアクセスできなくなった場合にThreema IDや連絡先、グループを復元することができます。";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "強力なパスワードを設定してください。このパスワードは、Threema Safeのバックアップを復元する際に必要となります。";
@@ -1068,6 +1075,8 @@
 
 "settings_list_invite_a_friend_title" = "友だちに紹介";
 "settings_list_threema_channel_title" = "Threemaチャンネル";
+
+"settings_list_rate" = "%@を評価する";
 
 "settings_list_support_title" = "サポート（英語）";
 "settings_list_privacy_policy_title" = "プライバシーポリシー";
@@ -1684,6 +1693,8 @@ iTunesのバックアップを作成してから行ってください。";
 
 "notification_group_sync_succeeded" = "グループを同期";
 "notification_group_sync_failed" = "グループ同期に失敗しました";
+"notification_group_call_start_failed" = "グループ通話に対応しているメンバーはいません";
+
 "notification_settings_sync_pending" = "同期中…";
 "notification_settings_sync_succeeded" = "設定を同期しました";
 
@@ -1876,6 +1887,7 @@ iTunesのバックアップを作成してから行ってください。";
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "（%@）\nバージョン%dからバージョン%dにダウングレードできませんでした";
 "sqldhsessionstore_unknownError" = "移行の試行時に不明なエラーが発生しました：%@";
+"app_migration_uncompleted" = "アプリの移行を完了できません。";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "新しいメッセージ";

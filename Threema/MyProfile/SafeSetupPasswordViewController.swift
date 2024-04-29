@@ -86,14 +86,14 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         }
         
         if safeManager.isActivated {
-            // is in change paasword mode, use existing server
+            // is in change password mode, use existing server
             let safeConfigManager = SafeConfigManager()
             customServer = safeConfigManager.getCustomServer()
             server = safeConfigManager.getServer()
             maxBackupBytes = safeConfigManager.getMaxBackupBytes()
             retentionDays = safeConfigManager.getRetentionDays()
         }
-        
+                
         if isForcedBackup == false {
             navigationItem.leftBarButtonItem = UIBarButtonItem(
                 barButtonSystemItem: .cancel,
@@ -106,6 +106,14 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             target: self,
             action: #selector(done)
         )
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if !passwordField.isHidden {
+            passwordField.becomeFirstResponder()
+        }
     }
 
     // TODO: (IOS-3251) Remove
@@ -123,9 +131,17 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     
     @objc private func done() {
         if safeManager.isActivated {
+            // TODO: (IOS-4577) Init view again, because Threema Safe could be changed in meantime
+            let safeConfigManager = SafeConfigManager()
+            customServer = safeConfigManager.getCustomServer()
+            server = safeConfigManager.getServer()
+            maxBackupBytes = safeConfigManager.getMaxBackupBytes()
+            retentionDays = safeConfigManager.getRetentionDays()
+
             checkPasswordAndActivate()
             return
         }
+
         navigationItem.leftBarButtonItem?.isEnabled = false
         navigationItem.rightBarButtonItem?.isEnabled = false
         view.isUserInteractionEnabled = false

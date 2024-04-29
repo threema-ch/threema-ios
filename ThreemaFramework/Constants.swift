@@ -56,4 +56,9 @@ public enum Constants {
     public static let showedNotificationTypeSelectionView = kShowedNotificationTypeSelectionView
     /// Key for all custom wallpaper
     public static let wallpaperKey = kWallpaperKey
+    
+    /// Key for app setup state setting
+    ///
+    /// - SeeAlso: kAppSetupStateKey
+    public static let appSetupStateKey = kAppSetupStateKey
 }

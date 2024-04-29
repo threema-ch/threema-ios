@@ -35,6 +35,9 @@ import Foundation
     public static let safeRestoreLogFile: URL? = FileUtility.appDocumentsDirectory?.appendingPathComponent(
         "safe-restore.log"
     )
+    @objc public static let appSetupStepsLogFile: URL? = FileUtility.appDocumentsDirectory?.appendingPathComponent(
+        "app-setup-steps.log"
+    )
             
     /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels
     /// like in <CocoaLumberjack/DDLog.h>

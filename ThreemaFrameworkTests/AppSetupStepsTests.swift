@@ -63,6 +63,9 @@ final class AppSetupStepsTests: XCTestCase {
             dhSessionStore: sessionStore
         )
         
+        // TODO: (IOS-4567) Remove
+        let taskManagerMock = TaskManagerMock()
+        
         // Identity with conversation or in no group
         let nonSolicitedIdentity = ThreemaIdentity("AAAAAAAA")
         _ = createFSEnabledContact(for: nonSolicitedIdentity)
@@ -93,14 +96,20 @@ final class AppSetupStepsTests: XCTestCase {
         
         // Run
         
+        FeatureMaskMock.updateLocalCalls = 0
         ContactPhotoSenderMock.numberOfSendProfileRequestCalls = 0
         let appSetupSteps = AppSetupSteps(
             backgroundBusinessInjector: businessInjectorMock,
+            taskManger: taskManagerMock,
+            featureMask: FeatureMaskMock.self,
             contactPhotoSender: ContactPhotoSenderMock.self
         )
         try await appSetupSteps.run()
         
         // Validate
+        
+        // Update own feature mask
+        XCTAssertEqual(1, FeatureMaskMock.updateLocalCalls)
         
         // All contacts should only be refreshed once
         XCTAssertEqual(1, contactStoreMock.numberOfUpdateStatusCalls)
@@ -108,29 +117,82 @@ final class AppSetupStepsTests: XCTestCase {
         // We have 1 solicited contact...
         
         // Validate one contact with a conversation and in groups that has no existing FS session
-        XCTAssertEqual(1, messageSenderMock.sentAbstractMessagesQueue.count)
-        let noSessionMessage = try XCTUnwrap(
-            messageSenderMock.sentAbstractMessagesQueue[0] as? ForwardSecurityEnvelopeMessage
-        )
-        let noSessionInitMessage = try XCTUnwrap(noSessionMessage.data as? ForwardSecurityDataInit)
-        let noSessionSession = try XCTUnwrap(sessionStore.bestDHSession(
-            myIdentity: businessInjectorMock.myIdentityStore.identity,
-            peerIdentity: conversationAndGroupIdentity.string
-        ))
-        XCTAssertEqual(noSessionSession.id, noSessionInitMessage.sessionID)
+        // TODO: (IOS-4567) Reenable
+        // XCTAssertEqual(1, messageSenderMock.sentAbstractMessagesQueue.count)
+        // let noSessionMessage = try XCTUnwrap(
+        //     messageSenderMock.sentAbstractMessagesQueue[0] as? ForwardSecurityEnvelopeMessage
+        // )
+        // let noSessionInitMessage = try XCTUnwrap(noSessionMessage.data as? ForwardSecurityDataInit)
+        // let noSessionSession = try XCTUnwrap(sessionStore.bestDHSession(
+        //     myIdentity: businessInjectorMock.myIdentityStore.identity,
+        //     peerIdentity: conversationAndGroupIdentity.string
+        // ))
+        // XCTAssertEqual(noSessionSession.id, noSessionInitMessage.sessionID)
         
         // Send profile picture request for single solicited contact
-        XCTAssertEqual(1, ContactPhotoSenderMock.numberOfSendProfileRequestCalls)
+        // TODO: (IOS-4567) Reenable
+        // XCTAssertEqual(1, ContactPhotoSenderMock.numberOfSendProfileRequestCalls)
         
         // One own group
         XCTAssertEqual(1, groupManagerMock.syncCalls.count)
         
         // One other group
         XCTAssertEqual(1, groupManagerMock.sendSyncRequestCalls.count)
+        
+        // TODO: (IOS-4567) Remove
+        
+        XCTAssertEqual(1, taskManagerMock.addedTasks.count)
+        let runForwardSecurityRefreshStepsTask = try XCTUnwrap(
+            taskManagerMock.addedTasks[0] as? TaskDefinitionRunForwardSecurityRefreshSteps
+        )
+        XCTAssertEqual([conversationAndGroupIdentity], runForwardSecurityRefreshStepsTask.contactIdentities)
     }
     
-    // TODO: (IOS-4280) Add more tests
-    
+    func testDoNotRunIfMultiDeviceIsRegistered() async throws {
+        let groupManagerMock = GroupManagerMock(myIdentityStoreMock)
+        let settingsStoreMock = SettingsStoreMock()
+        
+        businessInjectorMock = BusinessInjectorMock(
+            contactStore: contactStoreMock,
+            entityManager: backgroundEntityManager,
+            groupManager: groupManagerMock,
+            messageSender: messageSenderMock,
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
+            settingsStore: settingsStoreMock,
+            dhSessionStore: sessionStore
+        )
+        
+        // TODO: (IOS-4567) Remove
+        let taskManagerMock = TaskManagerMock()
+        
+        settingsStoreMock.isMultiDeviceRegistered = true
+        
+        // Run
+        
+        FeatureMaskMock.updateLocalCalls = 0
+        ContactPhotoSenderMock.numberOfSendProfileRequestCalls = 0
+        let appSetupSteps = AppSetupSteps(
+            backgroundBusinessInjector: businessInjectorMock,
+            taskManger: taskManagerMock,
+            featureMask: FeatureMaskMock.self,
+            contactPhotoSender: ContactPhotoSenderMock.self
+        )
+        try await appSetupSteps.run()
+        
+        // Validate
+        
+        XCTAssertEqual(0, FeatureMaskMock.updateLocalCalls)
+        XCTAssertEqual(0, contactStoreMock.numberOfUpdateStatusCalls)
+        XCTAssertEqual(0, messageSenderMock.sentAbstractMessagesQueue.count)
+        XCTAssertEqual(0, ContactPhotoSenderMock.numberOfSendProfileRequestCalls)
+        XCTAssertEqual(0, groupManagerMock.syncCalls.count)
+        XCTAssertEqual(0, groupManagerMock.sendSyncRequestCalls.count)
+
+        // TODO: (IOS-4567) Remove
+        XCTAssertEqual(0, taskManagerMock.addedTasks.count)
+    }
+        
     // MARK: - Private helper
 
     private func createFSEnabledContact(for identity: ThreemaIdentity) -> ContactEntity {

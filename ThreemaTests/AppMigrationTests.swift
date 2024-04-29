@@ -62,6 +62,7 @@ class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion5_6()
         setupDataForMigrationVersion5_7()
         setupDataForMigrationVersion5_9()
+        setupDataForMigrationVersion5_9_2()
 
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
@@ -106,6 +107,11 @@ class AppMigrationTests: XCTestCase {
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.7 successfully finished"))
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.9 started"))
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.9 successfully finished"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 5.9.2 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] App migration to version 5.9.2 successfully finished")
+        )
 
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         let conversations: [Conversation] = entityManager.entityFetcher.allConversations() as! [Conversation]
@@ -184,6 +190,11 @@ class AppMigrationTests: XCTestCase {
         }
         
         XCTAssertNil(AppGroup.userDefaults().array(forKey: "UnknownGroupAlertList"))
+        
+        // Checks for 5.9.2 migration
+        XCTAssertNil(AppGroup.userDefaults().object(forKey: "PendingCreateID"))
+        // .noSetup because my identity is not valid
+        XCTAssertEqual(AppSetupState.notSetup, AppSetup.state)
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -441,5 +452,10 @@ class AppMigrationTests: XCTestCase {
         // Unknown group message removal
         AppGroup.userDefaults()
             .setValue(["groupid": MockData.generateGroupID(), "creator": "CREATOR1"], forKey: "UnknownGroupAlertList")
+    }
+    
+    private func setupDataForMigrationVersion5_9_2() {
+        // Setup should be completed
+        AppGroup.userDefaults().set(false, forKey: "PendingCreateID")
     }
 }

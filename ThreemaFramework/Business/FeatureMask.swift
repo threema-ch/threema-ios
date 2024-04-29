@@ -22,7 +22,11 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaProtocols
 
-public class FeatureMask: NSObject {
+public enum FeatureMaskError: Error {
+    case unknownError
+}
+
+public class FeatureMask: NSObject, FeatureMaskProtocol {
     
     // MARK: - Local
     
@@ -32,7 +36,7 @@ public class FeatureMask: NSObject {
     }
     
     /// Updates local feature mask and sends it to server
-    public static func updateLocal(completion: (() -> Void)? = nil) {
+    public static func updateLocal(completion: (() -> Void)? = nil, onError: ((Error) -> Void)? = nil) {
 
         guard let identityStore = MyIdentityStore.shared() else {
             DDLogError("Update local feature mask failed, identityStore was nil.")
@@ -54,7 +58,7 @@ public class FeatureMask: NSObject {
             return
         }
             
-        DDLogNotice("[FeatureMask] Update feature mask on Server to: \(newMask)")
+        DDLogNotice("[FeatureMask] Update feature mask on Server to: new=\(newMask) old=\(lastMask)")
         let serverAPIConnector = ServerAPIConnector()
         serverAPIConnector.setFeatureMask(NSNumber(integerLiteral: newMask), for: identityStore) {
             identityStore.lastSentFeatureMask = newMask
@@ -62,21 +66,35 @@ public class FeatureMask: NSObject {
             defaults?.synchronize()
             completion?()
         } onError: { error in
-            if let error {
-                DDLogError("Update feature mask failed with error: \(error.localizedDescription)")
-            }
             identityStore.lastSentFeatureMask = 0
-            completion?()
+            
+            let fullError: Error
+            if let error {
+                fullError = error
+            }
+            else {
+                fullError = FeatureMaskError.unknownError
+            }
+            
+            if let onError {
+                onError(fullError)
+            }
+            else {
+                DDLogError("Update feature mask failed with error: \(fullError)")
+                completion?()
+            }
         }
     }
     
     /// Updates local feature mask and sends it to server
     ///
     /// Async version of `updateLocal(completion:)`
-    public static func updateLocal() async {
-        await withCheckedContinuation { continuation in
+    public static func updateLocal() async throws {
+        try await withCheckedThrowingContinuation { continuation in
             updateLocal {
                 continuation.resume()
+            } onError: { error in
+                continuation.resume(throwing: error)
             }
         }
     }

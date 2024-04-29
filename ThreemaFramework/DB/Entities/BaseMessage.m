@@ -43,16 +43,16 @@
 @dynamic groupDeliveryReceipts;
 @dynamic rejectedBy;
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     return nil;
 }
 
-- (NSString*)previewText {
-    return @"";
+- (nullable NSString *)contentToCheckForMentions {
+    return nil;
 }
 
-- (NSString*)quotePreviewText {
-    return self.previewText;
+- (nonnull NSString*)previewText {
+    return @"";
 }
 
 /// Check is managedObjectContext nil or isDeleted set to true

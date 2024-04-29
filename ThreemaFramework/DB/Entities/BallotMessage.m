@@ -41,16 +41,12 @@
     return  string;
 }
 
-- (NSString*)logText {
+- (nullable NSString*)additionalExportInfo {
     return [self format];
 }
 
-- (NSString*)previewText {
+- (nonnull NSString*)previewText {
     return [BundleUtil localizedStringForKey:@"ballot"];
-}
-
-- (NSString *)quotePreviewText {
-    return [NSString stringWithFormat:@"%@: %@", [BundleUtil localizedStringForKey:@"ballot"], self.ballot.title];
 }
 
 - (BOOL)isSummaryMessage {

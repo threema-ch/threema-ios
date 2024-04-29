@@ -196,7 +196,9 @@
         return NO;
     }
     
-    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    if (self.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    }
     
     [[ContactStore sharedContactStore] addContactWithIdentity:enteredId verificationLevel:kVerificationLevelUnverified onCompletion:^(ContactEntity * _Nullable contact, __unused BOOL alreadyExists) {
         [MBProgressHUD hideHUDForView:self.view animated:YES];

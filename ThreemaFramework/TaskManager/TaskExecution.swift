@@ -43,6 +43,7 @@ enum TaskExecutionError: Error {
     case wrongTaskDefinitionType
     case invalidContact(message: String)
     case ownContact(message: String)
+    case multiDeviceNotSupported
 }
 
 class TaskExecution: NSObject {
@@ -720,6 +721,9 @@ class TaskExecution: NSObject {
                 }
                 identities = [identity]
             }
+        }
+        else if let task = task as? TaskDefinitionRunForwardSecurityRefreshSteps {
+            identities = Set(task.contactIdentities.map(\.string))
         }
         else {
             throw TaskExecutionError.missingMessageNonce

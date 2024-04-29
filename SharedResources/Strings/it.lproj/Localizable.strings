@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Caricamento dati Threema Work non riuscito";
 "work_data_fetch_failed_message" = "Impossibile caricare i dati Threema Work. Verifica la connessione a Internet e riprova.";
 
+"app_setup_steps_failed_title" = "Impossibile completare la configurazione";
+"app_setup_steps_failed_message" = "Verifica la connessione a Internet e riprova. Se il problema persiste, contatta l'assistenza.";
+
 /* License Key */
 "enter_license_title" = "Sblocca Threema";
 /* MWPhotoBrowser */
@@ -972,7 +975,7 @@
 "safe_backup_now" = "Esegui backup ora";
 "safe_deactivate" = "Spegni Threema Safe";
 "safe_deactivate_explain" = "Se disabiliti Threema Safe ogni backup esistente sarà eliminato dal server. Continuare?";
-"safe_disable_confirm" = "Vuoi veramente continuare senza abilitare Threema Safe?";
+"safe_disable_confirm" = "Vuoi veramente continuare senza abilitare Threema Safe? In caso di perdita del dispositivo Threema Safe ti consente di ripristinare il tuo Threema ID, i tuoi contatti e gruppi.";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "Scegli una password. Ti serve per ripristinare il backup Threema Safe.";
@@ -1071,6 +1074,8 @@
 
 "settings_list_invite_a_friend_title" = "Invita amici";
 "settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_rate" = "Valuta %@";
 
 "settings_list_support_title" = "Assistenza";
 "settings_list_privacy_policy_title" = "Norme sulla Privacy";
@@ -1881,6 +1886,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nImpossibile eseguire il downgrade dalla versione %d alla versione %d";
 "sqldhsessionstore_unknownError" = "Si è verificato un errore sconosciuto durante il tentativo di migrazione: %@";
+"app_migration_uncompleted" = "Impossibile completare la migrazione dell'app.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Nuovo messaggio";

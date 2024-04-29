@@ -461,7 +461,6 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         for contactIdentity: String,
         reason: Int,
         arg: String? = nil,
-        setsLastUpdate: Bool = false,
         allowDuplicates: Bool = true
     ) {
         entityManager.performAsyncBlockAndSafe {
@@ -471,6 +470,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 setLastUpdate: false
             ) {
                 let lastSystemMessage = conversation.lastMessage as? SystemMessage
+                // TODO: (IOS-4573) Fix this: This will never be true, as no FS message is set as `lastMessage` anymore
                 if !allowDuplicates, let lastSystemMessage, lastSystemMessage.type.intValue == reason {
                     return
                 }
@@ -481,9 +481,6 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 systemMessage?.remoteSentDate = Date()
                 if systemMessage?.isAllowedAsLastMessage ?? false {
                     conversation.lastMessage = systemMessage
-                }
-                if setsLastUpdate {
-                    conversation.lastUpdate = Date()
                 }
             }
             else {

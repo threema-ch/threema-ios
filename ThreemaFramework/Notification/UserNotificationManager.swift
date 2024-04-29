@@ -415,10 +415,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         if let baseMessage = pendingUserNotification.baseMessage {
             if let isGroup = pendingUserNotification.isGroupMessage, isGroup {
                 if settingsStore.notificationType == .complete {
-                    return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText()!)
+                    return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText())
                 }
                 else {
-                    return TextStyleUtils.makeMentionsString(forText: "\(fromName): \(baseMessage.previewText()!)")
+                    return TextStyleUtils.makeMentionsString(forText: "\(fromName): \(baseMessage.previewText())")
                 }
             }
             else {

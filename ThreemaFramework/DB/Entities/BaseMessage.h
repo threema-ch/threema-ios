@@ -114,9 +114,9 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 @property (readonly) MessageState old_messageState DEPRECATED_MSG_ATTRIBUTE("Only use from Objective-C. Use messageState otherwise.");
 
-- (nullable NSString *)logText;
-- (NSString *)previewText;
-- (NSString *)quotePreviewText DEPRECATED_MSG_ATTRIBUTE("Deprecated in redesign. Use .quoteMessageType instead");
+- (nonnull NSString *)previewText;
+- (nullable NSString *)contentToCheckForMentions;
+- (nullable NSString *)additionalExportInfo;
 
 /// If this is true you can expect every property on the object to be `nil`
 - (BOOL)wasDeleted;

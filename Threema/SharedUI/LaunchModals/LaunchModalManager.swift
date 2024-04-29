@@ -40,7 +40,7 @@ import Foundation
     /// Checks if there is a launch view that needs to be displayed and does so modally if there is one
     @objc func checkLaunchModals() {
         
-        // Get root view and view to show
+        // TODO: (IOS-4577) Get root view and view to show
         guard let rootView = AppDelegate.shared().currentTopViewController() else {
             return
         }

@@ -67,9 +67,9 @@
     
     self.view.backgroundColor = [UIColor blackColor];
     self.previewView = [[UIView alloc] initWithFrame:self.view.bounds];
-    
-    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-   
+    if (self.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    }
     [self.view addSubview:self.previewView];
 }
 

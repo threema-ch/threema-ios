@@ -142,7 +142,7 @@ static LicenseStore *singleton;
                 return NO;
             }
             return YES;
-        } else if (([AppGroup getCurrentType] == AppGroupTypeNotificationExtension || [AppGroup getCurrentType] == AppGroupTypeShareExtension) && [self isWithinCheckInterval]) {
+        } else if (([AppGroup getCurrentType] == AppGroupTypeNotificationExtension || [AppGroup getCurrentType] == AppGroupTypeShareExtension) && [self isWithinOfflineInterval]) {
             // keep notification or share extension valid for one day
             return YES;
         }
@@ -212,9 +212,9 @@ static LicenseStore *singleton;
 
 - (void)performUpdateWorkInfoForce:(BOOL)force {
     // Only send the update work info when there is a valid license username and a valid threema id
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1 || (!appSetupState.isAppSetupCompleted && ![MyIdentityStore sharedMyIdentityStore].pendingCreateID))
+    if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1 || !AppSetup.isCompleted) {
         return;
+    }
         
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];

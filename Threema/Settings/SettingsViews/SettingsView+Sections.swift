@@ -329,6 +329,32 @@ extension SettingsView {
         }
     }
     
+    // MARK: - RateSection
+    
+    struct RateSection: View {
+        var body: some View {
+            Section {
+                SectionItem(
+                    action: {
+                        UIApplication.shared.open(link()!, options: [:], completionHandler: nil)
+
+                    },
+                    title: String.localizedStringWithFormat("settings_list_rate".localized, ThreemaApp.appName),
+                    image: .systemImage("heart.fill")
+                )
+            }
+        }
+        
+        private func link() -> URL? {
+            guard let string = BundleUtil.object(forInfoDictionaryKey: "ThreemaRateLink") as? String,
+                  let url = URL(string: string) else {
+                return nil
+            }
+            
+            return url
+        }
+    }
+
     struct ItemSection: View {
         typealias Item = (view: any View, title: String, symbol: ThreemaImageResource)
         

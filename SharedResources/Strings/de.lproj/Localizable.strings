@@ -583,6 +583,9 @@
 "work_data_fetch_failed_title" = "Laden von Threema Work-Daten fehlgeschlagen";
 "work_data_fetch_failed_message" = "Threema Work-Daten konnten nicht geladen werden, bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.";
 
+"app_setup_steps_failed_title" = "Einrichtung kann nicht abgeschlossen werden";
+"app_setup_steps_failed_message" = "Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut. Falls das Problem fortbesteht, wenden Sie sich bitte an den Support.";
+
 /* License Key */
 "enter_license_title" = "Anmeldedaten eingeben";
 /* MWPhotoBrowser */
@@ -645,7 +648,7 @@
 "push_reminder_set_now" = "Benachrichtigungen aktivieren";
 
 "updating_database" = "Datenbank wird aktualisiert…\n\nBitte lassen Sie Threema im Vordergrund laufen, bis der Vorgang abgeschlossen ist.\n\nJe nach Umfang Ihrer Chatverläufe kann dieser Prozess einige Minuten dauern.";
-"database_migration_error_hints" = "Bitte stellen Sie sicher, dass Sie genügend freien Speicherplatz auf Ihrem Gerät haben. Starten Sie Ihr Gerät neu und versuchen Sie es dann nochmals.";
+"database_migration_error_hints" = "Bitte stellen Sie sicher, dass Sie genügend freien Speicherplatz auf Ihrem Gerät haben. Starten Sie Ihr Gerät neu, und versuchen Sie es erneut.";
 "database_migration_storage_warning_title" = "Zu wenig freier Speicherplatz";
 "database_migration_storage_warning_message" = "Die Datenbank-Aktualisierung benötigt vorübergehend mindestens %.1f GB freien Speicherplatz. Ihr Gerät hat derzeit nur %.1f GB freien Speicherplatz. Stellen Sie Speicherplatz frei, indem Sie in den Benutzungseinstellungen Objekte löschen, und versuchen Sie es dann erneut.";
 
@@ -1073,6 +1076,8 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 
 "settings_list_invite_a_friend_title" = "Freunde einladen";
 "settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_rate" = "%@ bewerten";
 
 "settings_list_support_title" = "Support";
 "settings_list_privacy_policy_title" = "Datenschutzerklärung";
@@ -1883,6 +1888,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nEin Downgrade von Version %d auf Version %d konnte nicht durchgeführt werden\n";
 "sqldhsessionstore_unknownError" = "Beim Versuch einer Migration ist ein unbekannter Fehler aufgetreten: %@";
+"app_migration_uncompleted" = "App-Migration konnte nicht abgeschlossen werden.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Neue Nachricht";

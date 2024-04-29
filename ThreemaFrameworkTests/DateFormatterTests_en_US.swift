@@ -117,7 +117,10 @@ class DateFormatterTests_en_US: XCTestCase {
     let expectedRelativeTimeTodayAndMediumDateOtherwiseYesterday_en_US = "Yesterday"
     
     let expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US: String = {
-        if #available(iOS 17.0, *) {
+        if #available(iOS 17.4, *) {
+            return "Tomorrow at 2:03 AM"
+        }
+        else if #available(iOS 17.0, *) {
             return "Tomorrow, 2:03 AM"
         }
         else {
@@ -126,7 +129,10 @@ class DateFormatterTests_en_US: XCTestCase {
     }()
     
     let expectedRelativeLongStyleDateShortStyleTimeToday_en_US: String = {
-        if #available(iOS 17.0, *) {
+        if #available(iOS 17.4, *) {
+            return "Today at 1:14 PM"
+        }
+        else if #available(iOS 17.0, *) {
             return "Today, 1:14 PM"
         }
         else {
@@ -147,7 +153,10 @@ class DateFormatterTests_en_US: XCTestCase {
     }()
 
     let expectedAccessibilityRelativeDayTime_en_US: String = {
-        if #available(iOS 17.0, *) {
+        if #available(iOS 17.4, *) {
+            return "February 1, 2020 at 1:14 PM"
+        }
+        else if #available(iOS 17.0, *) {
             return "February 1, 2020, 1:14 PM"
         }
         else {

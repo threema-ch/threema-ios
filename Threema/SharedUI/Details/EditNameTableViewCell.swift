@@ -103,6 +103,7 @@ class EditNameTableViewCell: ThemedCodeTableViewCell {
         textField.adjustsFontSizeToFitWidth = true
         textField.minimumFontSize = UIFont.preferredFont(forTextStyle: .body).pointSize
         
+        textField.becomeFirstResponder()
         textField.autocapitalizationType = .words
         textField.clearButtonMode = .whileEditing
         

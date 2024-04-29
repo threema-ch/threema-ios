@@ -24,13 +24,18 @@ import CocoaLumberjackSwift
 public struct AppUpdateSteps {
     
     private let backgroundBusinessInjector: FrameworkInjectorProtocol
-    
+    private let featureMask: FeatureMaskProtocol.Type
+
     public init() {
-        self.init(backgroundBusinessInjector: BusinessInjector(forBackgroundProcess: true))
+        self.init(
+            backgroundBusinessInjector: BusinessInjector(forBackgroundProcess: true),
+            featureMask: FeatureMask.self
+        )
     }
     
-    init(backgroundBusinessInjector: FrameworkInjectorProtocol) {
+    init(backgroundBusinessInjector: FrameworkInjectorProtocol, featureMask: FeatureMaskProtocol.Type) {
         self.backgroundBusinessInjector = backgroundBusinessInjector
+        self.featureMask = featureMask
     }
     
     /// Run _Application Update Steps_ as defined by Threema Protocols
@@ -44,7 +49,7 @@ public struct AppUpdateSteps {
         // version or downgraded to a previous version:
         
         // 2. Update the user's feature mask on the directory server.
-        await FeatureMask.updateLocal()
+        try await featureMask.updateLocal()
         
         // 3. Let `contacts` be the list of all contacts (regardless of the acquaintance level).
         // 4. Refresh the state, type and feature mask of all `contacts` from the

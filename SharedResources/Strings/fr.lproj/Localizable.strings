@@ -582,6 +582,9 @@
 "work_data_fetch_failed_title" = "Échec de chargement des données de Threema Work";
 "work_data_fetch_failed_message" = "Impossible de charger les données de Threema Work, veuillez vérifier votre connexion Internet et réessayer.";
 
+"app_setup_steps_failed_title" = "Impossible de terminer la configuration";
+"app_setup_steps_failed_message" = "Veuillez vérifier votre connexion Internet et réessayer. Si le problème persiste, veuillez contacter notre assistance.";
+
 /* License Key */
 "enter_license_title" = "Déverrouiller Threema";
 /* MWPhotoBrowser */
@@ -644,7 +647,7 @@
 "push_reminder_set_now" = "Activer les notifications";
 
 "updating_database" = "Mise à jour de la base de données…\n\nVeuillez garder Threema en premier plan jusqu'à la fin de l'opération.\n\nCela pourrait prendre plusieurs minutes si vous avez un grand historique de chat.";
-"database_migration_error_hints" = "Veuillez vous assurer d’avoir assez d’espace libre sur votre appareil. Redémarrez votre appareil et réessayez.";
+"database_migration_error_hints" = "Veuillez vous assurer d’avoir assez d’espace de stockage libre sur votre appareil. Redémarrez votre appareil et réessayez.";
 "database_migration_storage_warning_title" = "Esapce de stockage disponible insuffisant";
 "database_migration_storage_warning_message" = "La base de données nécessite actuellement au moins %.1f Go de stockage disponible. Votre appareil ne comporte actuellement que %.1f Go disponibles. Veuillez libérer de l’espace en supprimant des éléments dans les Réglages d’Utilisation, puis réessayez.";
 
@@ -972,7 +975,8 @@
 "safe_backup_now" = "Sauvegarder maintenant";
 "safe_deactivate" = "Désactiver Threema Safe";
 "safe_deactivate_explain" = "Si vous désactivez Threema Safe, toute sauvegarde existante sera supprimée du serveur. Continuer ?";
-"safe_disable_confirm" = "Voulez-vous vraiment continuer sans activer Threema Safe ?";
+"safe_disable_confirm" = "Voulez-vous vraiment continuer sans activer Threema Safe ?
+En utilisant Threema Safe, vous pouvez restaurer votre ID, vos contacts et vos groupes Threema au cas où vous perdiez l'accès à votre appareil.";
 
 "safe_setup_backup_title" = "Threema Safe";
 "safe_setup_backup_description" = "Veuillez choisir un mot de passe. Celui-ci sera nécessaire pour restaurer votre sauvegarde Threema Safe.";
@@ -1071,6 +1075,8 @@
 
 "settings_list_invite_a_friend_title" = "Inviter un ami";
 "settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_rate" = "Évaluer %@";
 
 "settings_list_support_title" = "Support";
 "settings_list_privacy_policy_title" = "Politique de confidentialité";
@@ -1881,6 +1887,7 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 // App Migration
 "sqldhsessionstore_cannot_downgrade_to" = "(%@)\nImpossible de passer de la version %d à la version antérieure %d";
 "sqldhsessionstore_unknownError" = "Une erreur inconnue s'est produite lors de la tentative de migration : %@";
+"app_migration_uncompleted" = "Impossible de terminer la migration de l'application.";
 
 // UIApplicationShortcutItems
 "application_shortcut_item_new_message" = "Nouveau message";

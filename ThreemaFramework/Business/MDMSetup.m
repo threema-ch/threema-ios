@@ -505,9 +505,13 @@ static NSDictionary *_mdmCacheSetup;
         ServerAPIConnector *apiConnector = [[ServerAPIConnector alloc] init];
         /* Obtain server group from server */
         [apiConnector updateMyIdentityStore:identityStore onCompletion:^{
+            
             [identityStore storeInKeychain];
-            identityStore.pendingCreateID = YES;
+            
+            [AppSetup setState:AppSetupStateIdentityAdded];
+            
             [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+            
             onCompletion();
         } onError:^(NSError *error) {
             onError(error);

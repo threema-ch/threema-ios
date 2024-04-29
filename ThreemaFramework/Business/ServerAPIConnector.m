@@ -401,7 +401,8 @@
 
 - (void)obtainMatchTokenForIdentity:(MyIdentityStore*)identityStore forceRefresh:(BOOL)forceRefresh onCompletion:(void(^)(NSString *matchToken))onCompletion onError:(void(^)(NSError *error))onError {
 
-    if (identityStore.identity == nil || ![identityStore isProvisioned]) {
+    if (!identityStore.isValidIdentity || !AppSetup.isIdentityProvisioned) {
+        DDLogNotice(@"Skip obtaining token, because my identity is invalid or not provisioned.");
         onCompletion(nil);
         return;
     }

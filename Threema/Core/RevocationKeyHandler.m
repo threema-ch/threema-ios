@@ -35,8 +35,9 @@
 
 -(void)passwordResult:(NSString *)password fromViewController:(UIViewController *)viewController {
     _viewController = viewController;
-    
-    [MBProgressHUD showHUDAddedTo:_viewController.view animated:YES];
+    if (_viewController.view != nil) {
+        [MBProgressHUD showHUDAddedTo:_viewController.view animated:YES];
+    }
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self setPassword:password];
     });

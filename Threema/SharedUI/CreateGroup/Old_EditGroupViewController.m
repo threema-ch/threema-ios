@@ -107,6 +107,12 @@
     [super viewWillAppear:animated];
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    [_nameTextField becomeFirstResponder];
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
     [self triggerNameUpdate];
 

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -133,6 +134,31 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertTrue(result.nonces.isEmpty)
         XCTAssertFalse(result.isPersistent)
         XCTAssertFalse(result.retry)
+    }
+    
+    func testTaskDefinitionRunForwardSecurityRefreshSteps() throws {
+        let expectedToIdentities = [
+            ThreemaIdentity("CONTACT1"),
+            ThreemaIdentity("CONTACT2"),
+        ]
+        let expectedNonces: [String: Data] = expectedToIdentities
+            .reduce(into: [String: Data]()) { partialResult, identity in
+                partialResult[identity.string] = MockData.generateMessageNonce()
+            }
+
+        let task = TaskDefinitionRunForwardSecurityRefreshSteps(with: expectedToIdentities)
+        task.nonces = expectedNonces
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(task)
+
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionRunForwardSecurityRefreshSteps.self, from: data)
+        
+        XCTAssertEqual(expectedToIdentities, result.contactIdentities)
+        XCTAssertTrue(result.nonces.isEmpty)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertTrue(result.retry)
     }
 
     func testTaskDefinitionSendDeliveryReceiptsMessageEncodeDecode() throws {

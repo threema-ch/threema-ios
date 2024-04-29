@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Combine
 import Foundation
 import MBProgressHUD
@@ -203,7 +204,8 @@ final class ProfileViewModel: ObservableObject {
     }
     
     private func loadQRCode() {
-        guard businessInjector.myIdentityStore.isProvisioned() else {
+        guard businessInjector.myIdentityStore.isValidIdentity else {
+            DDLogWarn("Trying to show QR code for non-valid identity")
             return
         }
         

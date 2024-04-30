@@ -63,15 +63,19 @@ final class TaskExecutionRunForwardSecurityRefreshSteps: TaskExecution, TaskExec
         .then { messages -> Promise<[Promise<AbstractMessage?>]> in
             // Prepare sending for each message
             
-            let sendMessagePromises = messages.map {
-                self.sendMessage(
-                    message: $0,
-                    ltSend: self.taskContext.logSendMessageToChat,
-                    ltAck: self.taskContext.logReceiveMessageAckFromChat
-                )
+            Promise { seal in
+                self.frameworkInjector.entityManager.performBlock {
+                    let sendMessagePromises = messages.map {
+                        self.sendMessage(
+                            message: $0,
+                            ltSend: self.taskContext.logSendMessageToChat,
+                            ltAck: self.taskContext.logReceiveMessageAckFromChat
+                        )
+                    }
+                    
+                    seal.fulfill(sendMessagePromises)
+                }
             }
-            
-            return Promise { $0.fulfill(sendMessagePromises) }
         }
         .then { sendMessagePromises in
             // Send all messages

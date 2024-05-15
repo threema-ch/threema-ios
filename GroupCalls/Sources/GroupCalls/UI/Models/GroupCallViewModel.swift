@@ -133,13 +133,6 @@ public final class GroupCallViewModel: Sendable {
     }
     
     // MARK: - Public functions
-
-    public func getCallStartDate() async -> Date {
-        guard let millisecondsSinceStart = await groupCallActor?.exactCallStartDate else {
-            return .now
-        }
-        return Date(timeIntervalSince1970: TimeInterval(millisecondsSinceStart / 1000))
-    }
     
     func participant(for participantID: ParticipantID) -> ViewModelParticipant? {
         participantsList.first { $0.participantID == participantID }
@@ -496,7 +489,7 @@ extension GroupCallViewModel {
                     return
                 }
                 
-                guard await strongSelf.groupCallActor?.joinState() == .runningLocal else {
+                guard await strongSelf.groupCallActor?.joinState() == .joined else {
                     return
                 }
                 
@@ -507,7 +500,7 @@ extension GroupCallViewModel {
                 }
                 
                 let numberOfParticipants = strongSelf.numberOfParticipants
-                let timeInterval = await Date().timeIntervalSince(strongSelf.getCallStartDate())
+                let timeInterval = await Date().timeIntervalSince(strongSelf.groupCallActor?.callStartDate() ?? .now)
 
                 let update = GroupCallNavigationBarContentUpdate(
                     title: strongSelf.groupCallActor?.group.groupName,

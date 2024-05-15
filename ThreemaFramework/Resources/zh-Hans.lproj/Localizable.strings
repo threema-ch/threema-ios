@@ -83,9 +83,8 @@
 
 "mediapreview_options" = "选项";
 
-"testflight_feedback_viewtitle" = "测试版反馈";
-"testflight_feedback_title" = "请向我们发送您的测试版反馈！";
-"testflight_feedback_description" = "感谢您加入 Threema 的测试版。然而，测试只是迈向成功的一半，另一半就是提供反馈信息。如果您遇到任何错误或不正常情况，请向我们反馈。点击 “设置” > “测试版反馈”，即可联系我们。";
+"testflight_feedback_title" = "向我们发送您的测试版反馈！";
+"testflight_feedback_description" = "如果您遇到任何错误或异常情况，请向我们反馈。点击这里打开测试版聊天窗口。";
 
 "notification.threemaweb.connect.title" = "桌面版/网页版";
 "notification.threemaweb.connect.body" = "点击这里，以重新建立与桌面版应用程序 / 网页版客户端的连接。";

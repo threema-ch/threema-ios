@@ -24,7 +24,8 @@ class PlusButtonCollectionViewCell: UICollectionViewCell {
     @IBOutlet var imageView: UIImageView!
     func setup() {
         contentView.backgroundColor = Colors.secondary
-        imageView.image = BundleUtil.imageNamed("Plus")!.withTint(.primary)
+        imageView.image = UIImage(systemName: "plus")?.applying(symbolWeight: .semibold, symbolScale: .large)
+            .withTint(.primary)
         
         layer.borderWidth = 2
         layer.cornerRadius = 5

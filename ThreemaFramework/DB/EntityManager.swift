@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaProtocols
 
 public class EntityManager: NSObject {
     
@@ -870,7 +871,7 @@ extension EntityManager {
                     }
 
                     guard let message else {
-                        DDLogWarn("Unkonown message type (ID: \(abstractMessage.messageID.hexString))")
+                        DDLogWarn("Unknown message type (ID: \(abstractMessage.messageID.hexString))")
                         throw ThreemaProtocolError.unknownMessageType
                     }
 
@@ -885,6 +886,136 @@ extension EntityManager {
             }
 
             return message!
+        }
+    }
+
+    @available(*, deprecated, message: "Just for Objective-C calls")
+    @objc func deleteMessage(
+        for abstractMessage: AbstractMessage,
+        conversation: Conversation,
+        onError: @escaping (Error) -> Void
+    ) -> BaseMessage? {
+        do {
+            return try deleteMessage(for: abstractMessage, conversation: conversation)
+        }
+        catch {
+            onError(error)
+        }
+        return nil
+    }
+
+    func deleteMessage(
+        for abstractMessage: AbstractMessage,
+        conversation: Conversation
+    ) throws -> BaseMessage {
+        var e2eDeleteMessage: CspE2e_DeleteMessage?
+
+        if let deleteMessage = abstractMessage as? DeleteMessage {
+            e2eDeleteMessage = deleteMessage.decoded
+        }
+        else if let deleteGroupMessage = abstractMessage as? DeleteGroupMessage {
+            e2eDeleteMessage = deleteGroupMessage.decoded
+        }
+
+        guard let e2eDeleteMessage else {
+            DDLogError("Abstract message \(abstractMessage.messageID.hexString) it's not an delete message")
+            throw ThreemaProtocolError.messageToDeleteNotFound
+        }
+
+        return try performAndWaitSave {
+            guard let message = self.entityFetcher.message(
+                with: e2eDeleteMessage.messageID.littleEndianData,
+                conversation: conversation
+            ) else {
+                DDLogWarn("Message \(e2eDeleteMessage.messageID.littleEndianData.hexString) to delete not found")
+                throw ThreemaProtocolError.messageToDeleteNotFound
+            }
+
+            if abstractMessage.fromIdentity != self.myIdentityStore.identity {
+                // If sender nil, then its a reflected outgoing message
+                if let sender = message.sender ?? conversation.contact {
+                    guard sender.identity == abstractMessage.fromIdentity else {
+                        DDLogWarn("Message \(message.id.hexString) can't be deleted because of sender mismatch")
+                        throw ThreemaProtocolError.messageSenderMismatch
+                    }
+                }
+            }
+
+            message.deletedAt = Date()
+            message.lastEditedAt = nil
+
+            // Delete content of this base message
+            try self.entityDestroyer.deleteMessageContent(of: message)
+
+            conversation.updateLastMessage(with: self)
+
+            return message
+        }
+    }
+
+    @available(*, deprecated, message: "Just for Objective-C calls")
+    @objc func editMessage(
+        for abstractMessage: AbstractMessage,
+        conversation: Conversation,
+        onError: @escaping (Error) -> Void
+    ) -> BaseMessage? {
+        do {
+            return try editMessage(for: abstractMessage, conversation: conversation)
+        }
+        catch {
+            onError(error)
+        }
+        return nil
+    }
+
+    func editMessage(
+        for abstractMessage: AbstractMessage,
+        conversation: Conversation
+    ) throws -> BaseMessage {
+        var e2eEditMessage: CspE2e_EditMessage?
+
+        if let editMessage = abstractMessage as? EditMessage {
+            e2eEditMessage = editMessage.decoded
+        }
+        else if let editGroupMessage = abstractMessage as? EditGroupMessage {
+            e2eEditMessage = editGroupMessage.decoded
+        }
+
+        guard let e2eEditMessage else {
+            DDLogError("Abstract message \(abstractMessage.messageID.hexString) it's not an edit message")
+            throw ThreemaProtocolError.messageToEditNotFound
+        }
+
+        return try performAndWaitSave {
+            guard let message = self.entityFetcher.message(
+                with: e2eEditMessage.messageID.littleEndianData,
+                conversation: conversation
+            ) else {
+                DDLogWarn("Message \(e2eEditMessage.messageID.littleEndianData.hexString) to edit not found")
+                throw ThreemaProtocolError.messageToEditNotFound
+            }
+
+            if abstractMessage.fromIdentity != self.myIdentityStore.identity {
+                // If sender nil, then its a reflected outgoing message
+                if let sender = message.sender ?? conversation.contact {
+                    guard sender.identity == abstractMessage.fromIdentity else {
+                        DDLogWarn("Message \(message.id.hexString) can't be edited because of sender mismatch")
+                        throw ThreemaProtocolError.messageSenderMismatch
+                    }
+                }
+            }
+
+            if let textMessage = message as? TextMessage {
+                textMessage.lastEditedAt = Date()
+                textMessage.text = e2eEditMessage.text
+            }
+            else if let fileMessage = message as? FileMessageEntity {
+                fileMessage.lastEditedAt = Date()
+                fileMessage.caption = e2eEditMessage.text
+                fileMessage.json = FileMessageEncoder.jsonString(for: fileMessage)
+            }
+
+            return message
         }
     }
 

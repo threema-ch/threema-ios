@@ -50,6 +50,7 @@ static dispatch_queue_t directContextsQueue;
                 mainContext = [[TMAManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
                 [mainContext setPersistentStoreCoordinator:persistentCoordinator];
                 [mainContext setMergePolicy:NSOverwriteMergePolicy];
+                mainContext.automaticallyMergesChangesFromParent = YES;
             }
         });
     }
@@ -75,6 +76,7 @@ static dispatch_queue_t directContextsQueue;
     self = [super init];
     if (self) {
         mainContext = mainCnx;
+        mainContext.automaticallyMergesChangesFromParent = YES;
 
         if (backgroundCnx) {
             privateContext = backgroundCnx;

@@ -21,7 +21,7 @@
 import Foundation
 
 extension LocationMessage: PreviewableMessage {
-    public var previewText: String {
+    public var privatePreviewText: String {
         if let poiName {
             return poiName
         }

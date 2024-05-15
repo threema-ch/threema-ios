@@ -27,6 +27,7 @@
 #import "ContactTableDataSource.h"
 #import "GroupTableDataSource.h"
 #import "WorkContactTableDataSource.h"
+#import "DistributionListTableDataSource.h"
 #import "DeleteConversationAction.h"
 #import "ModalPresenter.h"
 #import "RectUtil.h"
@@ -46,8 +47,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 typedef enum : NSUInteger {
     ModeContacts,
     ModeGroups,
+    ModeDistributionLists,
     ModeWorkContacts
 } Mode;
+
 
 @interface ContactsViewController () <UIViewControllerPreviewingDelegate>
 
@@ -58,6 +61,7 @@ typedef enum : NSUInteger {
 @property EntityManager *entityManager;
 @property (nonatomic) ContactTableDataSource *contactsDataSource;
 @property (nonatomic) GroupTableDataSource *groupsDataSource;
+@property (nonatomic) DistributionListTableDataSource *distributionListTableDataSource;
 @property (nonatomic) WorkContactTableDataSource *workContactsDataSource;
 
 @property NSIndexPath *deletionIndexPath;
@@ -72,6 +76,7 @@ typedef enum : NSUInteger {
 @implementation ContactsViewController {
     ContactEntity *contactForDetails;
     Group *groupForDetails;
+    DistributionListEntity *distributionListForDetails;
     NSTimer *updateContactsTimer;
 }
 
@@ -99,44 +104,36 @@ typedef enum : NSUInteger {
     
     _currentDataSource = [self currentDataSource];
         
-    UIImage *contactImage = [BundleUtil imageNamed:@"Contact"];
+    UIImage *contactImage = [UIImage systemImageNamed:@"person.fill"];
     contactImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_contacts"];
-    UIImage *groupImage = [BundleUtil imageNamed:@"Group"];
+    [self.segmentedControl setImage:contactImage forSegmentAtIndex:ModeContacts];
+
+    UIImage *groupImage = [BundleUtil imageNamed:@"person.3.fill"];
     groupImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_groups"];
-    UIImage *workImage = [BundleUtil imageNamed:@"Case"];
-    workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
-    
-    [self.segmentedControl setTitle:@"contacts" forSegmentAtIndex:ModeContacts];
-    [self.segmentedControl setTitle:@"groups" forSegmentAtIndex:ModeGroups];
-    if ([LicenseStore requiresLicenseKey]) {
-        [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
-    }
-    
-    for (int i = 0; i < self.segmentedControl.numberOfSegments; i++) {
-        UIView *segment = self.segmentedControl.subviews[i];
-        for (id subview in segment.subviews) {
-            if ([subview isKindOfClass:[UILabel class]]) {
-                UILabel *label = (UILabel *)subview;
-                if ([label.text isEqualToString:@"contacts"]) {
-                    segment.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_contacts"];
-                }
-                else if ([label.text isEqualToString:@"groups"]) {
-                    segment.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_groups"];
-                }
-                else if ([label.text isEqualToString:@"work"]) {
-                    segment.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
-                }
-            }
+    [self.segmentedControl setImage:groupImage forSegmentAtIndex:ModeGroups];
+   
+    if ([ThreemaEnvironment distributionListsActive]) {
+        [self.segmentedControl insertSegmentWithTitle:nil atIndex:ModeDistributionLists animated:NO];
+        UIImage *distributionImage = [UIImage systemImageNamed:@"megaphone.fill"];
+        distributionImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
+        [self.segmentedControl setImage:distributionImage forSegmentAtIndex:ModeDistributionLists];
+        
+        if ([LicenseStore requiresLicenseKey]) {
+            [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
+            UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
+            workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
+            [self.segmentedControl setImage:workImage forSegmentAtIndex:ModeWorkContacts];
+            
         }
     }
-    [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeContacts];
-    [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeGroups];
-    [self.segmentedControl setImage:contactImage forSegmentAtIndex:ModeContacts];
-    [self.segmentedControl setImage:groupImage forSegmentAtIndex:ModeGroups];
-    
-    if ([LicenseStore requiresLicenseKey]) {
-        [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeWorkContacts];
-        [self.segmentedControl setImage:workImage forSegmentAtIndex:ModeWorkContacts];
+    else {
+        if ([LicenseStore requiresLicenseKey]) {
+            [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
+            UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
+            workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
+            [self.segmentedControl setImage:workImage forSegmentAtIndex:ModeWorkContacts-1];
+            
+        }
     }
         
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
@@ -175,6 +172,7 @@ typedef enum : NSUInteger {
     
     [self.tableView registerClass:ContactCell.class forCellReuseIdentifier:@"ContactCell"];
     [self.tableView registerClass:GroupCell.class forCellReuseIdentifier:@"GroupCell"];
+    [self.tableView registerClass:DistributionListCell.class forCellReuseIdentifier:@"DistributionListCell"];
 }
 
 - (void)refresh {
@@ -244,6 +242,19 @@ typedef enum : NSUInteger {
                 NSIndexPath *indexPath = [self.groupsDataSource indexPathForObject:groupForDetails];
                 [self.tableView selectRowAtIndexPath:indexPath animated:NO scrollPosition:UITableViewScrollPositionNone];
             }
+
+        } else if (distributionListForDetails && _mode == ModeDistributionLists) {
+            if (distributionListForDetails.conversation.willBeDeleted) {
+                DistributionListEntity *distributionList = [self getFirstDistributionList];
+                if (distributionList) {
+                    [self showDetailsForDistributionList:distributionList];
+                    [self setSelectionForDistributionList:distributionList];
+                }
+            } else {
+                NSIndexPath *indexPath = [self.distributionListTableDataSource indexPathForObject:distributionListForDetails];
+                [self.tableView selectRowAtIndexPath:indexPath animated:NO scrollPosition:UITableViewScrollPositionNone];
+            }
+            
         } else if (contactForDetails && _mode == ModeWorkContacts) {
             if (contactForDetails.willBeDeleted) {
                 ContactEntity *contact = [self getFirstWorkContact];
@@ -308,13 +319,22 @@ typedef enum : NSUInteger {
                 _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:([UserSettings sharedUserSettings].syncContacts ? @"no_contacts_syncon" : @"no_contacts_syncoff")];
             }
         }
+        else if (_mode == ModeGroups){
+            _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_groups"];
+            _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_groups_message"];
+        }
+        
+        else if (_mode == ModeDistributionLists) {
+            _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_distribution_list"];
+            _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_distribution_list_message"];
+        }
         else if (_mode == ModeWorkContacts) {
             _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
             _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], [ThreemaAppObjc appName]];
         }
         else {
-            _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_groups"];
-            _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_groups_message"];
+            _noContactsTitleLabel.text = nil;
+            _noContactsMessageLabel.text = nil;
         }
                 
         self.tableView.tableFooterView = _noContactsView;
@@ -337,6 +357,7 @@ typedef enum : NSUInteger {
     _currentDataSource = nil;
     _contactsDataSource = nil;
     _groupsDataSource = nil;
+    _distributionListTableDataSource = nil;
     _workContactsDataSource = nil;
     [self.tableView reloadData];
 }
@@ -371,6 +392,21 @@ typedef enum : NSUInteger {
     [self changeSelectedRow:selectedRow to:newRow];
     
     groupForDetails = group;
+}
+
+- (void)setSelectionForDistributionList:(DistributionListEntity *)distributionList {
+    if (_segmentedControl.selectedSegmentIndex != ModeDistributionLists) {
+        _segmentedControl.selectedSegmentIndex = ModeDistributionLists;
+        [self segmentedControlChanged:self];
+    }
+    
+    /* fix highlighted cell in our view */
+    NSIndexPath *selectedRow = [self.tableView indexPathForSelectedRow];
+    NSIndexPath *indexPath = [self.distributionListTableDataSource indexPathForObject:distributionList];
+    
+    [self changeSelectedRow:selectedRow to:indexPath];
+    
+    distributionListForDetails = distributionList;
 }
 
 - (void)setSelectionForWorkContact:(ContactEntity *)contact {
@@ -411,6 +447,13 @@ typedef enum : NSUInteger {
     [self displayGroup];
 }
 
+- (void)showDetailsForDistributionList:(DistributionListEntity*)distributionList {
+    [self setSelectionForDistributionList:distributionList];
+    
+    [self displayDistributionList];
+    return;
+}
+
 - (void)showDetailsForWorkContact:(ContactEntity*)contact {
     [self setSelectionForWorkContact:contact];
     
@@ -434,20 +477,22 @@ typedef enum : NSUInteger {
             [self showDetailsForContact:contact];
             return YES;
         }
-    }
-    
-    if (_mode == ModeWorkContacts) {
-        ContactEntity *contact = [self getFirstWorkContact];
-        if (contact) {
-            [self showDetailsForWorkContact:contact];
-            return YES;
-        }
-    }
-    
-    if (_mode == ModeGroups) {
+    }  else if (_mode == ModeGroups) {
         Group *group = [self getFirstGroup];
         if (group) {
             [self showDetailsForGroup:group];
+            return YES;
+        }
+    } else if (_mode == ModeDistributionLists) {
+        DistributionListEntity *distributionList = [self getFirstDistributionList];
+        if (distributionList) {
+            [self showDetailsForDistributionList:distributionList];
+            return YES;
+        }
+    } else if (_mode == ModeWorkContacts) {
+        ContactEntity *contact = [self getFirstWorkContact];
+        if (contact) {
+            [self showDetailsForWorkContact:contact];
             return YES;
         }
     }
@@ -473,6 +518,18 @@ typedef enum : NSUInteger {
             NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
             
             return [self.groupsDataSource groupAtIndexPath:indexPath];
+        }
+    }
+    
+    return nil;
+}
+
+- (DistributionListEntity *)getFirstDistributionList {
+    if ([self hasDistributionListData]) {
+        if ([self.distributionListTableDataSource tableView:self.tableView numberOfRowsInSection:0] > 0) {
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+            
+            return [self.distributionListTableDataSource distributionListAtIndexPath:indexPath];
         }
     }
     
@@ -509,6 +566,15 @@ typedef enum : NSUInteger {
     }
 }
 
+- (void)displayDistributionList{
+    if (SYSTEM_IS_IPAD == NO) {
+        DistributionListDetailsViewController *groupDetailsViewController = [[DistributionListDetailsViewController alloc] initFor:distributionListForDetails displayMode:DistributionListDetailsDisplayModeDefault displayStyle:DetailsDisplayStyleDefault delegate:nil];
+        [self showViewController:groupDetailsViewController sender:self];
+    } else {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowDistributionList object:nil userInfo:[NSDictionary dictionaryWithObject:distributionListForDetails forKey:kKeyDistributionList]];
+    }
+}
+
 - (BOOL)hasContactData {
     if ([self.contactsDataSource numberOfSectionsInTableView:self.tableView] > 0) {
         NSInteger count = [self.contactsDataSource tableView:self.tableView numberOfRowsInSection:0];
@@ -523,6 +589,17 @@ typedef enum : NSUInteger {
 - (BOOL)hasGroupData {
     if ([self.groupsDataSource numberOfSectionsInTableView:self.tableView] > 0) {
         NSInteger count = [self.groupsDataSource tableView:self.tableView numberOfRowsInSection:0];
+        if (count > 0) {
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
+- (BOOL)hasDistributionListData {
+    if ([self.distributionListTableDataSource numberOfSectionsInTableView:self.tableView] > 0) {
+        NSInteger count = [self.distributionListTableDataSource tableView:self.tableView numberOfRowsInSection:0];
         if (count > 0) {
             return YES;
         }
@@ -546,19 +623,23 @@ typedef enum : NSUInteger {
     if (_mode == ModeContacts) {
         return [self.contactsDataSource numberOfSectionsInTableView:self.tableView] > 0;
     }
+    else if (_mode == ModeGroups) {
+        return [self.groupsDataSource tableView:self.tableView numberOfRowsInSection:0] > 0;
+    }
+    else if (_mode == ModeDistributionLists) {
+        return [self.distributionListTableDataSource tableView:self.tableView numberOfRowsInSection:0] > 0;
+    }
     else if (_mode == ModeWorkContacts) {
         return [self.workContactsDataSource numberOfSectionsInTableView:self.tableView] > 0;
     }
-    else {
-        return [self.groupsDataSource tableView:self.tableView numberOfRowsInSection:0] > 0;
-    }
+    return FALSE;
 }
 
 - (ContactTableDataSource *)contactsDataSource {
     if (_contactsDataSource == nil) {
         _contactsDataSource = [ContactTableDataSource contactTableDataSourceWithFetchedResultsControllerDelegate:self members:nil];
         
-        // make sure sort indices are up to date
+        // Make sure sort indices are up to date
         [_contactsDataSource refreshContactSortIndices];
     }
     
@@ -573,11 +654,19 @@ typedef enum : NSUInteger {
     return _groupsDataSource;
 }
 
+- (DistributionListTableDataSource *)distributionListTableDataSource {
+    if (_distributionListTableDataSource == nil) {
+        _distributionListTableDataSource = [DistributionListTableDataSource distributionListTableDataSourceWithFetchedResultsControllerDelegate:self members:nil];
+        }
+    
+    return _distributionListTableDataSource;
+}
+
 - (WorkContactTableDataSource *)workContactsDataSource {
     if (_workContactsDataSource == nil) {
         _workContactsDataSource = [WorkContactTableDataSource workContactTableDataSourceWithFetchedResultsControllerDelegate:self members:nil];
         
-        // make sure sort indices are up to date
+        // Make sure sort indices are up to date
         [_workContactsDataSource refreshWorkContactSortIndices];
     }
     
@@ -590,13 +679,17 @@ typedef enum : NSUInteger {
             _contactsDataSource = [self contactsDataSource];
             _currentDataSource = _contactsDataSource;
         }
+        else if (_mode == ModeGroups) {
+            _groupsDataSource = [self groupsDataSource];
+            _currentDataSource = _groupsDataSource;
+        }
+        else if (_mode == ModeDistributionLists) {
+            _distributionListTableDataSource = [self distributionListTableDataSource];
+            _currentDataSource = _distributionListTableDataSource;
+        }
         else if (_mode == ModeWorkContacts) {
             _workContactsDataSource = [self workContactsDataSource];
             _currentDataSource = _workContactsDataSource;
-        }
-        else {
-            _groupsDataSource = [self groupsDataSource];
-            _currentDataSource = _groupsDataSource;
         }
     }
     
@@ -673,11 +766,14 @@ typedef enum : NSUInteger {
         if (_mode == ModeContacts) {
             cell = [self tableView:tableView contactCellForIndexPath:indexPath];
         }
+        else if (_mode == ModeGroups) {
+            cell = [self tableView:tableView groupCellForIndexPath:indexPath];
+        }
+        else if (_mode == ModeDistributionLists){
+            cell = [self tableView:tableView distributionListCellForIndexPath:indexPath];
+        }
         else if (_mode == ModeWorkContacts) {
             cell = [self tableView:tableView workContactCellForIndexPath:indexPath];
-        }
-        else {
-            cell = [self tableView:tableView groupCellForIndexPath:indexPath];
         }
         
         if (_searchController.isActive) {
@@ -707,6 +803,12 @@ typedef enum : NSUInteger {
     return cell;
 }
 
+- (UITableViewCell *)tableView:(UITableView *)tableView distributionListCellForIndexPath:(NSIndexPath *)indexPath {
+    DistributionListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"DistributionListCell"];
+    cell.distributionList = [self.distributionListTableDataSource distributionListAtIndexPath:indexPath];
+    return cell;
+}
+
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
 {
     return YES;
@@ -717,7 +819,12 @@ typedef enum : NSUInteger {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         _deletionIndexPath = indexPath;
         
-        if (_mode == ModeGroups) {
+        if (_mode == ModeContacts) {
+            ContactEntity *contact = [self.contactsDataSource contactAtIndexPath:indexPath];
+            [self deleteContact:contact atIndexPath:indexPath];
+            [self updateNoContactsView];
+        }
+        else if (_mode == ModeGroups) {
             Group *group = [self.groupsDataSource groupAtIndexPath:indexPath];
             [self deleteGroup:group];
             [self updateNoContactsView];
@@ -727,9 +834,9 @@ typedef enum : NSUInteger {
             [self deleteContact:contact atIndexPath:indexPath];
             [self updateNoContactsView];
         }
-        else {
-            ContactEntity *contact = [self.contactsDataSource contactAtIndexPath:indexPath];
-            [self deleteContact:contact atIndexPath:indexPath];
+        else if (_mode == ModeDistributionLists) {
+            DistributionListEntity *distributionList = [self.distributionListTableDataSource distributionListAtIndexPath:indexPath];
+            [self deleteDistributionList:distributionList atIndexPath:indexPath];
             [self updateNoContactsView];
         }
     }
@@ -820,6 +927,12 @@ typedef enum : NSUInteger {
             [self displayGroup];
         }];
     }
+    else if ([previewVc isKindOfClass:[DistributionListDetailsViewController class]]) {
+        distributionListForDetails = ((DistributionListDetailsViewController *)previewVc)._distributionList;
+        [animator addCompletion:^{
+            [self displayDistributionList];
+        }];
+    }
 }
 
 - (nullable ContactEntity *)contactAtIndexPath:(NSIndexPath *)indexPath {
@@ -886,6 +999,27 @@ typedef enum : NSUInteger {
     }];
 }
 
+- (void)deleteDistributionList:(nonnull DistributionListEntity *)distributionList atIndexPath:(nonnull NSIndexPath *)indexPath {
+    
+    NSString *title = [BundleUtil localizedStringForKey:@"distribution_list_delete_sheet_title"];
+    NSString *destructiveTitle = [BundleUtil localizedStringForKey:@"Delete"];
+    NSString *cancelTitle = [BundleUtil localizedStringForKey:@"cancel"];
+    
+    [UIAlertTemplate showDestructiveAlertWithOwner:self title:title message:nil titleDestructive:destructiveTitle actionDestructive:^(UIAlertAction * _Nonnull __unused destructiveAction) {
+        EntityManager *em = [[EntityManager alloc] init];
+        [em performSyncBlockAndSafe:^{
+                [[em entityDestroyer] deleteObjectWithObject:distributionList];
+        }];
+        
+    } titleCancel:cancelTitle actionCancel:^(UIAlertAction * _Nonnull __unused cancelAction) {
+        // Do nothing and allow casting the vote
+    }];
+}
+
+- (void) doNotheing {
+    return;
+}
+
 
 - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -893,16 +1027,21 @@ typedef enum : NSUInteger {
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (_mode == ModeGroups) {
+    
+    if (_mode == ModeContacts) {
+        contactForDetails = [self.contactsDataSource contactAtIndexPath:indexPath];
+        [self displayContact];
+    }
+    else if (_mode == ModeGroups) {
         groupForDetails = [self.groupsDataSource groupAtIndexPath:indexPath];
         [self displayGroup];
     }
+    else if (_mode == ModeDistributionLists) {
+        distributionListForDetails = [self.distributionListTableDataSource distributionListAtIndexPath:indexPath];
+        [self displayDistributionList];
+    }
     else if (_mode == ModeWorkContacts) {
         contactForDetails = [self.workContactsDataSource workContactAtIndexPath:indexPath];
-        [self displayContact];
-    }
-    else {
-        contactForDetails = [self.contactsDataSource contactAtIndexPath:indexPath];
         [self displayContact];
     }
 }
@@ -911,20 +1050,20 @@ typedef enum : NSUInteger {
 
 - (void)controllerWillChangeContent:(NSFetchedResultsController *)controller
 {
-    //nop
+    return;
 }
 
 - (void)controller:(NSFetchedResultsController *)controller didChangeSection:(id <NSFetchedResultsSectionInfo>)sectionInfo
            atIndex:(NSUInteger)sectionIndex forChangeType:(NSFetchedResultsChangeType)type
 {
-    //nop
+    return;
 }
 
 - (void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)anObject
        atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type
       newIndexPath:(NSIndexPath *)newIndexPath
 {
-    //nop
+    return;
 }
 
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller
@@ -979,7 +1118,18 @@ typedef enum : NSUInteger {
 #pragma mark - Actions
 
 - (IBAction)segmentedControlChanged:(id)sender {
-    _mode = self.segmentedControl.selectedSegmentIndex;
+    
+    if (![ThreemaEnvironment distributionListsActive]) {
+        if(self.segmentedControl.selectedSegmentIndex == ModeDistributionLists) {
+            _mode = self.segmentedControl.selectedSegmentIndex + 1;
+        }
+        else {
+            _mode = self.segmentedControl.selectedSegmentIndex;
+        }
+    } else {
+        // Remove all lines above except for this when removing FF
+        _mode = self.segmentedControl.selectedSegmentIndex;
+    }
     
     switch (_mode) {
         case ModeContacts:
@@ -994,6 +1144,28 @@ typedef enum : NSUInteger {
 
             [self updateNoContactsView];
             self.tableView.tableHeaderView = nil;
+            break;
+            
+        case ModeGroups:
+            self.navigationItem.title = [BundleUtil localizedStringForKey:@"segmentcontrol_groups"];
+            _rfControl = self.refreshControl;
+            self.refreshControl = nil;
+            _currentDataSource = [self groupsDataSource];
+            [_contactsDataSource setIgnoreFRCUpdates:YES];
+            [_workContactsDataSource setIgnoreFRCUpdates:YES];
+            [_groupsDataSource setIgnoreFRCUpdates:NO];
+
+            [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
+            self.tableView.tableHeaderView = nil;
+            [self updateNoContactsView];
+            break;
+            
+        case ModeDistributionLists:
+            self.navigationItem.title = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
+            _rfControl = self.refreshControl;
+            _currentDataSource = [self distributionListTableDataSource];
+            self.tableView.tableHeaderView = nil;
+            [self updateNoContactsView];
             break;
             
         case ModeWorkContacts:
@@ -1013,20 +1185,6 @@ typedef enum : NSUInteger {
                 self.tableView.tableHeaderView = nil;
             }
             
-            [self updateNoContactsView];
-            break;
-            
-        case ModeGroups:
-            self.navigationItem.title = [BundleUtil localizedStringForKey:@"segmentcontrol_groups"];
-            _rfControl = self.refreshControl;
-            self.refreshControl = nil;
-            _currentDataSource = [self groupsDataSource];
-            [_contactsDataSource setIgnoreFRCUpdates:YES];
-            [_workContactsDataSource setIgnoreFRCUpdates:YES];
-            [_groupsDataSource setIgnoreFRCUpdates:NO];
-
-            [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
-            self.tableView.tableHeaderView = nil;
             [self updateNoContactsView];
             break;
             
@@ -1054,7 +1212,7 @@ typedef enum : NSUInteger {
         UINavigationController *navVC = [storyboard instantiateViewControllerWithIdentifier:@"AddContactNavigationController"];
         
         [self presentViewController:navVC animated:YES completion:nil];
-    } else {
+    } else if (_mode == ModeGroups) {
         if ([mdmSetup disableCreateGroup]) {
             [UIAlertTemplate showAlertWithOwner:self title:@"" message:[BundleUtil localizedStringForKey:@"disabled_by_device_policy"] actionOk:nil];
             return;
@@ -1064,10 +1222,25 @@ typedef enum : NSUInteger {
         
         [self presentViewController:navVC animated:YES completion:nil];
     }
+    else if (_mode == ModeDistributionLists){
+        UIViewController* createDistList = [[DistributionListCreateEditViewController alloc]init];
+        UINavigationController *navVC = [[UINavigationController alloc] initWithRootViewController:createDistList];
+        [self presentViewController:navVC animated:YES completion:nil];
+    }
 }
 
 - (IBAction)pulledForRefresh:(UIRefreshControl *)sender {
-    _mode = self.segmentedControl.selectedSegmentIndex;
+    if (![ThreemaEnvironment distributionListsActive]) {
+        if(self.segmentedControl.selectedSegmentIndex == ModeDistributionLists) {
+            _mode = self.segmentedControl.selectedSegmentIndex + 1;
+        }
+        else {
+            _mode = self.segmentedControl.selectedSegmentIndex;
+        }
+    } else {
+        // Remove all lines above except for this when removing FF
+        _mode = self.segmentedControl.selectedSegmentIndex;
+    }
     
     if ((_mode == ModeContacts || _mode == ModeWorkContacts) && !self.searchController.active) {
         [self setRefreshControlTitle:YES];

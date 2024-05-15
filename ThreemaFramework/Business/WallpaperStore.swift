@@ -26,7 +26,7 @@ public class WallpaperStore {
     
     public static let shared = WallpaperStore()
     
-    public let defaultWallPaper: UIImage = BundleUtil.imageNamed("ChatBackground")!
+    public let defaultWallPaper: UIImage! = UIImage(resource: .chatBackground)
         .draw(withTintColor: Colors.backgroundChatLines)
     
     // MARK: - Public Functions
@@ -161,12 +161,12 @@ public class WallpaperStore {
     }
     
     private func defaultWallPaperDark() -> UIImage {
-        BundleUtil.imageNamed("ChatBackground")!
+        UIImage(resource: .chatBackground)
             .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .dark))
     }
     
     private func defaultWallPaperLight() -> UIImage {
-        BundleUtil.imageNamed("ChatBackground")!
+        UIImage(resource: .chatBackground)
             .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .light))
     }
 }

@@ -22,11 +22,23 @@ import Combine
 import SwiftUI
 import ThreemaFramework
 
+@dynamicMemberLookup
 struct AppContainer: EnvironmentKey {
     
     let appEnvironment: AppEnvironment
  
-    static var defaultValue: Self { Self(appEnvironment: AppEnvironment()) }
+    static var defaultValue: Self { self.default }
+    
+    private static let `default` =
+        Self(appEnvironment: AppEnvironment(businessInjector: BusinessInjector(forBackgroundProcess: false)))
+    
+    subscript<T>(dynamicMember keyPath: KeyPath<AppEnvironment, T>) -> T {
+        appEnvironment[keyPath: keyPath]
+    }
+    
+    subscript<T>(dynamicMember keyPath: KeyPath<BusinessInjectorProtocol, T>) -> T {
+        appEnvironment.businessInjector[keyPath: keyPath]
+    }
 }
 
 extension EnvironmentValues {

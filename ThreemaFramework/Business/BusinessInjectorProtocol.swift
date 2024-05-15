@@ -20,7 +20,7 @@
 
 import Foundation
 
-public protocol BusinessInjectorProtocol {
+public protocol BusinessInjectorProtocol: AnyObject {
     var runsInBackground: Bool { get }
     var contactStore: ContactStoreProtocol { get }
     var conversationStore: any ConversationStoreProtocol { get }
@@ -62,7 +62,7 @@ public protocol BusinessInjectorProtocol {
     func runInBackgroundAndWait<T>(_ block: (BusinessInjectorProtocol) throws -> T) rethrows -> T
 }
 
-protocol BusinessInternalInjectorProtocol {
+protocol BusinessInternalInjectorProtocol: AnyObject {
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol { get }
     var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol { get }
     var messageProcessor: MessageProcessorProtocol { get }

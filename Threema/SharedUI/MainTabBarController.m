@@ -44,6 +44,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @property SingleDetailsViewController *singleDetailViewController;
 @property GroupDetailsViewController *groupDetailViewController;
+@property DistributionListDetailsViewController *distributionListDetailViewController;
 
 @property ContactsViewController *contactsViewController;
 @property ConversationsViewController *conversationsViewController;
@@ -73,6 +74,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectedContact:) name:kNotificationShowContact object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectedGroup:) name:kNotificationShowGroup object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectedDistributionList:) name:kNotificationShowDistributionList object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectedConversation:) name:kNotificationShowConversation object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedConversation:) name:kNotificationDeletedConversation object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedContact:) name:kNotificationDeletedContact object:nil];
@@ -107,6 +109,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     _singleDetailViewController = nil;
     _groupDetailViewController = nil;
+    _distributionListDetailViewController = nil;
     
     _contactsViewController = nil;
     
@@ -148,6 +151,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)setSelectedViewController:(UIViewController *)selectedViewController {
     NSUInteger index = [self.viewControllers indexOfObject:(UIViewController * _Nonnull)selectedViewController];
     [self setSelectedIndex:index];
+}
+
+- (void)tabBar:(UITabBar *)tabBar didSelectItem:(UITabBarItem *)item {
+    if (item.tag > 1 && self.selectedIndex == item.tag) { // only profile & settings
+        [[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithFormat:@"popToRoot-%@", @(item.tag)] object:@(item.tag) userInfo:nil];
+    }
 }
 
 - (void)setSelectedIndex:(NSUInteger)selectedIndex {
@@ -270,7 +279,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [navigationController setViewControllers:@[_groupDetailViewController]];
         
         [_contactsViewController setSelectionForGroup:_groupDetailViewController._group];
-    } else {
+    } 
+    else if (_distributionListDetailViewController) {
+       UINavigationController *navigationController = self.viewControllers[kContactsTabBarIndex];
+       [navigationController setViewControllers:@[_distributionListDetailViewController]];
+       
+       [_contactsViewController setSelectionForDistributionList:_distributionListDetailViewController._distributionList];
+   }
+    else {
         BOOL gotDetailsView = [_contactsViewController showFirstEntryForCurrentMode];
         if (gotDetailsView == NO) {
             [self clearNavigationControllerAt:kContactsTabBarIndex];
@@ -337,7 +353,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     Group *group = [notification.userInfo objectForKey:kKeyGroup];
     
     _singleDetailViewController = nil;
-    
+    _distributionListDetailViewController = nil;
     if (SYSTEM_IS_IPAD) {
         _groupDetailViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStyleDefault delegate:nil];
         
@@ -358,6 +374,31 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
+- (void)selectedDistributionList:(NSNotification*)notification {
+    DistributionListEntity *distributionList = [notification.userInfo objectForKey:kKeyDistributionList];
+    
+    _singleDetailViewController = nil;
+    _groupDetailViewController = nil;
+    if (SYSTEM_IS_IPAD) {
+        _distributionListDetailViewController = [[DistributionListDetailsViewController alloc] initFor:distributionList displayMode:DistributionListDetailsDisplayModeDefault displayStyle:DetailsDisplayStyleDefault delegate:nil];
+        
+        if (self.selectedIndex == kContactsTabBarIndex) {
+            [self switchContact];
+        } else {
+            [self setSelectedIndex:kContactsTabBarIndex];
+        }
+    } else {
+        if (_contactsViewController == nil) {
+            _contactsNavigationController = self.viewControllers[kContactsTabBarIndex];
+            _contactsViewController = [[_contactsNavigationController viewControllers] objectAtIndex:0];
+        }
+        
+        [self setSelectedViewController:_contactsNavigationController];
+        [_contactsNavigationController popToViewController:_contactsViewController animated:NO];
+        [_contactsViewController showDetailsForDistributionList:distributionList];
+    }
+}
+
 - (void)selectedContact:(NSNotification*)notification {
     
     if (notification.userInfo[@"fromURL"] == nil && self.selectedIndex == kChatTabBarIndex) {
@@ -368,7 +409,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     ContactEntity *contact = [notification.userInfo objectForKey:kKeyContact];
     
     _groupDetailViewController = nil;
-    
+    _distributionListDetailViewController = nil;
     if (SYSTEM_IS_IPAD) {
         [self hideModal];
         
@@ -456,25 +497,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)selectedConversation:(NSNotification*)notification {
     [self hideModal];
-        
+    Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
+
+    if (conv == nil) {
+        DDLogError(@"Unable to show chat because conversation is nil");
+        return;
+    }
+    
     if (SYSTEM_IS_IPAD) {
-        if (self.selectedIndex == kChatTabBarIndex) {
-            Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
-            [self switchConversation: conv notification:notification];
-        } else {
+        if (self.selectedIndex != kChatTabBarIndex) {
             [self setSelectedIndex:kChatTabBarIndex];
-            Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
-            [self switchConversation: conv notification:notification];
         }
+        [self switchConversation: conv notification:notification];
     } else {
         // New ChatView iPhone
         if (_conversationsViewController == nil) {
             _conversationsNavigationController = self.viewControllers[kChatTabBarIndex];
-        }
-        Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
-        if (conv == nil) {
-            DDLogError(@"Unable to show chat because conversation is nil");
-            return;
         }
         ShowConversationInformation *info = [ShowConversationInformation createInfoFor:notification];
 
@@ -491,10 +529,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             [self setSelectedViewController:_conversationsNavigationController];
         }
         else {
-            // Check if open chat is same we want to open
+            // Check if open chat is same we want to open, TODO: (IOS-4617) improve opening logic
             if ([_conversationsNavigationController.topViewController isKindOfClass:[ChatViewController class]]) {
                 ChatViewController * topChatViewController = (ChatViewController *) _conversationsNavigationController.topViewController;
-                if (topChatViewController.conversation == chatViewController.conversation && notification == nil) {
+                if (topChatViewController.conversation == chatViewController.conversation && !info.forceReopenChat) {
                     return;
                 }
             }
@@ -522,6 +560,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         if (_groupDetailViewController._group.conversation == deletedConversation) {
             _groupDetailViewController = nil;
+            if (self.selectedIndex == kContactsTabBarIndex) {
+                [self switchContact];
+            }
+        }
+        
+        if (_distributionListDetailViewController._distributionList.conversation == deletedConversation) {
+            _distributionListDetailViewController = nil;
             if (self.selectedIndex == kContactsTabBarIndex) {
                 [self switchContact];
             }

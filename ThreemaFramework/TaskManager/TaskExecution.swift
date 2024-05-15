@@ -221,20 +221,21 @@ class TaskExecution: NSObject {
         // fetch of the feature mask to complete, if needed.
         // TODO: (IOS-4348) See if we can optimize that more
         firstly { () -> Promise<Void> in
-            self.frameworkInjector.entityManager.performAndWait {
-                guard let toContact = self.frameworkInjector.entityManager.entityFetcher.contact(
-                    for: message.toIdentity
-                ) else {
-                    return Promise(error: TaskExecutionError.sendMessageFailed(
-                        message: "Contact not found for identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
-                    ))
-                }
-                
-                // If the contact has a feature mask that is 0 it was probably never fetched. This can happen if the
-                // field changes after an update to 5.9 (IOS-4220). This is a problem, because eligibility for sending
-                // FS messages is determined base on the feature mask. Thus we try to fetch the feature mask if it is 0.
-                if toContact.featureMask == 0 {
-                    return Promise { seal in
+            Promise { seal in
+                self.frameworkInjector.entityManager.performBlock {
+                    guard let toContact = self.frameworkInjector.entityManager.entityFetcher.contact(
+                        for: message.toIdentity
+                    ) else {
+                        return seal.reject(TaskExecutionError.sendMessageFailed(
+                            message: "Contact not found for identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
+                        ))
+                    }
+                    
+                    // If the contact has a feature mask that is 0 it was probably never fetched. This can happen if the
+                    // field changes after an update to 5.9 (IOS-4220). This is a problem, because eligibility for
+                    // sending FS messages is determined base on the feature mask. Thus we try to fetch the feature mask
+                    // if it is 0.
+                    if toContact.featureMask == 0 {
                         DDLogNotice("Fetch feature mask of \(toContact.identity), because it is currently 0.")
                         self.frameworkInjector.contactStore.updateFeatureMasks(forIdentities: [toContact.identity]) {
                             seal.fulfill_()
@@ -246,9 +247,10 @@ class TaskExecution: NSObject {
                             seal.fulfill_()
                         }
                     }
+                    else {
+                        seal.fulfill_()
+                    }
                 }
-                
-                return Promise()
             }
         }
         .then { _ in
@@ -831,6 +833,15 @@ class TaskExecution: NSObject {
                 ) : frameworkInjector.entityManager.entityFetcher
                 .conversation(forIdentity: task.receiverIdentity)
         }
+        else if let task = task as? TaskDefinitionSendDeleteEditMessage,
+                let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
+            conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
+                .conversation(
+                    for: task.groupID!,
+                    creator: groupCreatorIdentity
+                ) : frameworkInjector.entityManager.entityFetcher
+                .conversation(forIdentity: task.receiverIdentity)
+        }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage {
             conversation = frameworkInjector.entityManager.entityFetcher
                 .ballot(for: task.ballotID)?.conversation
@@ -1092,7 +1103,55 @@ class TaskExecution: NSObject {
             groupMsg.toIdentity = toIdentity
             return groupMsg
         }
-        
+        else if let task = task as? TaskDefinitionSendDeleteEditMessage {
+            assert(task.deleteMessage != nil || task.editMessage != nil)
+
+            if let groupID = task.groupID,
+               let groupCreatorIdentity = task.groupCreatorIdentity,
+               frameworkInjector.groupManager
+               .getConversation(for: GroupIdentity(
+                   id: groupID,
+                   creator: ThreemaIdentity(groupCreatorIdentity)
+               )) !=
+               nil {
+
+                if let deleteMessage = task.deleteMessage {
+                    let msg = DeleteGroupMessage()
+                    msg.fromIdentity = frameworkInjector.myIdentityStore.identity
+                    msg.toIdentity = toIdentity
+                    msg.groupID = task.groupID
+                    msg.groupCreator = task.groupCreatorIdentity
+                    msg.decoded = deleteMessage
+                    return msg
+                }
+                else if let editMessage = task.editMessage {
+                    let msg = EditGroupMessage()
+                    msg.fromIdentity = frameworkInjector.myIdentityStore.identity
+                    msg.toIdentity = toIdentity
+                    msg.groupID = task.groupID
+                    msg.groupCreator = task.groupCreatorIdentity
+                    msg.decoded = editMessage
+                    return msg
+                }
+            }
+            else if let receiverIdentity = task.receiverIdentity {
+                if let deleteMessage = task.deleteMessage {
+                    let msg = DeleteMessage()
+                    msg.fromIdentity = frameworkInjector.myIdentityStore.identity
+                    msg.toIdentity = receiverIdentity
+                    msg.decoded = deleteMessage
+                    return msg
+                }
+                else if let editMessage = task.editMessage {
+                    let msg = EditMessage()
+                    msg.fromIdentity = frameworkInjector.myIdentityStore.identity
+                    msg.toIdentity = receiverIdentity
+                    msg.decoded = editMessage
+                    return msg
+                }
+            }
+        }
+
         return nil
     }
 

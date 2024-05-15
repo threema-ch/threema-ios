@@ -129,11 +129,11 @@ class HeaderView: UIView {
             )
             
             let arrowAttach = NSTextAttachment()
-            arrowAttach.image = BundleUtil.imageNamed("ArrowNext")?.withTint(.primary)
+            arrowAttach.image = UIImage(systemName: "chevron.right")?.withTintColor(.primary)
             
             let widthConst = optionsLabel.font.capHeight
             
-            arrowAttach.bounds = CGRect(x: 0, y: 0, width: widthConst, height: widthConst)
+            arrowAttach.bounds = CGRect(x: 0, y: 0, width: widthConst - 2, height: widthConst)
             let arrowAttachString = NSAttributedString(attachment: arrowAttach)
             attributedTitleString.append(arrowAttachString)
             

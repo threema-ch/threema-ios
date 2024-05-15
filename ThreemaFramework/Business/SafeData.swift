@@ -25,6 +25,8 @@ import Foundation
 
     public var key: [UInt8]?
     public var customServer: String?
+    public var serverUser: String?
+    public var serverPassword: String?
     public var server: String?
     public var maxBackupBytes: Int?
     public var retentionDays: Int?
@@ -39,6 +41,8 @@ import Foundation
     public init(
         key: [UInt8]?,
         customServer: String?,
+        serverUser: String?,
+        serverPassword: String?,
         server: String?,
         maxBackupBytes: Int?,
         retentionDays: Int?,
@@ -50,9 +54,10 @@ import Foundation
         lastAlertBackupFailed: Date?,
         isTriggered: Int?
     ) {
-        
         self.key = key
         self.customServer = customServer
+        self.serverUser = serverUser
+        self.serverPassword = serverPassword
         self.server = server
         self.maxBackupBytes = maxBackupBytes
         self.retentionDays = retentionDays
@@ -82,6 +87,8 @@ import Foundation
         self.init(
             key: key,
             customServer: customServer,
+            serverUser: nil, // Stored in keychain
+            serverPassword: nil, // Stored in keychain
             server: server,
             maxBackupBytes: maxBackupBytes,
             retentionDays: retentionDays,
@@ -96,7 +103,6 @@ import Foundation
     }
     
     public func encode(with aCoder: NSCoder) {
-        aCoder.encode(key, forKey: "key")
         aCoder.encode(customServer, forKey: "customServer")
         aCoder.encode(server, forKey: "server")
         aCoder.encode(maxBackupBytes, forKey: "maxBackupBytes")

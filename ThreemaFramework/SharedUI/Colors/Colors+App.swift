@@ -24,12 +24,10 @@ extension Colors {
     
     @objc public class var primaryWizard: UIColor {
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return darkColor(for: Asset.TargetColors.Threema.primary)
-        case .work:
+        case .work, .blue:
             return darkColor(for: Asset.TargetColors.ThreemaWork.primary)
-        case .red, .workRed:
-            return darkColor(for: Asset.TargetColors.ThreemaRed.primary)
         case .onPrem:
             return darkColor(for: Asset.TargetColors.OnPrem.primary)
         }
@@ -37,12 +35,10 @@ extension Colors {
     
     @objc public class var secondary: UIColor {
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return color(for: Asset.TargetColors.Threema.secondary)
-        case .work:
+        case .work, .blue:
             return color(for: Asset.TargetColors.ThreemaWork.secondary)
-        case .red, .workRed:
-            return color(for: Asset.TargetColors.ThreemaRed.secondary)
         case .onPrem:
             return color(for: Asset.TargetColors.OnPrem.secondary)
         }
@@ -50,12 +46,10 @@ extension Colors {
     
     @objc public class var chatBubbleSent: UIColor {
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return color(for: Asset.TargetColors.Threema.chatBubbleSent)
-        case .work:
+        case .work, .blue:
             return color(for: Asset.TargetColors.ThreemaWork.chatBubbleSent)
-        case .red, .workRed:
-            return color(for: Asset.TargetColors.ThreemaRed.chatBubbleSent)
         case .onPrem:
             return color(for: Asset.TargetColors.OnPrem.chatBubbleSent)
         }
@@ -63,12 +57,10 @@ extension Colors {
     
     @objc public class var chatBubbleSentSelected: UIColor {
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return color(for: Asset.TargetColors.Threema.chatBubbleSentSelected)
-        case .work:
+        case .work, .blue:
             return color(for: Asset.TargetColors.ThreemaWork.chatBubbleSentSelected)
-        case .red, .workRed:
-            return color(for: Asset.TargetColors.ThreemaRed.chatBubbleSentSelected)
         case .onPrem:
             return color(for: Asset.TargetColors.OnPrem.chatBubbleSentSelected)
         }
@@ -76,12 +68,10 @@ extension Colors {
     
     @objc public class var chatCallButtonBubble: UIColor {
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return color(for: Asset.TargetColors.Threema.primary)
-        case .work:
+        case .work, .blue:
             return color(for: Asset.TargetColors.ThreemaWork.primary)
-        case .red, .workRed:
-            return color(for: Asset.TargetColors.ThreemaRed.primary)
         case .onPrem:
             return color(for: Asset.TargetColors.OnPrem.primary)
         }
@@ -89,12 +79,10 @@ extension Colors {
     
     @objc public class var navigationBarCall: UIColor {
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return color(for: Asset.TargetColors.Threema.navigationBarCall)
-        case .work:
+        case .work, .blue:
             return color(for: Asset.TargetColors.ThreemaWork.navigationBarCall)
-        case .red, .workRed:
-            return color(for: Asset.TargetColors.ThreemaRed.navigationBarCall)
         case .onPrem:
             return color(for: Asset.TargetColors.OnPrem.navigationBarCall)
         }
@@ -102,33 +90,55 @@ extension Colors {
     
     @objc public class var navigationBarWeb: UIColor {
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return color(for: Asset.TargetColors.Threema.navigationBarWeb)
-        case .work:
+        case .work, .blue:
             return color(for: Asset.TargetColors.ThreemaWork.navigationBarWeb)
-        case .red, .workRed:
-            return color(for: Asset.TargetColors.ThreemaRed.navigationBarWeb)
         case .onPrem:
             return color(for: Asset.TargetColors.OnPrem.navigationBarWeb)
         }
     }
     
-    @objc public class var threemaLogo: UIImage? {
-        var flavor = ""
+    @objc public class var threemaLogo: UIImage! {
         switch ThreemaApp.current {
-        case .threema, .red, .workRed:
-            flavor = ""
+        case .threema:
+            return UIImage(resource: .threema)
         case .work:
-            flavor = "Work"
+            return UIImage(resource: .threemaWork)
         case .onPrem:
-            flavor = "OnPrem"
+            return UIImage(resource: .threemaOnPrem)
+        case .green:
+            return UIImage(resource: .threemaGreen)
+        case .blue:
+            return UIImage(resource: .threemaBlue)
         }
+    }
+    
+    @objc public class var darkConsumerLogo: UIImage! {
+        UIImage(resource: .threemaBlackLogo)
+    }
         
-        switch Colors.theme {
-        case .light, .undefined:
-            return BundleUtil.imageNamed("Threema\(flavor)Black")
-        case .dark:
-            return BundleUtil.imageNamed("Threema\(flavor)White")
+    @objc public class var threemaLogoForPasscode: UIImage! {
+        switch ThreemaApp.current {
+        case .threema:
+            return UIImage(resource: .passcodeLogo)
+        case .work:
+            return UIImage(resource: .passcodeLogoWork)
+        case .onPrem:
+            return UIImage(resource: .passcodeLogoOnprem)
+        case .green:
+            return UIImage(resource: .passcodeLogoGreen)
+        case .blue:
+            return UIImage(resource: .passcodeLogoBlue)
+        }
+    }
+    
+    @objc public class var consumerLogoRoundCorners: UIImage! {
+        switch ThreemaApp.current {
+        case .blue:
+            return UIImage(resource: .passcodeLogoGreen)
+        case .threema, .work, .onPrem, .green:
+            return UIImage(resource: .passcodeLogo)
         }
     }
     
@@ -138,9 +148,9 @@ extension Colors {
             return Colors.blue
         case .work:
             return Colors.green
-        case .red:
+        case .green:
             return Colors.blue
-        case .workRed:
+        case .blue:
             return Colors.green
         case .onPrem:
             return Colors.green
@@ -151,12 +161,10 @@ extension Colors {
         switch theme {
         case .light, .undefined:
             switch ThreemaApp.current {
-            case .threema:
+            case .threema, .green:
                 return Asset.TargetColors.Threema.circleButton.color
-            case .work:
+            case .work, .blue:
                 return Asset.TargetColors.ThreemaWork.circleButton.color
-            case .red, .workRed:
-                return Asset.TargetColors.ThreemaRed.circleButton.color
             case .onPrem:
                 return Asset.TargetColors.OnPrem.circleButton.color
             }

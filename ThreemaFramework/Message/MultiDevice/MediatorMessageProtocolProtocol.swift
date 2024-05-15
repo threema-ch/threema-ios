@@ -76,7 +76,7 @@ protocol MediatorMessageProtocolProtocol {
     ) -> D2d_Envelope
 
     // swiftformat:disable:next all
-    func getEnvelopeForIncomingMessageUpdate(messageIDs: [Data], messageReadDates: [Date], conversationID: D2d_ConversationId)
+    func getEnvelopeForIncomingMessageUpdate(messageIDs: [Data], messageReadDates: [Date?], conversationID: D2d_ConversationId)
         -> D2d_Envelope
 
     func getEnvelopeForOutgoingMessage(

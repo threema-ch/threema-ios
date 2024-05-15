@@ -156,11 +156,9 @@
         _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y - 20.0 - iPadSpace, _finishButton.frame.size.width, _finishButton.frame.size.height);
     }
     
-    UIImage *contactImage = [BundleUtil imageNamed:@"Contact"];
-    _contactImageView.image = [contactImage imageWithTint:Colors.textSetup];
-    
-    _phoneImageView.image = [UIImage imageNamed:@"Phone" inColor:Colors.textSetup];
-    _mailImageView.image = [UIImage imageNamed:@"Mail" inColor:Colors.textSetup];
+    _contactImageView.image = [[UIImage systemImageNamed:@"person.fill"] imageWithTintColor:Colors.textSetup];
+    _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.textSetup];
+    _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:Colors.textSetup];
     
     if (![LicenseStore requiresLicenseKey]) {
         _emailView.hidden = YES;
@@ -304,11 +302,10 @@
     
     if ([mdmSetup isSafeBackupServerPreset]) {
         customServer = [mdmSetup safeServerUrl];
-        server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
-        
+
         // Set data to safeConfigManager in case of empty or to short password
         [safeConfigManager setCustomServer:customServer];
-        [safeConfigManager setServer:server];
+        [safeConfigManager setServer:customServer];
     }
         
     if (self.identityStore.tempSafePassword == nil || self.identityStore.tempSafePassword.length < 8) {
@@ -322,7 +319,7 @@
     });
     
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [safeManager activateWithIdentity:self.identityStore.identity password:self.identityStore.tempSafePassword customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
+        [safeManager activateWithIdentity:self.identityStore.identity safePassword:self.identityStore.tempSafePassword customServer:customServer serverUser:[mdmSetup safeServerUsername] serverPassword:[mdmSetup safeServerPassword] server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
             if (error != nil) {
                 _hasErrors = YES;
                 onCompletion(NO);

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -279,6 +280,24 @@ class ContactTests: XCTestCase {
             
             // reset to default in case of further tests depending on the default
             UserSettings.shared().setSortOrderFirstName(true, displayOrderFirstName: true)
+        }
+    }
+
+    func testContactFeatureMask() async {
+        dbPreparer.save {
+            self.dbPreparer.createContact(identity: "ECHOECHO")
+        }
+
+        let em = EntityManager(databaseContext: dbMainCnx)
+
+        for flag in ThreemaProtocols.Common_CspFeatureMaskFlag.allCases {
+            let contactEntity = await em.performSave {
+                let contactEntity = em.entityFetcher.contact(for: "ECHOECHO")
+                contactEntity?.featureMask = NSNumber(integerLiteral: flag.rawValue)
+                return contactEntity
+            }
+
+            XCTAssertEqual(contactEntity?.featureMask.intValue, flag.rawValue)
         }
     }
 }

@@ -37,8 +37,11 @@ public protocol PendingUserNotificationManagerProtocol {
         for abstractMessage: AbstractMessage,
         stage: UserNotificationStage
     ) -> PendingUserNotification?
-    func pendingUserNotification(for baseMessage: BaseMessage, fromIdentity: String, stage: UserNotificationStage)
-        -> PendingUserNotification?
+    func pendingUserNotification(
+        for abstractMessage: AbstractMessage,
+        baseMessage: BaseMessage,
+        stage: UserNotificationStage
+    ) -> PendingUserNotification?
     func pendingUserNotification(for boxedMessage: BoxedMessage, stage: UserNotificationStage)
         -> PendingUserNotification?
     func startTimedUserNotification(pendingUserNotification: PendingUserNotification) -> Guarantee<Bool>
@@ -135,20 +138,28 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         return pendingUserNotification
     }
 
-    /// Create or update pending user notification for base message.
+    /// Create or update pending user notification for abstract message and set given base message.
     /// - Parameters:
     ///     - for: Abstract message
+    ///     - baseMessage: Created or edited message
     ///     - stage: Stage for the notification, usually is 'base' or 'final'
     /// - Returns: Pending user notification or nil
     public func pendingUserNotification(
-        for baseMessage: BaseMessage,
-        fromIdentity: String,
+        for abstractMessage: AbstractMessage,
+        baseMessage: BaseMessage,
         stage: UserNotificationStage
     ) -> PendingUserNotification? {
         var pendingUserNotification: PendingUserNotification?
-        if let key = PendingUserNotificationKey.key(identity: fromIdentity, messageID: baseMessage.id) {
+        if let key = PendingUserNotificationKey.key(
+            identity: abstractMessage.fromIdentity,
+            messageID: abstractMessage.messageID
+        ) {
             PendingUserNotificationManager.pendingQueue.sync {
                 pendingUserNotification = getPendingUserNotification(key: key)
+                pendingUserNotification?.contentKey = PendingUserNotificationKey.key(
+                    identity: abstractMessage.fromIdentity,
+                    messageID: baseMessage.id
+                ) ?? key
                 pendingUserNotification?.baseMessage = baseMessage
                 pendingUserNotification?.stage = stage
                 PendingUserNotificationManager.savePendingUserNotifications()
@@ -183,37 +194,47 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 seal(false)
                 return
             }
-            
-            guard pendingUserNotification.abstractMessage?.canShowUserNotification() ?? true else {
-                DDLogNotice("Removing notification from \(#function)")
-                userNotificationCenterManager.remove(
-                    key: pendingUserNotification.key,
-                    exceptStage: nil,
-                    justPending: false
-                )
-                addAsProcessed(pendingUserNotification: pendingUserNotification)
-                seal(true)
-                return
-            }
 
-            guard !isProcessed(pendingUserNotification: pendingUserNotification) else {
-                userNotificationCenterManager.remove(
-                    key: pendingUserNotification.key,
-                    exceptStage: nil,
-                    justPending: true
-                )
-                seal(true)
-                return
+            if pendingUserNotification.abstractMessage is EditMessage,
+               pendingUserNotification.baseMessage != nil,
+               userNotificationCenterManager.isDelivered(contentKey: pendingUserNotification.contentKey) {
+
+                // In general for edit message will not displayed a notification, but if a notification has already been
+                // delivered, the content of the notification is changed. Therefore `canShowUserNotification` is not
+                // validated in this case.
+            }
+            else {
+                guard pendingUserNotification.abstractMessage?.canShowUserNotification() ?? true else {
+                    DDLogNotice("Removing notification from \(#function)")
+                    userNotificationCenterManager.remove(
+                        contentKey: pendingUserNotification.contentKey,
+                        exceptStage: nil,
+                        justPending: false
+                    )
+                    addAsProcessed(pendingUserNotification: pendingUserNotification)
+                    seal(true)
+                    return
+                }
+
+                guard !isProcessed(pendingUserNotification: pendingUserNotification) else {
+                    userNotificationCenterManager.remove(
+                        contentKey: pendingUserNotification.contentKey,
+                        exceptStage: nil,
+                        justPending: true
+                    )
+                    seal(true)
+                    return
+                }
             }
 
             // Get notification content
             guard let userNotificationContent = self.userNotificationManager
                 .userNotificationContent(pendingUserNotification) else {
                 DDLogWarn(
-                    "[Push] Invalid Notification content, removed from pending, key: \(pendingUserNotification.key)"
+                    "[Push] Invalid Notification content, removed from pending, key: \(pendingUserNotification.contentKey)"
                 )
                 userNotificationCenterManager.remove(
-                    key: pendingUserNotification.key,
+                    contentKey: pendingUserNotification.contentKey,
                     exceptStage: nil,
                     justPending: true
                 )
@@ -244,9 +265,9 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
             }
 
             guard !suppress else {
-                DDLogWarn("[Push] Suppressed push, removing from pending, key: \(pendingUserNotification.key)")
+                DDLogWarn("[Push] Suppressed push, removing from pending, key: \(pendingUserNotification.contentKey)")
                 userNotificationCenterManager.remove(
-                    key: pendingUserNotification.key,
+                    contentKey: pendingUserNotification.contentKey,
                     exceptStage: nil,
                     justPending: true
                 )
@@ -333,7 +354,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     ) {
         
         userNotificationCenterManager.add(
-            key: pendingUserNotification.key,
+            contentKey: pendingUserNotification.contentKey,
             stage: pendingUserNotification.stage,
             notification: notification
         )
@@ -385,7 +406,11 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     /// - Parameter pendingUserNotification: Remove all timed notifications for this pending user notification
     public func removeAllTimedUserNotifications(pendingUserNotification: PendingUserNotification) {
         DDLogNotice("Removing all notifications from \(#function)")
-        userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil, justPending: true)
+        userNotificationCenterManager.remove(
+            contentKey: pendingUserNotification.contentKey,
+            exceptStage: nil,
+            justPending: true
+        )
     }
     
     /// Add pending user notification as processed.
@@ -442,7 +467,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         
         for pendingUserNotification in pendingUserNotifications {
             if !userNotificationCenterManager.isPending(
-                key: pendingUserNotification.key,
+                contentKey: pendingUserNotification.contentKey,
                 stage: pendingUserNotification.stage
             ) {
                 if pendingUserNotificationsAreNotPending == nil {
@@ -620,10 +645,6 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
     
     private func getPendingUserNotification(key: String) -> PendingUserNotification? {
-        guard !isProcessed(key: key) else {
-            return nil
-        }
-        
         var pendingUserNotification: PendingUserNotification?
         
         if PendingUserNotificationManager.pendingUserNotifications == nil {

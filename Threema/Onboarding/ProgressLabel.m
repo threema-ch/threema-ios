@@ -52,7 +52,8 @@
 }
 
 - (void)setup {
-    _activityIndicatior = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    _activityIndicatior = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+    _activityIndicatior.color = Colors.textSetup;
     _activityIndicatior.hidden = YES;
     
     _activityIndicatior.frame = [RectUtil rect:_activityIndicatior.frame centerVerticalIn:self.bounds round:YES];
@@ -88,21 +89,29 @@
 }
 
 - (void)showErrorMessage:(NSString *)errorMessage {
-    [self setStatusImage:@"ExclamationMark"];
+    [self setStatusImage:@"exclamationmark.circle.fill"];
     
     _label.text = errorMessage;
 }
 
 - (void)showSuccessMessage:(NSString *)successMessage {
-    [self setStatusImage:@"Checkbox"];
+    [self setStatusImage:@"checkmark.circle.fill"];
     
     _label.text = successMessage;
 }
 
 - (void)setStatusImage:(NSString *)imageName {
-    UIImage *image = [BundleUtil imageNamed:imageName];
-    if ([imageName isEqualToString:@"Checkbox"]) {
-        image = [image imageWithTint:[UIColor whiteColor]];
+    UIImage *image = [UIImage systemImageNamed:imageName];
+    if (image == nil) {
+        image = [BundleUtil imageNamed:imageName];
+    }
+    if ([imageName isEqualToString:@"checkmark.circle.fill"]) {
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.green]];
+        image = [UIImage systemImageNamed:imageName withConfiguration:config];
+    }
+    else if ([imageName isEqualToString:@"exclamationmark.circle.fill"]) {
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.red]];
+        image = [UIImage systemImageNamed:imageName withConfiguration:config];
     }
     if (_statusView == nil) {
         _statusView = [[UIImageView alloc] initWithImage:image];
@@ -111,7 +120,7 @@
     } else {
         _statusView.image = image;
     }
-    
+            
     if (CGRectIntersectsRect(_label.frame, _statusView.frame)) {
         CGFloat maxX = CGRectGetMaxX(_statusView.frame) + ACTIVITY_INDICATOR_PADDING;
         CGRect labelFrame = [RectUtil offsetAndResizeRect:self.bounds byX:maxX byY:0.0];

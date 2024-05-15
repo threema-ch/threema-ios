@@ -28,4 +28,8 @@ extension ProfileView: MainTabViewRepresentable {
     var symbol: UIImage? {
         UIImage(systemName: "person.circle.fill")
     }
+    
+    var tag: Int {
+        2
+    }
 }

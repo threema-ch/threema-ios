@@ -121,10 +121,10 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                 // If it is a read receipt of a reflected incoming message, then remove all notifications of this
                 // message
                 let identity: String? = message.sender?.identity ?? message.conversation.contact?.identity
-                if let key = PendingUserNotificationKey.key(identity: identity, messageID: message.id) {
+                if let contentKey = PendingUserNotificationKey.key(identity: identity, messageID: message.id) {
                     DDLogNotice("Removing notifications from \(#function)")
                     self.frameworkInjector.userNotificationCenterManager.remove(
-                        key: key,
+                        contentKey: contentKey,
                         exceptStage: nil,
                         justPending: false
                     )

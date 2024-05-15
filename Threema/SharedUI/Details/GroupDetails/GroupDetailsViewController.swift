@@ -51,7 +51,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
                 strongSelf.presentFullscreen(image: profilePicture)
             },
             quickActions: actions,
-            mediaAndPollsQuickActions: mediaAndPollActions()
+            mediaAndPollsQuickActions: mediaStarredAndPollActions()
         )
     }()
     
@@ -411,8 +411,8 @@ extension GroupDetailsViewController: LegacyUIActionProvider {
         dataSource.quickActions(in: viewController)
     }
     
-    func mediaAndPollActions() -> [QuickAction] {
-        dataSource.mediaAndPollsQuickActions
+    func mediaStarredAndPollActions() -> [QuickAction] {
+        dataSource.mediaStarredAndPollsQuickActions
     }
     
     @objc func uiActions(in viewController: UIViewController) -> NSArray {
@@ -428,10 +428,10 @@ extension GroupDetailsViewController {
     ///
     /// This is a workaround so a quick action can talk to the parent. If we end up with more of these we should
     /// consider if there is a better way to communication actions from the details to the chat.
-    func startChatSearch() {
+    func startChatSearch(forStarred: Bool = false) {
         // To not have a delay from when the details disappear and the search field appears we show the search
         // field before we dismiss ourself and then active the search after the dismissal.
-        delegate?.showChatSearch()
+        delegate?.showChatSearch(forStarred: forStarred)
         dismiss(animated: true)
     }
 }
@@ -530,7 +530,7 @@ extension GroupDetailsViewController: UITableViewDelegate {
             }
             
             action.run(cell)
-        
+            
         case let .contact(contact, isSelfMember: _),
              let .contactCreator(contact, left: _, inMembers: _):
             

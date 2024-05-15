@@ -38,4 +38,5 @@ import Foundation
     var blobWebFilename: String { get }
     var blobExternalFilename: String? { get }
     var blobThumbnailExternalFilename: String? { get }
+    var deletedAt: Date? { get }
 }

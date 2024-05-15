@@ -22,7 +22,7 @@
 
 import Foundation
 
-enum OnPremConfigError: Error {
+enum OnPremConfigError: Int, Error {
     case badInputOppfData
     case unsupportedVersion
     case badSignature
@@ -42,6 +42,17 @@ enum OnPremConfigError: Error {
 
 extension OnPremConfigError: LocalizedError {
     public var errorDescription: String? {
-        String(reflecting: self)
+        switch self {
+        case .badInputOppfData, .missingRendezvousConfig, .missingMediatorConfig, .missingSafeConfig,
+             .missingAvatarConfig, .missingWorkConfig, .invalidConfigUrl, .configurationMissing, .signatureKeyMismatch,
+             .badSignature:
+            String.localizedStringWithFormat("enter_license_onprem_error_config".localized, rawValue)
+       
+        case .unsupportedVersion:
+            String.localizedStringWithFormat("enter_license_onprem_error_version".localized, rawValue)
+
+        case .unauthorized, .licenseExpired:
+            String.localizedStringWithFormat("enter_license_onprem_error_credentials".localized, rawValue)
+        }
     }
 }

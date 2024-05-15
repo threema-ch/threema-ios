@@ -44,7 +44,8 @@ class WebMessageObject: NSObject {
     var location: [AnyHashable: Any]?
     var voip: [AnyHashable: Any]?
     var reactions: [AnyHashable: [String]]?
-    
+    var lastEditedAt: UInt64?
+
     init(message: BaseMessage, conversation: Conversation, forConversationsRequest: Bool, session: WCSession) {
         self.baseMessage = message
         self.type = conversation.isGroup() ? "group" : "contact"
@@ -98,7 +99,11 @@ class WebMessageObject: NSObject {
         if conversation.isGroup() {
             self.reactions = message.groupReactionsDictForWeb()
         }
-        
+
+        if let lastEditedAt = message.lastEditedAt {
+            self.lastEditedAt = lastEditedAt.millisecondsSince1970 / 1000
+        }
+
         super.init()
         
         switch message {
@@ -217,7 +222,11 @@ class WebMessageObject: NSObject {
         if let reactions {
             objectDict.updateValue(reactions, forKey: "reactions")
         }
-        
+
+        if let lastEditedAt {
+            objectDict.updateValue(lastEditedAt, forKey: "lastEditedAt")
+        }
+
         return objectDict
     }
     
@@ -239,7 +248,7 @@ class WebMessageObject: NSObject {
             if let quotedMessage = entityManager.entityFetcher.message(
                 with: quotedMessageID,
                 conversation: textMessage.conversation
-            ) {
+            ) as? PreviewableMessage {
                 if let sender = quotedMessage.sender, !quotedMessage.isOwnMessage {
                     quotedIdentity = sender.identity
                 }
@@ -247,7 +256,7 @@ class WebMessageObject: NSObject {
                     quotedIdentity = contact.identity
                 }
                 
-                let quotedText = quotedMessage.previewText() ?? ""
+                let quotedText = quotedMessage.previewText ?? ""
 
                 quote = [
                     "identity": quotedIdentity,
@@ -603,7 +612,7 @@ struct WebThumbnail {
         else {
             self.height = Int(44)
             self.width = Int(44)
-            self.preview = UIImage(named: "Thumbnail")!.pngData()!
+            self.preview = UIImage(systemName: "questionmark.app.fill")!.pngData()!
             self.image = preview
         }
     }
@@ -621,7 +630,7 @@ struct WebThumbnail {
             self.height = Int(44)
             self.width = Int(44)
             
-            self.preview = UIImage(named: "Thumbnail")!.pngData()!
+            self.preview = UIImage(systemName: "questionmark.app.fill")!.pngData()!
         }
         
         if !onlyThumbnail, let thumbnail = videoMessageEntity.thumbnail, let thumbnailData = thumbnail.data {
@@ -640,7 +649,7 @@ struct WebThumbnail {
         else {
             self.height = Int(44)
             self.width = Int(44)
-            self.preview = UIImage(named: "Thumbnail")!.pngData()!
+            self.preview = UIImage(systemName: "questionmark.app.fill")!.pngData()!
         }
         
         if !onlyThumbnail, let thumbnail = fileMessageEntity.thumbnail, let thumbnailData = thumbnail.data {

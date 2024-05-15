@@ -47,6 +47,7 @@ class EditNameTableViewCell: ThemedCodeTableViewCell {
         case firstName
         case lastName
         case groupName
+        case distributionListName
     }
     
     // MARK: - Public properties
@@ -65,6 +66,10 @@ class EditNameTableViewCell: ThemedCodeTableViewCell {
                 maxNumberOfUTF8Bytes = kMaxFirstOrLastNameLength
             case .groupName:
                 nameTextField.placeholder = BundleUtil.localizedString(forKey: "group_name_placeholder")
+                nameTextField.textContentType = .none
+                maxNumberOfUTF8Bytes = kMaxGroupNameLength
+            case .distributionListName:
+                nameTextField.placeholder = BundleUtil.localizedString(forKey: "distribution_list_name_placeholder")
                 nameTextField.textContentType = .none
                 maxNumberOfUTF8Bytes = kMaxGroupNameLength
             }

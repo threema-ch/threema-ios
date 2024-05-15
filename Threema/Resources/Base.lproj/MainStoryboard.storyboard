@@ -402,7 +402,7 @@
         <scene sceneID="JMs-VF-NWu">
             <objects>
                 <navigationController storyboardIdentifier="chatNavigationController" id="4Fs-j8-Z1S" customClass="ChatNavigationController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Messages" image="TabBar-Chats" id="nZg-gf-uED">
+                    <tabBarItem key="tabBarItem" tag="1" title="Messages" image="TabBar-Chats" id="nZg-gf-uED">
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="string" keyPath="accessibilityIdentifier" value="TabBarChats"/>
                         </userDefinedRuntimeAttributes>
@@ -480,14 +480,14 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="left" text="Scan an ID" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" id="YPC-ic-pTa">
-                                                    <rect key="frame" x="57" y="0.0" width="318.5" height="43.5"/>
+                                                    <rect key="frame" x="59" y="0.0" width="316.5" height="43.5"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                     <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" image="QRScan" highlightedImage="QRScan" id="BKc-YV-enp">
-                                                    <rect key="frame" x="20" y="10.5" width="22" height="22"/>
+                                                <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" image="qrcode.viewfinder" catalog="system" highlightedImage="qrcode.viewfinder" id="BKc-YV-enp">
+                                                    <rect key="frame" x="21.75" y="12" width="20.5" height="18.5"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                 </imageView>
                                             </subviews>
@@ -694,7 +694,7 @@
                         <outlet property="segmentedControl" destination="77n-al-llJ" id="SlC-Pa-59N"/>
                     </connections>
                 </tableViewController>
-                <view contentMode="scaleToFill" ambiguous="YES" id="ITQ-HT-0We">
+                <view contentMode="scaleToFill" id="ITQ-HT-0We">
                     <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                     <subviews>
@@ -840,7 +840,7 @@
                                 <rect key="frame" x="0.0" y="813" width="414" height="49"/>
                                 <viewLayoutGuide key="safeArea" id="WzG-2F-Wt4"/>
                                 <items>
-                                    <barButtonItem image="CurrentLocation" id="5k3-jD-RBI">
+                                    <barButtonItem image="location.fill" catalog="system" id="5k3-jD-RBI">
                                         <connections>
                                             <action selector="gotoUserLocationButtonTapped:" destination="FVk-BM-jrL" id="wLI-dZ-HUZ"/>
                                         </connections>
@@ -861,7 +861,7 @@
                                         </segmentedControl>
                                     </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="Oxk-XT-dDa"/>
-                                    <barButtonItem image="Location" id="C0u-5z-beZ">
+                                    <barButtonItem image="mappin.and.ellipse" catalog="system" id="C0u-5z-beZ">
                                         <connections>
                                             <action selector="gotoLocationButtonTapped:" destination="FVk-BM-jrL" id="UbN-h8-KQu"/>
                                         </connections>
@@ -1321,14 +1321,14 @@
     </scenes>
     <resources>
         <image name="Contact" width="15" height="15"/>
-        <image name="CurrentLocation" width="22" height="22"/>
         <image name="Group" width="31" height="15"/>
-        <image name="Location" width="23" height="25"/>
-        <image name="QRScan" width="22" height="22"/>
         <image name="Share" width="25" height="25"/>
         <image name="TabBar-Chats" width="37" height="23"/>
         <image name="TabBar-Contacts" width="37" height="23"/>
         <image name="UnknownPerson" width="200" height="200"/>
+        <image name="location.fill" catalog="system" width="128" height="119"/>
+        <image name="mappin.and.ellipse" catalog="system" width="110" height="128"/>
+        <image name="qrcode.viewfinder" catalog="system" width="128" height="115"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

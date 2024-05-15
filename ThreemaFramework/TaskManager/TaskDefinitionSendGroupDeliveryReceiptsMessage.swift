@@ -53,7 +53,7 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
     let receiptType: ReceiptType
     private let receiptTypeValue: UInt8
     let receiptMessageIDs: [Data]
-    let receiptReadDates: [Date]
+    let receiptReadDates: [Date?]
 
     private enum CodingKeys: String, CodingKey {
         case fromMember
@@ -67,13 +67,31 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
         case unknownReceiptType
     }
     
-    @objc init(
+    @objc convenience init(
         group: Group,
         from: String,
         to: [String],
         receiptType: ReceiptType,
         receiptMessageIDs: [Data],
-        receiptReadDates: [Date]
+        nonOptionalReceiptReadDates: [Date]
+    ) {
+        self.init(
+            group: group,
+            from: from,
+            to: to,
+            receiptType: receiptType,
+            receiptMessageIDs: receiptMessageIDs,
+            receiptReadDates: nonOptionalReceiptReadDates
+        )
+    }
+    
+    init(
+        group: Group,
+        from: String,
+        to: [String],
+        receiptType: ReceiptType,
+        receiptMessageIDs: [Data],
+        receiptReadDates: [Date?]
     ) {
         assert(receiptType == .read || receiptType == .ack || receiptType == .decline)
 

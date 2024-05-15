@@ -36,6 +36,7 @@ import UIKit
     @IBInspectable var showIcon: UIImage? {
         didSet {
             icon.image = showIcon?.withTint(Colors.textSetup)
+            icon.tintColor = Colors.textSetup
             icon.isHidden = false
             textBackground.frame = CGRect(x: 40, y: 0, width: frame.width - 40, height: frame.height)
             textField.frame = CGRect(x: 45, y: 5, width: 230, height: 30)
@@ -173,6 +174,7 @@ import UIKit
         let icon = UIImageView()
         icon.isHidden = true
         icon.frame = CGRect(x: 11, y: 11, width: 18, height: 18)
+        icon.contentMode = .scaleAspectFit
         return icon
     }()
     

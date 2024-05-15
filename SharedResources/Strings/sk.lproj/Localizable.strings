@@ -218,15 +218,13 @@
 
 "share_contact_id_button" = "Zdieľať ID kontaktu";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Upraviť kontakt";
 "edit_group_title" = "Upraviť skupinu";
-
 "first_name_placeholder" = "Meno";
 "last_name_placeholder" = "Priezvisko";
 "group_name_placeholder" = "Názov skupiny";
-
 "no_nickname_title" = "Prezývka nenastavená";
 "no_nickname_message" = "Naozaj chcete pokračovať bez nastavenia prezývky? Pre ostatných bude ťažké rozpoznať vaše správy, pokiaľ aplikáciu neotvoria.";
 
@@ -286,7 +284,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "messages_delete_selected_confirm" = "Odstrániť vybraté správy z tohto zariadenia?";
 "conversation_delete_confirm" = "Naozaj chcete vymazať túto konverzáciu?";
 "delete_n" = "Vymazať (%d)";
-
 "message_cannot_play_movie" = "Video sa nedá prehrať.";
 
 "identity_not_found_title" = "Neznáme ID";
@@ -333,12 +330,7 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "play" = "Prehrať";
 "pause" = "Pauza";
 "stop" = "Zastaviť";
-"voice message" = "Hlasová správa";
 "quit" = "Dokončiť";
-"record_cancel_title" = "Zrušiť nahrávanie";
-"record_cancel_message" = "Naozaj chcete zrušiť a zahodiť nahrávku?";
-"record_cancel_button_discard" = "Zrušiť nahrávanie";
-"speed" = "Rýchlosť prehrávania";
 
 "send_file_title" = "Odoslať súbor";
 "send_file_message" = "Súbor: %@ \n pre\n%@";
@@ -469,7 +461,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "no_groups_message" = "Zatiaľ nemáte žiadne skupiny. Pridajte skupiny ručne pomocou tlačidla + .";
 "no_work_contacts" = "Používatelia %@";
 "no_work_contacts_message" = "Nenašli sa žiadne %@ kontakty overené správcom.";
-
 "no_contacts_syncoff" = "Zatiaľ nemáte žiadne kontakty. Zapnite synchronizáciu (Nastavenia > Súkromie), alebo pridajte kontakt ručne pomocou tlačidla + .";
 
 "my_profile_picture_title" = "Váš profilový obrázok";
@@ -676,7 +667,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "duration" = "dĺžka";
 "current_position" = "pozícia";
 "in_reply_to" = "v odpovedi na";
-"go_to_position" = "v";
 "draft" = "Koncept";
 "new_message_accessibility" = "Nová správa: ";
 "quote_interaction_hint" = "Preskočiť na citovanú správu";
@@ -778,7 +768,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "group_call_started_by_contact_system_message" = "%@ začal skupinový hovor";
 "group_call_started_by_local_system_message" = "Začali ste skupinový hovor";
 "group_call_ended_system_message" = "Skupinový hovor sa skončil";
-
 "group_call_notification_body_preview" = "Skupinový hovor spustený užívateľom %@";
 "group_call_notification_body" = "Skupinový hovor spustený";
 
@@ -819,7 +808,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "pinned_conversation" = "Pripnutá konverzácia";
 
 /* Begin Edit */
-
 "private_message_label" = "Súkromná správa";
 "private_chat_label" = "Súkromné";
 "private_chat_accessibility" = "Súkromná konverzácia";
@@ -834,7 +822,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "archived_title" = "Archivované";
 "conversations_global_search_placeholder" = "Vyhľadať";
 "one_to_one_chat" = "Jednotlivé konverzácie";
-
 "select_all" = "Vybrať všetko";
 "deselect_all" = "Odznačiť všetko";
 "no_archived_chats" = "Žiadne archivované konverzácie";
@@ -873,7 +860,6 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "private_delete_info_alert_message" = "Pri odstraňovaní súkromného rozhovoru sa nový rozhovor automaticky znova neoznačí ako súkromný.";
 
 /* End Edit */
-
 "pushSetting_header" = "Hlásenia";
 "doNotDisturb_title" = "Nerušiť";
 
@@ -1643,7 +1629,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 // ChatBar
 "chat_bar_quote_close_button" = "Uzavrieť citát";
-
 // ChatDetailView
 "detailView_title" = "Podrobnosti správ";
 "detailView_messageID" = "ID správy";
@@ -1661,7 +1646,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "message_display_status_delivered_incoming" = "Prijaté";
 "message_display_status_read" = "Prečítané";
 "message_display_status_failed" = "Zlyhalo";
-
 // In-app notifications
 "notification_copying_succeeded" = "Položka bola skopírovaná";
 "notification_copying_failed" = "Kopírovanie zlyhalo";
@@ -1742,7 +1726,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "accessibility_chatbar_quote_label" = "Vybraná citovaná správa: %@.";
 "accessibility_chatbar_close_quote_button_label" = "Koniec citovania.";
 "accessibility_chatbar_close_quote_button_hint" = "Ukončiť citovanie vybranej správy.";
-
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Vaše %@";
 "accessibility_senderDescription_otherMessage_group" = "%@ od %@";
@@ -1787,7 +1770,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "accessibility_poll_closed" = "Uzavreté";
 "accessibility_file_duration" = "Trvanie: %@.";
 "accessibility_voice_message_playing" = "Prehráva sa.";
-
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Odsúhlasené, %@";
 "accessibility_status_declined_plus_time" = "Odmietnuté, %@";
@@ -1894,3 +1876,4 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "application_shortcut_item_new_message" = "Nová správa";
 "application_shortcut_item_scan_qr_code" = "Skenovať kód QR";
 "application_shortcut_item_my_id" = "Môj profil";
+

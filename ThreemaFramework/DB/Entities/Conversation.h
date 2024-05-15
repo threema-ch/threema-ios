@@ -34,7 +34,7 @@ typedef NS_ENUM(NSInteger, ConversationVisibility) {
     ConversationVisibilityPinned = 2,
 };
 
-@class Ballot, BaseMessage, ContactEntity, ImageData, Tag;
+@class Ballot, BaseMessage, ContactEntity, ImageData, Tag, DistributionListEntity;
 
 NS_ASSUME_NONNULL_BEGIN
 @interface Conversation : TMAManagedObject
@@ -62,6 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, retain, nullable) BaseMessage *lastMessage;
 @property (nonatomic, retain) NSSet<ContactEntity *> *members;
 @property (nonatomic, retain, nullable) NSSet *tags;
+@property (nonatomic, retain, nullable) DistributionListEntity *distributionList;
 
 // Derived properties
 

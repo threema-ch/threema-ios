@@ -63,7 +63,6 @@ struct Joining: GroupCallState {
                 return Ending(groupCallActor: groupCallActor)
             }
             
-            // TODO: IOS-4090
             await groupCallActor.setExactCallStartDate(joinResponse.startedAt)
             
             DDLogNotice("[GroupCall] [JoinSteps] Start Connecting")

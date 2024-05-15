@@ -47,7 +47,7 @@ final class GroupCallBannerView: UIView {
         }
         
         var buttonConfig = UIButton.Configuration.bordered()
-        buttonConfig.title = BundleUtil.localizedString(forKey: "group_call_join_button_tittle")
+        buttonConfig.title = BundleUtil.localizedString(forKey: "group_call_join_button_title")
         buttonConfig.image = UIImage(named: "phone.fill")
         buttonConfig.cornerStyle = .capsule
 
@@ -164,7 +164,7 @@ final class GroupCallBannerView: UIView {
 
                 participantsLabel.text = localizedParticipantsText
 
-                let text = update.joinState == .runningLocal ? BundleUtil
+                let text = update.joinState == .joined ? BundleUtil
                     .localizedString(forKey: "group_call_open_button_title") : BundleUtil
                     .localizedString(forKey: "group_call_join_button_title")
                 joinButton.configuration?.title = text

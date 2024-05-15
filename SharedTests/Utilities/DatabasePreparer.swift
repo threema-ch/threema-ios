@@ -54,13 +54,48 @@ class DatabasePreparer {
         }
     }
 
-    @discardableResult func createBallotMessage(conversation: Conversation, ballotID: Data) -> Ballot {
-        let ballotMessage = createEntity(objectType: Ballot.self)
-        ballotMessage.conversation = conversation
-        ballotMessage.id = ballotID
-        return ballotMessage
+    @discardableResult func createBallot(
+        conversation: Conversation,
+        ballotID: Data = MockData.generateBallotID()
+    ) -> Ballot {
+        let ballot = createEntity(objectType: Ballot.self)
+        ballot.conversation = conversation
+        ballot.id = ballotID
+        return ballot
     }
     
+    @discardableResult func createBallotMessage(
+        conversation: Conversation,
+        ballot: Ballot,
+        ballotState: Int = Int(kBallotMessageStateOpenBallot),
+        date: Date = Date(),
+        delivered: Bool = true,
+        id: Data = MockData.generateMessageID(),
+        isOwn: Bool,
+        read: Bool = true,
+        readDate: Date? = nil,
+        sent: Bool = true,
+        userack: Bool = false,
+        sender: ContactEntity? = nil,
+        remoteSentDate: Date? = nil // can be set to nil for outgoing messages
+    ) -> BallotMessage {
+        let ballotMessage = createEntity(objectType: BallotMessage.self)
+        ballotMessage.conversation = conversation
+        ballotMessage.ballot = ballot
+        ballotMessage.ballotState = NSNumber(integerLiteral: ballotState)
+        ballotMessage.date = date
+        ballotMessage.delivered = NSNumber(booleanLiteral: delivered)
+        ballotMessage.id = id
+        ballotMessage.isOwn = NSNumber(booleanLiteral: isOwn)
+        ballotMessage.read = NSNumber(booleanLiteral: read)
+        ballotMessage.readDate = readDate
+        ballotMessage.sent = NSNumber(booleanLiteral: sent)
+        ballotMessage.userack = NSNumber(booleanLiteral: userack)
+        ballotMessage.sender = sender
+        ballotMessage.remoteSentDate = remoteSentDate
+        return ballotMessage
+    }
+
     @discardableResult func createContact(
         publicKey: Data = MockData.generatePublicKey(),
         identity: String,
@@ -156,25 +191,62 @@ class DatabasePreparer {
         return audioMessage
     }
     
+    @discardableResult func createImageMessageEntity(
+        conversation: Conversation,
+        image: ImageData,
+        thumbnail: ImageData,
+        date: Date = Date(),
+        delivered: Bool = true,
+        id: Data = MockData.generateMessageID(),
+        isOwn: Bool,
+        read: Bool = true,
+        readDate: Date? = nil,
+        sent: Bool = true,
+        userack: Bool = false,
+        sender: ContactEntity?,
+        remoteSentDate: Date? // can be set to nil for outgoing messages
+    ) -> ImageMessageEntity {
+        let imageMessageEntity = createEntity(objectType: ImageMessageEntity.self)
+        imageMessageEntity.conversation = conversation
+        imageMessageEntity.image = image
+        imageMessageEntity.thumbnail = thumbnail
+        imageMessageEntity.date = date
+        imageMessageEntity.delivered = NSNumber(booleanLiteral: delivered)
+        imageMessageEntity.id = id
+        imageMessageEntity.isOwn = NSNumber(booleanLiteral: isOwn)
+        imageMessageEntity.read = NSNumber(booleanLiteral: read)
+        imageMessageEntity.readDate = readDate
+        imageMessageEntity.sent = NSNumber(booleanLiteral: sent)
+        imageMessageEntity.userack = NSNumber(booleanLiteral: userack)
+        imageMessageEntity.sender = sender
+        imageMessageEntity.remoteSentDate = remoteSentDate
+        return imageMessageEntity
+    }
+
     @discardableResult func createLocationMessage(
         conversation: Conversation,
         accuracy: Double,
         latitude: Double,
         longitude: Double,
+        reverseGeocodingResult: String,
+        poiAddress: String? = nil,
         poiName: String?,
-        id: Data,
-        sender: ContactEntity
+        id: Data = MockData.generateMessageID(),
+        isOwn: Bool,
+        sender: ContactEntity? = nil
     ) -> LocationMessage {
         let locationMessage = createEntity(objectType: LocationMessage.self)
         locationMessage.conversation = conversation
         locationMessage.accuracy = NSNumber(value: accuracy)
         locationMessage.latitude = NSNumber(value: latitude)
         locationMessage.longitude = NSNumber(value: longitude)
+        locationMessage.reverseGeocodingResult = reverseGeocodingResult
+        locationMessage.poiAddress = poiAddress
         locationMessage.poiName = poiName
         locationMessage.id = id
         locationMessage.date = Date()
         locationMessage.delivered = NSNumber(booleanLiteral: true)
-        locationMessage.isOwn = NSNumber(booleanLiteral: true)
+        locationMessage.isOwn = NSNumber(booleanLiteral: isOwn)
         locationMessage.read = NSNumber(booleanLiteral: false)
         locationMessage.sent = NSNumber(booleanLiteral: true)
         locationMessage.userack = NSNumber(booleanLiteral: false)
@@ -233,20 +305,36 @@ class DatabasePreparer {
     
     @discardableResult func createVideoMessageEntity(
         conversation: Conversation,
+        video: VideoData?,
+        duration: Int,
         thumbnail: ImageData,
-        videoData: VideoData?,
-        date: Date?,
-        complete: ((VideoMessageEntity) -> Void)?
+        date: Date = Date(),
+        delivered: Bool = true,
+        id: Data = MockData.generateMessageID(),
+        isOwn: Bool,
+        read: Bool = true,
+        readDate: Date? = nil,
+        sent: Bool = true,
+        userack: Bool = false,
+        sender: ContactEntity?,
+        remoteSentDate: Date?
     ) -> VideoMessageEntity {
-        let videoMessage = createEntity(objectType: VideoMessageEntity.self)
-        videoMessage.date = date
-        videoMessage.conversation = conversation
-        videoMessage.thumbnail = thumbnail
-        videoMessage.video = videoData
-        if let complete {
-            complete(videoMessage)
-        }
-        return videoMessage
+        let videoMessageEntity = createEntity(objectType: VideoMessageEntity.self)
+        videoMessageEntity.conversation = conversation
+        videoMessageEntity.video = video
+        videoMessageEntity.duration = NSNumber(integerLiteral: duration)
+        videoMessageEntity.thumbnail = thumbnail
+        videoMessageEntity.date = date
+        videoMessageEntity.delivered = NSNumber(booleanLiteral: delivered)
+        videoMessageEntity.id = id
+        videoMessageEntity.isOwn = NSNumber(booleanLiteral: isOwn)
+        videoMessageEntity.read = NSNumber(booleanLiteral: read)
+        videoMessageEntity.readDate = readDate
+        videoMessageEntity.sent = NSNumber(booleanLiteral: sent)
+        videoMessageEntity.userack = NSNumber(booleanLiteral: userack)
+        videoMessageEntity.sender = sender
+        videoMessageEntity.remoteSentDate = remoteSentDate
+        return videoMessageEntity
     }
     
     @discardableResult func createFileMessageEntity(
@@ -259,15 +347,14 @@ class DatabasePreparer {
         thumbnail: ImageData? = nil,
         mimeType: String? = nil,
         type: NSNumber? = nil,
-        messageID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+        messageID: Data = MockData.generateMessageID(),
         date: Date = Date(),
         isOwn: Bool = false,
         sent: Bool = true,
         delivered: Bool = false,
         read: Bool = false,
         caption: String? = nil,
-        userack: Bool = false,
-        complete: ((FileMessageEntity) -> Void)? = nil
+        userack: Bool = false
     ) -> FileMessageEntity {
         let fileMessage = createEntity(objectType: FileMessageEntity.self)
         
@@ -290,8 +377,6 @@ class DatabasePreparer {
         fileMessage.delivered = NSNumber(booleanLiteral: delivered)
         fileMessage.read = NSNumber(booleanLiteral: read)
         fileMessage.userack = NSNumber(booleanLiteral: userack)
-        
-        complete?(fileMessage)
         
         return fileMessage
     }
@@ -342,6 +427,9 @@ class DatabasePreparer {
         else if objectType is Ballot.Type {
             entityName = "Ballot"
         }
+        else if objectType is BallotMessage.Type {
+            entityName = "BallotMessage"
+        }
         else if objectType is SystemMessage.Type {
             entityName = "SystemMessage"
         }
@@ -350,6 +438,9 @@ class DatabasePreparer {
         }
         else if objectType is AudioMessageEntity.Type {
             entityName = "AudioMessage"
+        }
+        else if objectType is ImageMessageEntity.Type {
+            entityName = "ImageMessage"
         }
         else if objectType is LocationMessage.Type {
             entityName = "LocationMessage"

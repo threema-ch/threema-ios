@@ -77,7 +77,7 @@ import ThreemaProtocols
         #if DEBUG
             return true
         #else
-            if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+            if ThreemaApp.current == .green || ThreemaApp.current == .blue {
                 return true
             }
             return false
@@ -88,7 +88,27 @@ import ThreemaProtocols
     @objc public static var fsEnableV12: Bool {
         true
     }
-        
+    
+    @objc static var distributionListsActive: Bool {
+        #if DEBUG
+            return true
+        #else
+            return false
+        #endif
+    }
+    
+    @objc public static var deleteEditMessage: Bool {
+        #if DEBUG
+            true
+        #else
+            if ThreemaApp.current == .green || ThreemaApp.current == .blue {
+                return true
+            }
+
+            return false
+        #endif
+    }
+
     // MARK: - CallKit
     
     @objc public static func supportsCallKit() -> Bool {

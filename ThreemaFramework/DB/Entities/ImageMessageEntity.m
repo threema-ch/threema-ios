@@ -42,10 +42,6 @@
     return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"image"], [self blobFilename]];
 }
 
-- (nonnull NSString*)previewText {
-    return [BundleUtil localizedStringForKey:@"image"];
-}
-
 - (nullable NSString *)contentToCheckForMentions {
     return [self.image getCaption];
 }

@@ -59,7 +59,7 @@
 	<key>ThreemaMediatorBlobURL</key>
 	<string></string>
 	<key>ThreemaSafeURL</key>
-	<string>https://safe-{backupIdPrefix}.threema.ch</string>
+	<string>https://safe-{backupIdPrefix8}.threema.ch</string>
 	<key>ThreemaServerAltPublicKey</key>
 	<data>WpjyPeZWBdBQ3ABkvgfd3YEdoRalQ85DqiaH0Z8grzw=</data>
 	<key>ThreemaServerNamePrefix</key>

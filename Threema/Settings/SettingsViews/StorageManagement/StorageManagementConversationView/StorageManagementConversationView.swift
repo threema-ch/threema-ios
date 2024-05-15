@@ -26,9 +26,9 @@ struct StorageManagementConversationView: View {
     @ObservedObject var messageModel: MessageRetentionManagerModel
     @ObservedObject var model: Model
     
-    init(businessInjector: BusinessInjectorProtocol, model: Model) {
+    init(businessInjector: BusinessInjectorProtocol, conversation: Conversation? = nil) {
         self.messageModel = businessInjector.messageRetentionManager as! MessageRetentionManagerModel
-        self.model = model
+        self.model = .init(conversation: conversation, businessInjector: businessInjector)
     }
     
     var body: some View {
@@ -50,9 +50,7 @@ struct StorageManagementConversationView: View {
             .padding()
         }
         .navigationTitle("storage_management".localized)
-        .onAppear {
-            model.refresh()
-        }
+        .task(model.load)
     }
     
     @ViewBuilder

@@ -42,11 +42,9 @@
     [super viewDidLoad];
     
     [Colors updateKeyboardAppearanceFor:self.codeTextField];
-    UIImage *image = nil;
     switch (Colors.theme) {
         case ThemeDark:
-            image = [BundleUtil imageNamed:@"Phone"];
-            _phoneImageView.image = [image imageWithTint:Colors.text];
+            _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.text];
             break;
         case ThemeLight:
         case ThemeUndefined:

@@ -60,6 +60,8 @@ import UIKit
     func assetsActionHelperDidSelectRecordAudio(_ picker: PPAssetsActionHelper)
     func assetsActionHelperDidSelectCreateBallot(_ picker: PPAssetsActionHelper)
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper)
+    
+    var conversationIsDistributionList: Bool { get }
 }
 
 /// Default implementation for delegate methods to make them optional.
@@ -105,35 +107,57 @@ public class PPAssetsActionHelper: NSObject {
     @objc public func buildAction() -> PPAssetsActionController {
         var options = [PPOption]()
         
+        let shareLocationImage = UIImage(
+            systemName: "mappin.and.ellipse",
+            withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        )?
+            .withTintColor(.primary, renderingMode: .alwaysOriginal)
         let shareLocation = PPOption(
             withTitle: BundleUtil.localizedString(forKey: "send_location"),
-            withIcon: UIImage(named: "ActionLocation", in: .primary)
+            withIcon: shareLocationImage
         ) {
             self.delegate?.assetsActionHelperDidSelectLocation(self)
         }
         options.append(shareLocation)
+//        VoiceMessageAudioRecorder.requestRecordPermission { _ in
+//          let recordImage = UIImage(
+        //     systemName: "mic.fill",
+        //     withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        // )?
+        //     .withTintColor(.primary, renderingMode: .alwaysOriginal)
+        // let recordAudio = PPOption(
+        //     withTitle: BundleUtil.localizedString(forKey: "record_audio"),
+        //     withIcon: recordImage
+        // ) {
+        //     self.delegate?.assetsActionHelperDidSelectRecordAudio(self)
+        // }
+        // options.append(recordAudio)
+//        }
         
-        if PlayRecordAudioViewController.canRecordAudio() {
-            let recordAudio = PPOption(
-                withTitle: BundleUtil.localizedString(forKey: "record_audio"),
-                withIcon: UIImage(named: "ActionMicrophone", in: .primary)
-            ) {
-                self.delegate?.assetsActionHelperDidSelectRecordAudio(self)
-            }
-            options.append(recordAudio)
-        }
-        
+        let ballotImage = UIImage(
+            systemName: "chart.pie.fill",
+            withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        )?
+            .withTintColor(.primary, renderingMode: .alwaysOriginal)
         let ballotCreate = PPOption(
             withTitle: BundleUtil.localizedString(forKey: "ballot_create"),
-            withIcon: UIImage(named: "ActionBallot", in: .primary)
+            withIcon: ballotImage
         ) {
             self.delegate?.assetsActionHelperDidSelectCreateBallot(self)
         }
-        options.append(ballotCreate)
-
+        
+        if !(delegate?.conversationIsDistributionList ?? false) {
+            options.append(ballotCreate)
+        }
+        
+        let shareImage = UIImage(
+            systemName: "doc.fill",
+            withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        )?
+            .withTintColor(.primary, renderingMode: .alwaysOriginal)
         let shareFile = PPOption(
             withTitle: BundleUtil.localizedString(forKey: "share_file"),
-            withIcon: UIImage(named: "ActionFile", in: .primary)
+            withIcon: shareImage
         ) {
             self.delegate?.assetsActionHelperDidSelectShareFile(self)
         }
@@ -168,10 +192,18 @@ public class PPAssetsActionHelper: NSObject {
         
         config.useOwnSnapButton = true
         config.ownSnapButtonText = BundleUtil.localizedString(forKey: "choose_existing")
-        config.ownSnapButtonIcon = UIImage(named: "ActionPhoto", in: .primary)
+        config.ownSnapButtonIcon = UIImage(
+            systemName: "photo.fill",
+            withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        )?
+            .withTintColor(.primary, renderingMode: .alwaysOriginal)
 
         config.previewReplacementText = BundleUtil.localizedString(forKey: "take_photo_or_video")
-        config.previewReplacementIcon = UIImage(named: "ActionCamera", in: .primary)
+        config.previewReplacementIcon = UIImage(
+            systemName: "camera.fill",
+            withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        )?
+            .withTintColor(.primary, renderingMode: .alwaysOriginal)
         
         config.tintColor = .primary
         config.tableBackground = Colors.backgroundNavigationController

@@ -529,7 +529,7 @@ public enum CspE2eFs_Version: SwiftProtobuf.Enum {
 
 extension CspE2eFs_Version: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [CspE2eFs_Version] = [
+  public static let allCases: [CspE2eFs_Version] = [
     .unspecified,
     .v10,
     .v11,
@@ -936,7 +936,7 @@ public struct CspE2eFs_Reject {
 
 extension CspE2eFs_Reject.Cause: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [CspE2eFs_Reject.Cause] = [
+  public static let allCases: [CspE2eFs_Reject.Cause] = [
     .stateMismatch,
     .unknownSession,
     .disabledByLocal,
@@ -1025,7 +1025,7 @@ public struct CspE2eFs_Terminate {
 
 extension CspE2eFs_Terminate.Cause: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [CspE2eFs_Terminate.Cause] = [
+  public static let allCases: [CspE2eFs_Terminate.Cause] = [
     .unknownSession,
     .reset,
     .disabledByLocal,
@@ -1223,7 +1223,7 @@ public struct CspE2eFs_Encapsulated {
 
 extension CspE2eFs_Encapsulated.DHType: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [CspE2eFs_Encapsulated.DHType] = [
+  public static let allCases: [CspE2eFs_Encapsulated.DHType] = [
     .twodh,
     .fourdh,
   ]

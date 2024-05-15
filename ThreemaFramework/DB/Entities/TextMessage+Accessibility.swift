@@ -22,7 +22,7 @@ import Foundation
 
 extension TextMessage: MessageAccessibility {
         
-    public var customAccessibilityLabel: String {
+    public var privateCustomAccessibilityLabel: String {
         // We add an additional dot to improve the read text.
         guard let text else {
             return ""

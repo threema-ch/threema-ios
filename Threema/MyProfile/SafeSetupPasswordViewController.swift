@@ -39,6 +39,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     private var mdmSetup: MDMSetup
     
     var customServer: String?
+    var serverUser: String?
+    var serverPassword: String?
     var server: String?
     var maxBackupBytes: Int?
     var retentionDays: Int?
@@ -89,6 +91,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             // is in change password mode, use existing server
             let safeConfigManager = SafeConfigManager()
             customServer = safeConfigManager.getCustomServer()
+            serverUser = safeConfigManager.getServerUser()
+            serverPassword = safeConfigManager.getServerPassword()
             server = safeConfigManager.getServer()
             maxBackupBytes = safeConfigManager.getMaxBackupBytes()
             retentionDays = safeConfigManager.getRetentionDays()
@@ -166,12 +170,12 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     
     private func checkPasswordAndActivate() {
         guard mdmSetup.safePassword() == nil else {
-            activate(password: mdmSetup.safePassword())
+            activate(safePassword: mdmSetup.safePassword())
             return
         }
         
-        if let password = validatedPassword() {
-            if safeManager.isPasswordBad(password: password) {
+        if let safePassword = validatedPassword() {
+            if safeManager.isPasswordBad(password: safePassword) {
                 UIAlertTemplate.showConfirm(
                     owner: self,
                     popOverSource: passwordField,
@@ -179,7 +183,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     message: BundleUtil.localizedString(forKey: "password_bad_explain"),
                     titleOk: BundleUtil.localizedString(forKey: "continue_anyway"),
                     actionOk: { _ in
-                        self.activate(password: password)
+                        self.activate(safePassword: safePassword)
                     },
                     titleCancel: BundleUtil.localizedString(forKey: "try_again"),
                     actionCancel: { _ in
@@ -192,7 +196,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 )
             }
             else {
-                activate(password: password)
+                activate(safePassword: safePassword)
             }
         }
         else {
@@ -203,7 +207,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         }
     }
     
-    private func activate(password: String) {
+    private func activate(safePassword: String) {
         navigationItem.leftBarButtonItem?.isEnabled = false
         navigationItem.rightBarButtonItem?.isEnabled = false
         view.isUserInteractionEnabled = false
@@ -218,8 +222,10 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             
             self.safeManager.activate(
                 identity: MyIdentityStore.shared().identity,
-                password: password,
+                safePassword: safePassword,
                 customServer: self.customServer,
+                serverUser: self.serverUser,
+                serverPassword: self.serverPassword,
                 server: self.server,
                 maxBackupBytes: self.maxBackupBytes != nil ? NSNumber(integerLiteral: self.maxBackupBytes!) : nil,
                 retentionDays: self.retentionDays != nil ? NSNumber(integerLiteral: self.retentionDays!) : nil
@@ -329,17 +335,17 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             // server is given by MDM
             let mdmSetup = MDMSetup(setup: false)
             customServer = mdmSetup?.safeServerURL()
-            server = safeStore.composeSafeServerAuth(
-                server: mdmSetup?.safeServerURL(),
-                user: mdmSetup?.safeServerUsername(),
-                password: mdmSetup?.safeServerPassword()
-            )?.absoluteString
+            serverUser = mdmSetup?.safeServerUsername()
+            serverPassword = mdmSetup?.safeServerPassword()
+            server = customServer
             completion(true)
             return
         }
         else if serverSwitch.isOn {
             // server is standard (Threema)
             customServer = nil
+            serverUser = nil
+            serverPassword = nil
             server = nil
             maxBackupBytes = nil
             retentionDays = nil
@@ -355,21 +361,20 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 groupManager: BusinessInjector().groupManager
             )
             
-            if let customServer = serverField.text,
-               let customServerURL = safeStore.composeSafeServerAuth(
-                   server: customServer,
-                   user: serverUserNameField.text,
-                   password: serverPasswordField.text
-               ) {
-                
+            if let customServer = serverField.text, let customServerURL = URL(string: customServer) {
+
                 let safeManager = SafeManager(
                     safeConfigManager: safeConfigManager,
                     safeStore: safeStore,
                     safeApiService: SafeApiService()
                 )
                 
-                safeManager.testServer(serverURL: customServerURL) { errorMessage, maxBackupBytes, retentionDays in
-                    
+                safeManager.testServer(
+                    serverURL: customServerURL,
+                    user: serverUserNameField.text,
+                    password: serverPasswordField.text
+                ) { errorMessage, maxBackupBytes, retentionDays in
+
                     if let errorMessage {
                         DispatchQueue.main.async {
                             UIAlertTemplate.showAlert(
@@ -383,6 +388,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     }
                     else {
                         self.customServer = customServer
+                        self.serverUser = self.serverUserNameField.text
+                        self.serverPassword = self.serverPasswordField.text
                         self.server = customServerURL.absoluteString
                         self.maxBackupBytes = maxBackupBytes
                         self.retentionDays = retentionDays

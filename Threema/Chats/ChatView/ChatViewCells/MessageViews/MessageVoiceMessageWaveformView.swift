@@ -206,11 +206,11 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         let configuredSize = targetImageSize(from: imageView)
         let completeWaveformConfig = waveformConfig(size: configuredSize, color: Colors.textLight)
         let progressConfig = waveformConfig(size: configuredSize, color: .primary)
-        let analyzer = WaveformAnalyzer(audioAssetURL: audioURL)
+        let analyzer = WaveformAnalyzer()
         let sampleCount = Int(completeWaveformConfig.size.width * completeWaveformConfig.scale)
         let waveformDrawer = DSWaveformImage.WaveformImageDrawer()
         let waveformRenderer = LinearWaveformRenderer()
-        let samples = await (try? analyzer?.samples(count: sampleCount)) ?? []
+        let samples = await (try? analyzer.samples(fromAudioAt: audioURL, count: sampleCount)) ?? []
         let image = waveformDrawer.waveformImage(
             from: samples,
             with: completeWaveformConfig,

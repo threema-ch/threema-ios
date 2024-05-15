@@ -119,21 +119,6 @@ internal enum Asset {
       internal static let primaryDark = ColorAsset(name: "Threema/Primary+Dark")
       internal static let secondaryDark = ColorAsset(name: "Threema/Secondary+Dark")
     }
-    internal enum ThreemaRed {
-      internal static let chatBubbleSent = ColorAsset(name: "ThreemaRed/ChatBubbleSent")
-      internal static let chatBubbleSentSelected = ColorAsset(name: "ThreemaRed/ChatBubbleSentSelected")
-      internal static let circleButton = ColorAsset(name: "ThreemaRed/CircleButton")
-      internal static let navigationBarCall = ColorAsset(name: "ThreemaRed/NavigationBarCall")
-      internal static let navigationBarWeb = ColorAsset(name: "ThreemaRed/NavigationBarWeb")
-      internal static let primary = ColorAsset(name: "ThreemaRed/Primary")
-      internal static let secondary = ColorAsset(name: "ThreemaRed/Secondary")
-      internal static let chatBubbleSentDark = ColorAsset(name: "ThreemaRed/ChatBubbleSent+Dark")
-      internal static let chatBubbleSentSelectedDark = ColorAsset(name: "ThreemaRed/ChatBubbleSentSelected+Dark")
-      internal static let circleButtonDark = ColorAsset(name: "ThreemaRed/CircleButton+Dark")
-      internal static let navigationBarCallDark = ColorAsset(name: "ThreemaRed/NavigationBarCall+Dark")
-      internal static let primaryDark = ColorAsset(name: "ThreemaRed/Primary+Dark")
-      internal static let secondaryDark = ColorAsset(name: "ThreemaRed/Secondary+Dark")
-    }
     internal enum ThreemaWork {
       internal static let chatBubbleSent = ColorAsset(name: "ThreemaWork/ChatBubbleSent")
       internal static let chatBubbleSentSelected = ColorAsset(name: "ThreemaWork/ChatBubbleSentSelected")

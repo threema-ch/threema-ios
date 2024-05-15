@@ -282,6 +282,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         
+        if #available(iOS 17, *) {
+            imageView.addSymbolEffect(.variableColor.cumulative.dimInactiveLayers)
+        }
+        
         imageView.setContentCompressionResistancePriority(.required, for: .horizontal)
         imageView.setContentHuggingPriority(.required, for: .horizontal)
 
@@ -293,7 +297,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private lazy var dndImageView: UIImageView = {
         let imageView = UIImageView(
             image: UIImage(
-                systemName: "Bell",
+                systemName: "bell.fill",
                 withConfiguration: Configuration.iconsConfiguration
             )?
                 .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
@@ -573,6 +577,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     override func updateColors() {
         super.updateColors()
         
+        backgroundColor = .clear
+        
         if let conversation,
            !conversation.isGroup(),
            let contact = conversation.contact,
@@ -586,8 +592,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             nameLabel.highlightedTextColor = Colors.text
         }
         
-        let draft = MessageDraftStore.loadDraft(for: conversation)
-        updateColorsForDateDraftLabel(isDraft: draft != nil)
+        if let conversation {
+            let draft = MessageDraftStore.loadDraft(for: conversation)
+            updateColorsForDateDraftLabel(isDraft: draft?.string != nil)
+        }
         
         previewLabel.textColor = Colors.textLight
         previewLabel.highlightedTextColor = Colors.textLight
@@ -740,7 +748,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             hideUpdateGroupCallButton()
         }
         else {
-            let text = update.joinState == .runningLocal ? BundleUtil
+            let text = update.joinState == .joined ? BundleUtil
                 .localizedString(forKey: "group_call_open_button_title") : BundleUtil
                 .localizedString(forKey: "group_call_join_button_title")
             groupCallJoinButton.configuration?.title = text
@@ -824,8 +832,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        // Show group icon for groups
-        guard !conversation.isGroup() else {
+        // Groups
+        if conversation.isGroup() {
             // Check is group a note group
             if let group,
                group.isNoteGroup {
@@ -845,19 +853,32 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             displayStateImageView.isHidden = false
             return
         }
-        
-        if let lastMessage = conversation.lastMessage,
-           let symbol = lastMessage.messageDisplayState.overviewSymbol(
-               with: Colors.grayCircleBackground,
-               ownMessage: lastMessage.isOwnMessage,
-               configuration: Configuration.displayStateConfiguration
-           ) {
+        // Distribution list
+        else if conversation.distributionList != nil {
+            displayStateImageView.image = UIImage(
+                systemName: "megaphone.fill",
+                withConfiguration: Configuration.displayStateConfiguration
+            )?
+                .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
             displayStateImageView.isHidden = false
-            displayStateImageView.image = symbol
             return
         }
-        
-        displayStateImageView.isHidden = true
+        // 1:1
+        else {
+            if let lastMessage = conversation.lastMessage,
+               lastMessage.deletedAt == nil,
+               let symbol = lastMessage.messageDisplayState.overviewSymbol(
+                   with: Colors.grayCircleBackground,
+                   ownMessage: lastMessage.isOwnMessage,
+                   configuration: Configuration.displayStateConfiguration
+               ) {
+                displayStateImageView.isHidden = false
+                displayStateImageView.image = symbol
+                return
+            }
+            
+            displayStateImageView.isHidden = true
+        }
     }
     
     private func updateDateDraftLabel() {
@@ -1004,7 +1025,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)), \(BundleUtil.localizedString(forKey: "doNotDisturb_mention"))"
         }
         
-        if let draft = MessageDraftStore.loadDraft(for: conversation) {
+        if let draft = MessageDraftStore.loadDraft(for: conversation)?.string {
             // Drafts
             updateAccessibility(with: draft, accessibilityString: accessibilityText)
             return
@@ -1019,7 +1040,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        if let lastMessage = conversation.lastMessage {
+        if let lastMessage = conversation.lastMessage as? PreviewableMessage {
             accessibilityText += "\(DateFormatter.accessibilityRelativeDayTime(lastMessage.displayDate)). "
             
             if conversation.unreadMessageCount.intValue > 0 {
@@ -1029,7 +1050,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 accessibilityText += "\(BundleUtil.localizedString(forKey: "from")) "
                 accessibilityText += "\(sender). "
             }
-            accessibilityText += "\(lastMessage.previewText()). "
+            accessibilityText += "\(lastMessage.previewText). "
         }
         
         if conversation.conversationVisibility == .pinned {
@@ -1217,8 +1238,20 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func observeLastMessageProperties() {
+        if let lastMessage = conversation?.lastMessage as? BaseMessage {
+            observeLastMessage(lastMessage, keyPath: \.deletedAt, callOnCreation: false) { [weak self] in
+                self?.updateLastMessagePreview()
+                self?.updateDisplayStateImage()
+            }
+        }
+
         if let lastMessage = conversation?.lastMessage as? BallotMessage {
             observeLastMessage(lastMessage, keyPath: \.ballot, callOnCreation: false) { [weak self] in
+                self?.updateLastMessagePreview()
+            }
+        }
+        else if let lastMessage = conversation?.lastMessage as? TextMessage {
+            observeLastMessage(lastMessage, keyPath: \.text, callOnCreation: false) { [weak self] in
                 self?.updateLastMessagePreview()
             }
         }

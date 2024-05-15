@@ -23,8 +23,8 @@ import Foundation
 public enum ThreemaApp {
     case threema
     case work
-    case red
-    case workRed
+    case green
+    case blue
     case onPrem
     
     public static var current: ThreemaApp {
@@ -32,13 +32,13 @@ public enum ThreemaApp {
             return .onPrem
         }
         else if LicenseStore.requiresLicenseKey() {
-            if isRed {
-                return .workRed
+            if isSandbox {
+                return .blue
             }
             return .work
         }
-        if isRed {
-            return .red
+        if isSandbox {
+            return .green
         }
         
         return .threema
@@ -58,7 +58,17 @@ public enum ThreemaApp {
         BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Threema"
     }
     
-    private static var isRed: Bool {
+    /// Link to open for writing an AppStore review
+    public static var rateLink: URL? {
+        guard let string = BundleUtil.object(forInfoDictionaryKey: "ThreemaRateLink") as? String,
+              let url = URL(string: string) else {
+            return nil
+        }
+        
+        return url
+    }
+    
+    private static var isSandbox: Bool {
         let bundle = BundleUtil.mainBundle()
         return bundle?.bundleIdentifier?.contains(".red") ?? false
     }
@@ -68,8 +78,8 @@ public enum ThreemaApp {
     @objc public enum ThreemaApp: Int, RawRepresentable {
         case threema
         case work
-        case red
-        case workRed
+        case green
+        case blue
         case onPrem
     }
     
@@ -78,19 +88,19 @@ public enum ThreemaApp {
             return .onPrem
         }
         else if LicenseStore.requiresLicenseKey() {
-            if ThreemaAppObjc.isRed {
-                return .workRed
+            if ThreemaAppObjc.isSandbox {
+                return .blue
             }
             return .work
         }
-        if ThreemaAppObjc.isRed {
-            return .red
+        if ThreemaAppObjc.isSandbox {
+            return .green
         }
         
         return .threema
     }
     
-    private static var isRed: Bool {
+    private static var isSandbox: Bool {
         let bundle = BundleUtil.mainBundle()
         return bundle?.bundleIdentifier?.contains(".red") ?? false
     }

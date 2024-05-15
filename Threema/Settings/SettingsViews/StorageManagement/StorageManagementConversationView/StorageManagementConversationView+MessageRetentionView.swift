@@ -155,7 +155,7 @@ extension StorageManagementConversationView {
             }
             
             model.set(days) {
-                storageModel.refresh()
+                Task { await storageModel.load() }
                 NotificationManager().updateUnreadMessagesCount()
             }
         }

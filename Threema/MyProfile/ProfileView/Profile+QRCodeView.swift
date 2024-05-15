@@ -23,7 +23,10 @@ import ThreemaFramework
 
 extension ProfileView {
     struct QRCodeView: View {
+        static let animationDuration = 0.3
+        
         @EnvironmentObject var model: ProfileViewModel
+        @AccessibilityFocusState(for: .voiceOver) private var isCloseFocused: Bool
         
         let dismiss: () -> Void
         @State private var scale: CGFloat = 0
@@ -49,6 +52,10 @@ extension ProfileView {
                     .padding()
                 }
                 .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + QRCodeView.animationDuration) {
+                        isCloseFocused = true
+                    }
+                    
                     withAnimation(.spring.speed(2)) {
                         scale = 1
                     }
@@ -67,6 +74,8 @@ extension ProfileView {
                             in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                         )
                     }
+                    .accessibilityLabel("close".localized)
+                    .accessibilityFocused($isCloseFocused)
                     Spacer()
                 }.padding()
             }

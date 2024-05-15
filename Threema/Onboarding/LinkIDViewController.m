@@ -263,8 +263,8 @@
     _selectedCountryButton.backgroundColor = Colors.primaryWizard;
     [_selectedCountryButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
-    _phoneImageView.image = [UIImage imageNamed:@"Phone" inColor:[UIColor whiteColor]];
-    _mailImageView.image = [UIImage imageNamed:@"Mail" inColor:[UIColor whiteColor]];
+    _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.white];
+    _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:Colors.white];
 }
 
 - (void)updatePhonePlaceholder {

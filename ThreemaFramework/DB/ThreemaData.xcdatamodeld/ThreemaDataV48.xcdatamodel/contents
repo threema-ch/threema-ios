@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22757" systemVersion="23C64" minimumToolsVersion="Xcode 11.0" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
+    <entity name="AudioData" representedClassName="AudioData" syncable="YES">
+        <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AudioMessage" inverseName="audio" inverseEntity="AudioMessage"/>
+    </entity>
+    <entity name="AudioMessage" representedClassName="AudioMessageEntity" parentEntity="Message" syncable="YES">
+        <attribute name="audioBlobId" optional="YES" attributeType="Binary"/>
+        <attribute name="audioSize" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="duration" attributeType="Float" defaultValueString="0.0" usesScalarValueType="NO"/>
+        <attribute name="encryptionKey" optional="YES" attributeType="Binary"/>
+        <attribute name="progress" optional="YES" transient="YES" attributeType="Float" usesScalarValueType="NO"/>
+        <relationship name="audio" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="AudioData" inverseName="message" inverseEntity="AudioData"/>
+    </entity>
+    <entity name="Ballot" representedClassName="Ballot" syncable="YES">
+        <attribute name="assessmentType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="choicesType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="createDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="creatorId" optional="YES" attributeType="String"/>
+        <attribute name="displayMode" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="Binary"/>
+        <attribute name="modifyDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="state" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="unreadUpdateCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <relationship name="choices" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BallotChoice" inverseName="ballot" inverseEntity="BallotChoice"/>
+        <relationship name="conversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="ballots" inverseEntity="Conversation"/>
+        <relationship name="message" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="BallotMessage" inverseName="ballot" inverseEntity="BallotMessage"/>
+        <relationship name="participants" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact"/>
+        <fetchIndex name="byCreateDateIndex">
+            <fetchIndexElement property="createDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIdIndex">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byModifyDateIndex">
+            <fetchIndexElement property="modifyDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byStateIndex">
+            <fetchIndexElement property="state" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="BallotChoice" representedClassName="BallotChoice" syncable="YES">
+        <attribute name="createDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="modifyDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="totalVotes" optional="YES" attributeType="Integer 32" usesScalarValueType="NO"/>
+        <relationship name="ballot" maxCount="1" deletionRule="Nullify" destinationEntity="Ballot" inverseName="choices" inverseEntity="Ballot"/>
+        <relationship name="result" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BallotResult" inverseName="ballotChoice" inverseEntity="BallotResult"/>
+        <fetchIndex name="byIdIndex">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="BallotMessage" representedClassName="BallotMessage" parentEntity="Message" syncable="YES">
+        <attribute name="ballotState" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <relationship name="ballot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ballot" inverseName="message" inverseEntity="Ballot"/>
+    </entity>
+    <entity name="BallotResult" representedClassName="BallotResult" syncable="YES">
+        <attribute name="createDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="modifyDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="participantId" attributeType="String"/>
+        <attribute name="value" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <relationship name="ballotChoice" maxCount="1" deletionRule="Nullify" destinationEntity="BallotChoice" inverseName="result" inverseEntity="BallotChoice"/>
+    </entity>
+    <entity name="Call" representedClassName="CallEntity" syncable="YES">
+        <attribute name="callID" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+    </entity>
+    <entity name="Contact" representedClassName="ContactEntity" versionHashModifier="stateConversationsGroupConversationsIndexAdded" syncable="YES">
+        <attribute name="abFirstName" optional="YES" attributeType="String"/>
+        <attribute name="abLastName" optional="YES" attributeType="String"/>
+        <attribute name="abRecordId" optional="YES" attributeType="Integer 32" usesScalarValueType="NO"/>
+        <attribute name="cnContactId" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="featureMask" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="firstName" optional="YES" attributeType="String"/>
+        <attribute name="forwardSecurityState" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="hidden" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="identity" attributeType="String"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary"/>
+        <attribute name="importStatus" optional="YES" attributeType="Integer 16" usesScalarValueType="NO"/>
+        <attribute name="lastName" optional="YES" attributeType="String"/>
+        <attribute name="profilePictureBlobID" optional="YES" attributeType="String"/>
+        <attribute name="profilePictureSended" optional="YES" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="profilePictureUpload" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="property1" optional="YES" attributeType="String"/>
+        <attribute name="property2" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="publicKey" attributeType="Binary"/>
+        <attribute name="publicNickname" optional="YES" attributeType="String"/>
+        <attribute name="readReceipts" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="sortInitial" optional="YES" attributeType="String"/>
+        <attribute name="state" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="typingIndicators" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="verificationLevel" attributeType="Integer 16" usesScalarValueType="NO"/>
+        <attribute name="verifiedEmail" optional="YES" attributeType="String"/>
+        <attribute name="verifiedMobileNo" optional="YES" attributeType="String"/>
+        <attribute name="workContact" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <relationship name="contactImage" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ImageData"/>
+        <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Conversation" inverseName="contact" inverseEntity="Conversation"/>
+        <relationship name="groupConversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="members" inverseEntity="Conversation"/>
+        <relationship name="rejectedMessages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Message" inverseName="rejectedBy" inverseEntity="Message"/>
+        <fetchIndex name="byAbRecordIdIndex">
+            <fetchIndexElement property="abRecordId" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIdentityIndex">
+            <fetchIndexElement property="identity" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortIndexIndex">
+            <fetchIndexElement property="sortIndex" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byStateConversationsGroupConversations">
+            <fetchIndexElement property="state" type="Binary" order="ascending"/>
+            <fetchIndexElement property="conversations" type="Binary" order="ascending"/>
+            <fetchIndexElement property="groupConversations" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="Conversation" representedClassName="Conversation" syncable="YES">
+        <attribute name="category" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="groupId" optional="YES" attributeType="Binary"/>
+        <attribute name="groupImageSetDate" optional="YES" transient="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="groupMyIdentity" optional="YES" attributeType="String"/>
+        <attribute name="groupName" optional="YES" attributeType="String"/>
+        <attribute name="lastTypingStart" optional="YES" transient="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastUpdate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="marked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
+        <attribute name="typing" transient="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
+        <attribute name="unreadMessageCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="visibility" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <relationship name="ballots" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Ballot" inverseName="conversation" inverseEntity="Ballot"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact" inverseName="conversations" inverseEntity="Contact"/>
+        <relationship name="distributionList" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DistributionList" inverseName="conversation" inverseEntity="DistributionList"/>
+        <relationship name="groupImage" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData"/>
+        <relationship name="lastMessage" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Message"/>
+        <relationship name="members" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="groupConversations" inverseEntity="Contact"/>
+        <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Tag" inverseName="conversations" inverseEntity="Tag"/>
+    </entity>
+    <entity name="DistributionList" representedClassName="DistributionList" syncable="YES" codeGenerationType="class">
+        <attribute name="distributionListId" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <relationship name="conversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="distributionList" inverseEntity="Conversation"/>
+    </entity>
+    <entity name="FileData" representedClassName="FileData" syncable="YES">
+        <attribute name="data" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FileMessage" inverseName="data" inverseEntity="FileMessage"/>
+    </entity>
+    <entity name="FileMessage" representedClassName="FileMessageEntity" parentEntity="Message" syncable="YES">
+        <attribute name="blobId" optional="YES" attributeType="Binary"/>
+        <attribute name="blobThumbnailId" optional="YES" attributeType="Binary"/>
+        <attribute name="caption" optional="YES" attributeType="String"/>
+        <attribute name="consumed" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="encryptionKey" optional="YES" attributeType="Binary"/>
+        <attribute name="fileName" optional="YES" attributeType="String"/>
+        <attribute name="fileSize" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="json" optional="YES" attributeType="String"/>
+        <attribute name="mimeType" optional="YES" attributeType="String"/>
+        <attribute name="origin" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="progress" optional="YES" transient="YES" attributeType="Float" usesScalarValueType="NO"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" usesScalarValueType="NO"/>
+        <relationship name="data" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="FileData" inverseName="message" inverseEntity="FileData"/>
+        <relationship name="thumbnail" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData"/>
+    </entity>
+    <entity name="Group" representedClassName="GroupEntity" elementID="DeletedGroupInfo" syncable="YES">
+        <attribute name="groupCreator" optional="YES" attributeType="String"/>
+        <attribute name="groupId" attributeType="Binary"/>
+        <attribute name="lastPeriodicSync" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="state" attributeType="Integer 16" defaultValueString="2" usesScalarValueType="NO"/>
+        <fetchIndex name="byGroupCreatorIndex">
+            <fetchIndexElement property="groupCreator" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byGroupIdIndex">
+            <fetchIndexElement property="groupId" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="GroupCallEntity" representedClassName="GroupCallEntity" syncable="YES">
+        <attribute name="gck" optional="YES" attributeType="Binary"/>
+        <attribute name="protocolVersion" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sfuBaseURL" optional="YES" attributeType="String"/>
+        <attribute name="startMessageReceiveDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="group" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Group"/>
+    </entity>
+    <entity name="ImageData" representedClassName="ImageData" syncable="YES">
+        <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="height" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="width" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ImageMessage" inverseName="image" inverseEntity="ImageMessage"/>
+    </entity>
+    <entity name="ImageMessage" representedClassName="ImageMessageEntity" parentEntity="Message" syncable="YES">
+        <attribute name="encryptionKey" optional="YES" attributeType="Binary"/>
+        <attribute name="imageBlobId" optional="YES" attributeType="Binary"/>
+        <attribute name="imageNonce" optional="YES" attributeType="Binary"/>
+        <attribute name="imageSize" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="progress" optional="YES" transient="YES" attributeType="Float" usesScalarValueType="NO"/>
+        <relationship name="image" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData" inverseName="message" inverseEntity="ImageData"/>
+        <relationship name="thumbnail" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData"/>
+    </entity>
+    <entity name="LastGroupSyncRequest" representedClassName="LastGroupSyncRequest" syncable="YES">
+        <attribute name="groupCreator" attributeType="String"/>
+        <attribute name="groupId" attributeType="Binary"/>
+        <attribute name="lastSyncRequest" attributeType="Date" usesScalarValueType="NO"/>
+        <fetchIndex name="byGroupCreatorIndex">
+            <fetchIndexElement property="groupCreator" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byGroupIdIndex">
+            <fetchIndexElement property="groupId" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="LocationMessage" representedClassName="LocationMessage" parentEntity="Message" syncable="YES">
+        <attribute name="accuracy" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO"/>
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="NO"/>
+        <attribute name="poiAddress" optional="YES" attributeType="String"/>
+        <attribute name="poiName" optional="YES" attributeType="String"/>
+        <attribute name="reverseGeocodingResult" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Message" representedClassName="BaseMessage" isAbstract="YES" versionHashModifier="chatViewIndexAdded" syncable="YES">
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="deletedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="delivered" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="deliveryDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="flags" optional="YES" attributeType="Integer 32" usesScalarValueType="NO"/>
+        <attribute name="forwardSecurityMode" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="groupDeliveryReceipts" optional="YES" attributeType="Transformable" valueTransformerName="GroupDeliveryReceiptValueTransformer"/>
+        <attribute name="id" attributeType="Binary"/>
+        <attribute name="isCreatedFromWeb" optional="YES" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="isOwn" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="lastEditedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="property1" optional="YES" attributeType="String"/>
+        <attribute name="property2" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="read" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="readDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="remoteSentDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="sendFailed" optional="YES" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="sent" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="userack" attributeType="Boolean" usesScalarValueType="NO"/>
+        <attribute name="userackDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="webRequestId" optional="YES" attributeType="String"/>
+        <relationship name="conversation" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation"/>
+        <relationship name="messageMarkers" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MessageMarkers" inverseName="message" inverseEntity="MessageMarkers"/>
+        <relationship name="rejectedBy" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="rejectedMessages" inverseEntity="Contact"/>
+        <relationship name="sender" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <fetchIndex name="byDateIndex">
+            <fetchIndexElement property="date" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIdIndex">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsOwnIndex">
+            <fetchIndexElement property="isOwn" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byReadIndex">
+            <fetchIndexElement property="read" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="compoundIndex">
+            <fetchIndexElement property="conversation" type="Binary" order="ascending"/>
+            <fetchIndexElement property="date" type="Binary" order="ascending"/>
+            <fetchIndexElement property="remoteSentDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="compoundIndex1">
+            <fetchIndexElement property="conversation" type="Binary" order="ascending"/>
+            <fetchIndexElement property="isOwn" type="Binary" order="ascending"/>
+            <fetchIndexElement property="read" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="MessageMarkers" representedClassName="MessageMarkers" syncable="YES" codeGenerationType="class">
+        <attribute name="star" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
+        <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="messageMarkers" inverseEntity="Message"/>
+    </entity>
+    <entity name="Nonce" representedClassName="Nonce" syncable="YES">
+        <attribute name="nonce" attributeType="Binary"/>
+        <fetchIndex name="byNonceIndex">
+            <fetchIndexElement property="nonce" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="SystemMessage" representedClassName="SystemMessage" parentEntity="Message" syncable="YES">
+        <attribute name="arg" optional="YES" attributeType="Binary"/>
+        <attribute name="type" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="Tag" syncable="YES">
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="tags" inverseEntity="Conversation"/>
+    </entity>
+    <entity name="TextMessage" representedClassName="TextMessage" parentEntity="Message" syncable="YES">
+        <attribute name="quotedMessageId" optional="YES" attributeType="Binary"/>
+        <attribute name="text" attributeType="String"/>
+    </entity>
+    <entity name="VideoData" representedClassName="VideoData" syncable="YES">
+        <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="VideoMessage" inverseName="video" inverseEntity="VideoMessage"/>
+    </entity>
+    <entity name="VideoMessage" representedClassName="VideoMessageEntity" parentEntity="Message" syncable="YES">
+        <attribute name="duration" attributeType="Float" defaultValueString="0.0" usesScalarValueType="NO"/>
+        <attribute name="encryptionKey" optional="YES" attributeType="Binary"/>
+        <attribute name="progress" optional="YES" transient="YES" attributeType="Float" usesScalarValueType="NO"/>
+        <attribute name="videoBlobId" optional="YES" attributeType="Binary"/>
+        <attribute name="videoSize" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+        <relationship name="thumbnail" minCount="1" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData"/>
+        <relationship name="video" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="VideoData" inverseName="message" inverseEntity="VideoData"/>
+    </entity>
+    <entity name="WebClientSession" representedClassName="WebClientSession" syncable="YES">
+        <attribute name="active" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
+        <attribute name="browserName" optional="YES" attributeType="String"/>
+        <attribute name="browserVersion" optional="YES" attributeType="Integer 32" defaultValueString="0.0" usesScalarValueType="NO"/>
+        <attribute name="initiatorPermanentPublicKey" attributeType="Binary"/>
+        <attribute name="initiatorPermanentPublicKeyHash" optional="YES" attributeType="String"/>
+        <attribute name="lastConnection" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="permanent" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
+        <attribute name="privateKey" optional="YES" attributeType="Binary"/>
+        <attribute name="saltyRTCHost" attributeType="String"/>
+        <attribute name="saltyRTCPort" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="NO"/>
+        <attribute name="selfHosted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
+        <attribute name="serverPermanentPublicKey" attributeType="Binary"/>
+        <attribute name="version" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
+    </entity>
+</model>

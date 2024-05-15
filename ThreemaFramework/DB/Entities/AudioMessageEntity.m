@@ -42,10 +42,6 @@
     return [NSString stringWithFormat:@"%@ (%02d:%02d, %@)", [BundleUtil localizedStringForKey:@"file_message_voice"], minutes, seconds, [self blobFilename]];
 }
 
-- (nonnull NSString*)previewText {
-    return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:self.duration.integerValue]];
-}
-
 #pragma mark - Misc
 
 #ifdef DEBUG

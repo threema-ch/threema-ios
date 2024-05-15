@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/dmrschmidt/DSWaveformImage.git",
       "state" : {
-        "revision" : "8253ffa3bdd2734e24decfaa65ccf8df7126b532",
-        "version" : "13.0.1"
+        "revision" : "4c56578ee10128ee2b2c04c9c5aa73812de722db",
+        "version" : "14.2.2"
       }
     },
     {
@@ -50,7 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/calimarkus/JDStatusBarNotification",
       "state" : {
-        "revision" : "c2357555debf11ac4d1130a2d9293f37e7058438"
+        "revision" : "9a10de3232f189553033aeb2cbf20f59c7afba6a",
+        "version" : "2.2.0"
       }
     },
     {
@@ -67,8 +68,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jdg/MBProgressHUD.git",
       "state" : {
-        "revision" : "bca42b801100b2b3a4eda0ba8dd33d858c780b0d",
-        "version" : "1.2.0"
+        "revision" : "18c442d57398cee5ef57f852df10fc5ff65f0763"
       }
     },
     {
@@ -147,7 +147,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/threema-ch/sentry-cocoa",
       "state" : {
-        "revision" : "4ad62fe4b52c2c62a61929d4a01e9fe413a00512"
+        "revision" : "3c6b67085270e77fa799c475f08d470b445d572c"
       }
     },
     {
@@ -173,8 +173,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/daltoniam/Starscream",
       "state" : {
-        "revision" : "ac6c0fc9da221873e01bd1a0d4818498a71eef33",
-        "version" : "4.0.6"
+        "revision" : "c6bfd1af48efcc9a9ad203665db12375ba6b145a",
+        "version" : "4.0.8"
       }
     },
     {

@@ -29,7 +29,7 @@ import ThreemaFramework
         DispatchQueue.main.async {
             // Reload CoreData object because of concurrency problem
             let entityManager = EntityManager()
-            let message = entityManager.entityFetcher.getManagedObject(by: baseMessage.objectID) as! BaseMessage
+            let message = entityManager.entityFetcher.getManagedObject(by: baseMessage.objectID) as! PreviewableMessage
 
             var contactImageView: UIImageView?
             var thumbnailImageView: UIImageView?
@@ -42,27 +42,26 @@ import ThreemaFramework
             
             if let imageMessageEntity = message as? ImageMessageEntity {
                 if let thumbnail = imageMessageEntity.thumbnail {
-                    thumbnailImageView = UIImageView(image: thumbnail.uiImage)
-                    thumbnailImageView?.contentMode = .scaleAspectFit
+                    thumbnailImageView = getThumbnail(for: thumbnail.uiImage)
                 }
+            }
+            else if message is AudioMessageEntity {
+                thumbnailImageView = getThumbnailAudio()
             }
             else if let fileMessageEntity = message as? FileMessageEntity {
-                if let thumbnail = fileMessageEntity.thumbnail {
-                    thumbnailImageView = UIImageView(image: thumbnail.uiImage)
+                if fileMessageEntity.renderType == .voiceMessage {
+                    thumbnailImageView = getThumbnailAudio()
+                }
+                else if let thumbnail = fileMessageEntity.thumbnail {
+                    thumbnailImageView = getThumbnail(for: thumbnail.uiImage)
                     thumbnailImageView?.contentMode = .scaleAspectFit
                 }
-            }
-            else if message.isKind(of: AudioMessageEntity.self) {
-                let thumbnail = BundleUtil.imageNamed("ActionMicrophone")?.withTint(Colors.text)
-                thumbnailImageView = UIImageView(image: thumbnail)
-                thumbnailImageView?.contentMode = .center
             }
             
             let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
             let bodyFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .subheadline)
             
-            var body = message.previewText()
-            body = TextStyleUtils.makeMentionsString(forText: body)
+            var body = TextStyleUtils.makeMentionsString(forText: message.previewText)
             
             if message.isGroupMessage {
                 // Quickfix: Sender should never be `nil` for an incoming group message
@@ -125,7 +124,7 @@ import ThreemaFramework
                 }
                 
                 let attributed = TextStyleUtils.makeAttributedString(
-                    from: message.previewText(),
+                    from: message.previewText,
                     with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
                     textColor: Colors.text,
                     isOwn: true,
@@ -147,7 +146,7 @@ import ThreemaFramework
             }
             else {
                 let attributed = TextStyleUtils.makeAttributedString(
-                    from: message.previewText(),
+                    from: message.previewText,
                     with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
                     textColor: Colors.text,
                     isOwn: true,
@@ -205,7 +204,25 @@ import ThreemaFramework
             }
         }
     }
-    
+
+    private class func getThumbnailAudio() -> UIImageView? {
+        let image = UIImage(
+            systemName: "mic.fill",
+            withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        )?
+            .withTintColor(Colors.text, renderingMode: .alwaysOriginal)
+        return getThumbnail(for: image, contentMode: .center)
+    }
+
+    private class func getThumbnail(
+        for image: UIImage?,
+        contentMode: UIView.ContentMode = .scaleAspectFill
+    ) -> UIImageView? {
+        let thumbnailImageView = UIImageView(image: image)
+        thumbnailImageView.contentMode = contentMode
+        return thumbnailImageView
+    }
+
     class func newBannerForStartGroupCall(
         conversationManagedObjectID: NSManagedObjectID,
         title: String,
@@ -344,7 +361,7 @@ import ThreemaFramework
                 titleColor: Colors.text,
                 subtitleFont: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
                 subtitleColor: Colors.white,
-                leftView: UIImageView(image: BundleUtil.imageNamed("InfoFilled")),
+                leftView: UIImageView(image: UIImage(systemName: "info.circle.fill")),
                 rightView: nil,
                 style: bannerStyle,
                 colors: CustomBannerColors()

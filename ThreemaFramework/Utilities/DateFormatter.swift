@@ -259,7 +259,7 @@ public class DateFormatter: NSObject {
         return mediumWeekdayDayAndMonthDateFormatter!.string(from: date)
     }
     
-    /// Localized  weekday
+    /// Localized weekday
     ///
     /// - Note: Marked as private, because it's only used internally
     ///
@@ -555,6 +555,24 @@ public class DateFormatter: NSObject {
     }
     
     // MARK: - Time conversion
+    
+    static let timeFormatter = DateComponentsFormatter().then {
+        $0.zeroFormattingBehavior = .pad
+        $0.allowedUnits = [.minute, .second]
+    }
+    
+    /// Format seconds into time string
+    ///
+    /// - Parameter totalSeconds: Seconds to transform
+    /// - Returns: String of format "01:02:03" with hour omitted if it's zero
+    public static func timeFormatted(_ totalSeconds: TimeInterval) -> String? {
+        timeFormatter.then {
+            if totalSeconds > 3600 {
+                $0.allowedUnits = [.hour, .minute, .second]
+            }
+        }
+        .string(from: totalSeconds)
+    }
     
     /// Format seconds into time string
     ///

@@ -25,10 +25,12 @@ import ThreemaEssentials
 
 public enum MessageSenderError: Error {
     case tooBig
+    case noData
     case noID
     case unableToLoadConversation
     case unableToLoadMessage
     case sendingFailed
+    case editedTextToLong
 }
 
 public enum MessageSenderReceivers {
@@ -88,7 +90,17 @@ public protocol MessageSenderProtocol {
     func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?)
     
     func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) async
-    
+
+    func sendDeleteMessage(with objectID: NSManagedObjectID, receiversExcluded: [Contact]?) throws
+
+    /// Send `EditMessage` to all the receiver(s) of the given message.
+    ///
+    /// - Parameters:
+    ///   - objectID: Object-ID of the edited message
+    ///   - rawText: New text of the message
+    ///   - receiversExcluded: Excluded contacts from sending `EditMessage`
+    func sendEditMessage(with objectID: NSManagedObjectID, rawText: String, receiversExcluded: [Contact]?) throws
+
     // MARK: - Status update
 
     func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void>

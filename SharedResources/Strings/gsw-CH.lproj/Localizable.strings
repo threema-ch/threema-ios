@@ -1,0 +1,1955 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2012 Threema GmbH. All rights reserved.
+ */
+
+// General
+"quotation_mark_start" = "«";
+"quotation_mark_end" = "»";
+
+/* Tabbar and title for list with all conversations */
+"chats_title" = "Chats";
+"chats_pinned" = "Apinnt";
+
+"SortOrder_Firstname" = "Vor-, Nachname";
+"SortOrder_Lastname" = "Vor-, Nachname";
+
+"segmentcontrol_contacts" = "Kontäkt";
+"segmentcontrol_groups" = "Gruppe";
+"segmentcontrol_distribution_list" = "Verteilerliischte";
+"segmentcontrol_work_contacts" = "Work";
+
+/* WebRTC diagnostics */
+"webrtc_diagnostics.title" = "WebRTC-Diagnose";
+"webrtc_diagnostics.description" = "Started Sie das Tool, zum Problem mit em Aruef-Verbindigsufbau z’diagnostiziere.\nDrucked Sie de «Start»-Chnopf, zum de Test z’starte.";
+"webrtc_diagnostics.start" = "Start";
+"webrtc_diagnostics.copyToClipboard" = "Id Zwüscheablag kopiere";
+"webrtc_diagnostics.copy" = "Text isch id Zwüscheablag kopiert worde";
+"webrtc_diagnostics.done" = "Fertig. Wenn Sie Problem mitem Aruef-Verbindigsufbau händ, schicked Sie bitte de Output an Threema-Support.";
+
+/* Privacy Policy */
+"privacy_poliy_url" = "https://threema.ch/de/privacy";
+
+/* MWPhotoBrowser */
+"mwphotobrowser_select" = "Uswahl";
+"mwphotobrowser_select_all" = "All";
+"mwphotobrowser_deselect_all" = "Kei";
+"profileimage_setting_all_footer" = "All Ihri Kontäkt chömed Ihres Profilbild über, wenn Sie ihne schribed.";
+"profileimage_setting_contacts_footer" = "Usgwählti Kontäkt i dere Liste chömed Ihres Profilbild über, wenn Sie ihne schribed.";
+
+
+"status_disconnected" = "Trännt";
+"status_connecting" = "Verbinde";
+"status_connected" = "Verbinde";    /* note: this is intentional; don't want to bother user with protocol details */
+"status_loggedIn" = "Verbunde";
+"status_disconnecting" = "Trännt";
+
+"cannot_connect_title" = "Kei Verbindig";
+"cannot_connect_message" = "Bitte prüefed Sie Ihri Internetverbindig.";
+
+// JKLockScreenViewController
+"delete_identity_passcode_title" = "Code-Sperri iigschalte";
+"delete_identity_passcode_message" = "Bitte schalted Sie d’Code-Sperri us, bevor Sie Ihri ID lösched.";
+
+/* JKLockScreenViewController */
+"cancel" = "Abbräche";
+"continue" = "Wiiter";
+"ok" = "Easy";
+"no" = "Nei";
+"yes" = "Ja";
+"delete" = "Lösche";
+"try_again" = "Nomal versueche";
+"copy" = "Kopiere";
+"save" = "Speichere";
+"edit" = "Bearbeite";
+"download" = "Abelade";
+"retry" = "Nomal probiere";
+"share" = "Teile";
+"details" = "Details";
+"acknowledge" = "Bestätige";
+"decline" = "Ablehne";
+"quote" = "Zitiere";
+"speak" = "Vorläse laa";
+"send" = "Schicke";
+"image" = "Bild";
+"sticker" = "Sticker";
+"gif" = "GIF";
+"video" = "Video";
+"file" = "Datei";
+"location" = "Standort";
+"locating" = "Standort bestimme...";
+"unknown_location" = "unbekannte Standort";
+"open" = "Ufmache";
+"call" = "Alüte"; /* Short version for "Start Threema Call" */
+"Info" = "Info";
+"error_abort" = "Schwere Fehler";
+"qr_code" = "QR-Code";
+"forward" = "Wiiterleite";
+"read" = "Gläse";
+"unread" = "Ungläse";
+"settings" = "Iistellige";
+"loadMore" = "Meh lade";
+"all" = "All";
+"myIdentity" = "Profil";
+"share_id" = "Teil dini Threema-ID";
+"close" = "schlüsse";
+"threema_id" = "Threema-ID";
+"nickname" = "Nickname";
+"add_button" = "Dezue tue";
+"chatview_contextmenu_select" = "Uswähle...";
+"learn_more" = "Wiiteri Infos…";
+"file_message_image" = "Bild";
+"file_message_sticker" = "Sticker";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Video";
+"file_message_voice" = "Sprachnachricht";
+"file_message_file" = "Datei";
+"chat" = "Chat"; /* noun */
+
+"chat_back_button_accessibility" = "%d ungläse";
+
+"show_in_google_maps" = "In «Google Maps» aazeige";
+"show_in_maps" = "In «Karten» aazeige";
+"calculate_route" = "Route berächne";
+
+/* Chat export */
+"conversation_log_subject" = "Threema-Chatprotokoll mit %@";
+"conversation_log_body" = "S’Chatprotokoll isch dere E-Mail aghänkt (%@). \nSie bruched es moderns ZIP-Tool mit AES-Unterstützig, zum die Datei ufzmache, z.B. https://www.7-zip.org oder https://apps.apple.com/de/app/the-unarchiver/id425424353";
+"conversation_log_group_body" = "S’Gruppe-Chatprotokoll isch dere E-Mail aghänkt (%@).\nSie bruched es moderns ZIP-Tool mit AES-Unterstützig, zum die Datei ufzmache, z.B. https://www.7-zip.org oder https://apps.apple.com/de/app/the-unarchiver/id425424353";
+"not_enough_storage_title" = "Zwenig freie Speicherplatz.";
+"amount_of_free_storage_needed" = "%@ Speicherplatz wird benötigt. %@ sind im Moment frei.";
+"chat_export_failed_title" = "Chat-Export isch fehlgschlage.";
+"chat_export_failed_message" = "Chat-Export isch fehlgschlage. Fehlercode: %d.";
+"cancelling_export" = "Export wird abbroche.";
+"export_progress_label" = "%li / %li Nachrichte exportiert";
+"caption" = "Untertitel";
+"fileNotDownloaded" = "Datei isch glöscht oder nöd abeglade worde.";
+"include_media_title" = "Mit Medie (Fotis, Videos) exportiere?";
+"include_media_message" = "Es moderns ZIP-Tool mit AES-Unterstützig wird benötigt, zum die Datei ufzmache, z.B 7-Zip (Windows) oder The Unarchiver (Mac).";
+
+"chat_view_resend_group_message_confirmation_title" = "Gruppenachricht nomal schicke?";
+/* The placeholder will be replaced by a localized list of all receivers */
+"chat_view_resend_group_message_confirmation_message" = "Die Nachricht hät nöd a all Mitglieder chöne verschickt werde. Wänd Sie die Nachricht nomal a %@ schicke?";
+"chat_view_resend_group_message_confirmation_button" = "Schicke";
+
+/* image sizes */
+"image_size_title" = "Bildgrössi";
+/* image sizes */
+"original" = "Original";
+"small" = "Chlii";
+"medium" = "Mittel";
+"large" = "Gross";
+"xlarge" = "Extragross";
+"max_x_by_x_pixels" = "Max. %d × %d Pixel";
+"images are not scaled" = "Bilder werded nöd skaliert";
+"image_resize_share_extension" = "Wäge begränzte Arbetsspeicher-Ressource werded über d’Share Extension verschickti Bilder verchlinered, so dass sie max. 1600 × 1600 Pixel händ.";
+
+/* video sizes */
+"videoquality_title" = "Videoqualität";
+/* video sizes */
+"low" = "Tüüf";
+"high" = "Höch";
+"max_1_minute" = "Max. 1 Minute";
+"max_x_minutes" = "Max. %d Minute";
+"still_compressed_note" = "Sehr grossi Videos werded unabhängig vo dere Istellig komprimiert, demit sie verschickt werde chönd.";
+
+/* Sound names */
+"sound_none" = "Keine";
+"sound_default" = "Standard";
+"sound_silent" = "Nur Vibriere";
+"sound_bamboo" = "Bambus";
+"sound_drum" = "Trummle";
+"sound_glass" = "Glas";
+"sound_incoming_message" = "Iigehendi Nachricht";
+"sound_input" = "Iigab";
+"sound_marimba1" = "Marimba 1";
+"sound_marimba2" = "Marimba 2";
+"sound_music_box" = "Musig-Box";
+"sound_pulse" = "Impuls";
+"sound_sms" = "SMS";
+"sound_received_message" = "Threema";
+"sound_synth" = "Synth";
+"sound_trill" = "Trill";
+"sound_whoop" = "Whoop";
+
+"sound_threema_best" = "Threema";
+"sound_threema_incom" = "Game";
+"sound_threema_xylo" = "Xylo";
+"sound_threema_goody" = "Remix";
+"sound_threema_alphorn" = "Alphorn";
+
+"identity_none" = "kei";
+"message" = "Nachricht schicke"; /* Short version for "Send Message" */
+"scan_identity" = "ID scanne";
+"scan" = "Scanne"; /* Short version for "Scan ID" */
+"(pending)" = "(in Prüefig)";
+"enter_code" = "Code igeh";
+"export_chat" = "Chat exportiere";
+"send_profile_picture" = "Profilbild jetzt schicke";
+"public_key" = "Öffentliche Schlüssel";
+"public_key_of" = "Öffentliche Schlüssel vo %@";
+"block_contact" = "Kontakt blockiere";
+"profile_picture_recipient" = "Profilbild-Empfänger";
+
+"no_linked_contact_access_title" = "Kei Zuegriff uf de verchnüpfti Kontakt";
+"no_linked_contact_access_message" = "Bitte mached Sie d’Iistellige uf, zum de Zuegriff uf die Kontäkt z’erlaube und de verchnüpfti Kontakt ah z’zeige. Oder hebed Sie die Verchnüpfig permanent uf.";
+"no_linked_contact_access_edit_message" = "Bitte mached Sie d’Iistellige uf, zum de Zuegriff uf die Kontäkt z’erlaube und de verchnüpfti Kontakt ah z’zeige. Oder hebed Sie die Verchnüpfig permanent uf, zum de Kontakt z’bearbeite.";
+"restricted_contacts_access_title" = "Zuegriff uf d’Kontäkt igschränkt";
+"restricted_contacts_access_message" = "Bitted Sie Ihre Administrator, die Ischränkig ufzhebe.";
+"restricted_linked_contact_access_message" = "%@ cha nöd uf de verchnüpft Kontakt zuegriife, wil de Zuegriff igschränkt isch. Bitted Sie Ihre Administrator, die Ischränkig ufzhebe. Oder hebed Sie d’Verchnüpfig permanent uf.";
+"restricted_linked_contact_access_edit_message" = "%@ cha nöd uf de verchnüpft Kontakt zuegriife, wil de Zuegriff igschränkt isch. Bitted Sie Ihre Administrator, die Ischränkig ufzhebe. Oder hebed Sie d’Verchnüpfig permanent uf, zum de Kontakt z’bearbeite.";
+"linked_contact_not_found_title" = "Verchnüpft Kontakt nöd gfunde";
+"linked_contact_not_found_message" = "De verchnüpfti Kontakt hät nöd chöne gfunde werde. Hebed Sie die Verchnüpfig permanent uf, zum de Kontakt z’bearbeite.";
+
+"unlink_contact" = "Verchnüpfig ufhebe";
+"unlink_and_edit_contact" = "Verchnüpfig ufhebe und bearbeite";
+"link_new_contact" = "Andere Kontakt verchnüpfe";
+"show_linked_contact" = "De verchnüpft Kontakt aazeige";
+
+"link_contact" = "Kontakt verchnüpfe";
+"linked_contact" = "Verchnüpft Kontakt";
+"[no access]" = "[Kei Zuegriff]";
+"[not found]" = "[Nöd gfunde]";
+"[restricted]" = "[Igschränkt]";
+
+/* This shows the number of groups in parentheses */
+"groups_header" = "Gruppe (%lu)";
+"show_all_button" = "All aazeige";
+
+"share_contact_id_button" = "Kontakt-ID teile";
+
+// Edit contact, distribution list, or group
+
+"edit_contact_title" = "Kontakt bearbeite";
+"edit_group_title" = "Gruppe bearbeite";
+"edit_distribution_list_title" = "Verteilerlischte bearbeite";
+
+"first_name_placeholder" = "Vorname";
+"last_name_placeholder" = "Nachname";
+"group_name_placeholder" = "Gruppename";
+"distribution_list_name_placeholder" = "Name vode Verteilerlischte";
+
+"no_nickname_title" = "Kein Nickname";
+"no_nickname_message" = "Wänd Sie würklich kein Nickname festlegge? Ohni de isches für Ihri Kontäkt schwirig, Nachrichte von Ihne z’erchänne, bevor Sie d’App started.";
+
+"server_message_title" = "Server-Nachricht";
+
+"no_preview_available" = "Kei Vorschau verfüegbar";
+
+"bad_phone_number_format_title" = "Nummere nöd erchännt";
+"bad_phone_number_format_message" = "D’Telefonnummere, wo Sie ageh händ, isch nöd erchännt worde. Bitte versueched Sie, d’Nummere im internationale Format iizgeh.";
+
+"confirm_phone_number_title" = "Nummere bestätige";
+"confirm_phone_number_x" = "Es wird es SMS a folgendi Nummere gschickt:\n\n%@\n\nIsch die Nummere korrekt?";
+
+"abort_verification" = "Überprüefig abbräche";
+"abort_verification_message" = "D’Azahl Versüech isch begränzt; bitte warted Sie mindestens 30 Minute uf die SMS, oder versueched Sie d’Aruef-Option.";
+"call_me_title" = "Hiiwis zum Aruef";
+"call_me_message" = "Wenn Sie wiitermached, werded mir grad versueche, Sie azlüte. Ihre Überprüefigscode wird Ihne dänn zweimal vorgläse. Achtung: Es git nur ein Versuech.";
+"number" = "Nummere";
+
+"mobileno_linked_title" = "Telefonnummere verchnüpft";
+"mobileno_linked_message" = "Ihri Telefonnummere isch erfolgriich mit Ihrere ID verchnüpft.";
+
+"link_email_title" = "E-Mail verchnüpfe";
+"link_your_email" = "Ihri E-Mail-Adrässe";
+"link_email_address" = "E-Mail-Adrässe";
+"link_email_sent_title" = "Überprüefigsmail verschickt";
+"link_email_sent_message" = "En Überprüefigslink isch per E-Mail a %@ verschickt worde.";
+"invalid_email_address_title" = "Ungültigi E-Mail-Adrässe";
+"invalid_email_address_message" = "S’Format stimmt nöd mit dem vonere E-Mail-Adrässe überii";
+
+"public_key_mismatch_title" = "Öffentliche Schlüssel stimmt nöd überii";
+"public_key_mismatch_message" = "Es git scho en Kontakt mit dere ID, aber de öffentlich Schlüssel stimmt nöd überii! Das cha en Versuech sii, Sie z’verleite, Nachrichte an falsche Empfänger z’schicke. De neu öffentlich Schlüssel isch nöd gspeicheret worde; wenn Sie sich sicher sind, dass er stimmt, dänn lösched Sie de existierend Kontakt und versueched Sie’s nomal.";
+
+"public_key_server_mismatch_title" = "Öffentliche Schlüssel stimmt nöd überii";
+"public_key_server_mismatch_message" = "De öffentlich Schlüssel, wo Sie igscannt händ, stimmt nöd mitem Schlüssel überii, wo de Server für die ID verzeichnet hät. Das bedütet, dass öpper böswillig de gscannti Code modifiziert hät, und dass dem Schlüssel uf kein Fall vertraut werde dörf. Bitte mälded Sie das Vorkommnis a security@threema.ch, wenn möglich mit Aagab vode ID und de Umständ.";
+
+"password_again" = "Passwortwiederholig";
+"password_too_short_title" = "Passwort isch z’churz";
+"password_too_short_message" = "S’Passwort isch z’churz. Bitte gebed Sie mindestens 8 Zeiche i.";
+"password_mismatch_title" = "Passwörter stimmed nöd überii";
+"password_mismatch_message" = "Die Passwörter, wo Sie iigeh händ, stimmed nöd überii. Bitte gönd Sie zrugg und versueched Sie’s nomal.";
+"password_description_backup" = "Ihre privat Schlüssel wird mit dem Passwort verschlüsslet (mind. 8 Zeiche und e Mischig us Buechstabe, Zahle und Symbol sind empfohle).";
+"password_description_export" = "S’Chatprotokoll wird komprimiert und mit dem Passwort verschlüsslet (mind. 8 Zeiche und e Mischig us Buechstabe, Zahle und Symbol sind empfohle).";
+
+"revocation_password" = "ID-Widerruefspasswort";
+"revocation_password_description" = "Mit dem Passwort cha die eigeni Threema-ID uf https://myid.threema.ch/revoke endgültig widerruefe werde (mind. 8 Zeiche und e Mischig us Buechstabe, Zahle und Symbol sind empfohle).";
+"revocation_request_success" = "ID-Widerruefspasswort isch gsetzt";
+"revocation_request_failed" = "Setze vom ID-Widerruefspasswort fehlgschlage";
+"revocation_password_not_set" = "nöd gsetzt";
+"conversations_delete_all_confirm" = "Sind Sie sicher, dass Sie all Chats lösche wänd?\nHiiwis: Gruppechats bliibed erhalte.";
+"revocation_check_failed" = "Update fehlgschlage";
+
+"messages_delete_all_button" = "All Nachrichte lösche";
+"messages_delete_all_confirm_title" = "All Nachrichte i dem Chat vo dem Grät lösche?";
+"messages_delete_all_confirm_message" = "Das beinhaltet au alli Medie und Dokument.";
+"messages_delete_selected_confirm" = "Usgwählti Nachrichte vo dem Grät lösche?";
+"conversation_delete_confirm" = "De Chat vo dem Grät lösche?";
+"delete_n" = "Lösche (%d)";
+"message_delete_for_everyone" = "Nachricht für all lösche";
+
+"message_cannot_play_movie" = "Film cha nöd abgspilt werde.";
+
+"identity_not_found_title" = "Unbekannti ID";
+"identity_not_found_message" = "Die ID gits nöd, oder die Person mit dere ID nutzt e App, wo nöd kompatibel isch.";
+
+"message_too_long_title" = "Nachricht isch z’lang";
+"message_too_long_message" = "Die maximal Nachrichtelängi isch %d Bytes.";
+
+"scanned_identity_mismatch_title" = "ID stimmt nöd überii";
+"scanned_identity_mismatch_message" = "Die ID, wo Sie gscannt händ, stimmt nöd mit em gespeicherete Kontakt überii.";
+
+"scanned_own_identity_title" = "Sie händ Ihri eigeni ID gscannt.";
+
+"scan_code_expired_title" = "Code abgloffe";
+"scan_code_expired_message" = "De Code isch abgloffe. Bitte scanned Sie ihn nomal direkt usde App vom andere Nutzer.";
+
+"scan_id_add_contact_failed_title" = "Kontakt cha nöd dezue taa werde";
+"scan_id_add_contact_failed_message" = "Bitte versueched Sie’s nomal.";
+
+"scanned_non_threema_id_title" = "ID cha nöd gläse werde.";
+"scanned_non_threema_id_message" = "Das isch en ungültige QR-Code vo %@.";
+
+"take_photo_or_video" = "Foti oder Video mache";
+"take_photo" = "Foti mache";
+"choose_existing" = "Useme Album uswähle";
+"choose_existing_photo" = "Foti useme Album uswähle";
+"edit_photos" = "Usgwählti Dateie bearbeite";
+"delete_photo" = "Foti lösche";
+"delete_video" = "Video lösche";
+"delete_file" = "Datei lösche";
+"send_location" = "Standort schicke";
+"record_audio" = "Tonufnahm";
+"record_continue" = "Tonufnahm wiiterufneh";
+"scan_qr" = "QR-Code scanne";
+"share_file" = "Datei schicke";
+"add_item_caption" = "Bildunterschrift ergänze";
+"add_items_caption" = "Bildunterschrifte ergänze";
+"send_item_immediately_photo" = "Foti verschicke";
+"send_item_immediately_video" = "Video verschicke";
+"send_items_immediately" = "%d Fotis/Videos verschicke";
+"send_items_immediately_photo" = "%d Fotis verschicke";
+"send_items_immediately_video" = "%d Videos verschicke";
+
+"record" = "Ufneh";
+"play" = "Abspile";
+"pause" = "Pause";
+"stop" = "Aahalte";
+"quit" = "Beende";
+
+"send_file_title" = "Datei schicke";
+"send_file_message" = "Date: %@\na\n%@";
+"quote_not_found" = "Zitiert Nachricht nöd gfunde.";
+
+"include_media" = "Mit Medie";
+"without_media" = "Ohni Medie";
+"media_overview" = "Medie";
+
+"members" = "Mitglieder";
+"group_one_member_title" = "1 Mitglied";
+"group_multiple_members_title" = "%d Mitglieder";
+"group_members_section_header" = "Mitglieder (%d)";
+"group_add_members_button" = "Mitglieder dezue tue";
+"group_manage_members_button" = "Mitglieder bearbeite";
+"group_creator_section_header" = "Admin";
+"group_creator_left_section_header" = "Admin (verlaa)";
+"too_many_members_title" = "Zvil Gruppe-Mitglieder";
+"too_many_members_message" = "Die maximal Aazahl a Gruppe-Mitglieder isch %d.";
+"add_member" = "Mitglied dezue tue";
+"no_more_members" = "Die Gruppe hät kei Mitglieder meh.";
+"group_different_identity" = "Die Gruppe isch erstellt worde, wo Sie e anderi Threema-ID gnutzt händ. Mit Ihrere aktuelle ID chönd Sie kei Nachrichte a die Gruppe schicke.";
+"group_is_not_member" = "Sie chönd kei Nachricht a die Gruppe schicke, wil Sie keis Mitglied vode Gruppe meh sind.";
+"contact_blocked_cannot_send" = "Sie chönd kei Nachricht a de Kontakt schicke, wil er blockiert isch.";
+"contact_invalid_cannot_send" = "Sie chönd kei Nachricht a de Kontakt schicke, wil er ungültig isch.";
+"contact_betafeedback_cannot_send" = "Sie nutzed nöd d’Beta-Version, bitte schicked Sie Feedback a *SUPPORT.";
+"group_sync_button" = "Gruppe synchronisiere";
+"group_clone_button" = "Gruppe chlone";
+"group_clone_title" = "Gruppe chlone";
+"group_clone_message" = "Es wird e Kopie vode aktuelle Gruppe mit Ihne als Administrator erstellt.";
+"group_clone_action_button" = "Chlone";
+"group_leave_button" = "Gruppe verlaa";
+"group_delete_confirm" = "Sind Sie sicher, dass Sie die Gruppe wänd verlaa?";
+"group_admin_delete_confirm" = "Sind Sie sicher, dass Sie die Gruppe wänd uflöse?";
+"group_dissolve_button" = "Gruppe uflöse";
+"group_delete" = "Gruppe lösche";
+
+"distribution_list_recipients_section_header" = "Empfänger (%d)";
+"distribution_list_no_recipient_title" = "Kei Empfänger";
+"distribution_list_one_recipient_title" = "1 Empfänger";
+"distribution_list_multiple_recipients_title" = "%d Empfänger";
+
+"distribution_list_delete" = "Verteilerlischte lösche";
+"distribution_list_create" = "Neui Verteilerlischte";
+"distribution_list_edit" = "Verteilerlischte bearbeite";
+
+"group name" = "Gruppename";
+"existing groups" = "Bestehendi Gruppe";
+"new group" = "Neui Gruppe";
+"edit group" = "Gruppe bearbeite";
+"pick image" = "Bild wähle";
+"create" = "Erstelle";
+"search" = "Sueche";
+"leave" = "Verlaa";
+"dissolve" = "Uflöse";
+"groups" = "Gruppe";
+"create_new_group" = "Neui Gruppe erstelle";
+"create_note_group_info_title" = "Tipp";
+"create_note_group_info_text" = "Wenn Sie kei Mitglieder dezue tüend, bliibed Nachrichte a die Gruppe lokal. Das isch ideal, zum Notize, Medie oder Dokument sicher speichere oder uf de Desktop z’überträge.";
+"remind_me_next_time" = "Nöchschts Mal erinnere";
+"doNotShowAgain" = "Nüme aazeige";
+"add_note_group_info" = "*Sie sind ellei da ine*\nBruched Sie de Chat als sichers Notizbuech für Text, Medie oder Dokument.";
+"end_note_group_info" = "*Sie sind nüme ellei i dem Chat*\nNeui Nachrichte werded a all Gruppemitglieder gschickt.";
+
+"chat_search_searching" = "Sueche...";
+"chat_search_no_matches" = "Kei Ergäbnis";
+"chat_search_matches" = "%d vo %d Ergäbnis";
+
+"choose_recipient" = "Empfänger uswähle";
+
+"tap_to_cancel" = "Aatippe zum Abbräche";
+"previous" = "Vorherigi";
+"tap_to_change" = "Aatippe zum Ändere";
+"next" = "Wiiter";
+"unread_messages" = "Ungläseni Nachrichte";
+"unread_messages_line_with_count" = "Ungläseni Nachrichte (%d)";
+
+/* Verification level popovers in chat view */
+"verification_level_title" = "Vertrauensstufe";
+/* Verification level popovers in chat view */
+"verification_level_text" = "Die farbige Pünkt gebed d’Vertrauensstufe vomene Kontakt ah.";
+"level0_title" = "Tüüfsti Vertrauensstufe";
+/* Verification level section title */
+"verification_level_section_work" = "Kontäkt i Ihrere Organisation";
+"verification_level_section_other" = "Anderi Kontäkt";
+/* Verification level popovers in chat view */
+"level1_title" = "Mittleri Vertrauensstufe";
+"level2_title" = "Höchsti Vertrauensstufe";
+"level3_title" = "Mittleri Work-Vertrauensstufe";
+"level4_title" = "Höchsti Work-Vertrauensstufe";
+"level0_explanation" = "Unbekannte Kontakt; de Kontakt hät entweder sini ID weder mitere Handynummere no mitere E-Mail-Adrässe verchnüpft, oder i Ihrem Adrässbuech sind die Aagabe nöd drin.";
+"level1_explanation" = "Kontakt, vo dem d’Handynummere und/oder d’E-Mail-Adrässe i Ihrem Adrässbuech drin isch.";
+"level2_explanation" = "Kontakt, vo dem Sie d’Identität und de öffentlich Schlüssel dur Scanne vom QR-Code persönlich verifiziert händ.";
+"level3_explanation" = "Interne Kontakt, wo dur Ihri Organisation vorgeh isch.";
+"level4_explanation" = "Interne Kontakt, vo dem Sie d’Identität und de öffentlich Schlüssel dur Scanne vom QR-Code persönlich verifiziert händ.";
+
+"id_verified_title" = "ID überprüeft";
+
+/* Invalid country code alert */
+"invalid_country_code_title" = "Ungültigi Region";
+"invalid_country_code_message" = "D’Region vo Ihrem Grät schiint uf en ungültige Wert igstellt z’sii. Bitte mached Sie d’Iistelligs-App uf und wähled Sie unter «Allgemein > Landeseinstellungen» nomal e Region us, zum Problem mitem Abgliich vo Telefonnummere z’vermiide.";
+
+/* Settings */
+"show_stale_contacts_on" = "Inaktivi Threema-IDs (d.h. sonigi, wo während meh als drü Mönet nöd in Gebruuch gsi sind) und widerruefeni IDs werded usbländet.";
+"show_stale_contacts_off" = "All Threema-IDs werded i de Kontaktliste aazeigt.";
+
+"backgrounding_on" = "D’App blibt im Hindergrund bis zu 30 Sekunde lang verbunde.";
+"backgrounding_off" = "D’App trännt d’Verbindig im Hindergrund sofort.";
+"debug_log_clear" = "Log lösche";
+"log_empty_message" = "S’Debug-Log isch leer.";
+"cannot_send_mail_message" = "Es isch keis E-Mail-Konto uf dem Grät konfiguriert.";
+
+"preview_limit" = "Begränzig:\n%.0f Medie";
+
+/* Backup identity */
+"backup_mail_subject" = "Threema-ID-Export für %@";
+"backup_found_message" = "E exportierti Threema-ID isch uf Ihrem Grät gfunde worde. Wänd Sie die wiederherstelle?";
+"backup_include" = "De verschlüsslet ID-Export wird mit iigschlosse, wenn Sie Ihres Grät via iTunes oder iCloud sichered.";
+"backup_found_title" = "ID-Export gfunde";
+"backup_footer" = "Die Date chönd zäme mitem gwählte Passwort zum Wiederherstelle vo Ihrere ID ufeme andere Grät brucht werde. Sie chönd die Date mittels Kopiere und Iifüege amene geeignete Ort ablegge, sich sälber per E-Mail schicke oder de QR-Code miteme andere Grät scanne.";
+
+/* Restore identity */
+"scan_backup" = "ID-Export scanne";
+"backup_exclude" = "De ID-Export wird nöd mit iigschlosse, wenn Sie Ihres Grät via iTunes oder iCloud sichered. Speichered Sie de ID-Export manuell, demit Sie ihn nöd verlüüred.";
+
+/* Contacts */
+"pull_to_sync" = "Abezieh";
+"bad_identity_backup" = "De ID-Export isch ungültig, oder Sie händ es falsches Passwort igeh. Bruuched Sie s’Passwort, wo Sie bim Erstelle vom Export gwählt händ, zum Ihri Threema-ID wiederherzstelle. Bitte überprüefed Sie Ihri Iigabe und versueched Sie’s nomal.";
+"pull_to_sync_429_message" = "S’Limit vode erlaubte Kontaktsynchronisatione pro Tag isch erreicht. Setzed Sie d’Synchronisierig morn fort, oder kontaktiered Sie de Threema-Support.";
+"pull_to_sync_429_message_work" = "S’Limit vode erlaubte Kontaktsynchronisatione pro Tag isch erreicht. Setzed Sie d’Synchronisation morn fort, oder kontaktiered Sie Ihre %@-Administrator.";
+
+"synchronizing" = "Synchronisiere…";
+
+"no_contacts_syncon" = "Sie händ no kei Kontäkt. D’Synchronisierig isch igschalte, aber offebar hät no niemer vo Ihrne Kontäkt Threema installiert (ladet Sie sie ii!).";
+"no_contacts" = "Kei Kontäkt";
+"no_groups" = "Kei Gruppe";
+"no_groups_message" = "Sie händ no kei Gruppe. Tipped Sie ufde «+»-Button, zum e Gruppe z’erstelle.";
+"no_work_contacts" = "%@-Nutzer";
+"no_work_contacts_message" = "Kei vo ihrem Administrator überprüefti %@-Kontäkt gfunde.";
+"no_distribution_list" = "Kei Verteilerlischte";
+"no_distribution_list_message" = "Sie händ no kei Verteilerlischte. Tipped Sie uf de «+»-Button, zum eini erstelle.";
+
+"no_contacts_syncoff" = "Sie händ no kei Kontäkt. Schalted Sie d’Synchronisierig ii (Iistellige > Privatsphäre), oder füeged Sie Kontäkt manuell mitem «+»-Button hinzue.";
+
+"my_profile_picture_title" = "Ihres Profilbild";
+"release_profilepicture_to" = "Profilbild freigeh a";
+"contact_added_to_profile_picture_list" = "De Kontakt chunnt Ihres Profilbild über, sobald Sie ihm schribed.";
+"contact_removed_from_profile_picture_list" = "De Kontakt chunnt Ihres Profilbild nüme über.";
+
+"sync_group" = "Gruppe synchronisiere";
+
+"contact_threema_work_title" = "Threema Work";
+"contact_threema_work_info" = "S’Aktekoffer-Symbol bedüted, dass en Kontakt d’Business-App «Threema Work» bruucht.";
+"contact_threema_title" = "Threema";
+"contact_threema_info" = "S’Huus-Symbol bedüted, dass en Kontakt di privat Version vo Threema bruucht, nöd Threema Work.";
+"contact_threema_work_conversation_info" = "De Kontakt bruucht Threema Work.";
+"contact_threema_conversation_info" = "De Kontakt bruucht die privat Version vo Threema.";
+
+"threema_type_icon_work_accessibility_label" = "Work-Kontakt";
+"threema_type_icon_private_accessibility_label" = "Private Kontakt";
+
+"delete_contact_group_exists_title" = "Kontakt cha nöd glöscht werde";
+"delete_contact_group_exists_message_single" = "«%@» isch Mitglied vonere Gruppe. Entferned Sie de Kontakt zerscht usde Gruppe, oder lösched Sie d’Gruppe.";
+"delete_contact_group_exists_message_multiple" = "«%@» isch Mitglied vo %d Gruppe. Entferned Sie de Kontakt zerscht usde Gruppe, oder lösched Sie d’Gruppe.";
+"delete_contact_group_exists_show_contact_button" = "Kontakt aazeige";
+"delete_contact_existing_conversation_title" = "«%@» lösche?";
+"delete_contact_existing_conversation_button" = "Kontakt + Nachrichteverlauf lösche";
+"delete_contact_confirmation_with_exclusion_message" = "«%@» lösche und vode Synchronisation usschlüsse?";
+"delete_contact_button" = "Kontakt lösche";
+"delete_contact_confirmation_with_exclusion_button" = "Kontakt lösche + usschlüsse";
+"exclude_deleted_id_title" = "D’Threema-ID vo «%@» vode Synchronisation usschlüsse?";
+"exclude_deleted_id_message" = "D’Usschlussliste cha ide Privatsphäre-Iistellige verwalted werde.";
+"exclude_deleted_id_exclude_button" = "Usschlüsse";
+
+"forward_security" = "Perfect Forward Secrecy";
+"forward_security_none" = "kei"; /* sent to _none_ with PFS (_no(ne)_ PFS) */
+"forward_security_2dh" = "einsiitig"; /* _uniliteral_ PFS */
+"forward_security_4dh" = "vollständig"; /* _complete_ PFS */
+"forward_security_outgoing_group_partial" = "teilwiis"; /* _partial_ly sent with PFS */
+"forward_security_outgoing_group_full" = "all"; /* _full_y sent with PFS */
+"forward_security_clear_sessions" = "Perfect Forward Secrecy für de Kontakt zruggsetze";
+"forward_security_explainer_footer" = "Füehred Sie die Aktion nur us, wenn Sie vom Threema-Support explizit dezue ufgforderet worde sind.";
+"md_wizard_pfs_warning" = "Perfect Forward Secrecy wird für all Kontäkt deaktiviert, nachdem Sie d’Multi-Device-Vorschau aktiviert händ.";
+"md_wizard_disable_pfs_confirm" = "Perfect Forward Secrecy deaktiviere";
+
+/* create id */
+"lets_get_started" = "Los gaht’s!";
+"setup_threema" = "Jetzt iirichte";
+"restore_id" = "Backup wiederherstelle";
+"restore_title_text" = "Zrugg bi %@?";
+"setup_title_text" = "Neu bi %@?";
+"restore_id_export" = "Exportierti ID wiederherstelle";
+"id_exists" = "Die vorher uf dem Grät gnutzti Threema-ID (%@) isch no ume. Wänd Sie die ID wiederherstelle?";
+
+"welcome" = "Willkomme bi %@";
+"move_your_finger" = "Beweged Sie Ihre Finger im Feld, zum e neui Threema-ID z’generiere.";
+"more_information" = "Meh Informatione";
+"more_information_link_id_work" = "Wenn Sie Ihri eigeni Telefonnummere und/oder E-Mail-Adrässe agebed, chan %@ Ihrne Kontäkt helfe, Sie automatisch z’finde, wenn Sie i ihrem Adrässbuech iitreit sind. E-Mail-Adrässe werded für das in einwegverschlüssleter (ghashter) Form uf üsem Server gspeicheret. Sie chönd de Schritt au eifach überspringe, wenn Sie %@ anonym wänd nutze.";
+"more_information_pick_nickname" = "De Nickname wird uf es paar Grät in Benachrichtigunge aazeigt und dient ide Kontaktliste als zuesätzlichi Identifikationsmöglichkeit für Chatpartner, wo Sie nöd i ihrere Kontaktliste händ. Mir empfehled, nur en Vorname oder es Pseudonym z’bruuche. Wenn Sie kein Nickname festlegged, wird Ihri Threema-ID bruucht.";
+"more_information_sync_contacts" = "D’E-Mail-Adrässe und Telefonnummere werded vo %@ anonymisiert und sicher a üseri Server übermittled und nachem Abgliich direkt wider glöscht.";
+"more_information_random_seed" = "Dur d’Bewegig vom Finger erzüüged Sie Zuefallsdate (sogenannti «Entropie»), wo für d’Erzüügig vom Schlüsselpaar gnutzt werded. Das Schlüsselpaar wird mit Ihrere neue Threema-ID verbunde.";
+"id_confirm_description_work" = "Ihri Threema-ID funktioniert wie e Telefonnummere. Ihri Kontäkt chönd Sie über die ID erreiche.";
+"more_information_link_id" = "Wenn Sie Ihri eigeni Telefonnummere agebed, chan Threema Ihrne Fründe helfe, Sie automatisch z’finde, wenn Sie i ihrem Adressbuech iitreit sind. Telefonnummere werded für das in einwegverschlüssleter (ghashter) Form uf üsem Server gspeicheret. Sie chönd de Schritt au eifach überspringe, wenn Sie %@ anonym wänd nutze.";
+"more_information_confirm_id" = "Sie händ mit de Threema-ID es Schlüsselpaar erzüügt. De öffentlich Schlüssel isch a üse Server gschickt worde. De privat Schlüssel verlaht Ihri Grät nie. Das stellt sicher, dass niemer anders Ihri Nachrichte läse cha.";
+
+"id_confirm_description" = "Ihri Threema-ID funktioniert wie e Telefonnummere. Ihri Fründe chönd Sie über die ID erreiche.";
+"id_pick_nickname_description_work" = "De Nickname wird bi Ihrne Kontäkt aazeigt, wenn sie e Nachricht überchömed.";
+"id_confirm_your_id" = "Das isch Ihri Threema-ID:";
+
+"id_pick_nickname_title" = "Nickname wähle";
+"id_pick_nickname_description" = "De Nickname wird bi Ihrne Fründe aazeigt, wenn sie e Nachricht überchömed.";
+"id_link_title_work" = "Demit Sie eifacher gfunde werded";
+"id_pick_nickname_question" = "Wänd Sie Ihri Threema-ID als Nickname bruuche?";
+"id_enter_nickname" = "Nickname igeh";
+
+"id_link_no_input_work" = "Sie händ weder e Telefonnummere no e E-Mail-Adrässe zur Verchnüpfig ageh. Sie werded drum nöd automatisch in Kontaktliste ufgfüehrt. Wänd Sie %@ würklich komplett anonym nutze?";
+"id_link_title" = "Demit Sie eifacher gfunde werded";
+"id_link_description_work" = "Verchnüpfed Sie Ihri Telefonnummere/E-Mail-Adrässe mit Ihrere Threema-ID.";
+"id_link_description" = "Verchnüpfed Sie Ihri Telefonnummere mit Ihrere Threema-ID.";
+"id_link_no_input" = "Sie händ kei Telefonnummere zur Verchnüpfig ageh. Sie werded drum nöd automatisch ide Kontaktliste vo Ihrne Fründe ufgfüehrt. Wänd Sie %@ würklich komplett anonym nutze?";
+"id_sync_title_work" = "Findet Sie Ihri Kontäkt uf %@";
+"id_sync_description_work" = "Iischalte, zum gseh, wer vo Ihrne Kontäkt %@ nutzt.";
+"id_enter_email" = "E-Mail-Adrässe (optional)";
+
+"id_sync_title" = "Findet Sie Ihri Fründe uf Threema";
+"id_sync_description" = "Iischalte, zum gseh, wer vo Ihrne Fründe Threema nutzt.";
+"id_sync_contacts" = "Kontäkt synchronisiere";
+
+"id_completed_title" = "Iirichtig abgschlosse. Stimmt alles?";
+"id_completed_nickname" = "Ihre Nickname";
+"id_completed_linked_to" = "Verchnüpft mit";
+"id_completed_sync_contacts" = "Kontäkt synchronisiere";
+"finish" = "Abschlüsse";
+
+"linking_email" = "Verchnüpfti E-Mail";
+"syncing_contacts" = "Kontäkt synchronisiere";
+"linking_phone" = "Verchnüpfti Telefonnummere";
+"(linked)" = "(verchnüpft)";
+"linking_phone_sms_sent" = "SMS zur Verifikation verschickt";
+
+"Password" = "Passwort";
+"(optional)" = "(optional)";
+"scan_id_backup" = "Exportierte QR-Code iiläse";
+"phone number" = "Telefonnummere";
+"id_backup" = "Exportierti ID";
+"id_backup_placeholder" = "Gebed Sie da d’Zeichefolg vo Ihrem ID-Export ii";
+"username" = "Benutzername";
+
+"country_code" = "Landesvorwahl";
+"enter_license_password_placeholder" = "Passwort";
+"leave_group" = "Gruppe verlaa";
+
+"work_data_fetch_failed_title" = "Lade vo Threema Work-Date fehlgschlage";
+"work_data_fetch_failed_message" = "Threema Work-Date händ nöd chöne glade werde, bitte prüefed Sie d’Internetverbindig und versueched Sie’s nomal.";
+
+"app_setup_steps_failed_title" = "Iirichtig cha nöd abgschlosse werde";
+"app_setup_steps_failed_message" = "Bitte prüefed Sie Ihri Internetverbindig und versueched Sie’s nomal. Falls s’Problem wiiterhin bestaht, wänded Sie sich bitte an Support.";
+
+/* License Key */
+"enter_license_infoview_subtitle" = "für Unternehme";
+"enter_license_infoview_more_link" = "[Meh über Threema Work erfahre](link)";
+
+"enter_license_infoview_private_use" = "für Privataawänder";
+"enter_license_infoview_threema_description" = "Wenn Sie d’App privat wänd bruuche, laded Sie bitte die regulär Threema-App abe.";
+"enter_license_infoview_appstore_link" = "Threema im App Store";
+"enter_license_infoview_login" = "Aamälde";
+
+/* License Key */
+"enter_license_title" = "Ameldedate igeh";
+/* MWPhotoBrowser */
+"Done" = "Fertig";
+"enter_license_description" = "Gebed Sie Ihri Threema Work-Zuegangsdate ii, wo Sie vo Ihrem Unternehme übercho händ.";
+"enter_license_onprem_description" = "Gebed Sie Ihri Threema OnPrem-Zuegangsdate ii, wo Sie vo Ihrem Unternehme übercho händ.";
+"enter_license_work_admin_description" = "Zuegangsdate vergesse? – Mälded Sie sich bi Ihrem Threema Work-Administrator.";
+"enter_license_onprem_admin_description" = "Zuegangsdate vergesse? – Mälded Sie sich bi Ihrem Threema OnPrem-Administrator.";
+"enter_license_onprem_error_config" = "Ungültigi Konfiguration. Mälded Sie sich bi Ihrem Threema OnPrem-Administrator. (Code: %d)";
+"enter_license_onprem_error_version" = "Nöd unterstützti Version. Mälded Sie sich bi Ihrem Threema OnPrem-Administrator. (Code: %d)";
+"enter_license_onprem_error_credentials" = "Ungültigi Aamäldedate. Mälded Sie sich bi Ihrem Threema OnPrem-Administrator. (Code: %d)";
+"more_work_info" = "Meh über %@ erfahre.";
+"Save" = "Speichere";
+"enter_license_username_placeholder" = "Benutzername";
+"of" = "vo";
+"Cancel" = "Abbräche";
+"enter_license_checking" = "Ameldig wird überprüeft";
+"confirm" = "Bestätige";
+"enter_license_info" = "Wenn Sie d’App privat nutze wänd, laded Sie Threema bitte da abe.";
+"enter_license_info_link" = "da";
+"enter_license_server_placeholder" = "Server";
+
+"enter_license_enter_new_credentials" = "Neui Zuegangsdate bruuche";
+
+"Copy" = "Kopiere";
+"Email" = "E-Mail";
+"Saving" = "Speichere";
+"Failed" = "Fehlgschlage";
+"Saved" = "Gspeicheret";
+"Copying" = "Kopiere";
+"Copied" = "Kopiert";
+"Preparing" = "Vorbereite";
+"photo" = "Foti";
+"Dismiss" = "Easy";
+"photos" = "Fotis";
+
+/* invite messages */
+"invite_email_body" = "Hallo\n\nIch nutze Threema, de sicheri Instant Messenger, wo d’Privatsphäre schützt.\n\nMini Threema-ID: https://threema.id/%@\n\nChum, mer chatted über Threema!\n\nLiebi Grüess";
+"invite_email_subject" = "Threema. De sicheri Messenger, wo dini und mini Privatsphäre schützt";
+"invite_sms_body" = "Hallo! Lah üs sicher und dateschutzkonform über Threema kommuniziere! Mini Threema-ID: https://threema.id/%@";
+"invite_facebook_text" = "Ich bruuch Threema, de sicheri Instant Messenger, wo d’Privatsphäre schützt. Mini Threema-ID: https://threema.id/%@";
+"invite_twitter_text" = "Ich bruuch Threema, de sicheri Instant Messenger, wo d’Privatsphäre schützt. Mini Threema-ID: https://threema.id/%@";
+"invite_using" = "Fründe zu Threema iilade mit…";
+"sms" = "SMS";
+
+/* Notifications Text */
+"new_message" = "Nachricht";
+/* Notifications Text */
+"new_message_from_x" = "Nachricht vo %@";
+"new_group_message" = "Gruppenachricht";
+"new_message_unknown" = "Unbekannt";
+"new_message_unknown_group" = "Unbekannti Gruppe";
+"new_group_message_from_x" = "Gruppenachricht vo %@";
+"new_message_no_access_title" = "Neui Nachrichte";
+"new_message_no_access_message" = "Bitte öffned Sie %@, zum iigehendi Nachrichte z’empfange.";
+"new_message_invalid_license" = "Ihri Lizänz isch ungültig. Öffned Sie d’App, zum fortzfahre.";
+"new_message_db_requires_migration" = "Threema isch aktualisiert worde. Bitte öffned Sie d’App, demit s’Update cha abgschlosse werde.";
+
+/* reminder messages */
+"push_reminder_title" = "Benachrichtigunge nöd aktiviert";
+"push_reminder_message" = "Sie werded nöd über neui Nachrichte oder iigehendi Arüef informiert, wenn %@ gschlosse isch. \n\nZum das z’behebe, gönd Sie id System-Iistellige und aktiviered Sie Benachrichtigunge für %@.";
+"push_reminder_not_now" = "Nöd nomal erinnere";
+"push_reminder_set_now" = "Benachrichtigunge aktiviere";
+
+"updating_database" = "Datebank wird aktualisiert…\n\nBitte lönd Sie Threema im Vordergrund laufe, bis de Vorgang abgschlosse isch.\n\nJe nach Umfang vo Ihrne Chatverläuf cha de Prozess es paar Minute duure.";
+"database_migration_error_hints" = "Bitte stelled Sie sicher, dass Sie gnueg freie Speicherplatz uf Ihrem Grät händ. Started Sie Ihres Grät neu und versueched Sie’s dänn nomal.";
+"database_migration_storage_warning_title" = "Zwenig freie Speicherplatz";
+"database_migration_storage_warning_message" = "D’Datebank-Aktualisierig benötigt vorübergehend mindestens %.1f GB freie Speicherplatz. Ihres Grät hät im Moment aber nume %.1f GB freie Speicherplatz. Stelled Sie Speicherplatz frei, indem Sie ide Benutzigsiistellige Objekt lösched, und versueched Sie’s dänn nomal.";
+
+"sync_exclusion_footer" = "D’IDs, wo da ufglistet sind, werded bim Synchronisiere vo Kontäkt ignoriert.";
+"enter_id_to_exclude" = "Gebed Sie d’ID ii, wo vo de Synchronisierig söll usgschlosse werde:";
+
+"group_renamed_to_x" = "Gruppe umbenännt in «%@»";
+"group_member_x_left" = "%@ hät d’Gruppe verlaa";
+"group_member_x_added" = "%@ isch id Gruppe ufgnoh worde";
+"group_member_x_forced_leave" = "%@ isch usde Gruppe entfernt worde";
+"group_member_self_added" = "Sie sind id Gruppe ufgnoh worde.";
+"group_member_self_removed" = "Sie sind usde Gruppe entfernt worde.";
+"group_member_self_left" = "Sie händ d’Gruppe verlaa.";
+"group_member_creator_left" = "*Die Gruppe isch verwaist*\nDe Gruppe-Ersteller hät d’Gruppe verlaa, und sie isch ez nüme administrierbar. Es verbliibends Gruppemitglied söll d’Gruppe (via Gruppedetails) chlone, zum de neu Administrator z’werde.";
+"system_message_group_avatar_changed" = "Gruppebild aktualisiert";
+
+/* accessibility labels */
+"my_profilepicture" = "Ihres Profilbild";
+"my_threema_id" = "Ihri Threema-ID";
+"edit_profile" = "Nickname und Profilbild bearbeite";
+
+"from" = "vo";
+"at" = "um";
+"seconds" = "Sekunde";
+"duration" = "Duur";
+"current_position" = "Position";
+"in_reply_to" = "als Antwort uf";
+"draft" = "Entwurf";
+"new_message_accessibility" = "Neui Nachricht:";
+"quote_interaction_hint" = "Springt zude zitierte Nachricht";
+
+/* TTOpenInAppActivity */
+"Open in ..." = "Ufmache in…";
+
+/* VoiceOver long labels */
+"restore" = "Wiederherstelle";
+
+/* PullToRefresh */
+"pull_to_refresh" = "Abezieh";
+"refreshing" = "Aktualisiere…";
+
+/* Threema Channel */
+"threema_channel_intro" = "Wänd Sie de Threema Channel zu Ihrne Kontäkt dezue tue?";
+"threema_channel_info" = "De Threema Channel versorgt Sie mit Neuigkeite zu Threema.";
+"threema_channel_failed" = "De Threema Channel hät leider nöd chöne dezue taa werde.";
+
+/* Push decryption */
+"decryption_push_reply" = "Antworte";
+"decryption_push_placeholder" = "Antworte…";
+"decryption_push_agree" = "Bestätige";
+"decryption_push_disagree" = "Ablehne";
+
+"send_notification_message_error_title" = "Nachricht schicke";
+"send_notification_message_error_failed" = "D’Nachricht hät nöd chöne gschickt werde.";
+"send_notification_message_error_agree" = "D’Nachricht hät nöd chöne bestätigt werde.";
+"send_notification_message_error_disagree" = "D’Nachricht hät nöd chöne abglehnt werde.";
+
+/* Device policy */
+"disabled_by_device_policy" = "Es paar Iistellige sind dur Ihre Administrator deaktiviert worde";
+
+/* Edit profile */
+"profile_picture_recipients" = "Profilbild-Empfänger";
+/* Edit profile */
+"send_profileimage_off" = "Niemer";
+"send_profileimage_on" = "All, dene Sie schribed";
+"send_profileimage_contacts" = "Usgwählti Kontäkt";
+"edit_profile_footer" = "De Nickname wird in Push-Benachrichtigunge vo Ihne iigsetzt. Mir empfehled, nur Ihre Vorname oder es Pseudonym z’bruuche.";
+
+/* DKImagePickerView */
+"gallery_moments" = "Momänt";
+
+/* VoIP Call */
+"call_mute" = "Stumm";
+"call_unmute" = "Stumm ufhebe";
+"call_speaker" = "Lutsprächer";
+"call_earpiece" = "Ohrmuschle";
+"call_end" = "Uflegge";
+"call_camera_activate_button" = "Kamera aktiviere";
+"call_camera_deactivate_button" = "Kamera deaktiviere";
+"call_camera_switch_to_front_button" = "Zude Vorderkamera wächsle";
+"call_camera_switch_to_back_button" = "Zude Rückkamera wächsle";
+
+"call_rejected" = "Aruef abglehnt";
+"call_rejected_busy" = "Beschäftigt";
+"call_rejected_timeout" = "Aruefempfänger nöd verfüegbar";
+"call_rejected_disabled" = "Threema-Arüef sind ufem Zielgrät deaktiviert";
+"call_rejected_unknown" = "Aruef abglehnt";
+"call_missed" = "Verpasste Aruef";
+"call_incoming_ended" = "Iigehende Aruef";
+"call_outgoing_ended" = "Usgehende Aruef";
+"call_duration" = "Duur: %@";
+"call_canceled" = "Aruef abbroche";
+"call_back" = "Zruggalüte";
+"call_accept" = "Aaneh";
+"call_reject" = "Ablehne";
+"call_hide_call" = "Aruef verberge";
+"call_no_wifi" = "Aruef über Mobilfunknetz. Meh erfahre…";
+"call_mic_access" = "Kei Mikrofon-Zuegriff.";
+
+"call_voip_not_supported_title" = "Threema-Aruef";
+"call_voip_not_supported_text" = "De Kontakt cha no kei Threema-Arüef empfange.";
+"call_contact_not_reachable" = "De Kontakt isch aktuell nöd verfüegbar.";
+
+"call_status_idle" = "Parat";
+"call_status_wait_ringing" = "Ruefufbau";
+"call_status_ringing" = "Es lüüted";
+"call_status_incom_ringing" = "Threema-Aruef";
+"call_status_initializing" = "Wird verbunde";
+"call_status_calling" = "Verbunde";
+"call_status_reconnecting" = "Wird verbunde";
+"call_status_unknown" = "Unbekannt";
+"call_status_blocked" = "Blockierte Kontakt";
+"call_status_failed_title" = "Threema-Aruef";
+
+"call_threema_cellular_instead_of_wifi_title" = "Aruef übers Mobilfunknetz";
+"call_threema_cellular_instead_of_wifi_text" = "Achtung: De Aruef verursacht Datetransfer im Mobilfunknetz.";
+
+// Group Calls
+"group_call_title" = "Gruppearuef";
+/* Group Calls */
+"group_call_join_button_title" = "Biiträtte";
+"group_call_open_button_title" = "Ufmache";
+"group_call_participants_title" = "Teilnehmer: %@";
+
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ hät en Gruppearuef gstarted";
+"group_call_started_by_local_system_message" = "Sie händ en Gruppearuef gstarted";
+"group_call_ended_system_message" = "De Gruppearuef hät gändet";
+"group_call_started_disabled" = "En Gruppeaaruef isch gstartet worde. Aktiviered Sie Gruppeaarüef ide Iistellige, zum biiträtte.";
+
+"group_call_notification_body_preview" = "Gruppearuef gstarted dur %@";
+"group_call_notification_body" = "Gruppearuef gstarted";
+
+"group_call_navbar_state_connecting" = "Verbinde…";
+"group_call_navbar_state_joining" = "Biiträtte…";
+"group_call_navbar_state_connected" = "Verbunde";
+
+"group_call_error_generic_title" = "En Fehler isch ufträtte";
+"group_call_error_generic_message" = "Falls s’Problem wiiterhin uftritt, wändet Sie sich bitte an Support.";
+"group_call_error_already_in_call_title" = "Andere Aruef aktiv";
+"group_call_error_already_in_call_message" = "Es cha maximal eim Aruef biiträtte werde.";
+"group_call_error_ended_in_meantime_title" = "De Gruppearuef hät gändet";
+"group_call_error_ended_in_meantime_message" = "De Aruef, wo Sie händ welle biiträtte, isch ide Zwüscheziit beändet worde.";
+
+"group_call_alert_full_title" = "Maximal Teilnehmerzahl erreicht";
+"group_call_alert_full_message_count" = "Die maximal Azahl vo %d Teilnehmer im Gruppearuef isch erreicht.";
+"group_call_alert_full_message" = "Die maximal Teilnehmerzahl im Gruppearuef isch erreicht.";
+
+"group_call_accessibility_hide_view" = "Gruppearuef verberge";
+"group_call_accessibility_enable_camera" = "Kamera iischalte";
+"group_call_accessibility_disable_camera" = "Kamera usschalte";
+"group_call_accessibility_audio_output" = "Audiousgab wächsle";
+"group_call_accessibility_enable_microphone" = "Mikrofon iischalte";
+"group_call_accessibility_disable_microphone" = "Mikrofon usschalte";
+"group_call_accessibility_audio_enabled" = "Mikrofon aktiviert";
+"group_call_accessibility_audio_disabled" = "Mikrofon deaktiviert";
+"group_call_accessibility_video_enabled" = "Kamera aktiviert";
+"group_call_accessibility_video_disabled" = "Kamera deaktiviert";
+
+/* Privacy Policy */
+"privacy_policy_about" = "Threema schützt Ihri Privatsphäre so konsequänt wie kein andere Messenger. I üsere Dateschutzerchlärig erfahred Sie meh.";
+"privacy_policy_about_work" = "%@ schützt Ihri Privatsphäre so konsequänt wie kein andere Messenger. I üsere Dateschutzerchlärig erfahred Sie meh.";
+"privacy_policy_about_link" = "Dateschutzerchlärig";
+
+/* Conversation */
+"pin" = "Apinne";
+"unpin" = "Entpinne";
+"pinned_conversation" = "Apinnte Chat";
+
+/* Begin Edit */
+"private_message_label" = "Privati Nachricht";
+"private_chat_label" = "Privat";
+"private_chat_accessibility" = "Private Chat";
+"make_private" = "Als «Privat» markiere";
+"remove_private" = "«Privat»-Markierig entferne";
+"archive" = "Archiviere";
+"unarchive" = "Wiederherstelle";
+"mark_read" = "Als gläse markiere";
+"mark_unread" = "Als ungläse markiere";
+"archived_chats" = "Archivierti Chats";
+
+"archived_title" = "Archiviert";
+"conversations_global_search_placeholder" = "Sueche";
+"one_to_one_chat" = "Einzelchats";
+"conversations_global_search_section_header_tokens" = "Nachrichtetype";
+"conversations_global_search_token_text" = "Textnachrichte";
+"conversations_global_search_token_captions" = "Medieunderschrifte";
+"conversations_global_search_token_polls" = "Umfrage";
+"conversations_global_search_token_locations" = "Standört";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Sterndli-Nachrichte";
+
+"select_all" = "All uswähle";
+"deselect_all" = "All abwähle";
+"no_archived_chats" = "Kei archivierti Chats";
+
+"privateChat_alert_title" = "Privati Chats";
+"privateChat_code_alert_message" = "Zum en Chat als privat z’markiere, muess d’Code-Sperri iigrichted sii.";
+"privateChat_code_alert_confirm" = "Jetzt iirichte";
+"privateChat_set_alert_title" = "Wänd Sie de Chat als privat markiere?";
+"privateChat_set_alert_message" = "D’Sichtbarkeit vo private Chats cha ide Privatsphäre-Iistellige festgleit werde.";
+"privateChat_setup_alert_message" = "Ihres Threema Safe-Backup hät privati Chats enthalte. Demit Sie die chönd ufmache, müend Sie d’Code-Sperri iirichte.";
+
+"group_leave_sheet_title" = "«%@» verlaa?";
+"group_leave_sheet_message" = "Wenn Sie d’Gruppe nur verlönd, chönd Sie nüme ade Konversation teilneh. De bisherig Nachrichteverlauf bliibt aber erhalte.";
+
+"group_leave_delete_sheet_title" = "«%@» verlaa und lösche?";
+"group_leave_delete_sheet_message" = "Wenn Sie die Gruppe verlönd und lösched, chönd Sie nüme a de Konversation teilneh, und de Nachrichteverlauf wird glöscht.";
+"group_leave_and_delete_button" = "Gruppe verlaa und lösche";
+
+"group_dissolve_sheet_title" = "«%@» uflöse?";
+"group_dissolve_sheet_message" = "Wenn Sie die Gruppe nur uflösed, cha niemer meh neui Nachrichte id Gruppe schicke, und sie laht sich au nüme verwalte. Die ufglösti Gruppe cha wiiterhin klont werde.";
+
+"group_dissolve_delete_sheet_title" = "«%@» uflöse und lösche?";
+"group_dissolve_delete_sheet_message" = "Wenn Sie die Gruppe lösched, cha niemer meh neui Nachrichte id Gruppe schicke, und sie laht sich au nüme verwalte. De Nachrichteverlauf wird uf dem Grät glöscht.";
+"group_dissolve_and_delete_button" = "Gruppe uflöse und lösche";
+
+"group_delete_sheet_title" = "«%@» lösche?";
+"group_delete_sheet_message" = "Sind Sie sicher, dass Sie die Gruppe und ihri Inhält lösche wänd?";
+"group_delete_button" = "Gruppe + Nachrichteverlauf lösche";
+
+"distribution_list_delete_sheet_title" = "Verteilerlischte lösche?";
+
+"selected_count" = "%d usgwählt";
+"all_selected" = "All usgwählt";
+
+"archived_alert_title" = "Archivierti Chats";
+"archived_alert_message" = "Zeiged Sie archivierti Chats ah, indem Sie uf de Button z’unterst ide Chatübersicht tipped.";
+
+"private_delete_info_alert_message" = "Wenn Sie en private Chat lösched, sind zuekünftigi Chats nöd au automatisch privat markiert.";
+
+/* End Edit */
+"pushSetting_header" = "Benachrichtigunge";
+"doNotDisturb_title" = "Nöd störe";
+
+"doNotDisturb_turn_off_button" = "Deaktiviere";
+"doNotDisturb_offHours_info" = "Ruheziite sind aktiviert.";
+"doNotDisturb_offHours_details" = "Sie chömed nume Benachrichtigunge am %@ vo %@ bis %@ über.";
+
+"doNotDisturb_off" = "Usgschalte";
+"doNotDisturb_on" = "Unbegränzt igschalte";
+"doNotDisturb_on_until_date_and_time" = "Bis %@";
+"doNotDisturb_on_until_date_and_time_long" = "Iigschalte bis %@";
+"doNotDisturb_onPeriod_time" = "Bis";
+"doNotDisturb_onPeriod_reset" = "Zruggsetze uf";
+"doNotDisturb_onPeriod_1Hour" = "1 Stund";
+"doNotDisturb_onPeriod_2Hours" = "2 Stunde";
+"doNotDisturb_onPeriod_3Hours" = "3 Stunde";
+"doNotDisturb_onPeriod_4Hours" = "4 Stunde";
+"doNotDisturb_onPeriod_8Hours" = "8 Stunde";
+"doNotDisturb_onPeriod_1Day" = "1 Tag";
+"doNotDisturb_onPeriod_1Week" = "1 Wuche";
+"doNotDisturb_on_forever" = "Unbegränzt";
+
+"doNotDisturb_mention" = "Benachrichtigung bi Erwähnig";
+"doNotDisturb_mention_footer_off" = "Wenn «Nöd störe» aktiv isch, chömed Sie kei Benachrichtigunge über, au nöd, wenn Sie erwähnt werded.";
+"doNotDisturb_mention_footer_on" = "Wenn «Nöd störe» aktiv isch und Sie erwähnt werded, chömed Sie trotzdem Benachrichtigunge über.";
+
+"doNotDisturb_notification_sound_footer" = "De Benachrichtigungston wird nur abgspilt, wenn «Ton abspile» aktiviert und «Nöd störe» deaktiviert isch.";
+
+"notification_sound_header" = "Benachrichtigungston";
+"notification_sound_title" = "Ton abspile";
+
+"edit_avatar_no_image_found_title" = "Bild cha nöd glade werde";
+"edit_avatar_no_image_found_message" = "Bitte versueched Sie’s nomal. Vilicht miteme andere Bild.";
+"edit_avatar_edit_picture_accessibility_label" = "Bild bearbeite";
+"edit_avatar_picture_accessibility_label" = "Bild";
+"edit_avatar_picture_not_editable_accessibility" = "Nöd änderbar";
+
+/* WebClient */
+"webClientSession_title" = "Desktop/Web";
+"webClientSession_add" = "Neui Sitzig starte";
+"webClientSession_add_wrong_qr_title" = "Desktop/Web";
+"webClientSession_add_wrong_qr_message" = "Das isch kein QR-Code für d’Desktop-App oder de Web-Client. Laded Sie d’Desktop-App abe (%@) oder öffned Sie de Web-Client (%@), und scanned Sie de abbildet QR-Code.";
+"webClientSession_add_footer" = "Ladet Sie uf Ihrem Mac/PC d’Desktop-App abe (%@), oder mached Sie de Web-Client (%@) uf. Tipped Sie nachher uf s’Kamera-Icon obe rechts uf dem Bildschirm, und scanned Sie de QR-Code uf Ihrem Kompi.";
+"webClientSession_sessions_header" = "Sitzige";
+"webClientSession_unnamed" = "Unbenännti Sitzig";
+"webClientSession_lastUse" = "Zletscht gnutzt";
+"webClientSession_saved" = "Gspeicheret";
+"webClientSession_notSaved" = "Nöd gspeicheret";
+"webClientSession_sessionName" = "Sitzigsname";
+"webClientSession_actionSheetTitle" = "Sitzig bearbeite";
+"webClientSession_actionSheet_stopSession" = "Sitzig schlüsse";
+"webClientSession_actionSheet_startSession" = "Sitzig starte";
+"webClientSession_actionSheet_renameSession" = "Sitzig umbenänne";
+"webClientSession_actionSheet_deleteSession" = "Sitzig lösche";
+"webClientSession_error_updateApp_title" = "Desktop/Web";
+"webClientSession_error_updateApp_message" = "Falschi Version vom App Remote Protocol, bitte aktualisiered Sie d’iOS-App.";
+"webClientSession_error_updateServer_title" = "Desktop/Web";
+"webClientSession_error_updateServer_message" = "Falschi Version vom App Remote Protocol, bitte ladet Sie die aktuell Version vode Desktop-App abe, oder bitted Sie Ihre Administrator, de Web-Client z’aktualisiere.";
+"webClientSession_error_wrongVersion_title" = "Desktop/Web";
+"webClientSession_error_wrongVersion_message" = "Die iOS-App unterstützt s’App Remote Protocol vo Ihrere Desktop-App bzw. vom Web-Client nöd.";
+"webClientSession_error_voip_title" = "Desktop-/Web-Sitzig abgloffe";
+"webClientSession_error_voip_message" = "%@ hät versuecht, e Verbindig mit Ihrem Kompi herzstelle. Bitte lösched Sie die gspeicheret Sitzig ufem Kompi und started Sie e neui.";
+
+"webClient_scan_error_title" = "Desktop/Web";
+"webClient_scan_error_message" = "Das isch en QR-Code für d’Desktop-App oder de Web-Client. Bitte nehmed Sie de Scanner under «Iistellige > Desktop/Web».";
+
+"webClient_scan_error_mdm_host_title" = "Sitzig cha nöd gstarted werde";
+"webClient_scan_error_mdm_host_message" = "Server isch nöd dur de Administrator freigeh worde.";
+
+/* ProtectedDataUnavailable */
+"protectedDataUnavailable_error_text" = "Die gschützte Date sind momentan nöd verfüegbar. Bitte verlönd Sie d’App und versueched Sie’s nomal.";
+"protectedDataUnavailable_exitbutton" = "Verlaa";
+
+/* Photo Browser */
+"media_delete_all_confirm" = "Sind Sie sicher, dass Sie all Medie i dem Chat lösche wänd?";
+"media_delete_selected_confirm" = "Sind Sie sicher, dass Sie die usgwählte Medie lösche wänd?";
+
+/* Threema Safe */
+"deactivate" = "Deaktiviere";
+"invalid_threema_id" = "Ungültigi Threema-ID";
+"number_of_days" = "%d Täg";
+
+"safe_enable_explain_short" = "Aktiviered Sie Threema Safe für automatischi, sicheri und anonymi Backups vo Ihrne wichtigste Date.";
+"safe_enable_explain" = "Bi Threema händ Sie keis zentrals Benutzerkonto. Ihri Date befindet sich nur bi Ihne uf dem Grät und sind so bestmöglich vor Fremdzuegriff gschützt.\n\nThreema Safe erstellt regelmässig es verschlüsslets, anonyms Backup vo Ihrne Schlüssel, Kontäkt, Gruppe und Iistellige ufeme Server Ihrer Wahl. Ihri ID und s’gwählte Passwort langed, zum die Date ufeme andere Grät wiederherzstelle.";
+
+"safe_server_authentication" = "Authentifizierig (optional)";
+"safe_server_name" = "Server";
+"safe_max_backup_size" = "Max. Backup-Grössi";
+"safe_retention" = "Speicherduur";
+"safe_last_backup" = "Letschts Backup";
+"safe_size" = "Backup-Grössi";
+"safe_result" = "Ergäbnis";
+"safe_successful" = "Erfolgriich";
+"safe_unsuccessful" = "Fehlgschlage";
+"safe_upload_failed" = "Upload fehlgschlage";
+"safe_upload_size_exceeded" = "Backup-Grössi überschritte";
+"safe_change_password" = "Passwort ändere";
+"safe_change_password_disabled" = "Passwort dur de Admin verwaltet";
+"safe_learn_more" = "Wiiteri Infos";
+"safe_backup_now" = "Jetzt sichere";
+"safe_deactivate" = "Threema Safe deaktiviere";
+"safe_deactivate_explain" = "Ihri bestehende Threema Safe-Backups werded ufem Server unwiderrueflich glöscht. Wänd Sie wiitermache?";
+"safe_disable_confirm" = "Wänd Sie wiitermache, ohni Threema Safe z’aktiviere? Threema Safe erlaubt, Ihri Threema-ID, Kontäkt und Gruppe wiederherzstelle, falls Sie Ihres Grät verlüüred.";
+
+"safe_setup_backup_title" = "Threema Safe";
+"safe_setup_backup_description" = "Wähled Sie es sichers Passwort. Sie benötiged das Passwort, zum Ihres Threema Safe-Backup wiederherzstelle.";
+"safe_advanced_options" = "Experte-Iistellige";
+"safe_configure_choose_server" = "Server uswähle";
+"safe_configure_server_explain" = "Speichered Sie Ihres Threema Safe-Backup bi Threema oder ufeme beliebige Server Ihrer Wahl.";
+"safe_configure_server_explain_onprem" = "Speichered Sie Ihres Threema Safe-Backup ufem Server vo Ihrere Organisation, oder legged Sie en andere Backup-Server fest.";
+"safe_use_default_server" = "Standardserver (Threema)";
+"safe_restore" = "Threema Safe wiederherstelle";
+"safe_restore_enter_id" = "Bitte gebed Sie d’Threema-ID ii, wo Sie wiederherstelle wänd";
+"safe_forgot_your_id" = "ID vergässe?";
+"safe_threema_id" = "Ihri Threema-ID";
+"safe_search_id_title" = "Bitte gebed Sie die mit Ihrere Threema-ID verchnüpfti Handynummere oder E-Mail-Adrässe ii";
+"safe_linked_mobile" = "Handynummere";
+"safe_linked_email" = "E-Mail";
+"safe_no_id_found" = "Kei Threema-ID gfunde";
+"safe_select_id" = "Mehreri Threema-IDs gfunde. Wähled Sie die gwünschti ID:";
+"safe_enter_password" = "Bitte gebed Sie Ihres Threema Safe-Passwort ii";
+"safe_restore_failed" = "Wiederherstelle fehlgschlage";
+"safe_no_backup_found" = "Keis Backup ufem Server gfunde. Überprüefed Sie d’ID und s’Passwort.";
+"safe_preparing" = "Threema Safe wird vorbereitet";
+"safe_error_preparing" = "Fehler bim Vorbereite vom Threema Safe-Backup";
+"safe_configure_choose_password_title" = "Passwort wähle";
+"safe_configure_choose_password" = "Wähled Sie es sichers Passwort. Sie benötiged das Passwort, zum Ihres Threema Safe-Backup wiederherzstelle.";
+"safe_configure_choose_password_mdm" = "Ihre Administrator hät Threema Safe für Ihres Grät aktiviert.";
+"safe_version_mismatch" = "D’Version vom Backup isch höcher als vo de App unterstützt. Bitte aktualisiered Sie d’App.";
+"safe_intro_title" = "Neu: Threema Safe";
+"safe_intro_description" = "Verlüüred Sie nie meh Ihri Threema-ID, Kontäkt, Gruppe und Iistellige!";
+"safe_intro_explain" = "Threema Safe erstellt für Sie regelmässig es verschlüsslets, anonyms Backup vode wichtigste Date und speicherets ufem Threema-Server oder eme andere Server Ihrer Wahl.";
+"safe_intro_enable" = "Jetzt aktiviere";
+"safe_intro_cancel" = "Nüme aazeige";
+"safe_failed_notification" = "Threema Safe hät sit %.0f Täg keis Backup meh chöne erstelle. Bitte prüefed Sie d’Threema Safe-Iistellige.";
+"safe_expired_notification" = "Ihres Threema Safe-Backup isch möglicherwiis nüme aktuell und wird ggf. glöscht. Bitte überprüefed Sie d’Threema Safe-Iistellige und stelled Sie sicher, dass es Threema Safe-Backup erstellt werde chan.";
+"safe_test_server" = "Server teste";
+"safe_test_server_invalid_url" = "Bitte gebed Sie e gültigi HTTPS-Adrässe ii.";
+"safe_restore_error" = "S’Wiederherstelle vom Threema Safe-Backup isch fehlgschlage, bitte wiederholed Sie de Vorgang.";
+"safe_activation_failed" = "Threema Safe hät nachem Wiederherstelle vom Backup nöd chöne aktiviert werde.";
+"safe_activation_app_migration_failed_error_message" = "Ihres Threema Safe-Backup hät wägeme Datebankfehler nöd chöne wiederhergstellt werde. Bitte versueched Sie’s nomal.";
+
+"password_bad" = "Unsichers Passwort";
+"password_bad_explain" = "S’gwählte Threema Safe-Passwort isch sehr unsicher und cha drum liecht vo Agriifer errate werde. Bitte wähled Sie es sichers Passwort. Tipp: Nutzed Sie es zämegsetzts Wort us mehrere Begriff.";
+"password_bad_guidelines" = "S’Passwort, wo Sie igeh händ, entspricht nöd de Richtlinie.";
+"password_bad_regex" = "D’Definition (Regex) vode Passwort-Aforderige isch fehlerhaft. Bitte kontaktiered Sie Ihre %@-Administrator.";
+
+"continue_anyway" = "Trotzdem wiitermache";
+
+"restore_option_title" = "Es Backup wiederherstelle";
+"restore_option_id_title" = "ID useme Backup wiederherstelle";
+"restore_option_description" = "Weles Backup wänd Sie wiederherstelle?";
+"restore_option_safe" = "Ihri ID, Kontäkt und Gruppe wiederherstelle";
+"restore_option_safe_keep_data" = "Ihri ID us Threema Safe wiederherstelle, und d’Date (Chats, Kontäkt, Gruppe etc.) uf dem Grät bhalte";
+"restore_option_id" = "Nur Ihri ID wiederherstelle";
+"restore_option_id_keep_data" = "Ihri exportiert Threema-ID wiederherstelle, und d’Date (Chats, Kontäkt, Gruppe etc.) uf dem Grät bhalte";
+"backup_faq_link_text" = "Meh über Backups in %@ erfahre";
+"forgot_password_link_text" = "Passwort vergässe?";
+
+"restore_option_data_description" = "Uf dem Grät sind %@-Date (Chats, Kontäkt, Gruppe etc.) vorhande.";
+"restore_option_data_keep_data" = "Lokali Date bhalte";
+"restore_option_data_keep_data_description" = "Nur d’Threema-ID (us Threema Safe oder usem ID-Export) wiederherstelle, und lokali Date bhalte";
+"restore_option_data_delete_data" = "Lokali Date lösche";
+"restore_option_data_delete_data_description" = "Nachem Lösche vode lokale Date es Threema Safe-Backup (beinhaltet Ihri ID, Kontäkt und Gruppe) oder en ID-Export (beinhaltet nur Ihri Threema-ID) wiederherstelle";
+"restore_option_data_delete_data_explain" = "Zum es kompletts Threema Safe-Backup wiederherzstelle, muess e Neuinstallation vo %@ duregfüehrt werde: Lösched Sie bitte d’App und ladet Sie sie nomal usem App Store abe.";
+
+"threema_safe_company_mdm_password_changed_title" = "Es verwaltets Passwort für Threema Safe isch festgleit worde";
+"threema_safe_company_mdm_password_changed_message" = "Wänd Sie s’gägewärtige Passwort dur s’neue, verwaltete ersetze? Im Zwiifelsfall wändet Sie sich bitte a Ihre Administrator.";
+"threema_safe_company_mdm_password_changed_accept" = "Akzeptiere";
+"threema_safe_company_mdm_password_changed_accepted" = "Verwaltets Passwort gsetzt";
+
+// Company Directory
+"companydirectory_description" = "Kontäkt im Unternehmensverzeichnis naaschlah";
+"companydirectory_placeholder" = "Verzeichnis dursueche";
+"companydirectory_noentries_title" = "Kei Iträg gfunde";
+"companydirectory_noentries_description" = "Bitte gebed Sie mindestens 3 Zeiche ii, zum d’Suechi z’starte";
+
+"already_licensed" = "Scho lizenziert";
+
+// IDNASafetyHelper
+"url_warning_title" = "Phishing-Warnig";
+"url_warning_body" = "D’Website, wo Sie wänd öffne, isch verdächtig:\n\nDe aazeigt Hostname: %@\nDe tatsächlich Hostname: %@\n\nEs chönnt sich um en Versuech handle, Sie uf e gfälschti Website umzleite.\n\nWänd Sie trotzdem wiitermache?";
+
+// Settings
+"settings_navbar_title" = "Iistellige";
+"settings_list_privacy_title" = "Privatsphäre";
+"settings_list_appearance_title" = "Erschiinigsbild";
+"settings_list_notifications_title" = "Benachrichtigunge";
+"settings_list_chat_title" = "Chat";
+"settings_list_media_title" = "Medie";
+"settings_list_storage_management_title" = "Speichermanagement";
+"settings_list_passcode_lock_title" = "Code-Sperri";
+"settings_threema_calls" = "Threema-Arüef";
+"settings_list_threema_web_title" = "Desktop/Web";
+
+"settings_list_network_title" = "Netzwerchstatus";
+"settings_list_version_title" = "Version";
+"settings_list_settings_license_username_title" = "Lizänz-Benutzername";
+
+"settings_list_invite_a_friend_title" = "Fründe iilade";
+"settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_rate" = "%@ bewerte";
+
+"settings_list_support_title" = "Support";
+"settings_list_privacy_policy_title" = "Dateschutzerchlärig";
+"settings_list_license_title" = "Lizänz";
+"settings_advanced" = "Erwiitered";
+"settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "Die sicher Kommunikationslösig für Unternehme";
+"settings_feedback" = "Beta-Feedback";
+"settings_list_tos_title" = "Nutzigsbedingige";
+
+"settings_md_sync_alert_title" = "Synchronisiere fehlgschlage";
+
+// Privacy Settings
+"settings_privacy_contacts_header" = "Kontäkt";
+"settings_privacy_sync_contacts" = "Kontäkt synchronisiere";
+"settings_privacy_exclusion_list" = "Usschlussliste";
+"settings_privacy_exclusion_list_alert_title" = "ID z’churz";
+"settings_privacy_exclusion_list_alert_message" = "Bitte gebed Sie e ID us genau 8 Buechstabe ii.";
+"settings_privacy_block_unknown" = "Unbekannti blockiere";
+"settings_privacy_block_unknown_footer_on"= "Nur Persone i Ihrere Kontaktliste chönd Ihne Nachrichte schicke.";
+"settings_privacy_block_unknown_foooter_off" = "Jede cha Ihne Nachrichte schicke. Neui Kontäkt werded bi de erste Nachricht automatisch dezue taa.";
+
+"settings_privacy_os_header" = "iOS-Integration";
+"settings_privacy_os_donate" = "Interaktione teile";
+"settings_privacy_os_reset" = "Interaktione zruggsetze";
+"settings_privacy_os_footer" = "Wenn aktiviert, werded Threema-Kontäkt bim Teile vo Inhält in iOS vorgschlage. Dur das werded Informatione zu Interaktione as Betribssystem wiitergeh.";
+
+"settings_privacy_chat_header" = "Chat";
+"settings_privacy_read_receipts" = "Läsebestätigunge";
+"settings_privacy_typing_indicator" = "Mälde, wenn ich tippe";
+
+"settings_privacy_TIRR_reset_all" = "All Kontäkt zruggsetze";
+"settings_privacy_TIRR_reset_footer" = "Setzt all Kontäkt uf d’Standardiistellig zrugg.";
+"settings_privacy_TIRR_reset_alert_title" = "Zruggsetze";
+"settings_privacy_TIRR_reset_alert_message" = "All Kontäkt werded uf d’Standardiistellig zrugggsetzt. Cha nöd rückgängig gmacht werde.";
+"settings_privacy_TIRR_reset_alert_action" = "All zruggsetze";
+
+"settings_privacy_choose_poi" = "POIs uswähle";
+"settings_privacy_hide_private_chats" = "Privati Chats verstecke";
+"settings_privacy_hide_private_chats_footer" = "All private Chats werded ide Chatübersicht usbländet. D’Code-Sperri mues aktiviert sii, zum die Iistellig z’aktiviere.";
+
+// Appearance Settings
+"settings_appearance_theme_section" = "Designstil";
+"settings_appearance_light_theme" = "Hell";
+"settings_appearance_dark_theme" = "Dunkel";
+"settings_appearance_system_theme" = "System";
+"settings_appearance_theme_selected" = "%@ Designstil aktiv";
+"settings_appearance_theme_active" = "Aktiv";
+"settings_appearance_hide_app_icon" = "App-Icon";
+"settings_appicon_default_header" = "Standard-Icon";
+"settings_appicon_legacy_header" = "Threema-Icons";
+"settings_appicon_special_header" = "Spezielli Icons";
+"settings_appearance_hide_stale_contacts" = "Inaktivi IDs usblände";
+"settings_appearance_show_profile_pictures" = "Profilbilder aazeige";
+"settings_appearance_display_order" = "Aazeigefolg";
+"settings_appearance_show_gallery_preview" = "Schnelluswahl vo Medie";
+
+// Notification Settings
+"settings_notifications_inapp_section" = "Ide App";
+"settings_notifications_inapp_sounds" = "Tön ide App";
+"settings_notifications_inapp_vibrate" = "Vibratione ide App";
+"settings_notifications_inapp_preview" = "Vorschau vode Nachricht aazeige";
+"settings_notifications_push_section" = "Push-Benachrichtigunge";
+"settings_notifications_push_sound" = "Ton";
+"settings_notifications_push_groupsound" = "Gruppe-Ton";
+"settings_notifications_push_preview" = "Vorschau aazeige";
+"settings_notifications_masterDnd_section_header" = "Ruheziit-Regelig";
+"settings_notifications_masterDnd" = "Nöd störe während de Ruheziit";
+"settings_notifications_masterDnd_section_footer" = "Usserhalb vode Arbetsziit kei Benachrichtigunge aazeige und Arüef usblände.";
+"settings_notifications_masterDnd_workingDays" = "Arbetstäg";
+"settings_notifications_masterDnd_startTime" = "Arbetsbeginn";
+"settings_notifications_masterDnd_endTime" = "Arbetsschluss";
+"settings_notification_iOS_settings" = "Systemiistellige";
+
+"settings_notification_type_preview_title" = "Push-Benachrichtigunge";
+"settings_notification_type_preview_description" = "Legged Sie fest, weli Informatione in Push-Benachrichtigunge für iigehendi Threema-Nachrichte sölled enthalte sii.";
+
+"settings_notification_type_preview_restrictive_title" = "Nickname aazeige";
+"settings_notification_type_preview_restrictive_description" = "Zeigt nur de Nickname vom Kontakt aa.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Hans";
+
+"settings_notification_type_preview_balanced_title" = "Name aazeige";
+"settings_notification_type_preview_balanced_description" = "Zeigt de vollständig Name vom Kontakt aa (Standard-Iistellig).";
+"settings_notification_type_preview_balanced_sender_name" = "Hans Muster";
+
+"settings_notification_type_preview_complete_title" = "Name und Profilbild aazeige";
+"settings_notification_type_preview_complete_description" = "Zeigt de Name und s’Profilbild vom Kontakt ah. Es paar Informatione zu Interaktione werded as Betribssystem wiitergeh. [Wiiteri Infos…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Hans Muster";
+
+"settings_notification_type_preview_message_text" = "Bispilnachricht…";
+"settings_notification_type_preview_no_button" = "Push-Benachrichtigunge deaktiviere";
+
+// Chat Settings
+"settings_chat_wallpaper_title" = "Hindergrundbild";
+"settings_chat_wallpaper_reset" = "All Hindergrundbilder zruggsetze";
+"settings_chat_wallpaper_empty" = "Keis";
+"settings_chat_wallpaper_custom" = "Eigenes";
+"settings_chat_wallpaper_default" = "Standard";
+"settings_chat_wallpaper_reset_all_alert" = "Setzt all für spezifischi Chats gsetzti Hindergrundbilder uf die obe gwählti Option zrugg. Cha nöd rückgängig gmacht werde.";
+
+"settings_chat_bigger_emojis" = "Grösseri Emojis";
+/* Chat Settings */
+"settings_chat_send_message_feedback_label" = "Vibration bim Verschicke";
+
+// Media Settings
+"settings_media_title" = "Medie";
+"settings_media_image_size_title" = "Bildgrössi";
+"settings_media_video_quality_title" = "Videoqualität";
+"settings_media_autosave_title" = "Medie automatisch ide «Fotos»-App speichere";
+/* Media */
+"settings_media_autosave_private_footer" = "Medie, wo Sie in private Chats überchömed, werded nöd automatisch gspeicheret.";
+
+// Storage Management Settings
+"storage_management" = "Speichermanagement";
+"storage_total" = "Speicherplatz insgesamt";
+"storage_total_in_use" = "Beleit";
+"storage_total_free" = "Frei";
+"storage_threema" = "Dur %@ beleit";
+"delete_explain" = "Lösched Sie alti Medie und Dateie, zum Speicherplatz freizgeh. Bitte beachted Sie: Nachrichte werded nöd automatisch glöscht, sondern nur bim Betätige vode entsprächende Lösche-Schaltflächi.";
+"delete_media_older_than" = "Medie und Dateie lösche, wo älter sind als";
+"delete_media" = "Medie und Dateie lösche";
+"delete_media_confirm" = "Wänd Sie all Medie und Dateie, wo älter als %@ sind, unwiederbringlich lösche?";
+"delete_media_confirm_all" = "Wänd Sie all Medie und Dateie unwiederbringlich lösche?";
+"delete_media_explain" = "Vorschaubilder werded nöd glöscht.";
+"delete_messages_older_than" = "Nachrichte lösche, wo älter sind als";
+"delete_messages" = "Nachrichte lösche";
+"delete_messages_confirm" = "Wänd Sie all Nachrichte, wo älter als %@ sind, unwiederbringlich lösche?";
+"delete_messages_confirm_all" = "Wänd Sie all Nachrichte unwiederbringlich lösche?";
+"delete_messages_explain" = "Nachrichte aller Art werded glöscht: Text- und Sprachnachrichte, Medie, Dateie, Umfrage etc.";
+"automatic_delete_explain" = "Legged Sie fest, ob und nach welem Ziitruum Nachrichte und Medie glöscht werde sölled, zum Speicherplatz freizgeh. Offeni Umfrage und Notizgruppe sind vo dere Option usgnoh.";
+"automatic_delete_on_confirmation_title" = "Automatischs Lösche iischalte?";
+"automatic_delete_off_confirmation_title" = "Automatischs Lösche usschalte?";
+// Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
+"automatic_delete_confirmation_message_no_immediate_deletion" = "Ab sofort werded all Nachrichte älter als %@ automatisch glöscht. Hiiwis: Offeni Umfrage und Notizgruppe sind devo nöd betroffe.";
+"automatic_delete_confirmation_message_immediate_deletion" = "%d Nachrichte aller Art werded jetzt glöscht, und all Nachrichte älter als %@ werded ab sofort automatisch glöscht. Hiiwis: Offeni Umfrage und Notizgruppe sind devo nöd betroffe.";
+"automatic_delete_on_confirmation_button" = "Automatischs Lösche iischalte";
+"automatic_delete_off_confirmation_button" = "Automatischs Lösche usschalte";
+"delete_in_progress" = "Löscht…";
+"one_year_title" = "1 Jahr";
+"one_year" = "1 Jahr";
+"six_months_title" = "6 Mönet";
+"six_months" = "6 Mönet";
+"three_months_title" = "3 Mönet";
+"three_months" = "3 Mönet";
+"one_month_title" = "1 Monet";
+"one_month" = "1 Monet";
+"one_week_title" = "1 Wuche";
+"one_week" = "1 Wuche";
+"everything" = "All lösche";
+"forever" = "Für immer";
+"media_file_not_found" = "Mediedatei cha nöd ufgmacht werde. Sie isch glöscht oder nöd vom Server abeglade worde.";
+"older_than" = "Älter als";
+
+"file_deleted_title" = "Datei glöscht";
+"file_not_found_title" = "Datei nöd gfunde";
+
+"manage_all_conversations" = "All Chats verwalte";
+"manage" = "Verwalte";
+"messages" = "Nachrichte";
+"files" = "Dateie";
+"automatic_delete" = "Automatischs Lösche";
+"automatic_delete_label" = "Nachrichte bhalte";
+
+// Call Settings
+"settings_threema_calls_enable_calls" = "Threema-Arüef aktiviere";
+"settings_threema_calls_always_relay_calls" = "Arüef immer über Server";
+"settings_threema_calls_callkit" = "Arüef in iOS iibinde";
+"settings_threema_calls_video_section" = "Videoarüef";
+"settings_threema_calls_allow_video_calls" = "Videoarüef zuelah";
+"settings_threema_calls_video_quality_profile" = "Bevorzugti Bildqualität";
+"settings_threema_calls_video_quality_profile_low" = "Tüüfe Dateverbruuch";
+"settings_threema_calls_video_quality_profile_max" = "Maximal Qualität";
+"settings_threema_calls_video_quality_profile_auto" = "Usgwoge (empfohle)";
+"settings_threema_calls_video_quality_profile_low_description" = "Reduzierti Bildqualität für tüüfere Dateverbruuch";
+"settings_threema_calls_video_quality_profile_max_description" = "Achtung: Cha höche Dateverbruuch verursache, au im Mobilnetz!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Höchi Bildqualität im WLAN, reduzierte Dateverbruuch im Mobilnetz";
+"settings_threema_calls_video_quality_profile_footer" = "Die tatsächlich Bildqualität isch abhängig vom Netz und vode Iistellige vom Gspröchspartner.";
+"settings_threema_calls_call_sound" = "Ton";
+"settings_threema_calls_hide_voip_call_ip_footer_off" = "Wenn möglich, direkti Verbindig nutze und nur Arüef a unverifizierti Kontäkt über Threema-Server leite. Cha Ihri IP-Adrässe priisgeh.";
+"settings_threema_calls_hide_voip_call_ip_footer_on" = "All Arüef über Threema-Server leite. Schützt Ihri IP-Adrässe, cha aber zu schlächterer Aruefqualität füehre.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_off" = "Wenn möglich, direkt verbinde und nur Arüef mit nöd verifizierte Kontäkt über OnPrem-Server leite. Cha Ihri IP-Adrässe priisgeh.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "All Arüef über OnPrem-Server leite. Verschleieret Ihri IP-Adrässe, cha aber zu schlächtere Aruefqualität füehre.";
+"settings_threema_voip_include_call_in_recents_footer_off" = "Arüef werded ufem Sperrbildschirm aazeigt, aber nöd ide Aruefliste ide «Telefon»-App ufgfüehrt.";
+"settings_threema_voip_include_call_in_recents_footer_on" = "Arüef werded ufem Sperrbildschirm aazeigt und ide Aruefliste ide «Telefon»-App ufgfüehrt. Falls iCloud Drive aktiviert isch, wird d’Aruefliste vode «Telefon»-App über Apple-Server synchronisiert.";
+"settings_threema_voip_no_callkit_in_china_footer" = "Wäge Ischränkige vo Apple sind Threema-Arüef nöd verfüegbar, wenn China als Region vom Grät festgleit isch.";
+"settings_threema_calls_group_calls_header" = "Gruppearüef";
+"settings_threema_calls_enable_group_calls" = "Threema-Gruppearüef aktiviere";
+
+// Advanced Settings
+"settings_advanced_networking_section_header" = "Netzwerch";
+"settings_advanced_ipv6_title" = "IPv6";
+
+"settings_advanced_proximity_monitoring_section_header" = "Sensor";
+"settings_advanced_proximity_monitoring_title" = "Proximity Monitoring";
+"settings_advanced_proximity_monitoring_section_footer_off" = "Bildschirm wird nöd usgschalte, wenn de Anöcherigssensor abdeckt isch.";
+"settings_advanced_proximity_monitoring_section_footer_on" = "Bildschirm wird während Spracharüef und bim Ufzeichne/Abspile vo Sprachnachrichte usgschalte, wenn de Anöcherigssensor abdeckt isch.";
+
+"settings_advanced_debug_log_section_header" = "Debug-Log";
+"settings_advanced_debug_log_title" = "Debug-Log";
+"settings_advanced_debug_log_size_title" = "Grössi";
+"settings_advanced_debug_log_share_title" = "Log teile";
+"settings_advanced_debug_log_clear_log_title" = "Log lösche";
+
+"settings_advanced_other_section_header" = "Anderi";
+"settings_advanced_webrtc_diagnostics_title" = "WebRTC-Diagnose";
+"settings_advanced_orphaned_files_cleanup" = "Verwaisti Dateie lösche";
+"settings_advanced_contacts_cleanup" = "Kontaktbereinigung";
+"settings_advanced_flush_message_queue" = "Nachrichte-Warteschlange leere";
+
+"settings_advanced_reregister_push_notifications_header_title" = "Push-Benachrichtigunge";
+"settings_advanced_reregister_push_notifications_footer_title" = "Falls Sie usserhalb vode App kei Benachrichtigung für iigehendi Nachrichte überchömed, chönd Sie d’Registration für Push-Benachrichtigunge da erneuere.";
+"settings_advanced_reregister_notifications_label" = "Push-Benachrichtigunge nomal registriere";
+
+"settings_advanced_reset_fs_db_label" = "Perfect-Forward-Secrecy-Status zruggsetze";
+"settings_advanced_reset_unread_count_label" = "Nachrichte als gläse markiere";
+"settings_advanced_support_settings_header_title" = "Support-Iistellige";
+"settings_advanced_support_settings_footer_title" = "Füehred Sie die Aktion nur us, wenn Sie vom Threema-Support explizit dezue ufgforderet worde sind.";
+"settings_advanced_successfully_deleted_fs_sessions_label" = "Perfect-Forward-Secrecy-Status isch erfolgriich zrugggsetzt worde.";
+"settings_advanced_successfully_reset_unread_count_label" = "All Nachrichte sind als gläse markiert worde";
+
+// Sentry
+"sentry_crash_send_title" = "Es Problem isch ufträtte";
+"sentry_crash_send_description" = "Sie chönd en anonyme Bricht iireiche. Details zu Interaktione, wo vorem Problem stattgfunde händ, hälfed üs, s’Problem drunder z’identifiziere.";
+"sentry_crash_send_yes" = "Anonyme Absturzbricht schicke";
+"sentry_crash_send_no" = "Nöd schicke";
+
+"sentry_crash_comment_placeholder" = "Details";
+
+// Profile
+"profile_share_id_text" = "Mini Threema-ID";
+"profile_share_id" = "Threema-ID teile";
+"profile_show_qr_code" = "QR-Code aazeige";
+"profile_big_qr_code" = "Grosse QR-Code";
+"profile_big_qr_code_cover_view" = "Grosse QR-Code Popup";
+"profile_linked_email" = "Verchnüpfti E-Mail";
+"profile_linked_phone" = "Verchnüpfti Handynummere";
+"profile_id_export" = "ID exportiere";
+"my_profile_delete_cell_title" = "ID und Date entferne";
+"profile_edit" = "Bearbeite";
+"not_connected_for_edit_profile_message" = "Bitte prüefed Sie Ihri Verbindig";
+"not_connected_for_edit_profile_title" = "Kei Verbindig";
+
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema-ID";
+"my_profile_delete_bullet_chats" = "Chats";
+"my_profile_delete_bullet_picture" = "Profilbild";
+"my_profile_delete_bullet_safe" = "Threema Safe-Backup";
+"my_profile_delete_bullet_linked" = "Handynummere- und/oder E-Mail-Verchnüpfig";
+
+"my_profile_delete_info_title" = "ID und Date entferne";
+"my_profile_delete_info_delete" = "All Ihri Threema-Date werded vo dem Grät entfernt.";
+"my_profile_delete_info_keep" = "Wenn Sie es Threema Safe-Backup erstellt oder Ihri ID exportiert händ, chönd Sie die ID ufeme andere Grät wiederherstelle.";
+"my_profile_delete_info_revoke_info" = "Wenn Sie Ihri Threema-ID uf keim andere Grät meh bruuche wänd, chönd Sie die unwiderrueflich lösche:";
+"my_profile_delete_info_revoke_info_link" = "[Threema-ID widerrüefe](link)";
+"my_profile_delete_info_button" = "ID und Date entferne";
+
+"my_profile_delete_info_alert_title" = "Ohni es Backup verlüüred Sie Ihri Threema-ID.";
+"my_profile_delete_info_alert_confirm" = "Date entferne";
+
+"my_profile_revoke_identity_view_title" = "ID und Date entferne";
+"my_profile_revoke_info_delete" = "All Ihri Threema-Date werded vo dem Grät entfernt, und die Threema-Date werded ufem Server glöscht:";
+
+"my_profile_delete_info_revoke" = "Es git kei Möglichkeit, Ihri Threema-ID wiederherzstelle.";
+"my_profile_revoke_identity_view_enter_id" = "Bitte gebed Sie Ihri Threema-ID «%@» ii, zum ein für alli Mal alles z’lösche:";
+"my_profile_revoke_identity_view_placeholder" = "Ihri Threema-ID";
+"my_profile_revoke_identity_view_button_revoke" = "ID und Date entferne";
+
+"my_profile_delete_identity_summary_view_removed_title" = "ID und Date entfernt";
+"my_profile_delete_identity_summary_view_removed_success" = "All Ihri Threema-Date sind vo dem Grät entfernt worde:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "All Ihri Threema-Date werded vo dem Grät entfernt, und folgendi Threema-Date sind ufem Server glöscht worde:";
+"my_profile_delete_identity_summary_view_removed_threema_id" = "Ihri Threema-ID isch widerruefe worde";
+"my_profile_delete_identity_summary_view_restart" = "Started Sie d’App neu, zum sie wiiterhin z’bruuche.";
+"my_profile_delete_identity_summary_view_restart_new" = "Started Sie d’App neu, zum e neui Threema-ID z’erstelle.";
+"my_profile_delete_identity_summary_view_close" = "App schlüsse";
+
+// File message
+"optional_caption" = "Optionale Text";
+"send_as_file" = "Als Datei schicke";
+
+// Orphaned files delete
+"settings_orphaned_files_description" = "I früehnere %@-Versione häts i sältene Fäll chöne vorcho, dass bim Lösche vo Date über d’Speicherverwaltig Medie und/oder Dateie us %@ entfernt, aber nöd vollständig glöscht worde sind.
+
+Mached Sie es iTunes-Backup, bevor Sie wiitermached; Dateverlust cha entstah!";
+"settings_orphaned_files_title" = "VERWAISTI DATEIE";
+"settings_orphaned_files_button" = "In Papierchorb verschiebe";
+"settings_orphaned_files_footer" = "%@ vo %@ Dateie sind verwaist.
+
+Verschiebed Sie die verwaiste Dateie in Papierchorb, und überprüefed Sie, öb kei Medie und/oder Dateie in %@ fehled.";
+"settings_orphaned_files_footer_no_files" = "Es sind kei verwaisti Dateie vorhande.";
+"settings_orphaned_files_bin_title" = "PAPIERCHORB";
+"settings_orphaned_files_bin_restore_button" = "Papierchorb-Inhalt wiederherstelle";
+"settings_orphaned_files_bin_delete_button" = "Date im Papierchorb lösche";
+"settings_orphaned_files_bin_footer" = "Es befindet sich %@ Dateie (%@) im Papierchorb.
+
+Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die verwaiste Dateie endgültig z’lösche.";
+"settings_orphaned_files_bin_footer_no_files" = "De Papierchorb isch leer.";
+"settings_orphaned_files_bin_delete_conformation" = "Wänd Sie die verwaiste Dateie unwiderrueflich lösche? Die Aktion laht sich nüme rückgängig mache.";
+"settings_orphaned_files_log_title" = "DATEIE LOGGE";
+"settings_orphaned_files_log_all_files_button" = "Dateie im Debug-Log logge";
+
+// Contacts cleanup
+"settings_advanced_contacts_cleanup_stats_title" = "Kontaktbereinigung";
+"settings_advanced_contacts_cleanup_log_stats" = "Doppleti Kontäkt logge";
+"settings_advanced_contacts_cleanup_unused" = "Doppleti Kontäkt entferne";
+"settings_advanced_contacts_cleanup_log_disabled" = "S’Debug-Log isch deaktiviert. \n\nBitte gönd Sie zrugg zu «Erwiiteret», aktiviered Sie s’Debug-Log, und versueched Sie’s nomal.";
+"settings_advanced_contacts_cleanup_submit_logs" = "Bitte gönd Sie zrugg zu «Erwiiteret», und teiled Sie s’Debug-Log mitem Threema-Support für wiiteri Analyse.\n\nNachher chönd Sie s’Debug-Log wieder deaktiviere.";
+"settings_advanced_contacts_cleanup_stats_logged" = "D’Informatione sind is Debug-Log gschribe worde.";
+"settings_advanced_contacts_cleanup_no_duplicates" = "Sie händ kei doppleti Kontäkt.";
+"settings_advanced_contacts_cleanup_error_title" = "Kontaktbereinigung fehlgschlage";
+"settings_advanced_contacts_cleanup_in_use_error_title" = "Chats manuell lösche";
+"settings_advanced_contacts_cleanup_still_used_error" = "De Vorgang hät nöd chöne abschlosse werde (%i Duplikat entfernt, %i übrig).\n\nEs paar Einzelchats müend vo Hand glöscht werde:\n\n%@\n\nBitte lösched Sie die und versueched Sie’s nomal.";
+"settings_advanced_contacts_multi_device_enabled_error" = "Es sind aktuell Grät verchnüpft. Bitte entferned Sie all verchnüpfte Grät, bevor Sie d’Kontaktbereinigung started.";
+"settings_advanced_contacts_cleanup_success_title" = "Kontaktbereinigung erfolgriich";
+"settings_advanced_contacts_cleanup_success_exit" = "Verlaa";
+"settings_advanced_contacts_cleanup_unused_message" = "%i duplizierti Kontäkt sind entfernt worde.\n\nBitte verlönd Sie d’App, started Sie d’App neu, und versueched Sie, es Grät z’verchnüpfe. Falls das nöd funktioniert:";
+
+// Media Preview
+"loading_video_failed" = "Video hät nöd chöne glade werde. Bitte started Sie d’App neu und versueched Sie’s nomal.";
+"loading_image" = "Bild wird glade";
+"loading_document" = "Datei wird glade";
+"load_error" = "Datei hät wägeme unbekannte Fehler nöd chöne glade werde.";
+"loading_video" = "Video wird glade";
+"selected_media_list" = "Liste vode usgwählte Medie";
+"media_item_of" = "Mediedatei %@ vo %@";
+"video_date" = "Video ufgnoh am %@";
+"video_date_duration" = "Video ufgnoh am %@, Duur: %@";
+"imagedate_date" = "Bild ufgnoh am %@";
+"send_as_file_description" = "Die Datei wird ohni Änderige verschickt. Dateie chönd Metadate enthalte, z.B. de Ufnahme-Standort bi Fotis.";
+"more_options" = "Wiiteri Optione";
+"add_caption_to_image" = "Text ergänze";
+"add_more_images" = "Wiiteri Bilder ergänze";
+"back_to_media_selection" = "Zrugg zude Medieuswahl";
+"remove_current_image_from_selected_images" = "Aktuells Bild usde Uswahl entferne.";
+"send_options" = "Wiiteri Optione";
+"multiple_media_items" = "%d Mediedateie";
+"media_item" = "Mediedatei";
+"could_not_add_items_title" = "Es Element cha nöd dezue taa werde";
+"could_not_add_all_items_title" = "Nöd all Element chönd dezue taa werde";
+"one_media_item_could_not_be_processed" = "Es Element cha nöd verarbeitet werde und isch übersprunge worde.";
+"multiple_media_items_could_not_be_processed" = "%d Element chönd nöd verarbeitet werde und sind übersprunge worde.";
+"processing_items_progress" = "Verarbeitet %d/%d";
+"item_too_large_title" = "Mediedatei isch z’gross";
+"maximum_file_size_exceeded" = "Die maximal erlaubt Dateigrössi isch %@. Die Datei isch %@ gross. D’Datei muess entfernt werde, zum fortzfahre.";
+"back" = "Zrugg";
+"sending_item" = "Element schicke";
+"send_as_file_title" = "Modus";
+"document" = "Datei";
+"loading_files_takes_time_title" = "Medie lade usde Medie-Bibliothek";
+"loading_files_takes_time_description" = "D’Video-Konvertierig cha es Ziitli duure";
+"pasteErrorMessageTitle" = "Ifüege fehlgschlage";
+"pasteErrorMessageMessage" = "D’Datei hät wägeme unbekannte Fehler nöd chöne igfüegt werde. Bitte versueched Sie’s nomal.";
+"media_preview_preview_button_accessibility_label" = "Datei aazeige";
+"preview" = "Vorschau";
+"could_not_add_all_items_memory_constrained_title" = "Bitte d’App bruuche";
+"could_not_add_all_items_memory_constrained_message" = "Us technische Gründ isch de Versand vo Dateie abere bestimmte Grössi nur über d’App möglich.";
+"image_preview_cell_cannot_preview" = "D’Vorschau cha nöd azeigt werde.";
+
+// Share Extension
+"finished_sending_title" = "Versand abgschlosse";
+"preview_button_accessibility_title" = "Dokument-Vorschau aazeige";
+"unknown_file_type" = "Unbekannte Dateityp";
+"unknown_file_size" = "Unbekannti Dateigrössi";
+"unknown_file_name" = "Unbekannte Dateiname";
+"sending_to" = "Empfänger";
+
+/* Ballot */
+"ballot" = "Umfrag";
+"ballots" = "Umfrage";
+"ballot_results" = "Umfragergäbnis";
+"ballot_validation_error_title" = "Ungültigi Umfrag";
+"ballot_validation_not_enough_choices" = "Definiered Sie bitte mindestens zwei Optione zur Uswahl.";
+"ballot_validation_title_missing" = "Setzed Sie bitte en Titel für d’Umfrag.";
+
+"ballot_options" = "Umfrageoptione";
+"ballot_intermediate_results" = "Zwüscheergäbnis";
+"ballot_show_intermediate_results" = "Zwüscheergäbnis aazeige";
+"ballot_multiple_choice" = "Mehrfachuswahl";
+"ballot_clone" = "Umfrag kopiere";
+"ballot_clone_warning_title" = "Achtung";
+"ballot_clone_warning_message" = "Scho gmachti Iigabe werded überschribe";
+"ballot_feature_level_warning_title" = "Beachted Sie bitte";
+"ballot_feature_level_warning_message" = "Es paar vode Teilnehmer händ nonig e Threema-Version, wo Umfrage unterstützt: %@";
+"ballot_feature_level_error_message" = "Keine vode Teilnehmer hät e Threema-Version, wo Umfrage unterstützt: %@";
+
+"ballot_add_choice" = "Uswahl dezue tue";
+"ballot_create" = "Umfrag erstelle";
+"ballot_placeholder_title" = "Titel, z.B. Woane gömmer go ässe?";
+"ballot_placeholder_choice" = "Uswahl";
+"ballot_date_button" = "Datum";
+"ballot_allDay_switch" = "Ganztägig";
+
+"ballot_choose_title" = "Umfrag wähle";
+"ballot_description_intermediate" = "Wähled Sie, öb die akkumulierte Zwüscheergäbnis für all Teilnehmer sichtbar sind. Sust werded d’Ergäbnis erst nachem Schlüsse vode Umfrag aazeigt.";
+"ballot_description_multiplechoice" = "Entscheided Sie, öb d’Teilnehmer eini oder mehreri Optione uswähle chönd.";
+
+"ballot_vote" = "Abstimme";
+"ballot_votes_count" = "%@ Stimme";
+"ballot_vote_selected" = "Usgwählt";
+"ballot_vote_not_selected" = "Nöd usgwählt";
+"ballot_close" = "Umfrag abschlüsse";
+"ballot_close_ack" = "Wänd Sie d’Umfrag abschlüsse und d’Resultat verfüegbar mache?";
+"ballot_got_votes_count" = "%1$i vo %2$i Stimme übercho.";
+"ballot_vote_ballot_closed_title" = "Schad, z’spaat";
+"ballot_vote_ballot_closed_message" = "D’Umfrag isch grad abschlosse worde.";
+
+"ballot_open_ballots" = "Offeni Umfrage";
+"ballot_closed_ballots" = "Abschlosseni Umfrage";
+"ballot_not_voted" = "Folgendi Teilnehmer händ nöd abgstumme:";
+
+"voteCancelTitle" = "Stimm verwerfe";
+"voteCancelMessage" = "Ihri Stimm wird verworfe und nöd abgschickt. Wähled Sie «Abstimme», zum Ihri Stimm abzgeh.";
+"discardVoteTitle" = "Verwerfe";
+
+"ballot_load_error" = "Umfrage nöd verfüegbar";
+
+"ballots_with_open_count_accessibility" = "Umfrage (%d offe)";
+
+/* Custom Privacy Settings */
+"privacySetting_header" = "Privatsphäre";
+"send_readReceipts" = "Läsebestätigunge";
+"dont_send" = "Nöd schicke";
+"send_typingIndicators" = "Mälde, wenn ich tippe";
+"send_typingIndicator" = "Mälde, wenn ich tippe";
+
+"default_send" = "%@ (Standard)";
+"use_default_send" = "Standard (%@)";
+"default_setting" = "Standardiistellig";
+
+"contactoverride_sheetMessage" = "D’Standardiistellig für de Kontakt wird überschribe.";
+
+/* Multi Device */
+"multi_device_linked_devices_title" = "Multi-Device-Vorschau";
+"multi_device_linked_devices_desc" = "Aktiviered oder deaktiviered Sie d’Multi-Device-Vorschau für das Grät.";
+"multi_device_linked_devices_refresh" = "Abezieh zum Aktualisiere";
+"multi_device_linked_devices_loading_failed" = "S’Lade vode Grät isch fehlgschlage: %@";
+"multi_device_linked_devices_failed_to_load_message" = "Verchnüpfti Grät händ nöd chöne glade werde. Bitte überprüefed Sie Ihri Internetverbindig und versueched Sie’s nomal.";
+"multi_device_linked_devices_this" = "Das Grät";
+"multi_device_linked_devices_others" = "Anderi Grät";
+"multi_device_linked_devices_last_login" = "Letschti Ameldig: %@";
+"multi_device_linked_devices_remove_failed" = "Entferne vom Grät fehlgschlage: %@";
+"multi_device_linked_devices_removed_devices_title" = "Multi-Device deaktiviere?";
+"multi_device_linked_devices_removed_devices_message" = "Demit werded all verbundene Grät entfernt, und Multi-Device wird deaktiviert.";
+"multi_device_linked_devices_removed_devices_ok" = "Deaktiviere";
+"multi_device_linked_duplicate_contacts_title" = "Doppleti Kontäkt";
+"multi_device_linked_devices_failed_to_load_title" = "Grätliste hät nöd chöne glade werde";
+
+"multi_device_linked_devices_failed_remove_title" = "Grät hät nöd chöne entfernt werde";
+"multi_device_linked_devices_failed_remove_message" = "S’verchnüpfte Grät hät nöd chöne entfernt werde. Bitte versueched Sie’s nomal.";
+"multi_device_linked_devices_failed_remove_message_2" = "S’verchnüpfte Grät hät nöd chöne entfernt werde. Bitte überprüefed Sie Ihri Internetverbindig und versueched Sie’s nomal.";
+
+/* New/reused multi device strings */
+"multi_device_unsupported_protocol_version_alert" = "Die Version vo Threema wird nüme unterstützt (veralteti Protokollversion). Bitte installiered Sie die neuscht Version, zum Threema wiiterhin z’nutze.";
+"multi_device_slot_state_mismatch_alert" = "D’Verchnüpfig mit dem Grät isch ufghobe worde, drum chönd im Momänt kei neui Nachrichte meh gschickt oder empfange werde. Falls d’Ufhebig vode Verchnüpfig nöd dur Sie veraalasst worde isch, beachted Sie bitte, dass während de Beta-Phase technischi Gründ chönd defür verantwortlich sii. Mir bitted um Verständnis. Zum s’Grät nomal z’verchnüpfe, folged Sie bitte dere Aleitig: https://threema.ch/faq/md_reset";
+
+"multi_device_new_linked_devices_title" = "Verchnüpfts Grät (Beta)";
+"multi_device_new_linked_devices_add_button" = "Grät dezue tue";
+"multi_device_new_linked_devices_limitation_info" = "Hiiwis: Momentan cha mit de Beta-Version nur ein Kompi verchnüpft werde. S’Verchnüpfe vomene zweite iPhone/iPad oder eme Android-Grät wird nöd unterstützt.";
+"multi_device_new_linked_devices_failed_to_load" = "Gräteliste hät nöd chöne glade werde. Bitte überprüefed Sie d’Internetverbindig und ziehnd Sie nachher d’Asicht abe, zum sie neu z’lade.";
+"multi_device_new_linked_devices_no_other_device" = "Tipped Sie uf %@, zum nomal es Grät z’verchnüpfe.";
+"multi_device_new_linked_device_remove_all_button" = "All Verchnüpfige ufhebe";
+"multi_device_new_linked_device_remove_all_title" = "All Verchnüpfige ufhebe?";
+"multi_device_new_linked_device_remove_all_error_title" = "Ufhebig vo allne Verchnüpfige fehlgschlage";
+"multi_device_new_linked_device_error_message" = "Bitte überprüefed Sie d’Internetverbindig und versueched Sie’s nomal.";
+"multi_device_new_linked_device_instructions" = "Bevor Sie es neus Grät verchnüpfed, ladet Sie bitte die aktuell Beta-Version vo %@ für Desktop abe und mached Sie die uf:\n\n%@";
+"multi_device_linked_duplicate_contacts_desc" = "Wäge dopplete Kontäkt (%@) laht sich das Grät nöd verchnüpfe. Bitte wänded Sie sich an Support («Iistellige > Support»).";
+"multi_device_new_linked_own_identity_in_contacts_title" = "Eigeni Threema-ID als Kontakt";
+"multi_device_new_linked_own_identity_in_contacts_message" = "Ihri Kontaktliste enthalted Ihri Threema-ID als Kontakt. Bitte lösched Sie de, zum es neus Grät z’verchnüpfe.";
+"multi_device_new_linked_show_contact_button" = "Kontakt aazeige";
+"multi_device_new_linked_device_list_no_platform_details" = "Kei Plattformdetails";
+"multi_device_new_linked_device_list_last_active" = "Zletscht aktiv: %@";
+"multi_device_new_linked_device_list_currently_active" = "Grad aktiv";
+
+"multi_device_join_perfect_forward_secrecy_info" = "Wenn Sie es Grät verchnüpfed, wird Perfect Forward Secrecy für all Kontäkt deaktiviert.\n\nDas isch e Ischränkig vode aktuelle Beta-Version. Wiiteri Ischränkige sind i [dere FAQ](%@) ufglischted.";
+"multi_device_join_scan_qr_code_title" = "QR-Code scanne";
+"multi_device_join_scan_qr_code_info" = "Scanned Sie de QR-Code ide Beta-Version vo %@ ufem Grät, wo söll verchnüpft werde";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_label" = "Kamera";
+"multi_device_join_scan_qr_code_scanner_view_accessibility_hint" = "Richted Sie d’Kamera uf de Bildschirm, wo %@ Beta göffnet isch.";
+"multi_device_join_connecting" = "Verbinde…";
+"multi_device_join_unrecoverable_error_title" = "Unvorhergsehne Fehler";
+"multi_device_join_fatal_scanning_qr_code_error_title" = "Fehler bim Scanne vom QR-Code";
+"multi_device_join_fatal_camera_access_error_title" = "Kamerazuegriff nöd möglich";
+"multi_device_join_fatal_no_internet_connection_title" = "Kei Internetverbindig";
+"multi_device_join_failed_to_send_data_title" = "Date chönd nöd übertreit werde";
+"multi_device_join_fatal_error_message" = "Bitte versueched Sie nomal, s’Grät z’verchnüpfe. Falls s’Problem wiiterhin bestaht, wänded Sie sich bitte an Support («Iistellige > Support»).";
+"multi_device_join_failed_threema_web_title" = "Bestehendi Desktop-/Web-Verbindig";
+"multi_device_join_failed_threema_web_message" = "Bitte deaktiviered Sie Desktop/Web («Iistellige > Desktop/Web»), und versueched Sie nomal, s’Grät z’verchnüpfe. Falls s’Problem immerno bestaht, wänded Sie sich bitte an Support («Iistellige > Support»).";
+"multi_device_join_unknown_qr_code_title" = "Unbekannte QR-Code";
+"multi_device_join_unknown_qr_code_message" = "Bitte stelled Sie sicher, dass Sie die entsprächend App vo %@ bruuched.";
+"multi_device_join_incompatible_version_title" = "Nöd unterstützti Version";
+"multi_device_join_incompatible_version_message" = "Bitte installiered Sie die neuscht Version vo %@ uf beidne Grät.";
+"multi_device_join_new_device_not_found_title" = "Neus Grät nöd gfunde";
+"multi_device_join_new_device_not_found_message" = "Das cha passiere, wenn de QR-Code scho gscannt worde isch. Bitted started Sie d’App ufem neue Grät neu, und versueched Sie’s nomal.";
+"multi_device_join_trust_new_device_title" = "Neuem Grät vertraue";
+"multi_device_join_trust_new_device_info" = "Tipped Sie uf d’Bilderfolg, wo ufem neue Grät erschiint, zum bestätige, dass Sie ihm vertraued.";
+"multi_device_join_no_match_button" = "Kei Übereinstimmig?";
+"multi_device_join_no_match_title" = "D’Bilder stimmed nöd überii?";
+"multi_device_join_no_match_message" = "D’Verbindig zum neue Grät schiint nöd korrekt z’funktioniere. Bitte started Sie d’App ufem neue Grät neu, und versueched Sie’s nomal.";
+"multi_device_join_sending_info" = "S’neue Grät speicheret e unabhängigi Kopie vo Ihrem %@-Profil, und Nachrichte werded i Ihrem Name gschickt und empfange.";
+"multi_device_join_sending_data" = "Date werded gschickt…";
+"multi_device_join_sending_continue_on_new_device" = "Bitte fahred Sie ufem neue Grät fort.";
+"multi_device_join_sending_wait" = "Bitte warted Sie. S’Schicke cha mehreri Minute duure.";
+"multi_device_join_linked_successfully_title" = "Grät erfolgriich verchnüpft"; // The same as `md_wizard_success_title`
+"multi_device_join_linked_successfully_info" = "%@ cha jetzt ufem neu verchnüpfte Grät bruucht werde (au wenn Ihres iOS-Grät usgschalte isch oder kei Internetverbindig hät).";
+
+"multi_device_join_failed_app_closed_title" = "Verchnüpfig mitem neue Grät fehlgschlage";
+"multi_device_join_failed_app_closed_message" = "Verchnüpfig fehlgschlage, wil %@ gschlosse worde isch. Bitte versueched Sie’s nomal.";
+
+"multi_device_linked_id_missing_title" = "Verchnüpfti Grät";
+"multi_device_linked_id_missing_message" = "Bestehendi Verchnüpfige sind ufghobe worde. Setzed Sie Threema für Desktop jetzt zrugg, demit Sie kei Nachrichte verpassed. Nach de Wiederherstellig oder Iirichtig vo dem Grät chönd Sie Ihri Grät nomal verchnüpfe.";
+"multi_device_linked_id_missing_reset_button" = "Desktop-App zruggsetze";
+
+"myprofile_link_email_phone_footer" = "Wenn Sie Ihri E-Mail-Adrässe oder Telefonnummere mit Ihrere ID verchnüpfed, chönd anderi Lüüt Sie uf %@ automatisch finde, wenn sie Sie im Adrässbuech händ.";
+"myprofile_link_email_footer" = "Wenn Sie Ihri E-Mail-Adrässe mit Ihrere ID verchnüpfed, chönd anderi Benutzer Sie uf %@ automatisch finde, wenn sie Sie im Adrässbuech händ.";
+"myprofile_link_email_onprem_footer" = "S’Verchnüpfe vonere E-Mail-Adrässe mit Ihrere Threema-ID erlaubt anderne Nutzer vo dem Server (%@), Sie uf %@ automatisch z’finde, wenn Ihri E-Mail-Adresse i ihrem Adrässbuech gspeicheret isch.";
+"myprofile_link_phone_footer" = "Wenn Sie Ihri Telefonnummere mit Ihrere ID verchnüpfed, chönd anderi Benutzer Sie uf %@ automatisch finde, wenn sie Sie im Adressbuech händ.";
+"myprofile_link_phone_onprem_footer" = "S’Verchnüpfe vonere Telefonnummere mit Ihrere Threema-ID erlaubt anderne Nutzer vo dem Server (%@), Sie uf %@ automatisch z’finde, wenn Ihri E-Mail-Adrässe i ihrem Adrässbuech gspeicheret isch.";
+
+"mentions_table_view_cell_accessibility_hint" = "Zum Erwähne tippe";
+
+// POI
+"poi_unavailable" = "Nöd verfüegbar";
+"poi_not_marked" = "–";
+"poi_search_POI" = "Städt und Strasse";
+"poi_search_prefix" = "Sueche im Umchreis vo %@";
+"poi_away" = "%@ entfernt";
+"poi_dropped_pin_info_alert_title" = "Stecknadle";
+"poi_dropped_pin_info_alert_message" = "Tipped und hebed Sie uf de Charte, zum e Stecknadle z’platziere.";
+"poi_current_location" = "Min Standort";
+"poi_marked_location" = "Stecknadle";
+
+"notification_threemaweb_connectionlost_title" = "Verbindig zude Desktop-App / zum Web-Client isch trännt worde";
+"notification_threemaweb_connectionlost_body" = "Zum d’Desktop-App oder de Web-Client wiiter z’bruuche, mached Sie bitte d’App uf.";
+
+"settings_threema_web_connected" = "Desktop/Web verbunde";
+"settings_threema_web_connectioninfo" = "Ihres Grät muess entsperrt und %@ im Vordergrund sii, demit d’Verbindig ufrechterhalte blibt. Binere aktive Verbindig wird s’Grät nöd automatisch gsperrt.";
+"settings_threema_web_linked_device_section_header" = "Multi-Device";
+"settings_threema_web_linked_device_section_footer" = "S’verchnüpfte Grät chan au gnutzt werde, wenn %@ im Hindergrund oder das Grät offline isch.";
+"settings_threema_web_section_header" = "Direkt verbundeni Grät";
+"settings_threema_web_multi_device_qr_code_title" = "Falsche QR-Code";
+"settings_threema_web_multi_device_qr_code_message" = "Tipped Sie uf «%@» und dänn «%@», zum mit dere Desktop-App z’verchnüpfe.";
+
+"chat_text_view_placeholder" = "Neui Nachricht";
+"compose_bar_camera_button_accessibility_label" = "Kamera ufmache";
+"compose_bar_image_picker_button_accessibility_label" = "Bilduswahl ufmache";
+"compose_bar_record_button_accessibility_label" = "Sprachnachricht ufneh";
+"compose_bar_send_message_button_accessibility_label" = "Nachricht verschicke";
+"compose_bar_attachment_button_accessibility_label" = "Medie uswähle";
+"play_record_audio_view_controller_general_error_title" = "Ufnahm fehlgschlage";
+"play_record_audio_view_controller_general_error_message" = "Wägeme unbekannte Fehler cha im Moment kei Sprachnachricht ufgnoh werde.";
+"hardware_keyboard_send_on_enter_discoverability_title" = "Nachricht abschicke";
+
+// New Ballot Message Cell
+"ballot_message_local_votes" = "Sie händ für %@ gstimmt.";
+"ballot_message_most_votes" = "Am meiste isch für %@ gstimmt worde.";
+"ballot_message_closed" = "Abgschlosse.";
+"ballot_message_did_vote" = "%@ vo %@ Teilnehmer.";
+"ballot_message_no_votes" = "Kei Stimme übercho.";
+"vote_system_message" = "«%@» hät in «%@» abgstumme";
+"vote_system_message_hidden" = "Neui Stimm übercho in «%@»";
+"vote_system_message_default" = "Stimm für e unbekannti Umfrag übercho.";
+"vote_system_message_update" = "«%@» hät in «%@» Änderige gmacht";
+
+// ChatBar
+"chat_bar_quote_close_button" = "Zitat schlüsse";
+"chat_bar_edited_message_close_button" = "Nachricht bearbeite abbräche";
+
+// ChatDetailView
+"detailView_title" = "Nachrichtedetails";
+"detailView_messageID" = "Nachrichte-ID";
+"detailView_group_acknowledged" = "Bestätigt (%d)";
+"detailView_group_declined" = "Abglehnt (%d)";
+"detailView_group_file_size" = "Dateigrössi";
+"detailView_consumed" = "S’erscht Mal abgspilt";
+"detailView_created_footer" = "Erstellt: %@";
+
+"message_display_status_none" = "Keine";
+"message_display_status_user_acknowledged" = "Bestätigt";
+"message_display_status_user_declined" = "Abglehnt";
+"message_display_status_sending" = "Schicke";
+"message_display_status_sent" = "Gschickt";
+"message_display_status_delivered" = "Zuegstellt";
+"message_display_status_delivered_incoming" = "Empfange";
+"message_display_status_read" = "Gläse";
+"message_display_status_failed" = "Fehlgschlage";
+"message_display_status_deleted_message" = "Glöscht";
+"message_display_status_edited_message" = "Bearbeitet";
+
+// In-app notifications
+"notification_copying_succeeded" = "Element kopiert";
+"notification_copying_failed" = "Kopiere fehlgschlage";
+"notification_copying_id_succeeded" = "Threema-ID kopiert";
+
+"notification_saving_succeeded" = "Element gspeicheret";
+"notification_saving_failed" = "Speichere fehlgschlage";
+
+"notification_saving_to_photos_succeeded" = "Zude Fotis dezue taa";
+"notification_saving_to_photos_failed" = "Zude Fotis dezue tue fehlgschlage";
+
+"notification_autosave_failed" = "Automatischs Speichere fehlgschlage";
+
+"notification_sending_failed" = "Schicke fehlgschlage";
+"notification_sending_failed_subtitle_size" = "Element z’gross";
+
+"notification_deleted_messages_count" = "%d Nachrichte glöscht";
+
+"notification_cannot_play_video" = "Video cha nöd abgspilt werde";
+
+"notification_call_failed_connected" = "Verbindig verlore";
+"notification_call_failed_not_connected" = "Verbindig herstelle fehlgschlage";
+"notification_call_creation_failed" = "Aruef starte fehlgschlage";
+"notification_call_creation_disabled" = "Arüef deaktiviert";
+
+"notification_sending_profile_picture_succeeded" = "Profilbild gschickt";
+"notification_sending_profile_picture_failed" = "Schicke fehlgschlage";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "Iistellige synchronisiert";
+
+"notification_group_sync_succeeded" = "Gruppe synchronisiert";
+"notification_group_sync_failed" = "Synchronisiere fehlgschlage";
+"notification_group_call_start_failed" = "Keis Mitglied understützt Gruppearüef";
+
+"notification_settings_sync_pending" = "Synchronisiere…";
+"notification_settings_sync_succeeded" = "Iistellige synchronisiert";
+
+"notification_interaction_delete_succeeded" = "Interaktione glöscht";
+"notification_interaction_delete_failed" = "Lösche fehlgschlage";
+
+"notification_revocation_failed" = "Widerruefe fehlgschlage";
+
+"notification_caption_too_long" = "Text isch z’lang";
+
+"notification_updateworkdata_failed" = "De Abgliich mitem Bereitstelligsserver isch fehlgschlage";
+
+"notification_empty_debug_log_success" = "S’Debug-Log isch erfolgriich gleert worde";
+
+"notification_flush_message_queue_succeeded" = "D’Nachrichte-Warteschlage isch gleert worde";
+
+"notification_reregister_notifications_succeeded" = "Push-Benachrichtigunge sind nomal registriert worde";
+
+"notification_audio_muted" = "Mikrofon: usgschalte";
+"notification_audio_unmuted" = "Mikrofon: iigschalte";
+"notification_video_muted" = "Kamera: usgschalte";
+"notification_video_unmuted" = "Kamera: iigschalte";
+
+// Forward security status messages
+"forward_security_message_without" = "E Nachricht ohni Perfect Forward Secrecy isch empfange worde. Stelled Sie sicher, dass de Absänder absichtlich Perfect Forward Secrecy deaktiviert hät.";
+"forward_security_session_established" = "Nachrichte mit dem Kontakt sind jetzt dur Perfect Forward Secrecy gschützt.";
+"forward_security_session_established_rx" = "Nachrichte, wo i dem Chat empfange werded, sind jetzt dur Perfect Forward Secrecy gschützt. Aktiviered Sie Perfect Forward Secrecy ide Kontaktdetails, zum au gschickti Nachrichte z’schütze.";
+"forward_security_messages_skipped_1" = "E Nachricht isch sit de letschte Nachricht verlore gange.";
+"forward_security_messages_skipped_x" = "%d Nachrichte sind sit de letschte Nachricht verlore gange.";
+"forward_security_session_reset" = "D’Perfect-Forward-Secrecy-Sitzig mit dem Kontakt isch zrugggsetzt worde. Das cha passiere, wenn de Kontakt es neus Grät hät oder d’App neu installiert hät.";
+"forward_security_message_out_of_order" = "E Nachricht isch ide falsche Reihefolg empfange worde und hät nöd chöne entschlüsslet werde.";
+"forward_security_status_enabled_outgoing" = "Perfect Forward Secrecy isch für usgehendi Nachrichte aktiviert.";
+"forward_security_status_disabled_outgoing" = "Perfect Forward Secrecy isch für de Chat deaktiviert.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Perfect Forward Secrecy isch i dere Konversation deaktiviert, wil d’App-Version vom Chat-Partner das nöd unterstützt.";
+"forward_security_illegal_session_state" = "D’Perfect-Forward-Secrecy-Sitzig isch wäge Ungültigkeit zrugggsetzt worde";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "Macht Kontaktdetails uf";
+"accessibility_profile_button_hint_group" = "Macht Gruppedetails uf";
+
+// Chat bar
+"accessibility_chatbar_label" = "Chat-Iigabefeld.";
+"accessibility_chatbar_hint" = "Nachricht verfasse.";
+"accessibility_chatbar_quote_label" = "Zu zitierendi Nachricht: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Zitat entferne.";
+"accessibility_chatbar_close_quote_button_hint" = "Bricht s’Zitiere vode usgwählte Nachricht ab.";
+"accessibility_chatbar_edited_message_label" = "Zu bearbeitendi Nachricht: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "Nachricht bearbeite abbräche.";
+"accessibility_chatbar_close_edited_message_button_hint" = "Bricht s’Bearbeite vode usgwählte Nachricht ab.";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "%@ vo Ihne";
+"accessibility_senderDescription_otherMessage_group" = "%@ vo %@";
+"accessibility_senderDescription_systemMessage" = "Info: %@";
+"accessibility_senderDescription_typing" = "De Kontakt schriibt grad";
+"accessibility_senderDescription_stopped_typing" = "De Kontakt hät ufghört z’schribe";
+"accessibility_senderDescription_contact_typing" = "%@ schriibt grad";
+"accessibility_senderDescription_contact_stopped_typing" = "%@ hät ufghört z’schribe";
+
+
+// Message types
+"accessibility_textMessage_description" = "Nachricht";
+"accessibility_locationMessage_description" = "Standort";
+"accessibility_systemCallMessage_description" = "Aruef";
+"accessibility_fileMessage_description" = "Datei";
+"accessibility_imageMessage_description" = "Bild";
+"accessibility_videoMessage_description" = "Video";
+"accessibility_animatedImageMessage_description" = "GIF";
+"accessibility_stickerMessage_description" = "Sticker";
+"accessibility_voiceMessage_description" = "Sprachnachricht";
+"accessibility_pollMessage_description" = "Umfrag";
+
+// Message hints
+"accessibility_audioMessage_hint" = "Sprachnachricht abspile.";
+"accessibility_locationMessage_hint" = "Standort ufmache.";
+"accessibility_systemCallMessage_hint" = "Aruef starte.";
+"accessibility_imageMessage_hint" = "Bild ufmache.";
+"accessibility_videoMessage_hint" = "Video abspile.";
+"accessibility_fileMessage_hint" = "Dateivorschau ufmache.";
+"accessibility_animatedImageMessage_hint" = "GIF-Wiedergab ii-/usschalte.";
+"accessibility_animatedStickerMessage_hint" = "Animation ii-/usschalte.";
+"accessibility_ballotMessage_hint_open" = "Umfrag ufmache.";
+"accessibility_ballotMessage_hint_closed" = "Umfragergäbnis aazeige.";
+"accessibility_voiceMessage_speed_hint" = "Wiedergabegschwindigkeit ändere.";
+"accessibility_voiceMessage_forward_hint" = "10 Sekunde vorwärts.";
+"accessibility_voiceMessage_rewind_hint" = "10 Sekunde zrugg.";
+
+// Other
+"accessibility_caption" = "Text: %@";
+"accessibility_poll_content_open" = "%@. Titel: %@, %@";
+"accessibility_poll_open" = "Offe";
+"accessibility_poll_closed" = "Gschlosse";
+"accessibility_file_duration" = "Duur: %@.";
+"accessibility_voice_message_playing" = "Spilt ab.";
+"accessibility_voice_message_unplayed" = "Nonig abgspilt.";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "Bestätigt, %@";
+"accessibility_status_declined_plus_time" = "Abglehnt, %@";
+"accessibility_status_sending_plus_time" = "Usgehend, %@";
+"accessibility_status_sent_plus_time" = "Verschickt, %@.";
+"accessibility_status_delivered_plus_time" = "Zuegstellt, %@";
+"accessibility_status_read_plus_time" = "Gläse, %@";
+"accessibility_status_failed_plus_time" = "Fehler, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Bestätigt vo %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Abglehnt vo %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Bestätigt vo %i, abglehnt vo %i, %@%@";
+"accessibility_status_group_acknowledged_my_reaction" = "Ich ha bestätigt";
+"accessibility_status_group_declined_my_reaction" = "Ich ha abglehnt";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "%@ öffne";
+"accessibility_action_call_phone" = "%@ alüte";
+"accessibility_action_open_mention" = "Kontakt vo %@ aazeige";
+
+// Multi-Device Wizard
+"md_wizard_header" = "Multi-Device-Vorschau";
+"md_wizard_start" = "Min Kompi verchnüpfe";
+"md_wizard_cancel" = "Abbräche";
+"md_wizard_next" = "Wiiter";
+"md_wizard_close" = "Schlüsse";
+"md_wizard_back_identity" = "Threema-ID aazeige";
+
+"md_wizard_connection_info" = "Während em Verchnüpfigsvorgang werded Arüef und Benachrichtigunge deaktiviert.";
+
+"md_wizard_terms_note_text" = "D’Tech Preview ermöglicht, die kommend Multi-Device-Funktionalität vorab z’teste. Bitte beachted Sie, dass Funktione limitiert sind und sich d’Alpha-Software no in Entwicklig befindet.";
+
+"md_wizard_terms_backup" = "Dateverlust cha ufträtte. Bitte mached Sie es Backup, bevor Sie wiitermached.\n[Backup-Aleitig]\n(https://threema.ch/docs/threema/ios_backup_manual_de.pdf)";
+"md_wizard_terms_support" = "Aktualisiered Sie d’iOS- und d’Desktop-App regelmässig, zum die neuschte Funktione und Verbesserige überzcho.";
+"md_wizard_terms_issues" = "Bekannti Problem und Ischränkige sind [da](https://threema.ch/faq/md_limit) (uf Englisch) ufglistet.";
+"md_wizard_terms_bugs" = "Zum Feedback geh, kontaktiered Sie üs direkt via Threema («Iistellige > Beta-Feedback»).";
+
+"md_wizard_terms_accept" = "Ich ha es Backup gmacht und wett wiitermache.";
+
+"md_wizard_info_download_title" = "Abelade";
+"md_wizard_info_download_text" = "Threema Tech Preview für Ihre Kompi:";
+"md_wizard_info_linking_title" = "Verchnüpfed Sie Ihre Kompi mit dem Grät";
+"md_wizard_info_linking_text" = "Bim Verchnüpfe vo Ihrem Kompi werded Ihri wichtigste Threema-Date (ID, Kontäkt und Gruppe) verschlüsslet und vorübergehend ufem [Threema-Server, wo Sie im Moment nutzed](https://threema.ch/de/faq/threema_safe_webdav) (aktuelli Iistellig: %@), gspeicheret.";
+
+"md_wizard_preparation_status" = "Wird vorbereitet…";
+
+"md_wizard_start_desktop" = "Öffned Sie Threema Tech Preview uf Ihrem Kompi und gebed Sie Ihri Threema-ID ii.";
+"md_wizard_identity_text" = "Ihri Threema-ID:";
+
+"md_wizard_code_text" = "Code für d’Verchnüpfig:";
+
+"md_wizard_success_title" = "Grät erfolgriich verchnüpft";
+"md_wizard_success_text" = "Threema Tech Preview cha jetzt uf Ihrem Kompi bruucht werde (au wenn Ihres iOS-Grät usgschalte isch).";
+
+"md_wizard_error_title" = "Verchnüpfig fehlgschlage, wil d’Threema-App gschlosse worde isch";
+"md_wizard_timeout_title" = "Verchnüpfig fehlgschlage, wil de Vorgang z’lang duuret hät";
+"md_wizard_could_not_connect_title" = "Verchnüpfig fehlgschlage, wil d’Verbindig zum Server nöd hät chöne hergstellt werde";
+"md_wizard_error_text" = "Bitte versueched Sie’s via «Iistellige > Multi-Device-Vorschau» nomal.";
+
+// App icons
+"app_icon_title_celebration" = "Geburtstags-Icon";
+"app_icon_description_celebration" = "10 Jahr Threema";
+"app_icon_title_current" = "Aktuells Icon";
+"app_icon_description_current" = "Sit 2019";
+"app_icon_title_second" = "Zweits Icon";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "Ersts Icon";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 Jahr Threema!";
+"anniversary_view_text" = "Am 12. Dezember 2022 wird Threema 10 Jahr alt. Zum die Fiirlichkeite z’starte, hämmer s’App-Icon fäschtlich gschmückt.";
+"anniversary_view_icon_info" = "Zum s’App-Icon zude Standardversion z’ändere oder mitere früehnere Version z’ersetze, gönd Sie zu «Iistellige > Erschiinigsbild > App-Icon».";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Nöd unterstützti Systemnachricht";
+
+// Alerts
+"alert_no_access_title_camera" = "Kei Zuegriff uf d’Kamera";
+"alert_no_access_title_contacts" = "Kei Zuegriff uf d’Kontäkt";
+"alert_no_access_title_location" = "Kei Zuegriff ufde Standort";
+"alert_no_access_title_location_precise" = "Kei Zuegriff uf de gnaui Standort";
+"alert_no_access_title_microphone" = "Kei Zuegriff ufs Mikrofon";
+
+"alert_no_access_message_camera" = "Wächsled Sie zu de iOS-Iistellige und erlaubed Sie de Kamera-Zuegriff.";
+"alert_no_access_message_contacts" = "Wächsled Sie zu de iOS-Iistellige und erlaubed Sie de Kontakt-Zuegriff.";
+"alert_no_access_message_location" = "Wächsled Sie zu de iOS-Iistellige und erlaubed Sie de Standort-Zuegriff.";
+"alert_no_access_message_location_precise" = "Wächsled Sie zu de iOS-Iistellige und erlaubed Sie de Zuegriff uf «Genauer Standort» in «Standort».";
+"alert_no_access_message_microphone" = "Wächsled Sie zu de iOS-Iistellige und erlaubed Sie de Mikrofon-Zuegriff.";
+
+"alert_no_access_open_settings" = "Iistellige öffne";
+
+"alert_biometrics_changed_title_touch" = "Möglichi Touch-ID-Änderig erchännt";
+"alert_biometrics_changed_title_face" = "Möglichi Face-ID-Änderig erchännt";
+"alert_biometrics_changed_message" = "Gebed Sie Ihre Code einmalig ii, zum die biometrisch Authentifizierig für Threema wieder z’erlaube.";
+
+"alert_enable_actions" = "Aktione verfüegbar in: %ds";
+
+// App Migration
+"sqldhsessionstore_cannot_downgrade_to" = "(%@)\nEs Downgrade vo Version %d uf Version %d hät nöd chöne duregfüehrt werde";
+"sqldhsessionstore_unknownError" = "Bim Versuech vonere Migration isch en unbekannte Fehler ufträtte: %@";
+"app_migration_uncompleted" = "D’App-Migration hät nöd chöne abgschlosse werde.";
+
+// UIApplicationShortcutItems
+"application_shortcut_item_new_message" = "Neui Nachricht";
+"application_shortcut_item_scan_qr_code" = "QR-Code scanne";
+"application_shortcut_item_my_id" = "Mis Profil";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "Sterndli-Nachrichte";
+"marker_action_star" = "Mit Sterndli markiere";
+"marker_action_remove_star" = "Sterndli lösche";
+"marker_accessibility_label" = "Mit Sterndli markiert.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "Sterndli-Nachricht";
+
+// Delete / Edit message
+"edit_message" = "Nachricht bearbeite";
+"edit_message_can_not_edit" = "Die Nachricht isch vor meh als 6 Stunde verschickt worde und cha drum nüme bearbeitet werde.";
+"edit_message_not_sent_to" = "Folgendi Gruppemitglieder werded Ihri Änderige nöd gseh: %@";
+"delete_message_not_sent_to" = "Bi folgende Gruppemitglieder wird d’Nachricht nöd glöscht: %@";
+"delete_edit_message_not_sent_to_others" = "%d anderi";
+"delete_message_requirement" = "Demit Nachrichte chönd glöscht werde, mues Threema uf di neuscht Version aktualisiert werde.";
+"edit_message_requirement" = "Zum bearbeiteti Nachrichte z’gseh, mues Threema uf di neuscht Version aktualisiert werden.";
+
+"edit_message_text_to_long" = "Die Nachricht cha nöd bearbeitet werde, wil de Text z’lang isch.";
+"edited_message_state" = "Bearbeitet";
+"deleted_message" = "Die Nachricht isch glöscht worde";

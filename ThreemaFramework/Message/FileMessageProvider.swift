@@ -176,6 +176,7 @@ public protocol VideoMessage: ThumbnailDisplayMessage {
 
 public protocol VoiceMessage: BaseMessage & FileMessageProvider & CommonFileMessageMetadata {
     var durationTimeInterval: TimeInterval? { get }
+    var consumed: Date? { get }
 }
 
 // MARK: - FileMessage

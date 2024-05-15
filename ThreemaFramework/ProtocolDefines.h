@@ -47,10 +47,14 @@
 #define kDisconnectTimeout 3
 #define kReconnectBaseInterval 2
 #define kReconnectMaxInterval 10
-#define kKeepAliveInterval 180
+#define kEchoRequestInterval 60
+#define kEchoRequestMDInterval 15
+#define kEchoRequestTimeout 10
 #define kErrorDisplayInterval 30
 #define kBlobLoadTimeout 180
 #define kBlobUploadTimeout 120
+#define kConnectionIdleTimeout 120 // min 30, max 600
+#define kConnectionIdleMDTimeout 30 // min 30, max 600
 
 #define kMaxMessageLen 7000 // text message size limit (bytes, not characters!); must comfortably fit in maximum packet length (including 360 bytes overhead and padding)
 #define kMaxCaptionLen 1000
@@ -115,6 +119,10 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define MSGTYPE_DELIVERY_RECEIPT 0x80
 #define MSGTYPE_GROUP_DELIVERY_RECEIPT 0x81
 #define MSGTYPE_TYPING_INDICATOR 0x90
+#define MSGTYPE_EDIT 0x91
+#define MSGTYPE_DELETE 0x92
+#define MSGTYPE_GROUP_EDIT 0x93
+#define MSGTYPE_GROUP_DELETE 0x94
 #define MSGTYPE_FORWARD_SECURITY 0xa0
 #define MSGTYPE_AUTH_TOKEN 0xff
 #define MSGTYPE_GROUP_CALL_START 0x4f
@@ -135,7 +143,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define DELIVERYRECEIPT_MSGCONSUMED 0x05
 
 #define PLTYPE_ECHO_REQUEST 0x00
-#define PLTYPE_ECHO_REPLY 0x80
+#define PLTYPE_ECHO_RESPONSE 0x80
 #define PLTYPE_OUTGOING_MESSAGE 0x01
 #define PLTYPE_OUTGOING_MESSAGE_ACK 0x81
 #define PLTYPE_INCOMING_MESSAGE 0x02
@@ -143,6 +151,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PLTYPE_UNBLOCK_INCOMING_MESSAGES 0x03
 #define PLTYPE_PUSH_NOTIFICATION_TOKEN 0x20
 #define PLTYPE_VOIP_PUSH_NOTIFICATION_TOKEN 0x24
+#define PLTYPE_SET_CONNECTION_IDLE_TIMEOUT 0x30
 #define PLTYPE_QUEUE_SEND_COMPLETE 0xd0
 #define PLTYPE_DEVICE_COOKIE_CHANGE_INDICATION 0xd2
 #define PLTYPE_CLEAR_DEVICE_COOKIE_CHANGE_INDICATION 0xd3
@@ -162,6 +171,8 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define FEATURE_MASK_VOIP               0x10
 #define FEATURE_MASK_VOIP_VIDEO         0x20
 #define FEATURE_MASK_FORWARD_SECURITY   0x40
+#define FEATURE_MASK_EDIT_MESSAGE       0x100
+#define FEATURE_MASK_DELETE_MESSAGE     0x200
 
 #define PUSHFILTER_TYPE_NONE            0
 #define PUSHFILTER_TYPE_ALLOW_LISTED	1

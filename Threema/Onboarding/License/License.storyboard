@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PEi-Qh-1Aa">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PEi-Qh-1Aa">
     <device id="retina6_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -20,7 +20,7 @@
                                 <rect key="frame" x="0.0" y="47" width="428" height="845"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="center" spacing="25" translatesAutoresizingMaskIntoConstraints="NO" id="0jz-NY-pVE">
-                                        <rect key="frame" x="16" y="16" width="396" height="541.66666666666663"/>
+                                        <rect key="frame" x="16" y="16" width="396" height="434"/>
                                         <subviews>
                                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="ThreemaWorkWhite" translatesAutoresizingMaskIntoConstraints="NO" id="CNQ-yI-SPU">
                                                 <rect key="frame" x="121.66666666666666" y="0.0" width="152.99999999999997" height="18"/>
@@ -44,12 +44,13 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="y62-zU-oeM">
                                                         <rect key="frame" x="0.0" y="0.0" width="36" height="136"/>
                                                         <subviews>
-                                                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="749" verticalCompressionResistancePriority="749" image="Key" translatesAutoresizingMaskIntoConstraints="NO" id="ukr-xH-xk3">
-                                                                <rect key="frame" x="0.0" y="10" width="20" height="20"/>
+                                                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="749" verticalCompressionResistancePriority="749" image="key.fill" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="ukr-xH-xk3">
+                                                                <rect key="frame" x="0.0" y="8.9999999999999964" width="20" height="22.333333333333336"/>
+                                                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                 <constraints>
                                                                     <constraint firstAttribute="height" constant="20" id="B3N-oF-uPg"/>
                                                                     <constraint firstAttribute="width" secondItem="ukr-xH-xk3" secondAttribute="height" multiplier="1:1" id="Duo-Oc-i5R"/>
-                                                                    <constraint firstAttribute="width" constant="20" id="Wg9-a9-mge"/>
+                                                                    <constraint firstAttribute="width" relation="lessThanOrEqual" constant="20" id="Wg9-a9-mge"/>
                                                                 </constraints>
                                                             </imageView>
                                                         </subviews>
@@ -149,8 +150,9 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                             <constraint firstAttribute="width" constant="20" id="ow7-a2-oMh"/>
                                                         </constraints>
                                                     </activityIndicatorView>
-                                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="750" verticalHuggingPriority="750" image="Checkbox" translatesAutoresizingMaskIntoConstraints="NO" id="hLW-NW-G3V">
-                                                        <rect key="frame" x="30" y="10.333333333333371" width="20" height="20"/>
+                                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="750" verticalHuggingPriority="750" image="checkmark.circle.fill" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="hLW-NW-G3V">
+                                                        <rect key="frame" x="30" y="11.333333333333369" width="20" height="18.666666666666664"/>
+                                                        <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="20" id="K2K-HM-fMK"/>
                                                             <constraint firstAttribute="width" constant="20" id="faw-gf-r36"/>
@@ -170,25 +172,13 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                 <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Learn more about Threema Work" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="y1s-MQ-fL9" customClass="ZSWTappableLabel">
-                                                <rect key="frame" x="76.333333333333329" y="434" width="243.66666666666669" height="19.333333333333314"/>
-                                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
-                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1Lb-6f-5Ku">
-                                                <rect key="frame" x="30" y="478.33333333333337" width="336" height="0.0"/>
+                                                <rect key="frame" x="30" y="434" width="336" height="0.0"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" id="12z-vS-B2l"/>
                                                 </constraints>
                                             </view>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="If you are a private user, please tap here to download Threema." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ILs-iF-94n" customClass="ZSWTappableLabel">
-                                                <rect key="frame" x="38.666666666666657" y="503.33333333333331" width="318.66666666666674" height="38.333333333333314"/>
-                                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
-                                                <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
                                         </subviews>
                                         <constraints>
                                             <constraint firstItem="crj-cC-LdC" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="0jz-NY-pVE" secondAttribute="leading" constant="16" id="U9P-M0-otP"/>
@@ -230,10 +220,9 @@ Please enter your credentials. If you do not know your credentials, please conta
                         <outlet property="keyImageView" destination="ukr-xH-xk3" id="1Nx-Ve-61x"/>
                         <outlet property="licensePasswordTextField" destination="D61-wT-Sck" id="6fG-J6-Qvc"/>
                         <outlet property="licenseUsernameTextField" destination="CJH-1B-fdo" id="4Kf-h9-rl6"/>
+                        <outlet property="logoImageView" destination="CNQ-yI-SPU" id="nz2-VZ-BVB"/>
                         <outlet property="stackView" destination="0jz-NY-pVE" id="nfg-CM-UId"/>
                         <outlet property="threemaAdminInfoLabel" destination="38G-SM-x81" id="agh-T0-Rh4"/>
-                        <outlet property="threemaAppLinkLabel" destination="ILs-iF-94n" id="7Q8-Aa-YWE"/>
-                        <outlet property="threemaWorkInfoLabel" destination="y1s-MQ-fL9" id="Gsw-GN-cCJ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kRq-Sh-tbn" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -241,17 +230,9 @@ Please enter your credentials. If you do not know your credentials, please conta
             <point key="canvasLocation" x="-431.77570093457939" y="-2364.3628509719224"/>
         </scene>
     </scenes>
-    <designables>
-        <designable name="ILs-iF-94n">
-            <size key="intrinsicContentSize" width="465.66666666666669" height="19.333333333333332"/>
-        </designable>
-        <designable name="y1s-MQ-fL9">
-            <size key="intrinsicContentSize" width="243.66666666666666" height="19.333333333333332"/>
-        </designable>
-    </designables>
     <resources>
-        <image name="Checkbox" width="36" height="36"/>
-        <image name="Key" width="36" height="36"/>
         <image name="ThreemaWorkWhite" width="1481" height="183"/>
+        <image name="checkmark.circle.fill" catalog="system" width="128" height="123"/>
+        <image name="key.fill" catalog="system" width="82" height="128"/>
     </resources>
 </document>

@@ -83,9 +83,8 @@
 
 "mediapreview_options" = "Options";
 
-"testflight_feedback_viewtitle" = "Commentaires bêta";
-"testflight_feedback_title" = "Merci de nous envoyer vos commentaires concernant la bêta !";
-"testflight_feedback_description" = "Merci d'avoir testé la version bêta de Threema. Cependant, les tests ne représentent que la moitié de l'équation, l'autre moitié consiste à fournir des commentaires. Veuillez nous informer si vous rencontrez des bugs ou des anomalies. Accédez simplement aux Paramètres -> Commentaires bêta pour ouvrir la discussion liée à la bêta.";
+"testflight_feedback_title" = "Envoyez-nous vos commentaires concernant la bêta !";
+"testflight_feedback_description" = "Veuillez nous informer si vous rencontrez des bugs ou des anomalies. Touchez ici pour ouvrir la discussion liée à la bêta.";
 
 "notification.threemaweb.connect.title" = "Desktop/web";
 "notification.threemaweb.connect.body" = "Touchez ici pour rétablir la connexion à l'application pour bureau ou au client web.";

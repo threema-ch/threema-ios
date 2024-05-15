@@ -44,7 +44,7 @@ class HttpClientUploadSafeTests: XCTestCase {
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock()
         )
-        if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
+        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
             if let data = store.backupData() {
                 let encryptedData = try! store.encryptBackupData(key: key, data: data)
@@ -85,7 +85,7 @@ class HttpClientUploadSafeTests: XCTestCase {
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock()
         )
-        if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
+        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
             if let data = store.backupData() {
                 let encryptedData = try! store.encryptBackupData(key: key, data: data)

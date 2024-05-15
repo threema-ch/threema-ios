@@ -78,7 +78,8 @@ class SyncExclusionListViewController: ThemedTableViewController {
         }
         else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "AddCell")!
-            cell.imageView?.image = UIImage(named: "AddMember", in: .primary)
+            cell.imageView?.image = UIImage(systemName: "plus.circle.fill")?
+                .applying(symbolWeight: .regular, symbolScale: .large).withTintColor(.primary)
             return cell
         }
     }

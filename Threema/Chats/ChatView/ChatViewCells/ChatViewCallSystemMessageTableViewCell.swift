@@ -199,7 +199,11 @@ extension ChatViewCallSystemMessageTableViewCell: Reusable { }
 
 extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
     
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+    func messageActions()
+        -> (
+            primaryActions: [ChatViewMessageActionProvider.MessageAction],
+            generalActions: [ChatViewMessageActionProvider.MessageAction]
+        )? {
 
         guard let message = callMessageAndNeighbors?.message else {
             return nil
@@ -211,7 +215,7 @@ extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
             
-        let editAction = Provider.editAction {
+        let selectHandler = Provider.selectAction {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
@@ -227,7 +231,7 @@ extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
         let deleteAction = Provider.deleteAction(message: message, willDelete: willDelete, didDelete: didDelete)
         
         // Build menu
-        return [detailAction, editAction, deleteAction]
+        return ([], [detailAction, selectHandler, deleteAction])
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

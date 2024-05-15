@@ -259,7 +259,7 @@ final class ChatViewController: ThemedViewController {
         
         bannerView.isHidden = true
         bannerView.translatesAutoresizingMaskIntoConstraints = false
-                
+        
         return bannerView
     }()
     
@@ -273,7 +273,6 @@ final class ChatViewController: ThemedViewController {
         
         // Remove any section header padding
         tableView.sectionHeaderTopPadding = 0
-                
         tableView.alpha = 0.0
         
         // This fixes an issue, where voice over selected a random cell after scrolling to bottom when opening the chat
@@ -690,11 +689,10 @@ final class ChatViewController: ThemedViewController {
         scrollCompletion?()
         scrollCompletion = nil
         
-        chatBarCoordinator.saveDraft()
         chatBarCoordinator.sendTypingIndicator(startTyping: false)
         // Stop timers to prevent leaks
         chatBarCoordinator.stopTypingTimers()
-                
+        
         // This and the opposite in `viewWillAppear` is needed to make a search controller work that is added in a
         // child view controller using the same navigation bar. See ChatSearchController for details.
         definesPresentationContext = false
@@ -711,6 +709,14 @@ final class ChatViewController: ThemedViewController {
 
         if shouldMarkMessagesAsRead {
             unreadMessagesSnapshot.resetState()
+        }
+        
+        chatBarCoordinator.saveDraft()
+        
+        if isRecording() {
+            DispatchQueue.main.async {
+                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            }
         }
     }
     
@@ -898,7 +904,7 @@ final class ChatViewController: ThemedViewController {
             view.leadingAnchor.constraint(equalTo: groupCallBannerView.leadingAnchor, constant: -10),
             view.trailingAnchor.constraint(equalTo: groupCallBannerView.trailingAnchor, constant: 10),
         ])
-                
+
         if UIDevice.current.userInterfaceIdiom == .pad {
             // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an
             // iPad is used with an external keyboard
@@ -916,7 +922,7 @@ final class ChatViewController: ThemedViewController {
     // MARK: - Public functions
     
     @objc func isRecording() -> Bool {
-        chatBarCoordinator.isRecording
+        chatBarCoordinator.chatBar.recordingState == .recording
     }
     
     @objc func isPlayingAudioMessage() -> Bool {
@@ -1185,6 +1191,13 @@ extension ChatViewController {
             }
             
             detailsViewController = GroupDetailsViewController(for: group, displayMode: .conversation, delegate: self)
+        }
+        else if let distributionList = conversation.distributionList {
+            detailsViewController = DistributionListDetailsViewController(
+                for: distributionList,
+                displayMode: .conversation,
+                delegate: self
+            )
         }
         else {
             detailsViewController = SingleDetailsViewController(for: conversation, delegate: self)
@@ -1545,6 +1558,10 @@ extension ChatViewController {
                 
                 // If scrollPosition is set to `.none` it will not scroll
                 self?.tableView.selectRow(at: indexPath, animated: true, scrollPosition: .top)
+                
+                if UIAccessibility.isVoiceOverRunning, let cell = self?.tableView.cellForRow(at: indexPath) {
+                    UIAccessibility.post(notification: .layoutChanged, argument: cell)
+                }
             }
         }
         .ensure {
@@ -1836,12 +1853,21 @@ extension ChatViewController: UITableViewDelegate {
                dataSource.isSelected(objectID: objectID) {
                 tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
             }
+            
+            dataSource.startObservingMessage(with: objectID)
         }
         
         if !firstCellShown {
             firstCellShown = true
             let endTime = CACurrentMediaTime()
             DDLogVerbose("ChatViewController duration init to first cell shown \(endTime - initTime) s")
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if let cellType = dataSource.itemIdentifier(for: indexPath),
+           case let ChatViewDataSource.CellType.message(objectID: objectID) = cellType {
+            dataSource.stopObservingMessage(with: objectID)
         }
     }
     
@@ -2791,7 +2817,10 @@ extension ChatViewController: DetailsDelegate {
         }
     }
     
-    func showChatSearch() {
+    func showChatSearch(forStarred: Bool) {
+        if forStarred {
+            chatSearchController.addStarredToken()
+        }
         userInterfaceMode = .search
     }
     

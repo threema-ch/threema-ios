@@ -92,10 +92,10 @@ actor GroupCallActor: Sendable {
         }
     }
     
-    /// The exact call start date of the call as determined by the SFU
+    /// The exact creation timestamp of the call as determined by the SFU
     ///
-    /// Use this for ordering calls by call creation time.
-    var exactCallStartDate: UInt64?
+    /// Use this for ordering calls by call start time.
+    private(set) var exactCreationTimestamp: UInt64?
 
     let localContactModel: ContactModel
     var localParticipant: LocalParticipant? = nil
@@ -121,7 +121,7 @@ actor GroupCallActor: Sendable {
     
     private var startMessage: CspE2e_GroupCallStart?
     
-    private var numberOfParticipants = 0
+    private var sfuProvidedNumberOfParticipants = 0
     
     private lazy var state: GroupCallState = UnJoined(groupCallActor: self) {
         didSet {
@@ -324,7 +324,7 @@ actor GroupCallActor: Sendable {
     func handle(peekResult: SFUHTTPConnection.PeekResponse) async throws -> PeekResult {
         switch peekResult {
         case let .running(peekResponse):
-            exactCallStartDate = peekResponse.startedAt
+            exactCreationTimestamp = peekResponse.startedAt
             groupCallBaseState.maxParticipants = Int(peekResponse.maxParticipants)
 
             if peekResponse.hasEncryptedCallState {
@@ -338,7 +338,7 @@ actor GroupCallActor: Sendable {
                 }
                                 
                 // We add one for the creator, which is not included in participants
-                numberOfParticipants = decryptedCallState.participants.count + 1
+                sfuProvidedNumberOfParticipants = decryptedCallState.participants.count + 1
                 
                 await updateButtonAndBanner()
                 
@@ -379,13 +379,13 @@ actor GroupCallActor: Sendable {
     
     func joinState() -> GroupCallJoinState {
         if state is Connected {
-            return .runningLocal
+            return .joined
         }
         
         if startJoining, state is Connecting || state is Joining {
             return .joining
         }
-        return .notRunningLocal
+        return .notJoined
     }
     
     func setIsChosenCall() -> Bool {
@@ -414,7 +414,25 @@ actor GroupCallActor: Sendable {
     }
     
     func setExactCallStartDate(_ exactCallStartDate: UInt64) {
-        self.exactCallStartDate = exactCallStartDate
+        exactCreationTimestamp = exactCallStartDate
+    }
+    
+    /// Returns the the Date of`exactCreationTimestamp` or `.now` if it is nil
+    /// - Returns: Date of creation or now
+    func callStartDate() -> Date {
+        guard let millisecondsSinceStart = exactCreationTimestamp else {
+            return Date.now
+        }
+        return Date(timeIntervalSince1970: TimeInterval(millisecondsSinceStart / 1000))
+    }
+    
+    func numberOfJoinedParticipants() -> Int {
+        if joinState() == .notJoined {
+            return sfuProvidedNumberOfParticipants
+        }
+        else {
+            return viewModel.numberOfParticipants
+        }
     }
     
     private func updateButtonAndBanner(hide: Bool = false) async {
@@ -509,10 +527,6 @@ extension GroupCallActor {
 // MARK: View Model
 
 extension GroupCallActor {
-    
-    func getNumberOfParticipants() -> Int {
-        numberOfParticipants
-    }
         
     func add(_ localParticipant: LocalParticipant) async {
         self.localParticipant = localParticipant

@@ -50,4 +50,21 @@ extension TipKitManager {
 
         public init() { }
     }
+    
+    /// Tip shown for users using TestFlight
+    public struct ThreemaBetaFeedbackTip: Tip {
+        public var title: Text {
+            Text("testflight_feedback_title".localized)
+        }
+
+        public var message: Text? {
+            Text("testflight_feedback_description".localized)
+        }
+
+        public var image: Image? {
+            Image(systemName: "ant.fill")
+        }
+
+        public init() { }
+    }
 }

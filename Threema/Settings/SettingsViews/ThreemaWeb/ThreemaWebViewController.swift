@@ -102,7 +102,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         
         cleanupWebClientSessions()
         
-        cameraButton.image = BundleUtil.imageNamed("QRScan")?.withTint(.primary)
+        cameraButton.image = UIImage(systemName: "qrcode.viewfinder")!.withTint(.primary)
         cameraButton.accessibilityLabel = BundleUtil.localizedString(forKey: "scan_qr")
         
         ThreemaWebQRcodeScanner.shared.delegate = self
@@ -471,7 +471,7 @@ class ThreemaWebQRcodeScanner: QRScannerViewControllerDelegate {
     fileprivate var threemaWebServerURL: String = BundleUtil.object(forInfoDictionaryKey: "ThreemaWebURL") as! String
     fileprivate var downloadString: String {
         switch ThreemaApp.current {
-        case .work, .workRed, .onPrem:
+        case .work, .blue, .onPrem:
             return "https://threema.ch/work/download"
         default:
             return "https://threema.ch/download"

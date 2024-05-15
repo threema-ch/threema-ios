@@ -316,11 +316,7 @@ public func pack(
         if c == "s" {
             o = objectsQueue.remove(at: 0)
             
-            guard let stringData = (o as! String).data(using: .utf8) else {
-                assertionFailure()
-                return Data()
-            }
-            var bytes = stringData.bytes
+            var bytes = Data((o as! String).utf8).bytes
             
             let expectedSize = max(1, n)
             

@@ -75,6 +75,18 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         // no-op
     }
 
+    func sendDeleteMessage(with objectID: NSManagedObjectID, receiversExcluded: [ThreemaFramework.Contact]?) throws {
+        // no-op
+    }
+
+    func sendEditMessage(
+        with objectID: NSManagedObjectID,
+        rawText: String,
+        receiversExcluded: [ThreemaFramework.Contact]?
+    ) throws {
+        // no-op
+    }
+
     func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> PromiseKit.Promise<Void> {
         sendDeliveryReceiptCalls.append(abstractMessage)
         return Promise()

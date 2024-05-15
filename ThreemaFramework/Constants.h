@@ -59,6 +59,7 @@
 #define kNotificationBatchDeletedOldMessages @"ThreemaBatchDeletedOldMessages"
 
 #define kNotificationShowGroup @"ThreemaShowGroup"
+#define kNotificationShowDistributionList @"ThreemaShowDistributionList"
 #define kNotificationShowSafeSetup @"ThreemaShowSafeSetup"
 #define kShowNotificationSettings @"ThreemaShowNotificationSettings"
 
@@ -143,6 +144,7 @@ static NSString * const kNotificationGroupConversationImageChanged = @"ThreemaGr
 
 #define kKeyContact @"contact"
 #define kKeyGroup @"group"
+#define kKeyDistributionList @"distributionList"
 #define kKeyConversation @"conversation"
 #define kKeyForceCompose @"forceCompose"
 #define kKeyText @"text"

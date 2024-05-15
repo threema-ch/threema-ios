@@ -34,6 +34,8 @@
 @dynamic deliveryDate;
 @dynamic readDate;
 @dynamic remoteSentDate;
+@dynamic deletedAt;
+@dynamic lastEditedAt;
 @dynamic sendFailed;
 @dynamic conversation;
 @dynamic sender;
@@ -42,6 +44,7 @@
 @dynamic forwardSecurityMode;
 @dynamic groupDeliveryReceipts;
 @dynamic rejectedBy;
+@dynamic messageMarkers;
 
 - (nullable NSString*)additionalExportInfo {
     return nil;
@@ -49,10 +52,6 @@
 
 - (nullable NSString *)contentToCheckForMentions {
     return nil;
-}
-
-- (nonnull NSString*)previewText {
-    return @"";
 }
 
 /// Check is managedObjectContext nil or isDeleted set to true

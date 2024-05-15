@@ -49,8 +49,14 @@ extension BlobData {
     }
     
     // This only supports: remote, processed and fatalError
-    // (i.e. downloading, processing and deleted are note supported)
+    // (i.e. downloading and processing are note supported)
     private var incomingThumbnailState: IncomingBlobState {
+
+        guard deletedAt == nil else {
+            // The message content is deleted
+            return .noData(.deleted)
+        }
+
         if blobThumbnail != nil {
             return .processed
         }
@@ -72,8 +78,14 @@ extension BlobData {
     }
     
     // Similar to `outgoingDataState` as both are uploaded in the same go (`BlobMessageSender`)
-    // delete state is not supported and there is no fatalError
+    // there is no fatalError
     private var outgoingThumbnailState: OutgoingBlobState {
+
+        guard deletedAt == nil else {
+            // The message content is deleted
+            return .noData(.deleted)
+        }
+
         // If is blob ID set, than must be an reflected outgoing message
         if blobThumbnailIdentifier != nil {
             // The blob for reflected outgoing file message must be downloaded

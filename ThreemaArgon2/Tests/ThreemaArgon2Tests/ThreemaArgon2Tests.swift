@@ -102,8 +102,8 @@ final class ThreemaArgon2Tests: XCTestCase {
     func testCommonErrorStates() {
         XCTAssertThrowsExpectedError(
             try ThreemaArgon2.hashWithID(
-                "password".data(using: .utf8)!,
-                with: "diffsalt".data(using: .utf8)!,
+                Data("password".utf8),
+                with: Data("diffsalt".utf8),
                 iterations: 2,
                 memoryInKiB: 1,
                 threads: 1,
@@ -114,8 +114,8 @@ final class ThreemaArgon2Tests: XCTestCase {
 
         XCTAssertThrowsExpectedError(
             try ThreemaArgon2.hashWithID(
-                "password".data(using: .utf8)!,
-                with: "s".data(using: .utf8)!,
+                Data("password".utf8),
+                with: Data("s".utf8),
                 iterations: 2,
                 memoryInKiB: 1 ^ 12,
                 threads: 1,
@@ -134,8 +134,8 @@ final class ThreemaArgon2Tests: XCTestCase {
         expectedHex: String
     ) throws {
         let actualRaw = try ThreemaArgon2.hashWithID(
-            password.data(using: .utf8)!,
-            with: salt.data(using: .utf8)!,
+            Data(password.utf8),
+            with: Data(salt.utf8),
             iterations: iterations,
             memoryInKiB: memory,
             threads: threads,

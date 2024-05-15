@@ -223,7 +223,7 @@ class DBLoadTests: XCTestCase {
             for index in 0..<100_000 {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: index, to: Date(timeIntervalSince1970: 0))
-                let message = entityManager.entityCreator.textMessage(for: conversation)!
+                let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
                 message.date = date
                 message.sender = conversation?.contact
@@ -316,7 +316,7 @@ class DBLoadTests: XCTestCase {
                     for index in 0..<1000 {
                         let calendar = Calendar.current
                         let date = calendar.date(byAdding: .second, value: index, to: Date(timeIntervalSince1970: 0))
-                        let message = entityManager.entityCreator.textMessage(for: conversation)!
+                        let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
                         message.text = "\(index) - \(texts[index % texts.count])"
                         message.isOwn = index % 4 == 0 ? true : false
                         message.date = date
@@ -370,7 +370,7 @@ class DBLoadTests: XCTestCase {
                 entityManager.performSyncBlockAndSafe {
                     let calendar = Calendar.current
                     let date = calendar.date(byAdding: .second, value: +index, to: Date())
-                    let message = entityManager.entityCreator.textMessage(for: conversation)!
+                    let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
                     let isOwn = index % 3 == 0 ? false : true
                     message.isOwn = NSNumber(booleanLiteral: isOwn)
                     message.text = texts[index % texts.count]
@@ -406,7 +406,10 @@ class DBLoadTests: XCTestCase {
                     for contact in entityManager.entityFetcher.allContacts() as! [ContactEntity] {
                         let calendar = Calendar.current
                         let date = calendar.date(byAdding: .hour, value: 1, to: Date(timeIntervalSince1970: 0))
-                        let message = entityManager.entityCreator.textMessage(for: groupConversation)!
+                        let message = entityManager.entityCreator.textMessage(
+                            for: groupConversation,
+                            setLastUpdate: true
+                        )!
                         message.text = "Message \(num) from \(contact.identity) \(texts[num % texts.count])"
                         message.date = date
                         message.sender = contact
@@ -610,7 +613,10 @@ class DBLoadTests: XCTestCase {
         
         // Text messages
         entityManager.performSyncBlockAndSafe {
-            let outgoingMessage = entityManager.entityCreator.textMessage(for: group.conversation)!
+            let outgoingMessage = entityManager.entityCreator.textMessage(
+                for: group.conversation,
+                setLastUpdate: true
+            )!
             outgoingMessage.text = texts[0]
             outgoingMessage.date = Date()
             outgoingMessage.sent = true
@@ -620,7 +626,7 @@ class DBLoadTests: XCTestCase {
             outgoingMessage.isOwn = true
             quotableMessages.append(outgoingMessage)
             
-            let incomingMessage = entityManager.entityCreator.textMessage(for: group.conversation)!
+            let incomingMessage = entityManager.entityCreator.textMessage(for: group.conversation, setLastUpdate: true)!
             incomingMessage.text = texts[1]
             incomingMessage.date = Date()
             incomingMessage.sent = true
@@ -748,7 +754,10 @@ class DBLoadTests: XCTestCase {
         let locations = try JSONDecoder().decode([Location].self, from: Data(contentsOf: testLocationsURL))
         
         entityManager.performSyncBlockAndSafe {
-            let ownLocationMessage = entityManager.entityCreator.locationMessage(for: group.conversation)!
+            let ownLocationMessage = entityManager.entityCreator.locationMessage(
+                for: group.conversation,
+                setLastUpdate: true
+            )!
             ownLocationMessage.latitude = locations[0].latitude as NSNumber
             ownLocationMessage.longitude = locations[0].longitude as NSNumber
             ownLocationMessage.accuracy = locations[0].accuracy as NSNumber
@@ -757,7 +766,10 @@ class DBLoadTests: XCTestCase {
             ownLocationMessage.isOwn = true
             quotableMessages.append(ownLocationMessage)
             
-            let otherLocationMessage = entityManager.entityCreator.locationMessage(for: group.conversation)!
+            let otherLocationMessage = entityManager.entityCreator.locationMessage(
+                for: group.conversation,
+                setLastUpdate: true
+            )!
             otherLocationMessage.latitude = locations[2].latitude as NSNumber
             otherLocationMessage.longitude = locations[2].longitude as NSNumber
             otherLocationMessage.accuracy = locations[2].accuracy as NSNumber
@@ -767,7 +779,10 @@ class DBLoadTests: XCTestCase {
             otherLocationMessage.sender = senderContact
             quotableMessages.append(otherLocationMessage)
 
-            let anotherLocationMessage = entityManager.entityCreator.locationMessage(for: group.conversation)!
+            let anotherLocationMessage = entityManager.entityCreator.locationMessage(
+                for: group.conversation,
+                setLastUpdate: true
+            )!
             anotherLocationMessage.latitude = locations[3].latitude as NSNumber
             anotherLocationMessage.longitude = locations[3].longitude as NSNumber
             anotherLocationMessage.accuracy = locations[3].accuracy as NSNumber
@@ -784,7 +799,7 @@ class DBLoadTests: XCTestCase {
         
         entityManager.performSyncBlockAndSafe {
             for index in 0..<numberOfMessagesToAdd {
-                let message = entityManager.entityCreator.textMessage(for: group.conversation)!
+                let message = entityManager.entityCreator.textMessage(for: group.conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
                 message.date = Date()
                 message.sent = true
@@ -1318,7 +1333,10 @@ class DBLoadTests: XCTestCase {
             let location = locations[index % locations.count]
             
             entityManager.performSyncBlockAndSafe {
-                let locationMessage = entityManager.entityCreator.locationMessage(for: group.conversation)!
+                let locationMessage = entityManager.entityCreator.locationMessage(
+                    for: group.conversation,
+                    setLastUpdate: true
+                )!
                 
                 locationMessage.latitude = location.latitude as NSNumber
                 locationMessage.longitude = location.longitude as NSNumber
@@ -1652,7 +1670,7 @@ class DBLoadTests: XCTestCase {
                 forContact: contact,
                 entityManager: entityManager
             )
-            let message = entityManager.entityCreator.textMessage(for: conversation)!
+            let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
             
             message.text = text
             
@@ -1681,7 +1699,10 @@ class DBLoadTests: XCTestCase {
         entityManager: EntityManager
     ) -> TextMessage {
         entityManager.performAndWaitSave {
-            let message = entityManager.entityCreator.textMessage(for: group.conversation)! as TextMessage
+            let message = entityManager.entityCreator.textMessage(
+                for: group.conversation,
+                setLastUpdate: true
+            )! as TextMessage
             
             message.text = text
             
@@ -1729,7 +1750,7 @@ class DBLoadTests: XCTestCase {
             for index in 0..<(numberOfMessages / 2) {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: -(index * 8), to: Date())
-                let message = entityManager.entityCreator.textMessage(for: conversation)!
+                let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
                 message.isOwn = false
                 message.sender = conversation?.contact
@@ -1750,7 +1771,7 @@ class DBLoadTests: XCTestCase {
             for index in 0..<(numberOfMessages / 2) {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: -(index * 8), to: Date())!
-                let message = entityManager.entityCreator.textMessage(for: conversation)!
+                let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
                 message.isOwn = true
 

@@ -32,13 +32,25 @@ extension SettingsView {
         var body: some View {
             Section {
                 if model.displayFeedback {
-                    SectionItem(
-                        action: {
-                            model.giveFeedback()
-                        },
-                        title: "settings_feedback".localized,
-                        image: .systemImage("ant.fill")
-                    )
+                    if #available(iOS 17, *) {
+                        SectionItem(
+                            action: {
+                                model.giveFeedback()
+                            },
+                            title: "settings_feedback".localized,
+                            image: .systemImage("ant.fill")
+                        )
+                        .popoverTip(TipKitManager.ThreemaBetaFeedbackTip())
+                    }
+                    else {
+                        SectionItem(
+                            action: {
+                                model.giveFeedback()
+                            },
+                            title: "settings_feedback".localized,
+                            image: .systemImage("ant.fill")
+                        )
+                    }
                 }
                 if model.displayDevSettings {
                     SectionItem(
@@ -56,6 +68,9 @@ extension SettingsView {
     // MARK: - GeneralSection
     
     struct GeneralSection: View {
+        @Environment(\.appContainer.businessInjector)
+        private var injected: any BusinessInjectorProtocol
+        
         @State private var isPasswordRequired = false
         
         var body: some View {
@@ -87,7 +102,7 @@ extension SettingsView {
                         symbol: .systemImage("photo.fill")
                     )
                     (
-                        view: uiViewController(StorageManagementViewController()),
+                        view: StorageManagementView(model: .init(businessInjector: injected)),
                         title: "settings_list_storage_management_title",
                         symbol: .systemImage("tray.full.fill")
                     )
@@ -252,7 +267,7 @@ extension SettingsView {
                 .init(
                     cellTitle: title,
                     subCellTitle: "settings_threema_work_subtitle".localized,
-                    image: Image(uiImage: BundleUtil.imageNamed("ThreemaWorkSettings") ?? UIImage())
+                    image: Image(uiImage: UIImage(resource: .threemaWorkSettings))
                 )
             }
         }
@@ -262,6 +277,16 @@ extension SettingsView {
         struct InviteSection: View {
             var body: some View {
                 Section {
+                    if let link = ThreemaApp.rateLink {
+                        SectionItem(
+                            action: {
+                                UIApplication.shared.open(link, options: [:], completionHandler: nil)
+                                
+                            },
+                            title: String.localizedStringWithFormat("settings_list_rate".localized, ThreemaApp.appName),
+                            image: .systemImage("star.fill")
+                        )
+                    }
                     SectionItem(
                         action: inviteFriends,
                         title: "settings_list_invite_a_friend_title".localized,
@@ -334,24 +359,17 @@ extension SettingsView {
     struct RateSection: View {
         var body: some View {
             Section {
-                SectionItem(
-                    action: {
-                        UIApplication.shared.open(link()!, options: [:], completionHandler: nil)
-
-                    },
-                    title: String.localizedStringWithFormat("settings_list_rate".localized, ThreemaApp.appName),
-                    image: .systemImage("heart.fill")
-                )
+                if let link = ThreemaApp.rateLink {
+                    SectionItem(
+                        action: {
+                            UIApplication.shared.open(link, options: [:], completionHandler: nil)
+                            
+                        },
+                        title: String.localizedStringWithFormat("settings_list_rate".localized, ThreemaApp.appName),
+                        image: .systemImage("star.fill")
+                    )
+                }
             }
-        }
-        
-        private func link() -> URL? {
-            guard let string = BundleUtil.object(forInfoDictionaryKey: "ThreemaRateLink") as? String,
-                  let url = URL(string: string) else {
-                return nil
-            }
-            
-            return url
         }
     }
 
@@ -374,9 +392,13 @@ extension SettingsView {
                     destination: {
                         item.view.applyIf(item.view is (any UIViewControllerRepresentable)) { view in
                             view
-                                .threemaNavigationBar(item.title.localized)
+                                .ignoresSafeArea(.all)
                                 .asAnyView
                         }
+                        .navigationBarTitle(
+                            item.title.localized,
+                            displayMode: .inline
+                        )
                     },
                     title: item.title.localized,
                     image: item.symbol

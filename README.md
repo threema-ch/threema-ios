@@ -61,10 +61,10 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 ## <a name="schemes"></a>Schemes
 
 - `Threema` builds and tests the consumer app. (recommended for local testing)
-- `ThreemaWork` builds and tests the enterprise version of our app.
-- `ThreemaOnPrem` builds and tests the OnPrem version of our app.
-- `ThreemaRed` is only used for development and testing within Threema.
-- `ThreemaRedWork` is only used for development and testing within Threema.
+- `Threema Work` builds and tests the enterprise version of our app.
+- `Threema OnPrem` builds and tests the OnPrem version of our app.
+- `Threema Green` is only used for development and testing within Threema.
+- `Threema Blue` is only used for development and testing within Threema.
 
 ## <a name="building"></a>Building
 
@@ -92,9 +92,9 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
    rustup-init
    ```
    (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://github.com/Carthage/Carthage#installing-carthage).)
-   
+
    (You might want to add $HOME/.cargo/bin to your PATH.)
-   
+
 4. Ensure that submodules are checked out
 
    ```sh
@@ -110,7 +110,7 @@ _Note_: These setups are for running in the simulator.
 #### Threema (recommended)
 
 1. Open `Threema.xcproject` in Xcode
-2. Repeat these steps for the `Threema` and `ThreemaShareExtension` target
+2. Repeat these steps for the `Threema` and `Threema ShareExtension` target
    1. Check "Automatically manage signing" and confirm it ("Enable Automatic")
    2. Set "Team" to the team of your developer account
 3. Choose `Threema` as scheme and a simulator
@@ -118,7 +118,7 @@ _Note_: These setups are for running in the simulator.
 #### Threema Work
 
 1. Open `Threema.xcproject` in Xcode
-2. Repeat these steps for the `Threema Work` and `ThreemaForWorkShareExtension` target
+2. Repeat these steps for the `Threema Work` and `Threema Work ShareExtension` target
    1. Check "Automatically manage signing" and confirm it ("Enable Automatic")
    2. Set "Team" to the team of your developer account
 3. Choose `Threema Work` as scheme and a simulator
@@ -135,7 +135,7 @@ See "Building" for setting up a running environment. Before running the tests ch
 
 - Choose `Threema` as scheme to run the app tests.
 - Choose `ThreemaFramework` as scheme to run the framework tests.
-- Choose `ThreemaWork` as scheme to run Threema Work specific tests.
+- Choose `Threema Work` as scheme to run Threema Work specific tests.
 
 
 ## <a name="reproducible-builds"></a>Reproducible Builds
@@ -151,7 +151,7 @@ These are the most important groups of the Xcode project:
 
 - `ThreemaFramework`: Shared code between the main app and extensions
 - `Threema`: Code of both apps (Threema and Threema Work)
-- `ThreemaShareExtension`: Code of share extension
+- `Threema ShareExtension`: Code of share extension
 - `Threema{Framework}Tests`: Test files
 - `GroupCalls`: Code of group calls
 
@@ -168,7 +168,7 @@ We accept GitHub pull requests. Please refer to <https://threema.ch/open-source/
 Threema for iOS is licensed under the GNU Affero General Public License v3.
 
     Copyright (c) 2012-2023 Threema GmbH
-    
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License, version 3,
     as published by the Free Software Foundation.

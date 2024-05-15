@@ -116,6 +116,15 @@ extension Colors {
         }
     }
     
+    @objc public class var fillMicrophoneButton: UIColor {
+        switch theme {
+        case .light, .undefined:
+            return Asset.SharedColors.gray600.color
+        case .dark:
+            return Asset.SharedColors.gray400.color
+        }
+    }
+    
     @objc public class var ballotHighestVote: UIColor {
         .primary
     }

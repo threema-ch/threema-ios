@@ -30,7 +30,7 @@ class SettingsViewModel: ObservableObject {
         case .appStore:
             return false
         case .testFlight:
-            if ThreemaApp.current == .red || ThreemaApp.current == .workRed || ThreemaApp.current == .onPrem {
+            if ThreemaApp.current == .green || ThreemaApp.current == .blue || ThreemaApp.current == .onPrem {
                 return false
             }
             return true
@@ -44,7 +44,7 @@ class SettingsViewModel: ObservableObject {
         case .appStore:
             return false
         case .testFlight:
-            if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+            if ThreemaApp.current == .green || ThreemaApp.current == .blue {
                 return true
             }
             return false

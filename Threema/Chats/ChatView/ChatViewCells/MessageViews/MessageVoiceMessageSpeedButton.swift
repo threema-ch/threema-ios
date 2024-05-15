@@ -37,6 +37,15 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         }
     }
     
+    /// If a voice message is not consumed, it will show a badge on the mic icon
+    var isConsumed: Bool? {
+        didSet {
+            DispatchQueue.main.async {
+                self.updateMicrophoneIcon()
+            }
+        }
+    }
+    
     // MARK: - Private Properties
 
     // MARK: - Views
@@ -95,11 +104,7 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         let currentSpeed = UserSettings.shared().threemaAudioMessagePlaySpeedCurrentValue()
         speedLabel.text = "\(currentSpeed)x"
         
-        let image = UIImage(
-            systemName: "mic.fill",
-            withConfiguration: UIImage.SymbolConfiguration(scale: config.micIconSymbolConfigurationScale)
-        )
-        setImage(image, for: .normal)
+        updateMicrophoneIcon()
         
         /// We redispatch this on the main thread to avoid layouting too early causing temporary constraints due to a
         /// call to layoutIfNeeded when accessing the imageview of UIButton.
@@ -119,10 +124,30 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         }
     }
     
+    func updateMicrophoneIcon() {
+        guard isConsumed ?? true else {
+            let image = UIImage(
+                resource: .threemaMicFillBadge
+            ).applying(
+                configuration: UIImage.SymbolConfiguration(scale: config.micIconSymbolConfigurationScale),
+                paletteColors: [.primary, Colors.fillMicrophoneButton, Colors.fillMicrophoneButton]
+            )
+            setImage(image, for: .normal)
+            return
+        }
+        
+        let image = UIImage(
+            systemName: "mic.fill",
+            withConfiguration: UIImage.SymbolConfiguration(scale: config.micIconSymbolConfigurationScale)
+        )
+        setImage(image, for: .normal)
+    }
+    
     private func hideSpeedButton(animated: Bool = true) {
         let change = {
             self.imageView?.alpha = 1
             self.speedLabelContainer.alpha = 0
+            self.isUserInteractionEnabled = false
         }
         
         if animated {
@@ -145,6 +170,7 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         let change = {
             self.imageView?.alpha = 0
             self.speedLabelContainer.alpha = 1
+            self.isUserInteractionEnabled = true
         }
         
         if animated {
@@ -166,5 +192,7 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         speedLabel.textColor = Colors.textInverted
         tintColor = Colors.textLight
         speedLabelContainer.backgroundColor = Colors.textLight
+        
+        updateMicrophoneIcon()
     }
 }

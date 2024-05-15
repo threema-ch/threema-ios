@@ -74,6 +74,7 @@ class SupportViewController: UIViewController {
             queryItems.append(URLQueryItem(name: "lang", value: Bundle.main.preferredLocalizations[0]))
             queryItems.append(URLQueryItem(name: "version", value: ThreemaUtility.clientVersion))
             queryItems.append(URLQueryItem(name: "identity", value: myIdentity.identity))
+            queryItems.append(URLQueryItem(name: "theme", value: Colors.theme == .dark ? "dark" : "light"))
             guard let urlComp = BundleUtil.object(forInfoDictionaryKey: "ThreemaSupportURL") as? String else {
                 return nil
             }

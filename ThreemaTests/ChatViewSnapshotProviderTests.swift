@@ -500,7 +500,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     
     private func createMessage(in conversation: Conversation, entityManager: EntityManager) {
         entityManager.performSyncBlockAndSafe {
-            let textMessage = entityManager.entityCreator.textMessage(for: conversation)!
+            let textMessage = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
             textMessage.text = "Hello World"
         }
     }

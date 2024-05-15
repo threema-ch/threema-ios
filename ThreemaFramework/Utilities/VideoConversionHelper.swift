@@ -198,7 +198,6 @@ import Foundation
         }
         
         var srcVideoSize = __CGSizeApplyAffineTransform(videoTrack.naturalSize, videoTrack.preferredTransform)
-        let videoSize = Int(max(srcVideoSize.height, srcVideoSize.width))
         
         if srcVideoSize.width < 0 {
             srcVideoSize.width = -srcVideoSize.width
@@ -207,6 +206,8 @@ import Foundation
         if srcVideoSize.height < 0 {
             srcVideoSize.height = -srcVideoSize.height
         }
+        
+        let videoSize = Int(max(srcVideoSize.height, srcVideoSize.width))
         
         let duration = Int(asset.duration.seconds)
         guard let rate = VideoConversionHelper.getHighestPossibleBitrate(

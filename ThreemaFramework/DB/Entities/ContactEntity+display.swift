@@ -32,7 +32,7 @@ extension ContactEntity {
     /// Shorter version of `displayName` if available
     public var shortDisplayName: String {
         // This is an "op-in" feature
-        guard ThreemaApp.current == .threema || ThreemaApp.current == .red else {
+        guard ThreemaApp.current == .threema || ThreemaApp.current == .green else {
             return displayName
         }
         
@@ -51,7 +51,7 @@ extension ContactEntity {
             return false
         }
         
-        if ThreemaApp.current == .work || ThreemaApp.current == .workRed {
+        if ThreemaApp.current == .work || ThreemaApp.current == .blue {
             return !UserSettings.shared().workIdentities.contains(identity)
         }
         else {

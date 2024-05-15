@@ -74,11 +74,11 @@ struct ChatViewMessageActionProvider {
     ///   - copyHandler: Closure to be executed when copy is tapped
     ///   - quoteHandler: Closure to be executed when quote is tapped
     ///   - detailsHandler: Closure to be executed when details is tapped
-    ///   - editHandler: Closure to be executed when edit is tapped
+    ///   - selectHandler: Closure to be executed when select is tapped
     ///   - willDelete: Closure to be executed when delete is tapped and before the delete happens
     ///   - didDelete: Closure to be executed when delete is tapped and after the delete happened
     ///   - ackHandler: Closure to be executed when a reaction is tapped
-    /// - Returns: Array of MessageActions
+    /// - Returns: Two Arrays of MessageActions
     public static func defaultActions(
         message: BaseMessage,
         speakText: String,
@@ -87,62 +87,82 @@ struct ChatViewMessageActionProvider {
         copyHandler: @escaping () -> Void,
         quoteHandler: @escaping () -> Void,
         detailsHandler: @escaping () -> Void?,
-        editHandler: @escaping () -> Void?,
+        selectHandler: @escaping () -> Void?,
         willDelete: @escaping () -> Void?,
         didDelete: @escaping () -> Void?,
-        ackHandler: @escaping (BaseMessage, Bool) -> Void?
-    ) -> [MessageAction] {
+        ackHandler: @escaping (BaseMessage, Bool) -> Void?,
+        markStarHandler: @escaping (BaseMessage) -> Void?,
+        editHandler: (() -> Void?)? = nil
+    ) -> (primaryActions: [MessageAction], generalActions: [MessageAction]) {
         
-        var actions = [MessageAction]()
+        var primaryActions = [MessageAction]()
+        var generalActions = [MessageAction]()
         
         let quote = quoteAction(handler: quoteHandler)
         let copy = copyAction(handler: copyHandler)
         let forward = forwardAction(message: message)
         let share = shareAction(view: activityViewAnchor, shareItems: shareItems)
         let details = detailsAction(handler: detailsHandler)
-        let edit = editAction(handler: editHandler)
+        let select = selectAction(handler: selectHandler)
         let delete = deleteAction(
             message: message,
             willDelete: willDelete,
             didDelete: didDelete
         )
+
+        if message.conversation.distributionList == nil {
+            generalActions.append(quote)
+        }
         
         if let fileMessageEntity = message as? BlobData {
-            actions.append(contentsOf: [quote, details, edit, delete])
-            
+            generalActions.append(contentsOf: [details, select, delete])
+
             if fileMessageEntity.isDataAvailable {
-                actions.insert(forward, at: 1)
+                generalActions.insert(forward, at: 1)
                 
                 if !MDMSetup(setup: false).disableShareMedia() {
-                    actions.insert(copy, at: 1)
-                    actions.insert(share, at: 3)
+                    generalActions.insert(copy, at: 1)
+                    generalActions.insert(share, at: 3)
                 }
             }
         }
         else {
-            actions.append(contentsOf: [quote, copy, forward, share, details, edit, delete])
+            generalActions.append(contentsOf: [copy, forward, share, details, select, delete])
         }
-        
+
+        if ThreemaEnvironment.deleteEditMessage,
+           let editHandler,
+           message.isOwn?.boolValue ?? false,
+           !message.wasSentMoreThanSixHoursAgo,
+           message.messageState != .sending,
+           message.messageState != .failed,
+           FeatureMask.check(message: message, for: .editMessageSupport).isSupported {
+
+            generalActions.insert(editAction(handler: editHandler), at: generalActions.count - 1)
+        }
+
         if message.isUserAckEnabled {
             let thumbsUp = thumbsUpAction(message: message, handler: ackHandler)
-            actions.insert(thumbsUp, at: 0)
+            primaryActions.insert(thumbsUp, at: 0)
 
             let thumbsDown = thumbsDownAction(message: message, handler: ackHandler)
-            actions.insert(thumbsDown, at: 1)
+            primaryActions.insert(thumbsDown, at: 1)
         }
         
+        primaryActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
+
         // Add speak if it is enabled
         if UIAccessibility.isSpeakSelectionEnabled {
             let speak = speakAction(text: speakText)
-            if message.isUserAckEnabled {
-                actions.insert(speak, at: 3)
+            if #unavailable(iOS 16), message.isUserAckEnabled {
+                generalActions.insert(speak, at: 3)
             }
             else {
-                actions.insert(speak, at: 1)
+                generalActions.insert(speak, at: 1)
             }
         }
         
-        return actions
+        return (primaryActions, generalActions)
     }
     
     // MARK: - Default actions
@@ -229,13 +249,25 @@ struct ChatViewMessageActionProvider {
         }
     }
     
-    /// Provides action that starts edit mode in the table view the cell is displayed in
+    /// Provides action that starts selection mode in the table view the cell is displayed in
     /// - Parameter handler: Closure to execute when action is selected
     /// - Returns: MessageAction
-    public static func editAction(handler: @escaping () -> Void?) -> MessageAction {
+    public static func selectAction(handler: @escaping () -> Void?) -> MessageAction {
         MessageAction(
             title: BundleUtil.localizedString(forKey: "chatview_contextmenu_select"),
             image: UIImage(systemName: "ellipsis.circle")
+        ) {
+            handler()
+        }
+    }
+    
+    /// Provides action that starts editing the message of the cell
+    /// - Parameter handler: Closure to execute when action is selected
+    /// - Returns: MessageAction
+    static func editAction(handler: @escaping () -> Void?) -> MessageAction {
+        MessageAction(
+            title: BundleUtil.localizedString(forKey: "edit"),
+            image: UIImage(resource: .threemaPencilBubbleLeft)
         ) {
             handler()
         }
@@ -253,29 +285,99 @@ struct ChatViewMessageActionProvider {
             image: UIImage(systemName: "trash"),
             attributes: .destructive
         ) {
-            // Show alert
-            UIAlertTemplate.showDestructiveAlert(
-                owner: AppDelegate.shared().currentTopViewController(),
-                title: BundleUtil.localizedString(forKey: "messages_delete_selected_confirm"),
-                message: nil,
-                titleDestructive: BundleUtil.localizedString(forKey: "delete")
-            ) { _ in
-                
-                willDelete()
-                
-                // Delete
-                let entityManager = EntityManager()
-                entityManager.performSyncBlockAndSafe {
-                    entityManager.entityDestroyer.deleteObject(object: message)
-                    message.conversation.updateLastMessage(with: entityManager)
+            let businessInjector = BusinessInjector()
+            var actions = [UIAlertAction]()
+            actions.append(
+                UIAlertAction(title: BundleUtil.localizedString(forKey: "delete"), style: .destructive) { _ in
+                    businessInjector.entityManager.performAndWait {
+                        businessInjector.entityManager.entityDestroyer.deleteObject(object: message)
+                        message.conversation.updateLastMessage(with: businessInjector.entityManager)
+                    }
                 }
-                
-                didDelete()
+            )
+
+            if ThreemaEnvironment.deleteEditMessage,
+               message.isOwn?.boolValue ?? false,
+               message.isRemoteDeletable,
+               message.deletedAt == nil,
+               !message.wasSentMoreThanSixHoursAgo,
+               message.messageState != .sending,
+               message.messageState != .failed,
+               FeatureMask.check(message: message, for: .deleteMessageSupport).isSupported {
+
+                actions.append(
+                    UIAlertAction(
+                        title: BundleUtil.localizedString(forKey: "message_delete_for_everyone"),
+                        style: .destructive
+                    ) { _ in
+
+                        let unsupportedContacts = FeatureMask.check(
+                            message: message,
+                            for: .deleteMessageSupport
+                        ).unsupported
+
+                        let objectID = businessInjector.entityManager.performAndWait {
+                            message.objectID
+                        }
+
+                        do {
+                            try businessInjector.messageSender.sendDeleteMessage(
+                                with: objectID,
+                                receiversExcluded: unsupportedContacts
+                            )
+
+                            if !unsupportedContacts.isEmpty {
+                                showDeleteMessageNotSentAlert(for: unsupportedContacts)
+                            }
+                        }
+                        catch {
+                            DDLogError("Delete message on this device and on chat partner failed: \(error)")
+                        }
+                    }
+                )
             }
+
+            UIAlertTemplate.showSheet(
+                owner: AppDelegate.shared().currentTopViewController(),
+                popOverSource: AppDelegate.shared().currentTopViewController().view,
+                title: BundleUtil.localizedString(forKey: "messages_delete_selected_confirm"),
+                actions: actions
+            )
         }
     }
-    
-    // MARK: - Vote actions
+
+    private static func showDeleteMessageNotSentAlert(for contacts: [Contact]) {
+        let displayNames = contacts.map(\.displayName)
+        let listFormatter = ListFormatter()
+        var summary = ""
+
+        if displayNames.count > 5 {
+            var firstFive = displayNames.prefix(5)
+            let count = displayNames.count - 5
+            let countString = String.localizedStringWithFormat(
+                "delete_edit_message_not_sent_to_others".localized,
+                count
+            )
+            firstFive.append(countString)
+            if let totalSummary = listFormatter.string(from: Array(firstFive)) {
+                summary = "\(totalSummary) \("delete_message_requirement".localized)"
+            }
+        }
+        else {
+            if let shortsSummary = listFormatter.string(from: displayNames) {
+                summary = "\(shortsSummary). \("delete_message_requirement".localized)"
+            }
+        }
+
+        let message = String.localizedStringWithFormat("delete_message_not_sent_to".localized, summary)
+        UIAlertTemplate.showAlert(
+            owner: AppDelegate.shared().currentTopViewController(),
+            title: BundleUtil.localizedString(forKey: "delete"),
+            message: message
+        )
+    }
+
+    // MARK: - Reaction actions
     
     private static func thumbsUpAction(
         message: BaseMessage,
@@ -318,6 +420,23 @@ struct ChatViewMessageActionProvider {
             image: image
         ) {
             handler(message, false)
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+        }
+    }
+    
+    public static func addStarMarkerAction(
+        message: BaseMessage,
+        handler: @escaping (BaseMessage) -> Void?
+    ) -> MessageAction {
+        let isStarred = message.messageMarkers?.star.boolValue ?? false
+        let title = isStarred ? "marker_action_remove_star" : "marker_action_star"
+        
+        return MessageAction(
+            title: title.localized,
+            image: message.messageMarkerStarImage
+        ) {
+            handler(message)
             let generator = UINotificationFeedbackGenerator()
             generator.notificationOccurred(.success)
         }

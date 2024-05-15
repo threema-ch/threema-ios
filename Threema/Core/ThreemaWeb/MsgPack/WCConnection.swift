@@ -488,13 +488,13 @@ extension WCConnection {
                     
                     // send connectionInfo
                     let tmpID = Data(count: 0)
-                    let nonceData = "connectionidconnectionid".data(using: .utf8)
+                    let nonceData = Data("connectionidconnectionid".utf8)
                     
                     let id: UnsafePointer<UInt8> = tmpID.withUnsafeBytes {
                         $0.bindMemory(to: UInt8.self).baseAddress!
                     }
                     
-                    let nonce: UnsafePointer<UInt8> = nonceData!.withUnsafeBytes {
+                    let nonce: UnsafePointer<UInt8> = nonceData.withUnsafeBytes {
                         $0.bindMemory(to: UInt8.self).baseAddress!
                     }
                     

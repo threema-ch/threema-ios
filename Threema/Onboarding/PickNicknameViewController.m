@@ -130,8 +130,7 @@
     
     _nicknameTextfield.tintColor = Colors.primaryWizard;
     
-    UIImage *contactImage = [BundleUtil imageNamed:@"Contact"];
-    _contactImageView.image = [contactImage imageWithTint:[UIColor whiteColor]];
+    _contactImageView.image = [UIImage systemImageNamed:@"person.fill"];
 }
 
 - (BOOL)isInputValid {

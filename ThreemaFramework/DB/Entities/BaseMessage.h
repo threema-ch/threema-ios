@@ -20,7 +20,6 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
-
 #import "TMAManagedObject.h"
 
 typedef enum {
@@ -47,6 +46,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 @class Conversation;
 @class ContactEntity;
+@class MessageMarkers;
 
 @interface BaseMessage : TMAManagedObject
 
@@ -86,6 +86,8 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nullable, nonatomic, retain) NSDate *deliveryDate;
 @property (nullable, nonatomic, retain) NSDate *readDate;
 @property (nullable, nonatomic, retain) NSDate *userackDate;
+@property (nullable, nonatomic, retain) NSDate *deletedAt;
+@property (nullable, nonatomic, retain) NSDate *lastEditedAt;
 
 // The following block is non-optional by Core Data
 @property (nonatomic, retain) NSNumber *sent;
@@ -104,6 +106,8 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nonatomic, retain) Conversation *conversation;
 @property (nullable, nonatomic, retain) ContactEntity *sender;
 
+@property (nullable, nonatomic, retain) MessageMarkers *messageMarkers;
+
 /// Contacts that rejected this message
 ///
 /// This is only set for group messages.
@@ -114,7 +118,6 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 @property (readonly) MessageState old_messageState DEPRECATED_MSG_ATTRIBUTE("Only use from Objective-C. Use messageState otherwise.");
 
-- (nonnull NSString *)previewText;
 - (nullable NSString *)contentToCheckForMentions;
 - (nullable NSString *)additionalExportInfo;
 

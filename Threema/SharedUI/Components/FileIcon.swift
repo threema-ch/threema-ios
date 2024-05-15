@@ -103,7 +103,7 @@ final class FileIcon: UIImageView {
     ///
     /// - Parameter fileSymbol: File symbol to show
     init(with fileSymbol: FileSymbol = .noSymbol) {
-        super.init(image: BundleUtil.imageNamed("DocumentSmall"))
+        super.init(image: UIImage(resource: .documentSmall))
                 
         configureView()
         setFileSymbol(to: fileSymbol)

@@ -29,11 +29,10 @@
     if (self.clearButtonMode != UITextFieldViewModeNever) {
         self.rightViewMode = self.clearButtonMode;
 
-        UIImage *clearImage = [[BundleUtil imageNamed:@"Close"] imageWithTint:Colors.backgroundButton];
+        UIImage *clearImage = [[UIImage systemImageNamed:@"xmark.circle.fill"] applyingWithSymbolWeight:UIImageSymbolWeightSemibold symbolScale:UIImageSymbolScaleLarge paletteColors:nil];
         UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
         [button setImage:clearImage forState:UIControlStateNormal];
-        
-        button.imageEdgeInsets = UIEdgeInsetsMake(2, 2, 2, -6);
+        button.tintColor = Colors.backgroundButton;
         button.imageView.contentMode = UIViewContentModeScaleAspectFit;
         button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentFill;
         button.contentVerticalAlignment = UIControlContentVerticalAlignmentFill;

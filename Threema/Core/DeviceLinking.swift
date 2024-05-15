@@ -217,8 +217,8 @@ class DeviceLinking: NSObject {
                 if AppInfo.version.major < 5 {
                     autoDisableMultiDevice()
                 }
-            case .red, .workRed:
-                // Never disable it for red & work red
+            case .green, .blue:
+                // Never disable it for green & blue
                 break
             }
         case .appStore, .xcode:

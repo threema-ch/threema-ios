@@ -439,6 +439,33 @@ final class ChatViewSnapshotProvider {
         }
     }
     
+    /// Call this method when you need to apply changes of messages that are not automatically detected by the fetched
+    /// results controller. This will reconfigure the object if it was in a previous snapshot.
+    /// - Parameter objectID: `NSManagedObjectID` of the message to be reconfigured
+    func applyAdditionalSnapshotForMessage(with objectID: NSManagedObjectID) {
+        snapshotProviderQueue.async { [weak self] in
+            guard let strongSelf = self, let previousSnapshotInfo = strongSelf.previousSnapshotInfo else {
+                return
+            }
+            
+            var previousSnapshot = previousSnapshotInfo.snapshot
+            
+            guard previousSnapshot.itemIdentifiers.contains(.message(objectID: objectID)) else {
+                return
+            }
+            
+            previousSnapshot.reconfigureItems([.message(objectID: objectID)])
+            
+            strongSelf.snapshotInfo = SnapshotInfo(
+                snapshot: previousSnapshot,
+                rowAnimation: .none,
+                mustWaitForApply: true,
+                snapshotChanged: nil,
+                previouslyNewestMessagesLoaded: previousSnapshotInfo.previouslyNewestMessagesLoaded
+            )
+        }
+    }
+    
     private func updateTypingIndicator(add: Bool) {
         snapshotProviderQueue.async { [weak self] in
             guard let strongSelf = self else {
@@ -494,7 +521,7 @@ final class ChatViewSnapshotProvider {
                 #endif
             }
             else {
-                DDLogError(message)
+                DDLogError("\(message)")
             }
         }
     }
@@ -516,8 +543,6 @@ final class ChatViewSnapshotProvider {
                     return
                 }
             }
-            let currentIndex = snapshot.indexOfItem(itemIdentifier)
-            let beforeItemIndex = snapshot.indexOfItem(beforeItem)
             
             snapshot.moveItem(itemIdentifier, beforeItem: beforeItem)
         }
@@ -554,7 +579,7 @@ final class ChatViewSnapshotProvider {
     
     private func isCurrentlyTyping(conversation: Conversation) -> Bool {
         var isTyping = false
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             if let conversation = self.entityManager.entityFetcher
                 .existingObject(with: conversation.objectID) as? Conversation {
                 isTyping = conversation.typing.boolValue
@@ -565,7 +590,7 @@ final class ChatViewSnapshotProvider {
     
     private func messageIsOwn(messageID: NSManagedObjectID) -> Bool {
         var isOwn = false
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             if let message = self.entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage {
                 isOwn = message.isOwnMessage
             }
@@ -651,7 +676,9 @@ extension ChatViewSnapshotProvider {
         newSnapshot
             .reconfigureItems(
                 snapshotA.snapshot.reconfiguredItemIdentifiers
-                    .filter { newSnapshot.itemIdentifiers.contains($0) }
+                    .filter {
+                        newSnapshot.itemIdentifiers.contains($0) && !newSnapshot.reloadedItemIdentifiers.contains($0)
+                    }
             )
         newSnapshot
             .reloadSections(

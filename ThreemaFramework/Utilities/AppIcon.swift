@@ -93,8 +93,12 @@ public enum AppIcon: CaseIterable {
                 image = UIImage(named: "icon_2019_consumer_full")
             case .work:
                 image = UIImage(named: "icon_2019_work_full")
-            case .red, .workRed, .onPrem:
+            case .onPrem:
                 image = UIImage(named: "icon_2019_onprem_full")
+            case .green:
+                image = UIImage(named: "icon_2019_green_full")
+            case .blue:
+                image = UIImage(named: "icon_2019_blue_full")
             }
         case .icon2019:
             image = UIImage(named: "icon_2019_consumer_full")

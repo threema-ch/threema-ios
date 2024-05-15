@@ -27,6 +27,7 @@ extension ProfileView {
     
     struct QuickActionsViewSection: View {
         @EnvironmentObject var model: ProfileViewModel
+        @State var isAccessibilityHidden = false
         
         var body: some View {
             Section {
@@ -53,6 +54,7 @@ extension ProfileView {
                     }
                 }
                 .listRowInsets(EdgeInsets())
+                .accessibilityHidden(isAccessibilityHidden)
             }
         }
         
@@ -66,15 +68,18 @@ extension ProfileView {
             }
             
             var qrCodeUiView: UIView!
+            var vc: UIViewController!
             let dismissQrCodeView: () -> Void = {
-                UIView.animate(withDuration: 0.3) {
+                UIView.animate(withDuration: QRCodeView.animationDuration) {
                     qrCodeUiView.alpha = 0
                 } completion: { _ in
-                    qrCodeUiView.removeFromSuperview()
+                    vc.dismiss(animated: false)
                 }
             }
             let qrcodeView = QRCodeView(dismiss: dismissQrCodeView).environmentObject(model)
-            qrCodeUiView = UIHostingController(rootView: qrcodeView).view
+            vc = UIHostingController(rootView: qrcodeView)
+            vc.modalPresentationStyle = .overFullScreen
+            qrCodeUiView = vc.view
             guard let qrCodeUiView else {
                 return
             }
@@ -84,9 +89,9 @@ extension ProfileView {
             qrCodeUiView.alpha = 0
             qrCodeUiView.backgroundColor = .clear
             qrCodeUiView.accessibilityIdentifier = "qr_code"
-            currentWindow.view.addSubview(qrCodeUiView)
-            
-            UIView.animate(withDuration: 0.3) {
+            currentWindow.present(vc, animated: false)
+  
+            UIView.animate(withDuration: QRCodeView.animationDuration) {
                 qrCodeUiView.alpha = 1
             }
         }

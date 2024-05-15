@@ -32,6 +32,10 @@ extension AudioMessageEntity: VoiceMessage {
         }
     }
     
+    public var consumed: Date? {
+        Date(timeIntervalSince1970: 0)
+    }
+    
     // MARK: - FileMessageProvider
     
     public var fileMessageType: FileMessageType {

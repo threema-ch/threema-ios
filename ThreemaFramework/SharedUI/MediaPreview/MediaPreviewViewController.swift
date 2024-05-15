@@ -270,9 +270,14 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             view3.backgroundColor = .clear
             stackViewToolbar.backgroundColor = .clear
         }
-        
-        trashButton.setImage(BundleUtil.imageNamed("trash_")?.withTint(.primary), for: .normal)
-        previewButton.setImage(BundleUtil.imageNamed("eye_")?.withTint(.primary), for: .normal)
+        trashButton.setImage(
+            UIImage(systemName: "trash")?.applying(symbolWeight: .regular, symbolScale: .large).withTint(.primary),
+            for: .normal
+        )
+        previewButton.setImage(
+            UIImage(systemName: "eye")?.applying(symbolWeight: .regular, symbolScale: .large).withTint(.primary),
+            for: .normal
+        )
     }
     
     /// Setup of navigation items and header view

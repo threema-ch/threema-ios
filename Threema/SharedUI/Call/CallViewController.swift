@@ -177,28 +177,93 @@ class CallViewController: UIViewController {
                 }
                 
                 if output.portType == AVAudioSession.Port.builtInSpeaker {
-                    self.speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .normal)
-                    self.speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .highlighted)
-                    self.speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .selected)
+                    let speakerImage = UIImage(systemName: "speaker.wave.2.circle.fill")?
+                        .applying(
+                            pointSize: 36.0,
+                            symbolWeight: .thin,
+                            symbolScale: .large,
+                            paletteColors: [Colors.black, Colors.black, Colors.white]
+                        )
+                    self.speakerButton.setImage(
+                        speakerImage,
+                        for: .normal
+                    )
+                    self.speakerButton.setImage(
+                        speakerImage,
+                        for: .highlighted
+                    )
+                    self.speakerButton.setImage(
+                        speakerImage,
+                        for: .selected
+                    )
                     self.speakerButton.tag = 1
                 }
                 else if output.portType == AVAudioSession.Port.headphones {
-                    self.speakerButton.setImage(UIImage(named: "HeadphoneActive"), for: .normal)
-                    self.speakerButton.setImage(UIImage(named: "HeadphoneActive"), for: .highlighted)
-                    self.speakerButton.setImage(UIImage(named: "HeadphoneActive"), for: .selected)
+                    let headphonesImage = UIImage(systemName: "headphones.circle.fill")?
+                        .applying(
+                            pointSize: 36.0,
+                            symbolWeight: .thin,
+                            symbolScale: .large,
+                            paletteColors: [Colors.black, Colors.black, Colors.white]
+                        )
+                    self.speakerButton.setImage(
+                        headphonesImage,
+                        for: .normal
+                    )
+                    self.speakerButton.setImage(
+                        headphonesImage,
+                        for: .highlighted
+                    )
+                    self.speakerButton.setImage(
+                        headphonesImage,
+                        for: .selected
+                    )
                     self.speakerButton.tag = 2
                 }
                 else if output.portType == AVAudioSession.Port.bluetoothA2DP || output.portType == AVAudioSession.Port
                     .bluetoothHFP || output.portType == AVAudioSession.Port.bluetoothLE {
-                    self.speakerButton.setImage(UIImage(named: "BluetoothActive"), for: .normal)
-                    self.speakerButton.setImage(UIImage(named: "BluetoothActive"), for: .highlighted)
-                    self.speakerButton.setImage(UIImage(named: "BluetoothActive"), for: .selected)
+                    let bluetoothImage = UIImage(resource: .threemaBluetoothCircleFill)
+                        .applying(
+                            pointSize: 36.0,
+                            symbolWeight: .thin,
+                            symbolScale: .large,
+                            paletteColors: [Colors.black, Colors.black, Colors.white]
+                        )
+                    self.speakerButton.setImage(
+                        bluetoothImage,
+                        for: .normal
+                    )
+                    self.speakerButton.setImage(
+                        bluetoothImage,
+                        for: .highlighted
+                    )
+                    self.speakerButton.setImage(
+                        bluetoothImage,
+                        for: .selected
+                    )
+
                     self.speakerButton.tag = 3
                 }
                 else {
-                    self.speakerButton.setImage(UIImage(named: "SpeakerInactive"), for: .normal)
-                    self.speakerButton.setImage(UIImage(named: "SpeakerInactive"), for: .highlighted)
-                    self.speakerButton.setImage(UIImage(named: "SpeakerInactive"), for: .selected)
+                    let earpeaceImage = UIImage(systemName: "speaker.wave.2.circle")?
+                        .applying(
+                            pointSize: 36.0,
+                            symbolWeight: .thin,
+                            symbolScale: .large,
+                            paletteColors: [Colors.white, Colors.white, Colors.white]
+                        )
+                    self.speakerButton.setImage(
+                        earpeaceImage,
+                        for: .normal
+                    )
+                    self.speakerButton.setImage(
+                        earpeaceImage,
+                        for: .highlighted
+                    )
+                    self.speakerButton.setImage(
+                        earpeaceImage,
+                        for: .selected
+                    )
                     self.speakerButton.tag = 0
                 }
                 self.updateAccessibilityLabels()
@@ -484,24 +549,49 @@ extension CallViewController {
                 
         debugLabel.text = ""
         
-        acceptButton.setImage(UIImage(named: "AcceptCall", in: Colors.green), for: .normal)
-        acceptButton.setImage(UIImage(named: "AcceptCall", in: Colors.green), for: .selected)
-        acceptButton.setImage(UIImage(named: "AcceptCall", in: Colors.green), for: .highlighted)
+        let acceptButtonImage = UIImage(systemName: "phone.circle.fill")?
+            .applying(
+                pointSize: 50.0,
+                symbolWeight: .semibold,
+                symbolScale: .large,
+                paletteColors: [Colors.white, Colors.white, Colors.green]
+            )
+        acceptButton.setImage(acceptButtonImage, for: .normal)
+        acceptButton.setImage(acceptButtonImage, for: .selected)
+        acceptButton.setImage(acceptButtonImage, for: .highlighted)
         
-        let red = Colors.red
-        rejectButton.setImage(UIImage(named: "RejectCall", in: red), for: .normal)
-        rejectButton.setImage(UIImage(named: "RejectCall", in: red), for: .selected)
-        rejectButton.setImage(UIImage(named: "RejectCall", in: red), for: .highlighted)
+        let rejectButtonImage = UIImage(systemName: "phone.down.circle.fill")?
+            .applying(
+                pointSize: 50.0,
+                symbolWeight: .semibold,
+                symbolScale: .large,
+                paletteColors: [Colors.white, Colors.white, Colors.red]
+            )
+        rejectButton.setImage(rejectButtonImage, for: .normal)
+        rejectButton.setImage(rejectButtonImage, for: .selected)
+        rejectButton.setImage(rejectButtonImage, for: .highlighted)
         
-        endButton.setImage(UIImage(named: "RejectCall", in: red), for: .normal)
-        endButton.setImage(UIImage(named: "RejectCall", in: red), for: .selected)
-        endButton.setImage(UIImage(named: "RejectCall", in: red), for: .highlighted)
-        
-        cameraButton.setImage(UIImage(named: "VideoInactive"), for: .normal)
-        cameraButton.setImage(UIImage(named: "VideoInactive"), for: .selected)
-        cameraButton.setImage(UIImage(named: "VideoInactive"), for: .highlighted)
-        cameraButton.layer.cornerRadius = cameraButton.frame.width / 2
-        cameraButton.layer.masksToBounds = false
+        let endButtonImage = UIImage(systemName: "phone.down.circle.fill")?
+            .applying(
+                pointSize: 50.0,
+                symbolWeight: .semibold,
+                symbolScale: .large,
+                paletteColors: [Colors.white, Colors.white, Colors.red]
+            )
+        endButton.setImage(endButtonImage, for: .normal)
+        endButton.setImage(endButtonImage, for: .selected)
+        endButton.setImage(endButtonImage, for: .highlighted)
+             
+        let cameraButtonImage = UIImage(resource: .threemaVideoCircle)
+            .applying(
+                pointSize: 40,
+                symbolWeight: .thin,
+                symbolScale: .large,
+                paletteColors: [Colors.white, Colors.white, Colors.white]
+            )
+        cameraButton.setImage(cameraButtonImage, for: .normal)
+        cameraButton.setImage(cameraButtonImage, for: .selected)
+        cameraButton.setImage(cameraButtonImage, for: .highlighted)
         
         contactLabel.layer.shadowColor = UIColor.black.cgColor
         contactLabel.layer.shadowOffset = CGSize(width: 0, height: 0)
@@ -513,19 +603,39 @@ extension CallViewController {
         timerLabel.layer.shadowRadius = 1.0
         timerLabel.layer.shadowOpacity = 0.2
         
-        cameraSwitchButton.setImage(UIImage(named: "SwitchCam"), for: .normal)
-        cameraSwitchButton.setImage(UIImage(named: "SwitchCam"), for: .selected)
-        cameraSwitchButton.setImage(UIImage(named: "SwitchCam"), for: .highlighted)
-        cameraSwitchButton.layer.cornerRadius = cameraSwitchButton.frame.width / 2
-        cameraSwitchButton.layer.masksToBounds = false
+        let cameraSwitchButtonImage = UIImage(resource: .threemaArrowTriangle2CirclepathCameraCircle)
+            .applying(
+                pointSize: 40.0,
+                symbolWeight: .thin,
+                symbolScale: .large,
+                paletteColors: [Colors.white, Colors.white, Colors.white]
+            )
+        cameraSwitchButton.setImage(cameraSwitchButtonImage, for: .normal)
+        cameraSwitchButton.setImage(cameraSwitchButtonImage, for: .selected)
+        cameraSwitchButton.setImage(cameraSwitchButtonImage, for: .highlighted)
         
-        muteButton.setImage(UIImage(named: "MuteInactive"), for: .normal)
-        muteButton.setImage(UIImage(named: "MuteActive"), for: .selected)
-        muteButton.layer.cornerRadius = muteButton.frame.width / 2
-        muteButton.layer.masksToBounds = false
-        
-        speakerButton.layer.cornerRadius = speakerButton.frame.width / 2
-        speakerButton.layer.masksToBounds = false
+        let cellularWarningButtonImage = UIImage(resource: .threemaWifiExclamationmarkCircleFill)
+            .applying(
+                pointSize: 40.0,
+                symbolWeight: .thin,
+                symbolScale: .large,
+                paletteColors: [Colors.red, Colors.white, Colors.white]
+            )
+        cellularWarningButton.setImage(cellularWarningButtonImage, for: .normal)
+        cellularWarningButton.setImage(cellularWarningButtonImage, for: .selected)
+        cellularWarningButton.setImage(cellularWarningButtonImage, for: .highlighted)
+                
+        let hideButtonImage = UIImage(systemName: "chevron.left")?
+            .applying(
+                pointSize: 28,
+                symbolWeight: .semibold,
+                symbolScale: .large,
+                paletteColors: [Colors.white]
+            )
+        hideButton.imageView?.contentMode = .scaleAspectFit
+        hideButton.setImage(hideButtonImage, for: .normal)
+        hideButton.setImage(hideButtonImage, for: .selected)
+        hideButton.setImage(hideButtonImage, for: .highlighted)
         hideButton.layer.cornerRadius = hideButton.frame.width / 2
         hideButton.layer.shadowColor = UIColor.black.cgColor
         hideButton.layer.shadowOffset = CGSize(width: 0, height: 0)
@@ -598,10 +708,18 @@ extension CallViewController {
     
     private func updateVideoViews() {
         if contact != nil, threemaVideoCallAvailable == true {
-            let cameraImageName = isLocalVideoActive ? "VideoActive" : "VideoInactive"
-            cameraButton?.setImage(UIImage(named: cameraImageName), for: .normal)
-            cameraButton?.setImage(UIImage(named: cameraImageName), for: .selected)
-            cameraButton?.setImage(UIImage(named: cameraImageName), for: .highlighted)
+            let cameraButtonImage =
+                UIImage(named: isLocalVideoActive ? "threema.video.circle.fill" : "threema.video.circle")?
+                    .applying(
+                        pointSize: 40,
+                        symbolWeight: .thin,
+                        symbolScale: .large,
+                        paletteColors: [Colors.white, Colors.white, Colors.white]
+                    )
+
+            cameraButton?.setImage(cameraButtonImage, for: .normal)
+            cameraButton?.setImage(cameraButtonImage, for: .selected)
+            cameraButton?.setImage(cameraButtonImage, for: .highlighted)
             cameraButton?.accessibilityLabel = BundleUtil
                 .localizedString(
                     forKey: isLocalVideoActive ? "call_camera_deactivate_button" :
@@ -626,9 +744,18 @@ extension CallViewController {
         }
         else {
             if alreadyAccepted, UserSettings.shared().enableVideoCall {
-                cameraButton?.setImage(UIImage(named: "VideoInactive")!.withTint(Colors.gray), for: .normal)
-                cameraButton?.setImage(UIImage(named: "VideoInactive")!.withTint(Colors.gray), for: .selected)
-                cameraButton?.setImage(UIImage(named: "VideoInactive")!.withTint(Colors.gray), for: .highlighted)
+                let cameraButtonImage =
+                    UIImage(named: isLocalVideoActive ? "threema.video.circle.fill" : "threema.video.circle")?
+                        .applying(
+                            pointSize: 40,
+                            symbolWeight: .thin,
+                            symbolScale: .large,
+                            paletteColors: [Colors.gray, Colors.gray, Colors.gray]
+                        )
+
+                cameraButton?.setImage(cameraButtonImage, for: .normal)
+                cameraButton?.setImage(cameraButtonImage, for: .selected)
+                cameraButton?.setImage(cameraButtonImage, for: .highlighted)
                 cameraButton?.accessibilityLabel = BundleUtil.localizedString(forKey: "call_camera_deactivate_button")
                 cameraButton?.isHidden = isCallInitiator && !UserSettings.shared().enableVideoCall
                 cameraButton?.alpha = 0.9
@@ -684,12 +811,18 @@ extension CallViewController {
         DispatchQueue.main.async {
             self.timerLabel.text = "12:12"
         }
-        speakerButton.setImage(UIImage(named: "SpeakerInactive"), for: .normal)
-        speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .highlighted)
         
-        cameraButton?.setImage(UIImage(named: "VideoInactive"), for: .normal)
-        cameraButton?.setImage(UIImage(named: "VideoInactive"), for: .selected)
-        cameraButton?.setImage(UIImage(named: "VideoInactive"), for: .highlighted)
+        let cameraButtonImage =
+            UIImage(named: isLocalVideoActive ? "threema.video.circle.fill" : "threema.video.circle")?
+                .applying(
+                    pointSize: 40,
+                    symbolWeight: .thin,
+                    symbolScale: .large,
+                    paletteColors: [Colors.white, Colors.white, Colors.white]
+                )
+        cameraButton?.setImage(cameraButtonImage, for: .normal)
+        cameraButton?.setImage(cameraButtonImage, for: .selected)
+        cameraButton?.setImage(cameraButtonImage, for: .highlighted)
     }
     
     private func setupForVideoCallTest() {
@@ -711,16 +844,30 @@ extension CallViewController {
         cameraButton?.isEnabled = true
         cameraSwitchButton.isEnabled = true
         
-        let cameraImageName = "VideoActive"
-        cameraButton?.setImage(UIImage(named: cameraImageName), for: .normal)
-        cameraButton?.setImage(UIImage(named: cameraImageName), for: .selected)
-        cameraButton?.setImage(UIImage(named: cameraImageName), for: .highlighted)
+        let cameraButtonImage = UIImage(resource: .threemaVideoCircleFill)
+            .applying(
+                pointSize: 40,
+                symbolWeight: .thin,
+                symbolScale: .large,
+                paletteColors: [Colors.white, Colors.white, Colors.white]
+            )
+        cameraButton?.setImage(cameraButtonImage, for: .normal)
+        cameraButton?.setImage(cameraButtonImage, for: .selected)
+        cameraButton?.setImage(cameraButtonImage, for: .highlighted)
         
         DispatchQueue.main.async {
             self.timerLabel.text = "12:12"
         }
-        speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .normal)
-        speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .highlighted)
+        speakerButton.setImage(
+            UIImage(systemName: "speaker.wave.2.circle.fill")?
+                .applying(
+                    pointSize: 36.0,
+                    symbolWeight: .thin,
+                    symbolScale: .large,
+                    paletteColors: [Colors.black, Colors.black, Colors.white]
+                ),
+            for: .normal
+        )
         
         localVideoView?.isHidden = false
         remoteVideoView?.isHidden = false

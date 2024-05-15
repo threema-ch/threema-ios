@@ -648,8 +648,8 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
         let fileMessageWithNoMIMETypeObjectIDs = Set(messageFetcher.fileMessagesWithNoMIMEType(
             using: fetchedResultsController.managedObjectContext
         ))
-        DDLogNotice("\(fileMessageWithNoMIMETypeObjectIDs.count) messages are filtered")
-        
+        DDLogNotice("\(fileMessageWithNoMIMETypeObjectIDs.count) messages with no MIME type are filtered")
+
         // Go over all sections & rows and remove file messages with no MIME type (and sections if they are now empty)
         for sectionIdentifier in snapshot.sectionIdentifiers {
             newSnapshot.appendSections([sectionIdentifier])
@@ -667,35 +667,58 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
             }
         }
         
+        // Get all deleted messages in this conversation, to reload new cell identifiers for deleted messages
+        let messageWithDeletedMessageObjectIDs = Set(messageFetcher.messagesWithDeletedMessages(
+            using: fetchedResultsController.managedObjectContext
+        ))
+        DDLogNotice("\(messageWithDeletedMessageObjectIDs.count) deleted messages are filtered")
+
         // Identify the cells neighboring the reloaded cells. Neighbors must be reloaded as well as they may be grouped
         // together.
         for reloadedItemIdentifier in snapshot.reloadedItemIdentifiers {
+
             guard let index = newSnapshot.indexOfItem(reloadedItemIdentifier) else {
                 continue
             }
+
             // We may not insert the same identifier twice in the same call to reloadItems otherwise we get a crash.
             // This is most likely not relevant for performance but it might still be fun to optimize this (e.g. by
-            // collecting all the item to reconfigure in a set an apply it once with `reconfigureItems(_:)`)
+            // collecting all the item to reconfigure in a set and apply it once with `reconfigureItems(_:)`)
             // We use reconfigure to get the exact same cell back from the cell provider, this avoids flickering cells.
-            newSnapshot.reconfigureItems([
-                newSnapshot.itemIdentifiers[max(0, index - 1)],
-            ])
-            newSnapshot.reconfigureItems([
-                newSnapshot.itemIdentifiers[index],
-            ])
-            newSnapshot.reconfigureItems([
-                newSnapshot.itemIdentifiers[min(newSnapshot.itemIdentifiers.count - 1, index + 1)],
-            ])
+            //
+            // If shown message changed to deleted then a new cell type should be shown, in this case `reloadItems` must
+            // be called to add replace the old cell with new cell having a new identifier.
+            func reloadOrReconfigureItems(for identifier: NSManagedObjectID) {
+                if messageWithDeletedMessageObjectIDs.contains(identifier) {
+                    newSnapshot.reloadItems([identifier])
+                }
+                else {
+                    newSnapshot.reconfigureItems([identifier])
+                }
+            }
+
+            if index - 1 >= 0 {
+                reloadOrReconfigureItems(for: newSnapshot.itemIdentifiers[index - 1])
+            }
+
+            reloadOrReconfigureItems(for: newSnapshot.itemIdentifiers[index])
+
+            if index + 1 < newSnapshot.itemIdentifiers.count {
+                reloadOrReconfigureItems(for: newSnapshot.itemIdentifiers[index + 1])
+            }
         }
-        
+
         // If we try to reconfigure an item that's not in the snapshot it crashes thus we need to filter them out, too.
         // Because we cannot delete items from `reconfiguredItemIdentifiers` we need to filter the original array first
         // and then mark them as reconfigured.
         let filteredReconfiguredItems = snapshot.reconfiguredItemIdentifiers.filter {
-            !fileMessageWithNoMIMETypeObjectIDs.contains($0)
+            !fileMessageWithNoMIMETypeObjectIDs.contains($0) &&
+                !messageWithDeletedMessageObjectIDs.contains($0) &&
+                !snapshot.reloadedItemIdentifiers.contains($0) &&
+                !newSnapshot.reloadedItemIdentifiers.contains($0)
         }
         newSnapshot.reconfigureItems(filteredReconfiguredItems)
-        
+
         return newSnapshot
     }
 }

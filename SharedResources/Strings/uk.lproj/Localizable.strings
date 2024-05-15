@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "Контакти";
 "segmentcontrol_groups" = "Групи";
+"segmentcontrol_distribution_list" = "Списки розсилки";
 "segmentcontrol_work_contacts" = "Робота";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "Спробувати ще раз";
 "copy" = "Скопіювати";
 "save" = "Зберегти";
+"edit" = "Змінити";
 "download" = "Завантажити";
 "retry" = "Повторити спробу";
 "share" = "Поділитися";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "Поділитись ID контакта";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Редагувати контакт";
 "edit_group_title" = "Редагувати групу";
+"edit_distribution_list_title" = "Змінити список розсилки";
 
 "first_name_placeholder" = "Ім'я";
 "last_name_placeholder" = "Прізвище";
 "group_name_placeholder" = "Назва групи";
+"distribution_list_name_placeholder" = "Назва списку розсилки";
 
 "no_nickname_title" = "Прізвисько не вказано";
 "no_nickname_message" = "Ви дійсно бажаєте продовжити без вказання прізвиська? Іншим особам буде важко зрозуміти, що саме ви надіслали повідомлення, допоки вони не відкриють застосунок.";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "Видалити вибрані повідомлення із цього пристрою?";
 "conversation_delete_confirm" = "Видалити діалог з пристрою?";
 "delete_n" = "Видалити (%d)";
+"message_delete_for_everyone" = "Видалити повідомлення для всіх";
 
 "message_cannot_play_movie" = "Не вдається програти відео.";
 
@@ -318,6 +323,7 @@
 "delete_file" = "Видалити файл";
 "send_location" = "Надіслати місцеперебування";
 "record_audio" = "Записати аудіо";
+"record_continue" = "Продовжити запис аудіо";
 "scan_qr" = "Сканувати QR-код";
 "share_file" = "Поділитись файлом";
 "add_item_caption" = "Додати підпис";
@@ -332,12 +338,7 @@
 "play" = "Прослухати";
 "pause" = "Павза";
 "stop" = "Стоп";
-"voice message" = "Голосове повідомлення";
 "quit" = "Завершити";
-"record_cancel_title" = "Скасувати записування";
-"record_cancel_message" = "Ви дійсно бажаєте скасувати та видалити записане?";
-"record_cancel_button_discard" = "Видалити записане";
-"speed" = "Швидкість відтворення";
 
 "send_file_title" = "Надіслати файл";
 "send_file_message" = "Файл: %@\nдо\n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "Ви дійсно бажаєте розпустити цю групу?";
 "group_dissolve_button" = "Розпустити групу";
 "group_delete" = "Видалити групу";
+
+"distribution_list_recipients_section_header" = "Одержувачі (%d)";
+"distribution_list_no_recipient_title" = "Немає одержувачів";
+"distribution_list_one_recipient_title" = "1 одержувач";
+"distribution_list_multiple_recipients_title" = "Одержувачі %d";
+
+"distribution_list_delete" = "Видалити список розсилки";
+"distribution_list_create" = "Новий список розсилки";
+"distribution_list_edit" = "Змінити список розсилки";
 
 "group name" = "Назва групи";
 "existing groups" = "Наявні групи";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "У вас ще немає контактів. Синхронізацію увімкнено, але здається, що жоден з ваших контактів не використовує Threema (запросіть їх!).";
 "no_contacts" = "Немає контактів";
 "no_groups" = "Немає груп";
-"no_groups_message" = "Наразі груп немає. Додати групи вручну кнопкою +.";
+"no_groups_message" = "Наразі груп немає. Створить групу натиснувши на +.";
 "no_work_contacts" = "%@ користувачів";
 "no_work_contacts_message" = "Не знайдено перевірених адміністратором %@ контактів.";
+"no_distribution_list" = "Немає списків розсилки";
+"no_distribution_list_message" = "У вас ще немає списків розсилки. Задля створення списку – торкніться напису +.";
 
 "no_contacts_syncoff" = "У вас ще немає контактів. Увімкніть синхронізацію (Налаштування > Конфіденційність) або додайте контакти вручну за допомогою кнопки +.";
 
@@ -478,11 +490,11 @@
 
 "sync_group" = "Синхронізувати групу";
 
-"contact_threema_work_title" = "Threema Робота";
-"contact_threema_work_info" = "Значок портфеля вказує на те, що контакт використовує бізнес-версію застосунку — «Threema Робота».";
+"contact_threema_work_title" = "Threema Work";
+"contact_threema_work_info" = "Значок портфеля вказує на те, що контакт використовує бізнес-версію застосунку — «Threema Work».";
 "contact_threema_title" = "Threema";
-"contact_threema_info" = "Значок дому вказує на те, що контакт використовує приватну версію Threema, а не Threema Робота.";
-"contact_threema_work_conversation_info" = "Цей контакт використовує Threema Робота.";
+"contact_threema_info" = "Значок дому вказує на те, що контакт використовує приватну версію Threema, а не Threema Work.";
+"contact_threema_work_conversation_info" = "Цей контакт використовує Threema Work.";
 "contact_threema_conversation_info" = "Цей контакт використовує приватну версію Threema.";
 
 "threema_type_icon_work_accessibility_label" = "Робочий контакт";
@@ -579,20 +591,32 @@
 "enter_license_password_placeholder" = "Пароль";
 "leave_group" = "Покинути групу";
 
-"work_data_fetch_failed_title" = "Не вдалося завантажити дані Threema Робота";
-"work_data_fetch_failed_message" = "Не вдалося завантажити дані Threema Робота. Перевірте інтернет-з'єднання та спробуйте ще раз.";
+"work_data_fetch_failed_title" = "Не вдалося завантажити дані Threema Work";
+"work_data_fetch_failed_message" = "Не вдалося завантажити дані Threema Work. Перевірте інтернет з'єднання та спробуйте ще раз.";
 
 "app_setup_steps_failed_title" = "Неможливо завершити встановлення";
-"app_setup_steps_failed_message" = "Будь ласка, перевірте зʼєднання з інтернетом та спробуйте знов. Якщо проблема залишається, звʼяжіться з нашою підтримкою.";
+"app_setup_steps_failed_message" = "Будь ласка, перевірте зʼєднання з інтернетом та спробуйте знов. Якщо проблема залишається, будь ласка, звʼяжіться з нашою підтримкою.";
+
+/* License Key */
+"enter_license_infoview_subtitle" = "для Компаній";
+"enter_license_infoview_more_link" = "[Дізнайтесь більше про Threema Work](link)";
+
+"enter_license_infoview_private_use" = "для Осіб";
+"enter_license_infoview_threema_description" = "Будь ласка, завантажте класичний застосунок Threema, якщо плануєте користуватись особисто.";
+"enter_license_infoview_appstore_link" = "Threema у App Store";
+"enter_license_infoview_login" = "Увійти";
 
 /* License Key */
 "enter_license_title" = "Ввести особисті дані";
 /* MWPhotoBrowser */
 "Done" = "Готово";
-"enter_license_description" = "Threema Робота — це месенджер для компаній. Будь ласка, введіть облікові дані, надані вашою компанією.";
-"enter_license_onprem_description" = "Threema OnPrem — це приватний месенджер для компаній. Будь ласка, введіть облікові дані, надані вашою компанією";
+"enter_license_description" = "Будь ласка, введіть облікові дані Threema Work, надані вашою компанією.";
+"enter_license_onprem_description" = "Будь ласка, введіть облікові дані Threema OnPrem, надані вашою компанією.";
 "enter_license_work_admin_description" = "Забули свої облікові дані? Зверніться до свого адміністратора Threema Work.";
 "enter_license_onprem_admin_description" = "Забули свої облікові дані? Зверніться до свого адміністратора Threema OnPrem.";
+"enter_license_onprem_error_config" = "Хибні налаштування. Будь ласка, зверніться до свого адміністратора Threema OnPrem. (Код: %d)";
+"enter_license_onprem_error_version" = "Версія не підтримується. Будь ласка, зверніться до свого адміністратора Threema OnPrem. (Код: %d)";
+"enter_license_onprem_error_credentials" = "Хибні облікові дані. Будь ласка, зверніться до свого адміністратора Threema OnPrem. (Код: %d)";
 "more_work_info" = "Дізнатись більше про %@.";
 "Save" = "Зберегти";
 "enter_license_username_placeholder" = "Ім'я користувача";
@@ -675,7 +699,6 @@
 "duration" = "тривалість";
 "current_position" = "позиція";
 "in_reply_to" = "у відповідь";
-"go_to_position" = "на";
 "draft" = "Чернетка";
 "new_message_accessibility" = "Нове повідомлення: ";
 "quote_interaction_hint" = "Переходить до цитованого повідомлення.";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "%@ почав(-ла) груповий дзвінок";
 "group_call_started_by_local_system_message" = "Ви почали груповий дзвінок";
 "group_call_ended_system_message" = "Груповий дзвінок завершено";
+"group_call_started_disabled" = "Щойно розпочався груповий дзвінок. Увімкніть групові дзвінки у налаштуваннях для приєднання.";
 
 "group_call_notification_body_preview" = "Груповий дзвінок від %@";
 "group_call_notification_body" = "Груповий дзвінок розпочато";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "Закріплений діалог";
 
 /* Begin Edit */
-
 "private_message_label" = "Приватне повідомлення";
 "private_chat_label" = "Приватний";
 "private_chat_accessibility" = "Приватний діалог";
@@ -832,7 +855,14 @@
 
 "archived_title" = "Архівовані";
 "conversations_global_search_placeholder" = "Пошук";
-"one_to_one_chat" = "Діалоги один на один";
+"one_to_one_chat" = "Діалоги";
+"conversations_global_search_section_header_tokens" = "Тип повідомлення";
+"conversations_global_search_token_text" = "Текстові повідомлення";
+"conversations_global_search_token_captions" = "Медіа";
+"conversations_global_search_token_polls" = "Опитування";
+"conversations_global_search_token_locations" = "Місцеперебування";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Обрані";
 
 "select_all" = "Обрати усі";
 "deselect_all" = "Зняти виділення";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "Ви дійсно бажаєте видалити цю групу?";
 "group_delete_button" = "Видалити групу + історію діалогу";
 
+"distribution_list_delete_sheet_title" = "Видалити список розсилки?";
+
 "selected_count" = "Обрано %d";
 "all_selected" = "Усі обрано";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "У разі видалення приватного діалогу, новий автоматично не позначатиметься приватним.";
 
 /* End Edit */
-
 "pushSetting_header" = "Сповіщення";
 "doNotDisturb_title" = "Не турбувати";
 
@@ -1083,7 +1114,7 @@
 "settings_list_privacy_policy_title" = "Політика конфіденційності";
 "settings_list_license_title" = "Ліцензія";
 "settings_advanced" = "Розширені";
-"settings_threema_work" = "Threema Робота";
+"settings_threema_work" = "Threema Work";
 "settings_threema_work_subtitle" = "Надійне рішення для забезпечення комунікації в компанії";
 "settings_feedback" = "Відгук про бета-версію";
 "settings_list_tos_title" = "Умови використання";
@@ -1299,12 +1330,12 @@
 "settings_advanced_successfully_reset_unread_count_label" = "Лічильник непрочитаних повідомлень успішно скинуто";
 
 // Sentry
-"sentry_crash_send_title" = "Аварійне завершення роботи %@";
-"sentry_crash_send_description" = "Ви можете надіслати анонімний звіт про аварійне завершення роботи. Деталі, які пояснюють причину збою, допоможуть розв'язати проблему, що призвела до цього.";
+"sentry_crash_send_title" = "Сталася помилка";
+"sentry_crash_send_description" = "Ви можете надіслати анонімний звіт. Деталі щодо взаємодій перед виникненням помилки допоможуть розв'язати проблему, що призвела до цього.";
 "sentry_crash_send_yes" = "Надіслати анонімний звіт";
 "sentry_crash_send_no" = "Не надсилати";
 
-"sentry_crash_comment_placeholder" = "Звіт про аварійне завершення роботи";
+"sentry_crash_comment_placeholder" = "Звіт";
 
 // Profile
 "profile_share_id_text" = "Мій Threema ID";
@@ -1643,6 +1674,7 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "Закрити цитату";
+"chat_bar_edited_message_close_button" = "Скасувати редагування повідомлення";
 
 // ChatDetailView
 "detailView_title" = "Деталі повідомлення";
@@ -1650,6 +1682,7 @@
 "detailView_group_acknowledged" = "Прийнято (%d)";
 "detailView_group_declined" = "Не прийнято (%d)";
 "detailView_group_file_size" = "Розмір файлу";
+"detailView_consumed" = "Вперше відтворено";
 "detailView_created_footer" = "Створено: %@";
 
 "message_display_status_none" = "Немає";
@@ -1661,6 +1694,8 @@
 "message_display_status_delivered_incoming" = "Отримано";
 "message_display_status_read" = "Прочитати";
 "message_display_status_failed" = "Не вдалось";
+"message_display_status_deleted_message" = "Видалено";
+"message_display_status_edited_message" = "Редаговано";
 
 // In-app notifications
 "notification_copying_succeeded" = "Елемент скопійовано";
@@ -1739,9 +1774,12 @@
 // Chat bar
 "accessibility_chatbar_label" = "Поле діалогу.";
 "accessibility_chatbar_hint" = "Напишіть повідомлення.";
-"accessibility_chatbar_quote_label" = "Вибрати цитоване повідомлення: %@.";
-"accessibility_chatbar_close_quote_button_label" = "Завершити цитування.";
-"accessibility_chatbar_close_quote_button_hint" = "Завершує цитування вибраного повідомлення.";
+"accessibility_chatbar_quote_label" = "Цитоване повідомлення: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Не цитувати.";
+"accessibility_chatbar_close_quote_button_hint" = "Залишає обране повідомлення без цитування.";
+"accessibility_chatbar_edited_message_label" = "Повідомлення для редагування: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "Скасувати редагування.";
+"accessibility_chatbar_close_edited_message_button_hint" = "Скасує редагування обраного повідомлення.";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Ваші %@";
@@ -1787,6 +1825,7 @@
 "accessibility_poll_closed" = "Закрито";
 "accessibility_file_duration" = "Тривалість: %@.";
 "accessibility_voice_message_playing" = "Відтворюється зараз";
+"accessibility_voice_message_unplayed" = "Ще не відтворювалось.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Прийнято, %@";
@@ -1894,3 +1933,25 @@
 "application_shortcut_item_new_message" = "Створити повідомлення";
 "application_shortcut_item_scan_qr_code" = "Сканувати QR-код";
 "application_shortcut_item_my_id" = "Мій профіль";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "Обрані";
+"marker_action_star" = "Обрати";
+"marker_action_remove_star" = "Не обирати";
+"marker_accessibility_label" = "Обрано.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "Обрані";
+
+// Delete / Edit message
+"edit_message" = "Редагувати повідомлення";
+"edit_message_can_not_edit" = "Повідомлення надіслано понад 6 годин тому, отже не може бути редаговано.";
+"edit_message_not_sent_to" = "Наступні учасники групи не зможуть побачити ваші редагування: %@";
+"delete_message_not_sent_to" = "Повідомлення не видалиться для наступних учасників групи: %@";
+"delete_edit_message_not_sent_to_others" = "%d інших";
+"delete_message_requirement" = "Для видалення повідомлень їм потрібно встановити найновішу версію Threema.";
+"edit_message_requirement" = "Для перегляду редагування їм потрібно встановити найновішу версію Threema.";
+
+"edit_message_text_to_long" = "Повідомлення не може бути редагованим, оскільки воно задовге.";
+"edited_message_state" = "Редаговано";
+"deleted_message" = "Повідомлення видалено";

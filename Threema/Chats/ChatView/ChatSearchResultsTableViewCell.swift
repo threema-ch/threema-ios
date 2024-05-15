@@ -148,6 +148,46 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         return label
     }()
     
+    private lazy var markerStarImageView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(systemName: "star.fill"))
+        
+        imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(
+            textStyle: ChatViewConfiguration.SearchResults.metadataTextStyle
+        )
+        
+        imageView.tintColor = .systemYellow
+        
+        imageView.setContentCompressionResistancePriority(.required, for: .horizontal)
+                
+        return imageView
+    }()
+    
+    private lazy var bottomLineStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [
+            messagePreviewTextLabel,
+            markerStarImageView,
+        ])
+       
+        stack.axis = .horizontal
+        stack.spacing = ChatViewConfiguration.SearchResults.nameAndMetadataSpacing
+        stack.alignment = .firstBaseline
+        stack.distribution = .equalSpacing
+        
+        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
+            stack.axis = .vertical
+            stack.alignment = .leading
+            
+            disclosureIndicatorImageView.isHidden = true
+            accessoryType = .disclosureIndicator
+        }
+        
+        if debug {
+            stack.backgroundColor = .systemMint
+        }
+        
+        return stack
+    }()
+    
     override func configureCell() {
         super.configureCell()
         
@@ -156,7 +196,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         contentStack.alignment = .fill
         
         contentStack.addArrangedSubview(topLineStack)
-        contentStack.addArrangedSubview(messagePreviewTextLabel)
+        contentStack.addArrangedSubview(bottomLineStack)
         
         if debug {
             contentStack.backgroundColor = .systemCyan
@@ -168,11 +208,11 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
     override func updateColors() {
         super.updateColors()
         
-        Colors.setTextColor(Colors.text, label: nameLabel)
-        Colors.setTextColor(Colors.textLight, label: dateLabel)
+        nameLabel.textColor = Colors.text
+        dateLabel.textColor = Colors.textLight
         disclosureIndicatorImageView.tintColor = Colors.textLight
-        
-        Colors.setTextColor(Colors.textLight, label: messagePreviewTextLabel)
+        markerStarImageView.tintColor = .systemYellow
+        messagePreviewTextLabel.tintColor = Colors.textLight
     }
     
     private func updateCel(for message: BaseMessage?) {
@@ -185,10 +225,27 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         
         nameLabel.text = message.localizedSenderName
         dateLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: message.sectionDate)
+        markerStarImageView.isHidden = !(message.messageMarkers?.star.boolValue ?? false)
         
         if let previewableMessage = message as? PreviewableMessage {
             messagePreviewTextLabel.attributedText = previewableMessage
                 .previewAttributedText(for: PreviewableMessageConfiguration.searchCell)
+        }
+    }
+    
+    override public var accessibilityLabel: String? {
+        get {
+            guard let message = message as? MessageAccessibility else {
+                return nil
+            }
+
+            let labelText =
+                "\(message.accessibilitySenderAndMessageTypeText) \(message.customAccessibilityLabel) \(message.accessibilityDateAndState)"
+            return labelText
+        }
+        
+        set {
+            // No-op
         }
     }
 }

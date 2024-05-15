@@ -143,7 +143,7 @@ public enum History_MediaType: SwiftProtobuf.Enum {
 
 extension History_MediaType: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [History_MediaType] = [
+  public static let allCases: [History_MediaType] = [
     .all,
   ]
 }
@@ -528,7 +528,7 @@ public struct History_Reaction {
 
 extension History_Reaction.TypeEnum: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [History_Reaction.TypeEnum] = [
+  public static let allCases: [History_Reaction.TypeEnum] = [
     .acknowledge,
     .decline,
   ]

@@ -64,6 +64,8 @@
 #import "CallEntity.h"
 #import "GroupCallEntity.h"
 
+@class DistributionListEntity;
+
 @interface EntityCreator : NSObject
 
 - (instancetype)init NS_UNAVAILABLE;
@@ -97,7 +99,7 @@
 
 - (FileData *)fileData;
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation;
+- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate;
 
 - (ImageMessageEntity *)imageMessageEntityForConversation:(Conversation *)conversation;
 
@@ -107,7 +109,7 @@
 
 - (AudioMessageEntity *)audioMessageEntityForConversation:(Conversation *)conversation;
 
-- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation;
+- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate;
 
 - (SystemMessage *)systemMessageForConversation:(Conversation *)conversation;
 
@@ -133,6 +135,8 @@
 
 - (Tag *)tagWithName:(NSString *)name;
 
+- (MessageMarkers *)messageMarkers;
+
 - (WebClientSession *)webClientSession;
 
 - (RequestedConversation *)requestedConversationWithId:(NSString *)conversationId webClientSession:(WebClientSession*)webClientSession;
@@ -144,5 +148,7 @@
 - (CallEntity *)callEntity;
 
 - (GroupCallEntity *)groupCallEntity;
+
+- (DistributionListEntity*)distributionListEntity;
 
 @end

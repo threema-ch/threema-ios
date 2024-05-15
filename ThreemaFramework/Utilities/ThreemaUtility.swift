@@ -123,7 +123,7 @@ public final class ThreemaUtility: NSObject {
     // MARK: - Other threema type
     
     @objc public static let isWorkFlavor = ThreemaApp.current == .work ||
-        ThreemaApp.current == .workRed ||
+        ThreemaApp.current == .blue ||
         ThreemaApp.current == .onPrem
     
     // TODO: (IOS-4362) Move into `ThreemaEnvironment`
@@ -293,5 +293,19 @@ public final class ThreemaUtility: NSObject {
         
         // Trim general whitespace
         return sanitized.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    public static func accessibilityString(atTime timeInterval: TimeInterval, with prefixKey: String) -> String {
+        let accessibilityTime = accessibilityTimeString(for: Int(timeInterval))
+        return String.localizedStringWithFormat("%@ %@", prefixKey.localized, accessibilityTime)
+    }
+    
+    public static func accessibilityTimeString(for totalSeconds: Int) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .full
+        formatter.collapsesLargestUnit = true
+        formatter.allowedUnits = [.minute, .second]
+        
+        return formatter.string(from: .init(totalSeconds)) ?? ""
     }
 }

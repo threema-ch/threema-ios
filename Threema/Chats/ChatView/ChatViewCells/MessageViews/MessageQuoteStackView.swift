@@ -220,9 +220,14 @@ final class MessageQuoteStackView: UIStackView {
         quoteLabel.attributedText = quoteMessage.previewAttributedText(for: .quote)
         
         // We need to set the font explicitly to make the label set its height correctly
-        quoteLabel.font = PreviewableMessageConfiguration.quote.font
+        if quoteMessage.deletedAt == nil {
+            quoteLabel.font = PreviewableMessageConfiguration.quote.font
+        }
+        else {
+            quoteLabel.font = PreviewableMessageConfiguration.quote.font.italic()
+        }
         
-        if let (thumbnail, _) = quoteMessage.mediaPreview {
+        if let (thumbnail, _) = quoteMessage.mediaPreview, quoteMessage.deletedAt == nil {
             quoteThumbnailView.image = thumbnail
         }
     }

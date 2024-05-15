@@ -61,7 +61,7 @@ public enum D2m_ProtocolVersion: SwiftProtobuf.Enum {
 
 extension D2m_ProtocolVersion: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [D2m_ProtocolVersion] = [
+  public static let allCases: [D2m_ProtocolVersion] = [
     .initial,
   ]
 }
@@ -107,7 +107,7 @@ public enum D2m_DeviceSlotExpirationPolicy: SwiftProtobuf.Enum {
 
 extension D2m_DeviceSlotExpirationPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [D2m_DeviceSlotExpirationPolicy] = [
+  public static let allCases: [D2m_DeviceSlotExpirationPolicy] = [
     .volatile,
     .persistent,
   ]
@@ -154,7 +154,7 @@ public enum D2m_DeviceSlotState: SwiftProtobuf.Enum {
 
 extension D2m_DeviceSlotState: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [D2m_DeviceSlotState] = [
+  public static let allCases: [D2m_DeviceSlotState] = [
     .new,
     .existing,
   ]
@@ -299,7 +299,7 @@ public struct D2m_ClientHello {
 
 extension D2m_ClientHello.DeviceSlotsExhaustedPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [D2m_ClientHello.DeviceSlotsExhaustedPolicy] = [
+  public static let allCases: [D2m_ClientHello.DeviceSlotsExhaustedPolicy] = [
     .reject,
     .dropLeastRecent,
   ]

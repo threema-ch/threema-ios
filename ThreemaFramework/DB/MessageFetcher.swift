@@ -94,6 +94,12 @@ public class MessageFetcher: NSObject {
         return NSCompoundPredicate(andPredicateWithSubpredicates: [conversationPredicate, fileMessagePredicate])
     }
     
+    private var conversationWithFilteredDeletedMessages: NSPredicate {
+        let deletedMessagePredicate = NSPredicate(format: "%K != nil", "deletedAt")
+
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [conversationPredicate, deletedMessagePredicate])
+    }
+
     // MARK: Fetch requests
     
     private lazy var countFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
@@ -197,6 +203,13 @@ public class MessageFetcher: NSObject {
         return fetchRequest
     }()
     
+    private lazy var messagesWithDeletedMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+        fetchRequest.predicate = conversationWithFilteredDeletedMessages
+        // Sorting doesn't matter because we just need them to filter later
+        return fetchRequest
+    }()
+
     // MARK: - Lifecycle
     
     /// Initialize for a fixed conversation
@@ -368,7 +381,31 @@ public class MessageFetcher: NSObject {
         
         return result
     }
-    
+
+    /// Object IDs of messages are deleted.
+    /// - Parameter managedObjectContext: Context to execute fetch request on. If you use the main context you might
+    /// deadlock
+    /// - Returns: Object IDs of messages are deleted
+    func messagesWithDeletedMessages(using managedObjectContext: NSManagedObjectContext) -> [NSManagedObjectID] {
+        messagesWithDeletedMessagesFetchRequest.resultType = .managedObjectIDResultType
+
+        var result = [NSManagedObjectID]()
+
+        managedObjectContext.performAndWait {
+            do {
+                let fetchResult = try managedObjectContext.fetch(messagesWithDeletedMessagesFetchRequest)
+                if let fetchResult = fetchResult as? [NSManagedObjectID] {
+                    result = fetchResult
+                }
+            }
+            catch {
+                DDLogError("Unable to fetch deleted messages")
+            }
+        }
+
+        return result
+    }
+
     // MARK: - Private helper methods
  
     // We prefer `date` to sort messages according to the date they appear on the device and not

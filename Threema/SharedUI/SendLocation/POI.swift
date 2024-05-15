@@ -271,9 +271,6 @@ extension PointOfInterest {
             return image
         }
         
-        if let image = UIImage(systemName: "mappin") {
-            return image
-        }
-        return UIImage(named: "mappin_regular.L")!
+        return UIImage(systemName: "mappin")!
     }
 }

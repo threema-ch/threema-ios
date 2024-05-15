@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "Kişiler";
 "segmentcontrol_groups" = "Gruplar";
+"segmentcontrol_distribution_list" = "Dağıtım Listeleri";
 "segmentcontrol_work_contacts" = "İş";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "Tekrar deneyin";
 "copy" = "Kopyala";
 "save" = "Kaydet";
+"edit" = "Düzenle";
 "download" = "İndir";
 "retry" = "Tekrar deneyin";
 "share" = "Paylaş";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "Kişi kimliğini paylaş";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Kişiyi düzenle";
 "edit_group_title" = "Grubu düzenle";
+"edit_distribution_list_title" = "Dağıtım Listesini Düzenle";
 
 "first_name_placeholder" = "İsim";
 "last_name_placeholder" = "Soyisim";
 "group_name_placeholder" = "Grup ismi";
+"distribution_list_name_placeholder" = "Dağıtım Listesi Adı";
 
 "no_nickname_title" = "Takma isim ayarlanmadı.";
 "no_nickname_message" = "Takma isim belirlemeden devam etmek istediğinizden emin misiniz? Uygulamayı başlatmadan önce diğer kişilerin sizden gelen mesajları tanıması zor olacaktır. ";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "Seçilen mesajlar bu cihazdan silinsin mi?";
 "conversation_delete_confirm" = "Bu sohbet bu cihazdan silinsin mi?";
 "delete_n" = "Sil (%d)";
+"message_delete_for_everyone" = "Mesajı Herkesten Sil";
 
 "message_cannot_play_movie" = "Video oynatılamıyor.";
 
@@ -318,6 +323,7 @@
 "delete_file" = "Dosyayı sil";
 "send_location" = "Konum gönder";
 "record_audio" = "Ses kaydet";
+"record_continue" = "Ses Kaydına Devam Et";
 "scan_qr" = "Kare kodu tara";
 "share_file" = "Dosya paylaş";
 "add_item_caption" = "Altyazı ekle";
@@ -332,12 +338,7 @@
 "play" = "Oynat";
 "pause" = "Duraklat";
 "stop" = "Durdur";
-"voice message" = "Sesli mesaj";
 "quit" = "Bitir";
-"record_cancel_title" = "Kaydı sil";
-"record_cancel_message" = "Kaydı gerçekten iptal etmek ve silmek istiyor musunuz?";
-"record_cancel_button_discard" = "Kaydı sil";
-"speed" = "Oynatma hızı";
 
 "send_file_title" = "Dosya gönder";
 "send_file_message" = "Dosya: %@\n-e/-a\n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "Bu grubu dağıtmak istediğinize emin misiniz?";
 "group_dissolve_button" = "Grubu dağıt";
 "group_delete" = "Grubu sil";
+
+"distribution_list_recipients_section_header" = "Alıcılar (%d)";
+"distribution_list_no_recipient_title" = "Alıcı Yok";
+"distribution_list_one_recipient_title" = "1 Alıcı";
+"distribution_list_multiple_recipients_title" = "%d Alıcı";
+
+"distribution_list_delete" = "Dağıtım Listesini Sil";
+"distribution_list_create" = "Yeni Dağıtım Listesi";
+"distribution_list_edit" = "Dağıtım Listesini Düzenle";
 
 "group name" = "Grup ismi";
 "existing groups" = "Mevcut gruplar";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "Henüz hiç kişiniz yok. Eşitleme açık, ancak adres defteri kişilerinizin hiçbiri Threema'da değil gibi görünüyor (davet edin!).";
 "no_contacts" = "Kişi yok";
 "no_groups" = "Grup yok";
-"no_groups_message" = "Henüz herhangi bir grubunuz yok. + düğmesini kullanarak grupları manuel olarak ekleyin.";
+"no_groups_message" = "Henüz herhangi bir grubunuz yok. + düğmesine dokunarak bir tane oluşturun.";
 "no_work_contacts" = "%@ kullanıcı";
 "no_work_contacts_message" = "Yönetici tarafından doğrulanmış %@ kişi bulunamadı.";
+"no_distribution_list" = "Dağıtım listesi yok";
+"no_distribution_list_message" = "Henüz herhangi bir dağıtım listeniz yok. Oluşturmak için + butonuna dokunun.";
 
 "no_contacts_syncoff" = "Henüz hiç kişiniz yok. Eşitlemeyi açın (Ayarlar > Gizlilik) veya + düğmesini kullanarak kişileri manuel olarak ekleyin.";
 
@@ -583,16 +595,28 @@
 "work_data_fetch_failed_message" = "Threema Work verileri yüklenemedi, lütfen İnternet bağlantınızı kontrol edin ve tekrar deneyin.";
 
 "app_setup_steps_failed_title" = "Kurulum Tamamlanamadı";
-"app_setup_steps_failed_message" = "Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin. Sorun devam ederse, lütfen destek ekibimizle iletişime geçin.";
+"app_setup_steps_failed_message" = "Lütfen İnternet bağlantınızı kontrol edin ve tekrar deneyin. Sorun devam ederse, lütfen destek ekibimizle iletişime geçin.";
+
+/* License Key */
+"enter_license_infoview_subtitle" = "Şirketler için";
+"enter_license_infoview_more_link" = "[Threema Work hakkında daha fazla bilgi edinin](link)";
+
+"enter_license_infoview_private_use" = "Bireyler için";
+"enter_license_infoview_threema_description" = "Bireysel bir kullanıcıysanız lütfen normal Threema uygulamasını indirin.";
+"enter_license_infoview_appstore_link" = "App Store'da Threema";
+"enter_license_infoview_login" = "Giriş yap";
 
 /* License Key */
 "enter_license_title" = "Kimlik bilgilerini girin";
 /* MWPhotoBrowser */
 "Done" = "Tamam";
-"enter_license_description" = "Threema Work, şirketler için bir mesajlaşma uygulamasıdır. Lütfen şirketiniz tarafından sağlanan kimlik bilgilerini girin.";
-"enter_license_onprem_description" = "Threema OnPrem, şirketler için kendi altyapılarında barındırılan bir mesajlaşma uygulamasıdır. Lütfen şirketiniz tarafından sağlanan kimlik bilgilerini girin";
+"enter_license_description" = "Lütfen şirketiniz tarafından sağlanan Threema Work kimlik bilgilerini girin.";
+"enter_license_onprem_description" = "Lütfen şirketiniz tarafından sağlanan Threema OnPrem kimlik bilgilerini girin";
 "enter_license_work_admin_description" = "Kimlik bilgilerinizi mi unuttunuz? Lütfen Threema Work yöneticinizle iletişime geçin.";
 "enter_license_onprem_admin_description" = "Kimlik bilgilerinizi mi unuttunuz? Lütfen Threema OnPrem yöneticinizle iletişime geçin.";
+"enter_license_onprem_error_config" = "Geçersiz yapılandırma. Lütfen Threema OnPrem yöneticinizle iletişime geçin. (Kod: %d)";
+"enter_license_onprem_error_version" = "Sürüm desteklenmiyor. Lütfen Threema OnPrem yöneticinizle iletişime geçin. (Kod: %d)";
+"enter_license_onprem_error_credentials" = "Yanlış kimlik bilgileri. Lütfen Threema OnPrem yöneticinizle iletişime geçin. (Kod: %d)";
 "more_work_info" = "%@ hakkında daha fazla bilgi edinin.";
 "Save" = "Kaydet";
 "enter_license_username_placeholder" = "Kullanıcı adı";
@@ -675,7 +699,6 @@
 "duration" = "süre";
 "current_position" = "durum";
 "in_reply_to" = "cevap olarak";
-"go_to_position" = "de/da";
 "draft" = "Taslak";
 "new_message_accessibility" = "Yeni mesaj:";
 "quote_interaction_hint" = "Alıntılanan mesaja geçer";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "%@ bir grup araması başlattı";
 "group_call_started_by_local_system_message" = "Bir grup araması başlattınız";
 "group_call_ended_system_message" = "Grup araması sona erdi";
+"group_call_started_disabled" = "Bir grup araması başlatıldı. Katılmak için ayarlardan grup aramalarını aktif edin.";
 
 "group_call_notification_body_preview" = "Grup araması %@ tarafından başlatıldı";
 "group_call_notification_body" = "Grup araması başlatıldı";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "Sabitlenmiş sohbet";
 
 /* Begin Edit */
-
 "private_message_label" = "Özel mesaj ";
 "private_chat_label" = "Özel";
 "private_chat_accessibility" = "Özel sohbet";
@@ -833,6 +856,13 @@
 "archived_title" = "Arşivlendi";
 "conversations_global_search_placeholder" = "Ara";
 "one_to_one_chat" = "Tekli Sohbetler";
+"conversations_global_search_section_header_tokens" = "Mesaj Türü";
+"conversations_global_search_token_text" = "Metin Mesajları";
+"conversations_global_search_token_captions" = "Medya Başlıkları";
+"conversations_global_search_token_polls" = "Anketler";
+"conversations_global_search_token_locations" = "Konumlar";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Yıldızlı";
 
 "select_all" = "Hepsini seç";
 "deselect_all" = "Hiçbirini seçme";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "Bu grubu silmek istediğinizden emin misiniz?";
 "group_delete_button" = "Grup + sohbet geçmişini sil";
 
+"distribution_list_delete_sheet_title" = "Dağıtım Listesi Silinsin mi?";
+
 "selected_count" = "%d seçildi";
 "all_selected" = "Hepsi seçildi";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "Bir Özel Sohbeti silerken, yenisi otomatik olarak tekrar özel olarak işaretlenmez.";
 
 /* End Edit */
-
 "pushSetting_header" = "Bildirimler";
 "doNotDisturb_title" = "Rahatsız etmeyin";
 
@@ -1298,12 +1329,12 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_advanced_successfully_reset_unread_count_label" = "Okunmamış mesaj sayısı başarıyla sıfırlandı";
 
 // Sentry
-"sentry_crash_send_title" = "%@ beklenmedik bir şekilde kapandı";
-"sentry_crash_send_description" = "Anonim bir çökme raporu gönderebilirsiniz. Kazaya neyin yol açtığını açıklayan ayrıntılar, altta yatan sorunun çözülmesine yardımcı olacaktır.";
+"sentry_crash_send_title" = "Bir Sorun Oluştu";
+"sentry_crash_send_description" = "Anonim bir rapor gönderebilirsiniz. Sorun ortaya çıkmadan önce gerçekleşen etkileşimlerle ilgili ayrıntılar, altta yatan sorunu ele almamıza yardımcı olacaktır.";
 "sentry_crash_send_yes" = "Anonim rapor gönder";
 "sentry_crash_send_no" = "Gönderme";
 
-"sentry_crash_comment_placeholder" = "Çökme raporu";
+"sentry_crash_comment_placeholder" = "Detaylar";
 
 // Profile
 "profile_share_id_text" = "Threema kimliğim";
@@ -1642,6 +1673,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 // ChatBar
 "chat_bar_quote_close_button" = "Alıntıyı kapat";
+"chat_bar_edited_message_close_button" = "Mesajı düzenlemeyi iptal et";
 
 // ChatDetailView
 "detailView_title" = "Mesaj Detayları";
@@ -1649,6 +1681,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "detailView_group_acknowledged" = "Kabul Edildi (%d)";
 "detailView_group_declined" = "Kabul Edilmedi (%d)";
 "detailView_group_file_size" = "Dosya Boyutu";
+"detailView_consumed" = "İlk Kez Çalınmış";
 "detailView_created_footer" = "Oluşturuldu: %@";
 
 "message_display_status_none" = "Hiçbiri";
@@ -1660,6 +1693,8 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "message_display_status_delivered_incoming" = "Teslim alındı";
 "message_display_status_read" = "Okundu";
 "message_display_status_failed" = "Başarısız";
+"message_display_status_deleted_message" = "Silindi";
+"message_display_status_edited_message" = "Düzenlendi";
 
 // In-app notifications
 "notification_copying_succeeded" = "Öğe Kopyalandı";
@@ -1738,9 +1773,12 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 // Chat bar
 "accessibility_chatbar_label" = "Sohbet giriş alanı.";
 "accessibility_chatbar_hint" = "Mesaj oluştur.";
-"accessibility_chatbar_quote_label" = "Seçili alıntılanmış mesaj: %@.";
-"accessibility_chatbar_close_quote_button_label" = "Alıntılamayı bitir.";
-"accessibility_chatbar_close_quote_button_hint" = "Seçilen mesajın alıntılanmasını sonlandırır.";
+"accessibility_chatbar_quote_label" = "Alıntı yapılacak mesaj: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Alıntı yapmayı iptal eder.";
+"accessibility_chatbar_close_quote_button_hint" = "Seçilen mesajın alıntılanmasını iptal eder.";
+"accessibility_chatbar_edited_message_label" = "Düzenlenecek mesaj: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "Düzenlemeyi iptal eder.";
+"accessibility_chatbar_close_edited_message_button_hint" = "Seçilen mesajın düzenlenmesini iptal eder.";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Sizinki %@";
@@ -1786,6 +1824,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "accessibility_poll_closed" = "Kapalı";
 "accessibility_file_duration" = "Süre: %@.";
 "accessibility_voice_message_playing" = "Çalıyor.";
+"accessibility_voice_message_unplayed" = "Henüz Çalınmadı.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Kabul, %@";
@@ -1894,3 +1933,25 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "application_shortcut_item_new_message" = "Yeni mesaj";
 "application_shortcut_item_scan_qr_code" = "QR kodunu tara";
 "application_shortcut_item_my_id" = "Profilim";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "Yıldızlı";
+"marker_action_star" = "Yıldız";
+"marker_action_remove_star" = "Yıldızı Kaldır";
+"marker_accessibility_label" = "Yıldız ekler.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "Yıldızlı";
+
+// Delete / Edit message
+"edit_message" = "Mesajı Düzenle";
+"edit_message_can_not_edit" = "Mesaj 6 saatten daha uzun bir süre önce gönderilmiştir ve bu nedenle artık düzenlenemez.";
+"edit_message_not_sent_to" = "Aşağıdaki grup üyeleri düzenlemelerinizi göremeyecektir: %@";
+"delete_message_not_sent_to" = "Mesaj aşağıdaki grup üyeleri için silinmeyecektir: %@";
+"delete_edit_message_not_sent_to_others" = "%d diğerleri";
+"delete_message_requirement" = "Mesajların silinmesi için en son Threema sürümünü yüklemeleri gerekir.";
+"edit_message_requirement" = "Düzenlemeleri görmek için en son Threema sürümünü yüklemeleri gerekir.";
+
+"edit_message_text_to_long" = "Metin çok uzun olduğu için mesaj düzenlenemiyor.";
+"edited_message_state" = "Düzenlendi";
+"deleted_message" = "Bu mesaj silindi";

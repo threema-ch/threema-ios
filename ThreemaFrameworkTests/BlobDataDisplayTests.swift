@@ -275,7 +275,7 @@ class BlobDataDisplayTests: XCTestCase {
             )
         }
 
-        XCTAssertEqual(.pending, fileMessageEntity.blobDisplayState)
+        XCTAssertEqual(.remote, fileMessageEntity.blobDisplayState)
     }
 
     func testFileMessageDisplayStatePendingDownloadData() {
@@ -290,6 +290,6 @@ class BlobDataDisplayTests: XCTestCase {
             )
         }
 
-        XCTAssertEqual(.pending, fileMessageEntity.blobDisplayState)
+        XCTAssertEqual(.remote, fileMessageEntity.blobDisplayState)
     }
 }

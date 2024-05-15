@@ -28,7 +28,7 @@ import ThreemaBlake2b
     private let personal: Data
     
     @objc init(personal: String) {
-        self.personal = personal.data(using: .utf8)!
+        self.personal = Data(personal.utf8)
     }
     
     @available(*, deprecated, renamed: "ThreemaBlake2b(personal:)")
@@ -52,7 +52,7 @@ import ThreemaBlake2b
     }
     
     @objc public func deriveKey(salt: String, key: Data) -> Data? {
-        deriveKey(salt: salt.data(using: .utf8)!, key: key)
+        deriveKey(salt: Data(salt.utf8), key: key)
     }
     
     /// Calculates a keyed MAC using BLAKE2b.

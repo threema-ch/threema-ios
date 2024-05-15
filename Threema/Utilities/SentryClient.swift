@@ -25,24 +25,33 @@ import Sentry
 @objc class SentryClient: NSObject {
     
     private static let sentryNotEnabled = "SENTRY_NOT_ENABLED"
+    private static var didStart = false
     
     @objc override init() {
         super.init()
     }
     
     /// Create Sentry and start crash handler.
-    ///
-    /// - Parameters:
-    ///    - rootViewController: Parent view controller
     @objc func start() {
-        guard SentryClient.isEnabled(),
-              let sentryDsn = BundleUtil.object(forInfoDictionaryKey: "SentryClientDsn") as? String else {
-                
+        guard SentryClient.isEnabled() else {
             return
         }
         
-        do {
-            let options = try Sentry.Options(dict: ["dsn": sentryDsn])
+        guard !SentryClient.didStart else {
+            return
+        }
+        
+        guard let sentryDsn = BundleUtil.object(forInfoDictionaryKey: "SentryClientDsn") as? String else {
+            DDLogError("Could not retrieve sentryDsn from bundle. Sentry will not be started.")
+            return
+        }
+        
+        SentryClient.didStart = true
+        
+        SentrySDK.start { options in
+            
+            // Apply settings
+            options.dsn = sentryDsn
             options.enableAutoSessionTracking = false
             options.enableNetworkTracking = false
 
@@ -51,89 +60,95 @@ import Sentry
             options.enableAutoBreadcrumbTracking = false
             options.enableNetworkBreadcrumbs = false
             
+            // This will be called when an event occurs
             options.beforeSend = { event in
-                // TODO: IOS-3786
-                guard !Thread.isMainThread else {
-                    DDLogError("IOS-3786: Do not process crash on main thread because we would deadlock otherwise.")
-                    return nil
-                }
-                
-                if let appDevice = event.context?["app"]?["device_app_hash"] as? String {
-                    // Save anonymous app device, it will be displayed under Settings - Advanced
-                    UserSettings.shared()?.sentryAppDevice = appDevice
-
-                    // Send app device hash to count users per event on sentry ui
-                    // swiftformat:disable:next acronyms
-                    let user = User(userId: appDevice)
-                    event.user = user
-                }
-                
-                event.threads?.forEach { $0.stacktrace?.registers = [:] }
-                event.exceptions?.forEach { $0.stacktrace?.registers = [:] }
-
-                if event.exceptions?.first?.value != nil {
-                    event.exceptions?.first?.value = self.redact(exceptionDescription: event.exceptions!.first!.value)
-                }
-                
-                var send = false
-                
-                let dispatch = DispatchGroup()
-                dispatch.enter()
-                DispatchQueue.main.async {
-                    let confirm = UIAlertController(
-                        title: String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "sentry_crash_send_title"),
-                            ThreemaApp.currentName
-                        ),
-                        message: BundleUtil.localizedString(forKey: "sentry_crash_send_description"),
-                        preferredStyle: .alert
-                    )
-                    confirm.addTextField { textField in
-                        textField.placeholder = BundleUtil.localizedString(forKey: "sentry_crash_comment_placeholder")
-                    }
-                    confirm.addAction(UIAlertAction(
-                        title: BundleUtil.localizedString(forKey: "sentry_crash_send_yes"),
-                        style: .default,
-                        handler: { _ in
-                            if let textField = confirm.textFields?.first, let text = textField.text {
-                                let sentryMessage = SentryMessage(formatted: text)
-                                event.message = sentryMessage
-                            }
-                            send = true
-                            dispatch.leave()
-                        }
-                    ))
-                    confirm.addAction(UIAlertAction(
-                        title: BundleUtil.localizedString(forKey: "sentry_crash_send_no"),
-                        style: .cancel,
-                        handler: { _ in
-                            dispatch.leave()
-                        }
-                    ))
-
-                    DispatchQueue.main.async {
-                        if let vc = AppDelegate.shared()?.currentTopViewController() {
-                            vc.present(confirm, animated: true, completion: nil)
-                        }
-                        else {
-                            dispatch.leave()
-                        }
-                    }
-                }
-                
-                dispatch.wait()
-                
-                if send {
-                    return event
-                }
-                return nil
+                self.handle(event: event)
             }
-
-            SentrySDK.start(options: options)
         }
-        catch {
-            DDLogError("Could not start Sentry!")
+    }
+    
+    private func handle(event: Event) -> Event? {
+        //  TODO: IOS-3786
+        guard !Thread.isMainThread else {
+            DDLogError(
+                "IOS-3786: Do not process crash on main thread because we would deadlock otherwise."
+            )
+            return nil
         }
+        
+        if let appDevice = event.context?["app"]?["device_app_hash"] as? String {
+            // Save anonymous app device, it will be displayed under Settings -> Advanced
+            UserSettings.shared()?.sentryAppDevice = appDevice
+            
+            // Send app device hash to count users per event on sentry ui
+            // swiftformat:disable:next acronyms
+            let user = User(userId: appDevice)
+            event.user = user
+        }
+        
+        // Remove registers
+        event.threads?.forEach { $0.stacktrace?.registers = [:] }
+        event.exceptions?.forEach { $0.stacktrace?.registers = [:] }
+        
+        if event.exceptions?.first?.value != nil {
+            event.exceptions?.first?.value = redact(exceptionDescription: event.exceptions!.first!.value)
+        }
+        
+        var send = false
+        
+        // Show alert
+        let dispatch = DispatchGroup()
+        dispatch.enter()
+        DispatchQueue.main.async {
+            let confirm = UIAlertController(
+                title: String.localizedStringWithFormat(
+                    "sentry_crash_send_title".localized,
+                    ThreemaApp.currentName
+                ),
+                message: "sentry_crash_send_description".localized,
+                preferredStyle: .alert
+            )
+            confirm.addTextField { textField in
+                textField.placeholder = "sentry_crash_comment_placeholder".localized
+            }
+            confirm.addAction(UIAlertAction(
+                title: "sentry_crash_send_yes".localized,
+                style: .default,
+                handler: { _ in
+                    if let textField = confirm.textFields?.first,
+                       let text = textField.text {
+                        let sentryMessage = SentryMessage(formatted: text)
+                        event.message = sentryMessage
+                    }
+                    send = true
+                    dispatch.leave()
+                }
+            ))
+            confirm.addAction(UIAlertAction(
+                title: "sentry_crash_send_no".localized,
+                style: .cancel,
+                handler: { _ in
+                    dispatch.leave()
+                }
+            ))
+            
+            DispatchQueue.main.async {
+                if let vc = AppDelegate.shared()?.currentTopViewController() {
+                    vc.present(confirm, animated: true, completion: nil)
+                }
+                else {
+                    dispatch.leave()
+                }
+            }
+        }
+        
+        dispatch.wait()
+        
+        if send {
+            return event
+        }
+        
+        return nil
     }
     
     private func redact(exceptionDescription: String) -> String {
@@ -160,7 +175,7 @@ import Sentry
         let em = EntityManager()
         var idList: Set<String> = []
         
-        em.performBlockAndWait {
+        em.performAndWait {
             guard let contacts = em.entityFetcher.allContacts() as? [ContactEntity] else {
                 return
             }

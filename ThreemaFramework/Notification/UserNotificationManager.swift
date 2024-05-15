@@ -412,17 +412,17 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     }
     
     private func bodyWithPreview(for pendingUserNotification: PendingUserNotification, fromName: String) -> String {
-        if let baseMessage = pendingUserNotification.baseMessage {
+        if let baseMessage = pendingUserNotification.baseMessage as? PreviewableMessage {
             if let isGroup = pendingUserNotification.isGroupMessage, isGroup {
                 if settingsStore.notificationType == .complete {
-                    return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText())
+                    return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText)
                 }
                 else {
-                    return TextStyleUtils.makeMentionsString(forText: "\(fromName): \(baseMessage.previewText())")
+                    return TextStyleUtils.makeMentionsString(forText: "\(fromName): \(baseMessage.previewText)")
                 }
             }
             else {
-                return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText())
+                return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText)
             }
         }
         if let abstractMessage = pendingUserNotification.abstractMessage {
@@ -471,7 +471,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     }
     
     private func addAttachment(for pendingUserNotification: PendingUserNotification) -> (name: String?, url: URL?)? {
-        guard let baseMessage = pendingUserNotification.baseMessage, pendingUserNotification.stage == .final else {
+        guard let baseMessage = pendingUserNotification.baseMessage else {
             return nil
         }
         var image: ImageData? = (baseMessage as? FileMessageEntity)?.thumbnail

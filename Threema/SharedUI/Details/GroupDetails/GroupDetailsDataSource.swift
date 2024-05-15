@@ -131,7 +131,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         var cell: UITableViewCell
         
         switch row {
-            
+        
         case .meContact:
             let contactCell: ContactCell = tableView.dequeueCell(for: indexPath)
             contactCell.size = .medium
@@ -342,7 +342,7 @@ extension GroupDetailsDataSource {
         // Only show message button if we're in the group
         if group.isSelfMember {
             let messageQuickAction = QuickAction(
-                imageName: "threema.bubble.fill",
+                imageName: "threema.lock.bubble.right.fill",
                 title: BundleUtil.localizedString(forKey: "message"),
                 accessibilityIdentifier: "GroupDetailsDataSourceMessageQuickActionButton"
             ) { [weak self] _ in
@@ -468,7 +468,7 @@ extension GroupDetailsDataSource {
 
 extension GroupDetailsDataSource {
     
-    var mediaAndPollsQuickActions: [QuickAction] {
+    var mediaStarredAndPollsQuickActions: [QuickAction] {
         var quickActions = [QuickAction]()
         
         guard let viewController = groupDetailsViewController else {
@@ -483,7 +483,9 @@ extension GroupDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        businessInjector.entityManager.performBlockAndWait {
+        quickActions.append(contentsOf: starredQuickAction())
+        
+        businessInjector.entityManager.performAndWait {
             if self.businessInjector.entityManager.entityFetcher.countBallots(for: self.conversation) > 0 {
                 quickActions.append(contentsOf: self.ballotsQuickAction(for: self.conversation, in: viewController))
             }
@@ -540,6 +542,16 @@ extension GroupDetailsDataSource {
             // presentation
             let navigationController = ThemedNavigationController(rootViewController: ballotViewController)
             weakViewController.present(navigationController, animated: true)
+        }]
+    }
+    
+    private func starredQuickAction() -> [QuickAction] {
+        [QuickAction(
+            imageName: "star.fill",
+            title: "marker_details_title".localized,
+            accessibilityIdentifier: "marker_details_title".localized
+        ) { [weak groupDetailsViewController] _ in
+            groupDetailsViewController?.startChatSearch(forStarred: true)
         }]
     }
 }

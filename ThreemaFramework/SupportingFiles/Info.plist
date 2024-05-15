@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -34,6 +34,8 @@
 	<string>https://ds-apip.threema.ch</string>
 	<key>ThreemaAvatarURL</key>
 	<string>https://avatar.threema.ch</string>
+	<key>ThreemaBackupInfo</key>
+	<string>https://threema.ch/faq/backup-options</string>
 	<key>ThreemaBlobDoneURL</key>
 	<string>https://blobp-{blobIdPrefix}.threema.ch/{blobId}/done</string>
 	<key>ThreemaBlobDoneURLv6</key>
@@ -48,24 +50,32 @@
 	<string>https://ds-blobp-upload.threema.ch/upload</string>
 	<key>ThreemaCoreDataVersion</key>
 	<string>$(COREDATA_VERSION)</string>
-	<key>ThreemaRendezvousServerURL</key>
-	<string>wss://rendezvous-{prefix4}.threema.ch/{prefix8}</string>
-	<key>ThreemaMediatorServerURL</key>
-	<string>wss://mediator-{prefix4}.threema.ch/{prefix8}</string>
+	<key>ThreemaInteractionInfo</key>
+	<string>https://threema.ch/faq/ios-interactions</string>
 	<key>ThreemaMediatorBlobDoneURL</key>
-	<string>https://blob-mirror-{prefix4}.threema.ch/{prefix8}/{blobId}/done?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
-	<key>ThreemaMediatorBlobUploadURL</key>
-	<string>https://blob-mirror-{prefix4}.threema.ch/{prefix8}/upload?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
+	<string>https://blob-mirror-{deviceGroupIdPrefix4}.threema.ch/{deviceGroupIdPrefix8}/{blobId}/done?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
 	<key>ThreemaMediatorBlobURL</key>
-	<string>https://blob-mirror-{prefix4}.threema.ch/{prefix8}/{blobId}?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
+	<string>https://blob-mirror-{deviceGroupIdPrefix4}.threema.ch/{deviceGroupIdPrefix8}/{blobId}?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
+	<key>ThreemaMediatorBlobUploadURL</key>
+	<string>https://blob-mirror-{deviceGroupIdPrefix4}.threema.ch/{deviceGroupIdPrefix8}/upload?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
+	<key>ThreemaMediatorServerURL</key>
+	<string>wss://mediator-{deviceGroupIdPrefix4}.threema.ch/{deviceGroupIdPrefix8}</string>
+	<key>ThreemaNotificationInfo</key>
+	<string>https://threema.ch/faq/ios-notification-types</string>
 	<key>ThreemaOnPremPublicKeys</key>
 	<array>
 		<string>ek1qBp4DyRmLL9J5sCmsKSfwbsiGNB4veDAODjkwe/k=</string>
 		<string>Hrk8aCjwKkXySubI7CZ3y9Sx+oToEHjNkGw98WSRneU=</string>
 		<string>5pEn1T/5bhecNWrp9NgUQweRfgVtu/I8gRb3VxGP7k4=</string>
 	</array>
+	<key>ThreemaPOIAroundURL</key>
+	<string>https://poi.threema.ch/around/</string>
+	<key>ThreemaPOINamesURL</key>
+	<string>https://poi.threema.ch/names/</string>
+	<key>ThreemaRendezvousServerURL</key>
+	<string>wss://rendezvous-{rendezvousPathPrefix4}.threema.ch/{rendezvousPathPrefix8}</string>
 	<key>ThreemaSafeURL</key>
-	<string>https://safe-{backupIdPrefix}.threema.ch</string>
+	<string>https://safe-{backupIdPrefix8}.threema.ch</string>
 	<key>ThreemaServerAltPublicKey</key>
 	<data>2nxzeY+X1YfDol6+CpFBf3bbzM3aKTDmqQkK9i66bxU=</data>
 	<key>ThreemaServerNamePrefix</key>
@@ -83,6 +93,8 @@
 	<data>RQuXVzUnn97LMxNkj1/G7p/0Ng6pKowXUcZh5MDYyQk=</data>
 	<key>ThreemaSupportURL</key>
 	<string>https://threema.ch/ios/support</string>
+	<key>ThreemaWebURL</key>
+	<string>https://web.threema.ch/</string>
 	<key>ThreemaWorkAPIURL</key>
 	<string>https://apip-work.threema.ch</string>
 	<key>ThreemaWorkAPIURLv6</key>
@@ -91,17 +103,5 @@
 	<string>w-</string>
 	<key>ThreemaWorkServerNamePrefixv6</key>
 	<string>ds.w-</string>
-	<key>ThreemaWebURL</key>
-	<string>https://web.threema.ch/</string>
-	<key>ThreemaPOINamesURL</key>
-	<string>https://poi.threema.ch/names/</string>
-	<key>ThreemaPOIAroundURL</key>
-	<string>https://poi.threema.ch/around/</string>
-	<key>ThreemaBackupInfo</key>
-	<string>https://threema.ch/faq/backup-options</string>
-	<key>ThreemaNotificationInfo</key>
-	<string>https://threema.ch/faq/ios-notification-types</string>
-	<key>ThreemaInteractionInfo</key>
-	<string>https://threema.ch/faq/ios-interactions</string>
 </dict>
 </plist>

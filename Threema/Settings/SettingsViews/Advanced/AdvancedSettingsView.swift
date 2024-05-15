@@ -88,8 +88,11 @@ struct AdvancedSettingsView: View {
                 HStack {
                     Text("settings_advanced_debug_log_size_title".localized)
                     Spacer()
-                    Text(LogManager.logFileSize(LogManager.debugLogFile), format: .byteCount(style: .file))
-                        .foregroundColor(.secondary)
+                    Text(
+                        LogManager.logFileSize(LogManager.debugLogFile),
+                        format: .byteCount(style: .file, spellsOutZero: false)
+                    )
+                    .foregroundColor(.secondary)
                 }
                 
                 Button {

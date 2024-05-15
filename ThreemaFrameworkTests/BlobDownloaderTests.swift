@@ -34,7 +34,7 @@ class BlobDownloaderTests: XCTestCase {
         // Arrange
         let urlString = "https://example.com"
         let blobID = try XCTUnwrap(BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength))
-        let testData = try XCTUnwrap("Test Data".data(using: .utf8))
+        let testData = Data("Test Data".utf8)
         let objectID = NSManagedObjectID()
         
         let blobURL = BlobURL(

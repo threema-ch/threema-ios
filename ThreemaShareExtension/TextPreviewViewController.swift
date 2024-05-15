@@ -96,11 +96,9 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
             textPreviewHeightConstraint = textPreviewView.heightAnchor
                 .constraint(equalToConstant: view.frame.height - conversationDescriptionViewHeight)
             textPreviewHeightConstraint?.isActive = true
-            textPreviewView.isScrollEnabled = true
             textPreviewView.flashScrollIndicators()
         }
         else {
-            textPreviewView.isScrollEnabled = false
             textPreviewHeightConstraint?.isActive = false
         }
     }
@@ -118,7 +116,6 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
         textView.backgroundColor = Colors.backgroundViewController
         textView.textContainerInset = UIEdgeInsets(top: 6.5, left: 13, bottom: 0, right: 13)
         textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.isScrollEnabled = false
         textView.font = UIFont.preferredFont(forTextStyle: .body)
         
         return textView

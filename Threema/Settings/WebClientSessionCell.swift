@@ -56,7 +56,7 @@ class WebClientSessionCell: UITableViewCell {
             info = "\n\(localizedSavedString)"
         }
         infoLabel.text = info
-        
+
         switch webClientSession.browserName {
         case "chrome":
             browserIcon.image = UIImage(named: "Chrome")
@@ -69,7 +69,7 @@ class WebClientSessionCell: UITableViewCell {
         case "opera":
             browserIcon.image = UIImage(named: "Opera")
         case "macosThreemaDesktop", "win32ThreemaDesktop", "linuxThreemaDesktop":
-            browserIcon.image = BundleUtil.imageNamed("desktopcomputer_semibold.L")
+            browserIcon.image = UIImage(systemName: "desktopcomputer")
         default:
             if webClientSession.isConnecting {
                 browserIcon.image = nil
@@ -77,7 +77,8 @@ class WebClientSessionCell: UITableViewCell {
                 loadingIndicator.isHidden = false
             }
             else {
-                browserIcon.image = UIImage(named: "ExclamationMark")
+                let config = UIImage.SymbolConfiguration(paletteColors: [Colors.white, Colors.red])
+                browserIcon.image = UIImage(systemName: "exclamationmark.circle.fill")?.withConfiguration(config)
             }
         }
         
@@ -88,7 +89,11 @@ class WebClientSessionCell: UITableViewCell {
         
         if (webClientSession.active?.boolValue)! {
             accessoryType = .none
-            accessoryView = UIImageView(image: UIImage(named: "WebClientConnection", in: .primary))
+            accessoryView = UIImageView(
+                image: UIImage(systemName: "antenna.radiowaves.left.and.right.circle.fill")?
+                    .applying(textStyle: .title2, symbolScale: .large)
+            )
+            accessoryView?.tintColor = .primary
             cellAccessibility.append(". ")
             cellAccessibility.append(BundleUtil.localizedString(forKey: "status_loggedIn"))
             cellAccessibilityActions.append(UIAccessibilityCustomAction(

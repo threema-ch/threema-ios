@@ -71,7 +71,7 @@ class BallotWithOpenCountButton: ThemedCodeButton {
     /// This can be reassigned at any time. Default value `0`.
     var openBallotsCount: UInt = 0 {
         didSet {
-            badgeView.value = openBallotsCount
+            badgeCountView.updateCountLabel(to: String(openBallotsCount))
             updateAccessibilityLabel()
         }
     }
@@ -94,24 +94,12 @@ class BallotWithOpenCountButton: ThemedCodeButton {
     
     // MARK: - Private properties
     
-    private lazy var badgeView: MKNumberBadgeView = {
-        let badgeView = MKNumberBadgeView()
+    private lazy var badgeCountView: BadgeCountView = {
+        let view = BadgeCountView()
+        view.updateCountLabel(to: String(openBallotsCount))
+        view.translatesAutoresizingMaskIntoConstraints = false
         
-        badgeView.value = openBallotsCount
-        badgeView.alignment = .right
-        badgeView.font = ChatViewConfiguration.Profile.BallotButton.badgeFont
-        badgeView.isUserInteractionEnabled = false
-        
-        NSLayoutConstraint.activate([
-            badgeView.widthAnchor.constraint(
-                greaterThanOrEqualToConstant: ChatViewConfiguration.Profile.BallotButton.minBadgeSize.width
-            ),
-            badgeView.heightAnchor.constraint(
-                greaterThanOrEqualToConstant: ChatViewConfiguration.Profile.BallotButton.minBadgeSize.height
-            ),
-        ])
-        
-        return badgeView
+        return view
     }()
     
     private lazy var highlightAnimator = UIViewPropertyAnimator.barButtonHighlightAnimator(for: self)
@@ -135,21 +123,20 @@ class BallotWithOpenCountButton: ThemedCodeButton {
         )
         adjustsImageWhenHighlighted = false
         
-        addSubview(badgeView)
-        badgeView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(badgeCountView)
         
         NSLayoutConstraint.activate([
             // We assume there exists an image view
-            badgeView.topAnchor.constraint(
+            badgeCountView.topAnchor.constraint(
                 equalTo: imageView!.topAnchor,
                 constant: -(
-                    badgeView.badgeSize.height * ChatViewConfiguration.Profile.BallotButton
+                    badgeCountView.frame.height * ChatViewConfiguration.Profile.BallotButton
                         .badgeOffsetFromBallotSymbolRatio
                 )
             ),
-            badgeView.trailingAnchor.constraint(
+            badgeCountView.trailingAnchor.constraint(
                 equalTo: imageView!.trailingAnchor,
-                constant: badgeView.badgeSize.height * ChatViewConfiguration.Profile.BallotButton
+                constant: badgeCountView.frame.height * ChatViewConfiguration.Profile.BallotButton
                     .badgeOffsetFromBallotSymbolRatio
             ),
         ])

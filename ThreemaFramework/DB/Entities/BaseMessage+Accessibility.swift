@@ -57,19 +57,25 @@ extension BaseMessage {
     public var accessibilityDateAndState: String {
         
         let dateString = DateFormatter.relativeLongStyleDateShortStyleTime(displayDate)
-        
+        var resolvedString = ""
         if messageDisplayState == .none {
             if isGroupMessage, let groupReactionString = accessibilityGroupReactionState(with: dateString) {
-                return groupReactionString
+                resolvedString = groupReactionString
             }
             else {
-                return dateString
+                resolvedString = dateString
             }
         }
         else {
             // Style: "Delivered, Today at 15:44."
-            return "\(String.localizedStringWithFormat(messageDisplayState.accessibilityLabel, dateString))."
+            resolvedString = "\(String.localizedStringWithFormat(messageDisplayState.accessibilityLabel, dateString))."
         }
+        
+        if let marked = messageMarkers?.star.boolValue, marked {
+            resolvedString += "marker_accessibility_label".localized
+        }
+        
+        return resolvedString
     }
     
     private func accessibilityGroupReactionState(with dateString: String) -> String? {

@@ -72,7 +72,7 @@ class SafeTests: XCTestCase {
         let json =
             "{\"info\":{\"version\":1,\"device\":\"ios\"},\"user\":{\"links\":[{\"type\":\"email\",\"name\":\"privat\",\"value\":\"a@a.a\"}],\"nickname\":\"nicki\",\"privatekey\":\"key123\",\"profilePic\":\"pic source\",\"profilePicRelease\":[\"ECHOECHO\",\"TEST1234\"]}}"
         let parser = SafeJsonParser()
-        let safeBackupData = try! parser.getSafeBackupData(from: json.data(using: .utf8)!)
+        let safeBackupData = try! parser.getSafeBackupData(from: Data(json.utf8))
 
         XCTAssertNotNil(safeBackupData)
         XCTAssertEqual(safeBackupData.user?.nickname, "nicki")
@@ -85,7 +85,7 @@ class SafeTests: XCTestCase {
             groupManager: GroupManagerMock()
         )
 
-        let result = store.createKey(identity: "ECHOECHO", password: "shootdeathstar")
+        let result = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
 
         XCTAssertEqual(
             hexString(data: result!),
@@ -100,7 +100,7 @@ class SafeTests: XCTestCase {
             groupManager: GroupManagerMock()
         )
 
-        let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar")
+        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
         let backupID = store.getBackupID(key: key!)
         let encryptionKey = store.getEncryptionKey(key: key!)
 
@@ -127,7 +127,7 @@ class SafeTests: XCTestCase {
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock()
         )
-        let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar")
+        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
         let encryptedData = try! store.encryptBackupData(key: key!, data: parser.getJsonAsBytes(from: dataIn)!)
         let decryptedData = try! store.decryptBackupData(key: key!, data: encryptedData)
 
@@ -248,15 +248,15 @@ class SafeTests: XCTestCase {
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock()
         )
-        let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar")!
+        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!
 
         store.getSafeServer(key: key) { result in
             switch result {
-            case let .success(url):
-                XCTAssertEqual(url.absoluteString, "https://safe-06.threema.ch")
+            case let .success(safeServer):
+                XCTAssertEqual(safeServer.server.absoluteString, "https://safe-06.threema.ch")
 
                 XCTAssertEqual(
-                    url
+                    safeServer.server
                         .appendingPathComponent(
                             "backups/\(BytesUtility.toHexString(bytes: store.getBackupID(key: key)!))"
                         )
@@ -275,15 +275,15 @@ class SafeTests: XCTestCase {
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock()
         )
-        let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar")!
+        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!
 
         store.getSafeServer(key: key) { result in
             switch result {
-            case let .success(url):
-                XCTAssertEqual(url.absoluteString, "http://test.com")
+            case let .success(safeServer):
+                XCTAssertEqual(safeServer.server.absoluteString, "http://test.com")
 
                 XCTAssertEqual(
-                    url
+                    safeServer.server
                         .appendingPathComponent(
                             "backups/\(BytesUtility.toHexString(bytes: store.getBackupID(key: key)!))"
                         )
@@ -292,59 +292,6 @@ class SafeTests: XCTestCase {
                 )
             case let .failure(error):
                 XCTFail("\(error)")
-            }
-        }
-    }
-
-    func testComposeSafeServerAuth() {
-        let serverURLTests = [
-            [nil, nil, nil, nil],
-            ["https://example.com/", nil, nil, "https://example.com/"],
-            ["https://example.com/", "test.tester@app.com", nil, "https://test.tester%40app.com:@example.com/"],
-            [
-                "https://example.com/",
-                "test.tester@app.com",
-                "passphrase",
-                "https://test.tester%40app.com:passphrase@example.com/",
-            ],
-            [
-                "https://example.com",
-                "test.tester@app.com",
-                "püssiKösch",
-                "https://test.tester%40app.com:p%C3%BCssiK%C3%B6sch@example.com",
-            ],
-            [
-                "example.com",
-                "test.tester@app.com",
-                "püssiKösch",
-                "https://test.tester%40app.com:p%C3%BCssiK%C3%B6sch@example.com",
-            ],
-            ["https://example.com/", nil, "passphrase", "https://:passphrase@example.com/"],
-            ["HTTPS://example.com", nil, nil, "HTTPS://example.com"],
-            ["HTtPS://example.com", nil, nil, "HTtPS://example.com"],
-            ["http://example.com", nil, nil, nil],
-            ["https://exämple.com", nil, nil, nil],
-        ]
-
-        let store = SafeStore(
-            safeConfigManager: SafeConfigManager(),
-            serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
-        )
-
-        for serverURLTest in serverURLTests {
-            let url = store.composeSafeServerAuth(
-                server: serverURLTest[0],
-                user: serverURLTest[1],
-                password: serverURLTest[2]
-            )
-
-            if serverURLTest[3] != nil {
-                XCTAssertNotNil(url)
-                XCTAssertEqual(url?.absoluteString, serverURLTest[3])
-            }
-            else {
-                XCTAssertNil(url)
             }
         }
     }
@@ -379,11 +326,11 @@ class SafeTests: XCTestCase {
         )
 
         for serverURLTest in serverURLTests {
-            let safeServerAuth = store.extractSafeServerAuth(server: URL(string: serverURLTest[0]!)!)
+            let safeServer = SafeStore.extractSafeServerAuth(server: URL(string: serverURLTest[0]!)!)
 
-            XCTAssertEqual(serverURLTest[1], safeServerAuth.user)
-            XCTAssertEqual(serverURLTest[2], safeServerAuth.password)
-            XCTAssertEqual(URL(string: serverURLTest[3]!)!, safeServerAuth.server)
+            XCTAssertEqual(serverURLTest[1], safeServer.serverUser)
+            XCTAssertEqual(serverURLTest[2], safeServer.serverPassword)
+            XCTAssertEqual(URL(string: serverURLTest[3]!)!, safeServer.server)
         }
     }
     

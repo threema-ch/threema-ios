@@ -36,12 +36,10 @@ extension UIColor {
     
     @objc public static let primary = UIColor { _ in
         switch ThreemaApp.current {
-        case .threema:
+        case .threema, .green:
             return Asset.TargetColors.Threema.primary.color
-        case .work:
+        case .work, .blue:
             return Asset.TargetColors.ThreemaWork.primary.color
-        case .red, .workRed:
-            return Asset.TargetColors.ThreemaRed.primary.color
         case .onPrem:
             return Asset.TargetColors.OnPrem.primary.color
         }

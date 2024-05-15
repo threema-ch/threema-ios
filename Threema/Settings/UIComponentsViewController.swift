@@ -105,7 +105,7 @@ final class UIComponentsViewController: ThemedViewController {
         let textField = SetupTextField(frame: CGRect(x: 10, y: 60, width: 300, height: 40))
         textField.delegate = self
         textField.placeholder = "Password"
-        textField.showIcon = UIImage(imageLiteralResourceName: "Key")
+        textField.showIcon = UIImage(systemName: "key.fill")
         return textField
     }()
     

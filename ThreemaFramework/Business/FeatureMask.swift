@@ -166,6 +166,44 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
         mask.rawValue & contact.featureMask != 0
     }
     
+    /// Check if the receiver(s) supports given `Common_CspFeatureMaskFlag`
+    ///
+    /// - Parameters:
+    ///   - message: Message to check
+    ///   - mask: `Common_CspFeatureMaskFlag` to check receiver(s) for
+    ///   - Returns: `true` if min. one receiver supports the mask, all unsupported contacts
+    public static func check(
+        message: BaseMessage,
+        for mask: ThreemaProtocols.Common_CspFeatureMaskFlag
+    ) -> (isSupported: Bool, unsupported: [Contact]) {
+        guard let managedObjectContext = message.managedObjectContext else {
+            return (false, [Contact]())
+        }
+
+        let contactsToCheck = managedObjectContext.performAndWait {
+            var contactsToCheck = [Contact]()
+            if message.conversation.isGroup() {
+                contactsToCheck.append(contentsOf: message.conversation.members.map { Contact(contactEntity: $0) })
+            }
+            else if let contactEntity = message.conversation.contact {
+                contactsToCheck.append(Contact(contactEntity: contactEntity))
+            }
+            return contactsToCheck
+        }
+
+        var isSupported = false
+        var unsupported = [Contact]()
+        contactsToCheck.forEach { contact in
+            if FeatureMask.check(contact: contact, for: mask) {
+                isSupported = true
+            }
+            else {
+                unsupported.append(contact)
+            }
+        }
+        return (isSupported, unsupported)
+    }
+
     private static func filterUnsupported(contacts: any Sequence<ContactEntity>, for mask: Int) -> [ContactEntity] {
         contacts.filter { contact in
             // This should only be `nil` if contact is deleted

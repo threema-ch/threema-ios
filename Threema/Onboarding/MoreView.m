@@ -64,8 +64,10 @@
 
 - (void)setup {
 #if !TARGET_INTERFACE_BUILDER
-    UIImage *iconImage = [BundleUtil imageNamed:@"InfoFilled"];
+    UIImage *iconImage = [[UIImage systemImageNamed:@"info.circle.fill"] applyingWithSymbolWeight:UIImageSymbolWeightRegular symbolScale:UIImageSymbolScaleMedium paletteColors:nil];
     _iconView = [[UIImageView alloc] initWithImage:iconImage];
+    _iconView.contentMode = UIViewContentModeScaleAspectFit;
+    _iconView.tintColor = Colors.white;
     _iconView.frame = CGRectMake(4.0, 2.0, 22.0, 22.0);
     [self addSubview:_iconView];
 #endif

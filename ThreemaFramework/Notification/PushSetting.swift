@@ -263,7 +263,7 @@ public struct PushSetting: Codable, Sendable {
     /// Icon to represent the current setting
     func imageForPushSetting() -> UIImage? {
         guard let pushSettingIcon = imageForEditedPushSetting() else {
-            return UIImage(named: "Bell")
+            return UIImage(named: "bell.fill")
         }
         return pushSettingIcon
     }

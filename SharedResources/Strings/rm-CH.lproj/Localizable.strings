@@ -210,15 +210,13 @@
 
 "share_contact_id_button" = "Parter l'ID dal contact";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Modifitgar il contact";
 "edit_group_title" = "Modifitgar la gruppa";
-
 "first_name_placeholder" = "Prenum";
 "last_name_placeholder" = "Num";
 "group_name_placeholder" = "Num da la gruppa";
-
 "no_nickname_title" = "Nagin surnum";
 "no_nickname_message" = "Na vuls ti propi definir nagin surnum? Senza surnum èsi grev per tes contacts d'enconuscher messadis da tai senza avrir l'app.";
 
@@ -277,7 +275,6 @@
 "messages_delete_selected_confirm" = "Es ti segir che ti vuls stizzar ils messadis tschernids?";
 "conversation_delete_confirm" = "Es ti segir che ti vuls stizzar quest chat sin quest apparat?";
 "delete_n" = "Stizzar (%d)";
-
 "message_cannot_play_movie" = "Il film na po betg vegnir mussà.";
 
 "identity_not_found_title" = "ID nunenconuschenta";
@@ -324,12 +321,7 @@
 "play" = "Reproducir";
 "pause" = "Pausa";
 "stop" = "Interrumper";
-"voice message" = "Messadi discurrì";
 "quit" = "Terminar";
-"record_cancel_title" = "Interrumper la registraziun";
-"record_cancel_message" = "Vuls ti propi interrumper la registraziun?";
-"record_cancel_button_discard" = "Interrumper la registraziun";
-"speed" = "Spertadad da reproducziun";
 
 "send_file_title" = "Trametter la datoteca";
 "send_file_message" = "Datoteca: %@\na\n%@";
@@ -457,7 +449,6 @@
 "no_groups_message" = "Ti n’has anc naginas gruppas. Agiuntescha manualmain gruppas cun il nuv +.";
 "no_work_contacts" = "Utilisader da %@";
 "no_work_contacts_message" = "Chattà nagins contacts da %@ controllads da l’administratur.";
-
 "no_contacts_syncoff" = "Ti n’has anc nagins contacts. Activescha la sincronisaziun (Configuraziuns > Sfera privata) u agiuntescha manualmain contacts cun il nuv +.";
 
 "my_profile_picture_title" = "Tes maletg da profil";
@@ -644,7 +635,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "duration" = "Durada";
 "current_position" = "Posiziun";
 "in_reply_to" = "sco resposta a";
-"go_to_position" = "tar";
 "draft" = "Sboz";
 "new_message_accessibility" = "Nov messadi: ";
 "quote_interaction_hint" = "Siglia tar il messadi cità";
@@ -744,7 +734,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "pinned_conversation" = "Pinned conversation";
 
 /* Begin Edit */
-
 "private_message_label" = "Messadi privat";
 "private_chat_label" = "Privat";
 "private_chat_accessibility" = "Chat privat";
@@ -793,7 +782,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "private_delete_info_alert_message" = "Sche ti stizzas in chat privat, n'èn chats futurs betg automaticamain marcads sco privats.";
 
 /* End Edit */
-
 "pushSetting_header" = "Avis";
 "doNotDisturb_title" = "Betg disturbar";
 
@@ -1253,4 +1241,3 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "vote_system_message_default" = "Survegnì ina vusch per in'enquista nunenconuschenta.";
 // ChatBar
 "chat_bar_quote_close_button" = "Serrar il citat";
-

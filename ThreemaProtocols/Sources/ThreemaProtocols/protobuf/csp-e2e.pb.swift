@@ -73,6 +73,229 @@ public struct CspE2e_MessageMetadata {
   fileprivate var _nickname: String? = nil
 }
 
+/// Edit an existing message (e.g. a text message or a media message caption).
+///
+/// **Properties (1:1)**:
+/// - Kind: 1:1
+/// - Flags:
+///   - `0x01`: Send push notification.
+/// - User profile distribution: No
+/// - Exempt from blocking: No
+/// - Implicit _direct_ contact creation: No
+/// - Protect against replay: Yes
+/// - Reflect:
+///   - Incoming: Yes
+///   - Outgoing: Yes
+/// - Delivery receipts:
+///   - Automatic: No
+///   - Manual: No
+/// - Edit applies to: N/A (obviously)
+/// - Deletable by: N/A
+/// - When rejected: N/A (ignored)
+/// - Send to Threema Gateway ID group creator: N/A
+///
+/// **Properties (Group)**:
+/// - Kind: Group
+/// - Flags:
+///   - `0x01`: Send push notification.
+/// - User profile distribution: No
+/// - Exempt from blocking: No
+/// - Implicit _direct_ contact creation: No
+/// - Protect against replay: Yes
+/// - Reflect:
+///   - Incoming: Yes
+///   - Outgoing: Yes
+/// - Delivery receipts:
+///   - Automatic: N/A
+///   - Manual: No
+/// - Edit applies to: N/A (obviously)
+/// - Deletable by: N/A
+/// - When rejected: N/A (ignored)
+/// - Send to Threema Gateway ID group creator: If capture is enabled
+///
+/// When creating this message as a 1:1 message:
+///
+/// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, prevent
+///    creation and abort these steps.
+/// 2. Run the _Commit Edit Message Create Steps_.
+///
+/// When creating this message as a group message:
+///
+/// 1. If the content of the message would not change, prevent creation and abort
+///    these steps.
+/// 2. If the sender or all of the receivers do not have `EDIT_MESSAGE_SUPPORT`,
+///    prevent creation and abort these steps.
+/// 3. Run the _Common Edit Message Create Steps_.
+/// 4. If any of the receivers do not have `EDIT_MESSAGE_SUPPORT`, notify the
+///    user that the affected contacts will not receive the edited content.
+/// 5. Omit all receivers that do not have `EDIT_MESSAGE_SUPPORT`.
+///
+/// The following steps are defined as the _Common Edit Message Create Steps_:
+///
+/// 1. Let `message` be the referred message.
+/// 2. If the referred message has been sent (`sent-at`) more than 6 hours ago,
+///    prevent creation and abort these steps.¹
+/// 3. Let `created-at` be the current timestamp to be applied to the edit
+///    message.
+/// 4. Edit `message` as defined by the associated _Edit applies to_ property and
+///    add an indicator to `message`, informing the user that the message has
+///    been edited by the user at `created-at`.
+///
+/// When receiving this message as a 1:1 message:
+///
+/// 1. Run the _Common Edit Message Receive Steps_.
+///
+/// When receiving this message as a group message:
+///
+/// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
+///    has been discarded, abort these steps.
+/// 2. Run the _Common Edit Message Receive Steps_.
+///
+/// The following steps are defined as the _Common Edit Message Receive Steps_:
+///
+/// 1. Lookup the message with `message_id` originally sent by the sender within
+///    the associated conversation and let `message` be the result.
+/// 2. If `message` is not defined or the sender is not the original sender of
+///    `message`, discard the message and abort these steps.
+/// 3. If `message` is not editable (see the associated _Edit applies to_
+///    property), discard the message and abort these steps.
+/// 4. Edit `message` as defined by the associated _Edit applies to_ property and
+///    add an indicator to `message`, informing the user that the message has
+///    been edited by the sender at the `message`'s `created-at`.
+///
+/// ¹: For simplicity, the time constraint is applied on the sender side only.
+/// The receiver will always accept a request to edit a message. This is deemed
+/// acceptable considering this is not a security feature.
+public struct CspE2e_EditMessage {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Unique ID of the referred message to be edited.
+  public var messageID: UInt64 = 0
+
+  /// Text (or caption) to update the referred message with. Should be ≤ 6000
+  /// bytes.
+  public var text: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+/// Remove an existing message.
+///
+/// Note: This is a soft-security feature at best and it applies a best effort
+/// approach, meaning that it relies on some level of good will on the receiving
+/// end. A malicious receiver can easily persist a message prior to removal by
+/// e.g. making a screenshot, forwarding it, changing the date, explicitly saving
+/// it (if it contains media), etc.
+///
+/// **Properties (1:1)**:
+/// - Kind: 1:1
+/// - Flags:
+///   - `0x01`: Send push notification.
+/// - User profile distribution: No
+/// - Exempt from blocking: No
+/// - Implicit _direct_ contact creation: No
+/// - Protect against replay: Yes
+/// - Reflect:
+///   - Incoming: Yes
+///   - Outgoing: Yes
+/// - Delivery receipts:
+///   - Automatic: No
+///   - Manual: No
+/// - Edit applies to: N/A
+/// - Deletable by: N/A (obviously)
+/// - When rejected: N/A (ignored)
+/// - Send to Threema Gateway ID group creator: N/A
+///
+/// **Properties (Group)**:
+/// - Kind: Group
+/// - Flags:
+///   - `0x01`: Send push notification.
+/// - User profile distribution: No
+/// - Exempt from blocking: No
+/// - Implicit _direct_ contact creation: No
+/// - Protect against replay: Yes
+/// - Reflect:
+///   - Incoming: Yes
+///   - Outgoing: Yes
+/// - Delivery receipts:
+///   - Automatic: N/A
+///   - Manual: No
+/// - Edit applies to: N/A
+/// - Deletable by: N/A (obviously)
+/// - When rejected: N/A (ignored)
+/// - Send to Threema Gateway ID group creator: If capture is enabled
+///
+/// When creating this message as a 1:1 message:
+///
+/// 1. If the sender or the receiver do not have `DELETE_MESSAGE_SUPPORT`,
+///    prevent creation and abort these steps.
+/// 2. Run the _Commit Delete Message Create Steps_.
+///
+/// When creating this message as a group message:
+///
+/// 1. If the sender or all of the receivers do not have
+///    `DELETE_MESSAGE_SUPPORT`, prevent creation and abort these steps.
+/// 2. Run the _Commit Delete Message Create Steps_.
+/// 3. If any of the receivers do not have `DELETE_MESSAGE_SUPPORT`, notify the
+///    user that the affected contacts will continue to see the message.
+/// 4. Omit all receivers that do not have `DELETE_MESSAGE_SUPPORT`.
+///
+/// The following steps are defined as the _Common Delete Message Create Steps_:
+///
+/// 1. Let `message` be the referred message.
+/// 2. If the referred message has been sent (`sent-at`) more than 6 hours ago,
+///    prevent creation and abort these steps.¹
+/// 3. Let `created-at` be the current timestamp to be applied to the delete
+///    message.
+/// 4. Replace `message` with a message informing the user that the message of
+///    the user has been removed at `created-at`.²
+///
+/// When receiving this message as a 1:1 message:
+///
+/// 1. Run the _Common Delete Message Receive Steps_.
+///
+/// When receiving this message as a group message:
+///
+/// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
+///    has been discarded, abort these steps.
+/// 2. Run the _Common Delete Message Receive Steps_.
+///
+/// The following steps are defined as the _Common Delete Message Receive Steps_:
+///
+/// 1. Lookup the message with `message_id` originally sent by the sender within
+///    the associated conversation and let `message` be the result.
+/// 2. If `message` is not defined or the sender is not the original sender of
+///    `message`, discard the message and abort these steps.
+/// 3. If `message` is not deletable (see the associated _Deletable by_
+///    property), discard the message and abort these steps.
+/// 4. Replace `message` with a message informing the user that the message of
+///    the sender has been removed at `created-at`.²
+///
+/// ¹: For simplicity, the time constraint is applied on the sender side only.
+/// The receiver will always accept a request to delete a message. This is deemed
+/// acceptable considering this is just barely a soft-security feature.
+///
+/// ²: All references to a removed message (e.g. quotes) must be updated as well,
+/// so that the message content is no longer visible. An implementation should
+/// also try to withdraw or update any notification created for a removed
+/// message.
+public struct CspE2e_DeleteMessage {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Unique ID of the referred message to be removed.
+  public var messageID: UInt64 = 0
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 /// Announces and immediately starts a group call.
 ///
 /// **Properties**:
@@ -90,6 +313,8 @@ public struct CspE2e_MessageMetadata {
 ///   - Automatic: N/A
 ///   - Manual: No
 /// - When rejected: N/A¹
+/// - Edit applies to: N/A
+/// - Deletable by: N/A
 /// - Send to Threema Gateway ID group creator: If capture is enabled
 ///
 /// ¹: For the group creator it will be handled as if `group-sync-request` was
@@ -173,6 +398,8 @@ public struct CspE2e_GroupCallStart {
 ///   - Automatic: No
 ///   - Manual: No
 /// - When rejected: N/A (ignored)
+/// - Edit applies to: N/A
+/// - Deletable by: User only
 /// - Send to Threema Gateway ID group creator: N/A
 ///
 /// When receiving this message:
@@ -242,6 +469,8 @@ public struct CspE2e_GroupJoinRequest {
 ///   - Automatic: No
 ///   - Manual: No
 /// - When rejected: N/A (ignored)
+/// - Edit applies to: N/A
+/// - Deletable by: N/A
 /// - Send to Threema Gateway ID group creator: N/A
 ///
 /// When receiving this message:
@@ -384,6 +613,8 @@ public struct CspE2e_GroupJoinResponse {
 
 #if swift(>=5.5) && canImport(_Concurrency)
 extension CspE2e_MessageMetadata: @unchecked Sendable {}
+extension CspE2e_EditMessage: @unchecked Sendable {}
+extension CspE2e_DeleteMessage: @unchecked Sendable {}
 extension CspE2e_GroupCallStart: @unchecked Sendable {}
 extension CspE2e_GroupJoinRequest: @unchecked Sendable {}
 extension CspE2e_GroupJoinResponse: @unchecked Sendable {}
@@ -445,6 +676,76 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     if lhs.messageID != rhs.messageID {return false}
     if lhs.createdAt != rhs.createdAt {return false}
     if lhs._nickname != rhs._nickname {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CspE2e_EditMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EditMessage"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "message_id"),
+    2: .same(proto: "text"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.text) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.messageID != 0 {
+      try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 1)
+    }
+    if !self.text.isEmpty {
+      try visitor.visitSingularStringField(value: self.text, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: CspE2e_EditMessage, rhs: CspE2e_EditMessage) -> Bool {
+    if lhs.messageID != rhs.messageID {return false}
+    if lhs.text != rhs.text {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CspE2e_DeleteMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".DeleteMessage"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "message_id"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.messageID != 0 {
+      try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: CspE2e_DeleteMessage, rhs: CspE2e_DeleteMessage) -> Bool {
+    if lhs.messageID != rhs.messageID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

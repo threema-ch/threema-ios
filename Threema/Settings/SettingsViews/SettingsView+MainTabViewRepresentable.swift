@@ -28,4 +28,8 @@ extension SettingsView: MainTabViewRepresentable {
     var symbol: UIImage? {
         UIImage(systemName: "gear")
     }
+    
+    var tag: Int {
+        3
+    }
 }

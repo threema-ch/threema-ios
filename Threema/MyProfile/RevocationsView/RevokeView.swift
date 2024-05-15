@@ -81,7 +81,10 @@ struct RevokeView: View {
                                 .foregroundColor(textIsSameAsID ? Colors.red.color : Colors.white.color)
                         } icon: {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(Colors.orange.color)
+                                .foregroundStyle(
+                                    Colors.white.color,
+                                    textIsSameAsID ? Colors.red.color : Colors.orange.color
+                                )
                         }
                     })
                     .groupBoxStyle(.info)

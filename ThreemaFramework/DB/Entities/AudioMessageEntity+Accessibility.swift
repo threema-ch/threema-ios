@@ -21,7 +21,7 @@
 import Foundation
 
 extension AudioMessageEntity: MessageAccessibility {
-    public var customAccessibilityLabel: String {
+    public var privateCustomAccessibilityLabel: String {
         "" // No value since duration is handled as accessibilityValue and captions are not allowed
     }
     

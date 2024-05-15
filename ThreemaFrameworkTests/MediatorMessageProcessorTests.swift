@@ -156,8 +156,8 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     
     func incomingMessageStarted(_ message: AbstractMessage) { }
     
-    func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) { }
-    
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) { }
+
     func incomingMessageFinished(_ message: AbstractMessage) { }
     
     func incomingMessageFailed(_ message: BoxedMessage) {

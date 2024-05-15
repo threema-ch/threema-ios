@@ -63,7 +63,8 @@ class MessageStore: MessageStoreProtocol {
             msg.remoteSentDate = createdAt
         }
 
-        messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
+        assert(audioMessage.fromIdentity == conversationIdentity)
+        messageProcessorDelegate.incomingMessageChanged(audioMessage, baseMessage: msg)
         messageProcessorDelegate.incomingMessageFinished(audioMessage)
     }
 
@@ -98,9 +99,10 @@ class MessageStore: MessageStoreProtocol {
 
                     if !isOutgoing {
                         if let msg {
+                            assert(fileMessage.fromIdentity == conversationIdentity)
                             self.messageProcessorDelegate.incomingMessageChanged(
-                                msg,
-                                fromIdentity: conversationIdentity
+                                fileMessage,
+                                baseMessage: msg
                             )
                         }
 
@@ -153,7 +155,8 @@ class MessageStore: MessageStoreProtocol {
         }
 
         if !isOutgoing {
-            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
+            assert(conversationIdentity == textMessage.fromIdentity)
+            messageProcessorDelegate.incomingMessageChanged(textMessage, baseMessage: msg)
             messageProcessorDelegate.incomingMessageFinished(textMessage)
         }
         else {
@@ -236,12 +239,12 @@ class MessageStore: MessageStoreProtocol {
                             // If it is a read receipt of a reflected incoming message, then remove all notifications of
                             // this message
                             if isOutgoing {
-                                if let key = PendingUserNotificationKey.key(
+                                if let contentKey = PendingUserNotificationKey.key(
                                     identity: deliveryReceiptMessage.toIdentity,
                                     messageID: messageID
                                 ) {
                                     self.frameworkInjector.userNotificationCenterManager.remove(
-                                        key: key,
+                                        contentKey: contentKey,
                                         exceptStage: nil,
                                         justPending: false
                                     )
@@ -283,7 +286,67 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.readMessage(inConversations: messageReadConversations)
         }
     }
-    
+
+    func save(deleteMessage: DeleteMessage, createdAt: Date, isOutgoing: Bool) throws {
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageStarted(deleteMessage)
+        }
+
+        let (conversation, _) = try conversationSender(forMessage: deleteMessage, isOutgoing: isOutgoing)
+        let msg = try frameworkInjector.entityManager.deleteMessage(for: deleteMessage, conversation: conversation)
+
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageChanged(deleteMessage, baseMessage: msg)
+            messageProcessorDelegate.incomingMessageFinished(deleteMessage)
+        }
+
+        conversation.updateLastMessage(with: frameworkInjector.entityManager)
+    }
+
+    func save(deleteGroupMessage: DeleteGroupMessage, createdAt: Date, isOutgoing: Bool) throws {
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageStarted(deleteGroupMessage)
+        }
+
+        let (conversation, _) = try conversationSender(forMessage: deleteGroupMessage, isOutgoing: isOutgoing)
+        let msg = try frameworkInjector.entityManager.deleteMessage(for: deleteGroupMessage, conversation: conversation)
+
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageChanged(deleteGroupMessage, baseMessage: msg)
+            messageProcessorDelegate.incomingMessageFinished(deleteGroupMessage)
+        }
+
+        conversation.updateLastMessage(with: frameworkInjector.entityManager)
+    }
+
+    func save(editMessage: EditMessage, createdAt: Date, isOutgoing: Bool) throws {
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageStarted(editMessage)
+        }
+
+        let (conversation, _) = try conversationSender(forMessage: editMessage, isOutgoing: isOutgoing)
+        let msg = try frameworkInjector.entityManager.editMessage(for: editMessage, conversation: conversation)
+
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageChanged(editMessage, baseMessage: msg)
+            messageProcessorDelegate.incomingMessageFinished(editMessage)
+        }
+    }
+
+    func save(editGroupMessage: EditGroupMessage, createdAt: Date, isOutgoing: Bool) throws {
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageStarted(editGroupMessage)
+        }
+
+        let (conversation, _) = try conversationSender(forMessage: editGroupMessage, isOutgoing: isOutgoing)
+        let msg = try frameworkInjector.entityManager.editMessage(for: editGroupMessage, conversation: conversation)
+
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageChanged(editGroupMessage, baseMessage: msg)
+            messageProcessorDelegate.incomingMessageFinished(editGroupMessage)
+        }
+    }
+
     @available(
         *,
         deprecated,
@@ -318,7 +381,8 @@ class MessageStore: MessageStoreProtocol {
             msg.remoteSentDate = createdAt
         }
 
-        messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+        assert(groupAudioMessage.fromIdentity == senderIdentity)
+        messageProcessorDelegate.incomingMessageChanged(groupAudioMessage, baseMessage: msg)
         messageProcessorDelegate.incomingMessageFinished(groupAudioMessage)
     }
 
@@ -431,7 +495,8 @@ class MessageStore: MessageStoreProtocol {
 
                     if !isOutgoing {
                         if let msg {
-                            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                            assert(groupFileMessage.fromIdentity == senderIdentity)
+                            self.messageProcessorDelegate.incomingMessageChanged(groupFileMessage, baseMessage: msg)
                         }
 
                         self.messageProcessorDelegate.incomingMessageFinished(groupFileMessage)
@@ -520,7 +585,8 @@ class MessageStore: MessageStoreProtocol {
             }
 
             // Create image message in DB and download and decrypt blob
-            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+            assert(imageMessage.fromIdentity == senderIdentity)
+            self.messageProcessorDelegate.incomingMessageChanged(imageMessage, baseMessage: msg)
 
             let downloadQueue = DispatchQueue.global(qos: .default)
 
@@ -545,7 +611,8 @@ class MessageStore: MessageStoreProtocol {
                 maxBytesToDecrypt: maxBytesToDecrypt
             )
             .done {
-                self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                assert(imageMessage.fromIdentity == senderIdentity)
+                self.messageProcessorDelegate.incomingMessageChanged(imageMessage, baseMessage: msg)
                 seal.fulfill_()
             }
             .ensure {
@@ -599,7 +666,8 @@ class MessageStore: MessageStoreProtocol {
         setPoiAddress(message: msg)
             .done {
                 if !isOutgoing {
-                    self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                    assert(groupLocationMessage.fromIdentity == senderIdentity)
+                    self.messageProcessorDelegate.incomingMessageChanged(groupLocationMessage, baseMessage: msg)
                     self.messageProcessorDelegate.incomingMessageFinished(groupLocationMessage)
                 }
                 else {
@@ -652,7 +720,11 @@ class MessageStore: MessageStoreProtocol {
                         }
 
                         if !isOutgoing {
-                            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                            assert(groupBallotCreateMessage.fromIdentity == senderIdentity)
+                            self.messageProcessorDelegate.incomingMessageChanged(
+                                groupBallotCreateMessage,
+                                baseMessage: msg
+                            )
                             self.messageProcessorDelegate.incomingMessageFinished(groupBallotCreateMessage)
                         }
                         else {
@@ -802,7 +874,8 @@ class MessageStore: MessageStoreProtocol {
         }
 
         if !isOutgoing {
-            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+            assert(groupTextMessage.fromIdentity == senderIdentity)
+            messageProcessorDelegate.incomingMessageChanged(groupTextMessage, baseMessage: msg)
             messageProcessorDelegate.incomingMessageFinished(groupTextMessage)
         }
         else {
@@ -844,7 +917,7 @@ class MessageStore: MessageStoreProtocol {
                 for: videoMessage,
                 sender: sender,
                 conversation: conversation,
-                thumbnail: UIImage(imageLiteralResourceName: "Video")
+                thumbnail: UIImage(named: "threema.video.fill")
             ) as? VideoMessageEntity else {
                 throw MediatorReflectedProcessorError
                     .messageNotProcessed(message: "Could not find/create (group) video message")
@@ -872,7 +945,8 @@ class MessageStore: MessageStoreProtocol {
                 blobOrigin = msg.blobOrigin
             }
 
-            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+            assert(videoMessage.fromIdentity == senderIdentity)
+            self.messageProcessorDelegate.incomingMessageChanged(videoMessage, baseMessage: msg)
 
             // A VideoMessage never has a local blob because all note group capable devices send everything as
             // FileMessage (-> localOrigin: false)
@@ -895,7 +969,8 @@ class MessageStore: MessageStoreProtocol {
                 maxBytesToDecrypt: maxBytesToDecrypt
             )
             .done {
-                self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                assert(videoMessage.fromIdentity == senderIdentity)
+                self.messageProcessorDelegate.incomingMessageChanged(videoMessage, baseMessage: msg)
                 seal.fulfill_()
             }
             .ensure {
@@ -939,7 +1014,8 @@ class MessageStore: MessageStoreProtocol {
         setPoiAddress(message: msg)
             .done {
                 if !isOutgoing {
-                    self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
+                    assert(locationMessage.fromIdentity == conversationIdentity)
+                    self.messageProcessorDelegate.incomingMessageChanged(locationMessage, baseMessage: msg)
                     self.messageProcessorDelegate.incomingMessageFinished(locationMessage)
                 }
                 else {
@@ -983,9 +1059,10 @@ class MessageStore: MessageStoreProtocol {
                             msg.remoteSentDate = isOutgoing ? reflectedAt : createdAt
 
                             if !isOutgoing {
+                                assert(ballotCreateMessage.fromIdentity == conversationIdentity)
                                 self.messageProcessorDelegate.incomingMessageChanged(
-                                    msg,
-                                    fromIdentity: conversationIdentity
+                                    ballotCreateMessage,
+                                    baseMessage: msg
                                 )
                                 self.messageProcessorDelegate.incomingMessageFinished(ballotCreateMessage)
                             }

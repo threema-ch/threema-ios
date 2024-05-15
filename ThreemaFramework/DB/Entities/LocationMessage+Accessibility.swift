@@ -22,7 +22,7 @@ import Foundation
 
 extension LocationMessage: MessageAccessibility {
     
-    public var customAccessibilityLabel: String {
+    public var privateCustomAccessibilityLabel: String {
         previewText
     }
     

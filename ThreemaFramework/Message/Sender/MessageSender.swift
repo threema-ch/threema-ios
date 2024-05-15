@@ -23,6 +23,7 @@ import CoreLocation
 import Foundation
 import PromiseKit
 import ThreemaEssentials
+import ThreemaProtocols
 
 public final class MessageSender: NSObject, MessageSenderProtocol {
     private let serverConnector: ServerConnectorProtocol
@@ -105,7 +106,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
             if let messageConversation = self.entityManager.entityFetcher
                 .getManagedObject(by: conversation.objectID) as? Conversation,
-                let message = self.entityManager.entityCreator.textMessage(for: messageConversation) {
+                // TODO: (IOS-4366) Distribution list re-add setLastUpdate
+                let message = self.entityManager.entityCreator.textMessage(
+                    for: messageConversation,
+                    setLastUpdate: true
+                ) {
 
                 var remainingBody: NSString?
                 if let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody) {
@@ -198,18 +203,23 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         correlationID: String?,
         webRequestID: String?
     ) async throws {
-        // Check if we actually have data and if it is smaller than the max file size
-        guard let data = item.getData(),
-              data.count < kMaxFileSize
-        else {
+        // Check if we actually have data
+        guard let data = item.getData() else {
+            NotificationPresenterWrapper.shared.present(
+                type: .sendingError,
+                subtitle: BundleUtil.localizedString(forKey: "notification_sending_failed")
+            )
+            throw MessageSenderError.noData
+        }
+        
+        // Check if the data is smaller than the max file size
+        guard data.count < kMaxFileSize else {
             NotificationPresenterWrapper.shared.present(
                 type: .sendingError,
                 subtitle: BundleUtil.localizedString(forKey: "notification_sending_failed_subtitle_size")
             )
             throw MessageSenderError.tooBig
         }
-        
-        // Create file message
         
         let em = entityManager
         // Create message
@@ -268,19 +278,41 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     @available(*, deprecated, message: "Only use from Objective-C code")
     @objc public func sendBlobMessage(
         for item: URLSenderItem,
-        in conversation: Conversation,
+        inConversationWithID conversationID: NSManagedObjectID,
         correlationID: String?,
         webRequestID: String?,
         completion: ((Error?) -> Void)?
     ) {
         Task {
             do {
-                try await sendBlobMessage(
-                    for: item,
-                    in: conversation.objectID,
-                    correlationID: correlationID,
-                    webRequestID: webRequestID
-                )
+                let isDistributionList = await self.entityManager.perform { [weak self] in
+                    guard let weakSelf = self else {
+                        return false
+                    }
+                    guard let conversation = weakSelf.entityManager.entityFetcher
+                        .existingObject(with: conversationID) as? Conversation else {
+                        return false
+                    }
+                    return conversation.distributionList != nil
+                }
+
+                if isDistributionList {
+                    let dlSender = DistributionListMessageSender()
+                    try await dlSender.sendBlobMessage(
+                        for: item,
+                        in: conversationID,
+                        correlationID: correlationID,
+                        webRequestID: webRequestID
+                    )
+                }
+                else {
+                    try await sendBlobMessage(
+                        for: item,
+                        in: conversationID,
+                        correlationID: correlationID,
+                        webRequestID: webRequestID
+                    )
+                }
                 completion?(nil)
             }
             catch {
@@ -304,7 +336,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
             if let messageConversation = self.entityManager.entityFetcher
                 .getManagedObject(by: conversation.objectID) as? Conversation,
-                let message = self.entityManager.entityCreator.locationMessage(for: messageConversation) {
+                // TODO: (IOS-4366) Distribution list re-add setLastUpdate
+                let message = self.entityManager.entityCreator.locationMessage(
+                    for: messageConversation,
+                    setLastUpdate: true
+                ) {
 
                 message.latitude = NSNumber(floatLiteral: coordinates.latitude)
                 message.longitude = NSNumber(floatLiteral: coordinates.longitude)
@@ -534,7 +570,125 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             }
         }
     }
-    
+
+    public func sendDeleteMessage(with objectID: NSManagedObjectID, receiversExcluded: [Contact]?) throws {
+        let (messageID, receiverIdentity, group) = try entityManager.performAndWait {
+            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            else {
+                throw MessageSenderError.unableToLoadMessage
+            }
+
+            let messageID = baseMessage.id
+            var receiverIdentity: ThreemaIdentity?
+            let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
+            if group == nil {
+                receiverIdentity = baseMessage.conversation.contact?.threemaIdentity
+            }
+
+            return (messageID, receiverIdentity, group)
+        }
+
+        guard let messageID else {
+            DDLogError("Message ID is nil")
+            throw MessageSenderError.sendingFailed
+        }
+
+        var e2eDeleteMessage = CspE2e_DeleteMessage()
+        e2eDeleteMessage.messageID = try messageID.littleEndian()
+
+        let task = TaskDefinitionSendDeleteEditMessage(
+            receiverIdentity: receiverIdentity,
+            group: group,
+            deleteMessage: e2eDeleteMessage
+        )
+
+        if let group {
+            if let receiversExcluded {
+                task.receivingGroupMembers = Set(
+                    group.members.filter { !receiversExcluded.contains($0) }
+                        .map(\.identity.string)
+                )
+            }
+        }
+
+        taskManager.add(taskDefinition: task)
+    }
+
+    public func sendEditMessage(
+        with objectID: NSManagedObjectID,
+        rawText: String,
+        receiversExcluded: [Contact]?
+    ) throws {
+        let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
+        guard trimmedText.data(using: .utf8)?.count ?? 0 <= kMaxMessageLen else {
+            throw MessageSenderError.editedTextToLong
+        }
+
+        let (hasTextChanged, messageID, receiverIdentity, group) = try entityManager.performAndWaitSave {
+            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            else {
+                throw MessageSenderError.unableToLoadMessage
+            }
+
+            var hasTextChanged = false
+
+            // Save edited text
+            if let textMessage = baseMessage as? TextMessage,
+               textMessage.text != trimmedText {
+
+                textMessage.text = trimmedText
+                hasTextChanged = true
+            }
+            else if let fileMessage = baseMessage as? FileMessageEntity,
+                    fileMessage.caption != trimmedText {
+
+                fileMessage.caption = trimmedText
+                fileMessage.json = FileMessageEncoder.jsonString(for: fileMessage)
+                hasTextChanged = true
+            }
+
+            let messageID = baseMessage.id
+            var receiverIdentity: ThreemaIdentity?
+            let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
+            if group == nil {
+                receiverIdentity = baseMessage.conversation.contact?.threemaIdentity
+            }
+            return (hasTextChanged, messageID, receiverIdentity, group)
+        }
+
+        assert(receiverIdentity != nil || group != nil)
+
+        guard hasTextChanged else {
+            return
+        }
+
+        guard let messageID else {
+            DDLogError("Message ID is nil")
+            throw MessageSenderError.sendingFailed
+        }
+
+        var e2eEditMessage = CspE2e_EditMessage()
+        e2eEditMessage.messageID = try messageID.littleEndian()
+        e2eEditMessage.text = ThreemaUtility.trimCharacters(in: rawText)
+
+        let task = TaskDefinitionSendDeleteEditMessage(
+            receiverIdentity: receiverIdentity,
+            group: group,
+            editMessage: e2eEditMessage
+        )
+
+        if let group {
+            if let receiversExcluded {
+                task.receivingGroupMembers = Set(
+                    group.members.filter { !receiversExcluded.contains($0) }
+                        .map(\.identity.string)
+                )
+            }
+        }
+
+        taskManager.add(taskDefinition: task)
+    }
+
     // MARK: - Status update
 
     public func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void> {
@@ -785,20 +939,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
     
     private func sendNonBlobMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) throws {
-        let (messageID, receiverIdentity, group) = try entityManager.performAndWait {
-            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
-            else {
-                throw MessageSenderError.unableToLoadMessage
-            }
-            
-            let messageID = baseMessage.id
-            var receiverIdentity: ThreemaIdentity?
-            let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
-            if group == nil {
-                receiverIdentity = baseMessage.conversation.contact?.threemaIdentity
-            }
-            return (messageID, receiverIdentity, group)
-        }
+        let (messageID, receiverIdentity, group) = try getMessageIDAndReceiver(for: objectID)
 
         guard let messageID else {
             DDLogError("Message ID is nil")
@@ -839,7 +980,25 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             throw MessageSenderError.sendingFailed
         }
     }
-    
+
+    private func getMessageIDAndReceiver(for objectID: NSManagedObjectID) throws
+        -> (messageID: Data?, receiverIdentity: ThreemaIdentity?, group: Group?) {
+        try entityManager.performAndWait {
+            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            else {
+                throw MessageSenderError.unableToLoadMessage
+            }
+
+            let messageID = baseMessage.id
+            var receiverIdentity: ThreemaIdentity?
+            let group = self.groupManager.getGroup(conversation: baseMessage.conversation)
+            if group == nil {
+                receiverIdentity = baseMessage.conversation.contact?.threemaIdentity
+            }
+            return (messageID, receiverIdentity, group)
+        }
+    }
+
     private func sendReceipt(
         for messages: [BaseMessage],
         receiptType: ReceiptType,
@@ -966,13 +1125,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 taskGroup.addTask {
                     await withCheckedContinuation { continuation in
                         var receiptMessageIDs = [Data]()
-                        var receiptReadDates = [Date]()
+                        var receiptReadDates = [Date?]()
 
                         for key in keys {
                             receiptMessageIDs.append(key)
-                            if let readDate = msgIDAndReadDate[key] as? Date {
-                                receiptReadDates.append(readDate)
-                            }
+                            receiptReadDates.append(msgIDAndReadDate[key] as? Date)
                         }
 
                         if !receiptMessageIDs.isEmpty {

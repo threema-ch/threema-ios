@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 
 extension TextMessage: PreviewableMessage {
-    public var previewText: String {
+    public var privatePreviewText: String {
         guard let text else {
             DDLogError("Text message text is nil")
             return ""

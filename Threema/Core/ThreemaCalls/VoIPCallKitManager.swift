@@ -147,26 +147,35 @@ extension VoIPCallKitManager {
     
     func startCall(for contactIdentity: String) {
         let handle = CXHandle(type: .generic, value: contactIdentity)
-        uuid = UUID()
+        let localUUID = UUID()
+        uuid = localUUID
         callerName = contactIdentity
         
-        let startCallAction = CXStartCallAction(call: uuid!, handle: handle)
+        let startCallAction = CXStartCallAction(call: localUUID, handle: handle)
         let transaction = CXTransaction(action: startCallAction)
         callController.request(transaction, completion: { error in
+            
             if let error {
-                DDLogError("Start call action failed (CallKit UUID: \(self.uuid!): \(error)")
+                DDLogError("Start call action failed (CallKit UUID: \(localUUID): \(error)")
+                return
             }
+            
+            guard let uuid = self.uuid, localUUID == uuid else {
+                DDLogError("UUID mismatch local=\(localUUID), class=\(self.uuid ?? "nil")")
+                return
+            }
+            
             let update = CXCallUpdate()
             update.remoteHandle = CXHandle(type: .generic, value: contactIdentity)
             update.hasVideo = false
             let entityManager = BusinessInjector().entityManager
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 if let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
                     update.localizedCallerName = contact.displayName
                     self.callerName = contact.displayName
                 }
             }
-            self.provider.reportCall(with: self.uuid!, updated: update)
+            self.provider.reportCall(with: localUUID, updated: update)
         })
     }
     

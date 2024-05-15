@@ -38,8 +38,8 @@
     _choiceTextField.delegate = self;
     
     [Colors updateKeyboardAppearanceFor:_choiceTextField];
-    
-    [_dateButton setImage:[UIImage imageNamed:@"Calendar" inColor:UIColor.primary] forState:UIControlStateNormal];
+    UIImage *calendarImage = [[UIImage systemImageNamed:@"calendar"] imageWithTintColor:UIColor.primary renderingMode:UIImageRenderingModeAlwaysOriginal];
+    [_dateButton setImage:calendarImage forState:UIControlStateNormal];
     
     [_dateButton setAccessibilityLabel:[BundleUtil localizedStringForKey:@"ballot_date_button"]];
 }

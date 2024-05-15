@@ -576,7 +576,7 @@ extension GroupCallManager {
         /// value (i.e. the most recently created call) as provided by the peek result.
         for groupCall in thisGroupGroupCalls {
             if currentlyChosenCall == nil {
-                if await groupCall.exactCallStartDate != nil {
+                if await groupCall.exactCreationTimestamp != nil {
                     currentlyChosenCall = groupCall
                 }
                 continue
@@ -586,34 +586,34 @@ extension GroupCallManager {
                 let msg =
                     "[GroupCall] This never happens because we always either set `currentlyChosenCall` above or call `continue`"
                 assertionFailure(msg)
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 return nil
             }
             
-            guard let currentStartDate = await innerChosenCall.exactCallStartDate else {
+            guard let currentCreationTimestamp = await innerChosenCall.exactCreationTimestamp else {
                 continue
             }
-            guard let newStartDate = await groupCall.exactCallStartDate else {
+            guard let newStartCreationTimestamp = await groupCall.exactCreationTimestamp else {
                 continue
             }
             
             DDLogNotice(
-                "[GroupCall] [Periodic Refresh] [Peek Steps] Previously chosen call \(innerChosenCall.logIdentifier.prefix(5)) has start date \(currentStartDate)"
+                "[GroupCall] [Periodic Refresh] [Peek Steps] Previously chosen call \(innerChosenCall.logIdentifier.prefix(5)) has creation timestamp \(currentCreationTimestamp)"
             )
             DDLogNotice(
-                "[GroupCall] [Periodic Refresh] [Peek Steps] Potential new chosen call \(groupCall.logIdentifier.prefix(5)) has start date \(newStartDate)"
+                "[GroupCall] [Periodic Refresh] [Peek Steps] Potential new chosen call \(groupCall.logIdentifier.prefix(5)) has creation timestamp \(newStartCreationTimestamp)"
             )
             
-            if currentStartDate < newStartDate {
+            if currentCreationTimestamp < newStartCreationTimestamp {
                 currentlyChosenCall = groupCall
                 
                 DDLogNotice(
-                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.logIdentifier.prefix(5)) with start date \(newStartDate)"
+                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.logIdentifier.prefix(5)) with screation timestamp \(newStartCreationTimestamp)"
                 )
             }
             else {
                 DDLogNotice(
-                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.logIdentifier.prefix(5)) with start date \(currentStartDate)"
+                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.logIdentifier.prefix(5)) with creation timestamp \(currentCreationTimestamp)"
                 )
             }
         }
@@ -661,14 +661,14 @@ extension GroupCallManager {
                 currentlyJoiningOrJoinedCall = nil
                 DDLogNotice("[GroupCall] [Peek Steps] Stopping running call \(groupCall.logIdentifier.prefix(5))")
                 
-            case .runningLocal:
+            case .joined:
                 wasParticipatingInCall = true
                 await groupCall.forceLeaveCall()
                 await remove(groupCall)
                 currentlyJoiningOrJoinedCall = nil
                 DDLogNotice("[GroupCall] [Peek Steps] Stopping joined call \(groupCall.logIdentifier.prefix(5))")
                 
-            case .notRunningLocal:
+            case .notJoined:
                 continue
             }
             

@@ -131,7 +131,11 @@ enum MediatorMessageProtocolError: Error {
             mt == .callRinging ||
             mt == .contactSetProfilePicture ||
             mt == .contactDeleteProfilePicture ||
-            mt == .contactRequestProfilePicture
+            mt == .contactRequestProfilePicture ||
+            mt == .deleteMessage ||
+            mt == .groupDeleteMessage ||
+            mt == .editMessage ||
+            mt == .groupEditMessage
     }
     
     static func isGroupMessage(_ type: Int32) -> Bool {
@@ -536,22 +540,22 @@ enum MediatorMessageProtocolError: Error {
     /// - Returns: Envelope with incoming message update
     func getEnvelopeForIncomingMessageUpdate(
         messageIDs: [Data],
-        messageReadDates: [Date],
+        messageReadDates: [Date?],
         // swiftformat:disable:next all
         conversationID: D2d_ConversationId
     ) -> D2d_Envelope {
+        assert(messageIDs.count == messageReadDates.count, "Arrays must be same length.")
         var incomingMessageUpdate = D2d_IncomingMessageUpdate()
-        var index = 0
 
-        for messageID in messageIDs {
+        for (index, messageID) in messageIDs.enumerated() {
             var updateMessage = D2d_IncomingMessageUpdate.Update()
             updateMessage.read = D2d_IncomingMessageUpdate.Read()
             updateMessage.messageID = messageID.paddedLittleEndian()
-            updateMessage.read.at = messageReadDates[index].millisecondsSince1970
+            if index < messageReadDates.count, let date = messageReadDates[index] {
+                updateMessage.read.at = date.millisecondsSince1970
+            }
             updateMessage.conversation = conversationID
             incomingMessageUpdate.updates.append(updateMessage)
-
-            index += 1
         }
 
         var envelope = D2d_Envelope()
@@ -835,6 +839,14 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_GROUP_CALL_START
         case .empty:
             return MSGTYPE_EMPTY
+        case .editMessage:
+            return MSGTYPE_EDIT
+        case .deleteMessage:
+            return MSGTYPE_DELETE
+        case .groupEditMessage:
+            return MSGTYPE_GROUP_EDIT
+        case .groupDeleteMessage:
+            return MSGTYPE_GROUP_DELETE
         // Not supported types
         case .groupJoinRequest, .groupJoinResponse, .forwardSecurityEnvelope:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
@@ -919,6 +931,14 @@ enum MediatorMessageProtocolError: Error {
             return .typingIndicator
         case MSGTYPE_EMPTY:
             return .empty
+        case MSGTYPE_EDIT:
+            return .editMessage
+        case MSGTYPE_DELETE:
+            return .deleteMessage
+        case MSGTYPE_GROUP_EDIT:
+            return .groupEditMessage
+        case MSGTYPE_GROUP_DELETE:
+            return .groupDeleteMessage
         default:
             return .invalidType
         }
@@ -1043,5 +1063,21 @@ extension D2d_SettingsSync: D2d_LoggingDescriptionProtocol {
 extension D2d_UserProfileSync: D2d_LoggingDescriptionProtocol {
     var loggingDescription: String {
         "(type: \(D2d_UserProfileSync.self))"
+    }
+}
+
+// MARK: - CspE2e_DeleteMessage + D2d_LoggingDescriptionProtocol
+
+extension CspE2e_DeleteMessage: D2d_LoggingDescriptionProtocol {
+    var loggingDescription: String {
+        "(type: \(CspE2e_DeleteMessage.self); edit ID:\(messageID.littleEndianData.hexString))"
+    }
+}
+
+// MARK: - CspE2e_EditMessage + D2d_LoggingDescriptionProtocol
+
+extension CspE2e_EditMessage: D2d_LoggingDescriptionProtocol {
+    var loggingDescription: String {
+        "(type: \(CspE2e_EditMessage.self); edit ID:\(messageID.littleEndianData.hexString))"
     }
 }

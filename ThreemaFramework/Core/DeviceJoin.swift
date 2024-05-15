@@ -255,7 +255,7 @@ public final class DeviceJoin {
             $0.identityData = identityData
             
             // Add credentials for "a Threema Work app"
-            if [.work, .workRed, .onPrem].contains(ThreemaApp.current) {
+            if [.work, .blue, .onPrem].contains(ThreemaApp.current) {
                 $0.workCredentials = try gatherWorkCredentials()
             }
             

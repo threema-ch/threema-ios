@@ -705,7 +705,7 @@ struct pktExtension {
 - (void)processPayload:(struct pktPayload*)pl datalen:(int)datalen {
     
     switch (pl->type) {
-        case PLTYPE_ECHO_REPLY: {
+        case PLTYPE_ECHO_RESPONSE: {
             self.lastRtt = CACurrentMediaTime() - lastEchoSendTime;
             if (datalen == sizeof(lastRcvdEchoSeq)) {
                 memcpy(&lastRcvdEchoSeq, pl->data, sizeof(lastRcvdEchoSeq));
@@ -1027,12 +1027,30 @@ struct pktExtension {
     [self sendPayloadWithType:PLTYPE_ECHO_REQUEST data:[NSData dataWithBytes:&lastSentEchoSeq length:sizeof(lastSentEchoSeq)]];
     
     id<SocketProtocol> curSocket = socket;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kReadTimeout * NSEC_PER_SEC), dispatch_get_main_queue(), ^(void){
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kEchoRequestTimeout * NSEC_PER_SEC), dispatch_get_main_queue(), ^(void){
         if (curSocket == socket && lastRcvdEchoSeq < lastSentEchoSeq) {
             DDLogInfo(@"No reply to echo payload; disconnecting");
             [socket disconnect];
         }
     });
+}
+
+- (void)sendConnectionIdleTimeout {
+    if ([serverConnectorConnectionState connectionState] != ConnectionStateLoggedIn)
+        return;
+    
+    uint16_t connectionIdleTimeout = [UserSettings sharedUserSettings].enableMultiDevice ? kConnectionIdleMDTimeout : kConnectionIdleTimeout;
+    if (connectionIdleTimeout < 30) {
+        connectionIdleTimeout = 30;
+        DDLogError(@"[ServerConnector] Set connection idle timeout can be min 30 seconds!");
+    }
+    else if (connectionIdleTimeout > 600) {
+        connectionIdleTimeout = 600;
+        DDLogError(@"[ServerConnector] Set connection idle timeout can be max 600 seconds!");
+    }
+    
+    DDLogInfo(@"Sending connection idle timeout");
+    [self sendPayloadWithType:PLTYPE_SET_CONNECTION_IDLE_TIMEOUT data: [NSData dataWithBytes:&connectionIdleTimeout length:sizeof(UInt16)]];
 }
 
 #pragma mark - Multi Device
@@ -1399,14 +1417,19 @@ struct pktExtension {
             
             // Remove VoIP push token (since min OS version is iOS 15 or above)
             [self removeVoIPPushToken];
+            
+            /* set connection idle timeout */
+            [self sendConnectionIdleTimeout];
 
             /* Schedule task for keepalive */
             keepalive_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, socketQueue);
             dispatch_source_set_event_handler(keepalive_timer, ^{
                 [self sendEchoRequest];
             });
-            dispatch_source_set_timer(keepalive_timer, dispatch_time(DISPATCH_TIME_NOW, kKeepAliveInterval * NSEC_PER_SEC),
-                                      kKeepAliveInterval * NSEC_PER_SEC, NSEC_PER_SEC);
+            
+            int64_t echoRequestInterval = [UserSettings sharedUserSettings].enableMultiDevice ? kEchoRequestMDInterval : kEchoRequestInterval;
+            dispatch_source_set_timer(keepalive_timer, dispatch_time(DISPATCH_TIME_NOW, echoRequestInterval * NSEC_PER_SEC),
+                                      echoRequestInterval * NSEC_PER_SEC, NSEC_PER_SEC);
             dispatch_resume(keepalive_timer);
             
             /* Unblock incoming messages if not running multi device or already promoted to leader */
@@ -1435,8 +1458,9 @@ struct pktExtension {
             
             lastRead = CACurrentMediaTime();
             
-            dispatch_source_set_timer(keepalive_timer, dispatch_time(DISPATCH_TIME_NOW, kKeepAliveInterval * NSEC_PER_SEC),
-                                      kKeepAliveInterval * NSEC_PER_SEC, NSEC_PER_SEC);
+            int64_t echoRequestInterval = [UserSettings sharedUserSettings].enableMultiDevice ? kEchoRequestMDInterval : kEchoRequestInterval;
+            dispatch_source_set_timer(keepalive_timer, dispatch_time(DISPATCH_TIME_NOW, echoRequestInterval * NSEC_PER_SEC),
+                                      echoRequestInterval * NSEC_PER_SEC, NSEC_PER_SEC);
             
             /* Decrypt payload */
             NSData *plData = [[NaClCrypto sharedCrypto] decryptData:data withSecretKey:clientTempKeySec signKey:serverTempKeyPub nonce:[self nextServerNonce]];
@@ -1577,9 +1601,9 @@ struct pktExtension {
     });
 }
 
-- (void)incomingMessageChanged:(BaseMessage * _Nonnull)message fromIdentity:(NSString * _Nonnull)fromIdentity {
+- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessage * _Nonnull)baseMessage {
     dispatch_async(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate incomingMessageChanged:message fromIdentity:fromIdentity];
+        [clientMessageProcessorDelegate incomingMessageChanged:message baseMessage:baseMessage];
     });
 }
 

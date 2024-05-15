@@ -26,7 +26,7 @@ struct SettingsView: View {
     @ObservedObject var settingsViewModel = SettingsViewModel()
 
     // MARK: - Body
-    
+
     var body: some View {
         ThreemaNavigationView {
             ThreemaTableView {
@@ -41,7 +41,7 @@ struct SettingsView: View {
                     }
                 #endif
                 
-                #if THREEMA_WORK
+                #if THREEMA_WORK || THREEMA_ONPREM
                     RateSection()
                 #endif
                 

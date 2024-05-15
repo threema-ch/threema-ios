@@ -314,7 +314,11 @@ extension ChatViewSystemMessageTableViewCell {
 
 extension ChatViewSystemMessageTableViewCell: ChatViewMessageAction {
     
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+    func messageActions()
+        -> (
+            primaryActions: [ChatViewMessageActionProvider.MessageAction],
+            generalActions: [ChatViewMessageActionProvider.MessageAction]
+        )? {
 
         guard let message = systemMessageAndNeighbors.message else {
             return nil
@@ -340,7 +344,7 @@ extension ChatViewSystemMessageTableViewCell: ChatViewMessageAction {
         
         menuItems.append(contentsOf: [detailAction, deleteAction])
         
-        return menuItems
+        return ([ChatViewMessageActionProvider.MessageAction](), menuItems)
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

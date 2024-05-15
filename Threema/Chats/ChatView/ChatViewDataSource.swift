@@ -194,6 +194,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     
     private var afterFirstSnapshotApply: (() -> Void)?
     
+    private var observers = [NSManagedObjectID: [NSKeyValueObservation]]()
+    
     private var cancellables = Set<AnyCancellable>()
     
     private lazy var selectedObjectIDs = Set<NSManagedObjectID>()
@@ -280,10 +282,11 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
                     in: tableView,
                     at: indexPath
                 )
-                
                 return cell
+                
             case .typingIndicator:
                 return chatViewCellProvider.typingIndicator(in: tableView, at: indexPath)
+                
             case let .unreadLine(state: state):
                 let cell = chatViewCellProvider.unreadMessageLine(
                     with: state.numberOfUnreadMessages,
@@ -373,7 +376,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
                 fatalError(msg)
             }
             else {
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 assertionFailure()
             }
         }
@@ -413,7 +416,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
                 fatalError(msg)
             }
             else {
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 #if DEBUG
                     raise(SIGINT)
                 #endif
@@ -511,7 +514,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
                 fatalError(msg)
             }
             else {
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 #if DEBUG
                     raise(SIGINT)
                 #endif
@@ -639,6 +642,61 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         return currentHasUnreadMessageLine && !nextHasUnreadMessageLine &&
             abs(current.numberOfItems - next.numberOfItems) == 1
     }
+    
+    public func startObservingMessage(with id: NSManagedObjectID) {
+        guard let message = message(for: id) else {
+            return
+        }
+        
+        observeMessage(message: message, keyPath: \.messageMarkers?.star) { [weak self] in
+            guard !message.willBeDeleted else {
+                return
+            }
+            
+            self?.snapshotProvider.applyAdditionalSnapshotForMessage(with: message.objectID)
+        }
+    }
+    
+    public func stopObservingMessage(with id: NSManagedObjectID) {
+        guard let messageObservers = observers[id] else {
+            return
+        }
+        
+        messageObservers.forEach {
+            $0.invalidate()
+        }
+        
+        observers.removeValue(forKey: id)
+    }
+    
+    /// Helper to add observers to the `message` property
+    ///
+    /// All observers are stored in the `observers` property.
+    ///
+    /// - Parameters:
+    ///   - keyPath: Key path in `BaseMessage` to observe
+    ///   - changeHandler: Handler called on each observed change.
+    ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
+    private func observeMessage(
+        message: BaseMessage,
+        keyPath: KeyPath<BaseMessage, some Any>,
+        changeHandler: @escaping () -> Void
+    ) {
+
+        let observer = message.observe(keyPath) { _, _ in
+            // Because `changeHandler` updates UI elements we need to ensure that it runs on the main queue
+            DispatchQueue.main.async(execute: changeHandler)
+        }
+        
+        if var existingObservers = observers[message.objectID] {
+            existingObservers.append(observer)
+            observers[message.objectID] = existingObservers
+        }
+        else {
+            let newObservers = [observer]
+            observers[message.objectID] = newObservers
+        }
+    }
 
     // MARK: - Multi-Select
     
@@ -655,7 +713,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         
         var canEdit = true
         
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let message = self.entityManager.entityFetcher.existingObject(with: objectID) else {
                 canEdit = false
                 return
@@ -722,7 +780,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         // Keep track of all deleted messages IDs
         deletedMessagesObjectIDs = deletedMessagesObjectIDs.union(selectedObjectIDs)
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             var deletedCount = 0
             
             for objectID in self.selectedObjectIDs {
@@ -768,7 +826,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         
         willDeleteAllMessages()
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             let count = self.entityManager.entityDestroyer.deleteMessages(of: self.conversation)
             self.showDeletedNotification(count: count)
         }

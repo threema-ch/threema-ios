@@ -22,7 +22,7 @@ import Foundation
 
 extension FileMessageEntity: MessageAccessibility {
         
-    public var customAccessibilityLabel: String {
+    public var privateCustomAccessibilityLabel: String {
         
         var text = ""
         
@@ -35,15 +35,33 @@ extension FileMessageEntity: MessageAccessibility {
     }
     
     public var customAccessibilityValue: String? {
+        var customValue: String?
+        switch fileMessageType {
+        case .voice:
+            if !isOwnMessage,
+               consumed == nil {
+                // If a voice message hasn't been played yet, add the accessibility info
+                customValue = BundleUtil.localizedString(forKey: "accessibility_voice_message_unplayed")
+            }
+        default:
+            break
+        }
+        
         guard let duration = durationTimeInterval, duration > 0.0 else {
-            return nil
+            return customValue
         }
         
         let formattedDuration = DateFormatter.timeFormatted(Int(duration))
-        return String.localizedStringWithFormat(
+        let durationString = String.localizedStringWithFormat(
             BundleUtil.localizedString(forKey: "accessibility_file_duration"),
             formattedDuration
         )
+        
+        guard customValue != nil else {
+            return durationString
+        }
+        
+        return customValue! + ", " + durationString
     }
     
     public var customAccessibilityHint: String? {

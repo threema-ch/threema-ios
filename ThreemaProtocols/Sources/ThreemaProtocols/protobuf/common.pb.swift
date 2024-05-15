@@ -56,6 +56,12 @@ public enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum {
 
   /// Supports group calls.
   case groupCallSupport // = 128
+
+  /// Supports editing messages.
+  case editMessageSupport // = 256
+
+  /// Supports deleting messages.
+  case deleteMessageSupport // = 512
   case UNRECOGNIZED(Int)
 
   public init() {
@@ -73,6 +79,8 @@ public enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum {
     case 32: self = .o2OVideoCallSupport
     case 64: self = .forwardSecuritySupport
     case 128: self = .groupCallSupport
+    case 256: self = .editMessageSupport
+    case 512: self = .deleteMessageSupport
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -88,6 +96,8 @@ public enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum {
     case .o2OVideoCallSupport: return 32
     case .forwardSecuritySupport: return 64
     case .groupCallSupport: return 128
+    case .editMessageSupport: return 256
+    case .deleteMessageSupport: return 512
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -98,7 +108,7 @@ public enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum {
 
 extension Common_CspFeatureMaskFlag: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Common_CspFeatureMaskFlag] = [
+  public static let allCases: [Common_CspFeatureMaskFlag] = [
     .none,
     .voiceMessageSupport,
     .groupSupport,
@@ -108,6 +118,8 @@ extension Common_CspFeatureMaskFlag: CaseIterable {
     .o2OVideoCallSupport,
     .forwardSecuritySupport,
     .groupCallSupport,
+    .editMessageSupport,
+    .deleteMessageSupport,
   ]
 }
 
@@ -167,6 +179,12 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
 
   /// [`typing-indicator`](ref:e2e.typing-indicator)
   case typingIndicator // = 144
+
+  /// `csp-e2e.EditMessage`
+  case editMessage // = 145
+
+  /// `csp-e2e.DeleteMessage`
+  case deleteMessage // = 146
 
   /// [`set-profile-picture`](ref:e2e.set-profile-picture) of a contact
   case contactSetProfilePicture // = 24
@@ -247,6 +265,14 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
   /// [`group-member-container`](ref:e2e.group-member-container)
   case groupDeliveryReceipt // = 129
 
+  /// `csp-e2e.EditMessage` wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupEditMessage // = 147
+
+  /// `csp-e2e.DeleteMessage` wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupDeleteMessage // = 148
+
   /// `csp-e2e-fs.Envelope`
   case forwardSecurityEnvelope // = 160
 
@@ -297,6 +323,10 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
     case 128: self = .deliveryReceipt
     case 129: self = .groupDeliveryReceipt
     case 144: self = .typingIndicator
+    case 145: self = .editMessage
+    case 146: self = .deleteMessage
+    case 147: self = .groupEditMessage
+    case 148: self = .groupDeleteMessage
     case 160: self = .forwardSecurityEnvelope
     case 252: self = .empty
     case 254: self = .webSessionResume
@@ -343,6 +373,10 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
     case .deliveryReceipt: return 128
     case .groupDeliveryReceipt: return 129
     case .typingIndicator: return 144
+    case .editMessage: return 145
+    case .deleteMessage: return 146
+    case .groupEditMessage: return 147
+    case .groupDeleteMessage: return 148
     case .forwardSecurityEnvelope: return 160
     case .empty: return 252
     case .webSessionResume: return 254
@@ -356,7 +390,7 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
 
 extension Common_CspE2eMessageType: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Common_CspE2eMessageType] = [
+  public static let allCases: [Common_CspE2eMessageType] = [
     .invalidType,
     .empty,
     .text,
@@ -374,6 +408,8 @@ extension Common_CspE2eMessageType: CaseIterable {
     .callRinging,
     .deliveryReceipt,
     .typingIndicator,
+    .editMessage,
+    .deleteMessage,
     .contactSetProfilePicture,
     .contactDeleteProfilePicture,
     .contactRequestProfilePicture,
@@ -395,6 +431,8 @@ extension Common_CspE2eMessageType: CaseIterable {
     .groupPollSetup,
     .groupPollVote,
     .groupDeliveryReceipt,
+    .groupEditMessage,
+    .groupDeleteMessage,
     .forwardSecurityEnvelope,
     .webSessionResume,
   ]
@@ -511,7 +549,7 @@ public struct Common_Image {
 
 extension Common_Image.TypeEnum: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Common_Image.TypeEnum] = [
+  public static let allCases: [Common_Image.TypeEnum] = [
     .jpeg,
   ]
 }
@@ -674,6 +712,8 @@ extension Common_CspFeatureMaskFlag: SwiftProtobuf._ProtoNameProviding {
     32: .same(proto: "O2O_VIDEO_CALL_SUPPORT"),
     64: .same(proto: "FORWARD_SECURITY_SUPPORT"),
     128: .same(proto: "GROUP_CALL_SUPPORT"),
+    256: .same(proto: "EDIT_MESSAGE_SUPPORT"),
+    512: .same(proto: "DELETE_MESSAGE_SUPPORT"),
   ]
 }
 
@@ -716,6 +756,10 @@ extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
     128: .same(proto: "DELIVERY_RECEIPT"),
     129: .same(proto: "GROUP_DELIVERY_RECEIPT"),
     144: .same(proto: "TYPING_INDICATOR"),
+    145: .same(proto: "EDIT_MESSAGE"),
+    146: .same(proto: "DELETE_MESSAGE"),
+    147: .same(proto: "GROUP_EDIT_MESSAGE"),
+    148: .same(proto: "GROUP_DELETE_MESSAGE"),
     160: .same(proto: "FORWARD_SECURITY_ENVELOPE"),
     252: .same(proto: "EMPTY"),
     254: .same(proto: "WEB_SESSION_RESUME"),

@@ -21,7 +21,7 @@
 import Foundation
 
 extension BallotMessage: MessageAccessibility {
-    public var customAccessibilityLabel: String {
+    public var privateCustomAccessibilityLabel: String {
         guard let ballot else {
             return ""
         }

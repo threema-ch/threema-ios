@@ -43,10 +43,10 @@
 /**
  Processing of incoming (reflected) message has changed (is stored in DB).
  
- @param message Incoming DB message
- @param fromIdentity Sender identity
+ @param message Incoming message
+ @param baseMessage Created or edited DB message
  */
-- (void)incomingMessageChanged:(BaseMessage * _Nonnull)message fromIdentity:(NSString * _Nonnull)fromIdentity;
+- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessage * _Nonnull)baseMessage;
 
 /**
  Processing of incoming (reflected) message is finished.

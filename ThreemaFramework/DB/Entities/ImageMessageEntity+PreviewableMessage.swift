@@ -22,7 +22,7 @@ import Foundation
 
 extension ImageMessageEntity: PreviewableMessage {
     
-    public var previewText: String {
+    public var privatePreviewText: String {
         caption ?? fileMessageType.localizedDescription
     }
     

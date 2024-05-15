@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "Kontakty";
 "segmentcontrol_groups" = "Skupiny";
+"segmentcontrol_distribution_list" = "Distribuční seznamy";
 "segmentcontrol_work_contacts" = "Práce";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "Další pokus";
 "copy" = "Zkopírovat";
 "save" = "Uložit";
+"edit" = "Upravit";
 "download" = "Stáhnout";
 "retry" = "Opakovat";
 "share" = "Sdílet";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "Sdílet ID kontaktu";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Upravit kontakt";
 "edit_group_title" = "Upravit skupinu";
+"edit_distribution_list_title" = "Upravit distribuční seznam";
 
 "first_name_placeholder" = "Křestní jméno";
 "last_name_placeholder" = "Příjmení";
 "group_name_placeholder" = "Jméno skupiny";
+"distribution_list_name_placeholder" = "Název distribučního seznamu";
 
 "no_nickname_title" = "Přezdívka nebyla nastavena";
 "no_nickname_message" = "Opravdu chcete pokračovat bez nastavení přezdívky? Pro ostatní lidi bude obtížné rozpoznat vaše zprávy, dokud nezačnou aplikaci sami používat.";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "Smazat vybrané zprávy z tohoto zařízení?";
 "conversation_delete_confirm" = "Smazat tento chat z tohoto zařízení?";
 "delete_n" = "Smazat (%d)";
+"message_delete_for_everyone" = "Smazat zprávu pro všechny";
 
 "message_cannot_play_movie" = "Video nelze přehrát.";
 
@@ -318,6 +323,7 @@
 "delete_file" = "Smazat soubor";
 "send_location" = "Poslat polohu";
 "record_audio" = "Nahrát zvuk";
+"record_continue" = "Pokračovat v nahrávání zvuku";
 "scan_qr" = "Naskenovat QR kód";
 "share_file" = "Sdílet soubor";
 "add_item_caption" = "Přidat titulek";
@@ -332,12 +338,7 @@
 "play" = "Spustit";
 "pause" = "Pozastavit";
 "stop" = "Zastavit";
-"voice message" = "Hlasová zpráva";
 "quit" = "Dokončit";
-"record_cancel_title" = "Zrušit nahrávání";
-"record_cancel_message" = "Opravdu chcete zrušit nahrávání?";
-"record_cancel_button_discard" = "Zrušit nahrávání";
-"speed" = "Rychlost přehrávání";
 
 "send_file_title" = "Poslat soubor";
 "send_file_message" = "Soubor: %@ \n pro \n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "Opravdu chcete rozpustit tuto skupinu?";
 "group_dissolve_button" = "Rozpustit skupinu";
 "group_delete" = "Smazat skupinu";
+
+"distribution_list_recipients_section_header" = "Příjemci (%d)";
+"distribution_list_no_recipient_title" = "Žádní příjemci";
+"distribution_list_one_recipient_title" = "1 příjemce";
+"distribution_list_multiple_recipients_title" = "%d příjemci";
+
+"distribution_list_delete" = "Smazat distribuční seznam";
+"distribution_list_create" = "Nový distribuční seznam";
+"distribution_list_edit" = "Upravit distribuční seznam";
 
 "group name" = "Jméno skupiny";
 "existing groups" = "Stávající skupiny";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "Zatím nemáte žádné kontakty. Synchronizace je zapnutá, ale nikdo z vašeho adresáře zřejmě službu Threema nepoužívá (pozvěte je!).";
 "no_contacts" = "Žádné kontakty";
 "no_groups" = "Žádné skupiny";
-"no_groups_message" = "Zatím nemáte žádné skupiny. Přidejte skupiny ručně pomocí tlačítka +.";
+"no_groups_message" = "Zatím nemáte žádné skupiny. Vytvoříte je klepnutím na tlačítko +.";
 "no_work_contacts" = "Uživatelé %@";
 "no_work_contacts_message" = "Nebyly nalezeny žádné správcem ověřené kontakty %@.";
+"no_distribution_list" = "Žádné distribuční seznamy";
+"no_distribution_list_message" = "Zatím nemáte žádné distribuční seznamy. Vytvoříte je klepnutím na tlačítko +.";
 
 "no_contacts_syncoff" = "Zatím nemáte žádné kontakty. Zapněte synchronizaci (Nastavení > Soukromí) nebo přidejte kontakty ručně pomocí tlačítka +.";
 
@@ -586,13 +598,25 @@
 "app_setup_steps_failed_message" = "Zkontrolujte své připojení k internetu a zkuste to znovu. Bude-li problém přetrvávat, obraťte se na naši podporu.";
 
 /* License Key */
+"enter_license_infoview_subtitle" = "pro firmy";
+"enter_license_infoview_more_link" = "[Zjistit více o Threema Work](odkaz)";
+
+"enter_license_infoview_private_use" = "pro fyzické osoby";
+"enter_license_infoview_threema_description" = "Pokud jste soukromý uživatel, stáhněte si prosím běžnou aplikaci Threema.";
+"enter_license_infoview_appstore_link" = "Threema v App Store";
+"enter_license_infoview_login" = "Přihlásit se";
+
+/* License Key */
 "enter_license_title" = "Zadejte přihlašovací údaje";
 /* MWPhotoBrowser */
 "Done" = "Hotovo";
-"enter_license_description" = "Zadejte přihlašovací údaje, které vám poskytla vaše společnost nebo organizace.";
-"enter_license_onprem_description" = "Threema OnPrem je samostatně hostovaný messenger pro firmy. Zadejte přihlašovací údaje poskytnuté vaší společností";
+"enter_license_description" = "Zadejte prosím přihlašovací údaje společnosti Threema Work poskytnuté vaší společností.";
+"enter_license_onprem_description" = "Zadejte přihlašovací údaje společnosti Threema OnPrem poskytnuté vaší společností";
 "enter_license_work_admin_description" = "Zapomněli jste své přihlašovací údaje? Obraťte se na svého správce Threema Work.";
 "enter_license_onprem_admin_description" = "Zapomněli jste své přihlašovací údaje? Obraťte se na svého správce Threema OnPrem.";
+"enter_license_onprem_error_config" = "Neplatná konfigurace. Kontaktujte svého správce u Threema OnPrem. (Kód: %d)";
+"enter_license_onprem_error_version" = "Verze není podporována. Kontaktujte svého správce u Threema OnPrem. (Kód: %d)";
+"enter_license_onprem_error_credentials" = "Nesprávné přihlašovací údaje. Kontaktujte svého správce u Threema OnPrem. (Kód: %d)";
 "more_work_info" = "Zjistěte více o %@.";
 "Save" = "Uložit";
 "enter_license_username_placeholder" = "Uživatelské jméno";
@@ -675,7 +699,6 @@
 "duration" = "trvání";
 "current_position" = "pozice";
 "in_reply_to" = "v odpovědi na";
-"go_to_position" = "v";
 "draft" = "Koncept";
 "new_message_accessibility" = "Nová zpráva: ";
 "quote_interaction_hint" = "Přeskočí na citovanou zprávu";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "%@ začal(a) skupinový hovor";
 "group_call_started_by_local_system_message" = "Začal(a) jste skupinový hovor";
 "group_call_ended_system_message" = "Skupinový hovor byl ukončen";
+"group_call_started_disabled" = "Byl zahájen skupinový hovor. Pokud se chcete připojit, zapněte si v nastavení skupinové hovory.";
 
 "group_call_notification_body_preview" = "Skupinový hovor spuštěný uživatelem %@";
 "group_call_notification_body" = "Skupinový hovor zahájen";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "Připíchnutá konverzace";
 
 /* Begin Edit */
-
 "private_message_label" = "Soukromá zpráva";
 "private_chat_label" = "Soukromé";
 "private_chat_accessibility" = "Soukromý chat";
@@ -833,6 +856,13 @@
 "archived_title" = "Archivováno";
 "conversations_global_search_placeholder" = "Hledat";
 "one_to_one_chat" = "Osobní chaty";
+"conversations_global_search_section_header_tokens" = "Typ zprávy";
+"conversations_global_search_token_text" = "Textové zprávy";
+"conversations_global_search_token_captions" = "Titulky médií";
+"conversations_global_search_token_polls" = "Ankety";
+"conversations_global_search_token_locations" = "Polohy";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Označeno";
 
 "select_all" = "Vybrat vše";
 "deselect_all" = "Zrušit výběr všeho";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "Opravdu chcete smazat tuto skupinu?";
 "group_delete_button" = "Smazat skupinu + historii chatu";
 
+"distribution_list_delete_sheet_title" = "Smazat distribuční seznam?";
+
 "selected_count" = "%d zvoleno";
 "all_selected" = "Zvoleno vše";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "Po smazání soukromého chatu nebude nový chat automaticky znovu označen jako soukromý.";
 
 /* End Edit */
-
 "pushSetting_header" = "Oznámení";
 "doNotDisturb_title" = "Nerušit";
 
@@ -1297,12 +1328,12 @@
 "settings_advanced_successfully_reset_unread_count_label" = "Počet nepřečtených zpráv byl úspěšně resetován";
 
 // Sentry
-"sentry_crash_send_title" = "%@ – Neočekávané ukončení";
-"sentry_crash_send_description" = "Chcete odeslat anonymní zprávu o selhání programu? Podrobnosti vysvětlující, co vede k havárii, pomohou odhalit příčinu  problému.";
+"sentry_crash_send_title" = "Vyskytl se problém";
+"sentry_crash_send_description" = "Můžete podat anonymní oznámení. Podrobnosti o interakcích, které proběhly předtím, než problém nastal, nám pomohou vyřešit základní problém.";
 "sentry_crash_send_yes" = "Odeslat anonymní hlášení";
 "sentry_crash_send_no" = "Neposílat";
 
-"sentry_crash_comment_placeholder" = "Chybová zpráva";
+"sentry_crash_comment_placeholder" = "Podrobnosti";
 
 // Profile
 "profile_share_id_text" = "Moje Threema ID";
@@ -1641,6 +1672,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 // ChatBar
 "chat_bar_quote_close_button" = "Uzavřít citaci";
+"chat_bar_edited_message_close_button" = "Zrušit úpravu zprávy";
 
 // ChatDetailView
 "detailView_title" = "Podrobnosti zprávy";
@@ -1648,6 +1680,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "detailView_group_acknowledged" = "Souhlas (%d)";
 "detailView_group_declined" = "Nesouhlas (%d)";
 "detailView_group_file_size" = "Velikost souboru";
+"detailView_consumed" = "První hrané";
 "detailView_created_footer" = "Vytvořeno: %@";
 
 "message_display_status_none" = "Nic";
@@ -1659,6 +1692,8 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "message_display_status_delivered_incoming" = "Obdrženo";
 "message_display_status_read" = "Přečteno";
 "message_display_status_failed" = "Neúspěch";
+"message_display_status_deleted_message" = "Smazáno";
+"message_display_status_edited_message" = "Upraveno";
 
 // In-app notifications
 "notification_copying_succeeded" = "Položka zkopírována";
@@ -1738,8 +1773,11 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_chatbar_label" = "Vstupní pole chatu.";
 "accessibility_chatbar_hint" = "Sestavení zprávy.";
 "accessibility_chatbar_quote_label" = "Vybraná citace zprávy: %@.";
-"accessibility_chatbar_close_quote_button_label" = "Konec citace.";
-"accessibility_chatbar_close_quote_button_hint" = "Ukončí citování vybrané zprávy.";
+"accessibility_chatbar_close_quote_button_label" = "Zrušit citaci.";
+"accessibility_chatbar_close_quote_button_hint" = "Zrušit citování vybrané zprávy.";
+"accessibility_chatbar_edited_message_label" = "Zpráva k úpravě: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "Zrušit úpravu.";
+"accessibility_chatbar_close_edited_message_button_hint" = "Ukončí upravování vybrané zprávy.";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Vaše %@";
@@ -1785,6 +1823,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_poll_closed" = "Zavřeno";
 "accessibility_file_duration" = "Trvání: %@.";
 "accessibility_voice_message_playing" = "Aktuálně se přehrává.";
+"accessibility_voice_message_unplayed" = "Dosud nehrané.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Souhlas, %@";
@@ -1892,3 +1931,25 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "application_shortcut_item_new_message" = "Nová zpráva";
 "application_shortcut_item_scan_qr_code" = "Naskenovat QR kód";
 "application_shortcut_item_my_id" = "Můj profil";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "Označeno";
+"marker_action_star" = "Označit";
+"marker_action_remove_star" = "Odebrat hvězdičku";
+"marker_accessibility_label" = "Označeno.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "Označeno";
+
+// Delete / Edit message
+"edit_message" = "Upravit zprávu";
+"edit_message_can_not_edit" = "Zpráva byla odeslána před více než 6 hodinami, a proto ji již nelze upravovat.";
+"edit_message_not_sent_to" = "Následující členové skupiny neuvidí vaše úpravy: %@";
+"delete_message_not_sent_to" = "Zpráva nebude smazána pro následující členy skupiny: %@";
+"delete_edit_message_not_sent_to_others" = "%d další";
+"delete_message_requirement" = "Aby mohly být zprávy smazány, je třeba si nainstalovat nejnovější verzi Threema.";
+"edit_message_requirement" = "Pokud chcete vidět úpravy, je třeba si nainstalovat nejnovější verzi Threema.";
+
+"edit_message_text_to_long" = "Zprávu nelze upravit, protože text je příliš dlouhý.";
+"edited_message_state" = "Upraveno";
+"deleted_message" = "Tato zpráva byla smazána";

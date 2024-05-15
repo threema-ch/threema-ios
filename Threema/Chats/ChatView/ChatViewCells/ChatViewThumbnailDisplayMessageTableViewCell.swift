@@ -201,14 +201,18 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: MessageTextViewDelegate 
 
 extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
     
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+    func messageActions()
+        -> (
+            primaryActions: [ChatViewMessageActionProvider.MessageAction],
+            generalActions: [ChatViewMessageActionProvider.MessageAction]
+        )? {
 
         guard let message = thumbnailDisplayMessageAndNeighbors?.message as? ThumbnailDisplayMessage else {
             return nil
         }
 
         typealias Provider = ChatViewMessageActionProvider
-        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
+        var generalMenuItems = [ChatViewMessageActionProvider.MessageAction]()
         
         // Speak
         var speakText = message.fileMessageType.localizedDescription
@@ -273,8 +277,8 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
-        // Edit
-        let editHandler = {
+        // Select
+        let selectHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
@@ -291,8 +295,18 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
         let ackHandler = { (message: BaseMessage, ack: Bool) in
             self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
+            
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
         
-        let defaultActions = Provider.defaultActions(
+        // Edit Message
+        let editHandler = {
+            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
+        }
+
+        let (primaryMenuItems, generalActions) = Provider.defaultActions(
             message: message,
             speakText: speakText,
             shareItems: shareItems,
@@ -300,14 +314,16 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
             didDelete: didDelete,
-            ackHandler: ackHandler
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler,
+            editHandler: editHandler
         )
-        
+       
         // Build menu
-        menuItems.append(contentsOf: defaultActions)
+        generalMenuItems.append(contentsOf: generalActions)
         
         if message.isDataAvailable {
             let saveAction = Provider.saveAction {
@@ -325,11 +341,11 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
             
             // Save action is inserted before default action, depending if ack/dec is possible at a different position
             if !MDMSetup(setup: false).disableShareMedia() {
-                if message.isUserAckEnabled {
-                    menuItems.insert(saveAction, at: 2)
+                if #unavailable(iOS 16), message.isUserAckEnabled {
+                    generalMenuItems.insert(saveAction, at: 2)
                 }
                 else {
-                    menuItems.insert(saveAction, at: 0)
+                    generalMenuItems.insert(saveAction, at: 0)
                 }
             }
         }
@@ -341,11 +357,11 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
             }
             // Download action is inserted before default action, depending if ack/dec is possible at a different
             // position
-            if message.isUserAckEnabled {
-                menuItems.insert(downloadAction, at: 2)
+            if #unavailable(iOS 16), message.isUserAckEnabled {
+                generalMenuItems.insert(downloadAction, at: 2)
             }
             else {
-                menuItems.insert(downloadAction, at: 0)
+                generalMenuItems.insert(downloadAction, at: 0)
             }
         }
         
@@ -360,14 +376,14 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
             }
             
             // Retry action position analogously to download
-            if message.isUserAckEnabled {
-                menuItems.insert(retryHandler, at: 2)
+            if #unavailable(iOS 16), message.isUserAckEnabled {
+                generalMenuItems.insert(retryHandler, at: 2)
             }
             else {
-                menuItems.insert(retryHandler, at: 0)
+                generalMenuItems.insert(retryHandler, at: 0)
             }
         }
-        return menuItems
+        return (primaryMenuItems, generalMenuItems)
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

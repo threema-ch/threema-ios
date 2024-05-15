@@ -30,8 +30,6 @@ protocol MessageTextViewDelegate: AnyObject {
 }
 
 /// Label with correct font for a text message or caption
-///
-/// With IOS-2392 this will automatically format text and show big emojis if enabled.
 final class MessageTextView: RTLAligningTextView {
     private struct MessageTextViewRenderState {
         enum RenderState {
@@ -442,7 +440,7 @@ extension MessageTextView: UITextViewDelegate {
                 guard let messageTextViewDelegate else {
                     let msg = "messageTextViewDelegate is unexpectedly nil"
                     assertionFailure(msg)
-                    DDLogError(msg)
+                    DDLogError("\(msg)")
                     return false
                 }
                 

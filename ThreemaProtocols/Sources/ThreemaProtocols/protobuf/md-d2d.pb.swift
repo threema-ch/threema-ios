@@ -124,7 +124,7 @@ public struct D2d_DeviceInfo {
 
 extension D2d_DeviceInfo.Platform: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [D2d_DeviceInfo.Platform] = [
+  public static let allCases: [D2d_DeviceInfo.Platform] = [
     .unspecified,
     .android,
     .ios,
@@ -195,7 +195,7 @@ public struct D2d_TransactionScope {
 
 extension D2d_TransactionScope.Scope: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [D2d_TransactionScope.Scope] = [
+  public static let allCases: [D2d_TransactionScope.Scope] = [
     .userProfileSync,
     .contactSync,
     .groupSync,

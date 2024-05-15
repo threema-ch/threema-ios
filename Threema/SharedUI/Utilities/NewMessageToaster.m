@@ -93,8 +93,10 @@
                 ChatViewController *curChatVc = (ChatViewController*)chatNavVc.topViewController;
                 if (curChatVc.conversation.objectID == message.conversation.objectID) {
                     if (UIAccessibilityIsVoiceOverRunning() && (![curChatVc isRecording] && ![curChatVc isPlayingAudioMessage])) {
-                        NSString *accessibilityText = [NSString stringWithFormat:@"%@%@", [BundleUtil localizedStringForKey:@"new_message_accessibility"], [message previewText]];
-                        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, accessibilityText);
+                        NSString *accessibilityText = [self accessibilityTextFor:message];
+                        if (accessibilityText != nil) {
+                            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, accessibilityText);
+                        }
                     }
                     return;
                 }

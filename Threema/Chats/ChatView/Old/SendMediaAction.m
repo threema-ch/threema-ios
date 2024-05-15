@@ -419,7 +419,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 Conversation *conversation = self.chatViewController.conversation;
                 if (conversation != nil) {
                     MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
-                    [messageSender sendBlobMessageFor:item in:conversation correlationID:correlationID webRequestID:nil completion:^(NSError *error) {
+                    [messageSender sendBlobMessageFor:item inConversationWithID:conversation.objectID correlationID:correlationID webRequestID:nil completion:^(NSError *error) {
                         dispatch_semaphore_signal(_sequentialSema);
                     }];
                 } else {
@@ -674,7 +674,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         Conversation *conversation = self.chatViewController.conversation;
         if (senderItem != nil && conversation != nil) {
             MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
-            [messageSender sendBlobMessageFor:senderItem in:conversation correlationID:nil webRequestID:nil completion:nil];
+            [messageSender sendBlobMessageFor:senderItem inConversationWithID:conversation.objectID correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];
         }
@@ -723,7 +723,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         Conversation *conversation = self.chatViewController.conversation;
         if (senderItem != nil && conversation != nil) {
             MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
-            [messageSender sendBlobMessageFor:senderItem in:conversation correlationID:nil webRequestID:nil completion:nil];
+            [messageSender sendBlobMessageFor:senderItem inConversationWithID:conversation.objectID correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];
         }

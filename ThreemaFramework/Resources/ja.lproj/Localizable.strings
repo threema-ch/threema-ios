@@ -83,9 +83,8 @@
 
 "mediapreview_options" = "オプション";
 
-"testflight_feedback_viewtitle" = "ベータ•フィードバック";
-"testflight_feedback_title" = "あなたのベータ•フィードバックを私たちに送信してください！";
-"testflight_feedback_description" = "Threemaのベータ版をテストしていただき、ありがとうございます。しかし、テストは全体の半分に過ぎず、残りの半分はフィードバックを提供することです。バグや不具合が発生したら、ぜひお知らせください。その場合は\"設定\"→\"ベータ版フィードバック\"でベータ版トークを開いてください。";
+"testflight_feedback_title" = "ベータ版のフィードバックを私たちに送ってください！";
+"testflight_feedback_description" = "バグや不具合が発生しましたら、ぜひお知らせください。こちらをタップしてベータ版チャットを開いてください。";
 
 "notification.threemaweb.connect.title" = "デスクトップ／ウェブ";
 "notification.threemaweb.connect.body" = "ここをタップすると、デスクトップアプリ／ウェブクライアントとの接続が再確立されます。";

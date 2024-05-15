@@ -463,6 +463,22 @@ Process incoming message.
         onCompletion(nil);
     } else if ([amsg isKindOfClass:[UnknownTypeMessage class]]) {
         onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType]);
+    } else if ([amsg isKindOfClass:[DeleteMessage class]]) {
+        // On error case `onError` will be called and message is `nil`
+        BaseMessage *message = [entityManager deleteMessageFor:amsg conversation:conversation onError:onError];
+        if (message) {
+            [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+                onCompletion(nil);
+            }];
+        }
+    } else if ([amsg isKindOfClass:[EditMessage class]]) {
+        // On error case `onError` will be called and message is `nil`
+        BaseMessage *message = [entityManager editMessageFor:amsg conversation:conversation onError:onError];
+        if (message) {
+            [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+                onCompletion(nil);
+            }];
+        }
     }
     else {
         // Do not Ack message, try process this message later because of protocol changes
@@ -563,14 +579,22 @@ Process incoming message.
         } else if ([amsg isKindOfClass:[GroupDeliveryReceiptMessage class]]) {
             [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupCallStartMessage class]]) {
-            if ([[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
-                GroupCallStartMessage *newMsg = (GroupCallStartMessage *) amsg;
-                [[GlobalGroupCallsManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation receiveDate:newMsg.date onCompletion:^{
-                    DDLogNotice(@"[GroupCall] [DB] Completion handler called");
-                    onCompletion();
-                }];
-            } else {
+            GroupCallStartMessage *newMsg = (GroupCallStartMessage *) amsg;
+            [[GlobalGroupCallsManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation receiveDate:newMsg.date onCompletion:^{
+                DDLogNotice(@"[GroupCall] [DB] Completion handler called");
                 onCompletion();
+            }];
+        } else if ([amsg isKindOfClass:[DeleteGroupMessage class]]) {
+            // On error case `onError` will be called and message is `nil`
+            BaseMessage *message = [entityManager deleteMessageFor:amsg conversation:conversation onError:onError];
+            if (message) {
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
+            }
+        } else if ([amsg isKindOfClass:[EditGroupMessage class]]) {
+            // On error case `onError` will be called and message is `nil`
+            BaseMessage *message = [entityManager editMessageFor:amsg conversation:conversation onError:onError];
+            if (message) {
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             }
         } else {
             onError([ThreemaError threemaError:@"Invalid message class"]);
@@ -596,12 +620,12 @@ Process incoming message.
 }
 
 - (void)finalizeMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
-    [messageProcessorDelegate incomingMessageChanged:message fromIdentity:boxMessage.fromIdentity];
+    [messageProcessorDelegate incomingMessageChanged:boxMessage baseMessage:message];
     onCompletion();
 }
 
 - (void)finalizeGroupMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractGroupMessage*)boxMessage sender:(ContactEntity *)sender onCompletion:(void(^_Nonnull)(void))onCompletion {
-    [messageProcessorDelegate incomingMessageChanged:message fromIdentity:boxMessage.fromIdentity];
+    [messageProcessorDelegate incomingMessageChanged:boxMessage baseMessage:message];
     onCompletion();
 }
 
@@ -623,7 +647,7 @@ Process incoming message.
     [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
         ImageMessageEntity *imageMessageEntity = (ImageMessageEntity*)message;
 
-        [messageProcessorDelegate incomingMessageChanged:imageMessageEntity fromIdentity:[sender identity]];
+        [messageProcessorDelegate incomingMessageChanged:amsg baseMessage:imageMessageEntity];
 
         dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
@@ -656,10 +680,10 @@ Process incoming message.
         return;
     }
 
-    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:[UIImage imageNamed:@"Video"] onCompletion:^(BaseMessage *message) {
+    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:[UIImage imageNamed:@"threema.video.fill"] onCompletion:^(BaseMessage *message) {
         VideoMessageEntity *videoMessageEntity = (VideoMessageEntity *)message;
 
-        [messageProcessorDelegate incomingMessageChanged:videoMessageEntity fromIdentity:[sender identity]];
+        [messageProcessorDelegate incomingMessageChanged:amsg baseMessage:videoMessageEntity];
 
         BOOL isGroupMessage = [amsg isKindOfClass:[GroupVideoMessage class]];
 

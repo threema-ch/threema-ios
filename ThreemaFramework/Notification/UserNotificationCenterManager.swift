@@ -24,12 +24,13 @@ import PromiseKit
 
 protocol UserNotificationCenterManagerProtocol {
     func add(
-        key: PendingUserNotificationKey,
+        contentKey: PendingUserNotificationKey,
         stage: UserNotificationStage,
         notification: UNNotificationContent
     ) -> Promise<Date?>
-    func isPending(key: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool
-    func remove(key: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool)
+    func isPending(contentKey: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool
+    func isDelivered(contentKey: PendingUserNotificationKey) -> Bool
+    func remove(contentKey: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool)
 }
 
 enum UserNotificationCenterManagerError: Error {
@@ -41,13 +42,13 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
     /// Add notification to notification center.
     ///
     /// - Parameters:
-    ///    - key: Key of notification
+    ///    - contentKey: Key of notification
     ///    - stage: Stage of incoming message, if not equals 'final' set trigger date (30s) to fire (show) notification
     ///             otherwise fire notification right now
     ///    - notification: Notification for adding/replacing
     /// - Returns: Date when notification will be showed
     func add(
-        key: PendingUserNotificationKey,
+        contentKey: PendingUserNotificationKey,
         stage: UserNotificationStage,
         notification: UNNotificationContent
     ) -> Promise<Date?> {
@@ -61,7 +62,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
             }
             
             let notificationRequest = UNNotificationRequest(
-                identifier: getIdentifier(key, stage),
+                identifier: getIdentifier(contentKey, stage),
                 content: notification,
                 trigger: trigger
             )
@@ -78,7 +79,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
                             seal.reject(
                                 UserNotificationCenterManagerError
                                     .failedToAdd(
-                                        message: "[Push] Adding notification for message \(key) was not successful. Error: \(error.localizedDescription)"
+                                        message: "[Push] Adding notification for message \(contentKey) was not successful. Error: \(error.localizedDescription)"
                                     )
                             )
                             return
@@ -86,22 +87,23 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
                         let mutCopy = notification.mutableCopy() as! UNMutableNotificationContent
                         mutCopy.attachments = []
                         
-                        self.add(key: key, stage: stage, notification: mutCopy).pipe(to: { seal.resolve($0) })
+                        self.add(contentKey: contentKey, stage: stage, notification: mutCopy)
+                            .pipe(to: { seal.resolve($0) })
                     }
                     else {
                         seal.reject(
                             UserNotificationCenterManagerError
                                 .failedToAdd(
-                                    message: "[Push] Adding notification for message \(key) was not successful. Error: \(error.localizedDescription)"
+                                    message: "[Push] Adding notification for message \(contentKey) was not successful. Error: \(error.localizedDescription)"
                                 )
                         )
                     }
                 }
                 else {
                     DDLogNotice(
-                        "[Push] Added message \(key) to notification center with trigger \(trigger?.timeInterval ?? 0)s and identifier \(notificationRequest.identifier)"
+                        "[Push] Added message \(contentKey) to notification center with trigger \(trigger?.timeInterval ?? 0)s and identifier \(notificationRequest.identifier)"
                     )
-                    self.remove(key: key, exceptStage: stage, justPending: true)
+                    self.remove(contentKey: contentKey, exceptStage: stage, justPending: true)
                     
                     seal.fulfill(fireDate)
                 }
@@ -112,17 +114,17 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
     /// Looking for notification is pending in notification center.
     ///
     /// - Parameters:
-    ///     - key: Key of notification
+    ///     - contentKey: Key of notification
     ///     - stage: Stage of incoming message
     /// - Returns: True notification is pending in notification center
-    func isPending(key: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool {
+    func isPending(contentKey: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool {
         var isPending = false
 
         let dispatchGroup = DispatchGroup()
         dispatchGroup.enter()
         UNUserNotificationCenter.current().getPendingNotificationRequests { pendingNotifications in
             for pendingNotification in pendingNotifications {
-                if pendingNotification.identifier.elementsEqual(self.getIdentifier(key, stage)) {
+                if pendingNotification.identifier.elementsEqual(self.getIdentifier(contentKey, stage)) {
                     isPending = true
                     break
                 }
@@ -133,19 +135,47 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
         
         return isPending
     }
-    
+
+    /// Looking for notification (in all stages) is already delivered.
+    ///
+    /// - Parameter contentKey: Key of the notification
+    /// - Returns: `true` is notification already delivered
+    func isDelivered(contentKey: PendingUserNotificationKey) -> Bool {
+        var isDelivered = false
+
+        let dispatchGroup = DispatchGroup()
+        dispatchGroup.enter()
+        UNUserNotificationCenter.current().getDeliveredNotifications { deliveredNotifications in
+            for notification in deliveredNotifications {
+                for stage in UserNotificationStage.allCases {
+                    if notification.request.identifier.elementsEqual(self.getIdentifier(contentKey, stage)) {
+                        isDelivered = true
+                        break
+                    }
+                }
+                if isDelivered {
+                    break
+                }
+            }
+            dispatchGroup.leave()
+        }
+        dispatchGroup.wait()
+
+        return isDelivered
+    }
+
     /// Remove notifications with key from notification center.
     ///
     /// - Parameters:
-    ///   - key: Key of notification to remove
+    ///   - contentKey: Key of notification to remove
     ///   - exceptStage: Removes all notifications with key except this stages
     ///   - justPending: Removes pending notifications only
-    func remove(key: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool) {
+    func remove(contentKey: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool) {
         var removeKeyStages = [String]()
         for stage in UserNotificationStage.allCases.filter({ stage -> Bool in
             exceptStage == nil ? true : stage != exceptStage
         }) {
-            removeKeyStages.append(getIdentifier(key, stage))
+            removeKeyStages.append(getIdentifier(contentKey, stage))
         }
 
         DDLogNotice("[Push] Remove pending notifications with keys: \(removeKeyStages)")

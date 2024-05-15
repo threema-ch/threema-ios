@@ -22,7 +22,9 @@ import Foundation
 import UIKit
 
 public protocol MessageAccessibility: BaseMessage {
-    var customAccessibilityLabel: String { get }
+    /// For private use only, use `customAccessibilityLabel` instead
+    @available(*, deprecated, message: "For private use only, use `customAccessibilityLabel` instead")
+    var privateCustomAccessibilityLabel: String { get }
     var customAccessibilityValue: String? { get }
     var customAccessibilityHint: String? { get }
     var customAccessibilityTrait: UIAccessibilityTraits { get }
@@ -30,6 +32,15 @@ public protocol MessageAccessibility: BaseMessage {
 }
 
 extension MessageAccessibility {
+    public var customAccessibilityLabel: String {
+        // If deleted we return the default text
+        guard deletedAt == nil else {
+            return "deleted_message".localized
+        }
+        
+        return privateCustomAccessibilityLabel
+    }
+    
     public var customAccessibilityValue: String? {
         nil
     }

@@ -22,7 +22,7 @@ import Foundation
 
 extension SystemMessage: MessageAccessibility {
     
-    public var customAccessibilityLabel: String {
+    public var privateCustomAccessibilityLabel: String {
         
         switch systemMessageType {
         case let .callMessage(type: call):

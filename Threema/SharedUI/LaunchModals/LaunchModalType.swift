@@ -29,7 +29,6 @@ public enum LaunchModalType {
     case notificationReminder
     case notificationTypeSelection
     case safeSetupInfo
-    case betaFeedback
     
     /// The view controller belonging to a modal
     func viewController(delegate: LaunchModalManagerDelegate) -> UIViewController {
@@ -61,9 +60,6 @@ public enum LaunchModalType {
                 .instantiateViewController(withIdentifier: "SafeIntroViewController") as! SafeIntroViewController
             safeIntroViewController.launchModalDelegate = delegate
             return safeIntroViewController
-            
-        case .betaFeedback:
-            return UIHostingController(rootView: BetaFeedbackView())
         }
     }
 }

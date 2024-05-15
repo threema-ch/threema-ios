@@ -92,6 +92,8 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self startRunning];
+    [self updateOrientation];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
 }
@@ -171,7 +173,9 @@
     }];
     if (_captureSession) {
         if (_running) return;
-        [_captureSession startRunning];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            [_captureSession startRunning];
+        });
         _metadataOutput.metadataObjectTypes = _metadataOutput.availableMetadataObjectTypes;
         
         if ([[VoIPCallStateManager shared] currentCallState] == CallStateIdle) {
@@ -214,6 +218,37 @@
     }
     
     return NO;
+}
+
+- (void)updateOrientation {
+    AVCaptureConnection* connection = _previewLayer.connection;
+    if (connection && connection.isVideoOrientationSupported) {
+        UIDeviceOrientation orientation = UIDevice.currentDevice.orientation;
+        switch (orientation) {
+            case UIDeviceOrientationPortrait:
+                [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+                break;
+                
+            case UIDeviceOrientationPortraitUpsideDown:
+                [connection setVideoOrientation:AVCaptureVideoOrientationPortraitUpsideDown];
+                break;
+                
+            case UIDeviceOrientationLandscapeLeft:
+                [connection setVideoOrientation:AVCaptureVideoOrientationLandscapeRight];
+                break;
+                
+            case UIDeviceOrientationLandscapeRight:
+                [connection setVideoOrientation:AVCaptureVideoOrientationLandscapeLeft];
+                break;
+                
+            case UIDeviceOrientationUnknown:
+            case UIDeviceOrientationFaceUp:
+            case UIDeviceOrientationFaceDown:
+                [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+                break;
+        }
+        _previewLayer.frame = _previewView.frame;
+    }
 }
 
 - (void)showCameraAccessAlert {

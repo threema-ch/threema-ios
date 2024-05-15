@@ -152,7 +152,6 @@
 #import <ThreemaFramework/PageContentViewController.h>
 #import <ThreemaFramework/PageView.h>
 #import <ThreemaFramework/ThemedTableViewController.h>
-#import <ThreemaFramework/MessageDraftStore.h>
 #import <ThreemaFramework/CallEntity.h>
 #import <ThreemaFramework/ThreemaError.h>
 #import <ThreemaFramework/GroupCallEntity.h>

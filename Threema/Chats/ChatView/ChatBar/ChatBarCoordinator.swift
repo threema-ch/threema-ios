@@ -22,16 +22,18 @@ import AudioToolbox
 import CocoaLumberjackSwift
 import GroupCalls
 import SwiftProtobuf
+import SwiftUI
 import ThreemaFramework
 import ThreemaProtocols
 import UIKit
 
 protocol ChatBarCoordinatorDelegate: AnyObject {
     func didDismissQuoteView()
+    var userInterfaceMode: ChatViewController.UserInterfaceMode { get }
 }
 
 final class ChatBarCoordinator {
-    
+
     // MARK: - Public properties
 
     lazy var chatBarContainerView: ChatBarContainerView = {
@@ -49,15 +51,31 @@ final class ChatBarCoordinator {
             precomposedText: precomposedText
         )
         chatBarView.chatBarViewDelegate = self
-        
+
         return chatBarView
     }()
     
-    private(set) var isRecording = false
+    internal var isRecording = false
     
     // MARK: - Private properties
     
     private var conversation: Conversation
+    private var messageToEdit: EditedMessage? {
+        didSet {
+            if let baseMessage = messageToEdit as? BaseMessage {
+                editedMessageDeletionObserver = baseMessage.observe(\.willBeDeleted) { [weak self] baseMessage, _ in
+                    if baseMessage.willBeDeleted {
+                        self?.removeEditedMessageView()
+                    }
+                }
+            }
+            else {
+                editedMessageDeletionObserver?.invalidate()
+                editedMessageDeletionObserver = nil
+            }
+        }
+    }
+
     private var quoteMessage: QuoteMessage? {
         didSet {
             if let baseMessage = quoteMessage as? BaseMessage {
@@ -80,6 +98,7 @@ final class ChatBarCoordinator {
     private weak var chatBarCoordinatorDelegate: ChatBarCoordinatorDelegate?
 
     private let businessInjector: BusinessInjectorProtocol
+    private var editedMessageDeletionObserver: NSKeyValueObservation?
     private var quotedMessageDeletionObserver: NSKeyValueObservation?
     
     private lazy var messagePermission = MessagePermission(
@@ -134,7 +153,14 @@ final class ChatBarCoordinator {
             previewPrecomposedImage(image)
         }
         else {
-            self.precomposedText = MessageDraftStore.loadDraft(for: self.conversation)
+            if let draft = MessageDraftStore.loadDraft(for: self.conversation) {
+                switch draft {
+                case let .text(string):
+                    self.precomposedText = string
+                case let .audio(url):
+                    startRecording(with: url)
+                }
+            }
         }
     }
     
@@ -156,16 +182,63 @@ final class ChatBarCoordinator {
     }
     
     func saveDraft(andDeleteText: Bool = false) {
-        guard let currentText = chatBar.getCurrentText(andRemove: andDeleteText) else {
-            MessageDraftStore.deleteDraft(for: conversation)
-            return
+        if isRecording {
+            guard let mode = chatBarCoordinatorDelegate?.userInterfaceMode else {
+                return
+            }
+            
+            Task {
+                // avoid file operations if the chat is peeked
+                let currentState = await chatBar.getCurrentSessionState(shouldMove: mode != .preview)
+                await MainActor.run {
+                    switch currentState {
+                    case .background:
+                        break
+                    case let .closed(audioFile):
+                        MessageDraftStore.saveDraft(.audio(audioFile), for: conversation)
+                    case nil:
+                        MessageDraftStore.deleteDraft(for: conversation)
+                    }
+                }
+            }
         }
-        
-        let currentOrEmptyText = ThreemaUtility.trimCharacters(in: currentText)
-        
-        MessageDraftStore.saveDraft(currentOrEmptyText, for: conversation)
+        else {
+            guard let currentText = chatBar.getCurrentText() else {
+                MessageDraftStore.deleteDraft(for: conversation)
+                return
+            }
+            
+            if andDeleteText {
+                chatBar.removeCurrentText()
+            }
+            
+            let currentOrEmptyText = ThreemaUtility.trimCharacters(in: currentText)
+            
+            MessageDraftStore.saveDraft(.text(currentOrEmptyText), for: conversation)
+        }
     }
-    
+
+    /// Shows the edited message view for message on top of the chat bar. Removes currently existing edited message
+    /// views
+    /// - Parameter message: Message to edit
+    func showEditedMessageView(for message: EditedMessage) {
+        if messageToEdit != nil {
+            removeEditedMessageView()
+        }
+
+        messageToEdit = message
+        let editedView = ChatBarEditedMessageView(editedMessage: message, delegate: self)
+        chatBarContainerView.add(editedView)
+        chatBarContainerView.becomeFirstResponder()
+    }
+
+    /// Removes the currently displayed edit message view
+    func removeEditedMessageView() {
+        messageToEdit = nil
+        chatBarContainerView.removeEditedMessageView()
+        chatBar.removeCurrentText()
+    }
+
     /// Shows the quote view for message on top of the chat bar. Removes currently existing quote views
     /// - Parameter message: Message to be quoted
     func showQuoteView(for message: QuoteMessage) {
@@ -316,7 +389,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     func showCamera() {
         guard let action = SendMediaAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -332,7 +405,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     func showImagePicker() {
         guard let action = SendMediaAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -477,6 +550,10 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
             return messagePermission.canSend(groudID: group.groupID, groupCreatorIdentity: group.groupCreatorIdentity)
         }
+        else if let distributionList = conversation.distributionList {
+            // TODO: (IOS-4366) Check send possible for each recipient
+            return (true, nil)
+        }
         else {
             guard let contact = conversation.contact else {
                 return (false, nil)
@@ -491,53 +568,144 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
                 
         var sendableRawText = rawText
-        
-        if let quoteMessage {
-            sendableRawText = QuoteUtil.generateText(rawText, with: quoteMessage.id)
+        // Sending
+        // Edited Message
+        if let messageToEdit {
+            guard !messageToEdit.wasSentMoreThanSixHoursAgo else {
+                showEditMessageSentTooLongAgoAlert()
+                return
+            }
+           
+            let unsupportedContacts = FeatureMask.check(
+                message: messageToEdit,
+                for: .editMessageSupport
+            ).unsupported
+            
+            do {
+                try businessInjector.messageSender.sendEditMessage(
+                    with: messageToEdit.objectID,
+                    rawText: rawText,
+                    receiversExcluded: unsupportedContacts
+                )
+            }
+            catch MessageSenderError.editedTextToLong {
+                showEditMessageSentTooLongAlert()
+                return
+            }
+            catch {
+                DDLogError("Send edit message for edited message failed \(messageToEdit.id.hexString)")
+                return
+            }
+            
+            if !unsupportedContacts.isEmpty {
+                showEditMessageNotSentAlert(for: unsupportedContacts)
+            }
+            removeEditedMessageView()
         }
-                
-        businessInjector.messageSender.sanitizeAndSendText(sendableRawText, in: conversation)
+        // Quote Message
+        else if let quoteMessage {
+            sendableRawText = QuoteUtil.generateText(rawText, with: quoteMessage.id)
+
+            if let distributionList = conversation.distributionList {
+                let dm = DistributionListMessageSender(businessInjector: businessInjector)
+                dm.sanitizeAndSendText(sendableRawText, in: distributionList)
+            }
+            else {
+                businessInjector.messageSender.sanitizeAndSendText(sendableRawText, in: conversation)
+            }
+
+            removeQuoteView()
+        }
+        // New Message
+        else {
+            if let distributionList = conversation.distributionList {
+                let dm = DistributionListMessageSender(businessInjector: businessInjector)
+                dm.sanitizeAndSendText(sendableRawText, in: distributionList)
+            }
+            else {
+                businessInjector.messageSender.sanitizeAndSendText(sendableRawText, in: conversation)
+            }
+        }
+        
+        chatBar.removeCurrentText()
         
         MessageDraftStore.deleteDraft(for: conversation)
         
         ConversationActions(businessInjector: businessInjector).unarchive(conversation)
         
-        if quoteMessage != nil {
-            removeQuoteView()
-        }
-        
         if UserSettings.shared().inAppSounds, let sentMessageSoundID {
             AudioServicesPlaySystemSound(sentMessageSoundID)
         }
     }
+    
+    private func showEditMessageSentTooLongAgoAlert() {
+        guard let chatViewController else {
+            return
+        }
         
-    func startRecording() {
+        UIAlertTemplate.showAlert(
+            owner: chatViewController,
+            title: BundleUtil.localizedString(forKey: "edit_message"),
+            message: BundleUtil.localizedString(forKey: "edit_message_can_not_edit")
+        )
+    }
+    
+    private func showEditMessageNotSentAlert(for contacts: [Contact]) {
+        guard let chatViewController else {
+            return
+        }
+        let displayNames = contacts.map(\.displayName)
+        let listFormatter = ListFormatter()
+        var summary = ""
+        
+        if displayNames.count > 5 {
+            var firstFive = displayNames.prefix(5)
+            let count = displayNames.count - 5
+            let countString = String.localizedStringWithFormat(
+                "delete_edit_message_not_sent_to_others".localized,
+                count
+            )
+            firstFive.append(countString)
+            if let totalSummary = listFormatter.string(from: Array(firstFive)) {
+                summary = "\(totalSummary) \("edit_message_requirement".localized)"
+            }
+        }
+        else {
+            if let shortsSummary = listFormatter.string(from: displayNames) {
+                summary = "\(shortsSummary). \("edit_message_requirement".localized)"
+            }
+        }
+        
+        let message = String.localizedStringWithFormat("edit_message_not_sent_to".localized, summary)
+        UIAlertTemplate.showAlert(
+            owner: chatViewController,
+            title: BundleUtil.localizedString(forKey: "edit_message"),
+            message: message
+        )
+    }
+    
+    private func showEditMessageSentTooLongAlert() {
+        guard let chatViewController else {
+            return
+        }
+        
+        UIAlertTemplate.showAlert(
+            owner: chatViewController,
+            title: BundleUtil.localizedString(forKey: "edit_message"),
+            message: BundleUtil.localizedString(forKey: "edit_message_text_to_long")
+        )
+    }
+        
+    func startRecording(with audioFileURL: URL? = nil) {
         chatViewTableViewVoiceMessageCellDelegate?.pausePlaying()
         
-        PlayRecordAudioViewController.requestMicrophoneAccess { [weak self] in
-            guard let strongSelf = self else {
-                return
-            }
-
-            UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
-            guard let audioRecorder = PlayRecordAudioViewController(in: strongSelf.chatViewController) else {
-                guard let chatViewController = strongSelf.chatViewController else {
-                    DDLogError("chatViewController should not be nil when calling \(#function)")
-                    return
-                }
-                UIAlertTemplate.showAlert(
-                    owner: chatViewController,
-                    title: "play_record_audio_view_controller_general_error_message",
-                    message: "play_record_audio_view_controller_general_error_message"
-                )
-                return
-            }
-            audioRecorder.delegate = strongSelf
-            audioRecorder.startRecording(for: strongSelf.conversation)
-            
-            strongSelf.chatBar.isUserInteractionEnabled = false
-            strongSelf.isRecording = true
+        UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
+        
+        Benchmark.run {
+            self.chatBar.presentVoiceMessageRecorderView(with: self, with: audioFileURL)
         }
+        
+        isRecording = true
     }
     
     func sendTypingIndicator(startTyping: Bool) {
@@ -600,11 +768,20 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             DDLogError("Can't find contact for tapped mention")
         }
     }
+
+    func isEditedMessageSet() -> Bool {
+        messageToEdit != nil
+    }
 }
 
 // MARK: - PPAssetsActionHelperDelegate
 
 extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
+    
+    var conversationIsDistributionList: Bool {
+        conversation.distributionList != nil
+    }
+    
     func assetsActionHelperDidCancel(_ picker: PPAssetsActionHelper) {
         // We do not do anything on cancel
     }
@@ -616,7 +793,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     func assetActionHelperDidSelectOwnOption(_ picker: PPAssetsActionHelper, didFinishPicking assets: [Any]) {
         guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -631,7 +808,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     func assetsActionHelperDidSelectOwnSnapButton(_ picker: PPAssetsActionHelper, didFinishPicking assets: [Any]) {
         guard let action = SendMediaAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -661,7 +838,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
         
         guard let action = SendMediaAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -675,7 +852,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     func assetsActionHelperDidSelectLocation(_ picker: PPAssetsActionHelper) {
         guard let sendLocationAction = SendLocationAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendLocationAction"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -708,7 +885,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper) {
         guard let documentPicker = DocumentPicker(for: chatViewController, conversation: conversation) else {
             let message = "Could not create DocumentPicker"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -721,13 +898,15 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     }
 }
 
-// MARK: - PlayRecordAudioDelegate
+// MARK: - ChatBarEditedMessageViewDelegate
 
-extension ChatBarCoordinator: PlayRecordAudioDelegate {
-    func audioPlayerDidHide() {
-        chatBar.isUserInteractionEnabled = true
-        isRecording = false
-        UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
+extension ChatBarCoordinator: ChatBarEditedMessageViewDelegate {
+    func editedMessageDismissed() {
+        removeEditedMessageView()
+    }
+
+    var editedMessageTextBeginningInset: CGFloat {
+        chatBar.textBeginningInset
     }
 }
 
@@ -776,5 +955,15 @@ extension ChatBarCoordinator {
         else {
             updateMessagePermission()
         }
+    }
+}
+
+// MARK: - VoiceMessageRecorderViewDelegate
+
+extension ChatBarCoordinator: VoiceMessageRecorderViewDelegate {
+    func willDismissRecorder() {
+        chatBar.dismissVoiceMessageRecorderView()
+        isRecording = false
+        UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
     }
 }

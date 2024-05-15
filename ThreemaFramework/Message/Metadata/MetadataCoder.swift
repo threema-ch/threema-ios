@@ -40,7 +40,7 @@ enum MetadataCoderError: Error {
         var pbMetadata = CspE2e_MessageMetadata()
         
         if let nickname = metadata.nickname {
-            pbMetadata.padding = Data(count: max(0, 16 - nickname.data(using: .utf8)!.count))
+            pbMetadata.padding = Data(count: max(0, 16 - Data(nickname.utf8).count))
             pbMetadata.nickname = nickname
         }
         if let messageID = metadata.messageID {

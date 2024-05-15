@@ -32,8 +32,13 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
             }
             
             if let imageName = action.imageName {
-                let image = BundleUtil.imageNamed("\(imageName)_regular.L")
-                assert(image != nil, "Use SF Symbol: regular L")
+                var image = UIImage(systemName: imageName)
+                if image == nil {
+                    image = UIImage(named: imageName)
+                }
+                image = image?.applying(symbolWeight: .light, symbolScale: .medium)
+                
+                assert(image != nil, "Symbol not found")
                 iconImageView.image = image
             }
             

@@ -124,6 +124,7 @@ struct ThreemaNavigationView<Content: View>: View {
                     }
                 }
             }
+            .onReceive(\.notificationBarItemPromptShouldChange, navigationPromptDidChange)
             .wrappedNavigationView
             .navigationViewStyle(.stack)
             .introspect(.navigationView(style: .stack), on: .iOS(.v15...), customize: customize)
@@ -150,6 +151,8 @@ struct ThreemaNavigationView<Content: View>: View {
     /// - Parameter navigationController: The `UINavigationController` to be customized.
     private func customize(_ navigationController: UINavigationController) {
         guard customNavigationBar == nil, !(navigationController.navigationBar is StatusNavigationBar) else {
+            self.navigationController = navigationController
+            customNavigationBar = navigationController.navigationBar as? StatusNavigationBar
             return
         }
         customNavigationBar = StatusNavigationBar()
@@ -179,6 +182,7 @@ struct ThreemaNavigationView<Content: View>: View {
         DispatchQueue.main.async {
             scrollView
                 .publisher(for: \.contentOffset)
+                .receive(on: RunLoop.main)
                 .removeDuplicates()
                 .sink { offset in
                     if offset != lastContentOffset {
@@ -212,6 +216,20 @@ struct ThreemaNavigationView<Content: View>: View {
             // use ThreemaNavigationBarBranding instead
             break
         }
+    }
+    
+    private func navigationPromptDidChange(_ notification: Notification) {
+        navigationItem?.prompt = NavigationBarPromptHandler.getCurrentPrompt(duration: notification.object as? NSNumber)
+
+        navigationController?.view.setNeedsLayout()
+        navigationController?.view.layoutIfNeeded()
+        navigationController?.view.setNeedsDisplay()
+        
+        // Update navigation controllers view controllers view when height changes
+        /// Fixes incorrect content offset after the navigation bar updates its height
+        /// We only noticed this in chat view controller but other views in general should suffer from similar issues.
+        /// Thus we don't check specifically for chat view controller.
+        navigationController?.viewControllers.forEach { $0.view.setNeedsLayout() }
     }
 }
 

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -40,7 +41,7 @@ class MessageDecoderTests: XCTestCase {
     /// Should return nil for invalid messages
     func testDecodeInvalidMessage() {
         let type: Int32 = MSGTYPE_LOCATION
-        let data: Data = "test".data(using: .utf8)!
+        let data = Data("test".utf8)
 
         let result = MessageDecoder.decode(type, body: data)
 
@@ -50,7 +51,7 @@ class MessageDecoderTests: XCTestCase {
     /// Should return unkown type message for unknown types
     func testDecodeUnknownType() {
         let type: Int32 = 0xFF
-        let data: Data = "test".data(using: .utf8)!
+        let data = Data("test".utf8)
 
         let result = MessageDecoder.decode(type, body: data)
 
@@ -400,7 +401,7 @@ class MessageDecoderTests: XCTestCase {
         let msg = BoxBallotVoteMessage()
         msg.ballotCreator = "TESTID12"
         msg.ballotID = Data(BytesUtility.padding([], pad: 0x99, length: ThreemaProtocol.ballotIDLength))
-        msg.jsonChoiceData = "{type: 'ballot vote'}".data(using: .utf8)
+        msg.jsonChoiceData = Data("{type: 'ballot vote'}".utf8)
 
         let result = MessageDecoder.decode(MSGTYPE_BALLOT_VOTE, body: msg.body()) as? BoxBallotVoteMessage
         
@@ -412,7 +413,7 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeBoxFileMessage() {
         let msg = BoxFileMessage()
-        msg.jsonData = "{type: 'file'}".data(using: .utf8)
+        msg.jsonData = Data("{type: 'file'}".utf8)
         
         let result = MessageDecoder.decode(MSGTYPE_FILE, body: msg.body()) as? BoxFileMessage
         
@@ -435,7 +436,7 @@ class MessageDecoderTests: XCTestCase {
     }
     
     func testDecodeBoxLocationMessage() throws {
-        let msg = "47.201515,8.783403,65.000000".data(using: .utf8)
+        let msg = Data("47.201515,8.783403,65.000000".utf8)
         
         let result = try XCTUnwrap(MessageDecoder.decode(MSGTYPE_LOCATION, body: msg) as? BoxLocationMessage)
         
@@ -445,7 +446,7 @@ class MessageDecoderTests: XCTestCase {
     }
     
     func testDecodeBoxLocationMessageNoPoiName() throws {
-        let msg = "47.201515,8.783403,65.000000\n\ntestAddress".data(using: .utf8)
+        let msg = Data("47.201515,8.783403,65.000000\n\ntestAddress".utf8)
         
         let result = try XCTUnwrap(MessageDecoder.decode(MSGTYPE_LOCATION, body: msg) as? BoxLocationMessage)
         
@@ -457,7 +458,7 @@ class MessageDecoderTests: XCTestCase {
     }
     
     func testDecodeBoxLocationMessageAddress() throws {
-        let msg = "47.201515,8.783403,65.000000\ntestName\ntestAddress\\nline2".data(using: .utf8)
+        let msg = Data("47.201515,8.783403,65.000000\ntestName\ntestAddress\\nline2".utf8)
         
         let result = try XCTUnwrap(MessageDecoder.decode(MSGTYPE_LOCATION, body: msg) as? BoxLocationMessage)
         
@@ -524,7 +525,7 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeBoxVoIPCallAnswerMessage() {
         let msg = BoxVoIPCallAnswerMessage() // Data()
-        msg.jsonData = "{type: 'call answer'}".data(using: .utf8)
+        msg.jsonData = Data("{type: 'call answer'}".utf8)
         
         let result = MessageDecoder.decode(MSGTYPE_VOIP_CALL_ANSWER, body: msg.body()) as? BoxVoIPCallAnswerMessage
         
@@ -540,7 +541,7 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeBoxVoIPCallIceCandidatesMessage() {
         let msg = BoxVoIPCallIceCandidatesMessage()
-        msg.jsonData = "{type: 'call icecandidate'}".data(using: .utf8)
+        msg.jsonData = Data("{type: 'call icecandidate'}".utf8)
         
         let result = MessageDecoder.decode(
             MSGTYPE_VOIP_CALL_ICECANDIDATE,
@@ -553,7 +554,7 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeBoxVoIPCallOfferMessage() {
         let msg = BoxVoIPCallOfferMessage()
-        msg.jsonData = "{type: 'call offer'}".data(using: .utf8)
+        msg.jsonData = Data("{type: 'call offer'}".utf8)
         
         let result = MessageDecoder.decode(MSGTYPE_VOIP_CALL_OFFER, body: msg.body()) as? BoxVoIPCallOfferMessage
         
@@ -598,7 +599,71 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.size, msg.size)
         XCTAssertEqual(result?.encryptionKey, msg.encryptionKey)
     }
-    
+
+    func testDecodeDeleteGroupMessage() throws {
+        var expectedDeleteMessage = CspE2e_DeleteMessage()
+        expectedDeleteMessage.messageID = try MockData.generateMessageID().littleEndian()
+
+        let msg = DeleteGroupMessage()
+        msg.groupCreator = "ECHOECHO"
+        msg.groupID = MockData.generateGroupID()
+        msg.decoded = expectedDeleteMessage
+
+        let result = MessageDecoder.decode(MSGTYPE_GROUP_DELETE, body: msg.body()) as? DeleteGroupMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.groupCreator, msg.groupCreator)
+        XCTAssertEqual(result?.groupID, msg.groupID)
+        XCTAssertEqual(result?.decoded?.messageID, expectedDeleteMessage.messageID)
+    }
+
+    func testDecodeDeleteMessage() throws {
+        var expectedDeleteMessage = CspE2e_DeleteMessage()
+        expectedDeleteMessage.messageID = try MockData.generateMessageID().littleEndian()
+
+        let msg = DeleteMessage()
+        msg.decoded = expectedDeleteMessage
+
+        let result = MessageDecoder.decode(MSGTYPE_DELETE, body: msg.body()) as? DeleteMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.decoded?.messageID, expectedDeleteMessage.messageID)
+    }
+
+    func testDecodeEditGroupMessage() throws {
+        var expectedEditMessage = CspE2e_EditMessage()
+        expectedEditMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedEditMessage.text = "Test 123"
+
+        let msg = EditGroupMessage()
+        msg.groupCreator = "ECHOECHO"
+        msg.groupID = MockData.generateGroupID()
+        msg.decoded = expectedEditMessage
+
+        let result = MessageDecoder.decode(MSGTYPE_GROUP_EDIT, body: msg.body()) as? EditGroupMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.groupCreator, msg.groupCreator)
+        XCTAssertEqual(result?.groupID, msg.groupID)
+        XCTAssertEqual(result?.decoded?.messageID, expectedEditMessage.messageID)
+        XCTAssertEqual(result?.decoded?.text, expectedEditMessage.text)
+    }
+
+    func testDecodeEditMessage() throws {
+        var expectedEditMessage = CspE2e_EditMessage()
+        expectedEditMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedEditMessage.text = "Test 123"
+
+        let msg = EditMessage()
+        msg.decoded = expectedEditMessage
+
+        let result = MessageDecoder.decode(MSGTYPE_EDIT, body: msg.body()) as? EditMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.decoded?.messageID, expectedEditMessage.messageID)
+        XCTAssertEqual(result?.decoded?.text, expectedEditMessage.text)
+    }
+
     func testDecodeGroupAudioMessage() {
         let msg = GroupAudioMessage()
         msg.groupCreator = "TESTID12"
@@ -624,7 +689,7 @@ class MessageDecoderTests: XCTestCase {
         msg.groupCreator = "TESTID12"
         msg.groupID = Data(BytesUtility.padding([], pad: 0x11, length: ThreemaProtocol.groupIDLength))
         msg.ballotID = Data(BytesUtility.padding([], pad: 0x22, length: ThreemaProtocol.ballotIDLength))
-        msg.jsonData = "{type: 'group ballot create'}".data(using: .utf8)
+        msg.jsonData = Data("{type: 'group ballot create'}".utf8)
         
         let result = MessageDecoder.decode(MSGTYPE_GROUP_BALLOT_CREATE, body: msg.body()) as? GroupBallotCreateMessage
         
@@ -641,7 +706,7 @@ class MessageDecoderTests: XCTestCase {
         msg.groupID = Data(BytesUtility.padding([], pad: 0x66, length: ThreemaProtocol.groupIDLength))
         msg.ballotCreator = "TESTID34"
         msg.ballotID = Data(BytesUtility.padding([], pad: 0x55, length: ThreemaProtocol.ballotIDLength))
-        msg.jsonChoiceData = "{type: 'group ballot vote'}".data(using: .utf8)
+        msg.jsonChoiceData = Data("{type: 'group ballot vote'}".utf8)
         
         let result = MessageDecoder.decode(MSGTYPE_GROUP_BALLOT_VOTE, body: msg.body()) as? GroupBallotVoteMessage
         
@@ -699,7 +764,7 @@ class MessageDecoderTests: XCTestCase {
         let msg = GroupFileMessage()
         msg.groupCreator = "TESTID12"
         msg.groupID = Data(BytesUtility.padding([], pad: 0x46, length: ThreemaProtocol.groupIDLength))
-        msg.jsonData = "{type: 'group file'}".data(using: .utf8)
+        msg.jsonData = Data("{type: 'group file'}".utf8)
         
         let result = MessageDecoder.decode(MSGTYPE_GROUP_FILE, body: msg.body()) as? GroupFileMessage
         
@@ -740,10 +805,10 @@ class MessageDecoderTests: XCTestCase {
     }
     
     func testDecodeGroupLocationMessage() {
-        var msg: Data = "TESTID12".data(using: .utf8)!
+        var msg = Data("TESTID12".utf8)
         let groupID = Data(BytesUtility.padding([], pad: 0x12, length: ThreemaProtocol.groupIDLength))
         msg.append(groupID)
-        msg.append("47.201515,8.783403,65.000000".data(using: .utf8)!)
+        msg.append(Data("47.201515,8.783403,65.000000".utf8))
 
         let result = MessageDecoder.decode(MSGTYPE_GROUP_LOCATION, body: msg) as? GroupLocationMessage
         

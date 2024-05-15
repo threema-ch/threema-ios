@@ -30,6 +30,7 @@
 
 @interface EnterLicenseViewController : UIViewController
 
+@property (weak, nonatomic) IBOutlet UIImageView *logoImageView;
 @property (weak, nonatomic) IBOutlet UIStackView *stackView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicatorView;
 @property (weak, nonatomic) IBOutlet UIImageView *feedbackImageView;
@@ -38,14 +39,11 @@
 @property (weak, nonatomic) IBOutlet UITextField *licenseUsernameTextField;
 @property (weak, nonatomic) IBOutlet UITextField *licensePasswordTextField;
 @property (weak, nonatomic) IBOutlet UITextField *serverTextField;
-@property (weak, nonatomic) IBOutlet ZSWTappableLabel *threemaWorkInfoLabel;
 @property (weak, nonatomic) IBOutlet UILabel *threemaAdminInfoLabel;
 
 @property (weak, nonatomic) IBOutlet UIButton *confirmButton;
 
 @property (weak, nonatomic) IBOutlet UIImageView *keyImageView;
-
-@property (weak, nonatomic) IBOutlet ZSWTappableLabel *threemaAppLinkLabel;
 
 @property id<EnterLicenseDelegate> delegate;
 

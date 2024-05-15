@@ -50,6 +50,7 @@ struct ChatViewCellProvider {
         
         // Register cells with different reuse identifiers for incoming and outgoing messages to avoid flickering when
         // an outgoing cell is reused as incoming and vice versa
+        ChatViewCellProvider.registerIncomingOutgoingCells(ChatViewDeletedMessageTableViewCell.self, in: tableView)
         ChatViewCellProvider.registerIncomingOutgoingCells(ChatViewTextMessageTableViewCell.self, in: tableView)
         ChatViewCellProvider.registerIncomingOutgoingCells(ChatViewLocationMessageTableViewCell.self, in: tableView)
         ChatViewCellProvider.registerIncomingOutgoingCells(
@@ -100,7 +101,18 @@ struct ChatViewCellProvider {
         in tableView: UITableView,
         at indexPath: IndexPath
     ) -> UITableViewCell {
-        
+
+        guard message.deletedAt == nil else {
+            let cell: ChatViewDeletedMessageTableViewCell = ChatViewCellProvider.dequeueIncomingOutgoingCell(
+                for: indexPath,
+                and: message,
+                in: tableView
+            )
+            cell.deletedMessageAndNeighbors = (message, neighbors)
+            cell.chatViewTableViewCellDelegate = chatViewTableViewCellDelegate
+            return cell
+        }
+
         switch message {
             
         case let textMessage as TextMessage:
@@ -305,89 +317,100 @@ enum ChatViewCellSizeProvider {
         and width: CGFloat
     ) -> CGFloat {
         let measurableCell: MeasurableCell
-        
-        switch message {
-            
-        case let textMessage as TextMessage:
-            ChatViewTextMessageTableViewCell.sizingCell.textMessageAndNeighbors = (
-                message: textMessage,
-                neighbors: neighbors
-            )
-            measurableCell = ChatViewTextMessageTableViewCell.sizingCell
-            
-        case let fileMessageProvider as FileMessageProvider:
-            switch fileMessageProvider.fileMessageType {
-            case let .image(imageMessage):
-                ChatViewThumbnailDisplayMessageTableViewCell.sizingCell.thumbnailDisplayMessageAndNeighbors = (
-                    message: imageMessage,
+
+        if message.deletedAt == nil {
+            switch message {
+
+            case let textMessage as TextMessage:
+                ChatViewTextMessageTableViewCell.sizingCell.textMessageAndNeighbors = (
+                    message: textMessage,
                     neighbors: neighbors
                 )
-                measurableCell = ChatViewThumbnailDisplayMessageTableViewCell.sizingCell
-                
-            case let .sticker(stickerMessage):
-                ChatViewStickerMessageTableViewCell.sizingCell.stickerMessageAndNeighbors = (stickerMessage, neighbors)
-                measurableCell = ChatViewStickerMessageTableViewCell.sizingCell
-                
-            case let .animatedImage(animatedImageMessage):
-                ChatViewAnimatedImageMessageTableViewCell.sizingCell.animatedImageMessageAndNeighbors = (
-                    animatedImageMessage,
-                    neighbors
+                measurableCell = ChatViewTextMessageTableViewCell.sizingCell
+
+            case let fileMessageProvider as FileMessageProvider:
+                switch fileMessageProvider.fileMessageType {
+                case let .image(imageMessage):
+                    ChatViewThumbnailDisplayMessageTableViewCell.sizingCell.thumbnailDisplayMessageAndNeighbors = (
+                        message: imageMessage,
+                        neighbors: neighbors
+                    )
+                    measurableCell = ChatViewThumbnailDisplayMessageTableViewCell.sizingCell
+
+                case let .sticker(stickerMessage):
+                    ChatViewStickerMessageTableViewCell.sizingCell.stickerMessageAndNeighbors = (
+                        stickerMessage,
+                        neighbors
+                    )
+                    measurableCell = ChatViewStickerMessageTableViewCell.sizingCell
+
+                case let .animatedImage(animatedImageMessage):
+                    ChatViewAnimatedImageMessageTableViewCell.sizingCell.animatedImageMessageAndNeighbors = (
+                        animatedImageMessage,
+                        neighbors
+                    )
+                    measurableCell = ChatViewAnimatedImageMessageTableViewCell.sizingCell
+
+                case let .animatedSticker(animatedStickerMessage):
+                    ChatViewAnimatedStickerMessageTableViewCell.sizingCell.animatedStickerMessageAndNeighbors = (
+                        animatedStickerMessage,
+                        neighbors
+                    )
+                    measurableCell = ChatViewAnimatedStickerMessageTableViewCell.sizingCell
+
+                case let .video(videoMessage):
+                    ChatViewThumbnailDisplayMessageTableViewCell.sizingCell.thumbnailDisplayMessageAndNeighbors = (
+                        videoMessage,
+                        neighbors
+                    )
+                    measurableCell = ChatViewThumbnailDisplayMessageTableViewCell.sizingCell
+
+                case .voice:
+                    fatalError("Not implemented")
+
+                case let .file(fileMessage):
+                    ChatViewFileMessageTableViewCell.sizingCell.fileMessageAndNeighbors = (fileMessage, neighbors)
+                    measurableCell = ChatViewFileMessageTableViewCell.sizingCell
+                }
+
+            case let locationMessage as LocationMessage:
+                ChatViewLocationMessageTableViewCell.sizingCell.locationMessageAndNeighbors = (
+                    message: locationMessage,
+                    neighbors: neighbors
                 )
-                measurableCell = ChatViewAnimatedImageMessageTableViewCell.sizingCell
-                
-            case let .animatedSticker(animatedStickerMessage):
-                ChatViewAnimatedStickerMessageTableViewCell.sizingCell.animatedStickerMessageAndNeighbors = (
-                    animatedStickerMessage,
-                    neighbors
-                )
-                measurableCell = ChatViewAnimatedStickerMessageTableViewCell.sizingCell
-                
-            case let .video(videoMessage):
-                ChatViewThumbnailDisplayMessageTableViewCell.sizingCell.thumbnailDisplayMessageAndNeighbors = (
-                    videoMessage,
-                    neighbors
-                )
-                measurableCell = ChatViewThumbnailDisplayMessageTableViewCell.sizingCell
-                
-            case .voice:
-                fatalError("Not implemented")
-                
-            case let .file(fileMessage):
-                ChatViewFileMessageTableViewCell.sizingCell.fileMessageAndNeighbors = (fileMessage, neighbors)
-                measurableCell = ChatViewFileMessageTableViewCell.sizingCell
+                measurableCell = ChatViewLocationMessageTableViewCell.sizingCell
+
+            case let ballotMessage as BallotMessage:
+                ChatViewBallotMessageTableViewCell.sizingCell.ballotMessageAndNeighbors = (ballotMessage, neighbors)
+                measurableCell = ChatViewBallotMessageTableViewCell.sizingCell
+
+            case let systemMessage as SystemMessage:
+                // Differentiate between CallMessages and other SystemMessages
+                switch systemMessage.systemMessageType {
+                case .callMessage:
+                    ChatViewCallSystemMessageTableViewCell.sizingCell.callMessageAndNeighbors = (
+                        systemMessage,
+                        neighbors
+                    )
+                    measurableCell = ChatViewCallSystemMessageTableViewCell.sizingCell
+                case .systemMessage:
+                    ChatViewSystemMessageTableViewCell.sizingCell.systemMessageAndNeighbors = (systemMessage, neighbors)
+                    measurableCell = ChatViewSystemMessageTableViewCell.sizingCell
+                case .workConsumerInfo:
+                    ChatViewWorkConsumerInfoSystemMessageTableViewCell.sizingCell.systemMessage = systemMessage
+                    measurableCell = ChatViewWorkConsumerInfoSystemMessageTableViewCell.sizingCell
+                }
+
+            // Step 3
+
+            default:
+                fatalError("Not supported message type: \(message.loggingDescription)")
             }
-                
-        case let locationMessage as LocationMessage:
-            ChatViewLocationMessageTableViewCell.sizingCell.locationMessageAndNeighbors = (
-                message: locationMessage,
-                neighbors: neighbors
-            )
-            measurableCell = ChatViewLocationMessageTableViewCell.sizingCell
-            
-        case let ballotMessage as BallotMessage:
-            ChatViewBallotMessageTableViewCell.sizingCell.ballotMessageAndNeighbors = (ballotMessage, neighbors)
-            measurableCell = ChatViewBallotMessageTableViewCell.sizingCell
-            
-        case let systemMessage as SystemMessage:
-            // Differentiate between CallMessages and other SystemMessages
-            switch systemMessage.systemMessageType {
-            case .callMessage:
-                ChatViewCallSystemMessageTableViewCell.sizingCell.callMessageAndNeighbors = (systemMessage, neighbors)
-                measurableCell = ChatViewCallSystemMessageTableViewCell.sizingCell
-            case .systemMessage:
-                ChatViewSystemMessageTableViewCell.sizingCell.systemMessageAndNeighbors = (systemMessage, neighbors)
-                measurableCell = ChatViewSystemMessageTableViewCell.sizingCell
-            case .workConsumerInfo:
-                ChatViewWorkConsumerInfoSystemMessageTableViewCell.sizingCell.systemMessage = systemMessage
-                measurableCell = ChatViewWorkConsumerInfoSystemMessageTableViewCell.sizingCell
-            }
-            
-        // Step 3
-            
-        default:
-            fatalError("Not supported message type: \(message.loggingDescription)")
         }
-        
+        else {
+            measurableCell = ChatViewDeletedMessageTableViewCell.sizingCell
+        }
+
         let size = CGSize(width: width, height: UIView.layoutFittingCompressedSize.height)
         
         // This is an expensive call, because it creates and destroys a full Auto Layout "engine" just for this call

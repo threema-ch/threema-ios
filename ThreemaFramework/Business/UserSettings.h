@@ -96,6 +96,8 @@ enum ThreemaVideoCallQualitySetting {
 
 @property (nonatomic, readwrite) BOOL enableFSv12ForTesting;
 
+@property (nonatomic, readwrite) BOOL safeIntroShown;
+
 @end
 
 @interface UserSettings : NSObject <UserSettingsProtocol>
@@ -135,7 +137,6 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite, copy) NSData *deviceID;
 
 @property (nonatomic, readwrite) NSData *safeConfig;
-@property (nonatomic, readwrite) BOOL safeIntroShown;
 @property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateApp;
 @property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateShareExtension;
 

@@ -190,8 +190,8 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     
     func incomingMessageStarted(_ message: AbstractMessage) { }
     
-    func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) { }
-    
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) { }
+
     func incomingMessageFinished(_ message: AbstractMessage) { }
 
     func readMessage(inConversations: Set<Conversation>?) {

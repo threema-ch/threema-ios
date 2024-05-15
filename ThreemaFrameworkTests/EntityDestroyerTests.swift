@@ -42,7 +42,7 @@ class EntityDestroyerTests: XCTestCase {
         databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
     }
 
-    func testDeleteMedias() {
+    func testDeleteMediasOlderThan() {
         setupVideoMessages()
         
         let deleteTests = [
@@ -66,7 +66,7 @@ class EntityDestroyerTests: XCTestCase {
         }
     }
     
-    func testDeleteMessages() {
+    func testDeleteMessagesOlderThan() {
         setupVideoMessages()
         
         let deleteTests = [
@@ -89,7 +89,135 @@ class EntityDestroyerTests: XCTestCase {
             XCTAssertEqual(count, deleteTest[1]!, "not expected count of deleted messages")
         }
     }
-    
+
+    func testDeleteMessageContentOfLocationMessageEntity() throws {
+        let dbPreparer = DatabasePreparer(context: objCnx)
+        let message = dbPreparer.save {
+            dbPreparer.createLocationMessage(
+                conversation: dbPreparer.createConversation(),
+                accuracy: 1,
+                latitude: 1,
+                longitude: 1,
+                reverseGeocodingResult: "reverse result",
+                poiAddress: "POI address",
+                poiName: "POI name",
+                isOwn: true
+            )
+        }
+
+        let entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil))
+        try entityManager.entityDestroyer.deleteMessageContent(of: message)
+
+        XCTAssertEqual(message.latitude, 0)
+        XCTAssertEqual(message.longitude, 0)
+        XCTAssertEqual(message.accuracy, 0)
+        XCTAssertEqual(message.reverseGeocodingResult, "")
+        XCTAssertNil(message.poiAddress)
+        XCTAssertNil(message.poiName)
+    }
+
+    func testDeleteMessageContentOfTextMessageEntity() throws {
+        let dbPreparer = DatabasePreparer(context: objCnx)
+        let message = dbPreparer.save {
+            dbPreparer.createTextMessage(
+                conversation: dbPreparer.createConversation(),
+                text: "Test",
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+        }
+
+        let entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil))
+        try entityManager.entityDestroyer.deleteMessageContent(of: message)
+
+        XCTAssertEqual(message.text, "")
+    }
+
+    func testDeleteMessageContentOfFileMessageEntity() throws {
+        let dbPreparer = DatabasePreparer(context: objCnx)
+        let message = dbPreparer.save {
+            let data = dbPreparer.createFileData(data: Data([11, 22]))
+            let thumbnail = dbPreparer.createImageData(data: Data([33]), height: 33, width: 33)
+            let message = dbPreparer.createFileMessageEntity(
+                conversation: dbPreparer.createConversation(),
+                data: data,
+                thumbnail: thumbnail,
+                mimeType: "PDF",
+                isOwn: true,
+                caption: "Test PDF"
+            )
+            message.fileName = "test.pdf"
+            message.json = "{test: 1}"
+
+            return message
+        }
+
+        let entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil))
+        try entityManager.entityDestroyer.deleteMessageContent(of: message)
+
+        XCTAssertNil(message.data)
+        XCTAssertNil(message.thumbnail)
+        XCTAssertEqual(message.mimeType, "")
+        XCTAssertEqual(message.fileName, "")
+        XCTAssertEqual(message.caption, "")
+        XCTAssertEqual(message.json, "")
+    }
+
+    func testDeleteMessageContentOfImageMessageEntity() throws {
+        let dbPreparer = DatabasePreparer(context: objCnx)
+        let message = dbPreparer.save {
+            let image = dbPreparer.createImageData(data: Data([11, 22]), height: 22, width: 22)
+            let thumbnail = dbPreparer.createImageData(data: Data([33]), height: 33, width: 33)
+            let message = dbPreparer.createImageMessageEntity(
+                conversation: dbPreparer.createConversation(),
+                image: image,
+                thumbnail: thumbnail,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            return message
+        }
+
+        let entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil))
+        try entityManager.entityDestroyer.deleteMessageContent(of: message)
+
+        XCTAssertNil(message.image)
+        XCTAssertNil(message.thumbnail)
+    }
+
+    func testDeleteMessageContentOfVideoMessageEntity() throws {
+        let dbPreparer = DatabasePreparer(context: objCnx)
+        let message = dbPreparer.save {
+            let conversation = dbPreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default,
+                complete: nil
+            )
+            let video = dbPreparer.createVideoData(data: Data([11, 22]))
+            let thumbnail = dbPreparer.createImageData(data: Data([33]), height: 33, width: 33)
+            let message = dbPreparer.createVideoMessageEntity(
+                conversation: conversation,
+                video: video,
+                duration: 10,
+                thumbnail: thumbnail,
+                date: Date(),
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            return message
+        }
+
+        let entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil))
+        try entityManager.entityDestroyer.deleteMessageContent(of: message)
+
+        XCTAssertNil(message.video)
+        XCTAssertEqual(message.duration, 0)
+    }
+
     func testDeleteBasicConversation() {
         let entityManager = EntityManager(databaseContext: databaseMainCnx)
         
@@ -139,9 +267,9 @@ class EntityDestroyerTests: XCTestCase {
         var ultimatelyDeletedMessageIDs = Set<Data>()
         
         for i in 0..<100 {
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation)!
+                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -150,9 +278,9 @@ class EntityDestroyerTests: XCTestCase {
         }
         
         for i in 0..<100 {
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: remainingContactAndConversation.conversation)!
+                    .textMessage(for: remainingContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = remainingContactAndConversation.contact
                 message.text = "Text \(i)"
             }
@@ -208,7 +336,7 @@ class EntityDestroyerTests: XCTestCase {
         var ultimatelyDeletedMessageIDs = Set<Data>()
         var existingMessageIDs = Set<Data>()
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for i in 0..<100 {
                 _ = DatabasePreparer(context: self.databaseMainCnx.main)
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -219,7 +347,10 @@ class EntityDestroyerTests: XCTestCase {
                         
                         for i in 0..<100 {
                             for member in members {
-                                let message = entityManager.entityCreator.textMessage(for: conversation)!
+                                let message = entityManager.entityCreator.textMessage(
+                                    for: conversation,
+                                    setLastUpdate: true
+                                )!
                                 message.sender = member
                                 message.text = "Text \(i)"
                                 
@@ -233,9 +364,9 @@ class EntityDestroyerTests: XCTestCase {
         let conversation2 = entityManager.conversation(forContact: members.first!, createIfNotExisting: true)
         
         for i in 0..<100 {
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation)!
+                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -244,8 +375,8 @@ class EntityDestroyerTests: XCTestCase {
         }
         
         for i in 0..<100 {
-            entityManager.performSyncBlockAndSafe {
-                let message = entityManager.entityCreator.textMessage(for: conversation2)!
+            entityManager.performAndWaitSave {
+                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
                 
@@ -295,7 +426,7 @@ class EntityDestroyerTests: XCTestCase {
         var ultimatelyDeletedMessageIDs = Set<Data>()
         var existingMessageIDs = Set<Data>()
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for i in 0..<10 {
                 _ = DatabasePreparer(context: self.databaseMainCnx.main)
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -306,7 +437,10 @@ class EntityDestroyerTests: XCTestCase {
                         
                         for i in 0..<10 {
                             for member in members {
-                                let message = entityManager.entityCreator.textMessage(for: conversation)!
+                                let message = entityManager.entityCreator.textMessage(
+                                    for: conversation,
+                                    setLastUpdate: true
+                                )!
                                 message.sender = member
                                 message.text = "Text \(i)"
                                 
@@ -325,9 +459,9 @@ class EntityDestroyerTests: XCTestCase {
         let conversation2 = entityManager.conversation(forContact: members.first!, createIfNotExisting: true)
         
         for i in 0..<10 {
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation)!
+                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -336,8 +470,8 @@ class EntityDestroyerTests: XCTestCase {
         }
         
         for i in 0..<10 {
-            entityManager.performSyncBlockAndSafe {
-                let message = entityManager.entityCreator.textMessage(for: conversation2)!
+            entityManager.performAndWaitSave {
+                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
                 
@@ -475,7 +609,7 @@ extension EntityDestroyerTests {
         var notDeletedContact2: ContactEntity!
         var notDeletedContact3: ContactEntity!
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             notDeletedContact = entityManager.entityCreator.contact()!
             notDeletedContact.identity = "ECHOECH1"
             notDeletedContact.verificationLevel = 0
@@ -485,7 +619,7 @@ extension EntityDestroyerTests {
             notDeletedContact.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             notDeletedContact2 = entityManager.entityCreator.contact()!
             notDeletedContact2.identity = "ECHOECH2"
             notDeletedContact2.verificationLevel = 0
@@ -495,7 +629,7 @@ extension EntityDestroyerTests {
             notDeletedContact2.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             notDeletedContact3 = entityManager.entityCreator.contact()!
             notDeletedContact3.identity = "ECHOECH3"
             notDeletedContact3.verificationLevel = 0
@@ -512,7 +646,7 @@ extension EntityDestroyerTests {
         -> (contact: ContactEntity, conversation: Conversation) {
         var contact: ContactEntity!
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             contact = entityManager.entityCreator.contact()!
             contact.identity = identity
             contact.verificationLevel = 0
@@ -534,15 +668,9 @@ extension EntityDestroyerTests {
     
     private func setupVideoMessages() {
         // Setup DB for testing, insert 10 video messages
-        let testEntityManager = DatabasePreparer(context: objCnx)
-        testEntityManager.save {
-            let conversation = testEntityManager.createConversation(
-                typing: false,
-                unreadMessageCount: 0,
-                visibility: .default,
-                complete: nil
-            )
-            let thumbnail = testEntityManager.createImageData(data: Data([22]), height: 22, width: 22)
+        let dbPreparer = DatabasePreparer(context: objCnx)
+        dbPreparer.save {
+            let thumbnail = dbPreparer.createImageData(data: Data([22]), height: 22, width: 22)
             
             let userCalendar = Calendar.current
             let toDate = Date()
@@ -553,22 +681,16 @@ extension EntityDestroyerTests {
                 addDate.hour = 1
 
                 let date = userCalendar.date(byAdding: addDate, to: toDate)
-                _ = testEntityManager.createVideoMessageEntity(
-                    conversation: conversation,
+
+                dbPreparer.createVideoMessageEntity(
+                    conversation: dbPreparer.createConversation(),
+                    video: dbPreparer.createVideoData(data: Data([1])),
+                    duration: 10,
                     thumbnail: thumbnail,
-                    videoData: testEntityManager.createVideoData(data: Data([1])),
-                    date: date,
-                    complete: { videoMessage in
-                    
-                        videoMessage.delivered = 1
-                        videoMessage.id = Data([11])
-                        videoMessage.isOwn = true
-                        videoMessage.read = true
-                        videoMessage.sent = true
-                        videoMessage.userack = false
-                        videoMessage.duration = 10
-                        videoMessage.remoteSentDate = Date()
-                    }
+                    date: date!,
+                    isOwn: true,
+                    sender: nil,
+                    remoteSentDate: Date()
                 )
             }
         }

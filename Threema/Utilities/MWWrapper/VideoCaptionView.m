@@ -28,7 +28,7 @@
     UIView *view = [[UIView alloc] initWithFrame:rect];
     view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 
-    UIImage *tmpImage = [UIImage imageNamed:@"Video"];
+    UIImage *tmpImage = [UIImage imageNamed:@"threema.video.fill"];
     UIImage *cameraImage = [tmpImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     UIImageView *imageView = [[UIImageView alloc] initWithImage:cameraImage];
     imageView.tintColor = [UIColor whiteColor];

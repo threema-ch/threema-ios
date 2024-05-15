@@ -195,6 +195,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         button.translatesAutoresizingMaskIntoConstraints = false
         
         button.isPlaying = false
+        button.isConsumed = false
         
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         
@@ -466,6 +467,14 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
             waveformView.updateProgressWaveform(voiceMessageCellDelegate.getProgress(for: message))
         }
         
+        if let message = voiceMessage,
+           !message.isOwnMessage {
+            micIconOrPlaybackSpeedButton.isConsumed = message.consumed != nil
+        }
+        else {
+            micIconOrPlaybackSpeedButton.isConsumed = true
+        }
+        
         if !(voiceMessage?.showDateAndStateInline ?? false) {
             captionTextLabel.text = voiceMessage?.caption
             showCaptionAndDateAndState()
@@ -632,6 +641,19 @@ extension ChatViewVoiceMessageTableViewCell {
             
         isPlaying = true
         
+        if let voiceMessage = voiceMessageAndNeighbors.message as? FileMessageEntity,
+           !voiceMessage.isOwnMessage,
+           voiceMessage.consumed == nil {
+            // Set the consumed date for the voice message
+            let em = BusinessInjector().entityManager
+            em.performAndWaitSave {
+                if let vm = em.entityFetcher.getManagedObject(by: voiceMessage.objectID) as? FileMessageEntity {
+                    vm.consumed = Date()
+                }
+            }
+            micIconOrPlaybackSpeedButton.isConsumed = true
+        }
+        
         if !isFocused {
             UIAccessibility.post(notification: .layoutChanged, argument: self)
         }
@@ -704,15 +726,18 @@ extension ChatViewVoiceMessageTableViewCell {
 
 extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
     
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+    func messageActions()
+        -> (
+            primaryActions: [ChatViewMessageActionProvider.MessageAction],
+            generalActions: [ChatViewMessageActionProvider.MessageAction]
+        )? {
 
         guard let message = voiceMessageAndNeighbors?.message else {
             return nil
         }
 
         typealias Provider = ChatViewMessageActionProvider
-        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
-        
+            
         // Speak
         let speakText = message.fileMessageType.localizedDescription
         
@@ -752,8 +777,8 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
-        // Edit
-        let editHandler = {
+        // Select
+        let selectHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
@@ -770,8 +795,14 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
         let ackHandler = { (message: BaseMessage, ack: Bool) in
             self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
+            
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
         
-        let defaultActions = Provider.defaultActions(
+        // Build menu
+        return Provider.defaultActions(
             message: message,
             speakText: speakText,
             shareItems: shareItems,
@@ -779,16 +810,12 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
             didDelete: didDelete,
-            ackHandler: ackHandler
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler
         )
-                
-        // Build menu
-        menuItems.append(contentsOf: defaultActions)
-        
-        return menuItems
     }
     
     // MARK: - Accessibility
@@ -797,8 +824,10 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
     override public var accessibilityLabel: String? {
         get {
             if isPlaying {
-                return nil
+                // VoiceOver falls back to traits calling a playing message just "Button" without this
+                return "pause".localized
             }
+            
             return super.accessibilityLabel
         }
         

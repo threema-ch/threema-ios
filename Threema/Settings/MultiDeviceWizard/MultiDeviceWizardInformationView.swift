@@ -22,7 +22,9 @@ import SwiftUI
 
 struct MultiDeviceWizardInformationView: View {
     @Environment(\.openURL) var openURL
-
+    @Environment(\.appContainer.businessInjector)
+    private var injectedBusinessInjector: any BusinessInjectorProtocol
+    
     @ObservedObject var wizardVM: MultiDeviceWizardViewModel
     @Binding var dismiss: Bool
 
@@ -56,7 +58,7 @@ struct MultiDeviceWizardInformationView: View {
                         
                         Text(LocalizedStringKey(String.localizedStringWithFormat(
                             BundleUtil.localizedString(forKey: "md_wizard_info_linking_text"),
-                            DeviceLinking(businessInjector: BusinessInjector()).threemaSafeServer
+                            DeviceLinking(businessInjector: injectedBusinessInjector).threemaSafeServer
                         )))
                     }
                     .accessibilityElement(children: .combine)

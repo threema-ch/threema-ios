@@ -272,7 +272,9 @@ extension PPAssetsCollectionController {
             captureSession?.addInput(input)
             captureLayer = AVCaptureVideoPreviewLayer(session: captureSession!)
             captureLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            captureSession?.startRunning()
+            DispatchQueue.global(qos: .background).async {
+                self.captureSession?.startRunning()
+            }
             //------------------ Threema edit begin ---------------------------
             updatePreviewOrientation(UIDevice.current.orientation)
             //------------------ Threema edit end ---------------------------

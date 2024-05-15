@@ -796,7 +796,7 @@ public struct Groupcall_SfuHttpResponse {
 
 extension Groupcall_SfuHttpResponse.Join.Address.ProtocolEnum: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Groupcall_SfuHttpResponse.Join.Address.ProtocolEnum] = [
+  public static let allCases: [Groupcall_SfuHttpResponse.Join.Address.ProtocolEnum] = [
     .udp,
   ]
 }
@@ -2482,7 +2482,7 @@ public struct Groupcall_ParticipantToParticipant {
 
 extension Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device] = [
+  public static let allCases: [Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device] = [
     .all,
     .microphone,
     .camera,

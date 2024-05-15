@@ -23,31 +23,42 @@ import PromiseKit
 @testable import ThreemaFramework
 
 class UserNotificationCenterManagerMock: UserNotificationCenterManagerProtocol {
-    
-    private var returnFireDate: Date?
+    private let returnFireDate: Date
+    private let deliveredNotifications: [PendingUserNotificationKey]?
 
+    var addCalls = [PendingUserNotificationKey]()
     var removeCalls = [PendingUserNotificationKey]()
-    
-    convenience init(returnFireDate: Date) {
-        self.init()
+
+    convenience init() {
+        self.init(returnFireDate: Date())
+    }
+
+    required init(returnFireDate: Date, deliveredNotifications: [PendingUserNotificationKey]? = nil) {
         self.returnFireDate = returnFireDate
+        self.deliveredNotifications = deliveredNotifications
     }
     
     func add(
-        key: PendingUserNotificationKey,
+        contentKey: PendingUserNotificationKey,
         stage: UserNotificationStage,
         notification: UNNotificationContent
     ) -> Promise<Date?> {
-        Promise { seal in
+        addCalls.append(contentKey)
+
+        return Promise { seal in
             seal.fulfill(returnFireDate)
         }
     }
     
-    func isPending(key: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool {
+    func isPending(contentKey: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool {
         false
     }
     
-    func remove(key: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool) {
-        removeCalls.append(key)
+    func isDelivered(contentKey: PendingUserNotificationKey) -> Bool {
+        deliveredNotifications?.contains(contentKey) ?? false
+    }
+
+    func remove(contentKey: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool) {
+        removeCalls.append(contentKey)
     }
 }

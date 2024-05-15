@@ -30,7 +30,6 @@ import Foundation
 public struct ThreemaBlake2b: Sendable {
     
     public enum Error: Swift.Error {
-        case failedToConvertStringToData
         case wrongKeySize
         case inputEmpty
         case saltEmpty
@@ -56,13 +55,9 @@ public struct ThreemaBlake2b: Sendable {
     
     /// Create new instance that uses the provided personal
     /// - Parameter personal: Personal UTF-8 string to use in all calls of this instance
-    /// - Throws: `ThreemaBlake2b.Error.failedToConvertStringToData` or `ThreemaBlake2b.Error.personalTooLong`
+    /// - Throws:`ThreemaBlake2b.Error.personalTooLong`
     public init(personal: String) throws {
-        guard let personalData = personal.data(using: .utf8) else {
-            throw Error.failedToConvertStringToData
-        }
-        
-        try self.init(personal: personalData)
+        try self.init(personal: Data(personal.utf8))
     }
     
     /// Create new instance that uses the provided personal
@@ -95,13 +90,9 @@ public struct ThreemaBlake2b: Sendable {
         input: Data...,
         derivedKeyLength: DigestLength
     ) throws -> Data {
-        guard let saltData = salt.data(using: .utf8) else {
-            throw Error.failedToConvertStringToData
-        }
-        
-        return try ThreemaBlake2b.deriveKey(
+        try ThreemaBlake2b.deriveKey(
             from: key,
-            with: saltData,
+            with: Data(salt.utf8),
             personal: personal,
             input: input,
             derivedKeyLength: derivedKeyLength
@@ -151,15 +142,10 @@ public struct ThreemaBlake2b: Sendable {
         input: Data...,
         derivedKeyLength: DigestLength
     ) throws -> Data {
-        guard let saltData = salt.data(using: .utf8),
-              let personalData = personal.data(using: .utf8) else {
-            throw Error.failedToConvertStringToData
-        }
-        
-        return try deriveKey(
+        try deriveKey(
             from: key,
-            with: saltData,
-            personal: personalData,
+            with: Data(salt.utf8),
+            personal: Data(personal.utf8),
             input: input,
             derivedKeyLength: derivedKeyLength
         )
@@ -182,13 +168,9 @@ public struct ThreemaBlake2b: Sendable {
         input: Data...,
         derivedKeyLength: DigestLength
     ) throws -> Data {
-        guard let saltData = salt.data(using: .utf8) else {
-            throw Error.failedToConvertStringToData
-        }
-        
-        return try deriveKey(
+        try deriveKey(
             from: key,
-            with: saltData,
+            with: Data(salt.utf8),
             personal: personal,
             input: input,
             derivedKeyLength: derivedKeyLength
@@ -248,11 +230,7 @@ public struct ThreemaBlake2b: Sendable {
     /// - Returns: Hash of length `hashLength`
     /// - Throws: `ThreemaBlake2b.Error`
     public func hash(_ input: Data..., key: Data? = nil, salt: String, hashLength: DigestLength) throws -> Data {
-        guard let saltData = salt.data(using: .utf8) else {
-            throw Error.failedToConvertStringToData
-        }
-        
-        return try ThreemaBlake2b.hash(input, key: key, salt: saltData, personal: personal, hashLength: hashLength)
+        try ThreemaBlake2b.hash(input, key: key, salt: Data(salt.utf8), personal: personal, hashLength: hashLength)
     }
     
     /// Hash of the input data
@@ -287,12 +265,13 @@ public struct ThreemaBlake2b: Sendable {
         personal: String,
         hashLength: DigestLength
     ) throws -> Data {
-        guard let saltData = salt.data(using: .utf8),
-              let personalData = personal.data(using: .utf8) else {
-            throw Error.failedToConvertStringToData
-        }
-        
-        return try ThreemaBlake2b.hash(input, key: key, salt: saltData, personal: personalData, hashLength: hashLength)
+        try ThreemaBlake2b.hash(
+            input,
+            key: key,
+            salt: Data(salt.utf8),
+            personal: Data(personal.utf8),
+            hashLength: hashLength
+        )
     }
     
     /// Hash of the input data

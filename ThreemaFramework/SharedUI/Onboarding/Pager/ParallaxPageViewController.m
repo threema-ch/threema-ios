@@ -96,9 +96,10 @@
     [self.view addSubview:_pageContainerView];
 
     [self.view bringSubviewToFront:_controlsView];
-    
-    [_pageLeftButton setImage:[UIImage imageNamed:@"ArrowPrevious" inColor:Colors.primaryWizard] forState:UIControlStateNormal];
-    [_pageRightButton setImage:[UIImage imageNamed:@"ArrowNext" inColor:Colors.primaryWizard] forState:UIControlStateNormal];
+    [_pageLeftButton setImage:[[UIImage systemImageNamed:@"chevron.left"] imageWithTintColor:Colors.primaryWizard] forState:UIControlStateNormal];
+    _pageLeftButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    [_pageRightButton setImage:[[UIImage systemImageNamed:@"chevron.right"] imageWithTintColor:Colors.primaryWizard] forState:UIControlStateNormal];
+    _pageRightButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
     _pageLeftButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"previous"];
     _pageRightButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"next"];
     _pageControl.accessibilityLabel = [NSString stringWithFormat:@"%li %@ %li", (long)_pageControl.currentPage + 1, [BundleUtil localizedStringForKey:@"from"], (long)_pageControl.numberOfPages];

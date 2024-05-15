@@ -110,18 +110,15 @@ class AppearanceSettingsViewController: ThemedTableViewController {
         lightThemeButton.layer.masksToBounds = true
         systemThemeButton.layer.cornerRadius = 8.0
         systemThemeButton.layer.masksToBounds = true
-
-        if LicenseStore.requiresLicenseKey() == false {
-            lightThemeButton.setImage(BundleUtil.imageNamed("Light-Theme"), for: .normal)
-            darkThemeButton.setImage(BundleUtil.imageNamed("Dark-Theme"), for: .normal)
-            systemThemeButton.setImage(BundleUtil.imageNamed("System-Theme"), for: .normal)
-        }
-        else {
-            lightThemeButton.setImage(BundleUtil.imageNamed("Light-Theme-Work"), for: .normal)
-            darkThemeButton.setImage(BundleUtil.imageNamed("Dark-Theme-Work"), for: .normal)
-            systemThemeButton.setImage(BundleUtil.imageNamed("System-Theme-Work"), for: .normal)
-        }
         
+        lightThemeButton.setImage(UIImage(resource: .themeLight), for: .normal)
+        darkThemeButton.setImage(UIImage(resource: .themeDark), for: .normal)
+        systemThemeButton.setImage(UIImage(resource: .themeSystem), for: .normal)
+        
+        lightThemeButton.imageView?.contentMode = .scaleAspectFit
+        darkThemeButton.imageView?.contentMode = .scaleAspectFit
+        systemThemeButton.imageView?.contentMode = .scaleAspectFit
+
         displayOrderValue
             .text = (UserSettings.shared().displayOrderFirstName ? "SortOrder_Firstname" : "SortOrder_Lastname")
             .localized
@@ -225,7 +222,7 @@ extension AppearanceSettingsViewController {
             switch ThreemaApp.current {
             case .threema:
                 return UITableView.automaticDimension
-            case .workRed:
+            case .blue:
                 return UITableView.automaticDimension
             default:
                 return 0
@@ -239,7 +236,7 @@ extension AppearanceSettingsViewController {
             switch ThreemaApp.current {
             case .threema:
                 return UITableView.automaticDimension
-            case .workRed:
+            case .blue:
                 return UITableView.automaticDimension
             default:
                 return 0

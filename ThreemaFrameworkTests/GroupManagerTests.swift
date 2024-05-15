@@ -2595,10 +2595,7 @@ class GroupManagerTests: XCTestCase {
         
         var ballot: Ballot!
         databasePreparer.save {
-            ballot = databasePreparer.createBallotMessage(
-                conversation: group.conversation,
-                ballotID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!
-            )
+            ballot = databasePreparer.createBallot(conversation: group.conversation)
             ballot.creatorID = myIdentityStoreMock.identity
             ballot.state = NSNumber(integerLiteral: kBallotStateOpen)
         }

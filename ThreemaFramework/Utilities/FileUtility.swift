@@ -244,7 +244,7 @@ import Foundation
             return false
         }
         
-        return FileUtility.write(fileURL: fileURL, contents: text.data(using: .utf8))
+        return FileUtility.write(fileURL: fileURL, contents: Data(text.utf8))
     }
     
     @discardableResult public static func write(fileURL: URL?, contents: Data?) -> Bool {
@@ -289,17 +289,17 @@ import Foundation
 
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: fileURL.path) {
-            if let data = text.data(using: .utf8) {
-                do {
-                    let fileHandle = try FileHandle(forWritingTo: fileURL)
-                    fileHandle.seekToEndOfFile()
-                    fileHandle.write(data)
-                    fileHandle.closeFile()
-                }
-                catch {
-                    DDLogError(error.localizedDescription)
-                }
+            do {
+                let data = Data(text.utf8)
+                let fileHandle = try FileHandle(forWritingTo: fileURL)
+                fileHandle.seekToEndOfFile()
+                fileHandle.write(data)
+                fileHandle.closeFile()
             }
+            catch {
+                DDLogError(error.localizedDescription)
+            }
+            
             result = true
         }
         else {

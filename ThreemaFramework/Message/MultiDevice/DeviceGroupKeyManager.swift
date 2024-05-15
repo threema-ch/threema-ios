@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 protocol DeviceGroupKeyManagerProtocol {
     var dgk: Data? { get }
@@ -32,6 +33,14 @@ public class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtocol {
     private let keychainLabel = "Threema Device Group Key 1"
 
     private let myIdentityStore: MyIdentityStoreProtocol
+
+    var keychainHelper: KeychainHelper? {
+        guard let identity = myIdentityStore.identity else {
+            return nil
+        }
+
+        return KeychainHelper(identity: ThreemaIdentity(identity))
+    }
 
     @objc public required init(myIdentityStore: MyIdentityStoreProtocol) {
         self.myIdentityStore = myIdentityStore
@@ -56,90 +65,44 @@ public class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtocol {
     /// Load DGK from Keychain
     /// - Returns: DGK or nil if not found
     public func load() -> Data? {
-        guard let account = accountForDgk() else {
+        guard let keychainHelper else {
             return nil
         }
 
-        let matchQuery: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-            kSecAttrLabel as String: keychainLabel.data(using: .utf8)!,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnAttributes as String: true,
-            kSecReturnData as String: true,
-        ]
-
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(matchQuery as CFDictionary, &result)
-        guard status == errSecSuccess else {
-            DDLogNotice("No Device Group Key was found in keychain: \(status)")
-            return nil
-        }
-
-        guard let resultAccount = result?[kSecAttrAccount] as? Data,
-              let resultKey = result?[kSecValueData] as? Data else {
-            DDLogError("Device Group Key failed to extract account and key")
-            return nil
-        }
-
-        guard account.elementsEqual(resultAccount) else {
-            DDLogError("Device Group Key failed account mismatch")
-            return nil
-        }
-
-        return resultKey
+        let (key, _, _) = keychainHelper.load(item: .deviceGroupKey)
+        return key
     }
 
     /// Destroy DGK from Keychain.
     /// - Returns: True if key founded and destroyed
     @discardableResult @objc public func destroy() -> Bool {
-        guard let account = accountForDgk() else {
+        guard let keychainHelper else {
             return false
         }
 
-        let matchQuery: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-        ]
-        if SecItemCopyMatching(matchQuery as CFDictionary, nil) == errSecSuccess {
-            SecItemDelete(matchQuery as CFDictionary)
+        do {
+            try keychainHelper.destroy(item: .deviceGroupKey)
+            return true
         }
-
-        return true
+        catch {
+            return false
+        }
     }
 
     /// Store DGK into Keychain.
     /// - Parameter dgk: Device Group Key
     /// - Returns: True DGK stored successfully
     @discardableResult public func store(dgk: Data) -> Bool {
-        guard let account = accountForDgk() else {
+        guard let keychainHelper else {
             return false
         }
 
-        destroy()
-
-        let addQuery: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-            kSecAttrAccount as String: account,
-            kSecAttrLabel as String: keychainLabel.data(using: .utf8)!,
-            kSecValueData as String: dgk,
-        ]
-
-        let status = SecItemAdd(addQuery as CFDictionary, nil)
-        guard status == errSecSuccess else {
-            DDLogError("Storing Device Group Key failed: \(status)")
+        do {
+            try keychainHelper.store(password: dgk, item: .deviceGroupKey)
+            return true
+        }
+        catch {
             return false
         }
-
-        return true
-    }
-
-    private func accountForDgk() -> Data? {
-        guard let identity = myIdentityStore.identity, let account: Data = "\(identity)-dgk".data(using: .utf8) else {
-            DDLogError("Loading Device Group Key failed, because of missing identity")
-            return nil
-        }
-        return account
     }
 }

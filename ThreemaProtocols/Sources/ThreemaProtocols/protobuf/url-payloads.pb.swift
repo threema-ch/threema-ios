@@ -106,7 +106,7 @@ public struct Url_GroupInvite {
 
 extension Url_GroupInvite.ConfirmationMode: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Url_GroupInvite.ConfirmationMode] = [
+  public static let allCases: [Url_GroupInvite.ConfirmationMode] = [
     .automatic,
     .manual,
   ]
@@ -257,7 +257,7 @@ public struct Url_DeviceGroupJoinRequestOrOffer {
 
 extension Url_DeviceGroupJoinRequestOrOffer.Version: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Url_DeviceGroupJoinRequestOrOffer.Version] = [
+  public static let allCases: [Url_DeviceGroupJoinRequestOrOffer.Version] = [
     .v10,
   ]
 }

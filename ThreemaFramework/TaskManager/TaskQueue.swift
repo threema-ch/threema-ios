@@ -226,6 +226,9 @@ final class TaskQueue {
                             nsError.code == ThreemaProtocolError.messageAlreadyProcessed.rawValue ||
                             nsError.code == ThreemaProtocolError.messageBlobDecryptionFailed.rawValue ||
                             nsError.code == ThreemaProtocolError.messageNonceReuse.rawValue ||
+                            nsError.code == ThreemaProtocolError.messageSenderMismatch.rawValue ||
+                            nsError.code == ThreemaProtocolError.messageToDeleteNotFound.rawValue ||
+                            nsError.code == ThreemaProtocolError.messageToEditNotFound.rawValue ||
                             nsError.code == ThreemaProtocolError.unknownMessageType.rawValue:
                             
                             self.handleReceivingError(error, for: item)
@@ -251,7 +254,8 @@ final class TaskQueue {
                             self.done(item: item)
                             
                         case TaskExecutionError.invalidContact(message: _),
-                             TaskExecutionError.multiDeviceNotSupported:
+                             TaskExecutionError.multiDeviceNotSupported,
+                             TaskExecutionError.multiDeviceNotRegistered: // You need to relink anyway
                             DDLogWarn("\(item.taskDefinition) \(error)")
                             self.done(item: item)
                         
@@ -409,6 +413,11 @@ final class TaskQueue {
                         case String(describing: type(of: TaskDefinitionDeleteContactSync.self)):
                             taskDefinition = try unarchiver.decodeTopLevelDecodable(
                                 TaskDefinitionDeleteContactSync.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendDeleteEditMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendDeleteEditMessage.self,
                                 forKey: "\(className)_\(i)"
                             )
                         default:

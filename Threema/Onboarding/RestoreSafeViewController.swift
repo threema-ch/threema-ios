@@ -42,7 +42,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
     // restore just ID from Threema Safe, in case there is any data on this device
     @objc var restoreIdentityOnly = false
     var restoreIdentity: String?
-    var restorePassword: String?
+    var restoreSafePassword: String?
     var restoreCustomServer: String?
     var restoreServer: String?
     var restoreServerUsername: String?
@@ -88,11 +88,9 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
                 )
 
                 restoreCustomServer = mdmSetup.safeServerURL()
-                restoreServer = safeStore.composeSafeServerAuth(
-                    server: mdmSetup.safeServerURL(),
-                    user: mdmSetup.safeServerUsername(),
-                    password: mdmSetup.safeServerPassword()
-                )?.absoluteString
+                restoreServer = mdmSetup.safeServerURL()
+                restoreServerUsername = mdmSetup.safeServerUsername()
+                restoreServerPassword = mdmSetup.safeServerPassword()
             }
             
             if mdmSetup.isSafeRestoreForce() {
@@ -119,7 +117,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
                 identityField.text = restoreIdentity
                 
                 if mdmSetup.isSafeRestorePasswordPreset() {
-                    restorePassword = mdmSetup.safePassword()
+                    restoreSafePassword = mdmSetup.safePassword()
                     
                     okButton.isHidden = true
                     
@@ -228,12 +226,12 @@ extension RestoreSafeViewController {
         mainContentView.isHidden = false
 
         if let restoreSafePasswordViewController = segue.source as? RestoreSafePasswordViewController,
-           let password = restoreSafePasswordViewController.passwordField.text,
+           let safePassword = restoreSafePasswordViewController.passwordField.text,
            let identity = identityField.text {
 
             restoreIdentity = identity
-            restorePassword = password
-            
+            restoreSafePassword = safePassword
+
             startRestore()
         }
     }
@@ -273,8 +271,10 @@ extension RestoreSafeViewController {
 
         safeManager.startRestore(
             identity: restoreIdentity!,
-            password: restorePassword!,
+            safePassword: restoreSafePassword!,
             customServer: restoreCustomServer,
+            serverUser: restoreServerUsername,
+            serverPassword: restoreServerPassword,
             server: restoreServer,
             restoreIdentityOnly: restoreIdentityOnly,
             activateSafeAnyway: activateSafeAnyway,
@@ -287,13 +287,13 @@ extension RestoreSafeViewController {
                     if let error {
                         switch error {
                         case let .restoreError(message):
-                            DDLogError(message)
+                            DDLogError("\(message)")
                             let alert = IntroQuestionViewHelper(parent: self, onAnswer: { _, _ in
                                 self.delegate?.restoreSafeDone()
                             })
                             alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore_failed"))
                         case let .restoreFailed(message):
-                            DDLogError(message)
+                            DDLogError("\(message)")
                             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
                             alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore_failed"))
                         default: break

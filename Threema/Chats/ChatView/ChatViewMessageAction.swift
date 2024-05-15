@@ -24,8 +24,12 @@ protocol ChatViewMessageAction: ThemedCodeTableViewCell {
     
     /// Creates an array of ChatViewMessageActionProvider.MessageAction used to create context menus and accessibility
     /// custom actions
-    /// - Returns: Array of ChatViewMessageActionProvider.MessageAction
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]?
+    /// - Returns: Tuple containing two Arrays of ChatViewMessageActionProvider.MessageAction
+    func messageActions()
+        -> (
+            primaryActions: [ChatViewMessageActionProvider.MessageAction],
+            generalActions: [ChatViewMessageActionProvider.MessageAction]
+        )?
     
     /// Creates an UIContextMenuConfiguration to be used in a ContextMenu
     /// - Parameter indexPath: Index path of cell UIContextMenuConfiguration is built for
@@ -40,23 +44,42 @@ protocol ChatViewMessageAction: ThemedCodeTableViewCell {
 extension ChatViewMessageAction {
     
     func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-        guard let messageActions = messageActions() else {
+        guard let (primaryActions, generalActions) = messageActions() else {
             return nil
         }
         
-        let menuItems = messageActions.map(\.contextMenuAction)
-        let menu = UIMenu(children: menuItems)
-        
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        if #available(iOS 16.0, *) {
+            let primaryMenuActions = primaryActions.map(\.contextMenuAction)
+            let primaryMenu = UIMenu(options: .displayInline, children: primaryMenuActions)
+            primaryMenu.preferredElementSize = .small
+            
+            let generalMenuActions = generalActions.map(\.contextMenuAction)
+            let generalMenu = UIMenu(options: .displayInline, children: generalMenuActions)
+
+            let completeMenu = UIMenu(children: [primaryMenu, generalMenu])
+            
+            return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
+                completeMenu
+            }
+        }
+        else {
+            var allActions = primaryActions.map(\.contextMenuAction)
+            allActions.append(contentsOf: generalActions.map(\.contextMenuAction))
+            let menu = UIMenu(children: allActions)
+            
+            return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
+                menu
+            }
         }
     }
     
     func buildAccessibilityCustomActions() -> [UIAccessibilityCustomAction]? {
-        guard let messageActions = messageActions() else {
+        guard let (primaryActions, generalActions) = messageActions() else {
             return nil
         }
         
-        return messageActions.map(\.accessibilityAction)
+        var allActions = primaryActions
+        allActions.append(contentsOf: generalActions)
+        return allActions.map(\.accessibilityAction)
     }
 }

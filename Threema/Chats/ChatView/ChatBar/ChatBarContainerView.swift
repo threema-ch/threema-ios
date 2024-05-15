@@ -40,6 +40,7 @@ final class ChatBarContainerView: UIView {
     
     private weak var chatBarView: ChatBarView?
     
+    private weak var editedMessageView: ChatBarEditedMessageView?
     private weak var quoteView: ChatBarQuoteView?
     private weak var mentionsTableView: MentionsTableViewController?
     
@@ -171,6 +172,31 @@ final class ChatBarContainerView: UIView {
         }
     }
     
+    func add(_ editedMessageView: ChatBarEditedMessageView) {
+        guard self.editedMessageView != editedMessageView else {
+            return
+        }
+
+        if self.editedMessageView != nil {
+            removeEditedMessageView()
+        }
+
+        self.editedMessageView = editedMessageView
+
+        accessoryView.insertArrangedSubview(editedMessageView, at: accessoryView.arrangedSubviews.count)
+        accessoryView.bringSubviewToFront(editedMessageView)
+
+        editedMessageView.translatesAutoresizingMaskIntoConstraints = false
+
+        layoutIfNeeded()
+    }
+
+    func removeEditedMessageView() {
+        editedMessageView?.removeFromSuperview()
+        editedMessageView = nil
+        layoutIfNeeded()
+    }
+
     func add(_ quoteView: ChatBarQuoteView) {
         guard self.quoteView != quoteView else {
             return

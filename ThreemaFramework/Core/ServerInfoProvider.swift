@@ -99,8 +99,8 @@ import Foundation
         
         func replacePrefixesInURL(url: String) -> String {
             url
-                .replacingOccurrences(of: "{prefix4}", with: prefix4)
-                .replacingOccurrences(of: "{prefix8}", with: prefix8)
+                .replacingOccurrences(of: "{deviceGroupIdPrefix4}", with: prefix4)
+                .replacingOccurrences(of: "{deviceGroupIdPrefix8}", with: prefix8)
         }
         
         self.url = replacePrefixesInURL(url: url)

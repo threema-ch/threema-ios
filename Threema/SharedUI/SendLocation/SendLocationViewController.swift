@@ -627,15 +627,28 @@ extension SendLocationViewController {
         if poi.type != .currentLocationPOI, poi.type != .markedLocationPOI {
             name = poi.name
         }
-
-        BusinessInjector().messageSender.sendLocationMessage(
-            coordinates: poi.location.coordinate,
-            accuracy: poi == currentLocationPOI ? currentLocationPOI.location.horizontalAccuracy : 0.0,
-            poiName: name,
-            poiAddress: poi.address,
-            in: conversation
-        )
         
+        // Sending
+        let businessInjector = BusinessInjector()
+        if let distributionList = conversation.distributionList {
+            let dm = DistributionListMessageSender(businessInjector: businessInjector)
+            dm.sendLocationMessage(
+                coordinates: poi.location.coordinate,
+                accuracy: poi == currentLocationPOI ? currentLocationPOI.location.horizontalAccuracy : 0.0,
+                poiName: name,
+                poiAddress: poi.address,
+                in: distributionList
+            )
+        }
+        else {
+            businessInjector.messageSender.sendLocationMessage(
+                coordinates: poi.location.coordinate,
+                accuracy: poi == currentLocationPOI ? currentLocationPOI.location.horizontalAccuracy : 0.0,
+                poiName: name,
+                poiAddress: poi.address,
+                in: conversation
+            )
+        }
         dismiss(animated: true, completion: nil)
     }
     

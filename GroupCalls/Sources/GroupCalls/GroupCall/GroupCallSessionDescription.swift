@@ -216,6 +216,7 @@ extension GroupCallSessionDescription {
             lines.append("a=rtcp-rsize")
         }
         
+        // TODO: (IOS-4627) Investigate removing if below
         // Add msid if remote participant
         if type == .remote {
             lines.append("a=msid:- \(mid)")

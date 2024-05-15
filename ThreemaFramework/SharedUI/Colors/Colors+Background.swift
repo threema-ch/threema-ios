@@ -76,6 +76,24 @@ extension Colors {
         .systemGray
     }
     
+    @objc public class var backgroundChevronCircleButton: UIColor {
+        switch theme {
+        case .light, .undefined:
+            return Asset.SharedColors.gray250.color
+        case .dark:
+            return Asset.SharedColors.gray800.color
+        }
+    }
+    
+    @objc public class var backgroundTintChevronCircleButton: UIColor {
+        switch theme {
+        case .light, .undefined:
+            return Asset.SharedColors.gray550.color
+        case .dark:
+            return Asset.SharedColors.gray400.color
+        }
+    }
+    
     @objc public class var backgroundQuickActionButton: UIColor {
         backgroundTableViewCell
     }

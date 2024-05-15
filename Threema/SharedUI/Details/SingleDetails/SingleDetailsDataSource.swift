@@ -163,7 +163,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             cell.label = label
             cell.value = value
             return cell
-            
+
         case let .verificationLevel(contact):
             let verificationLevelCell: VerificationLevelDetailsTableViewCell = tableView.dequeueCell(for: indexPath)
             verificationLevelCell.contact = contact
@@ -391,7 +391,7 @@ extension SingleDetailsDataSource {
         
         var contactDetailsQuickActions = [
             QuickAction(
-                imageName: "threema.bubble.fill",
+                imageName: "threema.lock.bubble.right.fill",
                 title: localizesMessageTitle,
                 accessibilityIdentifier: "SingleDetailsDataSourceMessageQuickActionButton"
             ) { [weak self] _ in
@@ -467,7 +467,8 @@ extension SingleDetailsDataSource {
     
     private func searchChatQuickAction(
         in viewController: UIViewController,
-        for conversation: Conversation
+        for conversation: Conversation,
+        forStarred: Bool = false
     ) -> [QuickAction] {
         let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         guard messageFetcher.count() > 0 else {
@@ -483,7 +484,7 @@ extension SingleDetailsDataSource {
             title: BundleUtil.localizedString(forKey: "search"),
             accessibilityIdentifier: "SingleDetailsDataSourceSearchQuickActionButton"
         ) { [weak singleDetailsViewController] _ in
-            singleDetailsViewController?.startChatSearch()
+            singleDetailsViewController?.startChatSearch(forStarred: forStarred)
         }
         
         return [quickAction]
@@ -585,7 +586,7 @@ extension SingleDetailsDataSource {
 
 extension SingleDetailsDataSource {
     
-    var mediaAndPollsQuickActions: [QuickAction] {
+    var mediaStarredAndPollsQuickActions: [QuickAction] {
         var quickActions = [QuickAction]()
         
         guard let viewController = singleDetailsViewController else {
@@ -600,7 +601,9 @@ extension SingleDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        businessInjector.entityManager.performBlockAndWait {
+        quickActions.append(contentsOf: starredQuickAction())
+        
+        businessInjector.entityManager.performAndWait {
             if self.businessInjector.entityManager.entityFetcher.countBallots(for: conversation) > 0 {
                 quickActions.append(contentsOf: self.ballotsQuickAction(for: conversation, in: viewController))
             }
@@ -658,6 +661,16 @@ extension SingleDetailsDataSource {
             // presentation
             let navigationController = ThemedNavigationController(rootViewController: ballotViewController)
             weakViewController.present(navigationController, animated: true)
+        }]
+    }
+    
+    private func starredQuickAction() -> [QuickAction] {
+        [QuickAction(
+            imageName: "star.fill",
+            title: "marker_details_title".localized,
+            accessibilityIdentifier: "marker_details_title".localized
+        ) { [weak singleDetailsViewController] _ in
+            singleDetailsViewController?.startChatSearch(forStarred: true)
         }]
     }
 }

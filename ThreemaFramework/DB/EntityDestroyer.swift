@@ -76,8 +76,8 @@ import Foundation
         return deletedObjects
     }
     
-    func deleteMediasOf<T: BaseMessage>(
-        messageType: T.Type,
+    func deleteMediasOf(
+        messageType: (some BaseMessage).Type,
         olderThan: Date?,
         conversation: Conversation? = nil
     ) -> Int? {
@@ -122,96 +122,12 @@ import Foundation
                 }
             }
             
-            let messages = try objCnx.fetch(mediaMetaInfo.fetchMessages)
-            
-            var deleteMediaIDs: [NSManagedObjectID] = []
-            var updateMessageIDs: [NSManagedObjectID] = []
-
-            for message in messages {
-                if let message = message as? T {
-                    deleteMediaIDs
-                        .append(contentsOf: message.objectIDs(forRelationshipNamed: mediaMetaInfo.relationship))
-                    updateMessageIDs.append(message.objectID)
-                }
+            guard let messages = try objCnx.fetch(mediaMetaInfo.fetchMessages) as? [BaseMessage] else {
+                return 0
             }
-            
-            let deleteFilenames = getExternalFilenames(ofMessages: messages, includeThumbnail: false)
 
-            if !deleteMediaIDs.isEmpty {
-                var changes = [AnyHashable: [NSManagedObjectID]]()
+            try deleteMedias(of: messages, messageType: messageType)
 
-                // Delete media
-                var confirmedDeletedIDs: [NSManagedObjectID] = []
-
-                objCnx.propagatesDeletesAtEndOfEvent = true
-                for mediaID in deleteMediaIDs {
-                    objCnx.performAndWait {
-                        do {
-                            let object = try self.objCnx.existingObject(with: mediaID)
-
-                            if let message = object as? BaseMessage {
-                                nullifyConversationLastMessage(for: [message])
-                            }
-
-                            self.objCnx.delete(object)
-                            
-                            try self.objCnx.save()
-
-                            confirmedDeletedIDs.append(mediaID)
-                        }
-                        catch {
-                            DDLogError("Could not delete file. Error: \(error); \(error.localizedDescription)")
-                        }
-                    }
-                }
-
-                changes[NSDeletedObjectIDsKey] = confirmedDeletedIDs
-
-                if !updateMessageIDs.isEmpty {
-                    var updatedIDs: [NSManagedObjectID] = []
-                    
-                    for updateID in updateMessageIDs {
-                        if let updateMessage = try objCnx.existingObject(with: updateID) as? T {
-                            objCnx.performAndWait {
-                                var updated = false
-                                
-                                // Update data reference to nil (if it failed to to be deleted when the object was
-                                // deleted)
-                                if updateMessage.value(forKey: mediaMetaInfo.relationship) != nil {
-                                    updateMessage.setValue(nil, forKey: mediaMetaInfo.relationship)
-                                    updated = true
-                                }
-                                
-                                // Update blobIDs to nil (to prevent downloading blob again)
-                                if updateMessage.value(forKey: mediaMetaInfo.blobIDField) != nil {
-                                    updateMessage.setValue(nil, forKey: mediaMetaInfo.blobIDField)
-                                    updated = true
-                                }
-                                
-                                if updated {
-                                    do {
-                                        try self.objCnx.save()
-                                        
-                                        updatedIDs.append(updateID)
-                                    }
-                                    catch let error as NSError {
-                                        DDLogError("Cloud not update message. \(error), \(error.userInfo)")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    changes[NSUpdatedObjectsKey] = updatedIDs
-                }
-                
-                if !changes.isEmpty {
-                    let dbManager = DatabaseManager()
-                    dbManager.refreshDirtyObjectIDs(changes, into: objCnx)
-                }
-                
-                deleteExternalFiles(list: deleteFilenames)
-            }
-            
             return messages.count
         }
         catch let error as NSError {
@@ -219,6 +135,185 @@ import Foundation
         }
         
         return 0
+    }
+
+    private func deleteMedias<T: BaseMessage>(of messages: [BaseMessage], messageType: T.Type) throws {
+        guard messageType is AudioMessageEntity.Type ||
+            messageType is FileMessageEntity.Type ||
+            messageType is ImageMessageEntity.Type ||
+            messageType is VideoMessageEntity.Type
+        else {
+            return
+        }
+
+        var deleteMediaIDs: [NSManagedObjectID] = []
+        var updateMessageIDs: [NSManagedObjectID] = []
+
+        let mediaMetaInfo = try getMediaMetaInfo(messageType: messageType)
+
+        for message in messages {
+            if let message = message as? T {
+                deleteMediaIDs
+                    .append(contentsOf: message.objectIDs(forRelationshipNamed: mediaMetaInfo.relationship))
+                updateMessageIDs.append(message.objectID)
+            }
+        }
+
+        let deleteFilenames = getExternalFilenames(ofMessages: messages, includeThumbnail: false)
+
+        if !deleteMediaIDs.isEmpty {
+            var changes = [AnyHashable: [NSManagedObjectID]]()
+
+            // Delete media
+            var confirmedDeletedIDs: [NSManagedObjectID] = []
+
+            objCnx.propagatesDeletesAtEndOfEvent = true
+            for mediaID in deleteMediaIDs {
+                objCnx.performAndWait {
+                    do {
+                        let object = try self.objCnx.existingObject(with: mediaID)
+
+                        if let message = object as? BaseMessage {
+                            nullifyConversationLastMessage(for: [message])
+                        }
+
+                        self.objCnx.delete(object)
+
+                        try self.objCnx.save()
+
+                        confirmedDeletedIDs.append(mediaID)
+                    }
+                    catch {
+                        DDLogError("Could not delete file. Error: \(error); \(error.localizedDescription)")
+                    }
+                }
+            }
+
+            changes[NSDeletedObjectIDsKey] = confirmedDeletedIDs
+
+            if !updateMessageIDs.isEmpty {
+                var updatedIDs: [NSManagedObjectID] = []
+
+                for updateID in updateMessageIDs {
+                    if let updateMessage = try objCnx.existingObject(with: updateID) as? T {
+                        objCnx.performAndWait {
+                            var updated = false
+
+                            // Update data reference to nil (if it failed to to be deleted when the object was
+                            // deleted)
+                            if updateMessage.value(forKey: mediaMetaInfo.relationship) != nil {
+                                updateMessage.setValue(nil, forKey: mediaMetaInfo.relationship)
+                                updated = true
+                            }
+
+                            // Update blobIDs to nil (to prevent downloading blob again)
+                            if updateMessage.value(forKey: mediaMetaInfo.blobIDField) != nil {
+                                updateMessage.setValue(nil, forKey: mediaMetaInfo.blobIDField)
+                                updated = true
+                            }
+
+                            if updated {
+                                do {
+                                    try self.objCnx.save()
+
+                                    updatedIDs.append(updateID)
+                                }
+                                catch let error as NSError {
+                                    DDLogError("Cloud not update message. \(error), \(error.userInfo)")
+                                }
+                            }
+                        }
+                    }
+                }
+                changes[NSUpdatedObjectsKey] = updatedIDs
+            }
+
+            if !changes.isEmpty {
+                let dbManager = DatabaseManager()
+                dbManager.refreshDirtyObjectIDs(changes, into: objCnx)
+            }
+
+            deleteExternalFiles(list: deleteFilenames)
+        }
+    }
+
+    /// Delete content of given message, message metadata remains.
+    /// - Parameter message: Message to its content
+    func deleteMessageContent(of message: BaseMessage) throws {
+        guard message.isRemoteDeletable else {
+            return
+        }
+
+        // Just delete media for message types like `AudioMessageEntity`, `FileMessageEntity`, `ImageMessageEntity` and
+        // `VideoMessageEntity`
+        try deleteMedias(of: [message], messageType: type(of: message))
+
+        if let message = message as? LocationMessage {
+            message.latitude = 0
+            message.longitude = 0
+            message.accuracy = 0
+            message.reverseGeocodingResult = ""
+            message.poiAddress = nil
+            message.poiName = nil
+        }
+        else if let message = message as? TextMessage {
+            message.text = ""
+        }
+        else if let message = message as? FileMessageEntity {
+            deleteThumbnail(for: message)
+
+            message.thumbnail = nil
+            message.mimeType = ""
+            message.fileName = ""
+            message.caption = ""
+            message.json = ""
+        }
+        else if let message = message as? ImageMessageEntity {
+            deleteThumbnail(for: message)
+
+            message.thumbnail = nil
+        }
+        else if let message = message as? VideoMessageEntity {
+            deleteThumbnail(for: message)
+
+            message.duration = 0
+        }
+    }
+
+    private func deleteThumbnail(for message: BaseMessage) {
+        guard message is FileMessageEntity || message is ImageMessageEntity || message is VideoMessageEntity else {
+            return
+        }
+
+        let thumbnailObjectIDs = message.objectIDs(forRelationshipNamed: "thumbnail")
+        guard !thumbnailObjectIDs.isEmpty else {
+            return
+        }
+
+        for objectID in thumbnailObjectIDs {
+            objCnx.performAndWait {
+                do {
+                    let object = try self.objCnx.existingObject(with: objectID)
+
+                    if message is FileMessageEntity || message is ImageMessageEntity {
+                        self.objCnx.delete(object)
+                    }
+                    else if message is VideoMessageEntity,
+                            let imageData = object as? ImageData,
+                            let defaultThumbnail = UIImage(named: "threema.video.fill") {
+
+                        imageData.data = defaultThumbnail.jpegData(compressionQuality: kJPEGCompressionQualityLow)
+                        imageData.width = NSNumber(floatLiteral: defaultThumbnail.size.width)
+                        imageData.height = NSNumber(floatLiteral: defaultThumbnail.size.height)
+                    }
+
+                    try self.objCnx.save()
+                }
+                catch {
+                    DDLogError("Could not delete thumbnail. Error: \(error); \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     /// Delete all kind of messages.
@@ -381,6 +476,10 @@ import Foundation
             if count > 0 {
                 shouldUpdateConversationContent = true
             }
+        }
+        else if let distributionList = object as? DistributionListEntity,
+                let conversation = distributionList.conversation {
+            deleteObject(object: conversation)
         }
                 
         let deleteFilenames = getExternalFilenames(ofMessages: [object], includeThumbnail: true)

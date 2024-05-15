@@ -24,7 +24,11 @@ import UIKit
 final class OpaqueDeleteButton: ThemedCodeButton {
     
     private lazy var deleteImageView: UIImageView = {
-        let imageView = UIImageView(image: BundleUtil.imageNamed("xmark.circle.fill_semibold.L"))
+        
+        let imageView = UIImageView(
+            image: UIImage(systemName: "xmark.circle.fill")?
+                .applying(symbolWeight: .heavy, symbolScale: .large)
+        )
         
         imageView.contentMode = .scaleAspectFit
         imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor).isActive = true

@@ -51,7 +51,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     var receivingGroupMembers: Set<String>?
     var isNoteGroup: Bool?
     var sendContactProfilePicture: Bool?
-
+    
     var nonces = TaskReceiverNonce()
 
     private(set) var messageAlreadySentToQueue =

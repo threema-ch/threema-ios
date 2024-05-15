@@ -197,10 +197,15 @@ extension SystemMessage {
                 return BundleUtil
                     .localizedString(forKey: "forward_security_contact_has_downgraded_to_an_incompatible_version")
             case let .systemMessageGroupCallStartedBy(name: name):
-                return String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "group_call_started_by_contact_system_message"),
-                    name
-                )
+                if UserSettings.shared().enableThreemaGroupCalls {
+                    return String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "group_call_started_by_contact_system_message"),
+                        name
+                    )
+                }
+                else {
+                    return BundleUtil.localizedString(forKey: "group_call_started_disabled")
+                }
             case .systemMessageGroupCallStarted:
                 return BundleUtil.localizedString(forKey: "group_call_started_by_local_system_message")
             case .systemMessageGroupCallEnded:
@@ -481,7 +486,7 @@ extension SystemMessage {
             }
             return .callMessage(type: .rejectedUnknownIncoming)
         case 14:
-            if ThreemaApp.current == .work || ThreemaApp.current == .workRed {
+            if ThreemaApp.current == .work || ThreemaApp.current == .blue {
                 return .workConsumerInfo(type: .consumer)
             }
             else {

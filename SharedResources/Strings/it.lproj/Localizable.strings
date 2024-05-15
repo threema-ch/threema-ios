@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "Contatti";
 "segmentcontrol_groups" = "Gruppo";
+"segmentcontrol_distribution_list" = "Liste di distribuzione";
 "segmentcontrol_work_contacts" = "Work";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "Riprova";
 "copy" = "Copia";
 "save" = "Salva";
+"edit" = "Modifica";
 "download" = "Scarica";
 "retry" = "Riprova";
 "share" = "Condividi";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "Condividi ID contatto";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Modifica contatto";
 "edit_group_title" = "Modifica gruppo";
+"edit_distribution_list_title" = "Modifica lista di distribuzione";
 
 "first_name_placeholder" = "Nome";
 "last_name_placeholder" = "Cognome";
 "group_name_placeholder" = "Nome del gruppo";
+"distribution_list_name_placeholder" = "Nome della lista di distribuzione";
 
 "no_nickname_title" = "Nessun nickname pubblico";
 "no_nickname_message" = "Sei sicuro di non voler creare un nickname pubblico? Senza nickname pubblico è difficile per i contatti riconoscere i tuoi messaggi prima di avviare l’app.";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "Vuoi davvero eliminare da questo dispositivo tutti i messaggi selezionati?";
 "conversation_delete_confirm" = "Vuoi davvero eliminare questa chat da questo dispositivo?";
 "delete_n" = "Elimina (%d)";
+"message_delete_for_everyone" = "Cancella messaggio per tutti";
 
 "message_cannot_play_movie" = "Impossibile riprodurre il filmato.";
 
@@ -318,6 +323,7 @@
 "delete_file" = "Elimina file";
 "send_location" = "Invia posizione";
 "record_audio" = "Registrazione audio";
+"record_continue" = "Continua registrazione audio";
 "scan_qr" = "Scansiona codice QR";
 "share_file" = "Condividi file";
 "add_item_caption" = "Aggiungi didascalia";
@@ -332,12 +338,7 @@
 "play" = "Riproduci";
 "pause" = "Metti in pausa";
 "stop" = "Interrompi";
-"voice message" = "Messaggio vocale";
 "quit" = "Termina";
-"record_cancel_title" = "Annulla registrazione";
-"record_cancel_message" = "Vuoi davvero annullare la registrazione?";
-"record_cancel_button_discard" = "Annulla registrazione";
-"speed" = "Velocità di riproduzione";
 
 "send_file_title" = "Invia file";
 "send_file_message" = "File: %@\na\n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "Sei sicuro/a di voler chiudere questo gruppo?";
 "group_dissolve_button" = "Chiudi gruppo";
 "group_delete" = "Cancella gruppo";
+
+"distribution_list_recipients_section_header" = "Destinatari (%d)";
+"distribution_list_no_recipient_title" = "Nessun destinatario";
+"distribution_list_one_recipient_title" = "1 destinatario";
+"distribution_list_multiple_recipients_title" = "%d destinatari";
+
+"distribution_list_delete" = "Cancella lista di distribuzione";
+"distribution_list_create" = "Nuova lista di distribuzione";
+"distribution_list_edit" = "Modifica lista di distribuzione";
 
 "group name" = "Nome del gruppo";
 "existing groups" = "Gruppi esistenti";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "La rubrica è ancora vuota. La sincronizzazione è stata avviata, ma a quanto pare nessuno dei tuoi contatti ha installato Threema (invitali!).";
 "no_contacts" = "Nessun contatto";
 "no_groups" = "Nessun gruppo";
-"no_groups_message" = "Non è presente alcun gruppo al momento. Aggiungi i gruppi manualmente usando il pulsante +.";
+"no_groups_message" = "Non è ancora presente alcun gruppo. Aggiungi un gruppo usando il pulsante «+».";
 "no_work_contacts" = "Utenti di %@";
 "no_work_contacts_message" = "Non è stato trovato nessun contatto %@ verificato dall’amministrazione.";
+"no_distribution_list" = "Nessuna lista di distribuzione";
+"no_distribution_list_message" = "Non è ancora presente alcuna lista di distribuzione. Aggiungi una lista usando il pulsante «+».";
 
 "no_contacts_syncoff" = "La rubrica è ancora vuota. Attivare la sincronizzazione (Impostazioni > Privacy) o aggiungere contatti manualmente mediante il pulsante +.";
 
@@ -586,13 +598,25 @@
 "app_setup_steps_failed_message" = "Verifica la connessione a Internet e riprova. Se il problema persiste, contatta l'assistenza.";
 
 /* License Key */
+"enter_license_infoview_subtitle" = "per imprese";
+"enter_license_infoview_more_link" = "[Maggiori informazioni su Threema Work](link)";
+
+"enter_license_infoview_private_use" = "per utenti privati";
+"enter_license_infoview_threema_description" = "Se vuoi usare l'app privatamente sei pregato di scaricare l'app Threema regolare.";
+"enter_license_infoview_appstore_link" = "Threema nell'App Store";
+"enter_license_infoview_login" = "Accedi";
+
+/* License Key */
 "enter_license_title" = "Sblocca Threema";
 /* MWPhotoBrowser */
 "Done" = "Fine";
-"enter_license_description" = "Inserire le credenziali ricevute dalla propria azienda o organizzazione.";
-"enter_license_onprem_description" = "Threema OnPrem è il messenger autogestito per le imprese. Inserisci le credenziali fornite dalla tua impresa.";
+"enter_license_description" = "Inserisci le credenziali Threema Work ricevute dalla tua azienda o organizzazione.";
+"enter_license_onprem_description" = "Inserisci le credenziali Threema OnPrem ricevute dalla tua azienda o organizzazione.";
 "enter_license_work_admin_description" = "Hai dimenticato le credenziali? Contatta l'amministratore Threema Work.";
 "enter_license_onprem_admin_description" = "Hai dimenticato le credenziali? Contatta l'amministratore Threema OnPrem.";
+"enter_license_onprem_error_config" = "La configurazione non è valida. Contatta l'amministratore Threema OnPrem. (Codice: %d)";
+"enter_license_onprem_error_version" = "La versione non è supportata. Contatta l'amministratore Threema OnPrem. (Codice: %d)";
+"enter_license_onprem_error_credentials" = "Le credenziali non sono valide. Contatta l'amministratore Threema OnPrem. (Codice: %d)";
 "more_work_info" = "Maggiori informazioni su %@.";
 "Save" = "Salva";
 "enter_license_username_placeholder" = "Nome utente";
@@ -675,7 +699,6 @@
 "duration" = "durata";
 "current_position" = "posizione";
 "in_reply_to" = "in risposta a";
-"go_to_position" = "da";
 "draft" = "Bozza";
 "new_message_accessibility" = "Nuovo messaggio: ";
 "quote_interaction_hint" = "Passa al messaggio citato";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "%@ ha iniziato una chiamata di gruppo";
 "group_call_started_by_local_system_message" = "Hai iniziato una chiamata di gruppo";
 "group_call_ended_system_message" = "Chiamata di gruppo terminata";
+"group_call_started_disabled" = "È stata avviata una chiamata di gruppo. Per partecipare attiva le chiamate di gruppo nelle impostazioni.";
 
 "group_call_notification_body_preview" = "Chiamata di gruppo avviata da %@";
 "group_call_notification_body" = "Chiamata di gruppo avviata";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "Conversazione selezionata";
 
 /* Begin Edit */
-
 "private_message_label" = "Messaggio privato";
 "private_chat_label" = "Privato";
 "private_chat_accessibility" = "Chat privata";
@@ -833,6 +856,13 @@
 "archived_title" = "Archiviato";
 "conversations_global_search_placeholder" = "Cerca";
 "one_to_one_chat" = "Chat singole";
+"conversations_global_search_section_header_tokens" = "Tipi di messaggi";
+"conversations_global_search_token_text" = "Messaggi di testo";
+"conversations_global_search_token_captions" = "Firme sui media";
+"conversations_global_search_token_polls" = "Sondaggi";
+"conversations_global_search_token_locations" = "Posizioni";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Contrassegnato";
 
 "select_all" = "Seleziona tutto";
 "deselect_all" = "Deseleziona tutto";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "Vuoi davvero cancellare questo gruppo e i suoi contenuti?";
 "group_delete_button" = "Cancella gruppo + cronologia della chat ";
 
+"distribution_list_delete_sheet_title" = "Vuoi cancellare la lista di distribuzione?";
+
 "selected_count" = "%d selezionati";
 "all_selected" = "Tutti selezionati";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "Se cancelli una chat privata, quelle successive non saranno automaticamente indicate come private.";
 
 /* End Edit */
-
 "pushSetting_header" = "Notifiche";
 "doNotDisturb_title" = "Non disturbare";
 
@@ -1297,12 +1328,12 @@
 "settings_advanced_successfully_reset_unread_count_label" = "Tutti i messaggi sono stati segnati come letti";
 
 // Sentry
-"sentry_crash_send_title" = "%@ si è chiusa inaspettatamente.";
+"sentry_crash_send_title" = "Si è verificato un problema.";
 "sentry_crash_send_description" = "Puoi inviare un rapporto di arresto in modo totalmente anonimo. Fornendo dettagli sulla dinamica dell’arresto puoi aiutare a individuare il problema.";
 "sentry_crash_send_yes" = "Invia rapporto di arresto in modo anonimo.";
 "sentry_crash_send_no" = "Non inviare";
 
-"sentry_crash_comment_placeholder" = "Rapporto arresto";
+"sentry_crash_comment_placeholder" = "Dettagli";
 
 // Profile
 "profile_share_id_text" = "Il mio Threema ID";
@@ -1641,6 +1672,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 
 // ChatBar
 "chat_bar_quote_close_button" = "Chiudi citazione";
+"chat_bar_edited_message_close_button" = "Interrompi modifica messaggio";
 
 // ChatDetailView
 "detailView_title" = "Dettagli messaggio";
@@ -1648,6 +1680,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "detailView_group_acknowledged" = "Confermato (%d)";
 "detailView_group_declined" = "Respinto (%d)";
 "detailView_group_file_size" = "Dimensione file";
+"detailView_consumed" = "Riprodotto per la prima volta";
 "detailView_created_footer" = "Creato: %@";
 
 "message_display_status_none" = "Nessuno";
@@ -1659,6 +1692,8 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "message_display_status_delivered_incoming" = "Ricevuto";
 "message_display_status_read" = "Letto";
 "message_display_status_failed" = "Fallito";
+"message_display_status_deleted_message" = "Cancellato";
+"message_display_status_edited_message" = "Modificato";
 
 // In-app notifications
 "notification_copying_succeeded" = "Elemento copiato";
@@ -1740,6 +1775,9 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "accessibility_chatbar_quote_label" = "Messaggio da citare: %@.";
 "accessibility_chatbar_close_quote_button_label" = "Elimina citazione.";
 "accessibility_chatbar_close_quote_button_hint" = "Annulla la citazione del messaggio selezionato.";
+"accessibility_chatbar_edited_message_label" = "Messaggio da modificare: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "Interrompi modifica messaggio.";
+"accessibility_chatbar_close_edited_message_button_hint" = "Interrompe la modifica del messaggio selezionato.";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Il tuo %@";
@@ -1785,6 +1823,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "accessibility_poll_closed" = "Chiuso";
 "accessibility_file_duration" = "Durata: %@.";
 "accessibility_voice_message_playing" = "Lettura in corso.";
+"accessibility_voice_message_unplayed" = "Ancora non riprodotto.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Confermato, %@";
@@ -1892,3 +1931,25 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "application_shortcut_item_new_message" = "Nuovo messaggio";
 "application_shortcut_item_scan_qr_code" = "Scansiona codice QR";
 "application_shortcut_item_my_id" = "Il mio profilo";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "Contrassegnati";
+"marker_action_star" = "Contrassegna con asterisco";
+"marker_action_remove_star" = "Cancella asterisco";
+"marker_accessibility_label" = "Contrassegnato con asterisco.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "Contrassegnato con asterisco";
+
+// Delete / Edit message
+"edit_message" = "Modifica messaggio";
+"edit_message_can_not_edit" = "Il messaggio è stato inviato più di 6 ore fa e non può più essere modificato.";
+"edit_message_not_sent_to" = "I seguenti membri del gruppo non possono vedere le modifiche: %@";
+"delete_message_not_sent_to" = "Dai seguenti membri del gruppo il messaggio non sarà cancellato: %@";
+"delete_edit_message_not_sent_to_others" = "%d altri";
+"delete_message_requirement" = "Per cancellare i messaggi, Threema deve essere aggiornata all'ultima versione.";
+"edit_message_requirement" = "Per visualizzare i messaggi modificati, Threema deve essere aggiornata all'ultima versione.";
+
+"edit_message_text_to_long" = "Il messaggio non può essere modificato perché il testo è troppo lungo.";
+"edited_message_state" = "Modificato";
+"deleted_message" = "Il messaggio è stato cancellato";

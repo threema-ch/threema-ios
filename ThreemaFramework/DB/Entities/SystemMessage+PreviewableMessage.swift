@@ -21,7 +21,7 @@
 import Foundation
 
 extension SystemMessage: PreviewableMessage {
-    public var previewText: String {
+    public var privatePreviewText: String {
         switch systemMessageType {
         case let .callMessage(type: callType):
             return callType.localizedMessage

@@ -44,7 +44,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock()
         )
-        if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
+        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
             store.getSafeDefaultServer(key: key) { result in
                 switch result {
@@ -93,7 +93,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock()
         )
-        if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
+        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
             let backupURL = URL(string: "https://safe.threema.ch/backups/\(BytesUtility.toHexString(bytes: backupID))")
             let client = HTTPClient()
@@ -141,7 +141,7 @@ extension HttpClientDownloadSafeTests: URLSessionDataDelegate {
                     serverApiConnector: ServerAPIConnector(),
                     groupManager: GroupManagerMock()
                 )
-                if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar") {
+                if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar") {
                     
                     let decryptedData = try! store.decryptBackupData(key: key, data: Array(receivedData))
 

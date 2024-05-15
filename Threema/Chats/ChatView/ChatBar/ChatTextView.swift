@@ -487,8 +487,7 @@ final class ChatTextView: CustomResponderTextView {
     }
     
     /// Stops editing, removes the current text from the text view and replaces it with an empty string.
-    /// - Returns: If the current text is empty it returns nil otherwise it returns the text
-    func removeCurrentText() -> String? {
+    func removeCurrentText() {
         defer {
             updatePlaceholder()
             resizeTextView()
@@ -505,15 +504,10 @@ final class ChatTextView: CustomResponderTextView {
             let message = "chatTextViewDelegate should not be nil"
             DDLogError(message)
             assertionFailure(message)
-            return nil
+            return
         }
         
         isEditing = false
-        
-        if currentText != "" {
-            return currentText
-        }
-        return nil
     }
     
     /// Stops editing, removes the current text from the text view and replaces it with an empty string.
@@ -529,7 +523,28 @@ final class ChatTextView: CustomResponderTextView {
         }
         return nil
     }
-    
+
+    /// Insert new or replace message text, will be used for edit message.
+    /// - Parameter text: Message text for editing
+    func setCurrentText(_ text: String) {
+        self.text = text
+
+        updatePlaceholder()
+        resizeTextView()
+        setNeedsDisplay()
+
+        // Workaround
+        /// When removing the text we also need to reset the selected range to properly update predictive typing
+        selectedRange = NSRange(location: 0, length: 0)
+
+        // If text field not empty (eg for edit message) set cursor at the end of the text
+        if !self.text.isEmpty {
+            selectedTextRange = textRange(from: endOfDocument, to: endOfDocument)
+        }
+
+        customTextStorage?.reformatText()
+    }
+
     // MARK: - Change text in text view
     
     /// Should be called to reformat the currently editing mention

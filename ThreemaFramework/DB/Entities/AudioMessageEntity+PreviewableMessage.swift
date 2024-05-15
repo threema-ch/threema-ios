@@ -21,7 +21,7 @@
 import Foundation
 
 extension AudioMessageEntity: PreviewableMessage {
-    public var previewText: String {
+    public var privatePreviewText: String {
         let formattedDuration = DateFormatter.timeFormatted(Int(durationTimeInterval ?? 0.0))
         return "\(fileMessageType.localizedDescription) (\(formattedDuration))"
     }

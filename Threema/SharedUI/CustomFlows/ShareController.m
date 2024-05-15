@@ -26,6 +26,7 @@
 #import "Old_FileMessageSender.h"
 #import "UTIConverter.h"
 #import "UserSettings.h"
+#import "Conversation.h"
 
 @import CocoaLumberjack;
 
@@ -92,7 +93,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         if (item != nil) {
             MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
-            [messageSender sendBlobMessageFor:item in:conversation correlationID:nil webRequestID:nil completion:nil];
+            [messageSender sendBlobMessageFor:item inConversationWithID:conversation.objectID correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];
         }

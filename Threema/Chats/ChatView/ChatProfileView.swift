@@ -180,16 +180,16 @@ final class ChatProfileView: UIStackView {
         return imageView
     }()
     
-    /// Label of group members list
+    /// Label of members list
     ///
     /// This might be truncated when displayed.
     ///
     /// - Note: This should never be hidden or set to an empty text. Otherwise the height of
-    ///         `verificationAndGroupMembersListStack` collapses.
-    private let groupMembersListLabel: UILabel = {
+    ///         `nameAndMembersListStack` collapses.
+    private let membersListLabel: UILabel = {
         let label = UILabel()
         
-        label.font = ChatViewConfiguration.Profile.groupMembersListFont
+        label.font = ChatViewConfiguration.Profile.membersListFont
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
@@ -200,11 +200,11 @@ final class ChatProfileView: UIStackView {
     
     /// Stack with name & members for group chats
     ///
-    /// For single chats the verification level is shown on top and the group members list string with just a space.
-    private lazy var nameAndGroupMembersListStack: UIStackView = {
+    /// For single chats the verification level is shown on top and the members list string with just a space.
+    private lazy var nameAndMembersListStack: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [
             nameLabel,
-            groupMembersListLabel,
+            membersListLabel,
         ])
         
         stack.distribution = .fill
@@ -282,7 +282,7 @@ final class ChatProfileView: UIStackView {
         
         // Add arranged subviews
         addArrangedSubview(avatarImageView)
-        addArrangedSubview(nameAndGroupMembersListStack)
+        addArrangedSubview(nameAndMembersListStack)
         
         // The verification level is vertically centered in the groupMembersListLabel which is never hidden
         // for a consistent appearance
@@ -291,8 +291,8 @@ final class ChatProfileView: UIStackView {
         verificationLevelImageView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            verificationLevelImageView.centerYAnchor.constraint(equalTo: groupMembersListLabel.centerYAnchor),
-            verificationLevelImageView.leadingAnchor.constraint(equalTo: groupMembersListLabel.leadingAnchor),
+            verificationLevelImageView.centerYAnchor.constraint(equalTo: membersListLabel.centerYAnchor),
+            verificationLevelImageView.leadingAnchor.constraint(equalTo: membersListLabel.leadingAnchor),
         ])
         
         // Configure name and description verification stack
@@ -355,11 +355,14 @@ final class ChatProfileView: UIStackView {
             object: nil
         )
         
-        if !conversation.isGroup() {
-            configureSingleChatObservers()
+        if conversation.isGroup() {
+            configureGroupChatObservers()
+        }
+        else if conversation.distributionList != nil {
+            configureDistributionListObservers()
         }
         else {
-            configureGroupChatObservers()
+            configureSingleChatObservers()
         }
     }
     
@@ -394,8 +397,8 @@ final class ChatProfileView: UIStackView {
         }
         
         // Needed to get appropriate height for verification and description stack (see
-        // `verificationAndGroupMembersListStack`)
-        groupMembersListLabel.text = " "
+        // `nameAndMembersListStack`)
+        membersListLabel.text = " "
     }
     
     private func configureGroupChatObservers() {
@@ -428,6 +431,16 @@ final class ChatProfileView: UIStackView {
             // 4. Update label
             weakSelf.updateGroupMembersListLabel()
         }
+        
+        verificationLevelImageView.isHidden = true
+    }
+    
+    private func configureDistributionListObservers() {
+        guard let distributionList = conversation.distributionList else {
+            return
+        }
+        // TODO: (IOS-4366) Add observers move line below into member observer
+        updateDistributionListRecipientsLabel()
         
         verificationLevelImageView.isHidden = true
     }
@@ -480,7 +493,7 @@ final class ChatProfileView: UIStackView {
         updateAvatar()
         
         Colors.setTextColor(Colors.text, label: nameLabel)
-        Colors.setTextColor(Colors.textLight, label: groupMembersListLabel)
+        Colors.setTextColor(Colors.textLight, label: membersListLabel)
     }
     
     @objc private func updateAvatar() {
@@ -501,13 +514,17 @@ final class ChatProfileView: UIStackView {
     }
     
     private func updateGroupMembersListLabel() {
-        // TODO: (IOS-2404) Do a cleaner implementation
         let businessInjector = BusinessInjector()
         businessInjector.entityManager.performBlockAndWait {
             let group = businessInjector.groupManager.getGroup(conversation: self.conversation)
             // We always want at least one space in the label to keep it at a constant height
-            self.groupMembersListLabel.text = group?.membersList ?? " "
+            self.membersListLabel.text = group?.membersList ?? " "
         }
+    }
+    
+    private func updateDistributionListRecipientsLabel() {
+        // We always want at least one space in the label to keep it at a constant height
+        membersListLabel.text = conversation.distributionList?.recipientList ?? "No Recipents"
     }
     
     // MARK: - Actions
@@ -547,15 +564,15 @@ final class ChatProfileView: UIStackView {
         // the view is added to a navigation bar `titleView`.
         if traitCollection.verticalSizeClass == .compact {
             // Compact configuration
-            nameAndGroupMembersListStack.axis = .horizontal
-            nameAndGroupMembersListStack.alignment = .firstBaseline
-            nameAndGroupMembersListStack.spacing = ChatViewConfiguration.Profile.nameAndMembersListCompactSpacing
+            nameAndMembersListStack.axis = .horizontal
+            nameAndMembersListStack.alignment = .firstBaseline
+            nameAndMembersListStack.spacing = ChatViewConfiguration.Profile.nameAndMembersListCompactSpacing
         }
         else {
             // Default configuration
-            nameAndGroupMembersListStack.axis = .vertical
-            nameAndGroupMembersListStack.alignment = .leading
-            nameAndGroupMembersListStack.spacing = ChatViewConfiguration.Profile.nameAndMembersListRegularSpacing
+            nameAndMembersListStack.axis = .vertical
+            nameAndMembersListStack.alignment = .leading
+            nameAndMembersListStack.spacing = ChatViewConfiguration.Profile.nameAndMembersListRegularSpacing
         }
     }
     

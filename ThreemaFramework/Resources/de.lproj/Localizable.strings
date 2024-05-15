@@ -83,9 +83,8 @@
 
 "mediapreview_options" = "Optionen";
 
-"testflight_feedback_viewtitle" = "Beta-Feedback";
-"testflight_feedback_title" = "Bitte senden Sie uns Ihr Beta-Feedback!";
-"testflight_feedback_description" = "Vielen Dank, dass Sie Threemas Beta-Version testen. Testen allein genügt aber noch nicht, wir sind auf Ihr Feedback angewiesen. Lassen Sie uns bitte wissen, wenn Sie auf Bugs oder Unregelmässigkeiten stossen. Navigieren Sie einfach zu «Einstellungen > Beta-Feedback», um den Beta-Chat zu öffnen.";
+"testflight_feedback_title" = "Senden Sie uns Ihr Beta-Feedback!";
+"testflight_feedback_description" = "Lassen Sie uns wissen, wenn Sie auf Bugs oder Unregelmässigkeiten stossen. Tippen Sie hier, um den Beta-Chat zu öffnen.";
 
 "notification.threemaweb.connect.title" = "Desktop/Web";
 "notification.threemaweb.connect.body" = "Tippen Sie hier, um die Verbindung mit der Desktop-App / dem Web-Client wiederherzustellen.";

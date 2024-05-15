@@ -48,8 +48,10 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     func willDeleteMessage(with objectID: NSManagedObjectID)
     func didDeleteMessages()
     func sendAck(for message: BaseMessage, ack: Bool)
+    func toggleMessageMarkerStar(message: BaseMessage)
     func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID, from sourceView: UIView)
-    
+    func editMessage(for messageObjectID: NSManagedObjectID)
+
     func didSelectText(in textView: MessageTextView?)
     
     var currentSearchText: String? { get }
@@ -59,6 +61,8 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     var chatViewHasCustomBackground: Bool { get }
     
     var chatViewIsGroupConversation: Bool { get }
+    
+    var chatViewIsDistributionListConversation: Bool { get }
 }
 
 extension ChatViewTableViewCellDelegateProtocol {
@@ -115,6 +119,10 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             return false
         }
         return conversation.isGroup()
+    }
+    
+    var chatViewIsDistributionListConversation: Bool {
+        chatViewController?.conversation.distributionList != nil
     }
     
     // MARK: - Swipe Interactions
@@ -255,6 +263,8 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         chatViewController?.startMultiselect(with: messageObjectID)
     }
     
+    // MARK: - Message actions
+
     func sendAck(for message: BaseMessage, ack: Bool) {
         
         guard !UIAccessibility.isVoiceOverRunning else {
@@ -266,6 +276,44 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             ChatViewTableViewCellDelegate.sendAck(message: message, ack: ack)
         }
         chatViewController?.contextMenuActionsQueue.append(block)
+    }
+    
+    func toggleMessageMarkerStar(message: BaseMessage) {
+        entityManager.performAndWaitSave {
+            if let markers = message.messageMarkers {
+                markers.star = NSNumber(booleanLiteral: !markers.star.boolValue)
+            }
+            else {
+                if let newMarker = self.entityManager.entityCreator.messageMarkers() {
+                    newMarker.star = NSNumber(booleanLiteral: true)
+                    message.messageMarkers = newMarker
+                }
+                else {
+                    fatalError()
+                }
+            }
+        }
+    }
+    
+    func editMessage(for messageObjectID: NSManagedObjectID) {
+        entityManager.performAndWait {
+            var text: String?
+
+            let message = self.entityManager.entityFetcher.existingObject(with: messageObjectID) as? EditedMessage
+            if let textMessage = message as? TextMessage {
+                text = textMessage.text ?? ""
+            }
+            else if let fileMessage = message as? FileMessage {
+                text = fileMessage.caption ?? ""
+            }
+
+            guard let message, let text else {
+                return
+            }
+
+            self.chatViewController?.chatBarCoordinator.showEditedMessageView(for: message)
+            self.chatViewController?.chatBarCoordinator.chatBar.setCurrentText(text)
+        }
     }
     
     // MARK: - CellHeightCache

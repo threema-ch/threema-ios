@@ -33,7 +33,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
         didSet {
             let block = {
                 self.updateCell(for: self.locationMessageAndNeighbors?.message)
-                
+            
                 super.setMessage(
                     to: self.locationMessageAndNeighbors?.message,
                     with: self.locationMessageAndNeighbors?.neighbors
@@ -61,12 +61,12 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
             // Both of these animations are typically covered within a bigger animation block
             // or a block that doesn't animate at all. Both cases look good.
             if shouldShowDateAndState {
-                
+                    
                 let block = {
                     self.messageDateAndStateView.alpha = 1.0
                     self.messageDateAndStateView.isHidden = false
                 }
-                
+                    
                 if !oldValue {
                     // When adding the date and state view, this is an animation that doesn't look half bad since the
                     // view will animate in from the bottom.
@@ -76,22 +76,11 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
                         options: .curveEaseInOut
                     ) {
                         block()
-                    } completion: { _ in
-                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
-                        UIView.performWithoutAnimation {
-                            self.messageDateAndStateView.setNeedsLayout()
-                            self.messageDateAndStateView.layoutIfNeeded()
-                        }
                     }
                 }
                 else {
                     UIView.performWithoutAnimation {
                         block()
-                        
-                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
-                        // It is very unclear why this is needed in addition to
-                        self.messageDateAndStateView.setNeedsLayout()
-                        self.messageDateAndStateView.layoutIfNeeded()
                     }
                 }
             }
@@ -102,7 +91,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
                     self.messageDateAndStateView.alpha = 0.0
                 }
             }
-            
+                
             messageDateAndStateView.isHidden = !shouldShowDateAndState
         }
     }
@@ -205,14 +194,17 @@ extension ChatViewLocationMessageTableViewCell: Reusable { }
 
 extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
     
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
-
+    func messageActions()
+        -> (
+            primaryActions: [ChatViewMessageActionProvider.MessageAction],
+            generalActions: [ChatViewMessageActionProvider.MessageAction]
+        )? {
+        
         guard let message = locationMessageAndNeighbors?.message else {
             return nil
         }
 
         typealias Provider = ChatViewMessageActionProvider
-        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
 
         // We create a more readable string
         var locationSummary = ""
@@ -248,8 +240,8 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
-        // Edit
-        let editHandler = {
+        // Select
+        let selectHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
@@ -266,8 +258,13 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
         let ackHandler = { (message: BaseMessage, ack: Bool) in
             self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
         
-        let defaultActions = Provider.defaultActions(
+        // Build menu
+        return Provider.defaultActions(
             message: message,
             speakText: locationSummary,
             shareItems: shareItems,
@@ -275,15 +272,12 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
             didDelete: didDelete,
-            ackHandler: ackHandler
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler
         )
-        
-        menuItems.append(contentsOf: defaultActions)
-        
-        return menuItems
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

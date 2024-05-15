@@ -67,12 +67,16 @@ import ThreemaFramework
     
     // MARK: - keys and encryption
     
-    func createKey(identity: String, password: String?) -> [UInt8]? {
-        guard let password,
-              !password.isEmpty else {
+    /// Create/derive Threema Safe backup key
+    /// - Parameters:
+    ///   - identity: Threema ID
+    ///   - safePassword: Password entered by the user when activating the backup
+    func createKey(identity: String, safePassword: String?) -> [UInt8]? {
+        guard let safePassword,
+              !safePassword.isEmpty else {
             return nil
         }
-        let pPassword = UnsafeMutablePointer<Int8>(strdup(password))
+        let pPassword = UnsafeMutablePointer<Int8>(strdup(safePassword))
         let pSalt = UnsafeMutablePointer<Int8>(strdup(identity))
         
         let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: masterKeyLength)
@@ -180,20 +184,19 @@ import ThreemaFramework
     
     @objc func isSafeServerChanged(mdmSetup: MDMSetup, completion: @escaping (Bool) -> Void) {
         if mdmSetup.isSafeBackupServerPreset() {
-            let serverURL = composeSafeServerAuth(
-                server: mdmSetup.safeServerURL(),
-                user: mdmSetup.safeServerUsername(),
-                password: mdmSetup.safeServerPassword()
+            completion(
+                mdmSetup.safeServerURL() != safeConfigManager.getServer()
+                    || mdmSetup.safeServerUsername() != safeConfigManager.getServerUser()
+                    || mdmSetup.safeServerPassword() != safeConfigManager.getServerPassword()
             )
-            return completion(serverURL?.absoluteString != safeConfigManager.getServer())
         }
         else {
             getSafeDefaultServer(key: safeConfigManager.getKey()!) { result in
                 switch result {
-                case let .success(newServerURL):
-                    return completion(self.safeConfigManager.getServer() != newServerURL.absoluteString)
-                case let .failure:
-                    return completion(false)
+                case let .success(safeServer):
+                    completion(self.safeConfigManager.getServer() != safeServer.server.absoluteString)
+                case .failure:
+                    completion(false)
                 }
             }
         }
@@ -223,10 +226,13 @@ import ThreemaFramework
         }
     }
     
-    func getSafeServer(key: [UInt8], completion: @escaping (Swift.Result<URL, Error>) -> Void) {
+    func getSafeServer(
+        key: [UInt8],
+        completion: @escaping (Swift.Result<(serverUser: String?, serverPassword: String?, server: URL), Error>) -> Void
+    ) {
         if let server = safeConfigManager.getServer() {
             if let url = URL(string: server) {
-                completion(.success(url))
+                completion(.success((safeConfigManager.getServerUser(), safeConfigManager.getServerPassword(), url)))
             }
             else {
                 completion(.failure(SafeError.invalidURL))
@@ -237,7 +243,10 @@ import ThreemaFramework
         }
     }
     
-    func getSafeDefaultServer(key: [UInt8], completion: @escaping (Swift.Result<URL, Error>) -> Void) {
+    func getSafeDefaultServer(
+        key: [UInt8],
+        completion: @escaping (Swift.Result<(serverUser: String?, serverPassword: String?, server: URL), Error>) -> Void
+    ) {
         guard let backupID = getBackupID(key: key) else {
             completion(.failure(SafeError.badMasterKey))
             return
@@ -250,10 +259,10 @@ import ThreemaFramework
                 }
                 else {
                     if let url = URL(string: safeServerInfo!.url.replacingOccurrences(
-                        of: "{backupIdPrefix}",
+                        of: "{backupIdPrefix8}",
                         with: String(format: "%02hhx", backupID[0])
                     )) {
-                        completion(.success(url))
+                        completion(.success((nil, nil, url)))
                     }
                     else {
                         completion(.failure(SafeError.invalidURL))
@@ -263,53 +272,14 @@ import ThreemaFramework
         }
     }
     
-    /// Compose URL like https://user:password@host.com
-    /// - returns: Server URL with credentials
-    @objc func composeSafeServerAuth(server: String?, user: String?, password: String?) -> URL? {
-        guard let server, !server.lowercased().starts(with: "http://") else {
-            return nil
-        }
-        
-        let httpProtocol = "https://"
-        
-        var url: String!
-        if !server.lowercased().starts(with: httpProtocol) {
-            url = httpProtocol
-            url.append(server)
-        }
-        else {
-            url = server
-        }
-        
-        let userEncoded = user?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
-        let passwordEncoded = password?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
-        
-        if userEncoded != nil || passwordEncoded != nil {
-            var concatURL = url[...String.Index(utf16Offset: httpProtocol.count - 1, in: httpProtocol)]
-            concatURL.append(contentsOf: userEncoded != nil ? userEncoded! : "")
-            concatURL.append(contentsOf: ":")
-            concatURL.append(contentsOf: passwordEncoded != nil ? passwordEncoded! : "")
-            concatURL.append(contentsOf: "@")
-            concatURL.append(contentsOf: url[String.Index(utf16Offset: httpProtocol.count, in: httpProtocol)...])
-            
-            url = String(concatURL)
-        }
-        
-        if #available(iOS 17.0, *) {
-            return URL(string: url, encodingInvalidCharacters: false)
-        }
-        else {
-            return URL(string: url)
-        }
-    }
-    
     /// Extract and return server url, user and password from https://user:password@host.com
-    /// - returns: User, Password and Server URL without credentials
-    func extractSafeServerAuth(server: URL) -> (user: String?, password: String?, server: URL) {
+    /// - Parameter server: Server URL with included credentials
+    /// - Returns: User, Password and Server URL without credentials
+    static func extractSafeServerAuth(server: URL) -> (serverUser: String?, serverPassword: String?, server: URL) {
         let httpProtocol = "https://"
         
         guard server.absoluteString.starts(with: httpProtocol) else {
-            return (user: nil, password: nil, server: server)
+            return (serverUser: nil, serverPassword: nil, server: server)
         }
         
         var user: String?
@@ -340,7 +310,7 @@ import ThreemaFramework
             serverURL = server
         }
 
-        return (user: user, password: password, server: serverURL!)
+        return (serverUser: user, serverPassword: password, server: serverURL!)
     }
 
     // MARK: - back up and restore data

@@ -23,6 +23,7 @@ import Foundation
 @testable import Threema
 
 class SafeConfigManagerMock: NSObject, SafeConfigManagerProtocol {
+
     var safeConfigDestroyCallCount = 0
     
     private var server: String?
@@ -47,6 +48,22 @@ class SafeConfigManagerMock: NSObject, SafeConfigManagerProtocol {
     
     func setCustomServer(_ value: String?) { }
     
+    func getServerUser() -> String? {
+        nil
+    }
+
+    func setServerUser(_ value: String?) {
+        // no-op
+    }
+
+    func getServerPassword() -> String? {
+        nil
+    }
+
+    func setServerPassword(_ value: String?) {
+        // no-op
+    }
+
     func getServer() -> String? {
         server
     }

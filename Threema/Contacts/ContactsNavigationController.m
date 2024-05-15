@@ -29,8 +29,8 @@
 - (id)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self) {
-        self.tabBarItem.image = [UIImage imageNamed:@"TabBar-Contacts"];
-        self.tabBarItem.selectedImage = [UIImage imageNamed:@"TabBar-Contacts"];
+        self.tabBarItem.image = [UIImage systemImageNamed:@"person.2.fill"];
+        self.tabBarItem.selectedImage = [UIImage systemImageNamed:@"person.2.fill"];
     }
     return self;
 }

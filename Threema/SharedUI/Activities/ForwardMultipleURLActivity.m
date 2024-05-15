@@ -44,7 +44,7 @@
 }
 
 - (UIImage *)activityImage {
-    return [UIImage imageNamed:@"ShareForward"];
+    return [UIImage systemImageNamed:@"arrowshape.turn.up.right.fill"];
 }
 
 - (BOOL)canPerformWithActivityItems:(NSArray *)activityItems {

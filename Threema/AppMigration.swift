@@ -107,7 +107,7 @@ import ThreemaFramework
     
     /// Runs all necessary migrations
     /// Throws an error if and only if a migration has failed and the app is expected to not be usable without it.
-    /// Specifically `run` catches all errors but only rethrows a closely defined subset of it
+    /// Specifically `run` catches all errors but only re-throws a closely defined subset of it
     ///
     /// Errors thrown by `run` are always `NSErrors` i.e. they are directly usable by `ErrorHandler.abortWithError()`
     /// function.
@@ -169,6 +169,10 @@ import ThreemaFramework
                 try migrateTo5_9_2()
                 migratedTo = .v5_9_2
             }
+            if migratedTo < .v6_0 {
+                try migrateTo6_0()
+                migratedTo = .v6_0
+            }
             
             // Add here a check if migration is necessary for a particular version...
         }
@@ -217,9 +221,8 @@ import ThreemaFramework
 
         businessInjector.contactStore.updateAllContactsToCNContact()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyUpdatedToCNContacts")
-
         businessInjector.contactStore.updateAllContacts()
-
+        
         MessageDraftStore.cleanupDrafts()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyDeletedOldDrafts")
 
@@ -476,9 +479,9 @@ import ThreemaFramework
 
         // Migrate `UserSettings.noPushIdentities` and `UserSettings.pushSettingsList`
         let noPushIdentities = AppGroup.userDefaults().array(forKey: "NoPushIdentities") as? [String]
-        var pushSettingList = AppGroup.userDefaults().array(forKey: "PushSettingsList")
+        var pushSettingList = AppGroup.userDefaults().array(forKey: "PushSettingsList") ?? [Any]()
 
-        let pushSettingListIdentities = pushSettingList?.compactMap { item in
+        let pushSettingListIdentities = pushSettingList.compactMap { item in
             if let dic = item as? NSDictionary,
                let identity = dic["identity"] as? String {
                 return identity
@@ -489,16 +492,16 @@ import ThreemaFramework
         noPushIdentities?.filter { item in
             if item.count == 8 {
                 return !(
-                    pushSettingListIdentities?.filter { $0.count == 8 }
+                    pushSettingListIdentities.filter { $0.count == 8 }
                         .compactMap { $0.uppercased() }
-                        .contains(item.uppercased()) ?? false
+                        .contains(item.uppercased())
                 )
             }
             else if let item = BytesUtility.toBytes(hexString: item) {
                 return !(
-                    pushSettingListIdentities?.filter { $0.count > 8 }
+                    pushSettingListIdentities.filter { $0.count > 8 }
                         .compactMap { BytesUtility.toBytes(hexString: $0) }
-                        .contains(item) ?? false
+                        .contains(item)
                 )
             }
             else {
@@ -506,52 +509,55 @@ import ThreemaFramework
             }
         }.forEach { identity in
             let dic = ["identity": identity, "type": 1] // `PushSettingType.off`
-            pushSettingList?.append(dic)
+            pushSettingList.append(dic)
         }
 
-        pushSettingList?.forEach { item in
-            if let dic = item as? NSDictionary,
-               let identity = dic["identity"] as? String {
+        if !pushSettingList.isEmpty {
+            pushSettingList.forEach { item in
+                if let dic = item as? NSDictionary,
+                   let identity = dic["identity"] as? String {
 
-                businessInjector.entityManager.performAndWait {
-                    // The 'old' push setting identity, could be a Threema ID or a Group ID
-                    var contactEntity: ContactEntity?
-                    if identity.count == 8 {
-                        contactEntity = self.businessInjector.entityManager.entityFetcher.contact(for: identity)
-                    }
-
-                    // Looking for contact or group for given push setting identity,
-                    // if contact or group not found then push setting will discarded
-                    if let contactEntity {
-                        let pushSetting = applyPushSetting(
-                            dic,
-                            self.businessInjector.pushSettingManager.find(forContact: contactEntity.threemaIdentity)
-                        )
-                        newPushSettings.removeAll { item in
-                            item.identity == pushSetting.identity
+                    businessInjector.entityManager.performAndWait {
+                        // The 'old' push setting identity, could be a Threema ID or a Group ID
+                        var contactEntity: ContactEntity?
+                        if identity.count == 8 {
+                            contactEntity = self.businessInjector.entityManager.entityFetcher.contact(for: identity)
                         }
-                        newPushSettings.append(pushSetting)
-                    }
-                    else if let myIdentity = self.businessInjector.myIdentityStore.identity,
-                            let bytesGroupID = BytesUtility.toBytes(hexString: identity) {
-                        let groupID = Data(bytesGroupID)
-                        self.businessInjector.entityManager.performAndWait {
-                            if let groupEntities = self.businessInjector.entityManager.entityFetcher
-                                .groupEntities(for: groupID) {
-                                groupEntities.forEach { groupEntity in
-                                    if let group = self.businessInjector.groupManager.getGroup(
-                                        groupEntity.groupID,
-                                        creator: groupEntity.groupCreator ?? myIdentity
-                                    ) {
 
-                                        let pushSetting = applyPushSetting(
-                                            dic,
-                                            self.businessInjector.pushSettingManager.find(forGroup: group.groupIdentity)
-                                        )
-                                        newPushSettings.removeAll { item in
-                                            item.groupIdentity == pushSetting.groupIdentity
+                        // Looking for contact or group for given push setting identity,
+                        // if contact or group not found then push setting will discarded
+                        if let contactEntity {
+                            let pushSetting = applyPushSetting(
+                                dic,
+                                self.businessInjector.pushSettingManager.find(forContact: contactEntity.threemaIdentity)
+                            )
+                            newPushSettings.removeAll { item in
+                                item.identity == pushSetting.identity
+                            }
+                            newPushSettings.append(pushSetting)
+                        }
+                        else if let myIdentity = self.businessInjector.myIdentityStore.identity,
+                                let bytesGroupID = BytesUtility.toBytes(hexString: identity) {
+                            let groupID = Data(bytesGroupID)
+                            self.businessInjector.entityManager.performAndWait {
+                                if let groupEntities = self.businessInjector.entityManager.entityFetcher
+                                    .groupEntities(for: groupID) {
+                                    groupEntities.forEach { groupEntity in
+                                        if let group = self.businessInjector.groupManager.getGroup(
+                                            groupEntity.groupID,
+                                            creator: groupEntity.groupCreator ?? myIdentity
+                                        ) {
+
+                                            let pushSetting = applyPushSetting(
+                                                dic,
+                                                self.businessInjector.pushSettingManager
+                                                    .find(forGroup: group.groupIdentity)
+                                            )
+                                            newPushSettings.removeAll { item in
+                                                item.groupIdentity == pushSetting.groupIdentity
+                                            }
+                                            newPushSettings.append(pushSetting)
                                         }
-                                        newPushSettings.append(pushSetting)
                                     }
                                 }
                             }
@@ -559,14 +565,14 @@ import ThreemaFramework
                     }
                 }
             }
-        }
 
-        let jsonEncoder = JSONEncoder()
-        let newPushSettingsEncoded = try newPushSettings.map { item in
-            try jsonEncoder.encode(item)
-        }
+            let jsonEncoder = JSONEncoder()
+            let newPushSettingsEncoded = try newPushSettings.map { item in
+                try jsonEncoder.encode(item)
+            }
 
-        businessInjector.userSettings.pushSettings = newPushSettingsEncoded
+            businessInjector.userSettings.pushSettings = newPushSettingsEncoded
+        }
 
         AppGroup.userDefaults().removeObject(forKey: "NoPushIdentities")
         AppGroup.userDefaults().removeObject(forKey: "PushSettingsList")
@@ -638,5 +644,48 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "5.9.2 migration")
         DDLogNotice("[AppMigration] App migration to version 5.9.2 successfully finished")
+    }
+    
+    /// Migrate to version 6.0:
+    /// - Set FileAudioMessages consumed date (1970) for existing messages
+    private func migrateTo6_0() throws {
+        DDLogNotice("[AppMigration] App migration to version 6.0 started")
+        os_signpost(.begin, log: osPOILog, name: "6.0 migration")
+
+        // Remember to setup of Threema Safe when downgrade Threema (only necessary if Threema Safe activated)
+        let safeConfigManager = SafeConfigManager(myIdentityStore: businessInjector.myIdentityStore)
+        if safeConfigManager.getKey() != nil {
+            businessInjector.userSettings.safeIntroShown = false
+        }
+
+        // Consumed date is new 1970 for all existing voice messages
+        businessInjector.entityManager.performAndWaitSave {
+            let batch = NSBatchUpdateRequest(entityName: "FileMessage")
+            batch.resultType = .statusOnlyResultType
+            batch
+                .predicate =
+                NSPredicate(
+                    format: "isOwn == false AND type == 1 AND mimeType IN %@", UTIConverter.renderingAudioMimetypes()
+                )
+            
+            batch.propertiesToUpdate = ["consumed": Date(timeIntervalSince1970: 0)]
+            // If there was an error, the execute function will return nil or a result with the result 0
+            if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
+                if let success = result.result as? Int,
+                   success == 0 {
+                    DDLogError(
+                        "[AppMigration] Failed to set consumed date for existing voice messages"
+                    )
+                }
+            }
+            else {
+                DDLogError(
+                    "[AppMigration] Failed to set consumed date for existing voice messages"
+                )
+            }
+        }
+        
+        os_signpost(.end, log: osPOILog, name: "6.0 migration")
+        DDLogNotice("[AppMigration] App migration to version 6.0 successfully finished")
     }
 }

@@ -65,7 +65,7 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
         let symbolName: String
         
         switch currentBlobDisplayState {
-        case .remote, .downloading, .fileNotFound, .dataDeleted, .sendingError:
+        case .remote, .downloading, .fileNotFound, .dataDeleted:
             if let fillSymbolName = currentBlobDisplayState.circleFillSymbolName {
                 symbolName = fillSymbolName
             }
@@ -73,7 +73,7 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
                 symbolName = "play.slash.fill"
             }
             
-        case .processed, .pending, .uploading, .uploaded:
+        case .processed, .pending, .uploading, .uploaded, .sendingError:
             if isPlaying {
                 symbolName = "pause.circle.fill"
             }

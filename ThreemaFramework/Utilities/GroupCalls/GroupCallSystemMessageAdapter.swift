@@ -65,7 +65,7 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
                     }
                     
                     dbSystemMessage.type = NSNumber(value: kSystemMessageGroupCallStartedBy)
-                    dbSystemMessage.arg = contact.displayName.data(using: .utf8)
+                    dbSystemMessage.arg = Data(contact.displayName.utf8)
                     
                     conversation.lastMessage = dbSystemMessage
                     conversation.lastUpdate = Date.now

@@ -102,7 +102,7 @@ struct DeleteRevokeSuccessView: View {
                                     Text("my_profile_delete_identity_summary_view_removed_threema_id".localized)
                                 } icon: {
                                     Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundColor(Colors.red.color)
+                                        .foregroundStyle(Colors.white.color, Colors.red.color)
                                 }
                                 .padding(.vertical)
                                 

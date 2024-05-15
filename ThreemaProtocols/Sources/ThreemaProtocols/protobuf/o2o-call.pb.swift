@@ -156,7 +156,7 @@ public struct Callsignaling_VideoQualityProfile {
 
 extension Callsignaling_VideoQualityProfile.QualityProfile: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Callsignaling_VideoQualityProfile.QualityProfile] = [
+  public static let allCases: [Callsignaling_VideoQualityProfile.QualityProfile] = [
     .max,
     .high,
     .low,
@@ -255,7 +255,7 @@ public struct Callsignaling_CaptureState {
 
 extension Callsignaling_CaptureState.Mode: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Callsignaling_CaptureState.Mode] = [
+  public static let allCases: [Callsignaling_CaptureState.Mode] = [
     .off,
     .on,
   ]
@@ -263,7 +263,7 @@ extension Callsignaling_CaptureState.Mode: CaseIterable {
 
 extension Callsignaling_CaptureState.CaptureDevice: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Callsignaling_CaptureState.CaptureDevice] = [
+  public static let allCases: [Callsignaling_CaptureState.CaptureDevice] = [
     .camera,
     .reservedForScreenShare,
     .microphone,

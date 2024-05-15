@@ -146,7 +146,7 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
 
     func getEnvelopeForIncomingMessageUpdate(
         messageIDs: [Data],
-        messageReadDates: [Date],
+        messageReadDates: [Date?],
         // swiftformat:disable:next all
         conversationID: D2d_ConversationId
     ) -> D2d_Envelope {

@@ -592,7 +592,97 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
         XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
-    
+
+    func testEditGroupMessage() throws {
+        let expectedGroupID: Data = MockData.generateGroupID()
+        let expectedGroupCreator = "CREATOR1"
+        var expectedEditMessage = CspE2e_EditMessage()
+        expectedEditMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedEditMessage.text = "Test 123"
+
+        let msg: EditGroupMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+
+        msg.groupID = expectedGroupID
+        msg.groupCreator = expectedGroupCreator
+        msg.decoded = expectedEditMessage
+
+        let result: EditGroupMessage? = try encodeDecode(message: msg)
+
+        XCTAssertNotNil(result)
+
+        XCTAssertTrue(expectedGroupID.elementsEqual((result?.groupID)!))
+        XCTAssertEqual(expectedGroupCreator, result?.groupCreator)
+        XCTAssertEqual(expectedEditMessage, result?.decoded)
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+
+    func testEditMessage() throws {
+        var expectedEditMessage = CspE2e_EditMessage()
+        expectedEditMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedEditMessage.text = "Test 123"
+
+        let msg: EditMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+
+        msg.decoded = expectedEditMessage
+
+        let result: EditMessage? = try encodeDecode(message: msg)
+
+        XCTAssertNotNil(result)
+
+        XCTAssertEqual(expectedEditMessage, result?.decoded)
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+
     // TODO: (IOS-3949) Test changed
     func testForwardSecurityEnvelopeMessage() throws {
         let expectedSessionID = BytesUtility.generateRandomBytes(length: DHSessionID.dhSessionIDLength)!

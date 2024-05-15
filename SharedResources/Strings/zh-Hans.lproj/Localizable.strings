@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "联系人";
 "segmentcontrol_groups" = "群组";
+"segmentcontrol_distribution_list" = "通讯组列表";
 "segmentcontrol_work_contacts" = "工作";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "再试一次";
 "copy" = "复制";
 "save" = "保存";
+"edit" = "编辑";
 "download" = "下载";
 "retry" = "重试";
 "share" = "分享";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "分享联系人 ID";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "编辑联系人";
 "edit_group_title" = "编辑群组";
+"edit_distribution_list_title" = "编辑通讯组列表";
 
 "first_name_placeholder" = "名字";
 "last_name_placeholder" = "姓氏";
 "group_name_placeholder" = "群组名称";
+"distribution_list_name_placeholder" = "通讯组列表名称";
 
 "no_nickname_title" = "未设置昵称";
 "no_nickname_message" = "您确定要继续而不设置昵称吗？ 其他人收发消息时将很难识别您的身份。";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "在此设备中删除所选的消息吗？";
 "conversation_delete_confirm" = "在此设备中删除此会话吗？";
 "delete_n" = "删除 (%d)";
+"message_delete_for_everyone" = "在所有人的设备上删除消息";
 
 "message_cannot_play_movie" = "无法播放视频。";
 
@@ -318,6 +323,7 @@
 "delete_file" = "删除文件";
 "send_location" = "发送位置";
 "record_audio" = "录制音频";
+"record_continue" = "继续录音";
 "scan_qr" = "扫描二维码";
 "share_file" = "分享文件";
 "add_item_caption" = "添加标题";
@@ -332,12 +338,7 @@
 "play" = "播放";
 "pause" = "暂停";
 "stop" = "停止";
-"voice message" = "语音消息";
 "quit" = "完成";
-"record_cancel_title" = "放弃录音";
-"record_cancel_message" = "您确定要放弃录音？";
-"record_cancel_button_discard" = "放弃录影";
-"speed" = "播放速度";
 
 "send_file_title" = "发送文件";
 "send_file_message" = "文件：%@\n到\n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "您确定要解散此群组吗？";
 "group_dissolve_button" = "解散群组";
 "group_delete" = "删除群组";
+
+"distribution_list_recipients_section_header" = "收件人 (%d)";
+"distribution_list_no_recipient_title" = "没有收件人";
+"distribution_list_one_recipient_title" = "1个收件人";
+"distribution_list_multiple_recipients_title" = "%d个收件人";
+
+"distribution_list_delete" = "删除通讯组列表";
+"distribution_list_create" = "新通讯组列表";
+"distribution_list_edit" = "编辑通讯组列表";
 
 "group name" = "群组名称";
 "existing groups" = "现有群组";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "您还没有任何联系人。同步已经开始，但在通讯录中的联系人看似都不在 Threema 上（您可以邀请他们加入）。";
 "no_contacts" = "没有联系人";
 "no_groups" = "没有群组";
-"no_groups_message" = "您还未加入任何群组。点击 “+” 按钮手动添加群组。";
+"no_groups_message" = "您还未加入任何群组。点击 “+” 按钮即可创建群组。";
 "no_work_contacts" = "%@ 用户";
 "no_work_contacts_message" = "没有找到经管理员验证的 %@ 联系人。";
+"no_distribution_list" = "没有通讯组列表";
+"no_distribution_list_message" = "您还未创建任何通讯组列表。点击 “+” 按钮即可创建通讯组列表。";
 
 "no_contacts_syncoff" = "您还没有任何联系人。请开启同步（“设置” > “隐私”），或点击 “+ ” 按钮手动添加联系人。";
 
@@ -586,13 +598,25 @@
 "app_setup_steps_failed_message" = "请检查您的网络连接并重试。如果问题仍然存在，请联系我们的支持人员。";
 
 /* License Key */
+"enter_license_infoview_subtitle" = "公司版";
+"enter_license_infoview_more_link" = "[了解更多有关 Threema Work 的信息](link)";
+
+"enter_license_infoview_private_use" = "个人版";
+"enter_license_infoview_threema_description" = "如果您是个人用户，请下载普通版 Threema 应用程序。";
+"enter_license_infoview_appstore_link" = "App Store 上的 Threema";
+"enter_license_infoview_login" = "登录";
+
+/* License Key */
 "enter_license_title" = "输入凭证";
 /* MWPhotoBrowser */
 "Done" = "完成";
-"enter_license_description" = "Threema Work 是专为公司而设的即时通讯工具。请输入贵公司或组织提供的凭证。";
-"enter_license_onprem_description" = "Threema OnPrem 是专为公司而设的即时通讯工具。请输入贵公司或组织提供的凭证。";
+"enter_license_description" = "请输入贵公司提供的 Threema Work 凭证。";
+"enter_license_onprem_description" = "请输入贵公司提供的 Threema OnPrem 凭证。";
 "enter_license_work_admin_description" = "忘记了您的凭证？请联系您的 Threema Work 管理员。";
 "enter_license_onprem_admin_description" = "忘记了您的凭证？请联系您的 Threema OnPrem 管理员。";
+"enter_license_onprem_error_config" = "配置无效。请联系您的 Threema OnPrem 管理员。（错误代码：%d）";
+"enter_license_onprem_error_version" = "应用版本不支持。请联系您的 Threema OnPrem 管理员。（错误代码：%d）";
+"enter_license_onprem_error_credentials" = "凭证错误。请联系您的 Threema OnPrem 管理员。（错误代码：%d）";
 "more_work_info" = "了解更多关于 %@ 的信息。";
 "Save" = "保存";
 "enter_license_username_placeholder" = "用户名";
@@ -675,7 +699,6 @@
 "duration" = "时长";
 "current_position" = "位置";
 "in_reply_to" = "回复";
-"go_to_position" = "在";
 "draft" = "草稿";
 "new_message_accessibility" = "新消息： ";
 "quote_interaction_hint" = "跳转到引用的信息";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "%@发起了群组通话";
 "group_call_started_by_local_system_message" = "您发起了群组通话";
 "group_call_ended_system_message" = "群组通话已结束";
+"group_call_started_disabled" = "群组通话已开始。如要加入，在设置中打开群组通话即可。";
 
 "group_call_notification_body_preview" = "%@ 发起的群组通话";
 "group_call_notification_body" = "群组通话已开始";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "已置顶对话";
 
 /* Begin Edit */
-
 "private_message_label" = "私密消息";
 "private_chat_label" = "私密";
 "private_chat_accessibility" = "私密会话";
@@ -833,6 +856,13 @@
 "archived_title" = "已归档";
 "conversations_global_search_placeholder" = "搜索";
 "one_to_one_chat" = "单人聊天";
+"conversations_global_search_section_header_tokens" = "消息类型";
+"conversations_global_search_token_text" = "文字消息";
+"conversations_global_search_token_captions" = "媒体标题";
+"conversations_global_search_token_polls" = "投票";
+"conversations_global_search_token_locations" = "位置";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "已加星标";
 
 "select_all" = "全选";
 "deselect_all" = "取消全选";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "您确定要退出删除群组吗？";
 "group_delete_button" = "删除群组和会话记录";
 
+"distribution_list_delete_sheet_title" = "删除通讯组列表？";
+
 "selected_count" = "已选择 %d";
 "all_selected" = "全选";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "删除私密会话时，新的会话不会再次自动标记为私密会话。";
 
 /* End Edit */
-
 "pushSetting_header" = "通知";
 "doNotDisturb_title" = "请勿打扰";
 
@@ -1298,12 +1329,12 @@
 "settings_advanced_successfully_reset_unread_count_label" = "未读消息数字已成功重置";
 
 // Sentry
-"sentry_crash_send_title" = "%@ 意外退出";
-"sentry_crash_send_description" = "您可以提交匿名崩溃报告。请您详细解释导致崩溃原因，将有助于解决根本问题。";
+"sentry_crash_send_title" = "出现问题";
+"sentry_crash_send_description" = "您可以提交匿名报告。请仔细描述崩溃问题发生前的详情，将有助我们的支持团队解决根本问题。";
 "sentry_crash_send_yes" = "发送匿名报告";
 "sentry_crash_send_no" = "请勿发送";
 
-"sentry_crash_comment_placeholder" = "崩溃报告";
+"sentry_crash_comment_placeholder" = "详情";
 
 // Profile
 "profile_share_id_text" = "我的 Threema ID";
@@ -1642,6 +1673,7 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "关闭引用";
+"chat_bar_edited_message_close_button" = "取消编辑消息";
 
 // ChatDetailView
 "detailView_title" = "消息详情";
@@ -1649,6 +1681,7 @@
 "detailView_group_acknowledged" = "已同意 (%d)";
 "detailView_group_declined" = "不同意 (%d)";
 "detailView_group_file_size" = "文件大小";
+"detailView_consumed" = "首次播放";
 "detailView_created_footer" = "创建于：%@";
 
 "message_display_status_none" = "无";
@@ -1660,6 +1693,8 @@
 "message_display_status_delivered_incoming" = "已收到";
 "message_display_status_read" = "已阅读";
 "message_display_status_failed" = "失败";
+"message_display_status_deleted_message" = "已删除";
+"message_display_status_edited_message" = "已编辑";
 
 // In-app notifications
 "notification_copying_succeeded" = "项目已复制";
@@ -1738,9 +1773,12 @@
 // Chat bar
 "accessibility_chatbar_label" = "聊天输入框";
 "accessibility_chatbar_hint" = "撰写消息";
-"accessibility_chatbar_quote_label" = "所选的引用消息：%@。";
-"accessibility_chatbar_close_quote_button_label" = "结束引用";
-"accessibility_chatbar_close_quote_button_hint" = "结束引用所选消息";
+"accessibility_chatbar_quote_label" = "要引用的消息：%@";
+"accessibility_chatbar_close_quote_button_label" = "取消引用";
+"accessibility_chatbar_close_quote_button_hint" = "取消对所选消息的引用";
+"accessibility_chatbar_edited_message_label" = "要编辑的消息：%@";
+"accessibility_chatbar_close_edited_message_button_label" = "取消编辑";
+"accessibility_chatbar_close_edited_message_button_hint" = "取消对所选消息的编辑";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "您的%@";
@@ -1786,6 +1824,7 @@
 "accessibility_poll_closed" = "投票已关闭";
 "accessibility_file_duration" = "时长：%@";
 "accessibility_voice_message_playing" = "正在播放";
+"accessibility_voice_message_unplayed" = "还未播放";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "已同意, %@";
@@ -1893,3 +1932,25 @@
 "application_shortcut_item_new_message" = "新消息";
 "application_shortcut_item_scan_qr_code" = "扫描二维码";
 "application_shortcut_item_my_id" = "个人资料";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "已加星标";
+"marker_action_star" = "加星标";
+"marker_action_remove_star" = "取消星标";
+"marker_accessibility_label" = "已加星标";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "已加星标";
+
+// Delete / Edit message
+"edit_message" = "编辑消息";
+"edit_message_can_not_edit" = "该信息已发送超过6小时，因此无法再编辑。";
+"edit_message_not_sent_to" = "以下群组成员将无法看到您对信息的编辑：%@";
+"delete_message_not_sent_to" = "以下群组成员的消息不会被删除：%@";
+"delete_edit_message_not_sent_to_others" = "%d 其他人";
+"delete_message_requirement" = "如要同时为对方删除信息，对方需要安装最新的 Threema 版本。";
+"edit_message_requirement" = "对方如要查看已编辑的消息，他们需要安装最新的 Threema 版本。";
+
+"edit_message_text_to_long" = "由于文本太长，无法编辑消息。";
+"edited_message_state" = "已编辑";
+"deleted_message" = "此消息已被删除";

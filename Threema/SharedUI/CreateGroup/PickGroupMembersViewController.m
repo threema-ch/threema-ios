@@ -278,6 +278,13 @@ typedef enum : NSUInteger {
 
         [groupMemberIdentities  addObject:contact.identity];
     }
+    
+    // This is an insane hack to inject a custom completion handler. Used with distribution lists.
+    if (_didSelect != nil) {
+        self.didSelect(_selectedMembers);
+        [self dismissViewControllerAnimated:YES completion:nil];
+        return;
+    }
 
     [self dismissViewControllerAnimated:YES completion:^{
         [groupManager createOrUpdateObjcWithGroupID:_group.groupID creator:[[MyIdentityStore sharedMyIdentityStore] identity] members:groupMemberIdentities systemMessageDate:[NSDate date] completionHandler:^(Group * _Nullable grp, NSSet<NSString *> * _Nullable newMembers) {

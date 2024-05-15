@@ -89,18 +89,7 @@ static const NSUInteger newMaxLength = 6;
     [self.view setBackgroundColor:Colors.backgroundView];
     
     //------------------ Threema edit begin ---------------------------
-    switch(ThreemaAppObjc.current) {
-        case ThreemaAppThreema:
-        case ThreemaAppRed:
-            _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogo"];
-            break;
-        case ThreemaAppWork:
-        case ThreemaAppWorkRed:
-            _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogoWork"];
-            break;
-        case ThreemaAppOnPrem:
-            _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogoOnprem"];
-    }
+    _threemaLogo.image = [Colors threemaLogoForPasscode];
     //------------------ Threema edit end ---------------------------
     
     [Colors updateWithNavigationBar:self.navigationController.navigationBar];

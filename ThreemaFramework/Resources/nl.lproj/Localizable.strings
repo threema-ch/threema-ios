@@ -83,9 +83,8 @@
 
 "mediapreview_options" = "Opties";
 
-"testflight_feedback_viewtitle" = "Beta-feedback";
-"testflight_feedback_title" = "Stuur ons uw beta-feedback";
-"testflight_feedback_description" = "Bedankt voor het testen van de beta-versie van Threema. Het testen is echter slechts de helft van het werk, de andere helft is het geven van feedback. Laat het ons weten als u bugs of afwijkingen tegenkomt. Ga naar Instellingen > Beta-feedback om de beta-chat te openen.";
+"testflight_feedback_title" = "Stuur ons uw bèta-feedback";
+"testflight_feedback_description" = "Laat het ons weten als u bugs of afwijkingen tegenkomt. Tik hier om de bèta-chat te openen.";
 
 "notification.threemaweb.connect.title" = "Desktop/Web";
 "notification.threemaweb.connect.body" = "Tik hier om de verbinding met de desktop-app/webclient te herstellen.";

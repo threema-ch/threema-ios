@@ -32,7 +32,7 @@ final class DefaultRendezvousCryptoTests: XCTestCase {
         let authenticationKey = Data(repeating: 0x01, count: 32)
         let pathID: UInt32 = 1
         
-        let dataToEncrypt = try XCTUnwrap("threema".data(using: .utf8))
+        let dataToEncrypt = Data("threema".utf8)
         
         // Run
         
@@ -52,7 +52,7 @@ final class DefaultRendezvousCryptoTests: XCTestCase {
     
     // This is the inverse of `testEncryptionInitiator()`
     func testDecryptionResponder() throws {
-        let expectedData = try XCTUnwrap("threema".data(using: .utf8))
+        let expectedData = Data("threema".utf8)
         
         let role = Rendezvous.Role.responder
         let authenticationKey = Data(repeating: 0x01, count: 32)
@@ -86,7 +86,7 @@ final class DefaultRendezvousCryptoTests: XCTestCase {
         let authenticationKey = Data(repeating: 0x01, count: 32)
         let pathID: UInt32 = 1
         
-        let dataToEncrypt = try XCTUnwrap("threema".data(using: .utf8))
+        let dataToEncrypt = Data("threema".utf8)
         
         // Run
         
@@ -106,7 +106,7 @@ final class DefaultRendezvousCryptoTests: XCTestCase {
     
     // This is the inverse of `testEncryptionResponder()`
     func testDecryptionInitiator() throws {
-        let expectedData = try XCTUnwrap("threema".data(using: .utf8))
+        let expectedData = Data("threema".utf8)
 
         let role = Rendezvous.Role.initiator
         let authenticationKey = Data(repeating: 0x01, count: 32)
@@ -156,7 +156,7 @@ final class DefaultRendezvousCryptoTests: XCTestCase {
         )
         let remotePublicEphemeralTransportKey = Data(repeating: 0x01, count: 32)
         
-        let dataToEncrypt = try XCTUnwrap("threema".data(using: .utf8))
+        let dataToEncrypt = Data("threema".utf8)
         
         // Run
         
@@ -183,7 +183,7 @@ final class DefaultRendezvousCryptoTests: XCTestCase {
     // This is the inverse of `testTransportEncryptionInitiator()`
     func testTransportDecryptionResponder() throws {
         let expectedPathHashHex = "580288fa0eee0af16a76be8d54ceb90b01634a3031141fca02540f6045467e7e"
-        let expectedData = try XCTUnwrap("threema".data(using: .utf8))
+        let expectedData = Data("threema".utf8)
         
         // Derived ETK: 1c4ced205e274285121373dc8ff5c7f5c81e715ee65876444f3f8e04ec504676
         // STK: e78feea613e0a1529f639e3d383ce67feb10c1b4c0d04196b9fce38969cb55ec

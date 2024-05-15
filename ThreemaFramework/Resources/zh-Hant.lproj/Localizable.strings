@@ -83,9 +83,8 @@
 
 "mediapreview_options" = "選項";
 
-"testflight_feedback_viewtitle" = "測試版意見回饋";
-"testflight_feedback_title" = "請向我們傳送您的測試版意見回饋！";
-"testflight_feedback_description" = "感謝您加入 Threema 的測試版。然而，測試只是邁向成功的一半，另一半就是提供意見回饋。如果您遇到任何錯誤或不正常情況，請向我們提供意見回饋。按「設定」> 「測試版意見回饋」，即可聯絡我們。";
+"testflight_feedback_title" = "向我們傳送您的測試版意見回饋！";
+"testflight_feedback_description" = "如果您遇到任何錯誤或異常情況，請向我們提供意見回饋。 按一下這裡開啟測試版對話方塊。";
 
 "notification.threemaweb.connect.title" = "桌面版/網頁版";
 "notification.threemaweb.connect.body" = "按一下這裡，以重新建立與桌面版應用程式 / 網頁版用戶端的連結。";

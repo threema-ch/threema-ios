@@ -127,7 +127,7 @@ import ThreemaFramework
     
     /// Show notification for pending user notification is missing on notification center.
     @objc func showIsNotPending() {
-        businessInjector.entityManager.performBlock {
+        businessInjector.entityManager.performAndWait {
             if let pendingUserNotificationsAreNotPending = self.pendingUserNotificationManager
                 .pendingUserNotificationsAreNotPending() {
                 for pendingUserNotification in pendingUserNotificationsAreNotPending {
@@ -180,8 +180,11 @@ import ThreemaFramework
                     return
                 }
                 
-                if let message = pendingUserNotification.baseMessage, pendingUserNotification.stage == .final,
+                if let message = pendingUserNotification.baseMessage,
+                   message.deletedAt == nil,
+                   pendingUserNotification.stage == .final,
                    pendingUserNotification.abstractMessage?.receivedAfterInitialQueueSend == true {
+
                     if pushSettingManager.canMasterDndSendPush() {
                         entityManager.performBlock {
                             var pushSetting: PushSetting
@@ -272,10 +275,10 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
-    func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) {
         businessInjector.entityManager.performAndWaitSave {
             if let msg = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: message.objectID) as? BaseMessage {
+                .getManagedObject(by: baseMessage.objectID) as? BaseMessage {
                 if !AppDelegate.shared().active {
                     let databaseManager = DatabaseManager()
                     databaseManager.addDirtyObject(msg)
@@ -293,8 +296,8 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 }
 
                 if let pendingUserNotification = self.pendingUserNotificationManager.pendingUserNotification(
-                    for: msg,
-                    fromIdentity: fromIdentity,
+                    for: message,
+                    baseMessage: msg,
                     stage: .base
                 ) {
                     self.show(

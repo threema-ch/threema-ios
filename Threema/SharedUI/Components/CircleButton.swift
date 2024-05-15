@@ -86,8 +86,14 @@ final class CircleButton: ThemedCodeButton {
     
     private func configureButton(with sfSymbolName: String) {
         // Content
-        let image = BundleUtil.imageNamed("\(sfSymbolName)_semibold.L")
-        assert(image != nil, "SF Symbol: semibold & L required for '\(sfSymbolName)'")
+        
+        var image = UIImage(systemName: sfSymbolName)
+        if image == nil {
+            image = UIImage(named: sfSymbolName)
+        }
+        image = image?.applying(symbolWeight: .semibold, symbolScale: .large)
+
+        assert(image != nil, "Symbol not found")
         setImage(image, for: .normal)
                         
         // Layout

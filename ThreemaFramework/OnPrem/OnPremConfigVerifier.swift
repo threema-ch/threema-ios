@@ -50,7 +50,7 @@ class OnPremConfigVerifier {
         var chosenPublicKey: Data?
         for publicKey in trustedPublicKeys {
             let edPublicKey = try PublicKey([UInt8](publicKey))
-            if try edPublicKey.verify(signature: [UInt8](sig), message: [UInt8](jsonData.data(using: .utf8)!)) {
+            if try edPublicKey.verify(signature: [UInt8](sig), message: [UInt8](Data(jsonData.utf8))) {
                 valid = true
                 chosenPublicKey = publicKey
                 break
@@ -67,7 +67,7 @@ class OnPremConfigVerifier {
         dateFormat.timeZone = .current
         dateFormat.dateFormat = "yyyy-MM-dd"
         decoder.dateDecodingStrategy = .formatted(dateFormat)
-        let config = try decoder.decode(OnPremConfig.self, from: jsonData.data(using: .utf8)!)
+        let config = try decoder.decode(OnPremConfig.self, from: Data(jsonData.utf8))
         
         // Check that the version is supported
         if config.version != "1.0" {

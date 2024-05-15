@@ -84,11 +84,6 @@ import Foundation
         else if checkSafeInto() {
             return .safeSetupInfo
         }
-        else if ThreemaApp.current != .onPrem,
-                !AppGroup.userDefaults().bool(forKey: Constants.showedTestFlightFeedbackViewKey),
-                ThreemaEnvironment.env() != .appStore {
-            return .betaFeedback
-        }
         
         return nil
     }

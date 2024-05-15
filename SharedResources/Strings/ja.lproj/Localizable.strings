@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "連絡先";
 "segmentcontrol_groups" = "グループ";
+"segmentcontrol_distribution_list" = "配布リスト";
 "segmentcontrol_work_contacts" = "仕事";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "もう一度試す";
 "copy" = "コピー";
 "save" = "保存";
+"edit" = "編集";
 "download" = "ダウンロード";
 "retry" = "再試行";
 "share" = "共有";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "連絡先IDを共有";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "連絡先を編集";
 "edit_group_title" = "グループを編集";
+"edit_distribution_list_title" = "配布リストを編集";
 
 "first_name_placeholder" = "名前";
 "last_name_placeholder" = "名字";
 "group_name_placeholder" = "グループ名";
+"distribution_list_name_placeholder" = "配布リスト名";
 
 "no_nickname_title" = "名無し";
 "no_nickname_message" = "本当にニックネームを設定しませんか？この設定がないと、相手がアプリを起動する前にあなたからのメッセージを認識することができません。";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "この端末から選択したメッセージを削除しますか？";
 "conversation_delete_confirm" = "この端末からこのトークを削除しますか？";
 "delete_n" = "削除 (%d)";
+"message_delete_for_everyone" = "全員へのメッセージを削除";
 
 "message_cannot_play_movie" = "動画の再生ができません。";
 
@@ -318,6 +323,7 @@
 "delete_file" = "データを削除";
 "send_location" = "位置情報を送信";
 "record_audio" = "音声メッセージ";
+"record_continue" = "音声録音を続ける";
 "scan_qr" = "QRコードをスキャンする";
 "share_file" = "データを送信";
 "add_item_caption" = "キャプションの追加";
@@ -332,12 +338,7 @@
 "play" = "再生する";
 "pause" = "一時停止";
 "stop" = "停止";
-"voice message" = "音声メッセージ";
 "quit" = "終了";
-"record_cancel_title" = "録音データを消去";
-"record_cancel_message" = "本当に録音データを削除しますか？";
-"record_cancel_button_discard" = "録音データを削除する";
-"speed" = "再生スピード";
 
 "send_file_title" = "データを送信";
 "send_file_message" = "データ: %@\n受信\n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "本当にこのグループを解散しますか？";
 "group_dissolve_button" = "グループを解散する";
 "group_delete" = "グループを削除";
+
+"distribution_list_recipients_section_header" = "受信者（%d）";
+"distribution_list_no_recipient_title" = "受信者なし";
+"distribution_list_one_recipient_title" = "1人の受信者";
+"distribution_list_multiple_recipients_title" = "%d人の受信者";
+
+"distribution_list_delete" = "配布リストを削除";
+"distribution_list_create" = "新しい配布リスト";
+"distribution_list_edit" = "配布リストを編集";
 
 "group name" = "グループ名";
 "existing groups" = "存在するグループ";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "まだ連絡先がありません。同期は行われていますが、アドレス帳の連絡先がThreemaに登録されていないようです（招待してみてください）。";
 "no_contacts" = "連絡先がありません";
 "no_groups" = "グループがありません";
-"no_groups_message" = "まだグループがありません。グループの追加は、+ボタンを使って行ってください。";
+"no_groups_message" = "まだグループがありません。+ボタンをタップして作成してください。";
 "no_work_contacts" = "%@のユーザー";
 "no_work_contacts_message" = "管理者が確認した%@の連絡先は見つかりませんでした。";
+"no_distribution_list" = "配布リストなし";
+"no_distribution_list_message" = "まだ配布リストがありません。+ボタンをタップして作成してください。";
 
 "no_contacts_syncoff" = "まだ連絡先がありません。同期を有効（設定 > プライバシー）にするか、＋ボタンを使って手動で連絡先を追加してください。";
 
@@ -586,6 +598,15 @@
 "app_setup_steps_failed_message" = "インターネット接続を確認して、もう一度やり直してください。問題が解決しない場合はサポートにお問い合わせください。";
 
 /* License Key */
+"enter_license_infoview_subtitle" = "企業様向け";
+"enter_license_infoview_more_link" = "[Threema Workについての詳細を見る]（リンク）";
+
+"enter_license_infoview_private_use" = "個人様向け";
+"enter_license_infoview_threema_description" = "個人ユーザー様の場合は、通常版のThreemaアプリをダウンロードしてください。";
+"enter_license_infoview_appstore_link" = "App StoreでThreemaを開く";
+"enter_license_infoview_login" = "ログイン";
+
+/* License Key */
 "enter_license_title" = "ライセンスキーを入力";
 /* MWPhotoBrowser */
 "Done" = "終了";
@@ -593,6 +614,9 @@
 "enter_license_onprem_description" = "Threema OnPremは、企業・組織向けのセルフホスティング型メッセンジャーです。あなたの会社や組織が提供する認証情報を入力してください。";
 "enter_license_work_admin_description" = "資格情報を忘れましたか？Threema Workの管理者に連絡してください。";
 "enter_license_onprem_admin_description" = "資格情報を忘れましたか？Threema OnPremの管理者に連絡してください。";
+"enter_license_onprem_error_config" = "無効な認証情報です。ご所属先のThreema OnPremの管理者にお問合せください。（コード: %d）";
+"enter_license_onprem_error_version" = "サポートされていないバージョンです。ご所属先のThreema OnPremの管理者にお問合せください。（コード: %d）";
+"enter_license_onprem_error_credentials" = "認証情報が間違っています。ご所属先のThreema OnPremの管理者にお問合せください。（コード: %d）";
 "more_work_info" = "%@について詳しく知る";
 "Save" = "保存";
 "enter_license_username_placeholder" = "ユーザー名";
@@ -675,7 +699,6 @@
 "duration" = "持続時間";
 "current_position" = "ポジション";
 "in_reply_to" = "に返信";
-"go_to_position" = "で";
 "draft" = "下書き";
 "new_message_accessibility" = "新規メッセージ: ";
 "quote_interaction_hint" = "引用されたメッセージへ飛ぶ";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "%@がグループ通話を開始しました";
 "group_call_started_by_local_system_message" = "あなたがグループ通話を開始しました";
 "group_call_ended_system_message" = "グループ通話が終了しました";
+"group_call_started_disabled" = "グループ通話が開始されました。設定でグループ通話をオンにして参加してください。";
 
 "group_call_notification_body_preview" = "%@が開始したグループ通話";
 "group_call_notification_body" = "グループ通話が始まりました";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "ピンされた会話";
 
 /* Begin Edit */
-
 "private_message_label" = "プライベートメッセージ";
 "private_chat_label" = "プライベート";
 "private_chat_accessibility" = "プライベートトーク";
@@ -833,6 +856,13 @@
 "archived_title" = "アーカイブしました";
 "conversations_global_search_placeholder" = "検索";
 "one_to_one_chat" = "シングルトーク";
+"conversations_global_search_section_header_tokens" = "メッセージタイプ";
+"conversations_global_search_token_text" = "テキストメッセージ";
+"conversations_global_search_token_captions" = "メディアキャプション";
+"conversations_global_search_token_polls" = "投票";
+"conversations_global_search_token_locations" = "場所";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "スター付き";
 
 "select_all" = "すべて選択";
 "deselect_all" = "すべての選択を解除";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "本当にこのグループを削除しますか？";
 "group_delete_button" = "グループとトーク履歴を削除";
 
+"distribution_list_delete_sheet_title" = "配布リストを削除しますか？";
+
 "selected_count" = "%d項目を選択済み";
 "all_selected" = "全て選択済み";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "プライベートトークを削除しても、新しいトークが再び自動的にプライベートとしてマークされることはありません。";
 
 /* End Edit */
-
 "pushSetting_header" = "通知";
 "doNotDisturb_title" = "通知オフ";
 
@@ -1298,12 +1329,12 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "settings_advanced_successfully_reset_unread_count_label" = "未読メッセージ数をリセットしました";
 
 // Sentry
-"sentry_crash_send_title" = "%@ 予期せずに終了";
+"sentry_crash_send_title" = "問題が発生しました";
 "sentry_crash_send_description" = "匿名でクラッシュレポートを提出することができます。原因を詳しく説明することで、根本的な問題を解決することができます。";
 "sentry_crash_send_yes" = "匿名レポートを送信";
 "sentry_crash_send_no" = "送信しない";
 
-"sentry_crash_comment_placeholder" = "クラッシュレポート";
+"sentry_crash_comment_placeholder" = "詳細";
 
 // Profile
 "profile_share_id_text" = "私のThreema ID";
@@ -1642,6 +1673,7 @@ iTunesのバックアップを作成してから行ってください。";
 
 // ChatBar
 "chat_bar_quote_close_button" = "引用終了";
+"chat_bar_edited_message_close_button" = "メッセージの編集をキャンセル";
 
 // ChatDetailView
 "detailView_title" = "メッセージ詳細";
@@ -1649,6 +1681,7 @@ iTunesのバックアップを作成してから行ってください。";
 "detailView_group_acknowledged" = "同意（%d）";
 "detailView_group_declined" = "反対（%d）";
 "detailView_group_file_size" = "ファイルサイズ";
+"detailView_consumed" = "初回再生日";
 "detailView_created_footer" = "%@ は作成されました";
 
 "message_display_status_none" = "なし";
@@ -1660,6 +1693,8 @@ iTunesのバックアップを作成してから行ってください。";
 "message_display_status_delivered_incoming" = "受信済み";
 "message_display_status_read" = "既読";
 "message_display_status_failed" = "失敗";
+"message_display_status_deleted_message" = "削除済み";
+"message_display_status_edited_message" = "編集済み";
 
 // In-app notifications
 "notification_copying_succeeded" = "アイテムをコピーしました";
@@ -1738,9 +1773,12 @@ iTunesのバックアップを作成してから行ってください。";
 // Chat bar
 "accessibility_chatbar_label" = "トークの入力に失敗しました";
 "accessibility_chatbar_hint" = "メッセージを作成します。";
-"accessibility_chatbar_quote_label" = "選択された引用メッセージ：%@";
-"accessibility_chatbar_close_quote_button_label" = "引用終了。";
-"accessibility_chatbar_close_quote_button_hint" = "選択したメッセージの引用を終了します。";
+"accessibility_chatbar_quote_label" = "引用するメッセージ：%@。";
+"accessibility_chatbar_close_quote_button_label" = "引用をキャンセルします。";
+"accessibility_chatbar_close_quote_button_hint" = "選択したメッセージの引用をキャンセルします。";
+"accessibility_chatbar_edited_message_label" = "編集するメッセージ: %@。";
+"accessibility_chatbar_close_edited_message_button_label" = "編集をキャンセルします。";
+"accessibility_chatbar_close_edited_message_button_hint" = "選択したメッセージの編集をキャンセルします。";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "あなたの%@";
@@ -1786,6 +1824,7 @@ iTunesのバックアップを作成してから行ってください。";
 "accessibility_poll_closed" = "終了";
 "accessibility_file_duration" = "時間: %@";
 "accessibility_voice_message_playing" = "現在再生中。";
+"accessibility_voice_message_unplayed" = "まだ再生されていません。";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "同意済み、%@";
@@ -1893,3 +1932,25 @@ iTunesのバックアップを作成してから行ってください。";
 "application_shortcut_item_new_message" = "新しいメッセージ";
 "application_shortcut_item_scan_qr_code" = "QRコードを読み込む";
 "application_shortcut_item_my_id" = "プロフィール";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "スター付き";
+"marker_action_star" = "スターを付ける";
+"marker_action_remove_star" = "スターを外す";
+"marker_accessibility_label" = "スターを付けました。";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "スター付き";
+
+// Delete / Edit message
+"edit_message" = "メッセージを編集";
+"edit_message_can_not_edit" = "このメッセージは6時間以上前に送信されているため、もう編集することはできません。";
+"edit_message_not_sent_to" = "次のグループメンバーは、編集内容を見ることができません:  %@";
+"delete_message_not_sent_to" = "次のグループメンバーに対して、メッセージを削除することができません: %@";
+"delete_edit_message_not_sent_to_others" = "その他%d人";
+"delete_message_requirement" = "メッセージを削除するには、該当する受信者に最新バージョンのThreemaをインストールしてもらう必要があります。";
+"edit_message_requirement" = "編集内容を確認するには、最新バージョンのThreemaをインストールする必要があります。";
+
+"edit_message_text_to_long" = "テキストが長すぎるため、メッセージを編集することができません。";
+"edited_message_state" = "編集済み";
+"deleted_message" = "このメッセージは削除されました";

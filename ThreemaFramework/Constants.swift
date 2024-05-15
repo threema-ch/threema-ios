@@ -50,8 +50,6 @@ public enum Constants {
     /// Beta feedback identity
     public static let betaFeedbackIdentity = kBetaFeedbackIdentity
     
-    /// Showed TestFlight feedback info screen key
-    public static let showedTestFlightFeedbackViewKey = kShowedTestFlightFeedbackView
     /// Showed notification type selection view
     public static let showedNotificationTypeSelectionView = kShowedNotificationTypeSelectionView
     /// Key for all custom wallpaper

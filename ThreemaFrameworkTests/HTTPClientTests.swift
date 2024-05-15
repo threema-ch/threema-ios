@@ -28,7 +28,7 @@ class HTTPClientTests: XCTestCase {
     
     let sessionManager = URLSessionManager(with: TestSessionProvider())
     let dummyAuthToken = "dummyAuthToken"
-    let dummyData = "DummyData".data(using: .utf8)!
+    let dummyData = Data("DummyData".utf8)
 
     // MARK: - Delete
 

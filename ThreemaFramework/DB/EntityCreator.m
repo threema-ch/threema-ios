@@ -29,6 +29,7 @@
 
 @end
 
+@class MessageMarkers;
 @implementation EntityCreator
 
 - (instancetype)initWith:(NSManagedObjectContext *) managedObjectContext
@@ -163,12 +164,13 @@
     return (AudioData *)[self createEntityOfType: @"AudioData"];
 }
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation {
+- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate  {
     BaseMessage *message = [self createEntityOfType: @"TextMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
-    conversation.lastUpdate = [NSDate date];
-    
+    if(lastUpdate == YES) {
+        conversation.lastUpdate = [NSDate date];
+    }
     return (TextMessage *)message;
 }
 
@@ -208,12 +210,13 @@
     return (AudioMessageEntity *)message;
 }
 
-- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation {
+- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate  {
     BaseMessage *message = [self createEntityOfType: @"LocationMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
-    conversation.lastUpdate = [NSDate date];
-    
+    if(lastUpdate == YES) {
+        conversation.lastUpdate = [NSDate date];
+    }
     return (LocationMessage *)message;
 }
 
@@ -292,6 +295,11 @@
     tag.name = name;
     
     return tag;
+}
+
+- (MessageMarkers *)messageMarkers {
+    MessageMarkers *markers = (MessageMarkers *)[self createEntityOfType:@"MessageMarkers"];
+    return markers;
 }
 
 - (WebClientSession *)webClientSession {
@@ -389,5 +397,10 @@
 - (GroupCallEntity *)groupCallEntity {
     return (GroupCallEntity *)[self createEntityOfType: @"GroupCallEntity"];
 }
+
+- (DistributionListEntity*)distributionListEntity {
+    return (DistributionListEntity *)[self createEntityOfType: @"DistributionList"];
+}
+
 
 @end

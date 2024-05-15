@@ -111,6 +111,11 @@ final class ChatSearchController: NSObject {
     private var cancellables = Set<AnyCancellable>()
     @Published var searchText: String?
     
+    private var starredToken: UISearchToken {
+        let token = UISearchToken(icon: UIImage(systemName: "star.fill"), text: "search_token_starred_title".localized)
+        return token
+    }
+    
     private lazy var chatSearchResultsViewController = ChatSearchResultsViewController(
         delegate: self,
         entityManager: entityManager
@@ -126,6 +131,9 @@ final class ChatSearchController: NSObject {
         
         searchController.searchBar.delegate = self
         searchController.searchResultsUpdater = self
+        
+        searchController.searchBar.searchTextField.allowsDeletingTokens = true
+        searchController.obscuresBackgroundDuringPresentation = false
         
         return searchController
     }()
@@ -244,8 +252,6 @@ final class ChatSearchController: NSObject {
         self.entityFetcher = EntityFetcher(context, myIdentityStore: BusinessInjector().myIdentityStore)
         
         super.init()
-        
-        setupSearchResultsFetching()
     }
     
     @available(*, unavailable)
@@ -253,18 +259,28 @@ final class ChatSearchController: NSObject {
         fatalError("No available")
     }
     
-    // MARK: - Public function
+    // MARK: - Public functions
     
     /// Activate the search bar text field
     ///
     /// Call this after you added the `searchBar` to your view hierarchy and ensure the it can become first responder.
     func activateSearch() {
         searchController.searchBar.becomeFirstResponder()
+        setupSearchResultsFetching()
+    }
+    
+    /// Adds the starred message token to the `searchBar` which is used to filter the messages
+    func addStarredToken() {
+        searchController.searchBar.searchTextField.insertToken(starredToken, at: 0)
+        setupSearchResultsFetching()
     }
     
     // MARK: - Private functions
     
     private func setupSearchResultsFetching() {
+        
+        cancellables.forEach { $0.cancel() }
+        
         $searchText
             .debounce(for: ChatViewConfiguration.SearchResultsFetching.debounceInputSeconds, scheduler: RunLoop.main)
             .receive(on: searchQueue)
@@ -277,27 +293,40 @@ final class ChatSearchController: NSObject {
                     return
                 }
                 
-                guard searchText != "" else {
-                    return
-                }
-                
                 DispatchQueue.main.async {
                     let hud = MBProgressHUD.showAdded(to: self.chatSearchResultsViewController.view, animated: true)
                     hud.mode = .indeterminate
                     hud.label.text = BundleUtil.localizedString(forKey: "chat_search_searching")
                     hud.removeFromSuperViewOnHide = true
                 }
+                var hasTokens = false
+                DispatchQueue.main.sync {
+                    hasTokens = !self.searchController.searchBar.searchTextField.tokens.isEmpty
+                }
                 
                 // TODO: (IOS-2904) Only fetch object IDs
+                // TODO: (IOS-4469) Simplify
                 self.context.performAndWait {
-                    self.filteredMessageObjectIDs = self.entityFetcher.messagesContaining(
-                        searchText,
-                        in: self.conversation,
-                        filterPredicate: nil,
-                        fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
-                    )
-                    .compactMap { $0 as? BaseMessage }
-                    .map(\.objectID)
+                    if !hasTokens {
+                        self.filteredMessageObjectIDs = self.entityFetcher.messagesContaining(
+                            searchText,
+                            in: self.conversation,
+                            filterPredicate: nil,
+                            fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
+                        )
+                        .compactMap { $0 as? BaseMessage }
+                        .map(\.objectID)
+                    }
+                    else {
+                        self.filteredMessageObjectIDs = self.entityFetcher.starredMessagesContaining(
+                            searchText,
+                            in: self.conversation,
+                            filterPredicate: nil,
+                            fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
+                        )
+                        .compactMap { $0 as? BaseMessage }
+                        .map(\.objectID)
+                    }
                 }
                 
                 DispatchQueue.main.async {
@@ -315,6 +344,8 @@ final class ChatSearchController: NSObject {
     private func hideSearchResultsController(showToolbar: Bool = true) {
         searchController.showsSearchResultsController = false
         if showToolbar {
+            // We dismiss the searchResultsController to make the ChatView accessible for VoiceOver users.
+            searchController.searchResultsController?.dismiss(animated: false)
             delegate?.chatSearchController(showToolbarWith: currentToolbarButtonItems, animated: true)
         }
     }
@@ -344,7 +375,9 @@ final class ChatSearchController: NSObject {
     }
     
     @objc private func searchInfoBarButtonItemTapped() {
-        showSearchResultsController()
+        // We call this instead of `showSearchResultsController()` because this also presents the
+        // SearchResultsController again, which might get removed in `hideSearchResultsController()`.
+        searchController.searchBar.becomeFirstResponder()
     }
 }
 
@@ -365,7 +398,7 @@ extension ChatSearchController: UISearchBarDelegate {
     }
     
     private func updateSearchResultsVisibility(with searchText: String) {
-        if searchText.isEmpty {
+        if searchText.isEmpty, searchController.searchBar.searchTextField.tokens.isEmpty {
             hideSearchResultsController(showToolbar: false)
         }
         else {

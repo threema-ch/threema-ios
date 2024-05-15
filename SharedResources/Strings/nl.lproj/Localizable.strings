@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "Contactpersonen";
 "segmentcontrol_groups" = "Groepen";
+"segmentcontrol_distribution_list" = "Distributielijsten";
 "segmentcontrol_work_contacts" = "Work";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "Opnieuw";
 "copy" = "Kopiëren";
 "save" = "Opslaan";
+"edit" = "Bewerken";
 "download" = "Downloaden";
 "retry" = "Opnieuw proberen";
 "share" = "Delen";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "Contact ID delen";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Contactpersoon bewerken";
 "edit_group_title" = "Groep bewerken";
+"edit_distribution_list_title" = "Distributielijst bewerken";
 
 "first_name_placeholder" = "Voornaam";
 "last_name_placeholder" = "Achternaam";
 "group_name_placeholder" = "Groepsnaam";
+"distribution_list_name_placeholder" = "Naam distributielijst";
 
 "no_nickname_title" = "Geen nickname ingesteld";
 "no_nickname_message" = "Weet je zeker dat je wil doorgaan zonder nickname in te stellen. Op die manier is het lastig voor anderen om je berichten te herkennen voordat ze de app opstarten.";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "Geselecteerde berichten van dit apparaat verwijderen?";
 "conversation_delete_confirm" = "Deze chat van dit apparaat verwijderen?";
 "delete_n" = "Verwijderen (%d)";
+"message_delete_for_everyone" = "Bericht verwijderen voor iedereen";
 
 "message_cannot_play_movie" = "Kan film niet afspelen";
 
@@ -318,6 +323,7 @@
 "delete_file" = "Bestand verwijderen";
 "send_location" = "Locatie verzenden";
 "record_audio" = "Audio opnemen";
+"record_continue" = "Doorgaan met geluidsopname";
 "scan_qr" = "QR-code scannen";
 "share_file" = "Bestand delen";
 "add_item_caption" = "Onderschrift toevoegen";
@@ -332,12 +338,7 @@
 "play" = "Spelen";
 "pause" = "Pauzeren";
 "stop" = "Stoppen";
-"voice message" = "Stembericht";
 "quit" = "Stoppen";
-"record_cancel_title" = "Opname annuleren";
-"record_cancel_message" = "Weet u zeker dat u de opname wilt annuleren?";
-"record_cancel_button_discard" = "Opname annuleren";
-"speed" = "Afspeelsnelheid";
 
 "send_file_title" = "Bestand versturen";
 "send_file_message" = "Bestand: %@\nnaar\n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "Weet je zeker dat je deze groep wil ontbinden?";
 "group_dissolve_button" = "Groep ontbinden";
 "group_delete" = "Groep verwijderen";
+
+"distribution_list_recipients_section_header" = "Ontvangers (%d)";
+"distribution_list_no_recipient_title" = "Geen ontvangers";
+"distribution_list_one_recipient_title" = "1 ontvanger";
+"distribution_list_multiple_recipients_title" = "%d ontvangers";
+
+"distribution_list_delete" = "Verwijder distributielijst";
+"distribution_list_create" = "Nieuwe distributielijst";
+"distribution_list_edit" = "Distributielijst bewerken";
 
 "group name" = "Groepsnaam";
 "existing groups" = "Bestaande groepen";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "U heeft nog niet voldoende contactpersonen. Synchronisatie is ingeschakeld, maar zo te zien gebruikt niemand in uw adresboek Threema (nodig ze uit!).";
 "no_contacts" = "Geen contactpersonen";
 "no_groups" = "Geen groepen";
-"no_groups_message" = "U heeft nog geen groepen. Met de +-knop kunt u groepen handmatig toevoegen.";
+"no_groups_message" = "U hebt nog geen groepen. Tik op de +-knop om er een te maken.";
 "no_work_contacts" = "%@-gebruikers";
 "no_work_contacts_message" = "Geen door administrator geverifieerde %@-contactpersonen gevonden.";
+"no_distribution_list" = "Geen distributielijsten";
+"no_distribution_list_message" = "U hebt nog geen distributielijsten. Tik op de +-knop om er een te maken.";
 
 "no_contacts_syncoff" = "U heeft nog geen contactpersonen. Schakel synchronisatie in (Instellingen > Privacy), of voeg contactpersonen handmatig toe met de +-knop.";
 
@@ -583,16 +595,28 @@
 "work_data_fetch_failed_message" = "Threema Work-gegevens zijn niet geladen. Controleer uw internetverbinding en probeer het opnieuw.";
 
 "app_setup_steps_failed_title" = "Installatie is niet voltooid";
-"app_setup_steps_failed_message" = "Controleer de internetverbinding en probeer het opnieuw. Neem contact op met ondersteuning als het probleem aanhoudt.";
+"app_setup_steps_failed_message" = "Controleer uw internetverbinding en probeer het opnieuw. Neem contact op met ondersteuning als het probleem aanhoudt.";
+
+/* License Key */
+"enter_license_infoview_subtitle" = "voor bedrijven";
+"enter_license_infoview_more_link" = "[Meer informatie over Threema Work](link)";
+
+"enter_license_infoview_private_use" = "voor particulieren";
+"enter_license_infoview_threema_description" = "Download de reguliere Threema-app als u een privégebruiker bent.";
+"enter_license_infoview_appstore_link" = "Threema in de App Store";
+"enter_license_infoview_login" = "Inloggen";
 
 /* License Key */
 "enter_license_title" = "Gegevens invoeren";
 /* MWPhotoBrowser */
 "Done" = "Klaar";
-"enter_license_description" = "Voer de gegevens in die u van uw bedrijf of organisatie heeft ontvangen.";
-"enter_license_onprem_description" = "Threema OnPrem is de zakelijke messenger die bedrijven zelf hosten. Voer de gegevens in die je van je bedrijf of organisatie hebt ontvangen.";
+"enter_license_description" = "Voer de Threema Work-gegevens in die u van uw bedrijf hebt ontvangen.";
+"enter_license_onprem_description" = "Voer Threema OnPrem-gegevens in die u van uw bedrijf hebt ontvangen.";
 "enter_license_work_admin_description" = "Bent u uw toegangsgegevens vergeten? Neem contact op met de beheerder van Threema Work.";
 "enter_license_onprem_admin_description" = "Bent u uw toegangsgegevens vergeten? Neem contact op met de beheerder van Threema OnPrem.";
+"enter_license_onprem_error_config" = "Ongeldige configuratie. Neem contact op met uw Threema OnPrem-beheerder. (Code: %d)";
+"enter_license_onprem_error_version" = "Deze versie wordt niet ondersteund. Neem contact op met uw Threema OnPrem-beheerder. (Code: %d)";
+"enter_license_onprem_error_credentials" = "Onjuiste toegangsgegevens. Neem contact op met de Threema OnPrem-beheerder. (Code: %d)";
 "more_work_info" = "Meer informatie over %@.";
 "Save" = "Opslaan";
 "enter_license_username_placeholder" = "Gebruikersnaam";
@@ -675,7 +699,6 @@
 "duration" = "duur";
 "current_position" = "positie";
 "in_reply_to" = "in antwoord op";
-"go_to_position" = "op";
 "draft" = "Ontwerp";
 "new_message_accessibility" = "Nieuw bericht: ";
 "quote_interaction_hint" = "Gaat naar geciteerd bericht.";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "%@ heeft een groepsgesprek gestart";
 "group_call_started_by_local_system_message" = "U hebt een groepsgesprek gestart";
 "group_call_ended_system_message" = "Groepsgesprek is beëindigd";
+"group_call_started_disabled" = "Er is een groepsgesprek gestart. Ga naar de instellingen om groepsgesprekken in te schakelen en deel te nemen.";
 
 "group_call_notification_body_preview" = "Groepsgesprek begonnen door %@";
 "group_call_notification_body" = "Groepsgesprek is begonnen";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "Gemarkeerd gesprek";
 
 /* Begin Edit */
-
 "private_message_label" = "Privébericht";
 "private_chat_label" = "Privé";
 "private_chat_accessibility" = "Privéchat";
@@ -833,6 +856,13 @@
 "archived_title" = "Gearchiveerd";
 "conversations_global_search_placeholder" = "Zoeken";
 "one_to_one_chat" = "1:1-chats";
+"conversations_global_search_section_header_tokens" = "Type bericht";
+"conversations_global_search_token_text" = "Sms-berichten";
+"conversations_global_search_token_captions" = "Mediabijschriften";
+"conversations_global_search_token_polls" = "Polls";
+"conversations_global_search_token_locations" = "Locaties";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Met ster";
 
 "select_all" = "Alles selecteren";
 "deselect_all" = "Selectie opheffen";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "Weet je zeker dat je deze groep wil verwijderen?";
 "group_delete_button" = "Groep + Chatgeschiedenis verwijderen";
 
+"distribution_list_delete_sheet_title" = "Distributielijst verwijderen?";
+
 "selected_count" = "%d geselecteerd";
 "all_selected" = "Gehele selectie";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "Wanneer u een privéchat verwijdert, wordt een nieuwe chat niet automatisch opnieuw als privé aangemerkt.";
 
 /* End Edit */
-
 "pushSetting_header" = "Berichten";
 "doNotDisturb_title" = "Niet storen";
 
@@ -1298,12 +1329,12 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "settings_advanced_successfully_reset_unread_count_label" = "Het aantal ongelezen berichten is gereset";
 
 // Sentry
-"sentry_crash_send_title" = "%@ is onverwacht afgesloten";
-"sentry_crash_send_description" = "Je kunt een anoniem crashrapport verzenden. Uitleg over wat de crash heeft veroorzaakt, zal helpen om het onderliggende probleem op te lossen.";
+"sentry_crash_send_title" = "Er is een probleem opgetreden";
+"sentry_crash_send_description" = "U kunt een anoniem crashrapport verzenden. Voeg informatie toe over de interacties die vóór het probleem plaatsvonden om de onderliggende kwestie op te lossen.";
 "sentry_crash_send_yes" = "Anoniem rapport verzenden";
 "sentry_crash_send_no" = "Niet verzenden";
 
-"sentry_crash_comment_placeholder" = "Crashrapport";
+"sentry_crash_comment_placeholder" = "Informatie";
 
 // Profile
 "profile_share_id_text" = "Mijn Threema ID";
@@ -1642,6 +1673,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 // ChatBar
 "chat_bar_quote_close_button" = "Citaat afsluiten";
+"chat_bar_edited_message_close_button" = "Bewerken van bericht annuleren";
 
 // ChatDetailView
 "detailView_title" = "Berichtdetails";
@@ -1649,6 +1681,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "detailView_group_acknowledged" = "Akkoord (%d)";
 "detailView_group_declined" = "Niet akkoord (%d)";
 "detailView_group_file_size" = "Bestandsgrootte";
+"detailView_consumed" = "Als eerste afgespeeld";
 "detailView_created_footer" = "Aangemaakt: %@";
 
 "message_display_status_none" = "Geen";
@@ -1660,6 +1693,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "message_display_status_delivered_incoming" = "Ontvangen";
 "message_display_status_read" = "Gelezen";
 "message_display_status_failed" = "Mislukt";
+"message_display_status_deleted_message" = "Verwijderd";
+"message_display_status_edited_message" = "Bewerkt";
 
 // In-app notifications
 "notification_copying_succeeded" = "Item gekopieerd";
@@ -1738,9 +1773,12 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 // Chat bar
 "accessibility_chatbar_label" = "Chat invoerveld.";
 "accessibility_chatbar_hint" = "Bericht samenstellen.";
-"accessibility_chatbar_quote_label" = "Geselecteerd citaatbericht: %@.";
-"accessibility_chatbar_close_quote_button_label" = "Einde citaat";
-"accessibility_chatbar_close_quote_button_hint" = "Beëindigt het citeren van het geselecteerde bericht.";
+"accessibility_chatbar_quote_label" = "Bericht om te citeren: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Citaat annuleren.";
+"accessibility_chatbar_close_quote_button_hint" = "Dit annuleert het citeren van het geselecteerde bericht.";
+"accessibility_chatbar_edited_message_label" = "Bericht om te bewerken: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "Bewerken annuleren.";
+"accessibility_chatbar_close_edited_message_button_hint" = "Annuleert het bewerken van het geselecteerde bericht.";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Uw %@";
@@ -1786,6 +1824,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_poll_closed" = "Gesloten";
 "accessibility_file_duration" = "Tijdsduur: %@.";
 "accessibility_voice_message_playing" = "Wordt nu afgespeeld.";
+"accessibility_voice_message_unplayed" = "Nog niet afgespeeld.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Akkoord, %@";
@@ -1893,3 +1932,25 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "application_shortcut_item_new_message" = "Nieuw bericht";
 "application_shortcut_item_scan_qr_code" = "QR-code scannen";
 "application_shortcut_item_my_id" = "Mijn profiel";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "Met ster";
+"marker_action_star" = "Ster";
+"marker_action_remove_star" = "Ster verwijderen";
+"marker_accessibility_label" = "Met ster.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "Met ster";
+
+// Delete / Edit message
+"edit_message" = "Bericht bewerken";
+"edit_message_can_not_edit" = "Dit bericht is langer dan 6 uur geleden verzonden en kan niet meer worden bewerkt.";
+"edit_message_not_sent_to" = "De volgende groepsleden kunnen uw bewerkingen niet zien: %@";
+"delete_message_not_sent_to" = "Dit bericht wordt niet verwijderd voor de volgende groepsleden: %@";
+"delete_edit_message_not_sent_to_others" = "%d anderen";
+"delete_message_requirement" = "De nieuwste versie van Threema moet worden geïnstalleerd om berichten te verwijderen.";
+"edit_message_requirement" = "De nieuwste versie van Threema moet worden geïnstalleerd om bewerkingen te zien.";
+
+"edit_message_text_to_long" = "Dit bericht kan niet worden bewerkt, omdat de tekst te lang is.";
+"edited_message_state" = "Bewerkt";
+"deleted_message" = "Dit bericht is verwijderd";

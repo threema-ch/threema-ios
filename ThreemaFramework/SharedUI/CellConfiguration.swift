@@ -20,7 +20,7 @@
 
 import Foundation
 
-/// Shared configuration between `ContactCell` & `GroupCell`
+/// Shared configuration between `ContactCell`, `GroupCell` & `DistributionListCell`
 public struct CellConfiguration {
     
     public enum Size {
@@ -32,7 +32,7 @@ public struct CellConfiguration {
     
     // MARK: Configuration & helpers
     
-    public let loadingAvatarImage = BundleUtil.imageNamed("Unknown")
+    public let loadingAvatarImage = UIImage(resource: .unknown)
     
     public var nameLabelFont: UIFont {
         switch size {

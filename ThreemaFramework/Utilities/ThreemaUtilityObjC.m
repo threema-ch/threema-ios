@@ -152,7 +152,7 @@
     
     [image drawInRect:CGRectMake(0.0, 0.0, image.size.width, image.size.height)];
     
-    UIImage *playOverlayImage = [[BundleUtil imageNamed:@"Play"] imageWithTint:[UIColor whiteColor]];
+    UIImage *playOverlayImage = [[UIImage systemImageNamed:@"play.circle.fill"] applyingWithSymbolWeight:UIImageSymbolWeightSemibold symbolScale:UIImageSymbolScaleLarge paletteColors:@[[UIColor whiteColor]]];
     CGSize playImageSize = CGSizeMake(OVERLAY_DIAMETER,OVERLAY_DIAMETER);
     CGFloat x = (image.size.width - playImageSize.width)/2.0;
     CGFloat y = (image.size.height - playImageSize.height)/2.0;

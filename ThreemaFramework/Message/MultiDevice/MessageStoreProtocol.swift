@@ -59,6 +59,30 @@ protocol MessageStoreProtocol {
     ) throws
 
     func save(
+        deleteMessage: DeleteMessage,
+        createdAt: Date,
+        isOutgoing: Bool
+    ) throws
+
+    func save(
+        deleteGroupMessage: DeleteGroupMessage,
+        createdAt: Date,
+        isOutgoing: Bool
+    ) throws
+
+    func save(
+        editMessage: EditMessage,
+        createdAt: Date,
+        isOutgoing: Bool
+    ) throws
+
+    func save(
+        editGroupMessage: EditGroupMessage,
+        createdAt: Date,
+        isOutgoing: Bool
+    ) throws
+
+    func save(
         groupAudioMessage: GroupAudioMessage,
         senderIdentity: String,
         createdAt: Date,

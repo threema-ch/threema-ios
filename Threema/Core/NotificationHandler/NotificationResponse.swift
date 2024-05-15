@@ -385,8 +385,8 @@ class NotificationResponse: NSObject {
         let trimmedMessages = ThreemaUtilityObjC.getTrimmedMessages(text) as? [String]
 
         if trimmedMessages == nil {
-            let trimmedMessageData = userText!.data(using: .utf8)
-            if trimmedMessageData!.count > Int(kMaxMessageLen) {
+            let trimmedMessageData = Data(userText!.utf8)
+            if trimmedMessageData.count > Int(kMaxMessageLen) {
                 sendReplyError()
                 finishResponse()
                 return

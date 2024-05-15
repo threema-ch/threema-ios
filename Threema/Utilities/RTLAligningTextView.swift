@@ -41,4 +41,33 @@ class RTLAligningTextView: UITextView {
             }
         }
     }
+
+    // TODO: (IOS-4156) All code below is needed due to a bug which causes text to be cut of when the device language is set to german. The changes enforce the use of TextKit1. Last tested iOS 17.4.1
+    var customLayoutManager = NSLayoutManager()
+
+    override var layoutManager: NSLayoutManager {
+        customLayoutManager
+    }
+
+    override init(frame: CGRect, textContainer: NSTextContainer?) {
+        super.init(frame: frame, textContainer: textContainer)
+        initCustomLayoutManager()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        initCustomLayoutManager()
+    }
+
+    private func initCustomLayoutManager() {
+        if #available(iOS 17, *) {
+            customLayoutManager.textStorage = textStorage
+            customLayoutManager.addTextContainer(self.textContainer)
+
+            self.textContainer.replaceLayoutManager(customLayoutManager)
+        }
+        else {
+            customLayoutManager = super.layoutManager
+        }
+    }
 }

@@ -48,6 +48,8 @@ typedef enum : NSUInteger {
 
 @interface EntityFetcher : NSObject
 
+@property (readonly)NSManagedObjectContext *managedObjectContext;
+
 - (instancetype)init NS_UNAVAILABLE;
 
 - (instancetype)initWith:(NSManagedObjectContext *) managedObjectContext myIdentityStore:(id<MyIdentityStoreProtocol>)myIdentityStore;
@@ -65,6 +67,8 @@ typedef enum : NSUInteger {
 - (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversation:(Conversation *)conversation;
 
 - (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
+
+- (NSArray *)starredMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
 - (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
@@ -124,6 +128,7 @@ typedef enum : NSUInteger {
 
 - (NSArray *)groupConversationsFilteredByWords:(NSArray *)searchWords;
 
+- (NSArray *)distributionListsFilteredByWords:(NSArray *)searchWords;
 /// Group conversations where this contact is a member
 ///
 /// @param contact Only groups where this contact is member of are returned
@@ -220,6 +225,7 @@ typedef enum : NSUInteger {
 
 - (NSFetchedResultsController *)fetchedResultsControllerForContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 
+- (NSFetchedResultsController *)fetchedResultsControllerForDistributionLists;
 - (NSFetchedResultsController *)fetchedResultsControllerForGroups;
 
 - (NSFetchedResultsController *)fetchedResultsControllerForConversations;

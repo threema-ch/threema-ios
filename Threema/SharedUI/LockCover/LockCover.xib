@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina5_5" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -21,7 +21,7 @@
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bjV-9l-n4W" customClass="WizardBackgroundView" customModule="ThreemaFramework">
                     <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                     <subviews>
-                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LockCoverThreema" translatesAutoresizingMaskIntoConstraints="NO" id="suK-Vo-SwI">
+                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LockCover" translatesAutoresizingMaskIntoConstraints="NO" id="suK-Vo-SwI">
                             <rect key="frame" x="90" y="297" width="234" height="142"/>
                         </imageView>
                     </subviews>
@@ -38,6 +38,7 @@
                     </constraints>
                 </view>
             </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="bjV-9l-n4W" secondAttribute="bottom" id="WWP-ZA-TMB"/>
@@ -45,11 +46,10 @@
                 <constraint firstItem="bjV-9l-n4W" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="czS-Pn-sLN"/>
                 <constraint firstItem="bjV-9l-n4W" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="qr7-Sd-4mh"/>
             </constraints>
-            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <point key="canvasLocation" x="137.68115942028987" y="94.419642857142847"/>
         </view>
     </objects>
     <resources>
-        <image name="LockCoverThreema" width="262" height="142"/>
+        <image name="LockCover" width="262" height="142"/>
     </resources>
 </document>

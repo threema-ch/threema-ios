@@ -61,9 +61,8 @@ import Foundation
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         let filterItem = UIBarButtonItem(
-            image: BundleUtil.imageNamed("Filter"),
+            image: UIImage(systemName: "line.3.horizontal.decrease"),
             style: .plain,
             target: self,
             action: #selector(filter)
@@ -414,7 +413,11 @@ extension CompanyDirectoryViewController: UITableViewDataSource {
         if showLoadMore, indexPath.section == sectionTitles.count {
             let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "LoadMoreCell", for: indexPath)
             cell.textLabel?.text = BundleUtil.localizedString(forKey: "loadMore")
-            let image = UIImage(named: "ArrowDown", in: Colors.textLight)
+            let image = UIImage(
+                systemName: "chevron.down.circle",
+                withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+            )?
+                .withTintColor(Colors.textLight, renderingMode: .alwaysOriginal)
             cell.imageView?.image = image?.resizedImage(newSize: CGSize(width: 25.0, height: 25.0))
             cell.accessoryView = nil
             return cell

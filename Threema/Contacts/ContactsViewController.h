@@ -44,10 +44,12 @@
 
 - (void)showDetailsForContact:(ContactEntity *)contact;
 - (void)showDetailsForGroup:(Group *)group;
+- (void)showDetailsForDistributionList:(DistributionListEntity*)distributionList;
 
 - (void)setSelectionForContact:(ContactEntity *)contact;
 - (void)setSelectionForGroup:(Group *)group;
 - (void)setSelectionForWorkContact:(ContactEntity *)contact;
+- (void)setSelectionForDistributionList:(DistributionListEntity *)distributionList;
 
 - (BOOL)showFirstEntryForCurrentMode;
 

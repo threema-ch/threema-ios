@@ -28,6 +28,7 @@ typealias PendingUserNotificationKey = String
 public class PendingUserNotification: NSObject, NSCoding {
     
     let key: PendingUserNotificationKey
+    var contentKey: PendingUserNotificationKey
     var threemaPushNotification: ThreemaPushNotification?
     public internal(set) var abstractMessage: AbstractMessage?
     public internal(set) var baseMessage: BaseMessage? {
@@ -42,6 +43,7 @@ public class PendingUserNotification: NSObject, NSCoding {
     
     enum Keys {
         static let key = "key"
+        static let contentKey = "contentKey"
         static let threemaPushNotification = "threemaPushNotification"
         static let abstractMessage = "abstractMessage"
         static let baseMessageID = "baseMessageId"
@@ -51,6 +53,7 @@ public class PendingUserNotification: NSObject, NSCoding {
     
     public init(key: String) {
         self.key = key
+        self.contentKey = key
     }
     
     public required init?(coder: NSCoder) {
@@ -58,6 +61,7 @@ public class PendingUserNotification: NSObject, NSCoding {
             return nil
         }
         self.key = dKey
+        self.contentKey = coder.decodeObject(forKey: "contentKey") as? String ?? dKey
         self.threemaPushNotification = coder.decodeObject(
             of: [ThreemaPushNotification.self],
             forKey: Keys.threemaPushNotification
@@ -75,6 +79,7 @@ public class PendingUserNotification: NSObject, NSCoding {
     
     public func encode(with coder: NSCoder) {
         coder.encode(key, forKey: Keys.key)
+        coder.encode(contentKey, forKey: Keys.contentKey)
         coder.encode(threemaPushNotification, forKey: Keys.threemaPushNotification)
         coder.encode(abstractMessage, forKey: Keys.abstractMessage)
         coder.encode(baseMessageID, forKey: Keys.baseMessageID)

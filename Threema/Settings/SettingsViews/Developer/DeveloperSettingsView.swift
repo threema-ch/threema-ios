@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Intents
 import SwiftUI
+import ThreemaEssentials
 import ThreemaFramework
 
 struct DeveloperSettingsView: View {
@@ -41,6 +42,15 @@ struct DeveloperSettingsView: View {
 
     var body: some View {
         List {
+            Section("Local Info") {
+                HStack {
+                    Text("Last sent FeatureMask")
+                    Spacer()
+                    Text("\(MyIdentityStore.shared().lastSentFeatureMask)")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
             Section("UI") {
                 NavigationLink {
                     UIComponentsView()
@@ -154,6 +164,13 @@ struct DeveloperSettingsView: View {
                     ) {
                         Button("Delete Keychain Items", role: .destructive) {
                             MyIdentityStore.shared().destroyDeviceOnlyKeychainItems()
+
+                            if let identity = MyIdentityStore.shared().identity {
+                                let keychainHelper = KeychainHelper(identity: ThreemaIdentity(identity))
+                                try? keychainHelper.destroy(item: .threemaSafeKey)
+                                try? keychainHelper.destroy(item: .threemaSafeServer)
+                            }
+
                             exit(0)
                         }
                     }
@@ -178,6 +195,13 @@ struct DeveloperSettingsView: View {
                             exit(0)
                         }
                     }
+                }
+            }
+            
+            Section("Crash") {
+                Button("Crash the app") {
+                    var nilString: String?
+                    print(nilString!)
                 }
             }
         }

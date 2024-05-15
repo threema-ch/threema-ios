@@ -72,7 +72,26 @@ extension BaseMessage {
     @objc public var showRetryAndCancelButton: Bool {
         messageState == .failed
     }
-    
+
+    /// Message can only be edited if it was sent no more than 6 hours ago
+    public var wasSentMoreThanSixHoursAgo: Bool {
+        guard let createdAt = date,
+              let date = Calendar.current.date(byAdding: .hour, value: -6, to: .now)
+        else {
+            return true
+        }
+        return createdAt < date
+    }
+
+    public var isRemoteDeletable: Bool {
+        self is AudioMessageEntity ||
+            self is FileMessageEntity ||
+            self is ImageMessageEntity ||
+            self is VideoMessageEntity ||
+            self is LocationMessage ||
+            self is TextMessage
+    }
+
     // MARK: - Private helper
     
     private var ownMessageState: State {

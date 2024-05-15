@@ -114,7 +114,7 @@ class GroupTests: XCTestCase {
             let imageData = entityManager.entityCreator.imageData()
             imageData?.data = Data([0])
 
-            let message = entityManager.entityCreator.textMessage(for: conversation)
+            let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)
             message?.text = "123"
             message?.date = dateNow
 

@@ -136,14 +136,18 @@ final class ChatViewStickerMessageTableViewCell: ChatViewBaseTableViewCell, Meas
 
 extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
     
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+    func messageActions()
+        -> (
+            primaryActions: [ChatViewMessageActionProvider.MessageAction],
+            generalActions: [ChatViewMessageActionProvider.MessageAction]
+        )? {
 
         guard let message = stickerMessageAndNeighbors?.message as? StickerMessage else {
             return nil
         }
 
         typealias Provider = ChatViewMessageActionProvider
-        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
+        var generalMenuItems = [ChatViewMessageActionProvider.MessageAction]()
         
         // Speak
         var speakText = message.fileMessageType.localizedDescription
@@ -201,8 +205,8 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
-        // Edit
-        let editHandler = {
+        // Select
+        let selectHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
@@ -219,8 +223,13 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
         let ackHandler = { (message: BaseMessage, ack: Bool) in
             self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
-        
-        let defaultActions = Provider.defaultActions(
+            
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
+            
+        let (primaryMenuItems, generalActions) = Provider.defaultActions(
             message: message,
             speakText: speakText,
             shareItems: shareItems,
@@ -228,14 +237,15 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
             didDelete: didDelete,
-            ackHandler: ackHandler
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler
         )
         
         // Build menu
-        menuItems.append(contentsOf: defaultActions)
+        generalMenuItems.append(contentsOf: generalActions)
         
         if message.isDataAvailable {
             let saveAction = Provider.saveAction {
@@ -253,11 +263,11 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
             
             // Save action is inserted before default action, depending if ack/dec is possible at a different position
             if !MDMSetup(setup: false).disableShareMedia() {
-                if message.isUserAckEnabled {
-                    menuItems.insert(saveAction, at: 2)
+                if #unavailable(iOS 16), message.isUserAckEnabled {
+                    generalMenuItems.insert(saveAction, at: 2)
                 }
                 else {
-                    menuItems.insert(saveAction, at: 0)
+                    generalMenuItems.insert(saveAction, at: 0)
                 }
             }
         }
@@ -269,11 +279,11 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
             }
             // Download action is inserted before default action, depending if ack/dec is possible at a different
             // position
-            if message.isUserAckEnabled {
-                menuItems.insert(downloadAction, at: 2)
+            if #unavailable(iOS 16), message.isUserAckEnabled {
+                generalMenuItems.insert(downloadAction, at: 2)
             }
             else {
-                menuItems.insert(downloadAction, at: 0)
+                generalMenuItems.insert(downloadAction, at: 0)
             }
         }
         
@@ -288,14 +298,15 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
             }
             
             // Retry action position analogously to download
-            if message.isUserAckEnabled {
-                menuItems.insert(retryHandler, at: 2)
+            if #unavailable(iOS 16), message.isUserAckEnabled {
+                generalMenuItems.insert(retryHandler, at: 2)
             }
             else {
-                menuItems.insert(retryHandler, at: 0)
+                generalMenuItems.insert(retryHandler, at: 0)
             }
         }
-        return menuItems
+        
+        return (primaryMenuItems, generalMenuItems)
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

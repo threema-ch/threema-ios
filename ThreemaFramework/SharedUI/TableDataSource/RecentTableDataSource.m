@@ -116,7 +116,13 @@
         GroupCell *cell = [tableView dequeueReusableCellWithIdentifier:@"GroupCell"];
         cell.group = group;
         return cell;
-    } else {
+    } 
+    else if( conversation.distributionList != nil) {
+        DistributionListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"DistributionListCell"];
+        cell.distributionList = conversation.distributionList;
+        return cell;
+    }
+    else {
         Old_PickerContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Old_PickerContactCell"];
         cell.contact = conversation.contact;
         

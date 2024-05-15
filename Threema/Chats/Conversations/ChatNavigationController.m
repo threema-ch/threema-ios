@@ -29,8 +29,8 @@
 - (id)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self) {
-        self.tabBarItem.image = [UIImage imageNamed:@"TabBar-Chats"];
-        self.tabBarItem.selectedImage = [UIImage imageNamed:@"TabBar-Chats"];
+        self.tabBarItem.image = [UIImage systemImageNamed:@"bubble.left.and.bubble.right.fill"];
+        self.tabBarItem.selectedImage = [UIImage systemImageNamed:@"bubble.left.and.bubble.right.fill"];
     }
     return self;
 }

@@ -203,12 +203,6 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         receiveDate: Date,
         onCompletion: (() -> Void)?
     ) {
-        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
-            onCompletion?()
-            return
-        }
-        
         Task {
             await self.handleMessage(
                 rawMessage: rawMessage,
@@ -237,7 +231,11 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         receiveDate: Date,
         in groupConversation: Conversation
     ) async {
+       
         guard businessInjector.settingsStore.enableThreemaGroupCalls else {
+            if !MDMSetup(setup: false).disableGroupCalls() {
+                postGroupCallStartSystemMessage(in: groupConversation, by: senderIdentity)
+            }
             DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
@@ -245,7 +243,7 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         guard let convRawMessage = rawMessage as? CspE2e_GroupCallStart else {
             let msg = "[GroupCall] Incorrect message type passed into \(#function)"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             return
         }
         
@@ -340,6 +338,30 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
     }
     
     // MARK: - Private functions
+    
+    private func postGroupCallStartSystemMessage(in conversation: Conversation, by identity: String) {
+        // TODO: (IOS-3199) Move & improve
+        businessInjector.entityManager.performAndWaitSave {
+            guard let fetchedConversation = self.businessInjector.entityManager.entityFetcher
+                .existingObject(with: conversation.objectID) as? Conversation else {
+                return
+            }
+            
+            var displayName = identity
+            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) {
+                displayName = contact.displayName
+            }
+            
+            guard let dbSystemMessage = self.businessInjector.entityManager.entityCreator
+                .systemMessage(for: fetchedConversation) else {
+                return
+            }
+            
+            dbSystemMessage.type = NSNumber(value: kSystemMessageGroupCallStartedBy)
+            dbSystemMessage.arg = Data(displayName.utf8)
+            fetchedConversation.lastMessage = dbSystemMessage
+        }
+    }
     
     private func getCallID(in groupModel: GroupCallsThreemaGroupModel) async -> String? {
         await groupCallManager.getCallID(in: groupModel)

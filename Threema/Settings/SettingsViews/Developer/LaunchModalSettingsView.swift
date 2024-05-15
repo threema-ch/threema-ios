@@ -46,15 +46,6 @@ struct LaunchModalSettingsView: View {
                 .sheet(isPresented: $showNotificationTypeSelectionView) {
                     NotificationTypeSelectionView()
                 }
-                
-                Button {
-                    showFeedBackView.toggle()
-                } label: {
-                    Text("Beta Feedback")
-                }
-                .sheet(isPresented: $showFeedBackView) {
-                    BetaFeedbackView()
-                }
             }
             
             Section("Reset") {
@@ -62,12 +53,6 @@ struct LaunchModalSettingsView: View {
                     resetNotificationTypeSelection()
                 } label: {
                     Text("Notification Type Selection")
-                }
-                
-                Button(role: .destructive) {
-                    resetBetaFeedback()
-                } label: {
-                    Text("Beta Feedback")
                 }
                 
                 Button(role: .destructive) {
@@ -80,7 +65,6 @@ struct LaunchModalSettingsView: View {
             Section {
                 Button(role: .destructive) {
                     resetNotificationTypeSelection()
-                    resetBetaFeedback()
                     resetSafeIntroShown()
                 } label: {
                     Text("Reset All")
@@ -91,9 +75,7 @@ struct LaunchModalSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
     
-    private func resetBetaFeedback() {
-        AppGroup.userDefaults().set(false, forKey: Constants.betaFeedbackIdentity)
-    }
+    // MARK: - Private functions
     
     private func resetNotificationTypeSelection() {
         AppGroup.userDefaults().set(false, forKey: Constants.showedNotificationTypeSelectionView)

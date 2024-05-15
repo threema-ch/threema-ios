@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 protocol SafeConfigManagerProtocol {
     func destroy()
@@ -27,6 +28,10 @@ protocol SafeConfigManagerProtocol {
     func setKey(_ value: [UInt8]?)
     func getCustomServer() -> String?
     func setCustomServer(_ value: String?)
+    func getServerUser() -> String?
+    func setServerUser(_ value: String?)
+    func getServerPassword() -> String?
+    func setServerPassword(_ value: String?)
     func getServer() -> String?
     func setServer(_ value: String?)
     func getMaxBackupBytes() -> Int?
@@ -50,14 +55,33 @@ protocol SafeConfigManagerProtocol {
 }
 
 @objc class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
+    private let myIdentityStore: MyIdentityStoreProtocol
 
-    private static let safeConfigMutaionLock = DispatchQueue(label: "safeConfigMutaionLock")
+    private static let safeConfigMutationLock = DispatchQueue(label: "safeConfigMutationLock")
     private static var safeConfig: SafeData?
+
+    var keychainHelper: KeychainHelper? {
+        guard let identity = myIdentityStore.identity else {
+            return nil
+        }
+
+        return KeychainHelper(identity: ThreemaIdentity(identity))
+    }
+
+    @objc override convenience init() {
+        self.init(myIdentityStore: MyIdentityStore.shared())
+    }
+
+    init(myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()) {
+        self.myIdentityStore = myIdentityStore
+    }
 
     // MARK: - safe config
 
     @objc public func destroy() {
+        UserSettings.shared().safeConfig = nil
         SafeConfigManager.safeConfig = nil
+        destroyKeychain()
     }
 
     public func getKey() -> [UInt8]? {
@@ -77,6 +101,26 @@ protocol SafeConfigManagerProtocol {
     @objc public func setCustomServer(_ value: String?) {
         let config = getConfig()
         config.customServer = value
+        setConfig(config)
+    }
+
+    public func getServerUser() -> String? {
+        getConfig().serverUser
+    }
+
+    @objc public func setServerUser(_ value: String?) {
+        let config = getConfig()
+        config.serverUser = value
+        setConfig(config)
+    }
+
+    public func getServerPassword() -> String? {
+        getConfig().serverPassword
+    }
+
+    @objc public func setServerPassword(_ value: String?) {
+        let config = getConfig()
+        config.serverPassword = value
         setConfig(config)
     }
 
@@ -181,17 +225,42 @@ protocol SafeConfigManagerProtocol {
     }
 
     private func getConfig() -> SafeData {
-        SafeConfigManager.safeConfigMutaionLock.sync {
+        SafeConfigManager.safeConfigMutationLock.sync {
             if SafeConfigManager.safeConfig == nil {
                 if let data = UserSettings.shared().safeConfig,
-                   !data.isEmpty {
+                   !data.isEmpty,
+                   let config = decode(safeData: data) {
 
-                    SafeConfigManager.safeConfig = decode(safeData: data)
+                    migrateServer(config: config)
+
+                    // Loading key, user and password from Keychain if is key missing,
+                    // otherwise all the config values was migrated
+                    if config.key == nil {
+                        let key = loadKeyFromKeychain()
+                        if let key {
+                            config.key = key
+                        }
+
+                        let (serverUser, serverPassword, server) = loadServerFromKeychain()
+                        if let serverUser {
+                            config.serverUser = serverUser
+                        }
+                        if let serverPassword {
+                            config.serverPassword = serverPassword
+                        }
+                        if let server {
+                            config.server = server
+                        }
+                    }
+
+                    SafeConfigManager.safeConfig = config
                 }
                 else {
                     SafeConfigManager.safeConfig = SafeData(
                         key: nil,
                         customServer: nil,
+                        serverUser: nil,
+                        serverPassword: nil,
                         server: nil,
                         maxBackupBytes: nil,
                         retentionDays: nil,
@@ -211,15 +280,43 @@ protocol SafeConfigManagerProtocol {
     }
 
     private func setConfig(_ config: SafeData?) {
-        SafeConfigManager.safeConfigMutaionLock.sync {
-            if let data = config {
+        SafeConfigManager.safeConfigMutationLock.sync {
+            if let config {
+                migrateServer(config: config)
+
+                storeInKeychain(key: config.key)
+                storeInKeychain(
+                    serverUser: config.serverUser,
+                    serverPassword: config.serverPassword,
+                    server: config.server
+                )
+
                 UserSettings.shared().safeConfig = encode(safeData: SafeConfigManager.safeConfig)
             }
             else {
-                UserSettings.shared().safeConfig = nil
                 destroy()
             }
         }
+    }
+
+    /// Migrate old server URL with including user and password. Don't remove this function
+    /// to migrate older version of `SafeData`!
+    ///
+    /// The user and password will not be stored within the URL anymore.
+    /// - Parameter config: Safe config to migrate is necessary
+    private func migrateServer(config: SafeData) {
+        guard let serverAuth = config.server, let serverAuthURL = URL(string: serverAuth) else {
+            return
+        }
+
+        let (serverUser, serverPassword, server) = SafeStore.extractSafeServerAuth(server: serverAuthURL)
+        if let serverUser {
+            config.serverUser = serverUser
+        }
+        if let serverPassword {
+            config.serverPassword = serverPassword
+        }
+        config.server = server.absoluteString
     }
 
     private func encode(safeData: SafeData?) -> Data? {
@@ -254,5 +351,87 @@ protocol SafeConfigManagerProtocol {
         }
 
         return safeData
+    }
+
+    private func loadKeyFromKeychain() -> [UInt8]? {
+        guard let keychainHelper else {
+            return nil
+        }
+
+        let (password, _, _) = keychainHelper.load(item: .threemaSafeKey)
+
+        return password != nil ? Array(password!) : nil
+    }
+
+    private func loadServerFromKeychain() -> (serverUser: String?, serverPassword: String?, server: String?) {
+        guard let keychainHelper else {
+            return (nil, nil, nil)
+        }
+
+        let result = keychainHelper.load(item: .threemaSafeServer)
+
+        return (
+            serverUser: result.generic != nil ? String(data: result.generic!, encoding: .utf8) : nil,
+            serverPassword: result.password != nil ? String(data: result.password!, encoding: .utf8) : nil,
+            server: result.service
+        )
+    }
+
+    private func storeInKeychain(key: [UInt8]?) {
+        guard let keychainHelper else {
+            return
+        }
+
+        do {
+            if let key {
+                try keychainHelper.store(
+                    password: Data(bytes: key, count: key.count),
+                    item: .threemaSafeKey
+                )
+            }
+            else {
+                try keychainHelper.destroy(item: .threemaSafeKey)
+            }
+        }
+        catch {
+            DDLogError("\(error)")
+        }
+    }
+
+    private func storeInKeychain(serverUser: String?, serverPassword: String?, server: String?) {
+        guard let keychainHelper else {
+            return
+        }
+
+        do {
+            if let serverUser, let serverPassword, let server {
+                try keychainHelper.store(
+                    password: Data(serverPassword.utf8),
+                    generic: Data(serverUser.utf8),
+                    service: server,
+                    item: .threemaSafeServer
+                )
+            }
+            else {
+                try keychainHelper.destroy(item: .threemaSafeServer)
+            }
+        }
+        catch {
+            DDLogError("\(error)")
+        }
+    }
+
+    private func destroyKeychain() {
+        guard let keychainHelper else {
+            return
+        }
+
+        do {
+            try keychainHelper.destroy(item: .threemaSafeKey)
+            try keychainHelper.destroy(item: .threemaSafeServer)
+        }
+        catch {
+            DDLogError("\(error)")
+        }
     }
 }

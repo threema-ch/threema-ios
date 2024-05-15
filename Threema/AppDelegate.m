@@ -74,7 +74,6 @@
 #import "Threema-Swift.h"
 #import "ThreemaFramework.h"
 #import "ThreemaFramework/ThreemaFramework-swift.h"
-#import "MessageDraftStore.h"
 #import "MainTabBarController.h"
 #import <AVFoundation/AVFoundation.h>
 #import <UserNotifications/UserNotifications.h>
@@ -161,7 +160,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return YES;
     }
     
-    [self registerBackgroundTasks];
+    // Initializing this will also register all tasks, see documentation for more info.
+    [ThreemaBGTaskManager shared];
+    
     [self registerLifetimeObservers];
     [PromiseKitConfiguration configurePromiseKit];
     
@@ -194,7 +195,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [Colors initTheme];
     [Colors updateWithWindow:_window];
     pendingShortCutItem = [launchOptions objectForKey:UIApplicationLaunchOptionsShortcutItemKey];
-
+    
     [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
     [[UNUserNotificationCenter currentNotificationCenter] requestAuthorizationWithOptions:(UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionProvidesAppNotificationSettings) completionHandler:^(__unused BOOL granted, __unused NSError * _Nullable error) {
     }];
@@ -499,12 +500,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #pragma mark - Storyboards
 
 + (UIStoryboard *)getLaunchStoryboard {
-    if ([LicenseStore isOnPrem]) {
-        return [UIStoryboard storyboardWithName:@"ThreemaOnPremLaunchScreen" bundle:nil];
-    } else if ([LicenseStore requiresLicenseKey]) {
-        return [UIStoryboard storyboardWithName:@"ThreemaWorkLaunchScreen" bundle:nil];
-    } else {
-        return [UIStoryboard storyboardWithName:@"ThreemaLaunchScreen" bundle:nil];
+    switch ([ThreemaAppObjc current]) {
+        case ThreemaAppThreema:
+            return [UIStoryboard storyboardWithName:@"ThreemaLaunchScreen" bundle:nil];
+            break;
+        case ThreemaAppWork:
+            return [UIStoryboard storyboardWithName:@"ThreemaWorkLaunchScreen" bundle:nil];
+            break;
+        case ThreemaAppOnPrem:
+            return [UIStoryboard storyboardWithName:@"ThreemaOnPremLaunchScreen" bundle:nil];
+            break;
+        case ThreemaAppGreen:
+            return [UIStoryboard storyboardWithName:@"ThreemaGreenLaunchScreen" bundle:nil];
+            break;
+        case ThreemaAppBlue:
+            return [UIStoryboard storyboardWithName:@"ThreemaBlueLaunchScreen" bundle:nil];
+            break;
     }
 }
 
@@ -860,20 +871,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 [lastViewController dismissViewControllerAnimated:NO completion:nil];
             }
             
-            UIViewController *lockCover = nil;
-            switch (ThreemaAppObjc.current) {
-                case ThreemaAppWork:
-                case ThreemaAppWorkRed:
-                    lockCover = [[UIViewController alloc] initWithNibName:@"LockCoverWork" bundle:nil];
-                    break;
-                case ThreemaAppOnPrem:
-                    lockCover = [[UIViewController alloc] initWithNibName:@"LockCoverOnprem" bundle:nil];
-                    break;
-                default:
-                    lockCover = [[UIViewController alloc] initWithNibName:@"LockCover" bundle:nil];
-                    break;
-            }
-
+            UIViewController *lockCover = [[UIViewController alloc] initWithNibName:@"LockCover" bundle:nil];
             lockView = lockCover.view;
             lockView.frame = self.window.bounds;
 
@@ -1090,8 +1088,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      */
     DDLogNotice(@"AppState: applicationDidEnterBackground");
     
-    [self scheduleBackgroundTasks];
-    
+    [[ThreemaBGTaskManager shared] scheduleTasks];
     [self showLockScreen];
     
     if (![AppSetup isCompleted]) {

@@ -255,7 +255,7 @@ class NotificationService: UNNotificationServiceExtension {
                 pendingUserNotificationManager?.startTestUserNotification(
                     payload: bestAttemptContent.userInfo,
                     completion: {
-                        DDLogInfo("[Push] Test notification showed!")
+                        DDLogInfo("[Push] Test notification shown!")
                         
                         let emptyContent = UNMutableNotificationContent()
                         bestAttemptContent.badge = 999
@@ -280,14 +280,16 @@ class NotificationService: UNNotificationServiceExtension {
     /// For muted groups update badge count here.
     ///
     /// - Parameters:
-    ///   - bestAttemptContent: Best content for notification, is nil no notification will be showed
+    ///   - bestAttemptContent: Best content for notification, is nil no notification will be shown
     ///   - recalculateBadgeCount: If `true` count of unread messages will calculated for changed conversations
     ///                            (`NotificationService.conversationsChanged`)
     private func applyContent(
         _ bestAttemptContent: UNMutableNotificationContent? = nil,
         recalculateBadgeCount: Bool = true
     ) {
-
+        NotificationService.isRunning = false
+        DDLogNotice("[Push] isRunning set to false from apply.")
+        
         var badge = 0
         if recalculateBadgeCount {
             conversationsChangedQueue.sync {
@@ -317,7 +319,6 @@ class NotificationService: UNNotificationServiceExtension {
         }
         
         AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
-        NotificationService.isRunning = false
 
         if let bestAttemptContent {
             DDLogInfo("[Push] Notification showed!")
@@ -448,6 +449,8 @@ class NotificationService: UNNotificationServiceExtension {
                         DDLogNotice("[Push] Leave Processing Group")
                         NotificationService.stopProcessingGroup?.leave()
                         NotificationService.stopProcessingGroup = nil
+                        NotificationService.isRunning = false
+                        DDLogNotice("[Push] isRunning set to false from exit.")
                     }
                 )
             }
@@ -549,7 +552,7 @@ extension NotificationService: MessageProcessorDelegate {
     }
     
     func incomingMessageStarted(_ message: AbstractMessage) {
-        backgroundBusinessInjector.entityManager.performBlockAndWait {
+        backgroundBusinessInjector.entityManager.performAndWait {
             let msgID = message.messageID.hexString
             DDLogNotice("[Push] Message processor started for message id: \(msgID)")
 
@@ -564,10 +567,10 @@ extension NotificationService: MessageProcessorDelegate {
         }
     }
     
-    func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
-        backgroundBusinessInjector.entityManager.performBlockAndWait {
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) {
+        backgroundBusinessInjector.entityManager.performAndWait {
             if let msg = self.backgroundBusinessInjector.entityManager.entityFetcher
-                .getManagedObject(by: message.objectID) as? BaseMessage {
+                .getManagedObject(by: baseMessage.objectID) as? BaseMessage {
                 let msgID = msg.id?.hexString
                 DDLogNotice("[Push] Message processor changed for message id: \(msgID ?? "nil")")
 
@@ -589,10 +592,10 @@ extension NotificationService: MessageProcessorDelegate {
                         self.conversationsChanged?.insert(conversation.objectID)
                     }
                 }
-
+                
                 if let pendingUserNotification = self.pendingUserNotificationManager?.pendingUserNotification(
-                    for: msg,
-                    fromIdentity: fromIdentity,
+                    for: message,
+                    baseMessage: msg,
                     stage: .base
                 ) {
                     DDLogInfo("[Push] Message processor changed for message id: \(msgID ?? "nil") found")
@@ -604,7 +607,7 @@ extension NotificationService: MessageProcessorDelegate {
     }
     
     func incomingMessageFinished(_ message: AbstractMessage) {
-        backgroundBusinessInjector.entityManager.performBlockAndWait {
+        backgroundBusinessInjector.entityManager.performAndWait {
             let msgID = message.messageID.hexString
             DDLogNotice("[Push] Message processor finished for message id: \(msgID)")
 

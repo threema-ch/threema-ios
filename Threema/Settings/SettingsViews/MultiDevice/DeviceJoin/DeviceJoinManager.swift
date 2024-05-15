@@ -59,9 +59,9 @@ class DeviceJoinManager: ObservableObject {
     
     static var downloadURL: String {
         switch ThreemaApp.current {
-        case .threema, .red:
+        case .threema, .green:
             return "https://three.ma/md"
-        case .work, .onPrem, .workRed:
+        case .work, .onPrem, .blue:
             return "https://three.ma/mdw"
         }
     }

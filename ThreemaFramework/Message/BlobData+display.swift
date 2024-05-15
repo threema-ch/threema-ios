@@ -26,15 +26,6 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
         
     // TODO: In a future version we might want to display more states like a processing stage or when parts of the upload failed
     
-    // Incoming
-    
-    /// Blob data on server
-    case remote
-    /// Blob data is downloading with progress as fraction (0...1)
-    case downloading(progress: Float)
-    /// Blob data is downloaded and processed
-    case processed // TODO: (IOS-2386) play?
-    
     // Outgoing
     
     /// Blob data ready for upload
@@ -48,6 +39,12 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
     
     // Shared
     
+    /// Blob data on server
+    case remote
+    /// Blob data is downloading with progress as fraction (0...1)
+    case downloading(progress: Float)
+    /// Blob data is downloaded and processed
+    case processed // TODO: (IOS-2386) play?
     /// Blob data was deleted
     case dataDeleted
     /// Blob data cannot be found
@@ -144,6 +141,8 @@ extension BlobData {
             switch incomingThumbnailState {
             case .remote, .processed, .noData(.noThumbnail), .fatalError:
                 return .remote
+            case .noData(.deleted):
+                return .dataDeleted
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }
@@ -151,6 +150,8 @@ extension BlobData {
             switch incomingThumbnailState {
             case .remote, .processed, .noData(.noThumbnail), .fatalError:
                 return .downloading(progress: blobProgress?.floatValue ?? 0)
+            case .noData(.deleted):
+                return .dataDeleted
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }
@@ -158,13 +159,15 @@ extension BlobData {
             switch incomingThumbnailState {
             case .remote, .processed, .noData(.noThumbnail), .fatalError:
                 return .processed
+            case .noData(.deleted):
+                return .dataDeleted
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }
         case .noData(.deleted):
             switch incomingThumbnailState {
             // TODO: Should remote be "ignored"?
-            case .remote, .processed, .noData(.noThumbnail), .fatalError:
+            case .remote, .processed, .noData(.noThumbnail), .noData(.deleted), .fatalError:
                 return .dataDeleted
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
@@ -182,7 +185,7 @@ extension BlobData {
     ) -> BlobDisplayState {
         switch outgoingDataState {
         case .pendingDownload:
-            return .pending
+            return .remote
         case .downloading:
             return .downloading(progress: blobProgress?.floatValue ?? 0)
         case .pendingUpload:
@@ -199,13 +202,15 @@ extension BlobData {
             switch outgoingThumbnailState {
             case .pendingUpload, .uploading, .remote, .noData(.noThumbnail):
                 return .uploading(progress: blobProgress?.floatValue ?? 0)
+            case .noData(.deleted):
+                return .dataDeleted
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }
         case .remote:
             switch outgoingThumbnailState {
             case .pendingDownload:
-                return .pending
+                return .remote
             case .pendingUpload, .remote, .noData(.noThumbnail):
                 if blobError {
                     return .sendingError
@@ -219,7 +224,7 @@ extension BlobData {
             }
         case .noData(.deleted):
             switch outgoingThumbnailState {
-            case .pendingUpload, .uploading, .remote, .noData(.noThumbnail):
+            case .pendingUpload, .uploading, .remote, .noData(.noThumbnail), .noData(.deleted):
                 return .dataDeleted
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")

@@ -61,8 +61,14 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             
                 // Show current state icon if there is any
                 if let symbolName = self?.pushSetting.sfSymbolNameForPushSetting {
-                    let image = BundleUtil.imageNamed("\(symbolName)_regular.M")
-                    assert(image != nil, "SF Symbol: regular & M required")
+                    var image = UIImage(systemName: symbolName)
+                    if image == nil {
+                        image = UIImage(named: symbolName)
+                    }
+                    image = image?.applying(symbolWeight: .regular, symbolScale: .medium)
+                    
+                    assert(image != nil, "Symbol not found")
+                    
                     activeDNDInfoCell.imageView?.image = image
                     activeDNDInfoCell.tintColor = activeDNDInfoCell.textLabel?.textColor
                 }

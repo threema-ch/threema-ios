@@ -868,6 +868,16 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             return false
         }
         
+        // Do we have any markers?
+        guard !message.hasMarkers else {
+            return false
+        }
+
+        // Is edited message?
+        guard message.lastEditedAt == nil else {
+            return false
+        }
+
         return true
     }
     
@@ -958,7 +968,8 @@ extension ChatViewBaseTableViewCell: ChatViewTableViewCellHorizontalSwipeHandler
     
     var canQuote: Bool {
         (messageAndNeighbors.message is QuoteMessage) &&
-            (chatViewTableViewCellDelegate?.cellInteractionEnabled ?? false)
+            (chatViewTableViewCellDelegate?.cellInteractionEnabled ?? false) &&
+            !(chatViewTableViewCellDelegate?.chatViewIsDistributionListConversation ?? false)
     }
     
     func showQuoteView() {
@@ -988,7 +999,8 @@ extension ChatViewBaseTableViewCell {
             var status = ""
             
             // We add the status, if the voice message is playing.
-            if let voiceCell = self as? ChatViewVoiceMessageTableViewCell, voiceCell.isPlaying {
+            if let voiceCell = self as? ChatViewVoiceMessageTableViewCell,
+               voiceCell.isPlaying {
                 status = BundleUtil.localizedString(forKey: "accessibility_voice_message_playing")
             }
             
@@ -996,11 +1008,14 @@ extension ChatViewBaseTableViewCell {
             if let quotedMessage = message as? QuoteMessageProvider,
                let quoteMessage = quotedMessage.quoteMessage {
                 quote =
-                    "\(BundleUtil.localizedString(forKey: "in_reply_to")) \(quoteMessage.accessibilitySenderAndMessageTypeText) \(quoteMessage.previewText() ?? "")."
+                    "\(BundleUtil.localizedString(forKey: "in_reply_to")) \(quoteMessage.accessibilitySenderAndMessageTypeText) \(quoteMessage.previewText ?? "")."
             }
-            
+
+            let editedMessage = message.lastEditedAt != nil ? BundleUtil
+                .localizedString(forKey: "edited_message_state") : ""
+
             let labelText =
-                "\(message.accessibilitySenderAndMessageTypeText) \(status) \(message.customAccessibilityLabel) \(quote) \(message.accessibilityDateAndState)"
+                "\(message.accessibilitySenderAndMessageTypeText) \(status) \(message.customAccessibilityLabel) \(quote) \(editedMessage) \(message.accessibilityDateAndState)"
             return labelText
         }
         

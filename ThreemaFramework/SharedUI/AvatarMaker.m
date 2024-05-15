@@ -306,26 +306,36 @@ static AvatarMaker *sharedInstance = nil;
 }
 
 - (UIImage* _Nullable)avatarForConversation:(Conversation* _Nonnull)conversation size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled {
-    if (conversation.groupId == nil)
-        return [self avatarForContactEntity:conversation.contact size:size masked:masked];
-    
-    /* For groups, use the group image if available, or a default image otherwise */
-    if (conversation.groupImage != nil) {
-        UIImage *avatar;
-        if (masked) {
-            avatar = [self maskedImageForGroupConversation:conversation];
+    if (conversation.groupId != nil || conversation.distributionList != nil) {
+        /* For groups, use the group image if available, or a default image otherwise */
+        if (conversation.groupImage != nil) {
+            UIImage *avatar;
+            if (masked) {
+                avatar = [self maskedImageForGroupConversation:conversation];
+            } else {
+                avatar = [UIImage imageWithData:conversation.groupImage.data];
+            }
+            if (scaled)
+                size = size * [UIScreen mainScreen].scale;
+            return [avatar resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(size, size) interpolationQuality:kCGInterpolationHigh];
         } else {
-            avatar = [UIImage imageWithData:conversation.groupImage.data];
+            if (conversation.distributionList != nil) {
+                UIImage *groupImage = [BundleUtil imageNamed:@"UnknownDistributionList"];
+                if (scaled)
+                    size = size * [UIScreen mainScreen].scale;
+                groupImage = [groupImage resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(size, size) interpolationQuality:kCGInterpolationHigh];
+                return [groupImage imageWithTint:Colors.textLight];
+            } else {
+                UIImage *groupImage = [BundleUtil imageNamed:@"UnknownGroup"];
+                if (scaled)
+                    size = size * [UIScreen mainScreen].scale;
+                groupImage = [groupImage resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(size, size) interpolationQuality:kCGInterpolationHigh];
+                return [groupImage imageWithTint:Colors.textLight];
+            }
         }
-        if (scaled)
-            size = size * [UIScreen mainScreen].scale;
-        return [avatar resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(size, size) interpolationQuality:kCGInterpolationHigh];
-    } else {
-        UIImage *groupImage = [BundleUtil imageNamed:@"UnknownGroup"];
-        if (scaled)
-            size = size * [UIScreen mainScreen].scale;
-        groupImage = [groupImage resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(size, size) interpolationQuality:kCGInterpolationHigh];
-        return [groupImage imageWithTint:Colors.textLight];
+    }
+    else {
+        return [self avatarForContactEntity:conversation.contact size:size masked:masked];
     }
 }
 
@@ -457,6 +467,10 @@ static AvatarMaker *sharedInstance = nil;
 
 - (UIImage * _Nullable)unknownGroupImage {
     return [[BundleUtil imageNamed:@"UnknownGroup"] imageWithTint:Colors.textLight];
+}
+
+- (UIImage * _Nullable)unknownDistributionListImage {
+    return [[BundleUtil imageNamed:@"UnknownDistributionList"] imageWithTint:Colors.textLight];
 }
 
 - (NSString*)initialsForContactEntity:(ContactEntity*)contact {

@@ -35,27 +35,11 @@ struct GroupCallID: Sendable {
         callStartData: GroupCallStartData,
         dependencies: Dependencies
     ) throws {
-        guard let creatorID = groupIdentity.creator.string.data(using: .utf8) else {
-            let msg = "Could not encode group creator ID"
-            assertionFailure(msg)
-            DDLogError(msg)
-            
-            throw GroupCallError.encryptionFailure
-        }
-        
+        let creatorID = Data(groupIdentity.creator.string.utf8)
         let groupID = groupIdentity.id
-        
         let protocolVersion = Data(repeating: UInt8(callStartData.protocolVersion), count: 1)
-        
         let gck = callStartData.gck
-        
-        guard let baseURL = callStartData.sfuBaseURL.data(using: .utf8) else {
-            let msg = "Could not encode sfu base url"
-            assertionFailure(msg)
-            DDLogError(msg)
-            
-            throw GroupCallError.encryptionFailure
-        }
+        let baseURL = Data(callStartData.sfuBaseURL.utf8)
         
         let inputs = [creatorID, groupID, protocolVersion, gck, baseURL]
         

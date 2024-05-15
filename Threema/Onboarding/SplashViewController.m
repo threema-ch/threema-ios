@@ -118,10 +118,8 @@
     [mdmSetup loadIDCreationValues];
     [mdmSetup loadRenewableValues];
 
-    // Work logo
-    if ([LicenseStore requiresLicenseKey]) {
-        _threemaLogoView.image = [BundleUtil imageNamed:@"ThreemaWork"];
-    }
+    _threemaLogoView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    _threemaLogoView.image = [Colors threemaLogo];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -156,7 +154,7 @@
         if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
             animationName = [NSString stringWithFormat:@"%@_onprem", animationName];
         }
-        else if (ThreemaAppObjc.current == ThreemaAppWork || ThreemaAppObjc.current == ThreemaAppWorkRed) {
+        else if (ThreemaAppObjc.current == ThreemaAppWork || ThreemaAppObjc.current == ThreemaAppBlue) {
             animationName = [NSString stringWithFormat:@"%@_work", animationName];
         }
 
@@ -417,11 +415,37 @@
 }
 
 - (void)presentLicenseViewController {
+    BOOL showInfoView = false;
+    LicenseStore *licenseStore = [LicenseStore sharedLicenseStore];
+    if (licenseStore.licenseUsername == nil && licenseStore.licensePassword == nil && licenseStore.onPremConfigUrl == nil) {
+        showInfoView = true;
+    }
+    
     EnterLicenseViewController *viewController = [EnterLicenseViewController instantiate];
     viewController.delegate = self;
     viewController.doWorkApiFetch = NO;
     viewController.modalPresentationStyle = UIModalPresentationFullScreen;
-    [self presentViewController:viewController animated:NO completion:nil];
+    viewController.view.hidden = true;
+    
+    EnterLicenseInfoViewController *ec = [EnterLicenseInfoViewController new];
+    
+    if (showInfoView) {
+        UIViewController *enterLicenseInfoViewController = [ec viewControllerWithDismiss:^{
+            [viewController dismissViewControllerAnimated:YES completion:nil];
+        }];
+        enterLicenseInfoViewController.modalPresentationStyle = SYSTEM_IS_IPAD ? UIModalPresentationFormSheet : UIModalPresentationFullScreen;
+        
+        [self presentViewController:viewController animated:NO completion:^{
+            [viewController presentViewController:enterLicenseInfoViewController animated:NO completion:^{
+                viewController.view.hidden = false;
+            }];
+        }];
+    }
+    else {
+        [self presentViewController:viewController animated:NO completion:^{
+            viewController.view.hidden = false;
+        }];
+    }
 }
 
 - (void)presentPageViewController {
@@ -684,11 +708,11 @@
         }]];
         switch (ThreemaAppObjc.current) {
             case ThreemaAppThreema:
-            case ThreemaAppRed:
+            case ThreemaAppGreen:
                 break;
             case ThreemaAppWork:
             case ThreemaAppOnPrem:
-            case ThreemaAppWorkRed:
+            case ThreemaAppBlue:
                 [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"enter_license_enter_new_credentials"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
                     [self cancelPressed];
                     [self presentLicenseViewController];

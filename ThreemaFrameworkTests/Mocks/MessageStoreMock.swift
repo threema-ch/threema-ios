@@ -24,6 +24,7 @@ import ThreemaProtocols
 @testable import ThreemaFramework
 
 class MessageStoreMock: MessageStoreProtocol {
+
     struct SaveGroupTextMessageParam {
         let groupTextMessage: GroupTextMessage
         let senderIdentity: String
@@ -95,6 +96,22 @@ class MessageStoreMock: MessageStoreProtocol {
         // no-op
     }
 
+    func save(deleteMessage: ThreemaFramework.DeleteMessage, createdAt: Date, isOutgoing: Bool) throws {
+        // no-op
+    }
+
+    func save(deleteGroupMessage: ThreemaFramework.DeleteGroupMessage, createdAt: Date, isOutgoing: Bool) throws {
+        // no-op
+    }
+
+    func save(editMessage: ThreemaFramework.EditMessage, createdAt: Date, isOutgoing: Bool) throws {
+        // no-op
+    }
+
+    func save(editGroupMessage: ThreemaFramework.EditGroupMessage, createdAt: Date, isOutgoing: Bool) throws {
+        // no-op
+    }
+
     func save(
         groupAudioMessage: GroupAudioMessage,
         senderIdentity: String,
@@ -119,7 +136,7 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(groupRenameMessage amsg: GroupRenameMessage) -> Promise<Void> {
         Promise()
     }
-    
+
     func save(groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage, createdAt: Date, isOutgoing: Bool) throws {
         // no-op
     }
@@ -226,7 +243,7 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(ballotVoteMessage: BoxBallotVoteMessage) throws {
         // no-op
     }
-    
+
     func save(
         groupCallStartMessage: GroupCallStartMessage,
         decodedCallStartMessage: CspE2e_GroupCallStart,

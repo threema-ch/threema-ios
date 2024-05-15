@@ -27,6 +27,11 @@ public class ShowConversationInformation: NSObject {
     @objc public let image: UIImage?
     @objc public let messageObjectID: NSManagedObjectID?
 
+    // TODO: (IOS-4617) Remove once logic is improved. We need a solution to inject these dynamically into a initialized chat view.
+    @objc public var forceReopenChat: Bool {
+        precomposedText != nil || image != nil || messageObjectID != nil
+    }
+    
     init(
         conversation: Conversation,
         forceCompose: Bool = true,

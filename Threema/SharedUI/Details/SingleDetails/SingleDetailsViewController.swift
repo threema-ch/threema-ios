@@ -59,7 +59,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
                 strongSelf.presentFullscreen(image: avatarImage)
             },
             quickActions: quickActions,
-            mediaAndPollsQuickActions: mediaAndPollActions()
+            mediaAndPollsQuickActions: mediaStarredAndPollActions()
         )
     }()
     
@@ -319,7 +319,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     
     /// Helper to add observers to the `contact` property
     ///
-    /// All observers are store in the `observers` property.
+    /// All observers are stored in the `observers` property.
     ///
     /// - Parameters:
     ///   - keyPath: Key path in `Contact` to observe
@@ -558,8 +558,8 @@ extension SingleDetailsViewController: LegacyUIActionProvider {
         dataSource.quickActions(in: viewController)
     }
     
-    func mediaAndPollActions() -> [QuickAction] {
-        dataSource.mediaAndPollsQuickActions
+    func mediaStarredAndPollActions() -> [QuickAction] {
+        dataSource.mediaStarredAndPollsQuickActions
     }
     
     @objc func uiActions(in viewController: UIViewController) -> NSArray {
@@ -575,10 +575,10 @@ extension SingleDetailsViewController {
     ///
     /// This is a workaround so a quick action can talk to the parent. If we end up with more of these we should
     /// consider if there is a better way to communication actions from the details to the chat.
-    func startChatSearch() {
+    func startChatSearch(forStarred: Bool = false) {
         // To not have a delay from when the details disappear and the search field appears we show the search
         // field before we dismiss ourself and then active the search after the dismissal.
-        delegate?.showChatSearch()
+        delegate?.showChatSearch(forStarred: forStarred)
         dismiss(animated: true)
     }
 }

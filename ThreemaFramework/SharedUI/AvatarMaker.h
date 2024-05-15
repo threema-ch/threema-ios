@@ -50,7 +50,7 @@
 - (UIImage * _Nullable)companyImage;
 - (UIImage * _Nullable)unknownPersonImage;
 - (UIImage * _Nullable)unknownGroupImage;
-
+- (UIImage * _Nullable)unknownDistributionListImage;
 - (BOOL)isDefaultAvatarForContactEntity:(ContactEntity * _Nullable)contact;
 
 + (UIImage *_Nonnull)avatarWithString:(NSString* _Nullable)string size:(CGFloat)size;

@@ -47,6 +47,7 @@ struct ThreemaTableView<Content: View>: View {
         DispatchQueue.main.async {
             scrollView
                 .publisher(for: \.contentOffset)
+                .receive(on: RunLoop.main)
                 .removeDuplicates()
                 .sink { offset in
                     if offset != lastContentOffset {

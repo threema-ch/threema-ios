@@ -761,6 +761,92 @@
             msg = [[BoxEmptyMessage alloc] init];
             break;
         }
+        case MSGTYPE_DELETE: {
+            if ([body length] < (kIdentityLen)) {
+                DDLogWarn(@"Wrong length %lu for delete message", (unsigned long)[body length]);
+                break;
+            }
+
+            NSError *protobufError = nil;
+
+            DeleteMessage *deleteMessage = [[DeleteMessage alloc] init];
+            [deleteMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:body.bytes length:[body length]] error:&protobufError];
+
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode DeleteMessage: %@", protobufError);
+                break;
+            }
+
+            msg = deleteMessage;
+            break;
+        }
+        case MSGTYPE_GROUP_DELETE: {
+            if ([body length] < (kIdentityLen + kGroupIdLen)) {
+                DDLogWarn(@"Wrong length %lu for delete group message", (unsigned long)[body length]);
+                break;
+            }
+
+            NSError *protobufError = nil;
+
+            int i = 0;
+            DeleteGroupMessage *deleteGroupMessage = [[DeleteGroupMessage alloc] init];
+            deleteGroupMessage.groupCreator = [[NSString alloc] initWithData:[NSData dataWithBytes:body.bytes length:kIdentityLen] encoding:NSASCIIStringEncoding];
+            i+= kIdentityLen;
+            deleteGroupMessage.groupId = [NSData dataWithBytes:(body.bytes + i) length:kGroupIdLen];
+            i+= kGroupIdLen;
+            [deleteGroupMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:(body.bytes + i) length:[body length] - i] error:&protobufError];
+
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode DeleteGroupMessage: %@", protobufError);
+                break;
+            }
+
+            msg = deleteGroupMessage;
+            break;
+        }
+        case MSGTYPE_EDIT: {
+            if ([body length] < (kIdentityLen)) {
+                DDLogWarn(@"Wrong length %lu for edit message", (unsigned long)[body length]);
+                break;
+            }
+
+            NSError *protobufError = nil;
+
+            EditMessage *editMessage = [[EditMessage alloc] init];
+            [editMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:body.bytes length:[body length]] error:&protobufError];
+
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode EditMessage: %@", protobufError);
+                break;
+            }
+
+            msg = editMessage;
+            break;
+        }
+        case MSGTYPE_GROUP_EDIT: {
+            if ([body length] < (kIdentityLen + kGroupIdLen)) {
+                DDLogWarn(@"Wrong length %lu for edit group message", (unsigned long)[body length]);
+                break;
+            }
+
+            NSError *protobufError = nil;
+
+            int i = 0;
+            EditGroupMessage *editGroupMessage = [[EditGroupMessage alloc] init];
+            editGroupMessage.groupCreator = [[NSString alloc] initWithData:[NSData dataWithBytes:body.bytes length:kIdentityLen] encoding:NSASCIIStringEncoding];
+            i+= kIdentityLen;
+            editGroupMessage.groupId = [NSData dataWithBytes:(body.bytes + i) length:kGroupIdLen];
+            i+= kGroupIdLen;
+            [editGroupMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:(body.bytes + i) length:[body length] - i] error:&protobufError];
+
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode EditGroupMessage: %@", protobufError);
+                break;
+            }
+
+            msg = editGroupMessage;
+            break;
+        }
         default: {
             DDLogWarn(@"Unsupported message type %d", type);
             msg = [[UnknownTypeMessage alloc] init];

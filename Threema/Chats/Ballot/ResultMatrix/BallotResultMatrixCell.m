@@ -25,10 +25,10 @@
 #import "UIImage+ColoredImage.h"
 #import "BundleUtil.h"
 
-#define CHECKMARK_IMAGE @"Checkmark"
+#define CHECKMARK_IMAGE @"checkmark"
 #define CHECKMARK_SCALE 0.4
 
-#define MINUS_IMAGE @"Minus"
+#define MINUS_IMAGE @"minus"
 #define MINUS_VERTICAL_SCALE 0.32
 #define MINUS_HORIZONTAL_SCALE 0.06
 
@@ -96,7 +96,7 @@
     UIImageView *imageView = [[UIImageView alloc] initWithFrame: rect];
     UIImage *image;
     
-    UIImage *tmpImage = [UIImage imageNamed:imageName];
+    UIImage *tmpImage = [UIImage systemImageNamed:imageName];
     image = [tmpImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     self.tintColor = IMAGE_COLOR;
     

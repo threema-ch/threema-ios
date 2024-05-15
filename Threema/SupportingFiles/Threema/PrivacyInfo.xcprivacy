@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>DDA9.1</string> <!-- Needed due to displaying file timestamps. -->
+                <string>C617.1</string> <!-- Needed due to accessing the timestamps, size, or other metadata of files inside the app container. -->
+                <string>3B52.1</string> <!-- Needed due to accessing the timestamps, size, or other metadata of files or directories that the user specifically granted access to. -->
+            </array>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+        </dict>
+        
+        <dict>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>35F9.1</string> <!-- Needed due to using boot time to calculate things. -->
+                <string>8FFB.1</string> <!-- Needed due to using boot time in relation to UI. -->
+            </array>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+        </dict>
+        
+        <dict>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>85F4.1</string> <!-- Needed due to displaying disk space to user. -->
+                <string>E174.1</string> <!-- Needed due to checking if there is enough space to write. -->
+            </array>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+        </dict>
+        
+        <dict>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string> <!-- Needed due to accessing user defaults for the app itself. -->
+                <string>1C8F.1</string> <!-- Needed due to accessing user defaults for the app group. -->
+            </array>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+        </dict>
+        
+    </array>
+</dict>
+</plist>

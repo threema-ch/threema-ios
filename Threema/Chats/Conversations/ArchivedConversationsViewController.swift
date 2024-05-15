@@ -262,7 +262,7 @@ extension ArchivedConversationsViewController {
             handler(true)
         }
         
-        unarchiveAction.image = BundleUtil.imageNamed("archivebox.slash.fill_regular.L")
+        unarchiveAction.image = UIImage(resource: .threemaArchiveboxSlashFill)
         unarchiveAction.accessibilityLabel = BundleUtil.localizedString(forKey: "unarchive")
         unarchiveAction.backgroundColor = Colors.gray
         
@@ -282,7 +282,7 @@ extension ArchivedConversationsViewController {
             )
         }
         
-        deleteAction.image = BundleUtil.imageNamed("trash.fill_regular.L")
+        deleteAction.image = UIImage(systemName: "trash.fill")
         deleteAction.accessibilityLabel = BundleUtil.localizedString(forKey: "delete")
         
         let configuration = UISwipeActionsConfiguration(actions: [unarchiveAction, deleteAction])

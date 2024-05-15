@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -161,7 +162,7 @@ final class EntityManagerTests: XCTestCase {
 
         XCTAssertNotNil(resultMessage)
     }
-    
+
     func testNotExistingConversationSenderReceiverAndGetOrCreateMessageIfNotExists() {
         let abstractMessage = BoxTextMessage()
         abstractMessage.messageID = MockData.generateMessageID()
@@ -200,5 +201,141 @@ final class EntityManagerTests: XCTestCase {
 
         XCTAssertEqual(result.sender?.identity, sender?.identity)
         XCTAssertNil(result.conversation)
+    }
+
+    func testDeleteMessage() throws {
+        let testCases = [
+            (sender: "ECHOECHO", isThrowingError: false),
+            (sender: "SENDER01", isThrowingError: true),
+        ]
+
+        for testCase in testCases {
+            let expectedMessageID = MockData.generateMessageID()
+
+            // Prepare test data
+
+            let databasePreparer = DatabasePreparer(context: mainCnx)
+            let conversation = databasePreparer.save {
+                let contactEntity = databasePreparer.createContact(identity: "ECHOECHO")
+                let conversation = databasePreparer.createConversation(contactEntity: contactEntity)
+
+                databasePreparer.createTextMessage(
+                    conversation: conversation,
+                    id: expectedMessageID,
+                    isOwn: false,
+                    sender: contactEntity,
+                    remoteSentDate: Date()
+                )
+
+                return conversation
+            }
+
+            let deleteMessage = DeleteMessage()
+            deleteMessage.fromIdentity = testCase.sender
+            let e2eDeleteMessage = try CspE2e_DeleteMessage.with { message in
+                message.messageID = try expectedMessageID.littleEndian()
+            }
+            try deleteMessage.fromRawProtoBufMessage(rawProtobufMessage: e2eDeleteMessage.serializedData() as NSData)
+
+            // Test Delete Message
+
+            let entityManager = EntityManager(
+                databaseContext: DatabaseContext(
+                    mainContext: mainCnx,
+                    backgroundContext: nil
+                ),
+                myIdentityStore: MyIdentityStoreMock()
+            )
+
+            var deletedMessage: BaseMessage? = nil
+
+            if testCase.isThrowingError {
+                XCTAssertThrowsError(
+                    deletedMessage = try entityManager.deleteMessage(for: deleteMessage, conversation: conversation)
+                ) { error in
+                    XCTAssertEqual(error as? ThreemaProtocolError, .messageSenderMismatch)
+                }
+                XCTAssertNil(deletedMessage)
+            }
+            else {
+                XCTAssertNoThrow(
+                    deletedMessage = try entityManager.deleteMessage(for: deleteMessage, conversation: conversation)
+                )
+                XCTAssertNotNil(deletedMessage?.deletedAt)
+            }
+        }
+    }
+
+    func testEditMessage() throws {
+        let testCases = [
+            (sender: "ECHOECHO", isThrowingError: false),
+            (sender: "SENDER01", isThrowingError: true),
+        ]
+
+        for testCase in testCases {
+            let expectedMessageID = MockData.generateMessageID()
+            let expectedText = "Test 123"
+
+            // Prepare test data
+
+            let databasePreparer = DatabasePreparer(context: mainCnx)
+            let conversation = databasePreparer.save {
+                let contactEntity = databasePreparer.createContact(identity: "ECHOECHO")
+                let conversation = databasePreparer.createConversation(contactEntity: contactEntity)
+
+                databasePreparer.createTextMessage(
+                    conversation: conversation,
+                    text: "Test 1",
+                    id: expectedMessageID,
+                    isOwn: false,
+                    sender: contactEntity,
+                    remoteSentDate: Date()
+                )
+
+                return conversation
+            }
+
+            let editMessage = EditMessage()
+            editMessage.fromIdentity = testCase.sender
+            let e2eEditMessage = try CspE2e_EditMessage.with { message in
+                message.messageID = try expectedMessageID.littleEndian()
+                message.text = expectedText
+            }
+            try editMessage.fromRawProtoBufMessage(rawProtobufMessage: e2eEditMessage.serializedData() as NSData)
+
+            // Test Edit Message
+
+            let entityManager = EntityManager(
+                databaseContext: DatabaseContext(
+                    mainContext: mainCnx,
+                    backgroundContext: nil
+                ),
+                myIdentityStore: MyIdentityStoreMock()
+            )
+
+            var editedMessage: TextMessage? = nil
+
+            if testCase.isThrowingError {
+                XCTAssertThrowsError(
+                    editedMessage = try entityManager.editMessage(
+                        for: editMessage,
+                        conversation: conversation
+                    ) as? TextMessage
+                ) { error in
+                    XCTAssertEqual(error as? ThreemaProtocolError, .messageSenderMismatch)
+                }
+                XCTAssertNil(editedMessage)
+            }
+            else {
+                XCTAssertNoThrow(
+                    editedMessage = try entityManager.editMessage(
+                        for: editMessage,
+                        conversation: conversation
+                    ) as? TextMessage
+                )
+                XCTAssertNotNil(editedMessage?.lastEditedAt)
+                XCTAssertEqual(editedMessage?.text, expectedText)
+            }
+        }
     }
 }

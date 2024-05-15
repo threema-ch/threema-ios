@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import Combine
 import Foundation
 import GroupCalls
 import ThreemaFramework
@@ -28,11 +29,9 @@ import UIKit
     
     // MARK: - Private Properties
     
-    private lazy var tapGestureRecognizer: UITapGestureRecognizer = {
-        let recognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
-        
-        return recognizer
-    }()
+    private var navigationBarColorShouldChange: AnyCancellable?
+    
+    private lazy var tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
     
     // MARK: - Subviews
     
@@ -54,12 +53,10 @@ import UIKit
     }
     
     private func addObservers() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(updateNavigationBar),
-            name: Notification.Name(kNotificationNavigationBarColorShouldChange),
-            object: nil
-        )
+        navigationBarColorShouldChange = AppContainer.defaultValue.notificationBarColorShouldChange
+            .sink { [weak self] _ in
+                self?.updateNavigationBar()
+            }
     }
     
     override func layoutSubviews() {
@@ -69,7 +66,7 @@ import UIKit
     }
     
     deinit {
-        NotificationCenter.default.removeObserver(self)
+        navigationBarColorShouldChange = nil
         ServerConnector.shared().unregisterConnectionStateDelegate(delegate: self)
     }
     

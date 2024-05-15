@@ -161,6 +161,55 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertTrue(result.retry)
     }
 
+    func testTaskDefinitionSendDeleteMessageEncodeDecode() throws {
+        let expectedReceiverIdentity = ThreemaIdentity("ECHOECHO")
+        let expectedDeleteMessage = try CspE2e_DeleteMessage.with { message in
+            message.messageID = try MockData.generateMessageID().littleEndian()
+        }
+
+        let task = TaskDefinitionSendDeleteEditMessage(
+            receiverIdentity: expectedReceiverIdentity,
+            group: nil,
+            deleteMessage: expectedDeleteMessage
+        )
+
+        let encoder = JSONEncoder()
+        let data = try XCTUnwrap(encoder.encode(task))
+
+        let decoder = JSONDecoder()
+        let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendDeleteEditMessage.self, from: data))
+
+        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.string)
+        XCTAssertNil(result.groupID)
+        XCTAssertEqual(result.deleteMessage, expectedDeleteMessage)
+        XCTAssertNil(result.editMessage)
+    }
+
+    func testTaskDefinitionSendEditMessageEncodeDecode() throws {
+        let expectedReceiverIdentity = ThreemaIdentity("ECHOECHO")
+        let expectedEditMessage = try CspE2e_EditMessage.with { message in
+            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.text = "Test"
+        }
+
+        let task = TaskDefinitionSendDeleteEditMessage(
+            receiverIdentity: expectedReceiverIdentity,
+            group: nil,
+            editMessage: expectedEditMessage
+        )
+
+        let encoder = JSONEncoder()
+        let data = try XCTUnwrap(encoder.encode(task))
+
+        let decoder = JSONDecoder()
+        let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendDeleteEditMessage.self, from: data))
+
+        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.string)
+        XCTAssertNil(result.groupID)
+        XCTAssertNil(result.deleteMessage)
+        XCTAssertEqual(result.editMessage, expectedEditMessage)
+    }
+
     func testTaskDefinitionSendDeliveryReceiptsMessageEncodeDecode() throws {
         let expectedFromIdentity = "CONTACT1"
         let expectedToIdentity = "CONTACT2"

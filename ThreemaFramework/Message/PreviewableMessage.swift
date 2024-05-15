@@ -21,9 +21,9 @@
 import Foundation
 
 public protocol PreviewableMessage: BaseMessage {
-    
-    /// The raw text used in previews, use `previewAttributedText(for:)` directly
-    var previewText: String { get }
+    /// For private use only, use `previewText` instead
+    @available(*, deprecated, message: "For private use only, use `previewText` instead")
+    var privatePreviewText: String { get }
     /// System name or asset name of a symbol
     var previewSymbolName: String? { get }
     /// Configuration to be applied to symbol
@@ -33,6 +33,16 @@ public protocol PreviewableMessage: BaseMessage {
 }
 
 extension PreviewableMessage {
+    
+    /// The raw text used in previews, use `previewAttributedText(for:)` directly
+    public var previewText: String {
+        // If deleted we return the default text
+        guard deletedAt == nil else {
+            return "deleted_message".localized
+        }
+        
+        return privatePreviewText
+    }
     
     public var previewSymbolName: String? {
         nil
@@ -101,8 +111,8 @@ extension PreviewableMessage {
             range: NSRange(location: 0, length: configuredAttributedText.length)
         )
         
-        // If no symbol was found, we return the text without one
-        if let image = previewSymbol {
+        // If the message was remotely deleted, or no symbol was found, we return the text without one
+        if deletedAt == nil, let image = previewSymbol {
             // Create string containing icon
             let icon = NSTextAttachment()
             var tintColor: UIColor? = previewSymbolTintColor

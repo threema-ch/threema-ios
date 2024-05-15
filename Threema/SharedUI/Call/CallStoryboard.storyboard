@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17156" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="AQ2-Ik-2Xo">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="AQ2-Ik-2Xo">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -29,76 +31,93 @@
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </view>
                                     <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9qt-9z-Jej">
-                                        <rect key="frame" x="0.0" y="-114" width="375" height="457"/>
+                                        <rect key="frame" x="0.0" y="-94" width="375" height="468"/>
                                         <color key="backgroundColor" systemColor="labelColor"/>
                                     </view>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="top" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="hdG-rd-kVi">
-                                        <rect key="frame" x="16" y="16" width="343" height="197"/>
+                                        <rect key="frame" x="16" y="36" width="343" height="208"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="WBc-Wz-Q0y">
-                                                <rect key="frame" x="0.0" y="0.0" width="343" height="45"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="343" height="56"/>
                                                 <subviews>
                                                     <button opaque="NO" contentMode="scaleAspectFit" contentHorizontalAlignment="left" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T5Q-Ll-URe">
-                                                        <rect key="frame" x="0.0" y="4.5" width="50" height="36"/>
+                                                        <rect key="frame" x="0.0" y="10" width="50" height="36"/>
                                                         <accessibility key="accessibilityConfiguration" identifier="CallViewControllerHideButton"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" constant="50" id="Htc-cO-pTz"/>
                                                             <constraint firstAttribute="height" constant="36" id="nCs-qw-VoS"/>
                                                         </constraints>
-                                                        <state key="normal" image="ArrowPrevious">
+                                                        <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                        <state key="normal">
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <imageReference key="image" image="chevron.left" catalog="system" symbolScale="large"/>
+                                                            <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="28" scale="large" weight="semibold"/>
                                                         </state>
                                                         <connections>
                                                             <action selector="hideViewWithSender:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="DtO-Mm-R7t"/>
                                                         </connections>
                                                     </button>
                                                     <stackView opaque="NO" contentMode="scaleToFill" spacing="30" translatesAutoresizingMaskIntoConstraints="NO" id="Dfg-Oq-K2J">
-                                                        <rect key="frame" x="148" y="0.0" width="195" height="45"/>
+                                                        <rect key="frame" x="115" y="0.0" width="228" height="56"/>
                                                         <subviews>
                                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Kd0-TW-yNC">
-                                                                <rect key="frame" x="0.0" y="0.0" width="45" height="45"/>
+                                                                <rect key="frame" x="0.0" y="0.0" width="56" height="56"/>
                                                                 <constraints>
-                                                                    <constraint firstAttribute="width" constant="45" id="2g4-Ik-oTm"/>
-                                                                    <constraint firstAttribute="height" constant="45" id="EDE-et-brU"/>
+                                                                    <constraint firstAttribute="width" constant="56" id="2g4-Ik-oTm"/>
+                                                                    <constraint firstAttribute="height" constant="56" id="EDE-et-brU"/>
                                                                 </constraints>
-                                                                <state key="normal" image="CellularWarning"/>
+                                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                                <state key="normal">
+                                                                    <imageReference key="image" image="threema.wifi.exclamationmark.circle.fill" symbolScale="large"/>
+                                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="40" scale="large" weight="thin"/>
+                                                                </state>
                                                                 <connections>
                                                                     <action selector="showCellularWarningAction" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="KSn-IY-UeY"/>
                                                                 </connections>
                                                             </button>
-                                                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T1H-fT-Fu9">
-                                                                <rect key="frame" x="75" y="0.0" width="45" height="45"/>
+                                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T1H-fT-Fu9">
+                                                                <rect key="frame" x="86" y="0.0" width="56" height="56"/>
                                                                 <constraints>
-                                                                    <constraint firstAttribute="width" constant="45" id="Tjv-SM-67g"/>
-                                                                    <constraint firstAttribute="height" constant="45" id="wg2-6d-mgJ"/>
+                                                                    <constraint firstAttribute="width" constant="56" id="Tjv-SM-67g"/>
+                                                                    <constraint firstAttribute="height" constant="56" id="wg2-6d-mgJ"/>
                                                                 </constraints>
-                                                                <state key="normal" image="SwitchCam"/>
+                                                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                <state key="normal">
+                                                                    <imageReference key="image" image="threema.arrow.triangle.2.circlepath.camera.circle" symbolScale="large" renderingMode="hierarchical">
+                                                                        <hierarchicalColors>
+                                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                        </hierarchicalColors>
+                                                                    </imageReference>
+                                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="40" scale="large" weight="thin"/>
+                                                                </state>
                                                                 <connections>
                                                                     <action selector="switchCameraAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="sm0-V1-o1O"/>
                                                                 </connections>
                                                             </button>
                                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AxK-1x-RHZ">
-                                                                <rect key="frame" x="150" y="0.0" width="45" height="45"/>
+                                                                <rect key="frame" x="172" y="0.0" width="56" height="56"/>
                                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                 <accessibility key="accessibilityConfiguration" identifier="CallViewControllerVideoButton"/>
                                                                 <constraints>
-                                                                    <constraint firstAttribute="width" constant="45" id="6gm-E4-WJT"/>
-                                                                    <constraint firstAttribute="height" constant="45" id="Y4w-z4-y5h"/>
+                                                                    <constraint firstAttribute="width" constant="56" id="6gm-E4-WJT"/>
+                                                                    <constraint firstAttribute="height" constant="56" id="Y4w-z4-y5h"/>
                                                                 </constraints>
-                                                                <state key="normal" image="VideoInactive"/>
+                                                                <state key="normal" image="threema.video.circle.fill"/>
                                                                 <connections>
                                                                     <action selector="startVideoAction:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="Mgt-XA-yP9"/>
                                                                 </connections>
                                                             </button>
                                                         </subviews>
                                                         <constraints>
-                                                            <constraint firstAttribute="height" constant="45" id="6Gr-wm-Cdw"/>
+                                                            <constraint firstAttribute="height" constant="56" id="6Gr-wm-Cdw"/>
                                                         </constraints>
                                                     </stackView>
                                                 </subviews>
                                             </stackView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Test Voip User Name" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ite-cu-S0V">
-                                                <rect key="frame" x="0.0" y="55" width="198.5" height="35"/>
+                                                <rect key="frame" x="0.0" y="66" width="198.5" height="35"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="35" id="Jzt-Hf-vKw"/>
                                                 </constraints>
@@ -109,14 +128,14 @@
                                                 <size key="shadowOffset" width="0.0" height="0.0"/>
                                             </label>
                                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="verification-2.png" translatesAutoresizingMaskIntoConstraints="NO" id="vq4-yn-YTl">
-                                                <rect key="frame" x="0.0" y="100" width="48" height="12"/>
+                                                <rect key="frame" x="0.0" y="111" width="48" height="12"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="12" id="jYD-Gw-oCJ"/>
                                                     <constraint firstAttribute="width" constant="48" id="mkv-Hq-Ffx"/>
                                                 </constraints>
                                             </imageView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Threema-Anrufe sind auf dem Zielgerät deaktiviert" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gSm-UY-ZcI">
-                                                <rect key="frame" x="0.0" y="122" width="268" height="49"/>
+                                                <rect key="frame" x="0.0" y="133" width="268" height="49"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="26" id="ZiX-pT-rpY"/>
                                                 </constraints>
@@ -127,7 +146,7 @@
                                                 <size key="shadowOffset" width="0.0" height="0.0"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Tud-Fn-H4o">
-                                                <rect key="frame" x="0.0" y="181" width="33" height="16"/>
+                                                <rect key="frame" x="0.0" y="192" width="33" height="16"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.19764019690000001" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -139,28 +158,34 @@
                                         </constraints>
                                     </stackView>
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="80" translatesAutoresizingMaskIntoConstraints="NO" id="7Te-44-N6n">
-                                        <rect key="frame" x="77.5" y="499" width="220" height="80"/>
+                                        <rect key="frame" x="67.5" y="499" width="240" height="80"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KGy-Z7-7VF">
-                                                <rect key="frame" x="0.0" y="5" width="70" height="70"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="80" height="80"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="height" constant="70" id="0kB-Ve-sLq"/>
-                                                    <constraint firstAttribute="width" constant="70" id="ZaT-km-57U"/>
+                                                    <constraint firstAttribute="height" constant="80" id="0kB-Ve-sLq"/>
+                                                    <constraint firstAttribute="width" constant="80" id="ZaT-km-57U"/>
                                                 </constraints>
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
-                                                <state key="normal" image="RejectCall" backgroundImage="CallBackground"/>
+                                                <state key="normal">
+                                                    <imageReference key="image" image="phone.down.circle.fill" catalog="system" symbolScale="large"/>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="50" scale="large" weight="semibold"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="rejectAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="yct-J8-cD1"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="w7z-PM-OGJ">
-                                                <rect key="frame" x="150" y="5" width="70" height="70"/>
+                                                <rect key="frame" x="160" y="0.0" width="80" height="80"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="width" constant="70" id="79V-7o-wiJ"/>
-                                                    <constraint firstAttribute="height" constant="70" id="TJO-3c-ZTM"/>
+                                                    <constraint firstAttribute="width" constant="80" id="79V-7o-wiJ"/>
+                                                    <constraint firstAttribute="height" constant="80" id="TJO-3c-ZTM"/>
                                                 </constraints>
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
-                                                <state key="normal" image="AcceptCall" backgroundImage="CallBackground"/>
+                                                <state key="normal">
+                                                    <imageReference key="image" image="phone.circle.fill" catalog="system" symbolScale="large"/>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="50" scale="large" weight="semibold"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="acceptAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="Mp2-56-8on"/>
                                                 </connections>
@@ -175,41 +200,84 @@
                                         <color key="backgroundColor" systemColor="labelColor"/>
                                     </view>
                                     <stackView opaque="NO" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" distribution="equalSpacing" alignment="center" spacing="25" translatesAutoresizingMaskIntoConstraints="NO" id="9Vd-Lz-hNH">
-                                        <rect key="frame" x="82.5" y="579" width="210" height="80"/>
+                                        <rect key="frame" x="66.5" y="579" width="242" height="80"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lST-eP-A7p">
-                                                <rect key="frame" x="0.0" y="17.5" width="45" height="45"/>
+                                                <rect key="frame" x="0.0" y="12" width="56" height="56"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="height" constant="45" id="DeD-iY-mRs"/>
-                                                    <constraint firstAttribute="width" constant="45" id="dNe-er-ebV"/>
+                                                    <constraint firstAttribute="height" constant="56" id="DeD-iY-mRs"/>
+                                                    <constraint firstAttribute="width" constant="56" id="dNe-er-ebV"/>
                                                 </constraints>
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
-                                                <state key="normal" image="MuteInactive"/>
+                                                <color key="tintColor" name="White"/>
+                                                <state key="normal">
+                                                    <imageReference key="image" image="mic.slash.circle" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                                        <hierarchicalColors>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                        </hierarchicalColors>
+                                                    </imageReference>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="36" scale="large" weight="thin"/>
+                                                </state>
+                                                <state key="selected">
+                                                    <imageReference key="image" image="mic.slash.circle.fill" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                                        <hierarchicalColors>
+                                                            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                        </hierarchicalColors>
+                                                    </imageReference>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="36" scale="large" weight="thin"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="muteAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="n8g-b2-T8b"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mQM-IK-Y2i">
-                                                <rect key="frame" x="70" y="5" width="70" height="70"/>
+                                                <rect key="frame" x="81" y="0.0" width="80" height="80"/>
                                                 <accessibility key="accessibilityConfiguration" identifier="CallViewControllerEndButton"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="width" constant="70" id="Jol-3M-Xog"/>
-                                                    <constraint firstAttribute="height" constant="70" id="NM8-30-SMi"/>
+                                                    <constraint firstAttribute="width" constant="80" id="Jol-3M-Xog"/>
+                                                    <constraint firstAttribute="height" constant="80" id="NM8-30-SMi"/>
                                                 </constraints>
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
-                                                <state key="normal" image="RejectCall" backgroundImage="CallBackground"/>
+                                                <state key="normal">
+                                                    <imageReference key="image" image="phone.down.circle.fill" catalog="system" symbolScale="large"/>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="50" scale="large" weight="semibold"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="endAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="yRu-sl-Uhe"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FzD-FO-PaZ">
-                                                <rect key="frame" x="165" y="17.5" width="45" height="45"/>
+                                                <rect key="frame" x="186" y="12" width="56" height="56"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="width" constant="45" id="2jU-k7-GgC"/>
-                                                    <constraint firstAttribute="height" constant="45" id="bmR-gY-LnQ"/>
+                                                    <constraint firstAttribute="width" constant="56" id="2jU-k7-GgC"/>
+                                                    <constraint firstAttribute="height" constant="56" id="bmR-gY-LnQ"/>
                                                 </constraints>
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
-                                                <state key="normal" image="SpeakerInactive"/>
+                                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <state key="normal">
+                                                    <imageReference key="image" image="speaker.wave.2.circle" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                                        <hierarchicalColors>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                        </hierarchicalColors>
+                                                    </imageReference>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="36" scale="large" weight="thin"/>
+                                                </state>
+                                                <state key="selected">
+                                                    <imageReference key="image" image="speaker.wave.2.circle.fill" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                                        <hierarchicalColors>
+                                                            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                        </hierarchicalColors>
+                                                    </imageReference>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="36" scale="large" weight="thin"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="speakerAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="ncx-ec-vth"/>
                                                 </connections>
@@ -261,8 +329,8 @@
                                         <exclude reference="PrI-3O-YRd"/>
                                         <exclude reference="eT9-6h-oYV"/>
                                         <exclude reference="iK6-Fc-UHS"/>
-                                        <exclude reference="kuW-QC-uQZ"/>
                                         <exclude reference="mNK-8j-yvY"/>
+                                        <exclude reference="kuW-QC-uQZ"/>
                                     </mask>
                                 </variation>
                             </view>
@@ -323,17 +391,21 @@
         </scene>
     </scenes>
     <resources>
-        <image name="AcceptCall" width="80" height="80"/>
-        <image name="ArrowPrevious" width="36" height="36"/>
-        <image name="CallBackground" width="80" height="80"/>
-        <image name="CellularWarning" width="74" height="74"/>
-        <image name="MuteInactive" width="74" height="74"/>
-        <image name="RejectCall" width="80" height="80"/>
-        <image name="SpeakerInactive" width="74" height="74"/>
-        <image name="SwitchCam" width="74" height="74"/>
-        <image name="VideoInactive" width="74" height="74"/>
+        <image name="chevron.left" catalog="system" width="97" height="128"/>
         <image name="contact_3.jpg" width="101.23734283447266" height="101.23734283447266"/>
+        <image name="mic.slash.circle" catalog="system" width="128" height="123"/>
+        <image name="mic.slash.circle.fill" catalog="system" width="128" height="123"/>
+        <image name="phone.circle.fill" catalog="system" width="128" height="123"/>
+        <image name="phone.down.circle.fill" catalog="system" width="128" height="123"/>
+        <image name="speaker.wave.2.circle" catalog="system" width="128" height="123"/>
+        <image name="speaker.wave.2.circle.fill" catalog="system" width="128" height="123"/>
+        <image name="threema.arrow.triangle.2.circlepath.camera.circle" width="11" height="11"/>
+        <image name="threema.video.circle.fill" width="11" height="11"/>
+        <image name="threema.wifi.exclamationmark.circle.fill" width="13" height="13"/>
         <image name="verification-2.png" width="48" height="11"/>
+        <namedColor name="White">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
         <systemColor name="labelColor">
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

@@ -83,9 +83,8 @@
 
 "mediapreview_options" = "Seçenekler";
 
-"testflight_feedback_viewtitle" = "Beta geri bildirimi";
-"testflight_feedback_title" = "Lütfen bize beta geri bildiriminizi gönderin!";
-"testflight_feedback_description" = "Threema'nın beta sürümünü test ettiğiniz için teşekkür ederiz. Ancak test etmek denklemin sadece yarısıdır, diğer yarısı ise geri bildirim sağlamaktır. Herhangi bir hata veya düzensizlikle karşılaşırsanız lütfen bize bildirin. Beta sohbetini açmak için Ayarlar > Beta geri bildirimi'ne gidin.";
+"testflight_feedback_title" = "Bize beta geri bildiriminizi gönderin!";
+"testflight_feedback_description" = "Herhangi bir hata veya düzensizlikle karşılaşırsanız bize bildirin. Beta sohbetini açmak için buraya dokunun.";
 
 "notification.threemaweb.connect.title" = "Masaüstü / Web";
 "notification.threemaweb.connect.body" = "Masaüstü uygulaması / web istemcisi ile bağlantıyı yeniden kurmak için buraya dokunun.";

@@ -41,7 +41,7 @@
 }
 
 - (UIImage *)activityImage {
-    return [UIImage imageNamed:@"QRScan"];
+    return [UIImage systemImageNamed:@"qrcode.viewfinder"];
 }
 
 - (BOOL)canPerformWithActivityItems:(NSArray *)activityItems {

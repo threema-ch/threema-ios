@@ -35,8 +35,7 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
     private static var incomingQueue: TaskQueue?
     private static var outgoingQueue: TaskQueue?
 
-    private static let dispatchIncomingQueue = DispatchQueue(label: "ch.threema.TaskManager.dispatchIncomingQueue")
-    private static let dispatchOutgoingQueue = DispatchQueue(label: "ch.threema.TaskManager.dispatchOutgoingQueue")
+    private static let addTaskQueue = DispatchQueue(label: "ch.threema.TaskManager.addTaskQueue")
 
     @objc required init(backgroundEntityManager entityManager: EntityManager?) {
         self.entityManager = entityManager
@@ -50,45 +49,51 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
     }
 
     func add(taskDefinition: TaskDefinitionProtocol) {
-        do {
-            try add(task: taskDefinition, completionHandler: nil)
-        }
-        catch {
-            DDLogError("Failed add task to queue \(error)")
-        }
+        TaskManager.addTaskQueue.async {
+            do {
+                try self.add(task: taskDefinition, completionHandler: nil)
+            }
+            catch {
+                DDLogError("Failed add task to queue \(error)")
+            }
 
-        spool()
+            self.spool()
+        }
     }
 
     func add(taskDefinition: TaskDefinitionProtocol, completionHandler: @escaping TaskCompletionHandler) {
-        do {
-            try add(task: taskDefinition, completionHandler: completionHandler)
-        }
-        catch {
-            DDLogError("Failed add task to queue \(error)")
-        }
+        TaskManager.addTaskQueue.async {
+            do {
+                try self.add(task: taskDefinition, completionHandler: completionHandler)
+            }
+            catch {
+                DDLogError("Failed add task to queue \(error)")
+            }
 
-        spool()
+            self.spool()
+        }
     }
 
     func add(taskDefinitionTuples: [(
+
         taskDefinition: TaskDefinitionProtocol,
         completionHandler: TaskCompletionHandler
     )]) {
-        // Add addQueue
-        do {
-            for taskDefinitionTuple in taskDefinitionTuples {
-                try add(
-                    task: taskDefinitionTuple.taskDefinition,
-                    completionHandler: taskDefinitionTuple.completionHandler
-                )
+        TaskManager.addTaskQueue.async {
+            do {
+                for taskDefinitionTuple in taskDefinitionTuples {
+                    try self.add(
+                        task: taskDefinitionTuple.taskDefinition,
+                        completionHandler: taskDefinitionTuple.completionHandler
+                    )
+                }
             }
-        }
-        catch {
-            DDLogError("Failed add task to queue \(error)")
-        }
+            catch {
+                DDLogError("Failed add task to queue \(error)")
+            }
 
-        spool()
+            self.spool()
+        }
     }
 
     private func add(task: TaskDefinitionProtocol, completionHandler: TaskCompletionHandler? = nil) throws {
@@ -97,14 +102,10 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
         }
         
         if let queue = TaskManager.incomingQueue, queue.supportedTypes.contains(where: { $0 === type(of: task) }) {
-            try TaskManager.dispatchIncomingQueue.sync {
-                try queue.enqueue(task: task, completionHandler: completionHandler)
-            }
+            try queue.enqueue(task: task, completionHandler: completionHandler)
         }
         else if let queue = TaskManager.outgoingQueue, queue.supportedTypes.contains(where: { $0 === type(of: task) }) {
-            try TaskManager.dispatchOutgoingQueue.sync {
-                try queue.enqueue(task: task, completionHandler: completionHandler)
-            }
+            try queue.enqueue(task: task, completionHandler: completionHandler)
         }
         else {
             throw TaskManagerError.noTaskQueueFound
@@ -159,7 +160,7 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
     }
 
     private func load() {
-        TaskManager.dispatchIncomingQueue.sync {
+        TaskManager.addTaskQueue.async {
             if TaskManager.incomingQueue == nil {
                 TaskManager.incomingQueue = TaskQueue(
                     queueType: .incoming,
@@ -172,9 +173,7 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
 
                 self.load(queue: TaskManager.incomingQueue)
             }
-        }
 
-        TaskManager.dispatchOutgoingQueue.sync {
             if TaskManager.outgoingQueue == nil {
                 TaskManager.outgoingQueue = TaskQueue(
                     queueType: .outgoing,
@@ -198,6 +197,7 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
                         TaskDefinitionSettingsSync.self,
                         TaskDefinitionMdmParameterSync.self,
                         TaskDefinitionSendGroupCallStartMessage.self,
+                        TaskDefinitionSendDeleteEditMessage.self,
                         TaskDefinitionRunForwardSecurityRefreshSteps.self,
                     ],
                     frameworkInjectorResolver: FrameworkInjectorResolver(backgroundEntityManager: self.entityManager)

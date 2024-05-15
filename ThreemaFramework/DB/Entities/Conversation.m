@@ -25,6 +25,7 @@
 #import "UserSettings.h"
 #import "BundleUtil.h"
 #import "EntityFetcher.h"
+#import "ThreemaFramework/ThreemaFramework-swift.h"
 
 static NSString *fieldCategory = @"category";
 static NSString *fieldVisibility = @"visibility";
@@ -46,6 +47,7 @@ static NSString *fieldVisibility = @"visibility";
 @dynamic lastMessage;
 @dynamic members;
 @dynamic tags;
+@dynamic distributionList;
 
 - (void)setTyping:(NSNumber *)typing {
     [self willChangeValueForKey:@"typing"];
@@ -67,6 +69,8 @@ static NSString *fieldVisibility = @"visibility";
         } else {
             return @""; // The group has no name
         }
+    } else if (self.distributionList != nil) {
+        return  self.distributionList.name;
     } else {
         if (self.contact != nil) {
             return self.contact.displayName;

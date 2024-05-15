@@ -29,6 +29,7 @@
 @property (strong, nonatomic) UISearchController *searchController;
 @property (nonatomic) Group *group;
 @property id<EditGroupDelegate> delegate;
+@property (nonatomic, copy) void (^ _Nullable didSelect)(NSSet * _Nullable );
 
 - (void)refresh;
 

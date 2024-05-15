@@ -26,6 +26,7 @@ import Foundation
     private var safeConfigManager: SafeConfigManagerProtocol
     private var safeStore: SafeStore
     private var safeApiService: SafeApiService
+    private let userSettings: UserSettingsProtocol
     private var logger: ValidationLogger
 
     // Trigger safe backup states
@@ -45,10 +46,16 @@ import Foundation
         case restoreFailed(message: String)
     }
     
-    init(safeConfigManager: SafeConfigManagerProtocol, safeStore: SafeStore, safeApiService: SafeApiService) {
+    init(
+        safeConfigManager: SafeConfigManagerProtocol,
+        safeStore: SafeStore,
+        safeApiService: SafeApiService,
+        userSettings: UserSettingsProtocol = UserSettings.shared()
+    ) {
         self.safeConfigManager = safeConfigManager
         self.safeStore = safeStore
         self.safeApiService = safeApiService
+        self.userSettings = userSettings
         self.logger = ValidationLogger.shared()
     }
     
@@ -105,21 +112,25 @@ import Foundation
         guard let mdm = MDMSetup(setup: false) else {
             return
         }
-        let customServer = mdm.safeServerURL()
+
+        var customServer: String?
+        var serverUser: String?
+        var serverPassword: String?
         var server: String?
-        
-        if mdm.isSafeBackupPasswordPreset() {
-            server = safeStore.composeSafeServerAuth(
-                server: customServer,
-                user: mdm.safeServerUsername(),
-                password: mdm.safeServerPassword()
-            )?.absoluteString
+
+        if mdm.isSafeBackupServerPreset() {
+            customServer = mdm.safeServerURL()
+            serverUser = mdm.safeServerUsername()
+            serverPassword = mdm.safeServerPassword()
+            server = customServer
         }
         
         activate(
             identity: MyIdentityStore.shared().identity,
-            password: mdm.safePassword(),
+            safePassword: mdm.safePassword(),
             customServer: customServer,
+            serverUser: serverUser,
+            serverPassword: serverPassword,
             server: server,
             maxBackupBytes: nil,
             retentionDays: nil
@@ -137,14 +148,16 @@ import Foundation
     
     @objc func activate(
         identity: String,
-        password: String?,
+        safePassword: String?,
         customServer: String?,
+        serverUser: String?,
+        serverPassword: String?,
         server: String?,
         maxBackupBytes: NSNumber?,
         retentionDays: NSNumber?,
         completion: @escaping (Error?) -> Void
     ) {
-        guard let key = safeStore.createKey(identity: identity, password: password) else {
+        guard let key = safeStore.createKey(identity: identity, safePassword: safePassword) else {
             completion(ThreemaProtocolError.safePasswordEmpty)
             return
         }
@@ -152,6 +165,8 @@ import Foundation
         activate(
             key: key,
             customServer: customServer,
+            serverUser: serverUser,
+            serverPassword: serverPassword,
             server: server,
             maxBackupBytes: maxBackupBytes?.intValue,
             retentionDays: retentionDays?.intValue,
@@ -165,7 +180,7 @@ import Foundation
         }
         
         let current = safeConfigManager.getKey()
-        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: mdm.safePassword())
+        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: mdm.safePassword())
         return current != poss
     }
     
@@ -174,45 +189,65 @@ import Foundation
             return false
         }
         let current = safeConfigManager.getKey()
-        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: mdm.safePassword())
+        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: mdm.safePassword())
         return current == poss
     }
     
-    func activate(
+    private func activate(
         key: [UInt8],
         customServer: String?,
+        serverUser: String?,
+        serverPassword: String?,
         server: String?,
         maxBackupBytes: Int?,
         retentionDays: Int?,
         completion: @escaping (Error?) -> Void
     ) {
         if let customServer,
-           let server {
-            
+           let serverUser,
+           let serverPassword {
+
             safeConfigManager.setKey(key)
             safeConfigManager.setCustomServer(customServer)
-            safeConfigManager.setServer(server)
+            safeConfigManager.setServerUser(serverUser)
+            safeConfigManager.setServerPassword(serverPassword)
+            safeConfigManager.setServer(customServer)
             safeConfigManager.setMaxBackupBytes(maxBackupBytes)
             safeConfigManager.setRetentionDays(retentionDays)
+
             initTrigger()
+
+            // Show Threema Safe intro next time if is deactivated
+            userSettings.safeIntroShown = false
+
             completion(nil)
         }
         else {
             safeStore.getSafeDefaultServer(key: key) { result in
                 switch result {
-                case let .success(defaultServer):
-                    self.testServer(serverURL: defaultServer) { errorMessage, maxBackupBytes, retentionDays in
+                case let .success(safeServer):
+                    self.testServer(
+                        serverURL: safeServer.server,
+                        user: safeServer.serverUser,
+                        password: safeServer.serverPassword
+                    ) { errorMessage, maxBackupBytes, retentionDays in
                         if let errorMessage {
                             completion(SafeError.activateFailed(message: "Test default server: \(errorMessage)"))
                         }
                         else {
                             self.safeConfigManager.setKey(key)
                             self.safeConfigManager.setCustomServer(nil)
-                            self.safeConfigManager.setServer(defaultServer.absoluteString)
+                            self.safeConfigManager.setServerUser(nil)
+                            self.safeConfigManager.setServerPassword(nil)
+                            self.safeConfigManager.setServer(safeServer.server.absoluteString)
                             self.safeConfigManager.setMaxBackupBytes(maxBackupBytes)
                             self.safeConfigManager.setRetentionDays(retentionDays)
-                            
+
                             self.initTrigger()
+
+                            // Show Threema Safe intro next time if is deactivated
+                            self.userSettings.safeIntroShown = false
+
                             completion(nil)
                         }
                     }
@@ -239,13 +274,12 @@ import Foundation
             safeStore.getSafeServer(key: key) { result in
                 switch result {
                 case let .success(safeServer):
-                    let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServer)
-                    let safeBackupURL = safeServerAuth.server
+                    let safeBackupURL = safeServer.server
                         .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
                     self.safeApiService.delete(
                         server: safeBackupURL,
-                        user: safeServerAuth.user,
-                        password: safeServerAuth.password,
+                        user: safeServer.serverUser,
+                        password: safeServer.serverPassword,
                         completion: { errorMessage in
                             if let errorMessage {
                                 self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
@@ -259,6 +293,8 @@ import Foundation
         
         safeConfigManager.setKey(nil)
         safeConfigManager.setCustomServer(nil)
+        safeConfigManager.setServerUser(nil)
+        safeConfigManager.setServerPassword(nil)
         safeConfigManager.setServer(nil)
         safeConfigManager.setMaxBackupBytes(nil)
         safeConfigManager.setRetentionDays(nil)
@@ -297,7 +333,7 @@ import Foundation
             fileHandle.closeFile()
         }
 
-        let delimiter: Data = String(stringLiteral: "\n").data(using: .utf8)!
+        let delimiter = Data(String(stringLiteral: "\n").utf8)
         let chunkSize = 4096
         var isEof = false
         var lineStart = ""
@@ -447,13 +483,19 @@ import Foundation
     /// Tests a given server URL for Threema Safe
     /// - Parameters:
     ///   - serverURL: Server URL to test
+    ///   - user: User name for basic authentication
+    ///   - password: Password for basic authentication
     ///   - completion: Closure that accepts (errorMessage: String?, maxBackupDays: Int?, retentionDays: Int?)
-    func testServer(serverURL: URL, completion: @escaping (String?, Int?, Int?) -> Void) {
-        let safeServerAuth = safeStore.extractSafeServerAuth(server: serverURL)
+    func testServer(
+        serverURL: URL,
+        user: String?,
+        password: String?,
+        completion: @escaping (String?, Int?, Int?) -> Void
+    ) {
         safeApiService.testServer(
-            server: safeServerAuth.server,
-            user: safeServerAuth.user,
-            password: safeServerAuth.password
+            server: serverURL,
+            user: user,
+            password: password
         ) { comp in
             do {
                 let serverConfig = try comp()
@@ -473,14 +515,16 @@ import Foundation
     }
     
     /// Apply Threema Safe server it has changed
-    @objc func applyServer(server: String?, username: String?, password: String?) {
+    @objc func applyServer(server: String?, user: String?, password: String?) {
         if isActivated {
-            let doApply: (URL?) -> Void = { newServerURL in
-                if let newServerURL {
-                    if self.safeConfigManager.getServer() != newServerURL.absoluteString {
+            let doApply: (String?, String?, URL) -> Void = { user, password, serverURL in
+                if let server {
+                    if self.safeConfigManager.getServer() != server {
                         // Save Threema Safe server config and reset result and control config
                         self.safeConfigManager.setCustomServer(server)
-                        self.safeConfigManager.setServer(newServerURL.absoluteString)
+                        self.safeConfigManager.setServerUser(user)
+                        self.safeConfigManager.setServerPassword(password)
+                        self.safeConfigManager.setServer(serverURL.absoluteString)
                         self.safeConfigManager.setMaxBackupBytes(nil)
                         self.safeConfigManager.setRetentionDays(nil)
                         self.safeConfigManager.setLastChecksum(nil)
@@ -497,14 +541,14 @@ import Foundation
                 }
             }
 
-            if let customServer = server {
-                doApply(safeStore.composeSafeServerAuth(server: customServer, user: username, password: password))
+            if let server, let serverURL = URL(string: server) {
+                doApply(user, password, serverURL)
             }
             else {
                 safeStore.getSafeDefaultServer(key: safeConfigManager.getKey()!) { result in
                     switch result {
-                    case let .success(newServerURL):
-                        doApply(newServerURL)
+                    case let .success(safeServer):
+                        doApply(safeServer.serverUser, safeServer.serverPassword, safeServer.server)
                     case let .failure(error):
                         self.logger.logString("Cannot obtain default server: \(error)")
                     }
@@ -519,7 +563,7 @@ import Foundation
             throw SafeError.backupFailed(message: "This password is bad, please try another")
         }
 
-        guard let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: password) else {
+        guard let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: password) else {
             throw SafeError.backupFailed(message: "Missing backup key")
         }
 
@@ -534,16 +578,19 @@ import Foundation
         return try await withCheckedThrowingContinuation { continuation in
             safeStore.getSafeServer(key: key) { result in
                 switch result {
-                case let .success(safeServerURL):
-                    let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServerURL)
-                    let safeBackupURL = safeServerAuth.server
+                case let .success(safeServer):
+                    let safeBackupURL = safeServer.server
                         .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
-                    self.testServer(serverURL: safeServerURL) { errorMessage, maxBackupBytes, _ in
-                        
+                    self.testServer(
+                        serverURL: safeServer.server,
+                        user: safeServer.serverUser,
+                        password: safeServer.serverPassword
+                    ) { errorMessage, maxBackupBytes, _ in
+
                         if let error = errorMessage {
                             continuation.resume(throwing: SafeError.backupFailed(message: error))
                         }
-                        
+
                         // Encrypt backup data and upload it
                         do {
                             let encryptedData = try self.safeStore.encryptBackupData(key: key, data: data)
@@ -557,11 +604,11 @@ import Foundation
                                 )
                                 return
                             }
-                            
+
                             self.safeApiService.upload(
                                 backup: safeBackupURL,
-                                user: safeServerAuth.user,
-                                password: safeServerAuth.password,
+                                user: safeServer.serverUser,
+                                password: safeServer.serverPassword,
                                 encryptedData: encryptedData
                             ) { _, error in
                                 if let error {
@@ -581,7 +628,7 @@ import Foundation
                                 .resume(throwing: SafeError.backupFailed(message: "Encryption of backup failed."))
                         }
                     }
-                    
+
                 case let .failure(error):
                     continuation.resume(throwing: SafeError.backupFailed(message: "Invalid safe server url \(error)"))
                 }
@@ -590,19 +637,18 @@ import Foundation
     }
 
     func deleteBackupForDeviceLinking(password: String) {
-        if let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: password),
+        if let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: password),
            let backupID = safeStore.getBackupID(key: key) {
 
             safeStore.getSafeServer(key: key) { result in
                 switch result {
                 case let .success(safeServer):
-                    let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServer)
-                    let safeBackupURL = safeServerAuth.server
+                    let safeBackupURL = safeServer.server
                         .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
                     self.safeApiService.delete(
                         server: safeBackupURL,
-                        user: safeServerAuth.user,
-                        password: safeServerAuth.password,
+                        user: safeServer.serverUser,
+                        password: safeServer.serverPassword,
                         completion: { errorMessage in
                             if let errorMessage {
                                 self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
@@ -683,17 +729,20 @@ import Foundation
         key: [UInt8],
         data: [UInt8],
         backupID: [UInt8],
-        result: Swift.Result<URL, Error>,
+        result: Swift.Result<(serverUser: String?, serverPassword: String?, server: URL), Error>,
         completionHandler: @escaping () -> Void
     ) {
         do {
             switch result {
-            case let .success(safeServerURL):
-                let safeServerAuth = safeStore.extractSafeServerAuth(server: safeServerURL)
-                let safeBackupURL = safeServerAuth.server
+            case let .success(safeServer):
+                let safeBackupURL = safeServer.server
                     .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
                 
-                testServer(serverURL: safeServerURL) { errorMessage, maxBackupBytes, retentionDays in
+                testServer(
+                    serverURL: safeServer.server,
+                    user: safeServer.serverUser,
+                    password: safeServer.serverPassword
+                ) { errorMessage, maxBackupBytes, retentionDays in
                     do {
                         if let errorMessage {
                             throw SafeError.backupFailed(message: errorMessage)
@@ -713,8 +762,8 @@ import Foundation
                             
                             self.safeApiService.upload(
                                 backup: safeBackupURL,
-                                user: safeServerAuth.user,
-                                password: safeServerAuth.password,
+                                user: safeServer.serverUser,
+                                password: safeServer.serverPassword,
                                 encryptedData: encryptedData
                             ) { _, errorMessage in
                                 if let errorMessage {
@@ -772,44 +821,49 @@ import Foundation
     
     func startRestore(
         identity: String,
-        password: String,
+        safePassword: String,
         customServer: String?,
+        serverUser: String?,
+        serverPassword: String?,
         server: String?,
         restoreIdentityOnly: Bool,
         activateSafeAnyway: Bool,
         completionHandler: @escaping (SafeError?) -> Void
     ) {
         
-        if let key = safeStore.createKey(identity: identity, password: password),
+        if let key = safeStore.createKey(identity: identity, safePassword: safePassword),
            let backupID = safeStore.getBackupID(key: key) {
             
             if let server,
                !server.isEmpty {
-                
-                let safeServerURL = URL(string: server)!
+
                 startRestoreFromURL(
                     backupID: backupID,
                     key: key,
                     identity: identity,
                     customServer: customServer,
+                    serverUser: serverUser,
+                    serverPassword: serverPassword,
+                    server: URL(string: server)!,
                     restoreIdentityOnly: restoreIdentityOnly,
                     activateSafeAnyway: activateSafeAnyway,
-                    safeServerURL: safeServerURL,
                     completionHandler: completionHandler
                 )
             }
             else {
                 safeStore.getSafeDefaultServer(key: key) { result in
                     switch result {
-                    case let .success(safeServerURL):
+                    case let .success(safeServer):
                         self.startRestoreFromURL(
                             backupID: backupID,
                             key: key,
                             identity: identity,
                             customServer: customServer,
+                            serverUser: serverUser,
+                            serverPassword: serverPassword,
+                            server: safeServer.server,
                             restoreIdentityOnly: restoreIdentityOnly,
                             activateSafeAnyway: activateSafeAnyway,
-                            safeServerURL: safeServerURL,
                             completionHandler: completionHandler
                         )
                     case let .failure(error):
@@ -831,13 +885,14 @@ import Foundation
         key: [UInt8],
         identity: String,
         customServer: String?,
+        serverUser: String?,
+        serverPassword: String?,
+        server: URL,
         restoreIdentityOnly: Bool,
         activateSafeAnyway: Bool,
-        safeServerURL: URL,
         completionHandler: @escaping (SafeError?) -> Void
     ) {
-        let safeServerAuth = safeStore.extractSafeServerAuth(server: safeServerURL)
-        let backupURL = safeServerAuth.server
+        let backupURL = server
             .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
         
         var decryptedData: [UInt8]?
@@ -845,8 +900,8 @@ import Foundation
         let safeApiService = SafeApiService()
         safeApiService.download(
             backup: backupURL,
-            user: safeServerAuth.user,
-            password: safeServerAuth.password,
+            user: serverUser,
+            password: serverPassword,
             completionHandler: { comp in
                 do {
                     let encryptedData = try comp()
@@ -892,7 +947,9 @@ import Foundation
                                         self.activate(
                                             key: key,
                                             customServer: customServer,
-                                            server: safeServerURL.absoluteString,
+                                            serverUser: serverUser,
+                                            serverPassword: serverPassword,
+                                            server: server.absoluteString,
                                             maxBackupBytes: nil,
                                             retentionDays: nil
                                         ) { error in

@@ -21,7 +21,7 @@
 import Foundation
 
 extension FileMessageEntity: PreviewableMessage {
-    public var previewText: String {
+    public var privatePreviewText: String {
         switch fileMessageType {
         case let .voice(voice):
             let formattedDuration = DateFormatter.timeFormatted(Int(voice.durationTimeInterval ?? 0.0))

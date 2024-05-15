@@ -82,6 +82,14 @@ class MediatorReflectedIncomingMessageProcessor {
             return process(contactSetPhotoMessage: amsg as! ContactSetPhotoMessage)
         case is DeliveryReceiptMessage:
             return try process(incomingMessage: imsg, deliveryReceiptMessage: amsg as! DeliveryReceiptMessage)
+        case is DeleteMessage:
+            return try process(incomingMessage: imsg, deleteMessage: amsg as! DeleteMessage)
+        case is DeleteGroupMessage:
+            return try process(incomingMessage: imsg, deleteGroupMessage: amsg as! DeleteGroupMessage)
+        case is EditMessage:
+            return try process(incomingMessage: imsg, editMessage: amsg as! EditMessage)
+        case is EditGroupMessage:
+            return try process(incomingMessage: imsg, editGroupMessage: amsg as! EditGroupMessage)
         case is GroupCreateMessage:
             return try process(groupCreateMessage: amsg as! GroupCreateMessage)
         case is GroupDeletePhotoMessage:
@@ -273,6 +281,56 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             deliveryReceiptMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            isOutgoing: false
+        )
+        return Promise()
+    }
+
+    // MARK: Process reflected incoming delete / edit message
+
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        deleteMessage amsg: DeleteMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            deleteMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            isOutgoing: false
+        )
+        return Promise()
+    }
+
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        deleteGroupMessage amsg: DeleteGroupMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            deleteGroupMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            isOutgoing: false
+        )
+        return Promise()
+    }
+
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        editMessage amsg: EditMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            editMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            isOutgoing: false
+        )
+        return Promise()
+    }
+
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        editGroupMessage amsg: EditGroupMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            editGroupMessage: amsg,
             createdAt: getCreatedAt(for: imsg),
             isOutgoing: false
         )

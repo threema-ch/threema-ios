@@ -47,6 +47,10 @@ extension View {
         condition ? apply(self) : asAnyView
     }
     
+    func applyIf(_ condition: Bool, apply: (Self) -> some View) -> some View {
+        condition ? apply(self).asAnyView : asAnyView
+    }
+    
     func threemaNavigationBar(_ title: String) -> some View {
         ignoresSafeArea(.all)
             .navigationBarTitle(

@@ -1384,7 +1384,7 @@ extension VoIPCallService {
                             self.callCantCreateOffer(error: error)
                             return
                         }
-                        guard let sdp else {
+                        guard let sdp, let callID = self.callID else {
                             self.callID = nil
                             self.callCantCreateOffer(error: nil)
                             return
@@ -1395,7 +1395,7 @@ extension VoIPCallService {
                             contactIdentity: self.contactIdentity,
                             features: nil,
                             isVideoAvailable: self.threemaVideoCallAvailable,
-                            callID: self.callID!,
+                            callID: callID,
                             completion: nil
                         )
                         self.voIPCallSender.sendVoIPCall(offer: offerMessage)

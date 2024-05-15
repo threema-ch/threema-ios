@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
 import ThreemaFramework
 import UIKit
 
@@ -35,13 +36,14 @@ protocol ChatBarViewDelegate: AnyObject {
     func showImagePicker()
     func checkIfPastedStringIsMedia() -> Bool
     func showContact(identity: String)
-    
+    func isEditedMessageSet() -> Bool
+
     // Voice Messages
-    func startRecording()
+    func startRecording(with audioFileURL: URL?)
     
     // Animations
     func updateLayoutForTextChange()
-    
+
     func setIsResettingKeyboard(_ setReset: Bool)
 }
 
@@ -63,11 +65,15 @@ final class ChatBarView: UIView {
     }
     
     weak var chatBarViewDelegate: ChatBarViewDelegate?
-    
+
     // MARK: - Private properties
     
     private let markupParser = MarkupParser()
     private let conversation: Conversation
+    private let precomposedText: String?
+    
+    private var voiceMessageController: VoiceMessageRecorderViewController?
+    
     private var isTyping = false
     
     /// Timer which sends a typing message to avoid the other device cancelling the typing status
@@ -81,9 +87,8 @@ final class ChatBarView: UIView {
     private var currentSingleLineHeight: CGFloat = Config.defaultSingleLineHeight
     private var updatableConstraints = [UpdatableConstraint]()
     
-    private let precomposedText: String?
     private lazy var feedbackGenerator = UINotificationFeedbackGenerator()
-    
+
     // MARK: - Views
     
     private lazy var chatTextView: ChatTextView = {
@@ -183,7 +188,7 @@ final class ChatBarView: UIView {
             }
             
             if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
-                strongSelf.chatBarViewDelegate?.startRecording()
+                strongSelf.chatBarViewDelegate?.startRecording(with: nil)
             }
         }
         
@@ -502,19 +507,28 @@ final class ChatBarView: UIView {
     
     // MARK: - Public Functions
     
-    /// Stops editing, removes the current text from the text view and replaces it with an empty string.
-    /// Stops the typing indicator if currently typing
-    /// - Returns: If the current text is empty it returns nil otherwise it returns the text
-    public func getCurrentText(andRemove: Bool = false) -> String? {
-        let text = chatTextView.getCurrentText()
-        if andRemove {
-            _ = chatTextView.removeCurrentText()
-            chatTextViewDidChange(chatTextView, changeTyping: false)
-        }
-        
-        return text
+    public func getCurrentText() -> String? {
+        chatTextView.getCurrentText()
     }
     
+    public func setCurrentText(_ text: String) {
+        chatTextView.setCurrentText(text)
+        chatTextViewDidChange(chatTextView, changeTyping: false)
+    }
+
+    public func removeCurrentText() {
+        chatTextView.removeCurrentText()
+        chatTextViewDidChange(chatTextView, changeTyping: false)
+    }
+
+    public func getCurrentSessionState(shouldMove: Bool) async -> SessionState? {
+        try? await voiceMessageController?.audioFileURL(shouldMove: shouldMove)
+    }
+    
+    public var recordingState: RecordingState {
+        voiceMessageController?.recordingState ?? .none
+    }
+
     /// Resets the keyboard to the default keyboard
     @MainActor
     public func resetKeyboard() {
@@ -577,9 +591,8 @@ extension ChatBarView: ChatTextViewDelegate {
             assertionFailure("chatBarViewDelegate must not be nil when sending a text")
             return
         }
-        
-        guard let text = getCurrentText(andRemove: true),
-              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+
+        guard let text = getCurrentText(), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
         
@@ -668,6 +681,88 @@ extension ChatBarView: ChatTextViewDelegate {
         
         if changeTyping {
             sendStartOrStopTypingIndicator()
+        }
+    }
+}
+
+// MARK: - VoiceMessageRecorderView Configuration
+
+extension ChatBarView {
+    func presentVoiceMessageRecorderView(
+        with delegate: VoiceMessageRecorderViewDelegate?,
+        with audioFileURL: URL? = nil
+    ) {
+        let recorderViewController = VoiceMessageRecorderView.make(
+            to: self,
+            with: delegate,
+            model: .init(conversation: conversation, audioFile: audioFileURL)
+        )
+        recorderViewController.view.alpha = 0
+        showSendButton()
+        sendButton.alpha = 0
+        plusButton.alpha = 0
+        addSubview(recorderViewController.view)
+        NSLayoutConstraint.activate([
+            recorderViewController.view.leadingAnchor.constraint(equalTo: leadingAnchor),
+            recorderViewController.view.trailingAnchor.constraint(equalTo: trailingAnchor),
+            recorderViewController.view.topAnchor.constraint(equalTo: topAnchor),
+            recorderViewController.view.centerYAnchor.constraint(equalTo: centerYAnchor),
+            recorderViewController.view.widthAnchor.constraint(equalTo: widthAnchor),
+        ])
+        chatTextView.isEditable = false
+        voiceMessageController = recorderViewController
+        showRecorder(animated: audioFileURL == nil)
+    }
+    
+    func dismissVoiceMessageRecorderView() {
+        chatTextView.isEditable = true
+        sendButton.alpha = 1
+        plusButton.alpha = 1
+        hideSendButton()
+        hideRecorder()
+    }
+    
+    private func showRecorder(animated: Bool = true) {
+        if animated {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+        
+        let show = { [weak self] in
+            self?.voiceMessageController?.view.alpha = 1
+            self?.chatTextView.alpha = 0
+        }
+        
+        guard animated else {
+            return show()
+        }
+        
+        let totalDuration = Config.ShowHideSendButtonAnimation.totalDuration
+        let fadeDuration = Config.ShowHideSendButtonAnimation.fadeDuration
+        let preFadeDelay = Config.ShowHideSendButtonAnimation.preFadeDelay
+ 
+        UIView.animate(
+            withDuration: fadeDuration,
+            delay: preFadeDelay + (totalDuration - fadeDuration),
+            options: [.beginFromCurrentState, .curveEaseInOut],
+            animations: show
+        )
+    }
+    
+    private func hideRecorder() {
+        UIView.animate(
+            withDuration: Config.ShowHideSendButtonAnimation.fadeDuration,
+            delay: 0,
+            options: [.beginFromCurrentState, .curveEaseInOut]
+        ) {
+            [weak self] in
+            self?.voiceMessageController?.view.alpha = 0
+            self?.chatTextView.alpha = 1
+        } completion: { [weak self] _ in
+            self?.voiceMessageController?.view.removeFromSuperview()
+            self?.voiceMessageController = nil
+            if !(self?.chatTextView.isEmpty ?? true) {
+                self?.showSendButton()
+            }
         }
     }
 }

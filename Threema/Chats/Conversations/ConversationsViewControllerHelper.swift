@@ -149,7 +149,6 @@ class ConversationsViewControllerHelper {
     ///   - conversation: Conversation to be deleted
     ///   - group: Group to be deleted
     ///   - deleteHiddenContacts: True delete hidden contacts where member of the group
-    ///   - entityManager: EntityManager to handle deletion
     /// - See also: DeleteConversationAction (legacy code)
     private static func deleteConversation(
         conversation: Conversation,
@@ -209,9 +208,45 @@ class ConversationsViewControllerHelper {
         var sheetTitle: String
         var sheetMessage: String?
         var actions = [UIAlertAction]()
-        
+        let entityManager = EntityManager()
+
         // differentiate between individual and group conversation
-        if conversation.groupID == nil {
+        if conversation.groupID != nil {
+            // Group handling
+            handleGroupDeletion(
+                of: conversation,
+                owner: owner,
+                cell: cell,
+                singleFunction: singleFunction,
+                handler: handler
+            )
+        }
+        else if let distributionList = conversation.distributionList {
+            // Conversation Delete Action
+            if conversation.conversationCategory == .private {
+                sheetTitle = BundleUtil.localizedString(forKey: "private_delete_info_alert_message")
+            }
+            else {
+                sheetTitle = BundleUtil.localizedString(forKey: "distribution_list_delete_sheet_title")
+            }
+            sheetMessage = nil
+            
+            let distributionListConversationDeleteAlertAction = createDistributionListDeleteAlertAction(
+                distributionList: distributionList,
+                entityManager: entityManager,
+                handler: handler
+            )
+            actions.append(distributionListConversationDeleteAlertAction)
+            
+            UIAlertTemplate.showSheet(
+                owner: owner,
+                popOverSource: cell ?? owner.view,
+                title: sheetTitle,
+                message: sheetMessage,
+                actions: actions
+            )
+        }
+        else if !conversation.isGroup() {
             // Conversation Delete Action
             if conversation.conversationCategory == .private {
                 sheetTitle = BundleUtil.localizedString(forKey: "private_delete_info_alert_message")
@@ -270,7 +305,7 @@ class ConversationsViewControllerHelper {
             return
         }
         
-        // if self is member show option to leave and leave + delete,
+        // If self is member show option to leave and leave + delete,
         // or i'm creator to dissolve (delete) or otherwise just delete
         if group.isSelfMember {
             if let singleFunction {
@@ -412,6 +447,24 @@ class ConversationsViewControllerHelper {
                 group: nil,
                 deleteHiddenContacts: true
             )
+            handler(true)
+        }
+        return deleteAction
+    }
+    
+    private static func createDistributionListDeleteAlertAction(
+        distributionList: DistributionListEntity,
+        entityManager: EntityManager,
+        handler: @escaping (Bool) -> Void
+    ) -> UIAlertAction {
+        let deleteAction = UIAlertAction(
+            title: "Delete".localized,
+            style: .destructive
+        ) { _ in
+            
+            entityManager.performSyncBlockAndSafe {
+                entityManager.entityDestroyer.deleteObject(object: distributionList)
+            }
             handler(true)
         }
         return deleteAction
@@ -567,11 +620,11 @@ class ConversationsViewControllerHelper {
         
         if isPrivate {
             privateTitle = BundleUtil.localizedString(forKey: "remove_private")
-            privateAction.image = BundleUtil.imageNamed("lock.slash.fill_regular.L")
+            privateAction.image = UIImage(systemName: "lock.slash.fill")
         }
         else {
             privateTitle = BundleUtil.localizedString(forKey: "make_private")
-            privateAction.image = BundleUtil.imageNamed("lock.fill_regular.L")
+            privateAction.image = UIImage(systemName: "lock.fill")
         }
         privateAction.title = privateTitle
         privateAction.accessibilityLabel = privateTitle

@@ -227,7 +227,7 @@ extension BaseMessage {
         }
     }
     
-    // MARK: - ack images
+    // MARK: - Message action images
     
     public var userThumbsUpImage: UIImage? {
         var imageName = "hand.thumbsup"
@@ -245,6 +245,14 @@ extension BaseMessage {
         }
         return UIImage(systemName: imageName)?
             .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
+    }
+    
+    public var messageMarkerStarImage: UIImage? {
+        var imageName = "star.fill"
+        if messageMarkers?.star.boolValue ?? false {
+            imageName = "star.slash"
+        }
+        return UIImage(systemName: imageName)?.withTintColor(.systemYellow, renderingMode: .alwaysOriginal)
     }
     
     // MARK: - messageDisplayState

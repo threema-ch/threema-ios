@@ -21,7 +21,7 @@
 import Foundation
 
 extension VideoMessageEntity: MessageAccessibility {
-    public var customAccessibilityLabel: String {
+    public var privateCustomAccessibilityLabel: String {
         var text = ""
         
         if let caption {

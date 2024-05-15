@@ -31,7 +31,7 @@ import SwiftUI
     /// Shared wrapper to be used
     @objc public static var shared = NotificationPresenterWrapper()
     
-    private static let presenter = NotificationPresenter.shared()
+    private static let presenter = NotificationPresenter.shared
     private static let hapticGenerator = UINotificationFeedbackGenerator()
     
     // MARK: - Enums
@@ -64,19 +64,16 @@ import SwiftUI
     public func present(
         type: NotificationPresenterType,
         subtitle: String? = nil,
-        completion: NotificationPresenterCompletion? = nil
+        completion: NotificationPresenter.Completion? = nil
     ) {
-        
         Task { @MainActor in
-            NotificationPresenterWrapper.presenter
-                .present(text: type.notificationText, customStyle: type.notificationStyle.id) { presenter in
-                    
-                    presenter.dismiss(afterDelay: Configuration.defaultDelay)
-                    
-                    completion?(presenter)
-                }
-            
-            NotificationPresenterWrapper.presenter.updateSubtitle(subtitle)
+            NotificationPresenterWrapper.presenter.present(
+                type.notificationText,
+                subtitle: subtitle,
+                styleName: type.notificationStyle.id,
+                duration: Configuration.defaultDelay,
+                completion: completion
+            )
             
             if let imageView = type.notificationStyle.notificationImageView {
                 NotificationPresenterWrapper.presenter.displayLeftView(imageView)
@@ -97,15 +94,16 @@ import SwiftUI
     public func presentIndefinitely(
         text: String? = nil,
         type: NotificationPresenterType,
-        completion: NotificationPresenterCompletion? = nil
+        completion: NotificationPresenter.Completion? = nil
     ) {
-        
         Task { @MainActor in
-            NotificationPresenterWrapper.presenter
-                .present(text: type.notificationText, customStyle: type.notificationStyle.id) { presenter in
-                    
-                    completion?(presenter)
-                }
+            NotificationPresenterWrapper.presenter.present(
+                type.notificationText,
+                styleName: type.notificationStyle.id,
+                duration: Configuration.defaultDelay,
+                completion: completion
+            )
+            
             if let imageView = type.notificationStyle.notificationImageView {
                 NotificationPresenterWrapper.presenter.displayLeftView(imageView)
             }
@@ -142,34 +140,31 @@ import SwiftUI
     
     private func initializeStyles() {
         // General
-        NotificationPresenter.shared()
-            .addStyle(styleName: NotificationPresenterStyle.none.id) { style in
-                applyDefaultBackgroundParameters(to: &style.backgroundStyle)
-                applyDefaultTextParameters(to: &style.textStyle)
-                applyDefaultImageParameters(to: &style.leftViewStyle)
+        NotificationPresenterWrapper.presenter.addStyle(named: NotificationPresenterStyle.none.id) { style in
+            applyDefaultBackgroundParameters(to: &style.backgroundStyle)
+            applyDefaultTextParameters(to: &style.textStyle)
+            applyDefaultImageParameters(to: &style.leftViewStyle)
 
-                return style
-            }
+            return style
+        }
         
         // Success
-        NotificationPresenter.shared()
-            .addStyle(styleName: NotificationPresenterStyle.success.id) { style in
-                applyDefaultBackgroundParameters(to: &style.backgroundStyle)
-                applyDefaultTextParameters(to: &style.textStyle)
-                applyDefaultImageParameters(to: &style.leftViewStyle)
+        NotificationPresenterWrapper.presenter.addStyle(named: NotificationPresenterStyle.success.id) { style in
+            applyDefaultBackgroundParameters(to: &style.backgroundStyle)
+            applyDefaultTextParameters(to: &style.textStyle)
+            applyDefaultImageParameters(to: &style.leftViewStyle)
 
-                return style
-            }
+            return style
+        }
         
         // Error
-        NotificationPresenter.shared()
-            .addStyle(styleName: NotificationPresenterStyle.error.id) { style in
-                applyDefaultBackgroundParameters(to: &style.backgroundStyle)
-                applyDefaultTextParameters(to: &style.textStyle)
-                applyDefaultImageParameters(to: &style.leftViewStyle)
+        NotificationPresenterWrapper.presenter.addStyle(named: NotificationPresenterStyle.error.id) { style in
+            applyDefaultBackgroundParameters(to: &style.backgroundStyle)
+            applyDefaultTextParameters(to: &style.textStyle)
+            applyDefaultImageParameters(to: &style.leftViewStyle)
 
-                return style
-            }
+            return style
+        }
     }
     
     @objc public func colorChanged() {

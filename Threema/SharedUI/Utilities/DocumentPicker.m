@@ -134,7 +134,7 @@ static DocumentPicker *pickerStrongReference;
         
         if (_conversation != nil) {
             MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
-            [messageSender sendBlobMessageFor:item in:_conversation correlationID:nil webRequestID:nil completion:nil];
+            [messageSender sendBlobMessageFor:item inConversationWithID:_conversation.objectID correlationID:nil webRequestID:nil completion:nil];
         } else {
             [NotificationPresenterWrapper.shared presentSendingError];
         }

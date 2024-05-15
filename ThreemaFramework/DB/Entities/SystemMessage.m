@@ -229,14 +229,6 @@
     return [self format];
 }
 
-- (nonnull NSString*)previewText {
-    NSString *format = [self format];
-    if (format != nil) {
-        return [self format];
-    }
-    return @"";
-}
-
 - (NSString *)argAsUTF8String {
     return [[NSString alloc] initWithData:self.arg encoding:NSUTF8StringEncoding];
 }

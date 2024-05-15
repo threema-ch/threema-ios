@@ -95,15 +95,13 @@
     _titleLabel.text = [BundleUtil localizedStringForKey:@"restore_id_export"];
     _titleLabel.accessibilityIdentifier = @"restore_id_export";
     
-    _scanImageView.image = [UIImage imageNamed:@"QRScan" inColor:Colors.primaryWizard];
+    _scanImageView.image = [[UIImage systemImageNamed:@"qrcode.viewfinder"] imageWithTintColor:Colors.primaryWizard];
     
     _backupTextView.accessibilityIdentifier = @"backupTextView";
     
     _backupTextView.tintColor = Colors.primaryWizard;
     _passwordTextField.tintColor = Colors.primaryWizard;
-    
-    _keyImageView.image = [UIImage imageNamed:@"Key" inColor:[UIColor whiteColor]];
-    
+        
     UITapGestureRecognizer *mainTapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMainView:)];
     [self.mainContentView addGestureRecognizer:mainTapGesture];
     

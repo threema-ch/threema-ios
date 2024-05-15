@@ -32,7 +32,7 @@
     func detailsDidDisappear()
     
     /// Show a chat search in the delegate
-    func showChatSearch()
+    func showChatSearch(forStarred: Bool)
     
     /// Called before the detail view deletes messages
     /// - Parameter objectIDs: Object IDs of messages that will be deleted

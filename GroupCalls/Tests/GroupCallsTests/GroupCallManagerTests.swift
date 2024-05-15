@@ -310,15 +310,15 @@ import XCTest
             let chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
             
             await print(
-                "Gold chosen call \(String(describing: goldChosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: goldChosenCall?.exactCallStartDate))"
+                "Gold chosen call \(String(describing: goldChosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: goldChosenCall?.exactCreationTimestamp))"
             )
             await print(
-                "Actual chosen call \(String(describing: chosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: chosenCall?.exactCallStartDate))"
+                "Actual chosen call \(String(describing: chosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: chosenCall?.exactCreationTimestamp))"
             )
             
-            let chosenStartDate = await chosenCall!.exactCallStartDate!
+            let chosenStartDate = await chosenCall!.exactCreationTimestamp!
             for groupCall in groupCalls {
-                let otherStartDate = await groupCall.exactCallStartDate!
+                let otherStartDate = await groupCall.exactCreationTimestamp!
                 print("\(otherStartDate) < \(chosenStartDate)")
                 let smaller = otherStartDate <= chosenStartDate
                 XCTAssertTrue(smaller)

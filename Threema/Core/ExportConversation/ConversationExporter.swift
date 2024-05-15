@@ -154,10 +154,7 @@ extension ConversationExporter {
         zipFileContainer = ZipFileContainer(password: password!, name: "Conversation.zip")
         
         let success = exportChatToZipFile()
-        
-        guard let conversationData = log.data(using: String.Encoding.utf8) else {
-            throw CreateZipError.generalError
-        }
+        let conversationData = Data(log.utf8)
         
         if !enoughFreeStorage(toStore: Int64(conversationData.count)) {
             DispatchQueue.main.async {
@@ -432,7 +429,7 @@ extension ConversationExporter {
            let quoteMessage = entityManager.entityFetcher.message(
                with: quoteID,
                conversation: baseMessage.conversation
-           ) {
+           ) as? PreviewableMessage {
             log.append("[")
             if let displayName = quoteMessage.sender?.displayName {
                 log.append("\(displayName): ")
@@ -444,7 +441,7 @@ extension ConversationExporter {
                 log.append("\(BundleUtil.localizedString(forKey: "me")): ")
             }
                 
-            log.append("\"\(quoteMessage.previewText())\"] ")
+            log.append("\"\(quoteMessage.previewText)\"] ")
         }
         
         if let additionalExportInfo = baseMessage.additionalExportInfo() {

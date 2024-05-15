@@ -23,6 +23,7 @@
 #import "GroupTableDataSource.h"
 #import "RecentTableDataSource.h"
 #import "WorkContactTableDataSource.h"
+#import "DistributionListTableDataSource.h"
 #import "BundleUtil.h"
 #import "RectUtil.h"
 #import "AppGroup.h"
@@ -36,7 +37,8 @@ typedef enum : NSUInteger {
     ModeContact,
     ModeGroup,
     ModeRecent,
-    ModeWorkContact
+    ModeDistributionList,
+    ModeWorkContact,
 } SelectionMode;
 
 
@@ -88,11 +90,45 @@ typedef enum : NSUInteger {
     
     self.overrideUserInterfaceStyle = [UserSettings sharedUserSettings].darkTheme ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
     
-    WorkContactTableDataSource *workDataSource = [WorkContactTableDataSource workContactTableDataSource];
-    if ([LicenseStore requiresLicenseKey] && workDataSource.countOfWorkContacts > 0) {
-        [self.segmentedControl insertSegmentWithTitle:[BundleUtil localizedStringForKey:@"work"] atIndex:ModeWorkContact animated:NO];
-    }
     
+    UIImage *contactImage = [BundleUtil imageNamed:@"person.fill"];
+    contactImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_contacts"];
+    [self.segmentedControl setImage:contactImage forSegmentAtIndex:ModeContact];
+
+    UIImage *groupImage = [BundleUtil imageNamed:@"person.3.fill"];
+    groupImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_groups"];
+    [self.segmentedControl setImage:groupImage forSegmentAtIndex:ModeGroup];
+    
+    UIImage *recentImage = [BundleUtil imageNamed:@"clock.fill"];
+    recentImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"recent"];;
+    [self.segmentedControl setImage:recentImage forSegmentAtIndex:ModeRecent];
+    
+    // For sake of simplicity we show DLs after recents, after removing the FF one can switch the entries in enum and move the adding of the DL above the recent.
+    if ([ThreemaEnvironment distributionListsActive]) {
+        [self.segmentedControl insertSegmentWithTitle:nil atIndex:ModeDistributionList animated:NO];
+        UIImage *distributionImage = [UIImage systemImageNamed:@"megaphone.fill"];
+        distributionImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
+        [self.segmentedControl setImage:distributionImage forSegmentAtIndex:ModeDistributionList];
+        
+        if ([LicenseStore requiresLicenseKey]) {
+            [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContact animated:NO];
+            UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
+            workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
+            [self.segmentedControl setImage:workImage forSegmentAtIndex:ModeWorkContact];
+            
+        }
+    }
+    else {
+        if ([LicenseStore requiresLicenseKey]) {
+            [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContact animated:NO];
+            UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
+            workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
+            [self.segmentedControl setImage:workImage forSegmentAtIndex:ModeWorkContact-1];
+            
+        }
+    }
+        
+        
     NSUserDefaults *defaults = [AppGroup userDefaults];
     NSNumber *type = [defaults objectForKey:LAST_SELECTED_MODE];
     if (type) {
@@ -123,7 +159,10 @@ typedef enum : NSUInteger {
 
     _searchBarHeight = self.searchController.searchBar.frame.size.height;
     
-    [self updateUIStrings];
+    [_addTextButton setTitle:[BundleUtil localizedStringForKey:@"addText"] forState:UIControlStateNormal];
+    [_hideTextButton setTitle:[BundleUtil localizedStringForKey:@"hide"] forState:UIControlStateNormal];
+    [_sendButton setTitle:[BundleUtil localizedStringForKey:@"send"]];
+    [_sendAsFileLabel setText:[BundleUtil localizedStringForKey:@"send_as_file"]];
     
     if (_submitOnSelect || !_enableControlView) {
         _controlView.hidden = YES;
@@ -151,6 +190,7 @@ typedef enum : NSUInteger {
     [self.tableView setTableHeaderView:[[UIView alloc] initWithFrame:frame]];
 
     [self.tableView registerClass:GroupCell.class forCellReuseIdentifier:@"GroupCell"];
+    [self.tableView registerClass:DistributionListCell.class forCellReuseIdentifier:@"DistributionListCell"];
 }
 
 - (void)updateColors {
@@ -228,54 +268,6 @@ typedef enum : NSUInteger {
 - (void)setEnableMultiSelection:(BOOL)allowMulitSelection {
     _enableMultiSelection = allowMulitSelection;
     _tableView.allowsMultipleSelection = _enableMultiSelection;
-}
-
-- (void)updateUIStrings {    
-    // iOS 10 and 12 have different subviews sorting, so we have to check it with name and replace it at the end with the image
-    
-    [self.segmentedControl setTitle:@"contacts" forSegmentAtIndex:ModeContact];
-    [self.segmentedControl setTitle:@"groups" forSegmentAtIndex:ModeGroup];
-    [self.segmentedControl setTitle:@"recent" forSegmentAtIndex:ModeRecent];
-    if ([LicenseStore requiresLicenseKey] && self.segmentedControl.numberOfSegments == 4) {
-        [self.segmentedControl setTitle:@"work" forSegmentAtIndex:ModeWorkContact];
-    }
-    
-    for (int i = 0; i < self.segmentedControl.numberOfSegments; i++) {
-        UIView *segment = self.segmentedControl.subviews[i];
-        for (id subview in segment.subviews) {
-            if ([subview isKindOfClass:[UILabel class]]) {
-                UILabel *label = (UILabel *)subview;
-                if ([label.text isEqualToString:@"contacts"]) {
-                    segment.accessibilityLabel = [BundleUtil localizedStringForKey:@"contacts"];
-                }
-                else if ([label.text isEqualToString:@"groups"]) {
-                    segment.accessibilityLabel = [BundleUtil localizedStringForKey:@"groups"];
-                }
-                else if ([label.text isEqualToString:@"recent"]) {
-                    segment.accessibilityLabel = [BundleUtil localizedStringForKey:@"recent"];
-                }
-                else if ([label.text isEqualToString:@"work"]) {
-                    segment.accessibilityLabel = [BundleUtil localizedStringForKey:@"work"];
-                }
-            }
-        }
-    }
-    [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeContact];
-    [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeGroup];
-    [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeRecent];
-    [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Contact"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeContact];
-    [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Group"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeGroup];
-    [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Recent"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeRecent];
-    
-    if ([LicenseStore requiresLicenseKey] && self.segmentedControl.numberOfSegments == 4) {
-        [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeWorkContact];
-        [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Case"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeWorkContact];
-    }
-    
-    [_addTextButton setTitle:[BundleUtil localizedStringForKey:@"addText"] forState:UIControlStateNormal];
-    [_hideTextButton setTitle:[BundleUtil localizedStringForKey:@"hide"] forState:UIControlStateNormal];
-    [_sendButton setTitle:[BundleUtil localizedStringForKey:@"send"]];
-    [_sendAsFileLabel setText:[BundleUtil localizedStringForKey:@"send_as_file"]];
 }
 
 - (BOOL)shouldAutorotate {
@@ -545,7 +537,17 @@ typedef enum : NSUInteger {
 }
 
 - (IBAction)segmentedControlChanged:(id)sender {
-    _mode = self.segmentedControl.selectedSegmentIndex;
+    if (![ThreemaEnvironment distributionListsActive]) {
+        if(self.segmentedControl.selectedSegmentIndex == ModeDistributionList) {
+            _mode = self.segmentedControl.selectedSegmentIndex + 1;
+        }
+        else {
+            _mode = self.segmentedControl.selectedSegmentIndex;
+        }
+    } else {
+        // Remove all lines above except for this when removing FF
+        _mode = self.segmentedControl.selectedSegmentIndex;
+    }
     
     [self updateDataSourceMode];
 }
@@ -582,6 +584,10 @@ typedef enum : NSUInteger {
             [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
             break;
             
+        case ModeDistributionList:
+            [self hideSearchBar:NO];
+            _currentDataSource = [DistributionListTableDataSource distributionListDataSource];
+            [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
             
         default:
             break;

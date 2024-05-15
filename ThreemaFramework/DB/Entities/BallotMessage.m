@@ -45,10 +45,6 @@
     return [self format];
 }
 
-- (nonnull NSString*)previewText {
-    return [BundleUtil localizedStringForKey:@"ballot"];
-}
-
 - (BOOL)isSummaryMessage {
     return self.ballotState.intValue == kBallotMessageStateCloseBallot && self.ballot.state.intValue == kBallotStateClosed;
 }

@@ -1,0 +1,19 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
+
+"need_to_start_app_first_title" = "%@ isch nöd parat";
+"need_to_start_app_first_message" = "Started Sie bitte zerscht d’%@-Applikation.";
+
+"cannot_connect_title" = "Kei Verbindig";
+"cannot_connect_message" = "Bitte prüefed Sie Ihri Internetverbindig.";
+
+"sending_count" = "Schicke… (%1$ld / %2$ld)";
+
+"error_message_no_items_title" = "Ungültige Inhalt";
+"error_message_no_items_message" = "Kei unterstützti Inhält gfunde.";
+
+"send_as_file" = "Als Datei schicke";

@@ -89,7 +89,7 @@ public enum Sync_ReadReceiptPolicy: SwiftProtobuf.Enum {
 
 extension Sync_ReadReceiptPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_ReadReceiptPolicy] = [
+  public static let allCases: [Sync_ReadReceiptPolicy] = [
     .sendReadReceipt,
     .dontSendReadReceipt,
   ]
@@ -134,7 +134,7 @@ public enum Sync_TypingIndicatorPolicy: SwiftProtobuf.Enum {
 
 extension Sync_TypingIndicatorPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_TypingIndicatorPolicy] = [
+  public static let allCases: [Sync_TypingIndicatorPolicy] = [
     .sendTypingIndicator,
     .dontSendTypingIndicator,
   ]
@@ -174,7 +174,7 @@ public enum Sync_NotificationSoundPolicy: SwiftProtobuf.Enum {
 
 extension Sync_NotificationSoundPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_NotificationSoundPolicy] = [
+  public static let allCases: [Sync_NotificationSoundPolicy] = [
     .muted,
   ]
 }
@@ -223,7 +223,7 @@ public enum Sync_ConversationVisibility: SwiftProtobuf.Enum {
 
 extension Sync_ConversationVisibility: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_ConversationVisibility] = [
+  public static let allCases: [Sync_ConversationVisibility] = [
     .normal,
     .pinned,
     .archived,
@@ -269,7 +269,7 @@ public enum Sync_ConversationCategory: SwiftProtobuf.Enum {
 
 extension Sync_ConversationCategory: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_ConversationCategory] = [
+  public static let allCases: [Sync_ConversationCategory] = [
     .default,
     .protected,
   ]
@@ -415,7 +415,7 @@ public struct Sync_MdmParameters {
 
 extension Sync_MdmParameters.ParameterPrecedence: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_MdmParameters.ParameterPrecedence] = [
+  public static let allCases: [Sync_MdmParameters.ParameterPrecedence] = [
     .threema,
     .external,
   ]
@@ -1481,7 +1481,7 @@ public struct Sync_Contact {
 
 extension Sync_Contact.VerificationLevel: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Contact.VerificationLevel] = [
+  public static let allCases: [Sync_Contact.VerificationLevel] = [
     .unverified,
     .serverVerified,
     .fullyVerified,
@@ -1490,7 +1490,7 @@ extension Sync_Contact.VerificationLevel: CaseIterable {
 
 extension Sync_Contact.WorkVerificationLevel: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Contact.WorkVerificationLevel] = [
+  public static let allCases: [Sync_Contact.WorkVerificationLevel] = [
     .none,
     .workSubscriptionVerified,
   ]
@@ -1498,7 +1498,7 @@ extension Sync_Contact.WorkVerificationLevel: CaseIterable {
 
 extension Sync_Contact.IdentityType: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Contact.IdentityType] = [
+  public static let allCases: [Sync_Contact.IdentityType] = [
     .regular,
     .work,
   ]
@@ -1506,7 +1506,7 @@ extension Sync_Contact.IdentityType: CaseIterable {
 
 extension Sync_Contact.AcquaintanceLevel: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Contact.AcquaintanceLevel] = [
+  public static let allCases: [Sync_Contact.AcquaintanceLevel] = [
     .direct,
     .group,
   ]
@@ -1514,7 +1514,7 @@ extension Sync_Contact.AcquaintanceLevel: CaseIterable {
 
 extension Sync_Contact.ActivityState: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Contact.ActivityState] = [
+  public static let allCases: [Sync_Contact.ActivityState] = [
     .active,
     .inactive,
     .invalid,
@@ -1523,7 +1523,7 @@ extension Sync_Contact.ActivityState: CaseIterable {
 
 extension Sync_Contact.SyncState: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Contact.SyncState] = [
+  public static let allCases: [Sync_Contact.SyncState] = [
     .initial,
     .imported,
     .custom,
@@ -1532,7 +1532,7 @@ extension Sync_Contact.SyncState: CaseIterable {
 
 extension Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
+  public static let allCases: [Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
     .never,
   ]
 }
@@ -1923,7 +1923,7 @@ public struct Sync_Group {
 
 extension Sync_Group.UserState: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Group.UserState] = [
+  public static let allCases: [Sync_Group.UserState] = [
     .member,
     .kicked,
     .left,
@@ -1932,7 +1932,7 @@ extension Sync_Group.UserState: CaseIterable {
 
 extension Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
+  public static let allCases: [Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
     .mentioned,
     .never,
   ]
@@ -2480,7 +2480,7 @@ public struct Sync_Settings {
 
 extension Sync_Settings.ContactSyncPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.ContactSyncPolicy] = [
+  public static let allCases: [Sync_Settings.ContactSyncPolicy] = [
     .notSynced,
     .sync,
   ]
@@ -2488,7 +2488,7 @@ extension Sync_Settings.ContactSyncPolicy: CaseIterable {
 
 extension Sync_Settings.UnknownContactPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.UnknownContactPolicy] = [
+  public static let allCases: [Sync_Settings.UnknownContactPolicy] = [
     .allowUnknown,
     .blockUnknown,
   ]
@@ -2496,7 +2496,7 @@ extension Sync_Settings.UnknownContactPolicy: CaseIterable {
 
 extension Sync_Settings.O2oCallPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.O2oCallPolicy] = [
+  public static let allCases: [Sync_Settings.O2oCallPolicy] = [
     .allowO2OCall,
     .denyO2OCall,
   ]
@@ -2504,7 +2504,7 @@ extension Sync_Settings.O2oCallPolicy: CaseIterable {
 
 extension Sync_Settings.O2oCallConnectionPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.O2oCallConnectionPolicy] = [
+  public static let allCases: [Sync_Settings.O2oCallConnectionPolicy] = [
     .allowDirectConnection,
     .requireRelayedConnection,
   ]
@@ -2512,7 +2512,7 @@ extension Sync_Settings.O2oCallConnectionPolicy: CaseIterable {
 
 extension Sync_Settings.O2oCallVideoPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.O2oCallVideoPolicy] = [
+  public static let allCases: [Sync_Settings.O2oCallVideoPolicy] = [
     .allowVideo,
     .denyVideo,
   ]
@@ -2520,7 +2520,7 @@ extension Sync_Settings.O2oCallVideoPolicy: CaseIterable {
 
 extension Sync_Settings.GroupCallPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.GroupCallPolicy] = [
+  public static let allCases: [Sync_Settings.GroupCallPolicy] = [
     .allowGroupCall,
     .denyGroupCall,
   ]
@@ -2528,7 +2528,7 @@ extension Sync_Settings.GroupCallPolicy: CaseIterable {
 
 extension Sync_Settings.ScreenshotPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.ScreenshotPolicy] = [
+  public static let allCases: [Sync_Settings.ScreenshotPolicy] = [
     .allowScreenshot,
     .denyScreenshot,
   ]
@@ -2536,7 +2536,7 @@ extension Sync_Settings.ScreenshotPolicy: CaseIterable {
 
 extension Sync_Settings.KeyboardDataCollectionPolicy: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Sync_Settings.KeyboardDataCollectionPolicy] = [
+  public static let allCases: [Sync_Settings.KeyboardDataCollectionPolicy] = [
     .allowDataCollection,
     .denyDataCollection,
   ]

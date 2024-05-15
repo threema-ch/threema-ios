@@ -18,6 +18,7 @@
 
 "segmentcontrol_contacts" = "Контакты";
 "segmentcontrol_groups" = "Группы";
+"segmentcontrol_distribution_list" = "Списки рассылки";
 "segmentcontrol_work_contacts" = "Работа";
 
 /* WebRTC diagnostics */
@@ -62,6 +63,7 @@
 "try_again" = "Попробовать снова";
 "copy" = "Скопировать";
 "save" = "Сохранить";
+"edit" = "Изменить";
 "download" = "Скачать";
 "retry" = "Повтор";
 "share" = "Поделиться";
@@ -218,14 +220,16 @@
 
 "share_contact_id_button" = "Поделиться ID контакта";
 
-// Edit contact or group
+// Edit contact, distribution list, or group
 
 "edit_contact_title" = "Изменить контакт";
 "edit_group_title" = "Изменить группу";
+"edit_distribution_list_title" = "Изменить список рассылки";
 
 "first_name_placeholder" = "Имя";
 "last_name_placeholder" = "Фамилия";
 "group_name_placeholder" = "Имя группы";
+"distribution_list_name_placeholder" = "Название списка рассылки";
 
 "no_nickname_title" = "Не указано имя пользователя";
 "no_nickname_message" = "Вы точно хотите продолжить без публичного ника? Вашим собеседникам будет сложно распознать ваши сообщения до того, как они запустят приложение.";
@@ -285,6 +289,7 @@
 "messages_delete_selected_confirm" = "Удалить выбранные сообщения с этого устройства?";
 "conversation_delete_confirm" = "Удалить этот чат с этого устройства?";
 "delete_n" = "Удалить (%d)";
+"message_delete_for_everyone" = "Удалить сообщение для всех";
 
 "message_cannot_play_movie" = "Не удается воспроизвести видео.";
 
@@ -318,6 +323,7 @@
 "delete_file" = "Удалить файл";
 "send_location" = "Отправить местоположение";
 "record_audio" = "Записать голосовое сообщение";
+"record_continue" = "Продолжить запись аудио";
 "scan_qr" = "Сканировать QR-код";
 "share_file" = "Поделиться файлом";
 "add_item_caption" = "Добавить заголовок";
@@ -332,12 +338,7 @@
 "play" = "Воспроизвести";
 "pause" = "Пауза";
 "stop" = "Остановить";
-"voice message" = "Голосовое сообщение";
 "quit" = "Готово";
-"record_cancel_title" = "Отменить запись";
-"record_cancel_message" = "Действительно отменить запись?";
-"record_cancel_button_discard" = "Отменить запись";
-"speed" = "Скорость воспроизведения";
 
 "send_file_title" = "Отправить файл";
 "send_file_message" = "Файл: %@ \n кому: \n%@";
@@ -374,6 +375,15 @@
 "group_admin_delete_confirm" = "Вы уверены, что хотите распустить эту группу?";
 "group_dissolve_button" = "Распустить группу";
 "group_delete" = "Удалить группу";
+
+"distribution_list_recipients_section_header" = "Получатели (%d)";
+"distribution_list_no_recipient_title" = "Нет получателей";
+"distribution_list_one_recipient_title" = "1 получатель";
+"distribution_list_multiple_recipients_title" = "%d получат.";
+
+"distribution_list_delete" = "Удалить список рассылки";
+"distribution_list_create" = "Новый список рассылки";
+"distribution_list_edit" = "Изменить список рассылки";
 
 "group name" = "Название группы";
 "existing groups" = "Существующие группы";
@@ -465,9 +475,11 @@
 "no_contacts_syncon" = "У вас еще нет контактов. Синхронизация включена, но судя по всему, никто из контактов, имеющихся в вашей телефонной книге, не пользуется Threema (пригласите их!).";
 "no_contacts" = "Нет контактов";
 "no_groups" = "Нет групп";
-"no_groups_message" = "У вас пока нет групп. Добавляйте группы вручную с помощью кнопки «+».";
+"no_groups_message" = "У вас пока нет групп. Создайте группу, нажав на кнопку «+».";
 "no_work_contacts" = "Пользователи %@";
 "no_work_contacts_message" = "Проверенных администратором контактов %@ не найдено.";
+"no_distribution_list" = "Нет списков рассылки";
+"no_distribution_list_message" = "У вас пока нет списков рассылки. Создайте список, нажав на кнопку «+».";
 
 "no_contacts_syncoff" = "У вас еще нет контактов. Включите синхронизацию (Настройки > Приватность) или добавьте контакты вручную с помощью кнопки «+».";
 
@@ -586,13 +598,25 @@
 "app_setup_steps_failed_message" = "Проверьте соединение с Интернетом и повторите попытку. Если проблема не исчезнет, обратитесь в службу поддержки.";
 
 /* License Key */
+"enter_license_infoview_subtitle" = "для компаний";
+"enter_license_infoview_more_link" = "[Подробнее о Threema Work](link)";
+
+"enter_license_infoview_private_use" = "для физических лиц";
+"enter_license_infoview_threema_description" = "Если вы индивидуальный пользователь, скачайте стандартное приложение Threema.";
+"enter_license_infoview_appstore_link" = "Threema в App Store";
+"enter_license_infoview_login" = "Вход";
+
+/* License Key */
 "enter_license_title" = "Введите учетные данные";
 /* MWPhotoBrowser */
 "Done" = "Готово";
-"enter_license_description" = "Введите учетные данные, предоставленные вашей компанией или организацией.";
-"enter_license_onprem_description" = "Threema OnPrem — это мессенджер с серверами в локальной среде вашей компании. Введите учетные данные, предоставленные вашей компанией или организацией.";
+"enter_license_description" = "Введите учетные данные Threema Work, предоставленные вашей компанией или организацией.";
+"enter_license_onprem_description" = "Введите учетные данные Threema OnPrem, предоставленные вашей компанией или организацией.";
 "enter_license_work_admin_description" = "Забыли свои учетные данные? Обратитесь к своему администратору Threema Work.";
 "enter_license_onprem_admin_description" = "Забыли свои учетные данные? Обратитесь к своему администратору Threema OnPrem.";
+"enter_license_onprem_error_config" = "Недействительная конфигурация. Обратитесь к своему администратору Threema OnPrem. (Код: %d)";
+"enter_license_onprem_error_version" = "Версия не поддерживается. Обратитесь к своему администратору Threema OnPrem. (Код: %d)";
+"enter_license_onprem_error_credentials" = "Неверные учетные данные. Обратитесь к своему администратору Threema OnPrem. (Код: %d)";
 "more_work_info" = "Подробнее о %@.";
 "Save" = "Сохранить";
 "enter_license_username_placeholder" = "Имя пользователя";
@@ -675,7 +699,6 @@
 "duration" = "продолжительность";
 "current_position" = "позиция";
 "in_reply_to" = "В ответ на";
-"go_to_position" = "в";
 "draft" = "Проект";
 "new_message_accessibility" = "Новое сообщение: ";
 "quote_interaction_hint" = "Переход к ответу";
@@ -777,6 +800,7 @@
 "group_call_started_by_contact_system_message" = "Пользователь %@ начал групповой звонок";
 "group_call_started_by_local_system_message" = "Вы начали групповой звонок";
 "group_call_ended_system_message" = "Групповой звонок завершен";
+"group_call_started_disabled" = "Идет групповой звонок. Чтобы присоединиться к нему, включите групповые звонки в настройках.";
 
 "group_call_notification_body_preview" = "Групповой звонок начат пользователем %@";
 "group_call_notification_body" = "Групповой звонок начат";
@@ -818,7 +842,6 @@
 "pinned_conversation" = "Отмеченная беседа";
 
 /* Begin Edit */
-
 "private_message_label" = "Личное сообщение";
 "private_chat_label" = "Личная беседа";
 "private_chat_accessibility" = "Личный чат";
@@ -833,6 +856,13 @@
 "archived_title" = "Архивные";
 "conversations_global_search_placeholder" = "Поиск";
 "one_to_one_chat" = "Одиночный чат";
+"conversations_global_search_section_header_tokens" = "Тип сообщения";
+"conversations_global_search_token_text" = "Текстовые сообщения";
+"conversations_global_search_token_captions" = "Заголовки мультимедиа";
+"conversations_global_search_token_polls" = "Опросы";
+"conversations_global_search_token_locations" = "Местоположение";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Со звездой";
 
 "select_all" = "Выбрать все";
 "deselect_all" = "Отменить выбор";
@@ -863,6 +893,8 @@
 "group_delete_sheet_message" = "Вы уверены, что хотите удалить эту группу?";
 "group_delete_button" = "Удалить группу + историю чата";
 
+"distribution_list_delete_sheet_title" = "Удалить список рассылки?";
+
 "selected_count" = "%d выбрано";
 "all_selected" = "Все выбрано";
 
@@ -872,7 +904,6 @@
 "private_delete_info_alert_message" = "При удалении личного чата новый чат больше не будет автоматически помечаться как личный.";
 
 /* End Edit */
-
 "pushSetting_header" = "Уведомления";
 "doNotDisturb_title" = "Не беспокоить";
 
@@ -1297,12 +1328,12 @@
 "settings_advanced_successfully_reset_unread_count_label" = "Счетчик непрочитанных сообщений успешно сброшен";
 
 // Sentry
-"sentry_crash_send_title" = "%@: неожиданный выход";
-"sentry_crash_send_description" = "Вы можете отправить анонимный отчет о сбое. Данные, объясняющие, что привело к этому сбою, помогут устранить проблему, которая стала его причиной.";
+"sentry_crash_send_title" = "Возникла проблема";
+"sentry_crash_send_description" = "Вы можете отправить анонимный отчет. Данные о взаимодействиях, имевших место перед тем, как возник сбой, помогут устранить проблему, которая стала его причиной.";
 "sentry_crash_send_yes" = "Отправить анонимный отчет";
 "sentry_crash_send_no" = "Не отправлять";
 
-"sentry_crash_comment_placeholder" = "Отчет о сбое";
+"sentry_crash_comment_placeholder" = "Сведения";
 
 // Profile
 "profile_share_id_text" = "Мой Threema ID";
@@ -1641,6 +1672,7 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "Закрыть цитату";
+"chat_bar_edited_message_close_button" = "Отменить изменение сообщения";
 
 // ChatDetailView
 "detailView_title" = "Сведения о сообщении";
@@ -1648,6 +1680,7 @@
 "detailView_group_acknowledged" = "Принято (%d)";
 "detailView_group_declined" = "Не принято (%d)";
 "detailView_group_file_size" = "Размер файла";
+"detailView_consumed" = "Первое воспроизв.";
 "detailView_created_footer" = "Создано: %@";
 
 "message_display_status_none" = "Нет";
@@ -1659,6 +1692,8 @@
 "message_display_status_delivered_incoming" = "Получено";
 "message_display_status_read" = "Прочитано";
 "message_display_status_failed" = "Сбой";
+"message_display_status_deleted_message" = "Удаленное";
+"message_display_status_edited_message" = "Измененное";
 
 // In-app notifications
 "notification_copying_succeeded" = "Элемент скопирован";
@@ -1737,9 +1772,12 @@
 // Chat bar
 "accessibility_chatbar_label" = "Поле ввода сообщений чата.";
 "accessibility_chatbar_hint" = "Написать сообщение";
-"accessibility_chatbar_quote_label" = "Выбранное цитируемое сообщение: %@.";
-"accessibility_chatbar_close_quote_button_label" = "Завершение цитаты.";
-"accessibility_chatbar_close_quote_button_hint" = "Завершение цитирования выделенного сообщения.";
+"accessibility_chatbar_quote_label" = "Цитируемое сообщение: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Отменить цитирование";
+"accessibility_chatbar_close_quote_button_hint" = "Отмена цитирования выделенного сообщения.";
+"accessibility_chatbar_edited_message_label" = "Сообщение для изменения: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "Отменить измененение";
+"accessibility_chatbar_close_edited_message_button_hint" = "Отмена изменения выбранного сообщения.";
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Ваш %@";
@@ -1785,6 +1823,7 @@
 "accessibility_poll_closed" = "Закрытый";
 "accessibility_file_duration" = "Продолжительность: %@.";
 "accessibility_voice_message_playing" = "Сейчас воспроизводится.";
+"accessibility_voice_message_unplayed" = "Пока не воспроизв.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Принято, %@";
@@ -1892,3 +1931,25 @@
 "application_shortcut_item_new_message" = "Новое сообщение";
 "application_shortcut_item_scan_qr_code" = "Сканировать QR-код";
 "application_shortcut_item_my_id" = "Мой профиль";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "Со звездой";
+"marker_action_star" = "Добавить звезду";
+"marker_action_remove_star" = "Убрать звезду";
+"marker_accessibility_label" = "Со звездочкой.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "Со звездой";
+
+// Delete / Edit message
+"edit_message" = "Изменить сообщение";
+"edit_message_can_not_edit" = "Сообщение отправлено более 6 часов назад, поэтому изменить его больше нельзя.";
+"edit_message_not_sent_to" = "Следующие участники группы не смогут видеть ваши изменения: %@";
+"delete_message_not_sent_to" = "Сообщение не было удалено для следующих участников группы: %@";
+"delete_edit_message_not_sent_to_others" = "%d еще";
+"delete_message_requirement" = "Чтобы можно было удалить сообщения, у пользователей должна быть установлена последняя версия Threema.";
+"edit_message_requirement" = "Чтобы пользователи могли видеть изменения, у них должна быть установлена последняя версия Threema.";
+
+"edit_message_text_to_long" = "Сообщение нельзя изменить, т.к. текст слишком длинный.";
+"edited_message_state" = "Изменено";
+"deleted_message" = "Это сообщение удалено";

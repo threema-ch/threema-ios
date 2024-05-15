@@ -114,7 +114,7 @@
         
         _detailsImage.hidden = NO;
         
-        UIImage *tmpImage = [UIImage imageNamed:@"ArrowNext"];
+        UIImage *tmpImage = [UIImage systemImageNamed:@"chevron.right"];
         _detailsImage.image = [tmpImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         _detailsImage.tintColor = Colors.text;
     } else {

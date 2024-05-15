@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import CryptoKit
 import Foundation
 import Photos
 
@@ -118,13 +119,20 @@ extension FileMessageEntity: VideoMessage, VoiceMessage {
             return nil
         }
         
-        let filename = "v1-fileMessage-\(UUID().uuidString)"
+        let objectIDHash = SHA256
+            .hash(data: Data(objectID.uriRepresentation().absoluteString.utf8))
+            .map { String(format: "%02hhx", $0) }
+            .joined()
+        
+        let filename = "v2-fileMessage-\(objectIDHash)"
         guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent("\(filename).\(ext)") else {
             return nil
         }
         
         do {
-            try data.write(to: url)
+            if !FileUtility.isExists(fileURL: url) {
+                try data.write(to: url)
+            }
         }
         catch {
             DDLogWarn("Writing blob data to temporary file failed: \(error)")

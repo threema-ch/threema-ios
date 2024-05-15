@@ -38,59 +38,59 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var appMigratedToVersion = 0
 
     var wallpaper: Data!
-    
+
     var disableBigEmojis = true
-    
+
     var sendMessageFeedback = true
-    
+
     var chatFontSize: Float = 0.0
-        
+
     var enableIPv6 = true
-    
+
     var syncContacts = false
-    
+
     var blockUnknown = false
-    
+
     var enablePoi = true
-    
+
     var allowOutgoingDonations = false
-    
+
     var sendReadReceipts = true
-    
+
     var sendTypingIndicator = true
-    
+
     var includeCallsInRecents = true
-    
+
     var enableVideoCall = true
-    
+
     var threemaVideoCallQualitySetting: ThreemaVideoCallQualitySetting = .init(0)
-    
+
     var enableThreemaCall = true
-    
+
     var alwaysRelayCalls = true
-    
+
     var enableThreemaGroupCalls = true
-    
+
     var blacklist: NSOrderedSet! = []
 
     var syncExclusionList: [Any]! = [Any]()
-    
+
     var sortOrderFirstName = true
-    
+
     var sendProfilePicture: SendProfilePicture = .init(0)
-    
+
     var profilePictureContactList: [Any]?
 
     var autoSaveMedia = false
-    
+
     var inAppSounds = true
-    
+
     var inAppVibrate = true
-    
+
     var inAppPreview = true
-    
+
     var notificationType: NSNumber! = 0
-    
+
     var imageSize: String?
     var videoQuality: String?
     var voIPSound: String?
@@ -102,7 +102,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var masterDndWorkingDays: NSOrderedSet! = []
     var masterDndStartTime: String?
     var masterDndEndTime: String?
-    
+
     var hidePrivateChats = false
 
     var enableMultiDevice = false
@@ -111,20 +111,22 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var profilePictureRequestList: [Any]!
     var blockCommunication = false
     var donateInteractions = false
-    
+
     var voiceMessagesShowTimeRemaining = false
-           
+
     var disableProximityMonitoring = false
-    
+
     var validationLogging = false
-    
+
     var sentryAppDevice: String?
-    
+
     var groupCallsDeveloper = false
-    
+
     var groupCallsDebugMessages = false
-    
+
     var keepMessagesDays = -1
-    
+
     var enableFSv12ForTesting = true
+
+    var safeIntroShown = false
 }

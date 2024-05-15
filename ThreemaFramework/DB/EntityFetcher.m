@@ -38,8 +38,6 @@
 #endif
 @interface EntityFetcher ()
 
-@property NSManagedObjectContext *managedObjectContext;
-
 @end
 
 @implementation EntityFetcher {
@@ -116,7 +114,7 @@
     }
 }
 
-/// Returns all text, ballot and file messages containing the text in search text.
+/// Returns all text, ballot, location and file messages containing the text in search text.
 /// Check the exact implementation on how text is matched for ballot and file messages
 ///
 /// This might have room for optimization when sorting items since we have three already sorted arrays we should be able to "simply" combine them instead of sorting them again.
@@ -193,6 +191,107 @@
         return [self entitiesNamed:@"LocationMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
     }
     return [self entitiesNamed:@"LocationMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"(poiName contains[cd] %@ || poiAddress contains[cd] %@) AND conversation == %@", searchText, searchText, conversation];
+}
+
+
+/// Returns all text, ballot, location and file messages containing the text in search text that are starred.
+/// Check the exact implementation on how text is matched for ballot and file messages
+///
+/// This might have room for optimization when sorting items since we have three already sorted arrays we should be able to "simply" combine them instead of sorting them again.
+/// We might additionally be able to fetch the three kinds of times in parallel since these are independent fetch requests.
+/// - Parameters:
+///   - searchText: The text to search for
+///   - conversation: The conversation to search in
+///   - fetchLimit: The maximum number of items to fetch for each kind of item. This currently results in |{textMessages U ballotMessages U fileMessages}| items, i.e. no more than 3 times the fetchLimit.
+- (NSArray *)starredMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *textMessages = [self starredTextMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *ballotMessages = [self starredBallotMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *fileMessages = [self starredFileMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *locationMessages = [self starredLocationMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    
+    if ([ballotMessages count] > 0 || [fileMessages count] > 0 || [locationMessages count] > 0) {
+        NSMutableArray *allMessages = [NSMutableArray arrayWithArray:textMessages];
+        [allMessages addObjectsFromArray:ballotMessages];
+        [allMessages addObjectsFromArray:fileMessages];
+        [allMessages addObjectsFromArray:locationMessages];
+        
+        NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+        [allMessages sortUsingDescriptors:(NSArray *)sortDescriptors];
+        return allMessages;
+    } else {
+        return textMessages;
+    }
+}
+
+- (NSArray *)starredTextMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"text contains[cd] %@ && conversation.category != %d", searchText, ConversationCategoryPrivate];
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"TextMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
+    if (searchText.length == 0) {
+        return [self entitiesNamed:@"TextMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"conversation == %@ AND messageMarkers.star == 1", conversation];
+    }
+    else {
+        return [self entitiesNamed:@"TextMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"text contains[cd] %@ AND conversation == %@ AND messageMarkers.star == 1", searchText, conversation];
+    }
+}
+
+- (NSArray *)starredBallotMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"ballot.title contains[cd] %@ && conversation.category != %d", searchText, ConversationCategoryPrivate];
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"BallotMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
+
+    if (searchText.length == 0) {
+        return [self entitiesNamed:@"BallotMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"conversation == %@ AND messageMarkers.star == 1", conversation];
+    }
+    else {
+        return [self entitiesNamed:@"BallotMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"ballot.title contains[cd] %@ AND conversation == %@ AND messageMarkers.star == 1", searchText, conversation];
+    }
+}
+
+- (NSArray *)starredFileMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(fileName contains[cd] %@ || caption contains[cd] %@) && conversation.category != %d", searchText, searchText, ConversationCategoryPrivate];
+
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
+
+    if (searchText.length == 0) {
+        return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"conversation == %@ AND messageMarkers.star == 1", conversation];}
+    else {
+        return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"(fileName contains[cd] %@ || caption contains[cd] %@) AND conversation == %@ AND messageMarkers.star == 1", searchText, searchText, conversation];
+    }
+}
+
+- (NSArray *)starredLocationMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
+    
+    if (conversation == nil) {
+        // Used for global search. Do not search in private chats
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"(poiName contains[cd] %@ || poiAddress contains[cd] %@) && conversation.category != %d", searchText, searchText, ConversationCategoryPrivate];
+
+        NSPredicate *compoundPredicate = filterPredicate == nil ? predicate : [NSCompoundPredicate andPredicateWithSubpredicates:@[predicate, filterPredicate]];
+        return [self entitiesNamed:@"LocationMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: compoundPredicate.predicateFormat];
+    }
+
+    if (searchText.length == 0) {
+        return [self entitiesNamed:@"LocationMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"conversation == %@ AND messageMarkers.star == 1", conversation];}
+    else {
+        return [self entitiesNamed:@"LocationMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"(poiName contains[cd] %@ || poiAddress contains[cd] %@) AND conversation == %@ AND messageMarkers.star == 1", searchText, conversation];
+    }
 }
 
 - (Conversation *)conversationForContact:(ContactEntity *)contact {
@@ -551,6 +650,23 @@
     }
     
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Conversation"];
+    [fetchRequest setFetchBatchSize:100];
+    [fetchRequest setPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:predicates]];
+    
+    return [self executeFetchRequest:fetchRequest];
+}
+
+- (NSArray *)distributionListsFilteredByWords:(NSArray *)searchWords {
+    NSMutableArray *predicates = [NSMutableArray array];
+    
+    for (NSString *searchWord in searchWords) {
+        if (searchWord.length > 0) {
+            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"name contains[cd] %@", searchWord];
+            [predicates addObject:predicate];
+        }
+    }
+    
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"DistributionList"];
     [fetchRequest setFetchBatchSize:100];
     [fetchRequest setPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:predicates]];
     
@@ -916,6 +1032,20 @@
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"groupId != nil"];
 
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"groupName" ascending:YES]];
+    [fetchRequest setSortDescriptors:sortDescriptors];
+    
+    NSFetchedResultsController *fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:nil cacheName:nil];
+    
+    return fetchedResultsController;
+}
+
+- (NSFetchedResultsController *)fetchedResultsControllerForDistributionLists {
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"DistributionList" inManagedObjectContext:_managedObjectContext];
+    [fetchRequest setEntity:entity];
+    [fetchRequest setFetchBatchSize:20];
+    
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES]];
     [fetchRequest setSortDescriptors:sortDescriptors];
     
     NSFetchedResultsController *fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:nil cacheName:nil];

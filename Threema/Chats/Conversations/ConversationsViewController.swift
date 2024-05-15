@@ -25,43 +25,13 @@ import ThreemaFramework
 import UIKit
 
 class ConversationsViewController: ThemedTableViewController {
-    
-    // MARK: - Config
-    
-    private let globalSearchResultFetchLimit = 5000
-    private let searchScopeButtons: [String] = [
-        SearchScopeButtonType.all.title(),
-        SearchScopeButtonType.oneToOne.title(),
-        SearchScopeButtonType.groups.title(),
-        SearchScopeButtonType.archived.title(),
-    ]
-    
-    private enum SearchScopeButtonType: Int {
-        case all
-        case oneToOne
-        case groups
-        case archived
-                
-        func title() -> String {
-            switch self {
-            case .all:
-                return "all".localized
-            case .oneToOne:
-                return "one_to_one_chat".localized
-            case .groups:
-                return "groups".localized
-            case .archived:
-                return "archived_title".localized
-            }
-        }
-    }
 
     // MARK: - Property Declaration
 
     @IBOutlet var archivedChatsButton: UIButton!
     
     private lazy var newChatButton = UIBarButtonItem(
-        image: UIImage(named: "square.and.pencil_regular.L"),
+        image: UIImage(systemName: "square.and.pencil"),
         style: .plain,
         target: self,
         action: #selector(newMessage)
@@ -101,6 +71,22 @@ class ConversationsViewController: ThemedTableViewController {
         action: #selector(selectAllRows)
     )
     
+    private lazy var searchController: UISearchController = {
+        var controller = UISearchController(searchResultsController: globalSearchResultsViewController)
+        controller.searchResultsUpdater = globalSearchResultsViewController
+        controller.delegate = globalSearchResultsViewController
+        controller.obscuresBackgroundDuringPresentation = false
+        
+        controller.searchBar.placeholder = "conversations_global_search_placeholder".localized
+        controller.searchBar.scopeButtonTitles = globalSearchResultsViewController.searchScopeButtonTitles
+        controller.searchBar.searchTextField.allowsCopyingTokens = false
+
+        return controller
+    }()
+
+    private lazy var globalSearchResultsViewController =
+        GlobalSearchResultsViewController(entityManager: businessInjector.entityManager)
+    
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = businessInjector.entityManager
             .entityFetcher
@@ -111,23 +97,9 @@ class ConversationsViewController: ThemedTableViewController {
         return fetchedResultsController
     }()
     
-    private lazy var globalSearchResultsViewController =
-        GlobalSearchResultsViewController(entityManager: businessInjector.entityManager)
-    
     private lazy var businessInjector = BusinessInjector()
     private lazy var notificationManager = NotificationManager(businessInjector: businessInjector)
     private lazy var utilities = ConversationActions(businessInjector: businessInjector)
-
-    private lazy var searchController: UISearchController = {
-        var searchController = UISearchController(searchResultsController: globalSearchResultsViewController)
-        searchController.searchResultsUpdater = self
-        searchController.delegate = self
-        searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = BundleUtil
-            .localizedString(forKey: "conversations_global_search_placeholder")
-        searchController.searchBar.scopeButtonTitles = searchScopeButtons
-        return searchController
-    }()
     
     @objc public var selectedConversation: Conversation?
     private var allSelected = false
@@ -141,7 +113,6 @@ class ConversationsViewController: ThemedTableViewController {
     private lazy var lockScreen = LockScreen(isLockScreenController: false)
     
     private var refreshConversationsDelay: Timer?
-    private var refreshGlobalSearchResultsDelay: Timer?
 
     // MARK: - Lifecycle
     
@@ -174,6 +145,8 @@ class ConversationsViewController: ThemedTableViewController {
         tableView.allowsMultipleSelectionDuringEditing = true
         
         tableView.register(ConversationTableViewCell.self, forCellReuseIdentifier: "ConversationTableViewCell")
+        
+        globalSearchResultsViewController.setSearchController(searchController)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -374,7 +347,7 @@ extension ConversationsViewController {
             handler(true)
         }
         
-        archiveAction.image = BundleUtil.imageNamed("archivebox.fill_regular.L")
+        archiveAction.image = UIImage(systemName: "archivebox.fill")
         archiveAction.title = BundleUtil.localizedString(forKey: "archive")
         archiveAction.accessibilityLabel = BundleUtil.localizedString(forKey: "archive")
         archiveAction.backgroundColor = Colors.gray
@@ -396,7 +369,7 @@ extension ConversationsViewController {
             )
         }
         
-        deleteAction.image = BundleUtil.imageNamed("trash.fill_regular.L")
+        deleteAction.image = UIImage(systemName: "trash.fill")
         deleteAction.title = BundleUtil.localizedString(forKey: "delete")
         deleteAction.accessibilityLabel = BundleUtil.localizedString(forKey: "delete")
         
@@ -433,10 +406,10 @@ extension ConversationsViewController {
         }
         
         if isPinned {
-            pinAction.image = BundleUtil.imageNamed("pin.slash.fill_regular.L")
+            pinAction.image = UIImage(systemName: "pin.slash.fill")
         }
         else {
-            pinAction.image = BundleUtil.imageNamed("pin.fill_regular.L")
+            pinAction.image = UIImage(systemName: "pin.fill")
         }
 
         pinAction.title = pinTitle
@@ -475,10 +448,10 @@ extension ConversationsViewController {
         }
         
         if hasUnread {
-            readAction.image = BundleUtil.imageNamed("eye.fill_regular.L")
+            readAction.image = UIImage(systemName: "eye.fill")
         }
         else {
-            readAction.image = BundleUtil.imageNamed("envelope.badge.fill_regular.L")
+            readAction.image = UIImage(systemName: "envelope.badge.fill")
         }
         readAction.title = unreadTitle
         readAction.accessibilityLabel = unreadTitle
@@ -694,186 +667,6 @@ extension ConversationsViewController {
     }
 }
 
-// MARK: - UISearchResultsUpdating, UISearchControllerDelegate
-
-extension ConversationsViewController: UISearchResultsUpdating, UISearchControllerDelegate {
-    
-    func didPresentSearchController(_ searchController: UISearchController) {
-        archivedChatsButton.isHidden = true
-    }
-    
-    func didDismissSearchController(_ searchController: UISearchController) {
-        updateArchivedButton()
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            setSelection(for: selectedConversation)
-        }
-    }
-    
-    func updateSearchResults(for searchController: UISearchController) {
-        guard let searchText = searchController.searchBar.text else {
-            return
-        }
-        
-        refreshGlobalSearchResultsDelay?.invalidate()
-        
-        refreshGlobalSearchResultsDelay = Timer
-            .scheduledTimer(withTimeInterval: TimeInterval(0.2), repeats: false) { _ in
-                guard !searchText.isEmpty else {
-                    return
-                }
-                
-                let searchScopeButtonType = SearchScopeButtonType(
-                    rawValue: searchController.searchBar
-                        .selectedScopeButtonIndex
-                ) ?? SearchScopeButtonType.all
-                let searchCompound = self.buildConversationsSearchCompound(
-                    searchText: searchText,
-                    searchScopeButtonType: searchScopeButtonType
-                )
-                
-                var searchResults = GlobalSearchResultsViewController.GlobalSearchResult(
-                    conversations: [],
-                    baseMessages: []
-                )
-                if let conversations = self.businessInjector.entityManager.entityFetcher
-                    .conversations(withPredicate: searchCompound.predicateFormat) as? [Conversation] {
-                    searchResults.conversations = self.sortedConversations(conversations: conversations)
-                }
-                
-                if let messages = self.businessInjector.entityManager.entityFetcher.messagesContaining(
-                    searchText,
-                    in: nil,
-                    filterPredicate: self.buildMessagesSearchCompound(searchScopeButtonType: searchScopeButtonType),
-                    fetchLimit: self.globalSearchResultFetchLimit
-                ) as? [BaseMessage] {
-                    searchResults.baseMessages = messages
-                }
-                
-                self.globalSearchResultsViewController.searchResults = searchResults
-            }
-    }
-    
-    private func sortedConversations(conversations: [Conversation]) -> [Conversation] {
-        conversations.sorted(by: { a, b in
-            if a.conversationVisibility == .pinned,
-               b.conversationVisibility == .default || b.conversationVisibility == .archived {
-                return true
-            }
-            else if a.conversationVisibility == .default,
-                    b.conversationVisibility == .pinned {
-                return false
-            }
-            else if a.conversationVisibility == .default,
-                    b.conversationVisibility == .archived {
-                return true
-            }
-            else if a.conversationVisibility == .archived,
-                    b.conversationVisibility == .pinned ||
-                    b.conversationVisibility == .default {
-                return false
-            }
-            else {
-                guard let aLastUpdate = a.lastUpdate,
-                      let bLastUpdate = b.lastUpdate else {
-                    return a.lastUpdate != nil
-                    
-                    return false
-                }
-                return aLastUpdate > bLastUpdate
-            }
-        })
-    }
-    
-    private func buildConversationsSearchCompound(
-        searchText: String,
-        searchScopeButtonType: SearchScopeButtonType
-    ) -> NSPredicate {
-        var finalCompound: NSPredicate
-        let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
-
-        let groupPredicate = NSPredicate(format: "groupId != nil AND groupName contains[c] %@", searchText)
-        let firstNamePredicate = NSPredicate(
-            format: "groupId == nil AND contact.firstName contains[c] %@",
-            searchText
-        )
-        let lastNamePredicate = NSPredicate(
-            format: "groupId == nil AND contact.lastName contains[c] %@",
-            searchText
-        )
-        let publicNamePredicate = NSPredicate(
-            format: "groupId == nil AND contact.publicNickname contains[c] %@",
-            searchText
-        )
-        let identityPredicate = NSPredicate(
-            format: "groupId == nil AND contact.identity contains[c] %@",
-            searchText
-        )
-        let archivedPredicate =
-            NSPredicate(format: "visibility == \(NSNumber(value: ConversationVisibility.archived.rawValue))")
-        
-        switch searchScopeButtonType {
-        case .all:
-            finalCompound = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                groupPredicate,
-                firstNamePredicate,
-                lastNamePredicate,
-                publicNamePredicate,
-                identityPredicate,
-            ])
-        case .oneToOne:
-            finalCompound = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                firstNamePredicate,
-                lastNamePredicate,
-                publicNamePredicate,
-                identityPredicate,
-            ])
-        case .groups:
-            finalCompound = groupPredicate
-
-        case .archived:
-            let compound = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                groupPredicate,
-                firstNamePredicate,
-                lastNamePredicate,
-                publicNamePredicate,
-                identityPredicate,
-            ])
-            finalCompound = NSCompoundPredicate(andPredicateWithSubpredicates: [
-                compound,
-                archivedPredicate,
-            ])
-        }
-        
-        if UserSettings.shared().hidePrivateChats {
-            return NSCompoundPredicate(andPredicateWithSubpredicates: [
-                finalCompound,
-                notPrivatePredicate,
-            ])
-        }
-        return finalCompound
-    }
-    
-    private func buildMessagesSearchCompound(searchScopeButtonType: SearchScopeButtonType) -> NSPredicate? {
-        let contactsPredicate = NSPredicate(format: "conversation.groupId == nil")
-        let groupPredicate = NSPredicate(format: "conversation.groupId != nil")
-        let archivedPredicate =
-            NSPredicate(
-                format: "conversation.visibility == \(NSNumber(value: ConversationVisibility.archived.rawValue))"
-            )
-        
-        switch searchScopeButtonType {
-        case .all:
-            return nil
-        case .oneToOne:
-            return contactsPredicate
-        case .groups:
-            return groupPredicate
-        case .archived:
-            return archivedPredicate
-        }
-    }
-}
-
 // MARK: - Other
 
 extension ConversationsViewController {
@@ -1046,7 +839,10 @@ extension ConversationsViewController {
                     BundleUtil.localizedString(forKey: "archived_chats") + " ",
                     for: .normal
                 )
-                archivedChatsButton.setImage(BundleUtil.imageNamed("chevron.right_semibold.M"), for: .normal)
+                
+                var chevronImage = UIImage(systemName: "chevron.right")?
+                    .applying(symbolWeight: .semibold, symbolScale: .medium)
+                archivedChatsButton.setImage(chevronImage, for: .normal)
                 archivedChatsButton.isEnabled = true
             }
             // swiftformat:disable:next isEmpty

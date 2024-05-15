@@ -389,14 +389,14 @@ public struct Rendezvous_RendezvousInit {
 
 extension Rendezvous_RendezvousInit.Version: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Rendezvous_RendezvousInit.Version] = [
+  public static let allCases: [Rendezvous_RendezvousInit.Version] = [
     .v10,
   ]
 }
 
 extension Rendezvous_RendezvousInit.NetworkCost: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static var allCases: [Rendezvous_RendezvousInit.NetworkCost] = [
+  public static let allCases: [Rendezvous_RendezvousInit.NetworkCost] = [
     .unknown,
     .unmetered,
     .metered,

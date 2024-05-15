@@ -1,0 +1,171 @@
+
+/* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "25C-Te-sfW"; */
+"25C-Te-sfW.title" = "Schicke";
+
+/* Class = "UILabel"; text = "Message preview"; ObjectID = "4a3-95-oYU"; */
+"4a3-95-oYU.text" = "Nachrichtevorschau";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "5Ca-aK-dv0"; */
+"5Ca-aK-dv0.text" = "Detail";
+
+/* Class = "UITabBarItem"; title = "Profile"; ObjectID = "5lj-oy-IYs"; */
+"5lj-oy-IYs.title" = "Profil";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "6On-uo-xuU"; */
+"6On-uo-xuU.text" = "Detail";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "6bQ-Vj-jcf"; */
+"6bQ-Vj-jcf.text" = "Detail";
+
+/* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[0] = "Contacts"; ObjectID = "77n-al-llJ"; */
+"77n-al-llJ.segmentTitles[0]" = "Kontäkt";
+
+/* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[1] = "Groups"; ObjectID = "77n-al-llJ"; */
+"77n-al-llJ.segmentTitles[1]" = "Gruppe";
+
+/* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[0] = "Single"; ObjectID = "9mW-FX-ba3"; */
+"9mW-FX-ba3.segmentTitles[0]" = "Einzeln";
+
+/* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[1] = "Group"; ObjectID = "9mW-FX-ba3"; */
+"9mW-FX-ba3.segmentTitles[1]" = "Gruppe";
+
+/* Class = "UILabel"; text = "Message-ID"; ObjectID = "CyG-aF-qUX"; */
+"CyG-aF-qUX.text" = "Nachrichte-ID";
+
+/* Class = "UINavigationItem"; title = "Add Contact"; ObjectID = "Eq0-ED-f11"; */
+"Eq0-ED-f11.title" = "Kontakt dezue tue";
+
+/* Class = "UINavigationItem"; title = "Contacts"; ObjectID = "Ll3-Ew-izw"; */
+"Ll3-Ew-izw.title" = "Kontäkt";
+
+/* Class = "UINavigationItem"; title = "Message Details"; ObjectID = "LsJ-Ts-xZd"; */
+"LsJ-Ts-xZd.title" = "Nachrichtedetails";
+
+/* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[0] = "Standard"; ObjectID = "M1P-ix-V2L"; */
+"M1P-ix-V2L.segmentTitles[0]" = "Standard";
+
+/* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[1] = "Hybrid"; ObjectID = "M1P-ix-V2L"; */
+"M1P-ix-V2L.segmentTitles[1]" = "Hybrid";
+
+/* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[2] = "Satellite"; ObjectID = "M1P-ix-V2L"; */
+"M1P-ix-V2L.segmentTitles[2]" = "Satellit";
+
+/* Class = "UILabel"; text = "IDENTITY"; ObjectID = "NFg-lg-c4C"; */
+"NFg-lg-c4C.text" = "IDENTITY";
+
+/* Class = "UILabel"; text = "No contacts"; ObjectID = "Ofe-BC-uXe"; */
+"Ofe-BC-uXe.text" = "Kei Kontäkt";
+
+/* Class = "UILabel"; text = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"; ObjectID = "UbM-As-itV"; */
+"UbM-As-itV.text" = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX";
+
+/* Class = "UILabel"; text = "Acknowledged"; ObjectID = "VRy-nm-s0X"; */
+"VRy-nm-s0X.text" = "Bestätigt";
+
+/* Class = "UIButton"; normalTitle = "Load Earlier Messages"; ObjectID = "WuX-yK-0RJ"; */
+"WuX-yK-0RJ.normalTitle" = "Vorherigi Nachrichte lade";
+
+/* Class = "UILabel"; text = "Date"; ObjectID = "XTa-xS-cOR"; */
+"XTa-xS-cOR.text" = "Datum";
+
+/* Class = "UILabel"; text = "Scan an ID"; ObjectID = "YPC-ic-pTa"; */
+"YPC-ic-pTa.text" = "ID scanne";
+
+/* Class = "UITextField"; placeholder = "ID"; ObjectID = "YoS-Np-Z37"; */
+"YoS-Np-Z37.placeholder" = "ID";
+
+/* Class = "UILabel"; text = "Your ID backup"; ObjectID = "ZIq-dn-JdH"; */
+"ZIq-dn-JdH.text" = "Ihre ID-Export";
+
+/* Class = "UILabel"; text = "Read"; ObjectID = "Zrm-eG-ewD"; */
+"Zrm-eG-ewD.text" = "Gläse";
+
+/* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "aQb-a9-JtU"; */
+"aQb-a9-JtU.title" = "Schicke";
+
+/* Class = "UILabel"; text = "Name"; ObjectID = "aU9-dp-bDt"; */
+"aU9-dp-bDt.text" = "Name";
+
+/* Class = "UITabBarItem"; title = "Settings"; ObjectID = "b04-Gg-ZdB"; */
+"b04-Gg-ZdB.title" = "Iistellige";
+
+/* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "bsh-sy-Xwu"; */
+"bsh-sy-Xwu.text" = "MacBook Office 10 7";
+
+/* Class = "UINavigationItem"; title = "Choose contact"; ObjectID = "cNq-Pt-Uma"; */
+"cNq-Pt-Uma.title" = "Kontakt uswähle";
+
+/* Class = "UILabel"; text = "Include in phone backup"; ObjectID = "d2g-FC-ibo"; */
+"d2g-FC-ibo.text" = "Is Gräte-Backup ufneh";
+
+/* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
+"dgK-0J-UrZ.footerTitle" = "Die Date chönd zäme mitem gwählte Passwort zum Wiederherstelle vo Ihrere ID ufeme andere Grät bruucht werde. Sie chönd die Date mittels Kopiere und Iifüege amene geeignete Ort ablegge, sich sälber per E-Mail schicke oder de QR-Code miteme andere Grät scanne.";
+
+/* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
+"eEV-l3-MXP.footerTitle" = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud.";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "eK9-D8-pFP"; */
+"eK9-D8-pFP.text" = "Detail";
+
+/* Class = "UINavigationItem"; title = "Location"; ObjectID = "eXF-nx-MbG"; */
+"eXF-nx-MbG.title" = "Standort";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "gsp-ed-V8R"; */
+"gsp-ed-V8R.text" = "Label";
+
+/* Class = "UILabel"; text = "No places found in current location"; ObjectID = "jSK-DO-xV2"; */
+"jSK-DO-xV2.text" = "Kei POIs am aktuelle Standort gfunde";
+
+/* Class = "UILabel"; text = "Draft"; ObjectID = "jlK-CM-mIS"; */
+"jlK-CM-mIS.text" = "Entwurf";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "kaj-lV-4MC"; */
+"kaj-lV-4MC.text" = "Detail";
+
+/* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "lrl-UM-94p"; */
+"lrl-UM-94p.text" = "MacBook Office 10 7";
+
+/* Class = "UILabel"; text = "IDENTITY"; ObjectID = "n7x-y4-2CM"; */
+"n7x-y4-2CM.text" = "IDENTITY";
+
+/* Class = "UITabBarItem"; title = "Contacts"; ObjectID = "JXW-2V-ftV"; */
+"JXW-2V-ftV.title" = "Kontäkt";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "p0V-dq-HkU"; */
+"p0V-dq-HkU.text" = "Nickname";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "pVJ-rQ-2qD"; */
+"pVJ-rQ-2qD.text" = "Label";
+
+/* Class = "UILabel"; text = "Delivered"; ObjectID = "qNO-eF-kmI"; */
+"qNO-eF-kmI.text" = "Zuegstellt";
+
+/* Class = "UINavigationItem"; title = "Backup"; ObjectID = "tUV-iz-VQc"; */
+"tUV-iz-VQc.title" = "ID-Export";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "tr2-Ia-imu"; */
+"tr2-Ia-imu.text" = "Nickname";
+
+/* Class = "UINavigationItem"; title = "Location"; ObjectID = "uA6-FU-2ms"; */
+"uA6-FU-2ms.title" = "Standort";
+
+/* Class = "UILabel"; text = "X contacts"; ObjectID = "uT9-uH-vrD"; */
+"uT9-uH-vrD.text" = "X Kontäkt";
+
+/* Class = "UINavigationItem"; title = "Preview"; ObjectID = "wPu-F7-kf1"; */
+"wPu-F7-kf1.title" = "Vorschau";
+
+/* Class = "UILabel"; text = "Invite a Friend"; ObjectID = "xRZ-tM-3dS"; */
+"xRZ-tM-3dS.text" = "Fründe iilade";
+
+/* Class = "UILabel"; text = "Sent"; ObjectID = "yWO-wH-mIW"; */
+"yWO-wH-mIW.text" = "Gschickt";
+
+/* Class = "UILabel"; text = "You don't have any contacts. Turn on synchronization, or add contacts manually using the + button."; ObjectID = "zFq-Zo-ECJ"; */
+"zFq-Zo-ECJ.text" = "Sie händ no kei Kontäkt. Schalted Sie d’Synchronisierig ii (Iistellige > Privatsphäre), oder füeged Sie Kontäkt manuell mitem «+»-Button hinzue.";
+
+/* Class = "UILabel"; text = "Enter ID manually"; ObjectID = "zYA-qz-iwe"; */
+"zYA-qz-iwe.text" = "ID manuell igeh";
+
+/* Class = "UILabel"; text = "Enter a query to search for places"; ObjectID = "oXh-5e-M7J"; */
+"oXh-5e-M7J.text" = "Gebed Sie e Suechi ii, zum POIs ah z’zeige";

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22154" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina5_9" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22130"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -210,14 +210,14 @@
                             <tableViewSection footerTitle="Number: +41 79 123 45 67" id="5HP-W8-nFp">
                                 <cells>
                                     <tableViewCell contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" id="W9m-3i-YXI">
-                                        <rect key="frame" x="20" y="17.666666030883789" width="335" height="91.333335876464844"/>
+                                        <rect key="frame" x="20" y="17.666666030883789" width="335" height="92"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" tableViewCell="W9m-3i-YXI" id="tLQ-9j-jCh">
-                                            <rect key="frame" x="0.0" y="0.0" width="335" height="91.333335876464844"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="335" height="92"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="code" adjustsFontForContentSizeCategory="YES" minimumFontSize="17" clearButtonMode="always" translatesAutoresizingMaskIntoConstraints="NO" id="KTz-4x-SnC">
-                                                    <rect key="frame" x="20" y="41.333333333333336" width="295" height="36.000000000000007"/>
+                                                    <rect key="frame" x="20" y="41.333333333333343" width="295" height="36.666666666666657"/>
                                                     <inset key="insetFor6xAndEarlier" minX="3" minY="0.0" maxX="-3" maxY="0.0"/>
                                                     <color key="textColor" red="0.21960784310000001" green="0.3294117647" blue="0.52941176469999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleTitle1"/>
@@ -250,7 +250,7 @@
                             <tableViewSection footerTitle="" id="en3-1n-e6P">
                                 <cells>
                                     <tableViewCell contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="blue" indentationWidth="10" textLabel="RvX-Ht-6JQ" detailTextLabel="xdM-Ja-eNy" imageView="Jvb-1y-wcB" style="IBUITableViewCellStyleValue1" id="gal-dG-c9t">
-                                        <rect key="frame" x="20" y="156.66666793823242" width="335" height="43.666667938232422"/>
+                                        <rect key="frame" x="20" y="157.33333206176758" width="335" height="43.666667938232422"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" tableViewCell="gal-dG-c9t" id="PLh-QF-w6C">
                                             <rect key="frame" x="0.0" y="0.0" width="335" height="43.666667938232422"/>
@@ -279,7 +279,7 @@
                                         <inset key="separatorInset" minX="15" minY="0.0" maxX="0.0" maxY="0.0"/>
                                     </tableViewCell>
                                     <tableViewCell contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" textLabel="wJP-Jf-Pgx" style="IBUITableViewCellStyleDefault" id="D4c-fJ-kWC">
-                                        <rect key="frame" x="20" y="200.33333587646484" width="335" height="43.666667938232422"/>
+                                        <rect key="frame" x="20" y="201" width="335" height="43.666667938232422"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" tableViewCell="D4c-fJ-kWC" id="89a-uQ-Jw7">
                                             <rect key="frame" x="0.0" y="0.0" width="335" height="43.666667938232422"/>
@@ -1044,9 +1044,9 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="abL-qW-o92">
-                                                    <rect key="frame" x="150" y="10" width="22" height="22"/>
+                                                    <rect key="frame" x="151" y="10" width="20" height="22"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                                    <state key="normal" image="InfoFilled"/>
+                                                    <state key="normal" image="info.circle.fill" catalog="system"/>
                                                     <connections>
                                                         <action selector="touchDownExplainButton:forEvent:" destination="kum-xn-2YU" eventType="touchDown" id="jnx-R3-fRN"/>
                                                     </connections>
@@ -1055,20 +1055,20 @@
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="blue" indentationWidth="10" id="z54-P9-eaY">
-                                        <rect key="frame" x="20" y="437.66667556762695" width="335" height="50.666667938232422"/>
+                                        <rect key="frame" x="20" y="437.66667556762695" width="335" height="51.333332061767578"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" tableViewCell="z54-P9-eaY" id="eUk-PW-GRw">
-                                            <rect key="frame" x="0.0" y="0.0" width="335" height="50.666667938232422"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="335" height="51.333332061767578"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="left" text="Backup now" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="44" translatesAutoresizingMaskIntoConstraints="NO" id="QRg-9e-VxA" userLabel="Backup now">
-                                                    <rect key="frame" x="16" y="15.000000000000002" width="303" height="20.666666666666671"/>
+                                                    <rect key="frame" x="16" y="14.999999999999998" width="303" height="21.333333333333329"/>
                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                     <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="2Mt-Pf-8OR">
-                                                    <rect key="frame" x="157.66666666666666" y="15.333333333333336" width="20" height="20"/>
+                                                    <rect key="frame" x="157.66666666666666" y="15.666666666666664" width="20" height="20"/>
                                                 </activityIndicatorView>
                                             </subviews>
                                             <constraints>
@@ -1085,7 +1085,7 @@
                                         </accessibility>
                                     </tableViewCell>
                                     <tableViewCell contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="blue" indentationWidth="10" textLabel="xeg-TX-OYB" style="IBUITableViewCellStyleDefault" id="WGf-II-AqV">
-                                        <rect key="frame" x="20" y="488.33334350585938" width="335" height="43.666667938232422"/>
+                                        <rect key="frame" x="20" y="489.00000762939453" width="335" height="43.666667938232422"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" tableViewCell="WGf-II-AqV" id="SsX-Pg-i7x">
                                             <rect key="frame" x="0.0" y="0.0" width="335" height="43.666667938232422"/>
@@ -1475,8 +1475,8 @@
     </inferredMetricsTieBreakers>
     <resources>
         <image name="Info" width="22" height="22"/>
-        <image name="InfoFilled" width="22" height="22"/>
         <image name="Phone" width="25" height="25"/>
         <image name="ThreemaSafeIntro.png" width="400" height="400"/>
+        <image name="info.circle.fill" catalog="system" width="128" height="123"/>
     </resources>
 </document>

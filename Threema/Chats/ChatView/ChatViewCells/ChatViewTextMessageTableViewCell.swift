@@ -33,12 +33,17 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
             let block = {
                 self.updateCell(for: self.textMessageAndNeighbors?.message)
                 
+                self.observe(
+                    oldQuoteMessage: oldValue?.message.quoteMessage,
+                    quoteMessage: self.textMessageAndNeighbors?.message.quoteMessage
+                )
+               
                 super.setMessage(
                     to: self.textMessageAndNeighbors?.message,
                     with: self.textMessageAndNeighbors?.neighbors
                 )
             }
-            
+               
             if let oldValue, oldValue.message.objectID == textMessageAndNeighbors?.message.objectID {
                 UIView.animate(
                     withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
@@ -60,12 +65,12 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
             // Both of these animations are typically covered within a bigger animation block
             // or a block that doesn't animate at all. Both cases look good.
             if shouldShowDateAndState {
-                
+                    
                 let block = {
                     self.messageDateAndStateView.alpha = 1.0
                     self.messageDateAndStateView.isHidden = false
                 }
-                
+                    
                 if !oldValue {
                     // When adding the date and state view, this is an animation that doesn't look half bad since the
                     // view will animate in from the bottom.
@@ -75,22 +80,11 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
                         options: .curveEaseInOut
                     ) {
                         block()
-                    } completion: { _ in
-                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
-                        UIView.performWithoutAnimation {
-                            self.messageDateAndStateView.setNeedsLayout()
-                            self.messageDateAndStateView.layoutIfNeeded()
-                        }
                     }
                 }
                 else {
                     UIView.performWithoutAnimation {
                         block()
-                        
-                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
-                        // It is very unclear why this is needed in addition to
-                        self.messageDateAndStateView.setNeedsLayout()
-                        self.messageDateAndStateView.layoutIfNeeded()
                     }
                 }
             }
@@ -102,13 +96,13 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
                     self.messageDateAndStateView.alpha = 0.0
                 }
             }
-            
+                
             messageDateAndStateView.isHidden = !shouldShowDateAndState
-            
+                
             guard oldValue != shouldShowDateAndState else {
                 return
             }
-            
+                
             // The length of the rendered text in the message might be shorter than `messageDateAndStateView`.
             // Thus we fully remove it to avoid having it set the width of the message bubble.
             if messageDateAndStateView.isHidden {
@@ -119,6 +113,9 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
             }
         }
     }
+    
+    /// Used to observe changes of the quoted message, e.g. edits
+    private var observers = [NSKeyValueObservation]()
     
     // MARK: - Views
     
@@ -140,7 +137,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     
     private lazy var messageTextView = MessageTextView(messageTextViewDelegate: self)
     private lazy var messageDateAndStateView = MessageDateAndStateView()
-    
+
     private lazy var contentStack = DefaultMessageContentStackView(arrangedSubviews: [
         messageTextView,
         messageDateAndStateView,
@@ -184,6 +181,12 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         return view
     }()
 
+    // MARK: - Lifecycle
+    
+    deinit {
+        invalidateObservers()
+    }
+    
     // MARK: - Configuration
     
     override func configureCell() {
@@ -257,6 +260,39 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         accessibilityHint = BundleUtil.localizedString(forKey: "quote_interaction_hint")
     }
     
+    private func observe(oldQuoteMessage: QuoteMessage?, quoteMessage: QuoteMessage?) {
+        
+        guard let quoteMessage else {
+            invalidateObservers()
+            return
+        }
+        
+        if oldQuoteMessage?.id != quoteMessage.id {
+            invalidateObservers()
+        }
+        
+        guard let quotedMessage = quoteMessage as? BaseMessage else {
+            return
+        }
+        
+        let editObserver = quotedMessage.observe(\.lastEditedAt) { [weak self] _, _ in
+            self?.messageQuoteStackView.quoteMessage = quoteMessage
+        }
+        observers.append(editObserver)
+        
+        let deleteObserver = quotedMessage.observe(\.deletedAt) { [weak self] _, _ in
+            self?.messageQuoteStackView.quoteMessage = quoteMessage
+        }
+        observers.append(deleteObserver)
+    }
+    
+    private func invalidateObservers() {
+        observers.forEach { observer in
+            observer.invalidate()
+        }
+        observers.removeAll()
+    }
+
     // MARK: - Action Functions
     
     @objc func quoteViewTapped() {
@@ -287,14 +323,16 @@ extension ChatViewTextMessageTableViewCell: Reusable { }
 
 extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
     
-    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+    func messageActions() -> (
+        primaryActions: [ChatViewMessageActionProvider.MessageAction],
+        generalActions: [ChatViewMessageActionProvider.MessageAction]
+    )? {
 
         guard let message = textMessageAndNeighbors?.message else {
             return nil
         }
 
         typealias Provider = ChatViewMessageActionProvider
-        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
         
         // Copy
         let copyHandler = {
@@ -319,8 +357,8 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
-        // Edit
-        let editHandler = {
+        // Select
+        let selectHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
@@ -337,8 +375,19 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
         let ackHandler = { (message: BaseMessage, ack: Bool) in
             self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
-        
-        let defaultActions = Provider.defaultActions(
+            
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
+
+        // Edit Message
+        let editHandler = {
+            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
+        }
+
+        // Build menu
+        return Provider.defaultActions(
             message: message,
             speakText: message.text,
             shareItems: shareItems,
@@ -346,15 +395,13 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
             didDelete: didDelete,
-            ackHandler: ackHandler
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler,
+            editHandler: editHandler
         )
-        
-        menuItems.append(contentsOf: defaultActions)
-        
-        return menuItems
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

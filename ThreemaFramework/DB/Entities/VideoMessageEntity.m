@@ -45,10 +45,6 @@
     return [NSString stringWithFormat:@"%@ (%02d:%02d, %@)", [BundleUtil localizedStringForKey:@"video"], minutes, seconds, [self blobFilename]];
 }
 
-- (nonnull NSString*)previewText {
-   return [BundleUtil localizedStringForKey:@"video"];
-}
-
 #pragma mark - Misc
 
 #ifdef DEBUG

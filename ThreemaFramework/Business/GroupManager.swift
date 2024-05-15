@@ -1378,7 +1378,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     // MARK: - Private functions
     
     private func postSystemMessage(in conversation: Conversation, member: ContactEntity, type: Int, date: Date) {
-        postSystemMessage(in: conversation, type: type, arg: member.displayName.data(using: .utf8), date: date)
+        postSystemMessage(in: conversation, type: type, arg: Data(member.displayName.utf8), date: date)
     }
     
     private func postSystemMessage(in conversation: Conversation, type: Int, arg: Data?, date: Date) {

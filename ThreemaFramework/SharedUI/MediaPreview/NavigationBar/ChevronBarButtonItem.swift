@@ -81,18 +81,19 @@ class ChevronBarButtonItem: UIButton {
     
     private func configureButton() {
         // Using the tintColor property takes the default iOS tint color instead of ours
-        let image = ChevronBarButtonItem.drawImage()
+        let image = UIImage(systemName: "chevron.backward.circle.fill")?
+            .applying(
+                textStyle: .title2,
+                symbolScale: .large,
+                paletteColors: [Colors.backgroundTintChevronCircleButton, Colors.backgroundChevronCircleButton]
+            )
+
         setImage(image, for: .normal)
         imageView?.contentMode = .scaleAspectFill
-        adjustsImageWhenHighlighted = false
         
         updateAccessibilityLabel()
     }
-    
-    public static func drawImage() -> UIImage {
-        ChevronBackCircleImage.get()
-    }
-    
+        
     private func updateAccessibilityLabel() {
         accessibilityLabel = BundleUtil.localizedString(forKey: "back")
     }

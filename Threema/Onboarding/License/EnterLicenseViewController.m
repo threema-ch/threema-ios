@@ -29,7 +29,7 @@
 #import "WorkDataFetcher.h"
 
 
-@interface EnterLicenseViewController () <UITextFieldDelegate, ZSWTappableLabelTapDelegate>
+@interface EnterLicenseViewController () <UITextFieldDelegate>
 
 @property LicenseStore *licenseStore;
 
@@ -65,6 +65,9 @@
     _feedbackLabel.hidden = true;
     _activityIndicatorView.hidden = true;
     
+    _logoImageView.image = [Colors threemaLogo];
+    _logoImageView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    
     if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_description"];
         _threemaAdminInfoLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_admin_description"];
@@ -98,40 +101,13 @@
     UITapGestureRecognizer *mainTapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMainView:)];
     mainTapGesture.cancelsTouchesInView = false;
     [self.view addGestureRecognizer:mainTapGesture];
-    
-    self.threemaAppLinkLabel.font = [UIFont systemFontOfSize:16.0];
-    self.threemaAppLinkLabel.tapDelegate = self;
-    self.threemaAppLinkLabel.exclusiveTouch = true;
-    NSDictionary *normalAttributes = @{NSFontAttributeName: _threemaAppLinkLabel.font, NSForegroundColorAttributeName: [UIColor whiteColor]};
-    NSDictionary *linkAttributes = @{@"ZSWTappableLabelTappableRegionAttributeName": @YES,
-                                     @"ZSWTappableLabelHighlightedForegroundAttributeName": Colors.red,
-                                     NSForegroundColorAttributeName: Colors.textWizardLink,
-                                     NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle),
-                                     @"NSTextCheckingResult": @1
-                                     };
-    
-    NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:[BundleUtil localizedStringForKey:@"enter_license_info"] attributes:normalAttributes];
-    [attributedString addAttributes:linkAttributes range:[[BundleUtil localizedStringForKey:@"enter_license_info"] rangeOfString:[BundleUtil localizedStringForKey:@"enter_license_info_link"]]];
-    _threemaAppLinkLabel.attributedText = attributedString;
-    
+       
     _confirmButton.backgroundColor = Colors.primaryWizard;
     [_confirmButton setTitleColor:Colors.text forState:UIControlStateNormal];
     _licenseUsernameTextField.tintColor = Colors.primaryWizard;
     _licensePasswordTextField.tintColor = Colors.primaryWizard;
     _serverTextField.tintColor = Colors.primaryWizard;
-    
-    NSMutableDictionary *workInfoLinkAttributes = [[NSMutableDictionary alloc] initWithDictionary:linkAttributes];
-    workInfoLinkAttributes[NSFontAttributeName] = _threemaAppLinkLabel.font;
-    
-    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_work_info"], [ThreemaAppObjc appName]];
-    NSMutableAttributedString *attributedWorkInfoString = [[NSMutableAttributedString alloc] initWithString:message attributes:workInfoLinkAttributes];
-    
-    _threemaWorkInfoLabel.font = [UIFont systemFontOfSize:16.0];
-    _threemaWorkInfoLabel.numberOfLines = 2;
-    _threemaWorkInfoLabel.attributedText = attributedWorkInfoString;
-    _threemaWorkInfoLabel.tapDelegate = self;
-    _threemaWorkInfoLabel.exclusiveTouch = true;
-    
+        
     // use other spacing for small screens
     if (self.view.frame.size.height < 500.0) {
         _stackView.spacing = 25.0;
@@ -172,9 +148,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    
-    _keyImageView.image = [UIImage imageNamed:@"Key" inColor:[UIColor whiteColor]];
-    
+       
     if (_serverTextField.text.length == 0) {
         _serverTextField.text = @"https://";
     }
@@ -236,7 +210,8 @@
 - (void)showErrorMessage:(NSString *)errorMessage {
     [self showActivityIndicatorView:false];
         
-    _feedbackImageView.image = [BundleUtil imageNamed:@"ExclamationMark"];
+    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.red]];
+    _feedbackImageView.image = [UIImage systemImageNamed:@"exclamationmark.circle.fill" withConfiguration:config];
     _feedbackImageView.hidden = false;
     
     _feedbackLabel.hidden = false;
@@ -246,7 +221,8 @@
 - (void)showSuccessMessage:(NSString *)successMessage {
     [self showActivityIndicatorView:false];
         
-    _feedbackImageView.image = [[BundleUtil imageNamed:@"Checkbox"] imageWithTint:Colors.textSetup];
+    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.green]];
+    _feedbackImageView.image = [UIImage systemImageNamed:@"checkmark.circle.fill" withConfiguration:config];
     _feedbackImageView.hidden = false;
     
     _feedbackLabel.text = successMessage;
@@ -361,21 +337,6 @@
     NSString *title = [NSString stringWithFormat:@"%i", _licenseStore.error.code];
     NSString *message = [NSString stringWithFormat:@"%@", _licenseStore.error.description];
     [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];
-}
-
-#pragma mark - ZSWTappableLabel delegate
-
-- (void)tappableLabel:(ZSWTappableLabel *)tappableLabel tappedAtIndex:(NSInteger)idx withAttributes:(NSDictionary *)attributes {
-    NSURL *url;
-    if (tappableLabel == _threemaWorkInfoLabel) {
-        url = [NSURL URLWithString:@"https://threema.ch/work"];
-    } else {
-        url = [NSURL URLWithString:@"https://itunes.apple.com/app/id578665578"];
-    }
-    
-    if (url != nil && [[UIApplication sharedApplication] canOpenURL:url]) {
-        [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
-    }
 }
 
 @end

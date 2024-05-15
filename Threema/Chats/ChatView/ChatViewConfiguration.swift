@@ -45,8 +45,8 @@ enum ChatViewConfiguration {
         
         /// Constant font for contact or group name
         static let nameFont = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        /// Constant font for group members list
-        static let groupMembersListFont = UIFont.systemFont(ofSize: 12)
+        /// Constant font for members lists
+        static let membersListFont = UIFont.systemFont(ofSize: 12)
         
         /// Combined leading and trailing offset from the navigation width
         static let combinedLeadingAndTrailingOffset: CGFloat = 2 * 60
@@ -81,13 +81,8 @@ enum ChatViewConfiguration {
             /// Ballot symbol configuration to approximate the appearance of a normal bar button item
             static let symbolConfiguration = UIImage.SymbolConfiguration(scale: .large)
             
-            /// Size of badge count. Constant as the header height doesn't change
-            static let badgeFont = UIFont.systemFont(ofSize: 11)
-            
             /// Offset of badge from ballot symbol ratio
             static let badgeOffsetFromBallotSymbolRatio: CGFloat = 2 / 5
-            /// Minimal size of badge
-            static let minBadgeSize = CGSize(width: 30, height: 18)
             
             /// Min size of button touch area
             static let minimumTouchTargetWidth: CGFloat = 44
@@ -322,7 +317,25 @@ enum ChatViewConfiguration {
         /// Horizontal space between icon and text labels of message cell
         static let defaultIconCenterInset: CGFloat = 8
     }
-    
+
+    /// Edited message view
+    enum EditedMessage {
+        /// Width of the bar in a edit message
+        static let barWidth: CGFloat = 2
+        /// Distance between edit message bar and text
+        static let barTextDistance: CGFloat = 6
+        /// Distance between name and edit message text
+        static let nameTextDistance: CGFloat = 2
+        /// Default font for the title label in edit message
+        static let nameFont = UIFont.preferredFont(forTextStyle: .caption1).bold()
+        /// Maximal lines of edit message label
+        static let maxLines = 7
+        /// Corner radius of thumbnail
+        static let thumbnailCornerRadius = ChatBubble.cornerRadius - ChatBubble.defaultLeadingTrailingInset
+        /// Default size of thumbnail
+        static let thumbnailDefaultSize = 40.0
+    }
+
     /// Quote view
     enum Quote {
         /// Width of the bar in a quote
@@ -521,7 +534,7 @@ enum ChatViewConfiguration {
         /// Inset from leading or trailing end to center of symbol
         static let defaultSymbolCenterInset: CGFloat = 6
         /// Minimal space between a leading and trailing metadata view
-        static let minimalInBetweenSpace: CGFloat = 8
+        static let minimalInBetweenSpace: CGFloat = 4
         /// space between label and group reaction symbol
         static let defaultLabelGroupReactionSymbolSpace: CGFloat = 1
         

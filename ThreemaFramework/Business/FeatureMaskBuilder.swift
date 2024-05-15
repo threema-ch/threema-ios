@@ -55,6 +55,14 @@ import ThreemaProtocols
     @objc func groupCalls(enabled: Bool) -> FeatureMaskBuilder {
         set(feature: Int(ThreemaProtocols.Common_CspFeatureMaskFlag.groupCallSupport.rawValue), enabled: enabled)
     }
+
+    @objc func editMessage(enabled: Bool) -> FeatureMaskBuilder {
+        set(feature: Int(ThreemaProtocols.Common_CspFeatureMaskFlag.editMessageSupport.rawValue), enabled: enabled)
+    }
+    
+    @objc func deleteMessage(enabled: Bool) -> FeatureMaskBuilder {
+        set(feature: Int(ThreemaProtocols.Common_CspFeatureMaskFlag.deleteMessageSupport.rawValue), enabled: enabled)
+    }
     
     private func set(feature: Int, enabled: Bool) -> FeatureMaskBuilder {
         if enabled {
@@ -93,5 +101,7 @@ import ThreemaProtocols
             .videoCalls(enabled: true)
             .forwardSecurity(enabled: ThreemaUtility.supportsForwardSecurity)
             .groupCalls(enabled: BusinessInjector().settingsStore.enableThreemaGroupCalls)
+            .editMessage(enabled: true)
+            .deleteMessage(enabled: true)
     }
 }

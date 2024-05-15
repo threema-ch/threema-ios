@@ -48,6 +48,7 @@ static NSString *fieldOrigin = @"origin";
 @dynamic progress;
 @dynamic origin;
 @dynamic type;
+@dynamic consumed;
 
 @dynamic data;
 @dynamic thumbnail;
@@ -84,25 +85,6 @@ static NSString *fieldOrigin = @"origin";
     }
     
     return [NSString stringWithFormat:@"%@: %@%@", [BundleUtil localizedStringForKey:@"file"], [self logFileName], logCaption];
-}
-
-- (nonnull NSString*)previewText {
-    NSString *fileName = self.fileName;
-    if (self.type.intValue == 0 && fileName != nil) {
-        return fileName;
-    }
-    
-    NSString *fileTypeDescriptionText = [self fileTypeDescriptionText];
-    
-    if (fileTypeDescriptionText != nil) {
-        if ([self caption] != nil) {
-            fileTypeDescriptionText = [fileTypeDescriptionText stringByAppendingString:[NSString stringWithFormat:@"\n%@", self.caption]];
-        }
-        
-        return fileTypeDescriptionText;
-    }
-
-    return [BundleUtil localizedStringForKey:@"file"];
 }
 
 - (nullable NSString *)contentToCheckForMentions {

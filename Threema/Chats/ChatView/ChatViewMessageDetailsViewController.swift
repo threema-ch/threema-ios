@@ -50,14 +50,19 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         case message
         
         case fileSize
-        
+                
         case messageDisplayState(_ displayState: BaseMessage.DisplayState)
         
+        case deletedMessage
+        case editedMessage
+
         case groupReaction(_ groupDeliveryReceipt: GroupDeliveryReceipt)
+        
+        case consumed
         
         case perfectForwardSecrecy
         case messageID
-        
+
         case coreDataDebugInfo
     }
     
@@ -114,7 +119,44 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                     secondaryText: DateFormatter.shortStyleDateTime(message.date(for: displayState)),
                     image: displayState.symbol(with: .label, variant: .default)
                 )
+
+            case .deletedMessage:
+                return strongSelf.configuredCell(
+                    in: tableView,
+                    at: indexPath,
+                    text: BundleUtil.localizedString(forKey: "message_display_status_deleted_message"),
+                    secondaryText: DateFormatter.shortStyleDateTime(message.deletedAt),
+                    image: UIImage(systemName: "trash")?.withTintColor(Colors.text, renderingMode: .alwaysOriginal)
+                )
+
+            case .editedMessage:
+                return strongSelf.configuredCell(
+                    in: tableView,
+                    at: indexPath,
+                    text: BundleUtil.localizedString(forKey: "message_display_status_edited_message"),
+                    secondaryText: DateFormatter.shortStyleDateTime(message.lastEditedAt),
+                    image: UIImage(resource: .threemaPencilBubbleLeft)
+                        .withTintColor(Colors.text, renderingMode: .alwaysOriginal)
+                )
+
+            case .consumed:
+                var secondaryText: String?
+                var image: UIImage?
+                if let voiceMessage = message as? VoiceMessage,
+                   let consumedDate = voiceMessage.consumed {
+                    secondaryText = DateFormatter.shortStyleDateTime(consumedDate)
+                    
+                    image = UIImage(systemName: "mic")
+                }
                 
+                return strongSelf.configuredCell(
+                    in: tableView,
+                    at: indexPath,
+                    text: BundleUtil.localizedString(forKey: "detailView_consumed"),
+                    secondaryText: secondaryText,
+                    image: image
+                )
+                                
             case let .groupReaction(groupDeliveryReceipt):
                 let cell: ChatViewMessageDetailsGroupReactionTableViewCell = tableView.dequeueCell(for: indexPath)
                 cell.groupDeliveryReceipt = groupDeliveryReceipt
@@ -436,6 +478,14 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             snapshot.appendItems([
                 .messageDisplayState(.sent),
             ])
+
+            if message.deletedAt != nil {
+                snapshot.appendItems([.deletedMessage])
+            }
+
+            if message.lastEditedAt != nil {
+                snapshot.appendItems([.editedMessage])
+            }
         }
         else {
             snapshot.appendItems([
@@ -443,6 +493,23 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 .messageDisplayState(.delivered),
                 .messageDisplayState(.read),
             ])
+
+            if message.deletedAt != nil {
+                snapshot.appendItems([.deletedMessage])
+            }
+
+            if message.lastEditedAt != nil {
+                snapshot.appendItems([.editedMessage])
+            }
+        }
+        
+        // Show consumed only for received voice messages where the consumed date is not 1970 (default date for all
+        // existing voice messages before this feature)
+        if let voiceMessage = message as? VoiceMessage,
+           !voiceMessage.isOwnMessage,
+           let consumedDate = voiceMessage.consumed,
+           consumedDate != Date(timeIntervalSince1970: 0) {
+            snapshot.appendItems([.consumed])
         }
         
         snapshot.appendSections([.metadata])

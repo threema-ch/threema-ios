@@ -114,11 +114,7 @@ class SafeServerViewController: IDCreationPageViewController {
             )
             
             if let customServer = serverField.text,
-               let customServerURL = safeStore.composeSafeServerAuth(
-                   server: customServer,
-                   user: serverUsernameField.text,
-                   password: serverPasswordField.text
-               ) {
+               let customServerURL = URL(string: customServer) {
 
                 let safeManager = SafeManager(
                     safeConfigManager: safeConfigManager,
@@ -128,7 +124,11 @@ class SafeServerViewController: IDCreationPageViewController {
                 DispatchQueue.main.async {
                     MBProgressHUD.showAdded(to: self.view, animated: true)
                 }
-                safeManager.testServer(serverURL: customServerURL) { errorMessage, maxBackupBytes, retentionDays in
+                safeManager.testServer(
+                    serverURL: customServerURL,
+                    user: serverUsernameField.text,
+                    password: serverPasswordField.text
+                ) { errorMessage, maxBackupBytes, retentionDays in
                     DispatchQueue.main.async {
                         MBProgressHUD.hide(for: self.view, animated: true)
                         

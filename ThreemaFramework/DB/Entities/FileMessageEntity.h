@@ -40,6 +40,7 @@
 @property (nullable, nonatomic, retain) NSNumber * origin;
 @property (nullable, nonatomic, retain) NSNumber * progress;
 @property (nullable, nonatomic, retain) NSNumber * type;
+@property (nullable, nonatomic, retain) NSDate * consumed;
 
 // Relationships
 @property (nullable, nonatomic, retain) FileData *data;

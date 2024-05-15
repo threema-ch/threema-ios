@@ -63,6 +63,9 @@ public enum ThreemaProtocol {
     case messageBlobDecryptionFailed = 673
     case messageNonceReuse = 674
     case messageProcessingFailed = 669
+    case messageSenderMismatch = 679
+    case messageToDeleteNotFound = 678
+    case messageToEditNotFound = 677
     case notConnectedToMediator = 676
     case notLoggedIn = 675
     case safePasswordEmpty = 672
@@ -86,6 +89,12 @@ public enum ThreemaProtocol {
             return "\(rawError) 'Reuse of message nonce'"
         case .messageProcessingFailed:
             return "\(rawError) 'Processing of message failed'"
+        case .messageSenderMismatch:
+            return "\(rawError) 'Message sender mismatch'"
+        case .messageToDeleteNotFound:
+            return "\(rawError) 'Message to delete not found'"
+        case .messageToEditNotFound:
+            return "\(rawError) 'Message to edit not found'"
         case .notConnectedToMediator:
             return "\(rawError) 'Not connected to mediator'"
         case .notLoggedIn:

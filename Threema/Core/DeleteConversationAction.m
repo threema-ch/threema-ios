@@ -20,9 +20,9 @@
 
 #import "DeleteConversationAction.h"
 #import "ContactStore.h"
-#import "MessageDraftStore.h"
 
 #import "Threema-Swift.h"
+#import "ThreemaFramework/ThreemaFramework-swift.h"
 
 @interface DeleteConversationAction ()
 
@@ -181,7 +181,7 @@
         return;
     }
     
-    [MessageDraftStore deleteDraftForConversation:_conversation];
+    [MessageDraftStore deleteDraftFor:_conversation];
     [[ChatScrollPosition _sharedObjC] removeSavedPositionFor:_conversation];
 
     // Delete conversation

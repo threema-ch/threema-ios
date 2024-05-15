@@ -58,18 +58,16 @@ extension StorageManagementConversationView {
         init(conversation: Conversation?, businessInjector: BusinessInjectorProtocol) {
             self.businessInjector = businessInjector
             self.conversation = conversation
-            refresh()
         }
     
         // MARK: - General methods
         
         /// Refresh message and media count and update the ui
-        func refresh() {
-            Task {
-                await businessInjector.runInBackground { backgroundBusinessInjector in
-                    let conversations = self.conversations(backgroundBusinessInjector.entityManager)
-                    self.count(backgroundBusinessInjector.entityManager, conversations)
-                }
+        @Sendable
+        func load() async {
+            await businessInjector.runInBackground { backgroundBusinessInjector in
+                let conversations = self.conversations(backgroundBusinessInjector.entityManager)
+                self.count(backgroundBusinessInjector.entityManager, conversations)
             }
         }
         
@@ -93,7 +91,10 @@ extension StorageManagementConversationView {
         func messageDelete(_ option: OlderThanOption) {
             deleteInProgress = true
             Task {
-                await businessInjector.runInBackground { backgroundBusinessInjector in
+                await businessInjector.runInBackground { [weak self] backgroundBusinessInjector in
+                    guard let self else {
+                        return
+                    }
                     guard let count = await backgroundBusinessInjector
                         .entityManager
                         .entityDestroyer
@@ -126,7 +127,10 @@ extension StorageManagementConversationView {
         func mediaDelete(_ option: OlderThanOption) {
             deleteInProgress = true
             Task {
-                await businessInjector.runInBackground { backgroundBusinessInjector in
+                await businessInjector.runInBackground { [weak self] backgroundBusinessInjector in
+                    guard let self else {
+                        return
+                    }
                     guard let count = await backgroundBusinessInjector
                         .entityManager
                         .entityDestroyer
@@ -187,7 +191,10 @@ extension StorageManagementConversationView {
                 mediaCount += fetcher.mediaCount()
             }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else {
+                    return
+                }
                 self.totalMessagesCount = messagesCount
                 self.totalMediaCount = mediaCount
             }

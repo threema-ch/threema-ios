@@ -291,8 +291,9 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 }
 
                 if let conversation = msg.conversation {
-                    self.businessInjector.unreadMessages
+                    let totalCount = self.businessInjector.unreadMessages
                         .totalCount(doCalcUnreadMessagesCountOf: [conversation], withPerformBlockAndWait: false)
+                    self.notificationManager.updateTabBarBadge(badgeTotalCount: totalCount)
                 }
 
                 if let pendingUserNotification = self.pendingUserNotificationManager.pendingUserNotification(

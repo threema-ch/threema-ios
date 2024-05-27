@@ -58,6 +58,16 @@ public protocol NotificationManagerProtocol {
             businessInjector: BusinessInjector()
         )
     }
+    
+    final func updateTabBarBadge(badgeTotalCount: Int) {
+        Task { @MainActor in
+            if let mainTabBar = AppDelegate.getMainTabBarController(),
+               let item = mainTabBar.tabBar.items?[Int(kChatTabBarIndex)] {
+                item.badgeValue = badgeTotalCount > 0 ? String(badgeTotalCount) : nil
+            }
+            UIApplication.shared.applicationIconBadgeNumber = badgeTotalCount
+        }
+    }
 
     /// Update badge with unread messages count.
     @objc final func updateUnreadMessagesCount() {
@@ -93,14 +103,7 @@ public protocol NotificationManagerProtocol {
                     userInfo: [kKeyUnread: badgeTotalCount]
                 )
 
-                Task { @MainActor in
-                    if let mainTabBar = AppDelegate.getMainTabBarController(),
-                       let item = mainTabBar.tabBar.items?[Int(kChatTabBarIndex)] {
-                        item.badgeValue = badgeTotalCount > 0 ? String(badgeTotalCount) : nil
-                    }
-
-                    UIApplication.shared.applicationIconBadgeNumber = badgeTotalCount
-                }
+                self.updateTabBarBadge(badgeTotalCount: badgeTotalCount)
             }
         }
     }

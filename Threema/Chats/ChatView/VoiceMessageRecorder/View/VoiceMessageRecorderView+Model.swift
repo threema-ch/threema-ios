@@ -28,11 +28,7 @@ import ThreemaFramework
 
 extension VoiceMessageRecorderView {
     class Model: ObservableObject, @unchecked Sendable {
-        @Published var recordingState: RecordingState {
-            didSet {
-                DDLogInfo("didSet recordingState: \(oldValue) -> \(recordingState)")
-            }
-        }
+        @Published var recordingState: RecordingState
 
         @Published var samples: [Float] = []
         @Published var duration: TimeInterval = .zero
@@ -142,7 +138,7 @@ extension VoiceMessageRecorderView.Model: VoiceMessageAudioRecorderDelegate {
     
     func didUpdateRecordProgress(with recorder: VoiceMessageAudioRecorder, _ progress: Double) {
         duration = VoiceMessageAudioRecorder.Configuration.recordDuration.max * progress
-        if recordingState == .recording {
+        if recordingState.isRecording {
             samples.append(1 - pow(10, recorder.lastAveragePower / 30))
         }
     }

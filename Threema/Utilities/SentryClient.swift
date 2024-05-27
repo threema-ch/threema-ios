@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Sentry
+import ThreemaFramework
 
 @objc class SentryClient: NSObject {
     
@@ -33,6 +34,11 @@ import Sentry
     
     /// Create Sentry and start crash handler.
     @objc func start() {
+        
+        guard !SettingsBundleHelper.disableSentry else {
+            return
+        }
+        
         guard SentryClient.isEnabled() else {
             return
         }

@@ -62,7 +62,7 @@ struct VoiceMessageRecorderView: View {
     }
     
     private var shouldShowFullWaveform: Bool {
-        model.recordingState != .recording && model.recordingState != .none
+        !model.recordingState.isRecording
     }
     
     private var waveFormContainer: some View {
@@ -81,15 +81,30 @@ struct VoiceMessageRecorderView: View {
         }
         .foregroundColor(.gray)
         .overlay(alignment: .trailing) {
-            if model.recordingState == .recording {
-                stopButton
+            if model.recordingState.isRecording {
+                
+                if case .recordingStarting = model.recordingState {
+                    stopButton
+                        .disabled(true)
+                }
+                else {
+                    stopButton
+                        .disabled(false)
+                }
             }
-            if model.recordingState.isRecordingStopped {
-                addButton
+            if model.recordingState.isStopped {
+                if case .recordingStopping = model.recordingState {
+                    addButton
+                        .disabled(true)
+                }
+                else {
+                    addButton
+                        .disabled(false)
+                }
             }
         }
         .overlay(alignment: .leading) {
-            if model.recordingState.isRecordingStopped {
+            if model.recordingState.isStopped {
                 playPauseButton
             }
         }
@@ -148,14 +163,14 @@ struct VoiceMessageRecorderView: View {
     }
     
     private var leftInset: CGFloat {
-        model.recordingState.isRecordingStopped
+        model.recordingState.isStopped
             ? minBarHeight
             : ChatViewConfiguration.ChatBar.textInputButtonSpacing
     }
     
     private func willDismiss() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: DispatchWorkItem(block: {
-            if model.recordingState == .recording {
+            if model.recordingState.isRecording {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             }
         }))
@@ -235,8 +250,9 @@ extension VoiceMessageRecorderView {
                         weight: .regular
                     )
                 )
-                .foregroundColor(UIColor.primary.color)
+                .foregroundColor(model.recordingState == .recordingStopping ? .secondary : UIColor.primary.color)
         }
+        .disabled(model.recordingState == .recordingStopping)
         .accessibilityLabel("send".localized)
     }
     

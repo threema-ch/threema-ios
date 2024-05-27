@@ -27,10 +27,10 @@ protocol VoiceMessageAudioRecorderDelegate: AnyObject {
     /// Any Error that occurs during the recording/playback process.
     ///
     /// - Parameters:
-    ///   - error: The error that occured.
+    ///   - error: The error that occurred.
     func handleError<Error: LocalizedError>(_ error: Error)
     
-    /// Notifies the delegate that the record progress has been updated.
+    /// Notifies the delegate that the recording progress has been updated.
     ///
     /// - Parameters:
     ///   - recorder: The `VoiceMessageAudioRecorder` instance that is recording the audio.

@@ -86,7 +86,7 @@ class BlobDownloader: NSObject {
                     return
                 }
 
-                let task = self.startDownload(for: downloadURL) { data, error in
+                let task = self.startDownload(for: downloadURL, timeout: nil) { data, error in
                     // Download was completed
                     if let error {
                         continuation.resume(throwing: error)
@@ -116,15 +116,24 @@ class BlobDownloader: NSObject {
             }
         }
     }
- 
+
     @objc func download(blobID: Data, origin: BlobOrigin, completion: @escaping (Data?, Error?) -> Void) {
+        download(blobID: blobID, origin: origin, timeout: 60, completion: completion)
+    }
+
+    @objc func download(
+        blobID: Data,
+        origin: BlobOrigin,
+        timeout: TimeInterval,
+        completion: @escaping (Data?, Error?) -> Void
+    ) {
         blobURL.download(blobID: blobID, origin: origin) { downloadURL, _ in
             guard let downloadURL else {
                 completion(nil, BlobDownloaderError.invalidDownloadURL)
                 return
             }
             
-            self.startDownload(for: downloadURL, completion: completion)
+            self.startDownload(for: downloadURL, timeout: timeout, completion: completion)
         }
     }
 
@@ -151,11 +160,18 @@ class BlobDownloader: NSObject {
     }
     
     @discardableResult
-    private func startDownload(for url: URL, completion: @escaping (Data?, Error?) -> Void) -> URLSessionDataTask {
+    private func startDownload(
+        for url: URL,
+        timeout: TimeInterval? = nil,
+        completion: @escaping (Data?, Error?) -> Void
+    ) -> URLSessionDataTask {
         let httpClient = HTTPClient(sessionManager: urlSessionManager)
-        let task = httpClient.downloadData(url: url, contentType: .octetStream) { data, response, error in
+        let task = httpClient.downloadData(
+            url: url, contentType: .octetStream, timeout: timeout
+        ) { data, response, error in
+
             var downloadError: Error?
-            
+
             if let error {
                 downloadError = error
             }

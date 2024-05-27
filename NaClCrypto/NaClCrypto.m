@@ -287,6 +287,15 @@
     return ciphertext;
 }
 
+- (nullable NSData*)safeSymmetricDecryptData:(NSData*)ciphertext withKey:(NSData*)key nonce:(NSData*)nonce {
+    @try {
+        return [self symmetricDecryptData:ciphertext withKey:key nonce:nonce];
+    } @catch (NSException *exception) {
+        DDLogError(@"Failed to symmetric decrypt data: %@", exception.name);
+        return nil;
+    }
+}
+
 - (NSData*)symmetricDecryptData:(NSData*)ciphertext withKey:(NSData*)key nonce:(NSData*)nonce {
     
     if (key.length != kNaClCryptoSymmKeySize)

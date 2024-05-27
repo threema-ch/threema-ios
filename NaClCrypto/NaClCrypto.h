@@ -40,6 +40,7 @@
 - (NSData*)decryptData:(NSData*)ciphertext withSecretKey:(NSData*)secretKey signKey:(NSData*)signKey nonce:(NSData*)nonce;
 
 - (NSData*)symmetricEncryptData:(NSData*)plaintext withKey:(NSData*)key nonce:(NSData*)nonce;
+- (nullable NSData*)safeSymmetricDecryptData:(NSData*)ciphertext withKey:(NSData*)key nonce:(NSData*)nonce;
 - (NSData*)symmetricDecryptData:(NSData*)ciphertext withKey:(NSData*)key nonce:(NSData*)nonce;
 
 - (NSData*)streamXorData:(NSData*)data secretKey:(NSData*)secretKey nonce:(NSData*)nonce;

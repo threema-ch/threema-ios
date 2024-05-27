@@ -27,8 +27,13 @@ enum RecordingState {
     
     // MARK: - Recording
     
+    /// Recording process is starting
+    case recordingStarting
     /// Recording is currently in progress.
     case recording
+    
+    /// Recording process is stopping
+    case recordingStopping
     /// Recording has been stopped.
     case stopped
     
@@ -40,12 +45,17 @@ enum RecordingState {
     case paused
     
     /// Indicating whether the recording has been stopped, either explicitly or by pausing or ending playback.
-    var isRecordingStopped: Bool {
+    var isStopped: Bool {
         switch self {
-        case .paused, .playing, .stopped:
+        case .paused, .playing, .recordingStopping, .stopped:
             return true
         default:
             return false
         }
+    }
+    
+    /// Indicating whether the recording is starting or ongoing
+    var isRecording: Bool {
+        self == .recordingStarting || self == .recording
     }
 }

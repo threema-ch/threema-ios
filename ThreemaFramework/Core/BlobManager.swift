@@ -117,7 +117,7 @@ public actor BlobManager: BlobManagerProtocol {
         var blobID: String?
         var blobThumbnailID: String?
 
-        em.performSyncBlockAndSafe {
+        await em.performSave {
             guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageProvider,
                   !message.blobIsOutgoing else {
                 return
@@ -144,8 +144,10 @@ public actor BlobManager: BlobManagerProtocol {
             assert(result != .uploaded, "This should never upload media")
         }
         catch {
+            let messageID = await messageIDString(for: objectID)
+            
             DDLogError(
-                "[BlobManager] Auto sync for message with blobID: \(blobID ?? "nil"), and thumbnailID: \(blobThumbnailID ?? "nil") failed, reason: \(error)"
+                "[BlobManager] Auto sync for message with id: \(messageID), blobID: \(blobID ?? "nil"), and thumbnailID: \(blobThumbnailID ?? "nil") failed, reason: \(error)"
             )
         }
     }
@@ -230,8 +232,11 @@ public actor BlobManager: BlobManagerProtocol {
     /// Note: This does not cancel thumbnail syncs
     /// - Parameter objectID: Managed object ID of object to cancel blob sync for
     public func cancelBlobsSync(for objectID: NSManagedObjectID) async {
-                
         if await BlobManager.state.removeActiveObjectIDAndProgress(for: objectID) {
+            
+            let messageID = await messageIDString(for: objectID)
+            DDLogNotice("[BlobManager] Cancelling download for messageID: \(messageID)")
+        
             blobDownloader.cancelDownload(for: objectID)
             blobUploader.cancelUpload(for: objectID)
             resetStatesForBlob(with: objectID)
@@ -495,6 +500,11 @@ public actor BlobManager: BlobManagerProtocol {
             await BlobManager.state.setProgress(for: objectID, to: 0.0)
         }
         
+        let messageID = await messageIDString(for: objectID)
+        DDLogNotice(
+            "[BlobManager] Starting download for messageID: \(messageID), blobID: \(blobID.hexString), origin:\(origin)"
+        )
+
         // Download, Decrypt & Save
         let encryptedData = try await blobDownloader.download(
             blobID: blobID,
@@ -518,7 +528,7 @@ public actor BlobManager: BlobManagerProtocol {
     private func markDownloadDone(for blobID: Data, objectID: NSManagedObjectID, origin: BlobOrigin) async throws {
         
         var isGroupMessage: Bool?
-        
+        var messageID: String?
         let em = entityManager
         em.performSyncBlockAndSafe {
             guard let fetchedMessage = em.entityFetcher.existingObject(with: objectID) as? BaseMessage
@@ -526,10 +536,11 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
             isGroupMessage = fetchedMessage.isGroupMessage
+            messageID = fetchedMessage.id.hexString
         }
         
         guard let isGroupMessage, !isGroupMessage else {
-            DDLogInfo("[BlobManager] Do not mark downloads done for group messages")
+            DDLogInfo("[BlobManager] Do not mark downloads done for group messages. id: \(messageID)")
             return
         }
         
@@ -539,6 +550,9 @@ public actor BlobManager: BlobManagerProtocol {
         
         let client = HTTPClient(sessionManager: sessionManager)
         try await client.sendDone(url: url)
+        DDLogNotice(
+            "[BlobManager] Marked blob as done for messageID: \(messageID ?? "nil"), blobID: \(blobID.hexString), origin:\(origin)"
+        )
     }
     
     private func autoSaveMedia(objectID: NSManagedObjectID) {
@@ -944,6 +958,18 @@ public actor BlobManager: BlobManagerProtocol {
         }
         return isNoteGroup
     }
+    
+    private func messageIDString(for objectID: NSManagedObjectID) async -> String {
+        let em = entityManager
+        
+        return await em.perform {
+            guard let message = em.entityFetcher.existingObject(with: objectID) as? BaseMessage else {
+                return "nil"
+            }
+            
+            return message.id.hexString
+        }
+    }
 }
 
 // MARK: - BlobManagerDelegate
@@ -1034,6 +1060,10 @@ extension BlobManager {
         guard !isAlreadyDownloaded else {
             return .downloaded
         }
+        
+        DDLogNotice(
+            "[BlobManager] Starting download for legacy messageID: \(messageID.hexString), blobID: \(blobID.hexString)"
+        )
 
         try await withCheckedThrowingContinuation { continuation in
             let processor = ImageMessageProcessor(

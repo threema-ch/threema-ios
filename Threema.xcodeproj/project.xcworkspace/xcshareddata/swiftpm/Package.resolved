@@ -147,7 +147,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/threema-ch/sentry-cocoa",
       "state" : {
-        "revision" : "3c6b67085270e77fa799c475f08d470b445d572c"
+        "revision" : "b4eacc3656505ac6b2e727ebe59c3c404ada0187"
       }
     },
     {

@@ -44,8 +44,8 @@ extension StorageManagementView {
             let deviceStorage = DeviceUtility.getStorageSize()
             await MainActor.run {
                 total = deviceStorage.totalSize ?? 0
-                totalInUse = deviceStorage.totalFreeSize ?? 0
-                totalFree = total - totalInUse
+                totalFree = deviceStorage.totalFreeSize ?? 0
+                totalInUse = total - totalFree
             }
             let threemaCount = await StorageUsage.calcThreemaStorage()
             await MainActor.run {

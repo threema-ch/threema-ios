@@ -122,11 +122,15 @@ public class HTTPClient: NSObject {
     public func downloadData(
         url: URL,
         contentType: ContentType,
+        timeout: TimeInterval? = nil,
         completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void
     ) -> URLSessionDataTask {
         var request = urlRequest(for: url, httpMethod: .get, authorization: authorization)
         request.setValue(contentType.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
-        
+        if let timeout {
+            request.timeoutInterval = timeout != 0 ? timeout : 60
+        }
+
         let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
         
         let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false)

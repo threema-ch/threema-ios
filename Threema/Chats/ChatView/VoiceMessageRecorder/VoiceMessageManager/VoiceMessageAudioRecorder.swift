@@ -208,13 +208,14 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
     
     /// Starts recording audio, will automatically append new recordings to the current one.
     func record() async {
-        recordingStateSubject.send(.recording)
+        recordingStateSubject.send(.recordingStarting)
         idleTimer.disable()
         await withCheckedContinuation { continuation in
             if isContinuingRecording {
                 audioSessionManager.setupAudioSession(isEarpiece: false)
             }
             
+            self.recordingStateSubject.send(.recording)
             addRecording { [weak self] result in
                 if case let .failure(error) = result, let self {
                     self.delegate?.handleError(error)
@@ -226,7 +227,7 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
     
     /// Stops recording audio and saves the recorded file.
     func stop() async {
-        recordingStateSubject.send(.stopped)
+        recordingStateSubject.send(.recordingStopping)
         idleTimer.enable()
         guard isRecording else {
             DDLogInfo("Can't stop recording while not recording")
@@ -244,15 +245,18 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
             to: tmpRecorderFile
         ) {
         case .success:
-            await MainActor.run {
-                stopTimer()
-            }
             adaptToProximityState()
             resetIdleAndProximity()
             
             audioSessionManager.setupAudioSessionForPlayback()
+            await MainActor.run {
+                stopTimer()
+            }
+            recordingStateSubject.send(.stopped)
+            
         case let .failure(error):
             delegate?.handleError(error)
+            recordingStateSubject.send(.stopped)
         }
     }
     
@@ -334,7 +338,7 @@ extension VoiceMessageAudioRecorder {
                 self?.playbackStatusDidUpdate()
             }
         })
-        // unfreeze while interacting with other views
+        // Unfreeze while interacting with other views
         timer.map {
             RunLoop.current.add($0, forMode: .common)
         }

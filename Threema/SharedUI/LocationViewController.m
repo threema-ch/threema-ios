@@ -33,6 +33,7 @@
 #endif
 @interface LocationViewController () <CLLocationManagerDelegate>
     @property CLLocationManager *locationManager;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *shareButton;
 @end
 
 @implementation LocationViewController {
@@ -58,6 +59,7 @@
     [super viewDidLoad];
     self.mapView.userTrackingMode = MKUserTrackingModeNone;
     self.mapView.showsUserLocation = YES;
+    self.shareButton.image = [UIImage systemImageNamed:@"square.and.arrow.up"];
     self.navigationItem.scrollEdgeAppearance = [Colors defaultNavigationBarAppearance];
     MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(self.coordinate, 1000, 1000);
     [self.mapView setRegion:region animated:NO];

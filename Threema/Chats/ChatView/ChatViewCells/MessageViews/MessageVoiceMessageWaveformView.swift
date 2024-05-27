@@ -170,7 +170,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     func render(_ voiceMessage: VoiceMessage?) {
         guard let audioURL = blobDataURL(for: voiceMessage) else {
             let msg = "URL for blobdata was unexpectedly nil"
-            DDLogError(msg)
+            DDLogError("\(msg)")
             assertionFailure(msg)
             return
         }
@@ -190,7 +190,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     }
    
     private func updateWaveformImageViews(with audioURL: URL, and identifier: NSManagedObjectID?) async {
-        guard let identifier else {
+        guard identifier != nil else {
             return
         }
         
@@ -225,7 +225,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         guard let image, let progressImage else {
             let msg = "Could not create waveform from url"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             return
         }
         
@@ -278,7 +278,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     private func blobDataURL(for voiceMessage: VoiceMessage?) -> URL? {
         guard let silentAudioURL = BundleUtil.url(forResource: "silent", withExtension: "mp3") else {
             let msg = "URL for silent audio file was unexpectedly nil"
-            DDLogError(msg)
+            DDLogError("\(msg)")
             assertionFailure(msg)
             return nil
         }

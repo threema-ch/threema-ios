@@ -893,6 +893,7 @@
                     <connections>
                         <outlet property="mapTypeControl" destination="M1P-ix-V2L" id="SYk-3D-PWa"/>
                         <outlet property="mapView" destination="S8H-J6-Ghl" id="9CB-fL-wrH"/>
+                        <outlet property="shareButton" destination="g63-mL-9aV" id="UfW-TX-lCD"/>
                         <outlet property="toolbar" destination="Pwh-dA-MBJ" id="d68-db-Qd7"/>
                     </connections>
                 </viewController>

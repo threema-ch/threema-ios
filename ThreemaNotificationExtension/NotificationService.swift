@@ -271,7 +271,7 @@ class NotificationService: UNNotificationServiceExtension {
         // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push
         // payload will be used.
         DDLogWarn("[Push] Stopping processing incoming messages, because extension will expire!")
-        exitIfAllTasksProcessed(force: true)
+        exitIfAllTasksProcessed(force: true, willExpire: true)
     }
     
     // MARK: Private functions
@@ -407,7 +407,7 @@ class NotificationService: UNNotificationServiceExtension {
     ///   - force: Means last incoming task is processed, exit anyway
     ///   - reportedCall: Exit due to Threema Call was reported to the App, `NotificationService.didJustReportCall` will
     ///                   be set to `true` for 5s
-    private func exitIfAllTasksProcessed(force: Bool = false, reportedCall: Bool = false) {
+    private func exitIfAllTasksProcessed(force: Bool = false, reportedCall: Bool = false, willExpire: Bool = false) {
         let isMultiDeviceRegistered = backgroundBusinessInjector.settingsStore.isMultiDeviceRegistered
         if force ||
             (
@@ -416,10 +416,21 @@ class NotificationService: UNNotificationServiceExtension {
                     TaskManager.isEmpty(queueType: .incoming)
             ) {
             DDLogNotice(
-                "[Push] Stopping process incoming messages (force: \(force), because receive message queue finished or chat/reflection queue is dry!"
+                "[Push] Stopping process incoming messages (force: \(force), willExpire: \(willExpire)), because receive message queue finished or chat/reflection queue is dry!"
             )
             DDLog.flushLog()
 
+            guard !willExpire else {
+                NotificationService.stopProcessingTimer?.invalidate()
+                NotificationService.didJustReportCall = false
+                DDLogNotice("[Push] Leave Processing Group")
+                NotificationService.stopProcessingGroup?.leave()
+                NotificationService.stopProcessingGroup = nil
+                NotificationService.isRunning = false
+                DDLogNotice("[Push] isRunning set to false from exit.")
+                return
+            }
+            
             // Gives a little time to remove notification from notification center
             var delay: Double = 2
             if reportedCall {

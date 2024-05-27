@@ -922,7 +922,7 @@ final class ChatViewController: ThemedViewController {
     // MARK: - Public functions
     
     @objc func isRecording() -> Bool {
-        chatBarCoordinator.chatBar.recordingState == .recording
+        chatBarCoordinator.chatBar.recordingState.isRecording
     }
     
     @objc func isPlayingAudioMessage() -> Bool {

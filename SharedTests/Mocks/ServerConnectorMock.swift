@@ -205,6 +205,10 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     func incomingAbstractMessageFailed(_ message: AbstractMessage) {
         // no-op
     }
+    
+    func incomingForwardSecurityMessageWithNoResultFinished(_ message: AbstractMessage) {
+        // no-op
+    }
 
     func taskQueueEmpty(_ queueTypeName: String) {
         messageProcessorDelegate?.taskQueueEmpty(queueTypeName)

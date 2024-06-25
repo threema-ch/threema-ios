@@ -142,6 +142,7 @@ typedef enum : NSUInteger {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshWorkContactTableView:) name:kNotificationRefreshWorkContactTableView object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshContactSortIndices:) name:kNotificationRefreshContactSortIndices object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshDirtyObjects:) name:kNotificationDBRefreshedDirtyObject object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadingWorkContacts:) name:kNotificationLoadWorkContacts object:nil];
 
     [self setRefreshControlTitle:NO];
     
@@ -297,7 +298,7 @@ typedef enum : NSUInteger {
     [[UserSettings sharedUserSettings] removeObserver:self forKeyPath:@"hideStaleContacts"];
 }
 
-- (void)updateNoContactsView {    
+- (void)updateNoContactsView {
     if ([self hasData]) {
         if (_mode == ModeContacts) {
             [self setFooterView:YES];
@@ -310,34 +311,74 @@ typedef enum : NSUInteger {
         }
     } else {
         [self setFooterView:NO];
-
+        
         if (_mode == ModeContacts) {
-            _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_contacts"];
-            if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
-                _noContactsMessageLabel.text = @"";
-            } else {
-                _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:([UserSettings sharedUserSettings].syncContacts ? @"no_contacts_syncon" : @"no_contacts_syncoff")];
-            }
+            [self updateNoDataForContacts];
         }
         else if (_mode == ModeGroups){
             _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_groups"];
             _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_groups_message"];
+            [self shouldShowNoContactIndicatorView:NO];
         }
         
         else if (_mode == ModeDistributionLists) {
             _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_distribution_list"];
             _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_distribution_list_message"];
+            [self shouldShowNoContactIndicatorView:NO];
         }
         else if (_mode == ModeWorkContacts) {
-            _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
-            _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], [ThreemaAppObjc appName]];
+            [self updateNoDataForWorkContacts];
         }
         else {
             _noContactsTitleLabel.text = nil;
             _noContactsMessageLabel.text = nil;
+            [self shouldShowNoContactIndicatorView:NO];
         }
-                
+        
         self.tableView.tableFooterView = _noContactsView;
+    }
+}
+
+- (void)updateNoDataForContacts {
+    if ([AppDelegate sharedAppDelegate].isWorkContactsLoading && [LicenseStore requiresLicenseKey]) {
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
+        _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_contacts_loading"];
+        
+        [self shouldShowNoContactIndicatorView:YES];
+    }
+    else {
+        _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_contacts"];
+        if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
+            _noContactsMessageLabel.text = @"";
+        } else {
+            _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:([UserSettings sharedUserSettings].syncContacts ? @"no_contacts_syncon" : @"no_contacts_syncoff")];
+        }
+        [self shouldShowNoContactIndicatorView:NO];
+    }
+}
+
+- (void)updateNoDataForWorkContacts {
+    if ([AppDelegate sharedAppDelegate].isWorkContactsLoading) {
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
+        _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_contacts_loading"];
+        [self shouldShowNoContactIndicatorView:YES];
+    }
+    else {
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
+        _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], [ThreemaAppObjc appName]];
+        [self shouldShowNoContactIndicatorView:NO];
+    }
+}
+
+- (void)shouldShowNoContactIndicatorView:(BOOL)show {
+    if (show) {
+        [_loadingWorkContactsIndicatorView startAnimating];
+        _loadingWorkContactsIndicatorView.hidden = false;
+    }
+    else {
+        [_loadingWorkContactsIndicatorView stopAnimating];
+        _loadingWorkContactsIndicatorView.hidden = true;
+        
     }
 }
 
@@ -697,6 +738,8 @@ typedef enum : NSUInteger {
 }
 
 - (void)setFooterView:(BOOL)show {
+    [self shouldShowNoContactIndicatorView:NO];
+
     if (_mode == ModeGroups) {
         _countContactsFooterLabel.text = @"";
         self.tableView.tableFooterView = _countContactsFooterView;
@@ -1293,9 +1336,12 @@ typedef enum : NSUInteger {
 }
 
 - (void)updateWorkDataAndEndRefreshing:(UIRefreshControl*)rfSender {
+    [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:true];
     [WorkDataFetcher checkUpdateWorkDataForce:YES sendForce:YES onCompletion:^{
+        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
         [self endRefreshingAndScrollUp:rfSender];
     } onError:^(NSError *error) {
+        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
         [self endRefreshingAndScrollUp:rfSender];
         if (error.code == 401 || error.code == 409) {
             [[NotificationPresenterWrapper shared] presentUpdateWorkDataError];
@@ -1404,6 +1450,12 @@ typedef enum : NSUInteger {
     if (objectID == nil) {
         [self resetData];
     }
+}
+
+- (void)loadingWorkContacts:(NSNotification *)notification {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self updateNoContactsView];
+    });
 }
 
 @end

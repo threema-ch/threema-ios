@@ -177,7 +177,6 @@ protocol MessageStoreProtocol {
     
     func save(
         groupCallStartMessage: GroupCallStartMessage,
-        decodedCallStartMessage: CspE2e_GroupCallStart,
         senderIdentity: String,
         createdAt: Date,
         reflectedAt: Date,

@@ -84,7 +84,7 @@
 "mediapreview_options" = "옵션";
 
 "testflight_feedback_title" = "베타 피드백을 보내주세요!";
-"testflight_feedback_description" = "Threema의 베타 버전을 테스트해 주셔서 감사합니다. 그러나 테스트는 방정식의 반만이며, 나머지 반은 피드백을 제공하는 것입니다. 버그나 비정상적인 현상을 만나면 알려주세요. 베타 채팅을 열려면 간단히 설정 > 베타 피드백으로 이동하십시오.";
+"testflight_feedback_description" = "버그나 비정상적인 사항이 발견되면 알려주세요. 베타 채팅을 열려면 여기를 탭하세요.";
 
 "notification.threemaweb.connect.title" = "데스크톱/웹";
 "notification.threemaweb.connect.body" = "데스크톱 앱 / 웹 클라이언트와의 연결을 다시 설정하려면 여기를 탭하세요.";

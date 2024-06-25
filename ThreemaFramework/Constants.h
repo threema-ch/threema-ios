@@ -95,12 +95,15 @@
 #define kNotificationErrorRogueDevice @"ThreemaErrorRogueDevice"
 
 #define kNotificationDBRefreshedDirtyObject @"ThreemaDBRefreshedDirtyObject"
+#define kNotificationDBRefreshedDirtyObjects @"ThreemaDBRefreshedDirtyObjects"
 
 #define kNotificationRefreshWorkContactTableView @"RefreshWorkContactTableView"
 #define kNotificationAddressbookSyncronized @"AddressbookSyncronized"
 #define kNotificationRefreshContactSortIndices @"RefreshContactSortIndices"
 #define kNotificationChangedHidePrivateChat @"ChangedHidePrivateChat"
 #define kNotificationChangedPushSetting @"ChangedPushSetting"
+
+#define kNotificationLoadWorkContacts @"LoadWorkContacts"
 
 #define kVoIPCallStartRinging @"ThreemaVoIPCallStartRinging"
 #define kVoIPCallStatusChanged @"ThreemaVoIPCallStatusChanged"
@@ -154,6 +157,7 @@ static NSString * const kNotificationGroupConversationImageChanged = @"ThreemaGr
 #define kKeyTitle @"title"
 
 #define kKeyObjectID @"objectID"
+#define kKeyObjectIDs @"objectIDs"
 
 // Also update Constants.cnContactKeys
 #define kCNContactKeys @[CNContactFamilyNameKey, CNContactGivenNameKey, CNContactMiddleNameKey, CNContactOrganizationNameKey, CNContactPhoneNumbersKey, CNContactEmailAddressesKey, CNContactImageDataKey, CNContactImageDataAvailableKey, CNContactThumbnailImageDataKey, [CNContactFormatter descriptorForRequiredKeysForStyle:CNContactFormatterStyleFullName]]

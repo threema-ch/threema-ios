@@ -86,6 +86,7 @@ public struct CspE2e_MessageMetadata {
 /// - Reflect:
 ///   - Incoming: Yes
 ///   - Outgoing: Yes
+///   - _Sent_ update: No
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No
@@ -105,6 +106,7 @@ public struct CspE2e_MessageMetadata {
 /// - Reflect:
 ///   - Incoming: Yes
 ///   - Outgoing: Yes
+///   - _Sent_ update: No
 /// - Delivery receipts:
 ///   - Automatic: N/A
 ///   - Manual: No
@@ -202,6 +204,7 @@ public struct CspE2e_EditMessage {
 /// - Reflect:
 ///   - Incoming: Yes
 ///   - Outgoing: Yes
+///   - _Sent_ update: No
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No
@@ -221,6 +224,7 @@ public struct CspE2e_EditMessage {
 /// - Reflect:
 ///   - Incoming: Yes
 ///   - Outgoing: Yes
+///   - _Sent_ update: No
 /// - Delivery receipts:
 ///   - Automatic: N/A
 ///   - Manual: No
@@ -309,6 +313,7 @@ public struct CspE2e_DeleteMessage {
 /// - Reflect:
 ///   - Incoming: Yes
 ///   - Outgoing: Yes
+///   - _Sent_ update: No
 /// - Delivery receipts:
 ///   - Automatic: N/A
 ///   - Manual: No
@@ -338,8 +343,9 @@ public struct CspE2e_DeleteMessage {
 /// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
 ///    has been discarded, abort these steps.
 /// 2. If the hostname of `sfu_base_url` does not use the scheme `https` or does
-///    not end with one of the set of _Allowed SFU Hostname Suffixes_, log a
-///    warning, discard the message and abort these steps.
+///    not end with one of the set of [_Allowed SFU Hostname
+///    Suffixes_](ref:group-calls#obtain-sfu-information), log a warning, discard
+///    the message and abort these steps.
 /// 3. Let `running` be the list of group calls that are currently considered
 ///    running within the group.
 /// 4. If another call with the same GCK exists in `running`, log a warning,
@@ -351,8 +357,9 @@ public struct CspE2e_DeleteMessage {
 /// ¹: Adding unsupported `protocol_version`s allows the user to join an ongoing
 ///  call after an app update where support for `protocol_version` has been
 ///  added.
+///
 /// ²: This ensures that the user automatically switches to the chosen call if it
-///  is currently participating in a group call of this group.
+/// is currently participating in a group call of this group.
 public struct CspE2e_GroupCallStart {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -394,6 +401,7 @@ public struct CspE2e_GroupCallStart {
 /// - Reflect:
 ///   - Incoming: Yes
 ///   - Outgoing: Yes
+///   - _Sent_ update: No
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No
@@ -465,6 +473,7 @@ public struct CspE2e_GroupJoinRequest {
 /// - Reflect:
 ///   - Incoming: Yes
 ///   - Outgoing: Yes
+///   - _Sent_ update: No
 /// - Delivery receipts:
 ///   - Automatic: No
 ///   - Manual: No

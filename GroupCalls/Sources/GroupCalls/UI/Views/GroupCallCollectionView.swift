@@ -76,10 +76,11 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
         }
     }
     
-    public func updateLayout() {
+    // TODO: (IOS-4049) If possible this should only be needed if the number of participants changes and not need a `view` parameter
+    public func updateLayout(view: UIView) {
         let newLayout = GroupCallLayoutProvider.createLayout(
             numberOfParticipants: viewModel.numberOfParticipants,
-            view: self
+            view: view
         )
         
         // This prevents jumping of the scroll position if the fractional height of the layout is not 1 or 0.5.

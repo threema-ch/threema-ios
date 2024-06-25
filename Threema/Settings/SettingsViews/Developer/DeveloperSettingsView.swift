@@ -31,7 +31,7 @@ struct DeveloperSettingsView: View {
     @State private var showDebugDeviceJoin = false
     
     // Feature Flags
-    @State var enableFSv12 = true
+    @State var contactList2 = UserSettings.shared().contactList2
     
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
@@ -103,10 +103,13 @@ struct DeveloperSettingsView: View {
             }
             
             Section("Feature Flags") {
-                Toggle(isOn: $enableFSv12) {
-                    Text("Enable PFS 1.2")
+                Toggle(isOn: $contactList2) {
+                    Text("Enable Contact List 2.0")
                 }
-                .disabled(true)
+                .onChange(of: contactList2) { newValue in
+                    UserSettings.shared().contactList2 = newValue
+                    exit(1)
+                }
             }
             
             Section("Group Calls") {
@@ -189,7 +192,7 @@ struct DeveloperSettingsView: View {
                     ) {
                         Button("Delete Everything", role: .destructive) {
                             // DB & Files
-                            FileUtility.removeItemsInAllDirectories()
+                            FileUtility.shared.removeItemsInAllDirectories()
                             AppGroup.resetUserDefaults()
                             DatabaseManager().eraseDB()
                             exit(0)

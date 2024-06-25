@@ -83,8 +83,8 @@
 
 "mediapreview_options" = "Možnosti";
 
-"testflight_feedback_title" = "Pošlite nám spätnú väzbu k beta verzii!";
-"testflight_feedback_description" = "Ďakujeme za testovanie beta verzie Threema. Testovanie je však len polovica rovnice, druhá polovica je poskytovanie spätnej väzby. Ak narazíte na nejaké chyby alebo nezrovnalosti, dajte nám vedieť. Jednoducho prejdite do časti Nastavenia > Spätná väzba k beta verzii a otvorte beta chat.";
+"testflight_feedback_title" = "Pošlite nám svoju spätnú väzbu k beta verzii!";
+"testflight_feedback_description" = "Dajte nám vedieť, ak narazíte na nejaké chyby alebo nezrovnalosti. Ťuknutím sem otvorte konverzáciu s beta verziou.";
 
 "notification.threemaweb.connect.title" = "Desktop/Web";
 "notification.threemaweb.connect.body" = "Klepnutím sem obnovíte pripojenie k počítačovej aplikácii/webovému klientu.";

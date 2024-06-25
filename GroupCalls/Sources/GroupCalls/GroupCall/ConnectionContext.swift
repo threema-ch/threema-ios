@@ -42,7 +42,7 @@ final class ConnectionContext<
     
     // MARK: Participant State
 
-    fileprivate let myParticipantID: Participant
+    fileprivate let myParticipantID: ParticipantID
     
     fileprivate let cryptoContext: GroupCallFrameCryptoAdapterProtocol
     
@@ -161,7 +161,7 @@ final class ConnectionContext<
         self.sessionParameters = sessionParameters
         
         self.sessionDescription = GroupCallSessionDescription(localParticipantID: sessionParameters.participantID)
-        self.myParticipantID = Participant(participantID: sessionParameters.participantID)
+        self.myParticipantID = sessionParameters.participantID
         self.dependencies = dependencies
         
         self.videoSource = PeerConnectionContext.peerConnectionFactory.videoSource()
@@ -409,7 +409,7 @@ extension ConnectionContext {
         
         let newLocalTransceivers = try await {
             var result = [SdpKind: RTCRtpTransceiverImpl]()
-            let mids = Mids(from: myParticipantID.participantID).toMap()
+            let mids = Mids(from: myParticipantID).toMap()
             
             for (kind, mid) in mids {
                 guard let transceiver = await map.removeValue(for: mid) else {
@@ -442,7 +442,7 @@ extension ConnectionContext {
                     // Add encryptor
                     try self.cryptoContext.attachEncryptor(
                         to: productionTransceiver,
-                        myParticipantID: myParticipantID.participantID
+                        myParticipantID: myParticipantID
                     )
                 }
                 else {
@@ -534,7 +534,7 @@ extension ConnectionContext {
         
         let newLocalTransceivers = await { [self] in
             var result = [SdpKind: RTCRtpTransceiverImpl]()
-            let mids = Mids(from: myParticipantID.participantID).toMap()
+            let mids = Mids(from: myParticipantID).toMap()
             for (kind, mid) in mids {
                 // Mark it as mapped
                 guard let transceiver = await unmapped.removeValue(for: mid) else {
@@ -701,7 +701,10 @@ extension ConnectionContext {
         }
         
         // swiftformat:disable:next acronyms
-        return PeerConnectionContext.peerConnectionFactory.audioTrack(with: audioSource, trackId: "gcAudio0")
+        let audioTrack = PeerConnectionContext.peerConnectionFactory.audioTrack(with: audioSource, trackId: "gcAudio0")
+        
+        audioTrack.isEnabled = false
+        return audioTrack
     }
     
     private func createVideoTrack() -> RTCVideoTrack {

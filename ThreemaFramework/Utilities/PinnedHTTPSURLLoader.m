@@ -19,16 +19,26 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "PinnedHTTPSURLLoader.h"
-#import "SSLCAHelper.h"
+#import "ThreemaFramework/ThreemaFramework-swift.h"
+
+#ifdef DEBUG
+static const DDLogLevel ddLogLevel = DDLogLevelAll;
+#else
+static const DDLogLevel ddLogLevel = DDLogLevelNotice;
+#endif
 
 @implementation PinnedHTTPSURLLoader
 
 - (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace {
-    return [SSLCAHelper connection:connection canAuthenticateAgainstProtectionSpace:protectionSpace];
+    return [SSLCAHelper canAuthenticate:protectionSpace];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge {
-    [SSLCAHelper connection:connection didReceiveAuthenticationChallenge:challenge];
+    [[SSLCAHelper new] handleWithChallenge:challenge completionHandler:^(__unused NSURLSessionAuthChallengeDisposition, __unused NSURLCredential * _Nullable, NSError * _Nullable error) {
+        if (error) {
+            DDLogError(@"SSL cert pinning, handle authentication challenge failed %@", [error localizedDescription]);
+        }
+    }];
 }
 
 @end

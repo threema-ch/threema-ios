@@ -93,4 +93,8 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     func updateSettingsStore(with syncSettings: Sync_Settings) {
         // Noop
     }
+
+    func syncSettingCalls() {
+        // no-op
+    }
 }

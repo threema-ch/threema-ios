@@ -18,138 +18,167 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import Foundation
 import XCTest
 
 @testable import ThreemaFramework
 
 class HTTPClientTests: XCTestCase {
-   
+
     // MARK: - Properties
-    
+
+    var sslCAHelperMock: SSLCAHelperMock!
     let sessionManager = URLSessionManager(with: TestSessionProvider())
+    let expectedDomain = "www.example.com"
     let dummyAuthToken = "dummyAuthToken"
     let dummyData = Data("DummyData".utf8)
+
+    var challenge: URLAuthenticationChallenge?
+
+    override func setUp() {
+        sslCAHelperMock = SSLCAHelperMock()
+        challenge = URLAuthenticationChallenge(
+            protectionSpace: URLProtectionSpace(
+                host: expectedDomain,
+                port: 80,
+                protocol: "https",
+                realm: nil,
+                authenticationMethod: NSURLAuthenticationMethodServerTrust
+            ),
+            proposedCredential: nil,
+            previousFailureCount: 0,
+            failureResponse: nil,
+            error: nil,
+            sender: AuthenticationChallengeSenderMock()
+        )
+    }
 
     // MARK: - Delete
 
     func testDeleteForOwnSafe() throws {
         // Arrange
         let expectation = expectation(description: "deleteOwnSafeExpectation")
-        let url = URL(string: "www.example.com/deleteOwnSafe")!
+        let url = URL(string: "\(expectedDomain)/deleteOwnSafe")!
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
-        
         let httpClient = HTTPClientForOwnSafeServer()
-        
+
         // Act
         httpClient.delete(url: url) { _, _, _ in
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         assertOwnSafeRequest(request: request)
         XCTAssertEqual(request.httpMethod, HTTPMethod.delete.rawValue)
-        
+
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     func testDeleteForThreemaSafe() throws {
         // Arrange
         let expectation = expectation(description: "deleteThreemaSafeExpectation")
-        let url = URL(string: "www.example.com/deleteThreemaSafe")!
+        let url = URL(string: "\(expectedDomain)/deleteThreemaSafe")!
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
-        
         let httpClient = HTTPClientForThreemaSafeServer()
-        
+
         // Act
         httpClient.delete(url: url) { _, _, _ in
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         assertThreemaSafeRequest(request: request)
         XCTAssertEqual(request.httpMethod, HTTPMethod.delete.rawValue)
-        
-        XCTAssertTrue(sessionManager.sessionStore.isEmpty)
+
+        XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     // MARK: - Download
-    
+
     func testDownloadForOwnSafe() throws {
         // Arrange
         let expectation = expectation(description: "downloadOwnSafeExpectation")
-        let url = URL(string: "www.example.com/downloadOwnSafe")!
+        let url = URL(string: "\(expectedDomain)/downloadOwnSafe")!
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
         let httpClient = HTTPClientForOwnSafeServer()
-        
+
         // Act
         httpClient.downloadData(url: url, contentType: .octetStream) { _, _, _ in
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         assertOwnSafeRequest(request: request)
         XCTAssertEqual(request.httpMethod, HTTPMethod.get.rawValue)
         XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.accept.rawValue], ContentType.octetStream.rawValue)
-       
+
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     func testDownloadForThreemaSafe() throws {
         // Arrange
         let expectation = expectation(description: "downloadThreemaSafeExpectation")
-        let url = URL(string: "www.example.com/downloadThreemaSafe")!
+        let url = URL(string: "\(expectedDomain)/downloadThreemaSafe")!
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
         let httpClient = HTTPClientForThreemaSafeServer()
-        
+
         // Act
         httpClient.downloadData(url: url, contentType: .octetStream) { _, _, _ in
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         assertThreemaSafeRequest(request: request)
         XCTAssertEqual(request.httpMethod, HTTPMethod.get.rawValue)
         XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.accept.rawValue], ContentType.octetStream.rawValue)
-        
-        XCTAssertTrue(sessionManager.sessionStore.isEmpty)
+
+        XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     func testDownloadForGeneralHTTPClient() throws {
         // Arrange
         let expectation = expectation(description: "downloadGeneralClientExpectation")
-        let url = URL(string: "www.example.com/downloadGeneralClient")!
+        let url = URL(string: "\(expectedDomain)/downloadGeneralClient")!
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
         let httpClient = generalHTTPClient()
-        
+
         // Act
         httpClient.downloadData(url: url, contentType: .octetStream) { _, _, _ in
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         XCTAssertEqual(request.httpMethod, HTTPMethod.get.rawValue)
@@ -158,28 +187,30 @@ class HTTPClientTests: XCTestCase {
         XCTAssertNil(request.allHTTPHeaderFields?[HTTPHeaderField.authorization.rawValue])
         XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalAndRemoteCacheData)
         XCTAssertTrue(request.allowsCellularAccess)
-        
-        XCTAssertTrue(sessionManager.sessionStore.isEmpty)
+
+        XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     // MARK: - Upload
-    
+
     func testUploadForOwnSafe() throws {
         // Arrange
         let expectation = expectation(description: "uploadOwnSafeExpectation")
-        let url = URL(string: "www.example.com/uploadOwnSafe")!
+        let url = URL(string: "\(expectedDomain)/uploadOwnSafe")!
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
         let httpClient = HTTPClientForOwnSafeServer()
-        
+
         // Act
         httpClient.uploadData(url: url, data: dummyData) { _, _, _ in
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         assertOwnSafeRequest(request: request)
@@ -188,26 +219,28 @@ class HTTPClientTests: XCTestCase {
             request.allHTTPHeaderFields?[HTTPHeaderField.contentType.rawValue],
             ContentType.octetStream.rawValue
         )
-        
+
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     func testUploadForThreemaSafe() throws {
         // Arrange
         let expectation = expectation(description: "uploadThreemaSafeExpectation")
-        let url = URL(string: "www.example.com/uploadThreemaSafe")!
+        let url = URL(string: "\(expectedDomain)/uploadThreemaSafe")!
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
         let httpClient = HTTPClientForThreemaSafeServer()
-        
+
         // Act
         httpClient.uploadData(url: url, data: dummyData) { _, _, _ in
             expectation.fulfill()
         }
 
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         assertThreemaSafeRequest(request: request)
@@ -216,36 +249,38 @@ class HTTPClientTests: XCTestCase {
             request.allHTTPHeaderFields?[HTTPHeaderField.contentType.rawValue],
             ContentType.octetStream.rawValue
         )
-        
-        XCTAssertTrue(sessionManager.sessionStore.isEmpty)
+
+        XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     func testUploadMultipart() throws {
         // Arrange
         let expectation = expectation(description: "uploadMultipart")
         let dummyTaskDescription = "dummyTaskDescription"
-        let url = URL(string: "www.example.com/uploadMultipart")!
+        let url = URL(string: "\(expectedDomain)/uploadMultipart")!
         let boundary = "---------------------------Boundary_Line"
         let contentType = String(format: "multipart/form-data; boundary=%@", boundary)
-        
+
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil), { }
+            (nil, nil, nil, challenge), { }
         )
         let httpClient = HTTPClientForThreemaSafeServer()
-        
+
         // Act
         let task = httpClient.uploadDataMultipart(
             taskDescription: dummyTaskDescription,
             url: url,
             contentType: contentType,
             data: dummyData,
-            delegate: self
+            delegate: httpClient
         ) { _, _, _, _ in
             expectation.fulfill()
         }
 
         waitForExpectations(timeout: 5)
-        
+
         // Assert
         let request = try XCTUnwrap(URLProtocolMock.requests[url])
         assertThreemaSafeRequest(request: request)
@@ -255,19 +290,21 @@ class HTTPClientTests: XCTestCase {
             contentType
         )
         XCTAssertEqual(dummyTaskDescription, task.taskDescription)
-        
+
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
+        XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
+        XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
     }
-    
+
     // MARK: - Batch Assertion Functions
-    
+
     private func assertOwnSafeRequest(request: URLRequest) {
         XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.userAgent.rawValue], "Threema")
         XCTAssertNil(request.allHTTPHeaderFields?[HTTPHeaderField.authorization.rawValue])
         XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalAndRemoteCacheData)
         XCTAssertTrue(request.allowsCellularAccess)
     }
-    
+
     private func assertThreemaSafeRequest(request: URLRequest) {
         XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.userAgent.rawValue], "Threema")
         XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.authorization.rawValue], dummyAuthToken)
@@ -276,27 +313,34 @@ class HTTPClientTests: XCTestCase {
     }
 
     // MARK: - Helpers
-    
+
     private func HTTPClientForOwnSafeServer() -> HTTPClient {
         HTTPClient(
+            authorization: nil,
             user: "testUser",
             password: "testPassword",
-            sessionManager: sessionManager
+            sessionManager: sessionManager,
+            sslCAHelper: sslCAHelperMock
         )
     }
-    
+
     private func HTTPClientForThreemaSafeServer() -> HTTPClient {
         HTTPClient(
             authorization: dummyAuthToken,
-            sessionManager: sessionManager
+            user: nil,
+            password: nil,
+            sessionManager: sessionManager,
+            sslCAHelper: sslCAHelperMock
         )
     }
-    
+
     private func generalHTTPClient() -> HTTPClient {
-        HTTPClient(sessionManager: sessionManager)
+        HTTPClient(
+            authorization: nil,
+            user: nil,
+            password: nil,
+            sessionManager: sessionManager,
+            sslCAHelper: sslCAHelperMock
+        )
     }
 }
-
-// MARK: - URLSessionTaskDelegate
-
-extension HTTPClientTests: URLSessionTaskDelegate { }

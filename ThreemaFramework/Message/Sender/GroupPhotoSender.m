@@ -26,7 +26,6 @@
 #import "GroupSetPhotoMessage.h"
 #import "NSString+Hex.h"
 #import "ActivityIndicatorProxy.h"
-#import "SSLCAHelper.h"
 #import "GroupSetPhotoMessage.h"
 #import "ThreemaError.h"
 #import "ServerConnector.h"

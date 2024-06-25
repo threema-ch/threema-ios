@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "Scanner le document";
+"no_contacts_loading" = "Les contacts sont en cours de téléchargement depuis le serveur. Ils seront affichés une fois le processus terminé.";
+
+// Contact List
+"contactList_add_contact" = "Nouveau contact";
+"contactList_add_group" = "Nouveau groupe";
+
+
 
 // General
 "quotation_mark_start" = "«";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "Aucun contact %@ vérifié par un administrateur n’a été trouvé.";
 "no_distribution_list" = "Aucune liste de distribution";
 "no_distribution_list_message" = "Vous n’avez pas encore de liste de distribution. Créez-en une en touchant le bouton +.";
-
 "no_contacts_syncoff" = "Vous n’avez pas encore de contacts. Activez la synchronisation (Réglages > Confidentialité) ou ajoutez manuellement des contacts à l’aide du bouton +.";
 
 "my_profile_picture_title" = "Votre image de profil";
@@ -1349,7 +1356,6 @@ En utilisant Threema Safe, vous pouvez restaurer votre ID, vos contacts et vos g
 "profile_edit" = "Modifier";
 "not_connected_for_edit_profile_message" = "Veuillez vérifier votre connexion";
 "not_connected_for_edit_profile_title" = "Aucune connexion";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "ID Threema";

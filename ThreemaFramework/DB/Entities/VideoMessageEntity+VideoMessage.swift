@@ -82,11 +82,9 @@ extension VideoMessageEntity: VideoMessage {
         }
         
         let filename = "v1-videoMessage-\(UUID().uuidString)"
-        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(
+        let url = FileUtility.shared.appTemporaryDirectory.appendingPathComponent(
             "\(filename).\(MEDIA_EXTENSION_VIDEO)"
-        ) else {
-            return nil
-        }
+        )
         
         do {
             try videoData.write(to: url)

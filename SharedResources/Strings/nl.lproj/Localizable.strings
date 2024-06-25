@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "Document scannen";
+"no_contacts_loading" = "De contactpersonen worden momenteel gedownload van de server. Zodra dit proces is voltooid, worden ze weergegeven.";
+
+// Contact List
+"contactList_add_contact" = "Nieuwe contactpersoon";
+"contactList_add_group" = "Nieuwe groep";
+
+
 
 // General
 "quotation_mark_start" = "\"";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "Geen door administrator geverifieerde %@-contactpersonen gevonden.";
 "no_distribution_list" = "Geen distributielijsten";
 "no_distribution_list_message" = "U hebt nog geen distributielijsten. Tik op de +-knop om er een te maken.";
-
 "no_contacts_syncoff" = "U heeft nog geen contactpersonen. Schakel synchronisatie in (Instellingen > Privacy), of voeg contactpersonen handmatig toe met de +-knop.";
 
 "my_profile_picture_title" = "Je profielafbeelding";
@@ -1349,7 +1356,6 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "profile_edit" = "Bewerken";
 "not_connected_for_edit_profile_message" = "Controleer je verbinding";
 "not_connected_for_edit_profile_title" = "Geen verbinding";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema-ID";

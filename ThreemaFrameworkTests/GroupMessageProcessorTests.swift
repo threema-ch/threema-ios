@@ -168,7 +168,7 @@ class GroupMessageProcessorTests: XCTestCase {
         }
     }
 
-    func testHandleMessageGroupExistsIamMember() throws {
+    func testHandleMessageGroupExistsIamMember() async throws {
         let expectedMember01 = ThreemaIdentity("MEMBER01")
         let expectedMember02 = ThreemaIdentity("MEMBER02")
         let expectedMember03 = ThreemaIdentity("MEMBER03")
@@ -281,18 +281,20 @@ class GroupMessageProcessorTests: XCTestCase {
 
             let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedMember01)
 
-            let group = try XCTUnwrap(createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
+            guard let group = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
                 members: Set<String>([
                     myIdentityStoreMock.identity,
                     expectedMember01.string,
                     expectedMember02.string,
                     expectedMember03.string,
-                ])
-            ))
-
-            XCTAssertNotNil(group)
+                ]),
+                systemMessageDate: Date(),
+                sourceCaller: .local
+            ) else {
+                XCTFail("Creating group failed")
+                return
+            }
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
@@ -323,7 +325,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 expec.fulfill()
             })
 
-            wait(for: [expec], timeout: 2)
+            await fulfillment(of: [expec])
 
             DDLog.flushLog()
 
@@ -362,7 +364,7 @@ class GroupMessageProcessorTests: XCTestCase {
         }
     }
 
-    func testHandleMessageGroupExistsIamCreator() throws {
+    func testHandleMessageGroupExistsIamCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let expectedMember01 = ThreemaIdentity("MEMBER01")
@@ -489,13 +491,15 @@ class GroupMessageProcessorTests: XCTestCase {
 
             let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedCreator)
 
-            let group = try XCTUnwrap(createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: Set<String>([expectedMember01.string, expectedMember02.string, expectedMember03.string])
-            ))
-
-            XCTAssertNotNil(group)
+            guard let group = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
+                members: Set<String>([expectedMember01.string, expectedMember02.string, expectedMember03.string]),
+                systemMessageDate: Date(),
+                sourceCaller: .local
+            ) else {
+                XCTFail("Creating group failed")
+                return
+            }
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
@@ -526,7 +530,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 expec.fulfill()
             })
 
-            wait(for: [expec], timeout: 2)
+            await fulfillment(of: [expec])
 
             DDLog.flushLog()
 
@@ -565,7 +569,7 @@ class GroupMessageProcessorTests: XCTestCase {
         }
     }
 
-    func testHandleMessageGroupExistsILeftTheGroup() throws {
+    func testHandleMessageGroupExistsILeftTheGroup() async throws {
         let expectedMember01 = "MEMBER01"
         let expectedMember02 = "MEMBER02"
         let expectedMember03 = "MEMBER03"
@@ -631,11 +635,15 @@ class GroupMessageProcessorTests: XCTestCase {
                 creator: ThreemaIdentity(test[3] as! String)
             )
 
-            let group = try XCTUnwrap(createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: Set<String>(test[4] as! [String])
-            ))
+            guard let group = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
+                members: Set<String>(test[4] as! [String]),
+                systemMessageDate: Date(),
+                sourceCaller: .local
+            ) else {
+                XCTFail("Creating group failed")
+                return
+            }
 
             XCTAssertEqual(.active, group.state)
 
@@ -677,7 +685,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 expec.fulfill()
             })
 
-            wait(for: [expec], timeout: 2)
+            await fulfillment(of: [expec])
 
             DDLog.flushLog()
 
@@ -696,34 +704,5 @@ class GroupMessageProcessorTests: XCTestCase {
                 testDescription
             )
         }
-    }
-
-    /// Create or update group in DB and wait until finished.
-    @discardableResult private func createOrUpdateDBWait(
-        groupManager: GroupManagerProtocol,
-        groupIdentity: GroupIdentity,
-        members: Set<String>
-    ) -> Group? {
-        var group: Group?
-
-        let expec = expectation(description: "Group create or update")
-
-        groupManager.createOrUpdateDB(
-            for: groupIdentity,
-            members: members,
-            systemMessageDate: Date(),
-            sourceCaller: .local
-        )
-        .done { grp in
-            group = grp
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-        }
-
-        wait(for: [expec], timeout: 30)
-
-        return group
     }
 }

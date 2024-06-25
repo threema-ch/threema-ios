@@ -125,12 +125,10 @@ extension FileMessageEntity: VideoMessage, VoiceMessage {
             .joined()
         
         let filename = "v2-fileMessage-\(objectIDHash)"
-        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent("\(filename).\(ext)") else {
-            return nil
-        }
+        let url = FileUtility.shared.appTemporaryDirectory.appendingPathComponent("\(filename).\(ext)")
         
         do {
-            if !FileUtility.isExists(fileURL: url) {
+            if !FileUtility.shared.isExists(fileURL: url) {
                 try data.write(to: url)
             }
         }

@@ -610,6 +610,7 @@ static NSDictionary *_mdmCacheSetup;
     [[LicenseStore sharedLicenseStore] performUpdateWorkInfoForce:sendForce];
 
     [self sync];
+    [self syncSettingCalls];
 }
 
 - (NSDictionary*)getCompanyMDM {

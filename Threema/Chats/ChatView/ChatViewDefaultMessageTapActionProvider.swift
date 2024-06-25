@@ -258,7 +258,7 @@ extension ChatViewDefaultMessageTapActionProvider: AVPlayerViewControllerDelegat
         }
         
         // Delete temporary file that was played if there was any
-        FileUtility.delete(at: temporaryFileToCleanUp)
+        FileUtility.shared.delete(at: temporaryFileToCleanUp)
         temporaryFileToCleanUp = nil
     }
 }

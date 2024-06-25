@@ -28,6 +28,7 @@ import UserNotifications
 class NotificationService: UNNotificationServiceExtension {
     
     private static var isRunning = false
+    private static var runningStartDate: Date?
     private static var didJustReportCall = false
 
     var contentHandler: ((UNNotificationContent) -> Void)?
@@ -84,11 +85,21 @@ class NotificationService: UNNotificationServiceExtension {
         DispatchQueue.main.async {
             NotificationService.stopProcessingTimer?.invalidate()
         }
-
-        guard !NotificationService.isRunning else {
+        
+        // Suppressing push if notification extension is still running and running date is not older then 25 seconds
+        if NotificationService.isRunning,
+           let startDate = NotificationService.runningStartDate,
+           Date().timeIntervalSince(startDate) < kNSETimeout {
             DDLogNotice("[Push] Suppressing push because Notification Extension is still running")
+            
+            let emptyContent = UNMutableNotificationContent()
+            contentHandler(emptyContent)
+            
             return
         }
+        
+        // Set the running start date to check if its older then 25 seconds
+        NotificationService.runningStartDate = Date()
         NotificationService.isRunning = true
 
         // Checking database file exists as early as possible
@@ -181,7 +192,7 @@ class NotificationService: UNNotificationServiceExtension {
                     DDLogInfo("[Push] Alive check")
                 }
                 
-                // Start processing incoming messages and wait (max. 25s)
+                // Start processing incoming messages and wait (max. 25s kNSETimeout)
                 DDLogNotice("[Push] Enter the stopProcessingGroup")
                 NotificationService.stopProcessingGroup = DispatchGroup()
                 NotificationService.stopProcessingGroup?.enter()
@@ -208,7 +219,7 @@ class NotificationService: UNNotificationServiceExtension {
                     self.backgroundBusinessInjector.serverConnector.connect(initiator: .notificationExtension)
                 }
                 
-                let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + 25)
+                let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + kNSETimeout)
                 if result != .success {
                     DDLogWarn("[Push] Stopping processing incoming messages, because time is up!")
                     
@@ -407,6 +418,7 @@ class NotificationService: UNNotificationServiceExtension {
     ///   - force: Means last incoming task is processed, exit anyway
     ///   - reportedCall: Exit due to Threema Call was reported to the App, `NotificationService.didJustReportCall` will
     ///                   be set to `true` for 5s
+    ///   - willExpire: If function is called from `serviceExtensionTimeWillExpire`
     private func exitIfAllTasksProcessed(force: Bool = false, reportedCall: Bool = false, willExpire: Bool = false) {
         let isMultiDeviceRegistered = backgroundBusinessInjector.settingsStore.isMultiDeviceRegistered
         if force ||
@@ -669,6 +681,37 @@ extension NotificationService: MessageProcessorDelegate {
             pendingUserNotificationManager?.addAsProcessed(pendingUserNotification: pendingUserNotification)
             pendingUserNotificationManager?
                 .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
+        }
+    }
+    
+    func incomingForwardSecurityMessageWithNoResultFinished(_ message: AbstractMessage) {
+        // Remove notification
+        if let pendingUserNotification = pendingUserNotificationManager?.pendingUserNotification(
+            for: message,
+            stage: .abstract
+        ) {
+            pendingUserNotificationManager?.addAsProcessed(pendingUserNotification: pendingUserNotification)
+            pendingUserNotificationManager?.removeAllTimedUserNotifications(
+                pendingUserNotification: pendingUserNotification
+            )
+        }
+        
+        // Mark contact & conversation as dirty (1:1 conversation is needed if any status messages were added and the
+        // conversation was shown when the app was backgrounded)
+        backgroundBusinessInjector.entityManager.performAndWait {
+            let databaseManager = DatabaseManager()
+            
+            if let contactEntity = self.backgroundBusinessInjector.entityManager.entityFetcher.contact(
+                for: message.fromIdentity
+            ) {
+                databaseManager.addDirtyObject(contactEntity)
+            }
+            
+            if let conversation = self.backgroundBusinessInjector.entityManager.entityFetcher.conversation(
+                forIdentity: message.fromIdentity
+            ) {
+                databaseManager.addDirtyObject(conversation)
+            }
         }
     }
     

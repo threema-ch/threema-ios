@@ -149,17 +149,20 @@ class MediatorReflectedGroupSyncProcessor {
                     let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
                     
                     if syncGroup.hasMemberIdentities {
-                        self.frameworkInjector.groupManager.createOrUpdateDB(
-                            for: groupIdentity,
-                            members: Set<String>(syncGroup.memberIdentities.identities),
-                            systemMessageDate: Date(),
-                            sourceCaller: .sync
-                        )
-                        .done { group in
-                            seal.fulfill(group)
-                        }
-                        .catch { error in
-                            seal.reject(error)
+                        Task {
+                            do {
+                                let group = try await self.frameworkInjector.groupManager.createOrUpdateDB(
+                                    for: groupIdentity,
+                                    members: Set<String>(syncGroup.memberIdentities.identities),
+                                    systemMessageDate: Date(),
+                                    sourceCaller: .sync
+                                )
+
+                                seal.fulfill(group)
+                            }
+                            catch {
+                                seal.reject(error)
+                            }
                         }
                     }
                     else {
@@ -189,41 +192,53 @@ class MediatorReflectedGroupSyncProcessor {
                         }
 
                         if syncGroup.hasName {
-                            self.frameworkInjector.groupManager.setName(
-                                groupID: group.groupIdentity.id,
-                                creator: group.groupIdentity.creator.string,
-                                name: syncGroup.name,
-                                systemMessageDate: Date(),
-                                send: false
-                            )
-                            .catch { error in
-                                DDLogError("Changing of reflected group name failed: \(error)")
+                            Task {
+                                do {
+                                    try await self.frameworkInjector.groupManager.setName(
+                                        groupID: group.groupIdentity.id,
+                                        creator: group.groupIdentity.creator.string,
+                                        name: syncGroup.name,
+                                        systemMessageDate: Date(),
+                                        send: false
+                                    )
+                                }
+                                catch {
+                                    DDLogError("Changing of reflected group name failed: \(error)")
+                                }
                             }
                         }
 
                         if syncGroup.hasProfilePicture {
                             switch syncGroup.profilePicture.image {
                             case .removed:
-                                self.frameworkInjector.groupManager.deletePhoto(
-                                    groupID: group.groupIdentity.id,
-                                    creator: group.groupIdentity.creator.string,
-                                    sentDate: Date(),
-                                    send: false
-                                )
-                                .catch { error in
-                                    DDLogError("Removing of reflected group profile picture failed: \(error)")
+                                Task {
+                                    do {
+                                        try await self.frameworkInjector.groupManager.deletePhoto(
+                                            groupID: group.groupIdentity.id,
+                                            creator: group.groupIdentity.creator.string,
+                                            sentDate: Date(),
+                                            send: false
+                                        )
+                                    }
+                                    catch {
+                                        DDLogError("Removing of reflected group profile picture failed: \(error)")
+                                    }
                                 }
                             case .updated:
                                 if let imageData = profilePicture {
-                                    self.frameworkInjector.groupManager.setPhoto(
-                                        groupID: group.groupIdentity.id,
-                                        creator: group.groupIdentity.creator.string,
-                                        imageData: imageData,
-                                        sentDate: Date(),
-                                        send: false
-                                    )
-                                    .catch { error in
-                                        DDLogError("Changing of reflected group profile picture failed: \(error)")
+                                    Task {
+                                        do {
+                                            try await self.frameworkInjector.groupManager.setPhoto(
+                                                groupID: group.groupIdentity.id,
+                                                creator: group.groupIdentity.creator.string,
+                                                imageData: imageData,
+                                                sentDate: Date(),
+                                                send: false
+                                            )
+                                        }
+                                        catch {
+                                            DDLogError("Changing of reflected group profile picture failed: \(error)")
+                                        }
                                     }
                                 }
                             case .none:

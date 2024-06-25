@@ -29,11 +29,9 @@ import WebRTC
 protocol GroupCallContextProtocol: AnyObject {
     // MARK: Internal Properties
     
-    var pendingParticipants: Set<RemoteParticipant> { get }
-    var participants: Set<RemoteParticipant> { get }
+    var pendingParticipants: Set<PendingRemoteParticipant> { get }
+    var joinedParticipants: Set<JoinedRemoteParticipant> { get }
     
-    func localParticipant() -> LocalParticipant?
-
     var messageStream: AsyncStream<PeerConnectionMessage> { get }
     
     var keyRefreshTask: Task<Void, Error>? { get }
@@ -63,11 +61,10 @@ protocol GroupCallContextProtocol: AnyObject {
     
     func ratchetAndApplyNewKeys() throws
     func replaceAndApplyNewMediaKeys() async throws
-    func sendPostHandshakeMediaKeys(to remoteParticipant: RemoteParticipant) async throws
     
-    func rekeyReceived(from: RemoteParticipant, with mediaKeys: MediaKeys) throws
+    func rekeyReceived(from: JoinedRemoteParticipant, with mediaKeys: MediaKeys) throws
     
-    func removeDecryptor(for participant: RemoteParticipant) throws
+    func removeDecryptor(for participant: JoinedRemoteParticipant) throws
     
     // MARK: Call State
     
@@ -88,7 +85,7 @@ protocol GroupCallContextProtocol: AnyObject {
         existingParticipants: Bool
     ) async throws
     
-    func participant(with participantID: ParticipantID) -> RemoteParticipant?
+    func participant(with participantID: ParticipantID) -> JoinedRemoteParticipant?
     
     func leave() async
 }
@@ -139,17 +136,6 @@ final class GroupCallContext<
         /// encryption immediately. Note: Do **not** reset the MFSN!
         try participantState.localParticipant.ratchetMediaKeys()
         try groupCallBaseState.applyMediaKeys(from: participantState.localParticipant)
-    }
-    
-    func sendPostHandshakeMediaKeys(to remoteParticipant: RemoteParticipant) async throws {
-        DDLogNotice(
-            "[GroupCall] [Rekey] Send Immedate Post Handshake Rekey to Participant \(remoteParticipant.participantID.id) which has received old keys in the authentication message"
-        )
-        
-        let currentKeys = participantState.localParticipant.protocolMediaKeys
-        let innerRekeyMessage = try remoteParticipant.rekeyMessage(with: currentKeys)
-        let outerEnvelope = outerEnvelope(for: innerRekeyMessage, to: remoteParticipant)
-        try relay(outerEnvelope)
     }
     
     /// **Protocol Step: Join/Leave of Other Participants (Leave 1. - 6.)**
@@ -266,11 +252,11 @@ final class GroupCallContext<
         }
     }
     
-    func rekeyReceived(from remoteParticipant: RemoteParticipant, with mediaKeys: MediaKeys) throws {
+    func rekeyReceived(from remoteParticipant: JoinedRemoteParticipant, with mediaKeys: MediaKeys) throws {
         try groupCallBaseState.apply(mediaKeys: mediaKeys, for: remoteParticipant.participantID)
     }
     
-    func removeDecryptor(for participant: RemoteParticipant) throws {
+    func removeDecryptor(for participant: JoinedRemoteParticipant) throws {
         try groupCallBaseState.removeDecryptor(for: participant.participantID)
     }
 }
@@ -309,33 +295,47 @@ extension GroupCallContext {
         
         /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 2.)**
         /// Receiving 2. If the `sender` is unknown, discard the message and abort these steps.
-        guard let participant = participantState.getAllParticipants()
-            .first(where: { $0.participantID.id == message.sender })
-        else {
+        guard let participant = participantState.find(ParticipantID(id: message.sender)) else {
             DDLogError("Could not find participant for message from  \(message.sender) \(message.debugDescription)")
             return .none
         }
         
-        /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 3.)**
-        let message = try participant.handle(message: message, localParticipant: participantState.localParticipant)
-        
-        // If the handshake was completed, and the participant is no longer pending, we promote the participant
-        if participant.isHandshakeCompleted {
-            DDLogNotice("[GroupCall] Promote RemoteParticipant \(participant.participantID.id) from pending.")
-            if try participantState.promote(participant) {
-                DDLogNotice("[GroupCall] Add decryptor for \(participant.participantID.id).")
-                try await groupCallBaseState.addDecryptor(to: participant)
+        let messageResponse: MessageResponseAction
+        if let pendingParticipant = participant as? PendingRemoteParticipant {
+            
+            /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 3.)**
+            messageResponse = try pendingParticipant.handle(
+                message: message,
+                localParticipant: participantState.localParticipant
+            )
+            
+            // Handshake is completed, we promote the participant
+            if case let .handshakeCompleted(joinedRemoteParticipant) = messageResponse {
+                try participantState.registerPromotion(of: joinedRemoteParticipant)
+                try groupCallBaseState.addDecryptor(to: joinedRemoteParticipant)
             }
         }
+        else if let joinedParticipant = participant as? JoinedRemoteParticipant {
+            messageResponse = try joinedParticipant.handle(
+                message: message,
+                localParticipant: participantState.localParticipant
+            )
+        }
+        else {
+            fatalError()
+        }
             
-        return message
+        return messageResponse
     }
 }
 
 // MARK: - Message Sending
 
 extension GroupCallContext {
-    func outerEnvelope(for innerData: Data, to participant: RemoteParticipant) -> Groupcall_ParticipantToParticipant
+    func outerEnvelope(
+        for innerData: Data,
+        to participant: RemoteParticipant
+    ) -> Groupcall_ParticipantToParticipant
         .OuterEnvelope {
         var outer = Groupcall_ParticipantToParticipant.OuterEnvelope()
         outer.receiver = participant.participantID.id
@@ -366,7 +366,7 @@ extension GroupCallContext {
         /// 4. If the user is not in `candidates`, abort these steps.
         /// 5. If the user does not have the lowest participant ID in `candidates`, abort these steps.
         
-        if let minOtherParticipantID = participants.map(\.participantID.id).min(),
+        if let minOtherParticipantID = joinedParticipants.map(\.participantID.id).min(),
            myParticipantID().id > minOtherParticipantID {
             refreshTask?.cancel()
             refreshTask = nil
@@ -391,7 +391,7 @@ extension GroupCallContext {
     
     private func sendCallStateUpdateToSfu() throws {
         let groupCallState = try Groupcall_ParticipantToSfu.UpdateCallState.with {
-            $0.encryptedCallState = try encryptedCallState(from: participants)
+            $0.encryptedCallState = try encryptedCallState(from: joinedParticipants)
         }
         
         let outer = Groupcall_ParticipantToSfu.Envelope.with {
@@ -428,14 +428,14 @@ extension GroupCallContext {
         try await connectionContext.updateCall(call: participantState, remove: Set(remove), add: [])
         
         for participant in add {
-            let newParticipant = RemoteParticipant(
+            let pendingParticipant = PendingRemoteParticipant(
                 participantID: ParticipantID(id: participant.id),
                 dependencies: dependencies,
                 groupCallMessageCrypto: groupCallBaseState,
                 isExistingParticipant: existingParticipants
             )
             
-            participantState.add(pending: newParticipant)
+            participantState.add(pending: pendingParticipant)
         }
         
         try await connectionContext.updateCall(call: participantState, remove: Set(remove), add: Set(add))
@@ -445,12 +445,11 @@ extension GroupCallContext {
 // MARK: - Call State
 
 extension GroupCallContext {
-    var pendingParticipants: Set<RemoteParticipant> {
-        // TODO: (IOS-4059) Properly separate pending and other participants
+    var pendingParticipants: Set<PendingRemoteParticipant> {
         participantState.getPendingParticipants()
     }
     
-    var participants: Set<RemoteParticipant> {
+    var joinedParticipants: Set<JoinedRemoteParticipant> {
         participantState.getCurrentParticipants()
     }
     
@@ -458,8 +457,8 @@ extension GroupCallContext {
         connectionContext.messageStream
     }
     
-    func participant(with participantID: ParticipantID) -> RemoteParticipant? {
-        guard let participant = participants.filter({ $0.participantID == participantID }).first else {
+    func participant(with participantID: ParticipantID) -> JoinedRemoteParticipant? {
+        guard let participant = joinedParticipants.filter({ $0.participantID == participantID }).first else {
             DDLogWarn("[GroupCall] Could not find RemoteParticipant with id: \(participantID.id) in participants")
             #if DEBUG
                 if pendingParticipants.filter({ $0.participantID == participantID }).first != nil {
@@ -472,10 +471,6 @@ extension GroupCallContext {
         }
         
         return participant
-    }
-    
-    func localParticipant() -> LocalParticipant? {
-        participantState.localParticipant
     }
     
     func myParticipantID() -> ParticipantID {
@@ -527,7 +522,7 @@ extension GroupCallContext {
 // MARK: - Protobuf Helpers
 
 extension GroupCallContext {
-    private func encryptedCallState(from allParticipants: Set<RemoteParticipant>) throws -> Data {
+    private func encryptedCallState(from allParticipants: Set<JoinedRemoteParticipant>) throws -> Data {
         let callState = groupCallState(from: allParticipants)
         let serialized = try callState.ownSerializedData()
         let nonce = dependencies.groupCallCrypto.randomBytes(of: 24)
@@ -542,7 +537,7 @@ extension GroupCallContext {
         return encrypted
     }
     
-    private func groupCallState(from participants: Set<RemoteParticipant>) -> Groupcall_CallState {
+    private func groupCallState(from participants: Set<JoinedRemoteParticipant>) -> Groupcall_CallState {
         var callState = Groupcall_CallState()
         callState.stateCreatedAt = UInt64(Date().timeIntervalSinceReferenceDate)
         callState.stateCreatedBy = participantState.localParticipant.participantID.id
@@ -551,28 +546,31 @@ extension GroupCallContext {
         return callState
     }
     
-    private func groupCallParticipants(from participants: Set<RemoteParticipant>)
+    private func groupCallParticipants(from joinedRemoteParticipants: Set<JoinedRemoteParticipant>)
         -> [UInt32: Groupcall_CallState.Participant] {
         var dict = [UInt32: Groupcall_CallState.Participant]()
         
-        for participant in participants {
-            var gcParticipant = Groupcall_CallState.Participant.Normal()
-            guard let identity = participant.threemaIdentity else {
-                // In the future this could be a guest participant
-                DDLogError(
-                    "[GroupCall] Cannot add participant with id \(participant.participantID.id) to state update because it doesn't have an associated Threema ID."
-                )
-                continue
-            }
+        for joinedRemoteParticipant in joinedRemoteParticipants {
+            var normalParticipant = Groupcall_CallState.Participant.Normal()
             
-            gcParticipant.identity = identity.string
-            gcParticipant.nickname = participant.nickname ?? identity.string
-
-            var test = Groupcall_CallState.Participant()
-            test.threema = gcParticipant
+            normalParticipant.identity = joinedRemoteParticipant.threemaIdentity.string
+            normalParticipant.nickname = joinedRemoteParticipant.nickname
             
-            dict[participant.participantID.id] = test
+            var stateParticipant = Groupcall_CallState.Participant()
+            stateParticipant.threema = normalParticipant
+            
+            dict[joinedRemoteParticipant.participantID.id] = stateParticipant
         }
+        
+        // We also need to add the local participant
+        let localParticipant = participantState.localParticipant
+        var localNormalParticipant = Groupcall_CallState.Participant.Normal()
+        localNormalParticipant.identity = localParticipant.threemaIdentity.string
+        localNormalParticipant.nickname = localParticipant.nickname
+        
+        var localStateParticipant = Groupcall_CallState.Participant()
+        localStateParticipant.threema = localNormalParticipant
+        dict[localParticipant.participantID.id] = localStateParticipant
         
         return dict
     }

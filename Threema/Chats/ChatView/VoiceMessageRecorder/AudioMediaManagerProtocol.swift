@@ -18,9 +18,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import ThreemaFramework
 
 protocol AudioMediaManagerProtocol: AnyObject {
+    associatedtype FileUtil: FileUtilityProtocol
     
     /// Removes the files at the specified URLs from the filesystem.
     /// This operation is performed on a background thread.
@@ -58,4 +61,57 @@ protocol AudioMediaManagerProtocol: AnyObject {
     /// failure.
     @discardableResult
     static func moveToPersistentDir(from url: URL) -> Result<URL, VoiceMessageError>
+    
+    /// Copies  a file from a given URL to the destination
+    /// - Parameter source: The source URL of the file to be copied.
+    /// - Parameter destination: The destination URL of the file to be copied.
+    /// - Returns: A `Result` indicating the success or failure of the copy operation.
+    @discardableResult
+    static func copy(source: URL, destination: URL) -> Result<Void, VoiceMessageError>
+}
+
+extension AudioMediaManager {
+    static func cleanupFiles(_ urls: [URL]) {
+        DispatchQueue.global(qos: .background).async {
+            urls.forEach(FileUtil.shared.delete)
+        }
+    }
+    
+    static func tmpAudioURL(with namedFile: String) -> URL {
+        let fullFileName = "\(namedFile)-\(DateFormatter.getDateForExport(.now))"
+        let url = FileUtil.shared.appTemporaryDirectory
+            .appendingPathComponent(fullFileName)
+            .appendingPathExtension(MEDIA_EXTENSION_AUDIO)
+
+        DDLogInfo("new Tmp fileURL: \(url)")
+        return url
+    }
+    
+    static func copy(source: URL, destination: URL) -> Result<Void, VoiceMessageError> {
+        FileUtil.shared.copy(source: source, destination: destination)
+            ? .success(())
+            : .failure(.fileOperationFailed)
+    }
+    
+    static func moveToPersistentDir(from url: URL) -> Result<URL, VoiceMessageError> {
+        guard let persistentDir = FileUtil.shared.appDocumentsDirectory
+        else {
+            return .failure(.fileOperationFailed)
+        }
+        return moveFile(
+            from: url,
+            to: persistentDir
+                .appendingPathComponent(url.lastPathComponent)
+        )
+    }
+    
+    private static func moveFile(from url: URL, to newURL: URL) -> Result<URL, VoiceMessageError> {
+        guard !FileUtil.shared.isExists(fileURL: newURL) else {
+            return .success(newURL)
+        }
+        
+        return FileUtil.shared.move(source: url, destination: newURL)
+            ? .success(newURL)
+            : .failure(.fileOperationFailed)
+    }
 }

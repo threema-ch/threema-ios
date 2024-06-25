@@ -21,7 +21,7 @@
 import CoreData
 import Foundation
 
-class EntityObserver: NSObject {
+final class EntityObserver: NSObject {
 
     static let shared = EntityObserver()
 
@@ -32,7 +32,7 @@ class EntityObserver: NSObject {
         case deleted
     }
     
-    private let queue = DispatchQueue(label: "ch.threema.EntityObserver.queue")
+    private let queue: DispatchQueue
 
     private struct Subscriber: Hashable {
         static func == (lhs: EntityObserver.Subscriber, rhs: EntityObserver.Subscriber) -> Bool {
@@ -54,6 +54,7 @@ class EntityObserver: NSObject {
     private var subscribersForUpdate = Set<Subscriber>()
 
     override private init() {
+        self.queue = DispatchQueue(label: "ch.threema.EntityObserver.queue")
         super.init()
         initializeObserver()
     }
@@ -145,16 +146,20 @@ class EntityObserver: NSObject {
         subscribers: Set<Subscriber>,
         reason: EntityChangedReason
     ) {
-        let subscribersForObjectIDs = Set<NSManagedObjectID?>(
-            subscribers
-                .map { subscriber in
-                    subscriber.managedObjectID
-                }
-        )
+        let (localSubscribers, subscribersForObjectIDs) = queue.sync {
+            let localSubscribers = Set(subscribers)
+
+            var subscribersForObjectIDs = Set<NSManagedObjectID?>()
+            for subscriber in localSubscribers {
+                subscribersForObjectIDs.insert(subscriber.managedObjectID)
+            }
+
+            return (localSubscribers, subscribersForObjectIDs)
+        }
 
         let intersection = Set<NSManagedObjectID?>(updatedObjectIDs.intersection(subscribersForObjectIDs))
 
-        for subscriber in subscribers.filter({ intersection.contains($0.managedObjectID) }) {
+        for subscriber in localSubscribers.filter({ intersection.contains($0.managedObjectID) }) {
             subscriber.entityChangedAction(
                 updatedObjects?
                     .first(where: { $0.objectID == subscriber.managedObjectID }),

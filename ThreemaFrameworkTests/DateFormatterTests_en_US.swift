@@ -105,6 +105,20 @@ class DateFormatterTests_en_US: XCTestCase {
     let expectedRelativeMediumDateThisYear_en_US = ", Jan 01"
     let expectedRelativeMediumDateLastCalendarYear_en_US = ", Dec 31, "
     let expectedRelativeMediumDateMoreThanAYearAgo_en_US = "Fri, Feb 01, 2019"
+    let expectedRelativeMediumDateAndShortTimeYesterday_en_US: String = {
+        if #available(iOS 17.4, *) {
+            return "Yesterday at "
+        }
+        else {
+            return "Yesterday, "
+        }
+    }()
+
+    let expectedRelativeMediumDateAndShortTimeThisYear_en_US = ", Jan 01 at 1:14 PM"
+    let expectedRelativeMediumDateAndShortTimeLastCalendarYear_start_en_US = ", Dec 31, "
+    let expectedRelativeMediumDateAndShortTimeLastCalendarYear_end_en_US = " at 10:23 PM"
+    let expectedRelativeMediumDateAndShortTimeMoreThanAYearAgo_en_US = "Fri, Feb 01, 2019 at 1:14 PM"
+
     let expectedRelativeTimeTodayAndMediumDateOtherwiseToday_en_US: String = {
         if #available(iOS 17.0, *) {
             return "1:14 PM"
@@ -316,6 +330,54 @@ class DateFormatterTests_en_US: XCTestCase {
         let actual = DateFormatter.relativeMediumDate(for: DateFormatterTests.testDateMoreThanAYearAgo)
         
         XCTAssertEqual(actual, expectedRelativeMediumDateMoreThanAYearAgo_en_US)
+    }
+    
+    func testRelativeMediumDateAndShortTimeYesterday() throws {
+        let twentyFourHoursAgo = Date(timeIntervalSinceNow: -(60 * 60 * 24))
+        
+        let expected =
+            "\(expectedRelativeMediumDateAndShortTimeYesterday_en_US)\(DateFormatter.shortStyleTimeNoDate(twentyFourHoursAgo))"
+        
+        let actual = DateFormatter.relativeMediumDateAndShortTime(for: twentyFourHoursAgo)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testRelativeMediumDateAndShortTimeThisYearWithReset() throws {
+        try XCTSkipIf(
+            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
+        )
+        
+        let expected =
+            "\(DateFormatterTests.formattedShortWeekday(DateFormatterTests.testDateThisYear, localeIdentifier))\(expectedRelativeMediumDateAndShortTimeThisYear_en_US)"
+
+        DateFormatter.forceReinitialize()
+        DateFormatter.locale = Locale(identifier: localeIdentifier)
+        
+        let actual = DateFormatter.relativeMediumDateAndShortTime(for: DateFormatterTests.testDateThisYear)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testRelativeMediumDateAndShortTimeLastCalendarYear() throws {
+        try XCTSkipIf(
+            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
+        )
+        
+        let expected =
+            "\(DateFormatterTests.formattedShortWeekday(DateFormatterTests.testDateLastCalendarYear, localeIdentifier))\(expectedRelativeMediumDateAndShortTimeLastCalendarYear_start_en_US)\(DateFormatterTests.formattedFullYear(DateFormatterTests.testDateLastCalendarYear, localeIdentifier))\(expectedRelativeMediumDateAndShortTimeLastCalendarYear_end_en_US)"
+
+        let actual = DateFormatter.relativeMediumDateAndShortTime(for: DateFormatterTests.testDateLastCalendarYear)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testRelativeMediumDateAndShortTimeMoreThanAYearAgo() {
+        let actual = DateFormatter.relativeMediumDateAndShortTime(for: DateFormatterTests.testDateMoreThanAYearAgo)
+        
+        XCTAssertEqual(actual, expectedRelativeMediumDateAndShortTimeMoreThanAYearAgo_en_US)
     }
     
     func testRelativeTimeTodayAndMediumDateOtherwiseToday() {

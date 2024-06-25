@@ -163,7 +163,7 @@ class ConversationsViewControllerHelper {
             SettingsStore.removeINInteractions(for: conversation.objectID)
         }
 
-        MessageDraftStore.deleteDraft(for: conversation)
+        MessageDraftStore.shared.deleteDraft(for: conversation)
         WallpaperStore.shared.deleteWallpaper(for: conversation.objectID)
         ChatScrollPosition.shared.removeSavedPosition(for: conversation)
 

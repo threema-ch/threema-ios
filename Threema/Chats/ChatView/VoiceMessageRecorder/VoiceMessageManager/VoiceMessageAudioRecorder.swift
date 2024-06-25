@@ -25,13 +25,15 @@ import Foundation
 import ThreemaFramework
 
 final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtocol, @unchecked Sendable {
+    typealias DraftStore = MessageDraftStore
+    typealias MediaManager = AudioMediaManager<FileUtility>
+        
     // MARK: - Properties
     
     weak var delegate: VoiceMessageAudioRecorderDelegate?
     
     var interrupted = false
     
-    private(set) var audioMediaManager: AudioMediaManagerProtocol.Type
     private(set) var audioSessionManager: AudioSessionManagerProtocol
     
     private var runningInBackground = false
@@ -48,7 +50,7 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
     private var cancellables = Set<AnyCancellable>()
     
     // Finished recording URL
-    private lazy var recordedAudioURL = AudioMediaManager.tmpAudioURL(with: Configuration.recordFileName)
+    private lazy var recordedAudioURL = MediaManager.tmpAudioURL(with: Configuration.recordFileName)
     // Temp URL for the composition of audio recording sessions
     private(set) var tmpRecorderFile: URL
     
@@ -73,7 +75,7 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
     var isContinuingRecording: Bool { tmpAudioDuration.isZero && recorder == nil }
     
     private var newRecordingSessionURL: URL {
-        let url = AudioMediaManager
+        let url = MediaManager
             .tmpAudioURL(with: "\(Configuration.recordTmpFileName)_\(recordingSessions.count + 1)")
         recordingSessions.append(url)
         DDLogInfo("New recording session with URL: \(url)")
@@ -83,26 +85,22 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
     override convenience init() {
         self.init(
             delegate: nil,
-            audioMediaManager: AudioMediaManager.self,
             audioSessionManager: AudioSessionManager()
         )
     }
-    
+
     // MARK: - Init
     
     /// Manage recording, playback and sending of audio files.
     /// - Parameters:
     ///   - delegate: The delegate for the voice message recorder.
     ///   - audioMediaManager: File management of the audio files.
-    ///   - audioSessionManager: Manage audio sessions.
     init(
         delegate: VoiceMessageAudioRecorderDelegate?,
-        audioMediaManager: AudioMediaManagerProtocol.Type,
         audioSessionManager: AudioSessionManagerProtocol
     ) {
-        self.audioMediaManager = audioMediaManager
         self.audioSessionManager = audioSessionManager
-        self.tmpRecorderFile = AudioMediaManager.tmpAudioURL(with: Configuration.recordTmpFileName)
+        self.tmpRecorderFile = MediaManager.tmpAudioURL(with: Configuration.recordTmpFileName)
         super.init()
         self.delegate = delegate
         registerNotificationObservers()
@@ -111,18 +109,24 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
 
     deinit {
         detachAudioRecorder()
-        AudioMediaManager.cleanupFiles(recordingSessions + [tmpRecorderFile])
+        MediaManager.cleanupFiles(recordingSessions + [tmpRecorderFile])
     }
     
     // MARK: - Public Functions
     
     /// Sends the recorded audio file to a specified conversation.
     /// - Parameter conversation: The conversation where the audio file will be sent.
+    @Sendable
     func sendFile(for conversation: Conversation) async {
         recordingStateSubject.send(.none)
         
-        @Sendable
-        func send() async throws {
+        await stop()
+        
+        switch MediaManager.copy(
+            source: tmpRecorderFile,
+            destination: recordedAudioURL
+        ) {
+        case .success():
             DDLogVerbose("Sending AudioFile")
             guard let item = URLSenderItem(
                 url: recordedAudioURL,
@@ -133,29 +137,26 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
                 DDLogError("Error creating SenderItem for conversation: \(conversation.description)")
                 return
             }
-            
-            try await BusinessInjector().messageSender.sendBlobMessage(
-                for: item,
-                in: conversation.objectID,
-                correlationID: nil,
-                webRequestID: nil
-            )
-        }
-        
-        await stop()
-        do {
-            try FileManager.default.copyItem(at: tmpRecorderFile, to: recordedAudioURL)
-            DDLogInfo("Copied \(tmpRecorderFile.lastPathComponent) to \(recordedAudioURL.lastPathComponent)")
-            try await send()
-            await MainActor.run {
-                MessageDraftStore.deleteDraft(for: conversation)
+            do {
+                try await BusinessInjector().messageSender.sendBlobMessage(
+                    for: item,
+                    in: conversation.objectID,
+                    correlationID: nil,
+                    webRequestID: nil
+                )
             }
-        }
-        catch let error as LocalizedError {
+            catch let error as LocalizedError {
+                delegate?.handleError(error)
+            }
+            catch {
+                DDLogError("\(error.localizedDescription)")
+            }
+            
+            await MainActor.run {
+                DraftStore.shared.deleteDraft(for: conversation)
+            }
+        case let .failure(error):
             delegate?.handleError(error)
-        }
-        catch {
-            DDLogError("\(error.localizedDescription)")
         }
     }
     
@@ -240,7 +241,7 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
         
         recorder?.stop()
         
-        switch await AudioMediaManager.concatenateRecordingsAndSave(
+        switch await MediaManager.concatenateRecordingsAndSave(
             combine: recordingSessions,
             to: tmpRecorderFile
         ) {
@@ -274,7 +275,7 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
         // computation among other things
         recordingSessions.append(audioFile)
         // this makes sure the `tmpRecorderFile` is set with the `recordingSessions` contents
-        _ = await AudioMediaManager.concatenateRecordingsAndSave(
+        _ = await MediaManager.concatenateRecordingsAndSave(
             combine: recordingSessions,
             to: tmpRecorderFile
         )
@@ -293,7 +294,7 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
         
         await stop()
         return try .closed(
-            audioFile: shouldMove ? audioMediaManager.moveToPersistentDir(from: tmpRecorderFile)
+            audioFile: shouldMove ? MediaManager.moveToPersistentDir(from: tmpRecorderFile)
                 .get() : tmpRecorderFile
         )
     }

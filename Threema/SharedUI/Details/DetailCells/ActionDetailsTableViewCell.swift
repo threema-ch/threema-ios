@@ -36,7 +36,6 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
                 if image == nil {
                     image = UIImage(named: imageName)
                 }
-                image = image?.applying(symbolWeight: .light, symbolScale: .medium)
                 
                 assert(image != nil, "Symbol not found")
                 iconImageView.image = image
@@ -57,7 +56,6 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
     private let minCellHeight: CGFloat = 44
     
     private let iconCenterFromLeadingMargin: CGFloat = 12
-    private let defaultLargeIconHeight: CGFloat = 28
     private let labelOffsetFromIconCenter: CGFloat = 28
     
     private let defaultTopAndBottomMargin: CGFloat = 10
@@ -73,11 +71,8 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
     
     private lazy var iconImageView: UIImageView = {
         let imageView = UIImageView()
-        
-        imageView.contentMode = .scaleAspectFill
-        
-        let scaledHeight = UIFontMetrics.default.scaledValue(for: defaultLargeIconHeight)
-        imageView.heightAnchor.constraint(equalToConstant: scaledHeight).isActive = true
+
+        imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(scale: .large)
         
         return imageView
     }()

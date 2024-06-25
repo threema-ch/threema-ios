@@ -34,7 +34,7 @@
 - (void)changedManagedObjectID:(NSManagedObjectID * _Nonnull)objectID;
 
 /**
- Processing of incoming (reflected) message is started.
+ Processing of incoming (reflected) message started.
  
  @param message Incoming message
  */
@@ -73,9 +73,13 @@ NS_SWIFT_NAME(readMessage(inConversations:));
 
 /// Called when processing of the abstract message has failed
 ///
-/// This typically occurs when a PFS wrapped message cannot be decrypted due to missing or incorrectsession state
+/// This typically occurs when a PFS wrapped message cannot be decrypted due to missing or incorrect session state
 /// @param message
 - (void)incomingAbstractMessageFailed:(AbstractMessage * _Nonnull)message;
+
+/// A FS message with no unwrapped message was successfully processed (i.e. auxiliary messages or rejected messages)
+/// @param message  Abstract message of FS message
+- (void)incomingForwardSecurityMessageWithNoResultFinished:(AbstractMessage * _Nonnull)message;
 
 /**
  Will be called from TaskQueue if is queue empty.

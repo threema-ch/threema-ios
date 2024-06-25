@@ -21,6 +21,5 @@
 import Foundation
 
 public protocol GroupCallsHTTPClientAdapterProtocol {
-    init(authorization: String?)
     func sendPeek(authorization: String, url: URL, body: Data) async throws -> (Data, URLResponse)
 }

@@ -189,7 +189,7 @@ class BlobUploader: NSObject, BlobUploaderProtocol {
                            !(200...299).contains(response.statusCode) {
                             uploadError = BlobUploaderError
                                 .uploadFailed(
-                                    message: "[BlobUploader] Download failed with response code: \(response.statusCode)."
+                                    message: "[BlobUploader] Upload failed with response code: \(response.statusCode)."
                                 )
                         }
                     }

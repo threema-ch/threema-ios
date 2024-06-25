@@ -34,7 +34,7 @@ public struct SFUToken: Sendable {
     
     // MARK: - Internal Properties
 
-    let sfuBaseURL: String
+    let sfuBaseURL: URL
     let hostNameSuffixes: [String]
     let sfuToken: String
     
@@ -46,7 +46,7 @@ public struct SFUToken: Sendable {
     
     // MARK: - Lifecycle
     
-    public init(sfuBaseURL: String, hostNameSuffixes: [String], sfuToken: String, expiration: Int) {
+    public init(sfuBaseURL: URL, hostNameSuffixes: [String], sfuToken: String, expiration: Int) {
         self.sfuBaseURL = sfuBaseURL
         self.hostNameSuffixes = hostNameSuffixes
         self.sfuToken = sfuToken
@@ -54,11 +54,8 @@ public struct SFUToken: Sendable {
         self.expirationDate = Date().addingTimeInterval(TimeInterval(expiration - expirationOffset))
     }
     
-    public func isAllowedBaseURL(baseURL: String) -> Bool {
-        guard let url = URL(string: baseURL) else {
-            return false
-        }
-        return hasAllowedProtocol(url: url) && hasAllowedHostnameSuffix(url: url)
+    public func isValidSFUBaseURL(_ url: URL) -> Bool {
+        hasAllowedProtocol(url: url) && hasAllowedHostnameSuffix(url: url)
     }
     
     public func hasAllowedProtocol(url: URL) -> Bool {

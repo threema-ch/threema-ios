@@ -66,11 +66,6 @@ public class Contact: NSObject {
                 DDLogError("Wrong type, should be ContactEntity")
                 return
             }
-            guard self?.identity == ThreemaIdentity(contactEntity.identity),
-                  self?.publicKey == contactEntity.publicKey else {
-                DDLogError("Identity or public key mismatch")
-                return
-            }
 
             switch reason {
             case .deleted:
@@ -78,6 +73,12 @@ public class Contact: NSObject {
                     self?.willBeDeleted = true
                 }
             case .updated:
+                guard self?.identity == ThreemaIdentity(contactEntity.identity),
+                      self?.publicKey == contactEntity.publicKey else {
+                    DDLogError("Identity or public key mismatch")
+                    return
+                }
+
                 if self?.publicNickname != contactEntity.publicNickname {
                     self?.publicNickname = contactEntity.publicNickname
                 }

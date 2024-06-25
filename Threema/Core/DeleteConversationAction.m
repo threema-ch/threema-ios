@@ -181,7 +181,7 @@
         return;
     }
     
-    [MessageDraftStore deleteDraftFor:_conversation];
+    [[MessageDraftStore shared] deleteDraftFor:_conversation];
     [[ChatScrollPosition _sharedObjC] removeSavedPositionFor:_conversation];
 
     // Delete conversation

@@ -71,4 +71,8 @@ class ServerInfoProviderMock: ServerInfoProvider {
     func rendezvousServer(completionHandler: @escaping (ThreemaFramework.RendezvousServerInfo?, Error?) -> Void) {
         completionHandler(nil, nil)
     }
+
+    func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void) {
+        completionHandler(nil, nil)
+    }
 }

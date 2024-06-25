@@ -871,7 +871,7 @@
     }
     
     // Delete decrypted backup data from application documents folder
-    [FileUtility  deleteAt: [[FileUtility appDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
+    [[FileUtility shared]  deleteAt: [[[FileUtility shared] appDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
     
     // The App Setup Steps should be called as the last step of the onboarding and if they fail they need to be retried.
     // We log the steps (incl. retries) to a separate file in the document directory such that this can be requested in
@@ -887,7 +887,12 @@
         // The setup is only completed if the App Setup Steps are successfully completed
         [AppSetup setState:AppSetupStateComplete];
         
-        [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:nil onError:nil];
+        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:true];
+        [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:^{
+            [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
+        } onError:^(NSError *error) {
+            [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
+        }];
         
         [self showApplicaitonUI];
         

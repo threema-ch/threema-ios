@@ -165,13 +165,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         // Call it here to ensure we have the correct constraints
         updateHeaderLayout(animated: false)
-        
-        if ThreemaUtility.supportsForwardSecurity {
-            // Update feature mask for FS so that user can enable it if the contact has just updated the app
-            FeatureMask.check(contacts: [contact], for: Int(FEATURE_MASK_FORWARD_SECURITY)) { _ in
-                // Feature mask has been updated in DB, observer will take care of updating the UI
-            }
-        }
     }
     
     override func viewDidAppear(_ animated: Bool) {

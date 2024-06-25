@@ -321,6 +321,7 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageAction {
             speakText: speakText,
             shareItems: shareItems,
             activityViewAnchor: contentView,
+            popOverSource: chatBubbleView,
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,

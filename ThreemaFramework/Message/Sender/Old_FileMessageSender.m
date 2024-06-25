@@ -258,7 +258,7 @@
     NSString *errorMessage;
     switch (error) {
         case UploadErrorFileTooBig:
-            errorMessage = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_message_file_too_big"], [FileUtility getFileSizeDescriptionFrom:kMaxFileSize]];
+            errorMessage = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_message_file_too_big"], [[FileUtility shared] getFileSizeDescriptionFrom:kMaxFileSize]];
             break;
             
         case UploadErrorInvalidFile:

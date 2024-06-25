@@ -62,7 +62,7 @@ public class DeleteRevokeIdentityManager: NSObject {
         safeManager.setBackupReminder()
 
         // DB & Files
-        FileUtility.removeItemsInAllDirectories()
+        FileUtility.shared.removeItemsInAllDirectories()
         AppGroup.resetUserDefaults()
         DatabaseManager().eraseDB()
 

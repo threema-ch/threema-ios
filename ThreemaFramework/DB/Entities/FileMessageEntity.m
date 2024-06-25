@@ -150,7 +150,7 @@ static NSString *fieldOrigin = @"origin";
         }
         
         // Get unique filename in temporary directory, to allow sharing multiple files with the same name
-        NSString *uniqueFileName = [FileUtility getUniqueFilenameFrom:fileName directoryURL:tmpDirUrl pathExtension:extension];
+        NSString *uniqueFileName = [[FileUtility shared] getUniqueFilenameFrom:fileName directoryURL:tmpDirUrl pathExtension:extension];
         fileName = uniqueFileName;
         
         tmp = [[tmpDirUrl URLByAppendingPathComponent:fileName] URLByAppendingPathExtension: extension];

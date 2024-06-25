@@ -205,7 +205,7 @@ final class GlobalSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         }
         
         conversationNameLabel.text = message.conversation.displayName
-        dateLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: message.sectionDate)
+        dateLabel.text = DateFormatter.relativeMediumDateAndShortTime(for: message.sectionDate)
         markerStarImageView.isHidden = !(message.messageMarkers?.star.boolValue ?? false)
 
         if let previewableMessage = message as? PreviewableMessage {

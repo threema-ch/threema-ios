@@ -48,6 +48,7 @@ import XCTest
             groupIdentity: otherGroupIdentity,
             groupName: "TESTGROUP"
         )
+        fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
         
         // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
         func testExample() async throws {
@@ -56,11 +57,11 @@ import XCTest
             Task.detached {
                 let dependencies = MockDependencies().create()
 
-                let proposedGroupCall = ProposedGroupCall(
+                let proposedGroupCall = try ProposedGroupCall(
                     groupRepresentation: self.basicGroupModel,
                     protocolVersion: 1,
                     gck: Data(repeating: 0x03, count: 40),
-                    sfuBaseURL: "sfu.threema.test",
+                    sfuBaseURL: self.sfuBaseURL,
                     startMessageReceiveDate: Date(),
                     dependencies: dependencies
                 )
@@ -96,19 +97,19 @@ import XCTest
                     localContactModel: self.localContactModel
                 )
 
-                let proposedGroupCall1 = ProposedGroupCall(
+                let proposedGroupCall1 = try ProposedGroupCall(
                     groupRepresentation: self.basicGroupModel,
                     protocolVersion: 1,
                     gck: Data(repeating: 0x03, count: 40),
-                    sfuBaseURL: "sfu.threema.test",
+                    sfuBaseURL: self.sfuBaseURL,
                     startMessageReceiveDate: Date(),
                     dependencies: dependencies
                 )
-                let proposedGroupCall2 = ProposedGroupCall(
+                let proposedGroupCall2 = try ProposedGroupCall(
                     groupRepresentation: self.basicGroupModel,
                     protocolVersion: 1,
                     gck: Data(repeating: 0x04, count: 40),
-                    sfuBaseURL: "sfu.threema.test",
+                    sfuBaseURL: self.sfuBaseURL,
                     startMessageReceiveDate: Date(),
                     dependencies: dependencies
                 )
@@ -188,11 +189,11 @@ import XCTest
                 )
 
                 let proposedGroupCalls = (0..<numberOfCalls).map { i in
-                    ProposedGroupCall(
+                    try! ProposedGroupCall(
                         groupRepresentation: self.basicGroupModel,
                         protocolVersion: 1,
                         gck: Data(repeating: UInt8(i), count: 40),
-                        sfuBaseURL: "sfu.threema.test",
+                        sfuBaseURL: self.sfuBaseURL,
                         startMessageReceiveDate: Date(),
                         dependencies: dependencies
                     )
@@ -292,7 +293,7 @@ import XCTest
                 let newCall = try XCTUnwrap(GroupCallActor(
                     localContactModel: localContactModel,
                     groupModel: otherGroupModel,
-                    sfuBaseURL: "https://\(i).test",
+                    sfuBaseURL: URL(string: "https://\(i).test")!,
                     gck: Data(repeating: UInt8(i), count: 32),
                     dependencies: dependencies
                 ))
@@ -340,7 +341,7 @@ import XCTest
                 let newCall = try XCTUnwrap(GroupCallActor(
                     localContactModel: localContactModel,
                     groupModel: otherGroupModel,
-                    sfuBaseURL: "https://\(i).test",
+                    sfuBaseURL: URL(string: "https://\(i).test")!,
                     gck: Data(repeating: UInt8(i), count: 32),
                     dependencies: dependencies
                 ))
@@ -363,7 +364,7 @@ import XCTest
                 let newCall = try XCTUnwrap(GroupCallActor(
                     localContactModel: localContactModel,
                     groupModel: otherGroupModel,
-                    sfuBaseURL: "https://\(i).test",
+                    sfuBaseURL: URL(string: "https://\(i).test")!,
                     gck: Data(repeating: UInt8(i), count: 32),
                     dependencies: dependencies
                 ))
@@ -376,7 +377,7 @@ import XCTest
             let newGoldCall = try XCTUnwrap(GroupCallActor(
                 localContactModel: localContactModel,
                 groupModel: otherGroupModel,
-                sfuBaseURL: "",
+                sfuBaseURL: URL(string: "sfu.threema.test")!,
                 gck: Data(repeating: 0x01, count: 32),
                 dependencies: dependencies
             ))

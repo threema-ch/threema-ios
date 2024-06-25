@@ -69,11 +69,9 @@ extension AudioMessageEntity: VoiceMessage {
         }
         
         let filename = "v1-audioMessage-\(UUID().uuidString)"
-        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(
+        let url = FileUtility.shared.appTemporaryDirectory.appendingPathComponent(
             "\(filename).\(MEDIA_EXTENSION_AUDIO)"
-        ) else {
-            return nil
-        }
+        )
         
         do {
             try audioData.write(to: url)

@@ -150,13 +150,6 @@ public class Group: NSObject {
                     DDLogError("Wrong type, should be GroupEntity")
                     return
                 }
-                guard self?.groupIdentity == GroupIdentity(
-                    id: groupEntity.groupID,
-                    creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
-                ) else {
-                    DDLogError("Group identity mismatch")
-                    return
-                }
 
                 switch reason {
                 case .deleted:
@@ -164,6 +157,14 @@ public class Group: NSObject {
                         self?.willBeDeleted = true
                     }
                 case .updated:
+                    guard self?.groupIdentity == GroupIdentity(
+                        id: groupEntity.groupID,
+                        creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
+                    ) else {
+                        DDLogError("Group identity mismatch")
+                        return
+                    }
+
                     if let newState = GroupState(rawValue: groupEntity.state.intValue) {
                         if self?.state != newState {
                             self?.state = newState
@@ -188,10 +189,6 @@ public class Group: NSObject {
                     DDLogError("Wrong type, should be Conversation")
                     return
                 }
-                guard conversation.isGroup(), self?.groupID == conversation.groupID else {
-                    DDLogError("Group ID mismatch")
-                    return
-                }
 
                 switch reason {
                 case .deleted:
@@ -199,6 +196,11 @@ public class Group: NSObject {
                         self?.willBeDeleted = true
                     }
                 case .updated:
+                    guard conversation.isGroup(), self?.groupID == conversation.groupID else {
+                        DDLogError("Group ID mismatch")
+                        return
+                    }
+
                     if self?.conversationGroupMyIdentity != conversation.groupMyIdentity {
                         self?.conversationGroupMyIdentity = conversation.groupMyIdentity
                     }
@@ -323,7 +325,7 @@ public class Group: NSObject {
         state == .forcedLeft
     }
     
-    @objc public var didSyncRequst: Bool {
+    @objc public var didSyncRequest: Bool {
         lastSyncRequest != nil
     }
     
@@ -380,14 +382,6 @@ public class Group: NSObject {
                 numberOfMembers
             )
         }
-    }
-    
-    public var localizedRelativeLastMessageDate: String {
-        guard let lastMessageDate else {
-            return ""
-        }
-
-        return DateFormatter.relativeMediumDate(for: lastMessageDate)
     }
     
     @objc public private(set) dynamic var name: String?

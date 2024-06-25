@@ -65,7 +65,13 @@ enum {
 @property (nonatomic, retain, nullable) NSNumber * abRecordId NS_SWIFT_NAME(abRecordID);
 @property (nonatomic, retain, nullable) NSString * cnContactId NS_SWIFT_NAME(cnContactID);
 @property (nonatomic, retain, nullable) NSDate * createdAt;
+
+/// Current feature mask fetched for this contact
+///
+/// Always set this when the feature masked is fetched, even if it didn't change. The CD property will not be update if there was no change.
+/// However, this will do some cleanup if FS is not supported with the set mask.
 @property (nonatomic, retain) NSNumber * featureMask;
+
 @property (nonatomic, retain, nullable) NSString * firstName;
 @property (nonatomic, retain) NSString * identity;
 @property (nonatomic, retain, nullable) NSData * imageData;

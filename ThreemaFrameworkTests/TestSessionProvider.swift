@@ -58,23 +58,7 @@ class TestSessionProvider: URLSessionProvider {
     ///   - delegate: Delegate for session
     /// - Returns: Created URLSession
     func backgroundSession(identifier: String, delegate: URLSessionDelegate) -> URLSession {
-        // We first need to create the configuration. Changes made to a session after its initialization are not
-        // respected.
-        let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
-        configuration.protocolClasses = [URLProtocolMock.self]
-        
-        // General
-        configuration.allowsCellularAccess = true
-        configuration.waitsForConnectivity = true
-        
-        // Caching, this might not be needed since configuration is ephemeral anyways
-        configuration.urlCache = nil
-        configuration.urlCredentialStorage = nil
-
-        return URLSession(
-            configuration: configuration,
-            delegate: delegate,
-            delegateQueue: OperationQueue.current
-        )
+        // Return default session, because background session not working in unit tests
+        defaultSession(delegate: delegate)
     }
 }

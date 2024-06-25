@@ -210,9 +210,9 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
 
     private func load(queue: TaskQueue?) {
         if let queuePath = queue?.queuePath(),
-           FileUtility.isExists(fileURL: queuePath) {
-            if let data = FileUtility.read(fileURL: queuePath) {
-                FileUtility.delete(at: queuePath)
+           FileUtility.shared.isExists(fileURL: queuePath) {
+            if let data = FileUtility.shared.read(fileURL: queuePath) {
+                FileUtility.shared.delete(at: queuePath)
                 
                 queue?.decode(data)
             }

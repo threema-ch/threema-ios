@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "Сканировать документ";
+"no_contacts_loading" = "Выполняется скачивание контактов с сервера. Они будут показаны по завершении этого процесса.";
+
+// Contact List
+"contactList_add_contact" = "Новый контакт";
+"contactList_add_group" = "Новая группа";
+
+
 
 // General
 "quotation_mark_start" = "“";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "Проверенных администратором контактов %@ не найдено.";
 "no_distribution_list" = "Нет списков рассылки";
 "no_distribution_list_message" = "У вас пока нет списков рассылки. Создайте список, нажав на кнопку «+».";
-
 "no_contacts_syncoff" = "У вас еще нет контактов. Включите синхронизацию (Настройки > Приватность) или добавьте контакты вручную с помощью кнопки «+».";
 
 "my_profile_picture_title" = "Ваша фотография профиля";
@@ -1348,7 +1355,6 @@
 "profile_edit" = "Изменить";
 "not_connected_for_edit_profile_message" = "Проверьте соединение";
 "not_connected_for_edit_profile_title" = "Нет подключения";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";

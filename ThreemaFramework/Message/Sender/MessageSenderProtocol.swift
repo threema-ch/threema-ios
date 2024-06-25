@@ -47,16 +47,15 @@ public protocol MessageSenderProtocol {
 
     // MARK: - Type specific sending
     
+    /// Sanitizes, splits if needed and sends a text as TextMessage(s)
+    @discardableResult
     func sendTextMessage(
-        text: String?,
+        containing text: String,
         in conversation: Conversation,
-        quickReply: Bool,
-        requestID: String?,
-        completion: ((BaseMessage?) -> Void)?
-    )
-    
-    func sanitizeAndSendText(_ rawText: String, in conversation: Conversation)
-    
+        sendProfilePicture: Bool,
+        requestID: String?
+    ) async -> [TextMessage]
+        
     func sendBlobMessage(
         for item: URLSenderItem,
         in conversationObjectID: NSManagedObjectID,
@@ -130,12 +129,33 @@ public protocol MessageSenderProtocol {
 
 extension MessageSenderProtocol {
     public func sendTextMessage(
-        text: String?,
+        containing text: String,
         in conversation: Conversation,
-        quickReply: Bool,
+        sendProfilePicture: Bool = true,
         requestID: String? = nil
     ) {
-        sendTextMessage(text: text, in: conversation, quickReply: quickReply, requestID: requestID, completion: nil)
+        Task {
+            await sendTextMessage(
+                containing: text,
+                in: conversation,
+                sendProfilePicture: sendProfilePicture,
+                requestID: requestID
+            )
+        }
+    }
+    
+    public func sendTextMessage(
+        containing text: String,
+        in conversation: Conversation,
+        sendProfilePicture: Bool = true,
+        requestID: String? = nil
+    ) async -> [TextMessage] {
+        await sendTextMessage(
+            containing: text,
+            in: conversation,
+            sendProfilePicture: sendProfilePicture,
+            requestID: requestID
+        )
     }
     
     public func sendBlobMessage(

@@ -215,7 +215,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         if (!tmpPath) {
             NSString *type = [UTIConverter preferredFileExtensionForMimeType:[UTIConverter mimeTypeFromUTI:_type]];
-            tmpPath = [NSString stringWithFormat:@"%@%@.%@", NSTemporaryDirectory(), [FileUtility getTemporarySendableFileNameWithBase:@"audio" directoryURL:[NSURL fileURLWithPath:NSTemporaryDirectory()] pathExtension:type], type];
+            tmpPath = [NSString stringWithFormat:@"%@%@.%@", NSTemporaryDirectory(), [[FileUtility shared] getTemporarySendableFileNameWithBase:@"audio" directoryURL:[NSURL fileURLWithPath:NSTemporaryDirectory()] pathExtension:type], type];
             if ([[NSFileManager defaultManager] fileExistsAtPath:tmpPath]) {
                 return 0.0;
             }

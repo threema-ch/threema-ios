@@ -131,12 +131,27 @@ let tmpDirectory = "tmpImages/"
     
     @objc static func storeImageToTmprDir(imageData: UIImage) -> URL {
         let tmpDir = getTempDir()
-        let fileName = FileUtility.getTemporarySendableFileName(base: "image")
+        let fileName = FileUtility.shared.getTemporarySendableFileName(base: "image")
         let fileURL = tmpDir.appendingPathComponent(fileName + ".jpeg")
         let data = MediaConverter.jpegRepresentation(for: imageData)
         
         do {
             try data?.write(to: fileURL)
+        }
+        catch {
+            DDLogError("Error \(error.localizedDescription)")
+        }
+        
+        return fileURL
+    }
+    
+    @objc static func storePDFToTmpDir(pdfData: Data) -> URL {
+        let tmpDir = getTempDir()
+        let fileName = FileUtility.shared.getTemporarySendableFileName(base: "Scanned-Documents")
+        let fileURL = tmpDir.appendingPathComponent(fileName + ".pdf")
+        
+        do {
+            try pdfData.write(to: fileURL)
         }
         catch {
             DDLogError("Error \(error.localizedDescription)")
@@ -235,7 +250,7 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
         
         let tmpDirURL = PhotosAccessHelper.getTempDir()
         let fileManager = FileManager.default
-        let filename = FileUtility.getTemporarySendableFileName(
+        let filename = FileUtility.shared.getTemporarySendableFileName(
             base: "video",
             directoryURL: tmpDirURL,
             pathExtension: url.pathExtension
@@ -260,7 +275,7 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
         }
         let tmpDirURL = PhotosAccessHelper.getTempDir()
         let fileManager = FileManager.default
-        let filename = FileUtility.getTemporarySendableFileName(
+        let filename = FileUtility.shared.getTemporarySendableFileName(
             base: "image",
             directoryURL: tmpDirURL,
             pathExtension: url.pathExtension

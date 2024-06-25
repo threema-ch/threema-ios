@@ -53,6 +53,7 @@ final class TaskExecutionSettingsSync: TaskExecutionTransaction {
                 || task.syncSettings.hasExcludeFromSyncIdentities
                 || task.syncSettings.hasUnknownContactPolicy
                 || task.syncSettings.hasReadReceiptPolicy
+                || task.syncSettings.hasGroupCallPolicy
         )
     }
     

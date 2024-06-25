@@ -231,7 +231,7 @@ final class MessageDateAndStateView: UIView {
     private func updateDateLabel(for message: BaseMessage) {
         // Show date and time if the `displayDate` is on another day than the date used for sectioning
         if !Calendar.current.isDate(message.displayDate, inSameDayAs: message.sectionDate) {
-            dateLabel.text = DateFormatter.shortStyleDateTime(message.displayDate)
+            dateLabel.text = DateFormatter.relativeMediumDateAndShortTime(for: message.displayDate)
         }
         // Show time
         else {
@@ -240,7 +240,7 @@ final class MessageDateAndStateView: UIView {
         
         if message.lastEditedAt != nil {
             if let dateLabelText = dateLabel.text {
-                dateLabel.text = "\("edited_message_state".localized) \(dateLabelText)"
+                dateLabel.text = "\("edited_message_state".localized) • \(dateLabelText)"
             }
             else {
                 dateLabel.text = "edited_message_state".localized

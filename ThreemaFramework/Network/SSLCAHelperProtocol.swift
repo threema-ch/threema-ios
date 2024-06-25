@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,8 +18,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import <UIKit/UIKit.h>
+import Foundation
 
-@interface QRCodeActivity : UIActivity
-
-@end
+protocol SSLCAHelperProtocol {
+    static func canAuthenticate(_ protectionSpace: URLProtectionSpace) -> Bool
+    func handle(challenge: URLAuthenticationChallenge) async throws
+        -> (disposition: URLSession.AuthChallengeDisposition, credential: URLCredential?)
+    func evaluate(trust: SecTrust, domain: String, completionHandler: @escaping (Bool) -> Void)
+    func evaluate(trust: SecTrust, domain: String) async -> Bool
+}

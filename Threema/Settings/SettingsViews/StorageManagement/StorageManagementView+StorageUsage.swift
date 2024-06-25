@@ -62,15 +62,15 @@ extension StorageManagementView {
             await Task(priority: .background) {
                 var dbSize: Int64 = 0
                 var appSize: Int64 = 0
-                if let appDataURL = FileUtility.appDataDirectory {
+                if let appDataURL = FileUtility.shared.appDataDirectory {
                     let dbURL = appDataURL.appendingPathComponent("ThreemaData.sqlite")
-                    dbSize = FileUtility.fileSizeInBytes(fileURL: dbURL) ?? 0
+                    dbSize = FileUtility.shared.fileSizeInBytes(fileURL: dbURL) ?? 0
                     DDLogInfo(
                         "DB size \(ByteCountFormatter.string(fromByteCount: dbSize, countStyle: ByteCountFormatter.CountStyle.file))"
                     )
                     
-                    FileUtility.pathSizeInBytes(pathURL: appDataURL, size: &appSize)
-                    FileUtility.pathSizeInBytes(pathURL: FileManager.default.temporaryDirectory, size: &appSize)
+                    FileUtility.shared.pathSizeInBytes(pathURL: appDataURL, size: &appSize)
+                    FileUtility.shared.pathSizeInBytes(pathURL: FileManager.default.temporaryDirectory, size: &appSize)
                     DDLogInfo(
                         "APP size \(ByteCountFormatter.string(fromByteCount: appSize, countStyle: ByteCountFormatter.CountStyle.file))"
                     )

@@ -32,32 +32,35 @@ class WebGroupSyncRequest: WebAbstractMessage {
     }
     
     func syncGroup() {
-        ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        let businessInjector = BusinessInjector()
-        guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversation(for: id) else {
-            ack!.success = false
-            ack!.error = "invalidGroup"
-            return
-        }
-
-        guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
-            ack!.success = false
-            ack!.error = "invalidGroup"
-            return
-        }
-        
-        if !group.isOwnGroup {
-            ack!.success = false
-            ack!.error = "notAllowed"
-            return
-        }
-        
-        DispatchQueue.main.async {
-            businessInjector.groupManager.sync(group: group)
-                .catch { error in
-                    DDLogError("Unable to sync group: \(error.localizedDescription)")
+        Task {
+            do {
+                ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
+                let businessInjector = BusinessInjector()
+                guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversation(for: id) else {
+                    ack!.success = false
+                    ack!.error = "invalidGroup"
+                    return
                 }
+
+                guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
+                    ack!.success = false
+                    ack!.error = "invalidGroup"
+                    return
+                }
+
+                if !group.isOwnGroup {
+                    ack!.success = false
+                    ack!.error = "notAllowed"
+                    return
+                }
+
+                try await businessInjector.groupManager.sync(group: group)
+            }
+            catch {
+                DDLogError("Unable to sync group: \(error)")
+            }
+
+            ack!.success = true
         }
-        ack!.success = true
     }
 }

@@ -58,9 +58,14 @@ import ThreemaFramework
             
             // Apply settings
             options.dsn = sentryDsn
+            options.environment = ThreemaEnvironment.env().description
+
+            // Disable/Configure certain tracking options
             options.enableAutoSessionTracking = false
             options.enableNetworkTracking = false
-
+            options.enableCaptureFailedRequests = false
+            options.appHangTimeoutInterval = TimeInterval(10)
+            
             // Disable breadcrumbs
             options.maxBreadcrumbs = 0
             options.enableAutoBreadcrumbTracking = false
@@ -213,6 +218,7 @@ import ThreemaFramework
     ///
     /// - Returns: true -> start Sentry crash handler
     private static func isEnabled() -> Bool {
-        !FileUtility.isExists(fileURL: FileUtility.appDocumentsDirectory?.appendingPathComponent(sentryNotEnabled))
+        !FileUtility.shared
+            .isExists(fileURL: FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(sentryNotEnabled))
     }
 }

@@ -167,6 +167,10 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     func incomingAbstractMessageFailed(_ message: AbstractMessage) {
         // no-op
     }
+    
+    func incomingForwardSecurityMessageWithNoResultFinished(_ message: AbstractMessage) {
+        // no-op
+    }
 
     func outgoingMessageFinished(_ message: AbstractMessage) { }
 

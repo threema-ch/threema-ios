@@ -49,7 +49,7 @@ public class AppSetup: NSObject {
             }
             
             if newValue == .complete {
-                FileUtility.delete(at: AppSetup.noPreexistingDatabaseFile)
+                FileUtility.shared.delete(at: AppSetup.noPreexistingDatabaseFile)
             }
             
             AppGroup.userDefaults().set(newValue.rawValue, forKey: Constants.appSetupStateKey)
@@ -78,16 +78,16 @@ public class AppSetup: NSObject {
     
     /// This file is created during a call to `registerIfADatabaseFileExists()` and only deleted if `state` is set to
     /// `.complete`
-    private static let noPreexistingDatabaseFile: URL? = FileUtility.appDataDirectory?.appendingPathComponent(
+    private static let noPreexistingDatabaseFile: URL? = FileUtility.shared.appDataDirectory?.appendingPathComponent(
         "APP_SETUP_NOT_COMPLETED" // Named like this for backwards compatibility
     )
     
     /// Create a marker if no database file exist when this is called. The marker can only be removed by completing the
     /// setup with setting`state` to `.complete`
     @objc public static func registerIfADatabaseFileExists() {
-        if !FileUtility.isExists(fileURL: noPreexistingDatabaseFile),
-           !FileUtility.isExists(fileURL: DatabaseManager.storeURL()) {
-            FileUtility.write(
+        if !FileUtility.shared.isExists(fileURL: noPreexistingDatabaseFile),
+           !FileUtility.shared.isExists(fileURL: DatabaseManager.storeURL()) {
+            FileUtility.shared.write(
                 fileURL: noPreexistingDatabaseFile,
                 contents: nil
             )
@@ -102,7 +102,7 @@ public class AppSetup: NSObject {
             return true
         }
         
-        return !FileUtility.isExists(fileURL: AppSetup.noPreexistingDatabaseFile)
+        return !FileUtility.shared.isExists(fileURL: AppSetup.noPreexistingDatabaseFile)
     }
     
     // MARK: - Private helper

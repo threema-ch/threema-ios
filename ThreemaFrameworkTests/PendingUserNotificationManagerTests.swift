@@ -28,10 +28,11 @@ class PendingUserNotificationManagerTests: XCTestCase {
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
-
-        FileUtility.delete(at: URL(fileURLWithPath: PendingUserNotificationManager.pathPendingUserNotifications))
-        FileUtility.delete(at: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications))
-
+        
+        FileUtility.shared.delete(at: URL(fileURLWithPath: PendingUserNotificationManager.pathPendingUserNotifications))
+        FileUtility.shared
+            .delete(at: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications))
+        
         PendingUserNotificationManager.clear()
 
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()

@@ -35,7 +35,7 @@ class DBLoadTests: XCTestCase {
     /// methods in this file like 'testDbLoad'.
     func testCopyOldVersionOfDatabase() {
         
-        let databasePath = FileUtility.appDataDirectory?.path
+        let databasePath = FileUtility.shared.appDataDirectory?.path
         
         if databasePath != nil {
             print("\nCopy 'old' version of database for testing DB migration:")
@@ -64,136 +64,145 @@ class DBLoadTests: XCTestCase {
     /// This test is useful to test "Settings - Advanced - Contacts Cleanup"
     ///
     /// Note: the database must contain at least 2 nonduplicate contacts before running this test
-    func testGenerateDuplicateContacts() throws {
-        let em = EntityManager()
-        var newDuplicateContacts = [ContactEntity]()
+    func testGenerateDuplicateContacts() async throws {
+        let em = EntityManager(withChildContextForBackgroundProcess: true)
 
-        try em.performAndWaitSave {
-            if let allContacts = em.entityFetcher.allContacts() {
-                guard allContacts.count >= 2 else {
-                    print("\nSkipping test, please first add at least 2 contacts\n")
-                    return
-                }
-                
-                if let identities = (allContacts as? [ContactEntity])?.map(\.identity) {
-                    
-                    identities.forEach { identity in
-                        
-                        if let contactsForIdentity = em.entityFetcher.allContacts(forID: identity) as? [ContactEntity],
-                           contactsForIdentity.count == 1,
-                           let contact = contactsForIdentity.first {
-                            
-                            print("Create duplicate contact for \(identity)")
-                            let duplicateContact = em.entityCreator.contact()
-                            duplicateContact?.identity = identity
-                            duplicateContact?.firstName = "Duplicate of"
-                            duplicateContact?.lastName = identity
-                            duplicateContact?.publicKey = contact.publicKey
-                            duplicateContact?.verificationLevel = contact.verificationLevel
-                            duplicateContact?.workContact = contact.workContact
-                            duplicateContact?.forwardSecurityState = contact.forwardSecurityState
-                            duplicateContact?.featureMask = contact.featureMask
-                            duplicateContact?.isContactHidden = contact.isContactHidden
-                            duplicateContact?.typingIndicator = contact.typingIndicator
-                            duplicateContact?.readReceipt = contact.readReceipt
-                            duplicateContact?.importedStatus = contact.importedStatus
-                            duplicateContact?.publicNickname = contact.publicNickname
-                            
-                            newDuplicateContacts.append(duplicateContact!)
-                        }
-                    }
-                    
-                    guard !newDuplicateContacts.isEmpty else {
-                        print("No duplicates created, terminating test.")
-                        return
-                    }
-                    
-                    //
-                    // create 1:1 conversation for the first duplicated contact
-                    //
-                    
-                    if let firstDuplicateContact = newDuplicateContacts.first {
-                        self.addOneToOneTextMessage(
-                            "This message was received",
-                            isOwn: false,
-                            contact: firstDuplicateContact,
-                            entityManager: em
-                        )
-                        self.addOneToOneTextMessage(
-                            "This message was sent",
-                            isOwn: true,
-                            contact: firstDuplicateContact,
-                            entityManager: em
-                        )
-                        print(
-                            "Created (duplicate) 1:1 conversation with \(firstDuplicateContact.identity) and sent/received messages"
-                        )
-                    }
-                    
-                    //
-                    // create call history entries for duplicate contact
-                    //
-                    
-                    if let firstDuplicateContact = newDuplicateContacts.first {
-                        // inspired from CallHistoryManager / CallHistoryManagerTests
-                        for _ in 0..<10 {
-                            if let call = em.entityCreator.callEntity() {
-                                call.callID = NSNumber(value: UInt32.random(in: UInt32.min..<UInt32.max))
-                                call.date = Date()
-                                call.contact = firstDuplicateContact
-                            }
-                        }
-                        print(
-                            "Created 10 (invisible) call history entries for duplicate of \(firstDuplicateContact.identity)"
-                        )
-                    }
+        let allContactIdentity: [String] = await em.perform {
+            (em.entityFetcher.allContacts() as? [ContactEntity])?.map(\.identity) ?? [String]()
+        }
 
-                    //
-                    // create group with duplicate contacts
-                    //
-                    
-                    let group = try self.createGroup(
-                        named: "Duplicate members in this group",
-                        with: identities,
-                        entityManager: em
-                    )
-                    group.conversation.addMembers(Set(newDuplicateContacts))
-                    newDuplicateContacts.forEach { duplicateContact in
-                        let mainContact = em.entityFetcher.contact(for: duplicateContact.identity)
-                        
-                        self.addGroupTextMessage("From main contact", sender: mainContact, in: group, entityManager: em)
-                        self.addGroupTextMessage(
-                            "From duplicate contact",
-                            sender: duplicateContact,
-                            in: group,
-                            entityManager: em
-                        )
-                    }
-                    print(
-                        "Created group conversation '\(group.name!)' with regular and duplicate members and received messages"
-                    )
-                    
-                    //
-                    // add rejected message at the end of the group
-                    //
+        guard allContactIdentity.count >= 2 else {
+            print("\nSkipping test, please first add at least 2 contacts\n")
+            return
+        }
 
-                    let message = self.addGroupTextMessage(
-                        "From myself. Rejected by 50% main contacts and 50% duplicates.",
-                        in: group,
-                        entityManager: em
-                    )
-                    message.sendFailed = NSNumber(booleanLiteral: true)
-                    for i in 0..<newDuplicateContacts.count {
-                        // alternate between regular and duplicate contacts
-                        let duplicate = newDuplicateContacts[i]
-                        let contact = i % 2 == 0 ? duplicate : em.entityFetcher.contact(for: duplicate.identity)
-                        message.addRejectedBy(contact!)
+        let newDuplicateContacts = await em.perform {
+            var newDuplicateContacts = [ContactEntity]()
+
+            allContactIdentity.forEach { identity in
+
+                if let contactsForIdentity = em.entityFetcher.allContacts(forID: identity) as? [ContactEntity],
+                   contactsForIdentity.count == 1,
+                   let contact = contactsForIdentity.first {
+
+                    print("Create duplicate contact for \(identity)")
+                    if let duplicateContact = em.entityCreator.contact() {
+                        duplicateContact.identity = identity
+                        duplicateContact.firstName = "Duplicate of"
+                        duplicateContact.lastName = identity
+                        duplicateContact.publicKey = contact.publicKey
+                        duplicateContact.verificationLevel = contact.verificationLevel
+                        duplicateContact.workContact = contact.workContact
+                        duplicateContact.forwardSecurityState = contact.forwardSecurityState
+                        duplicateContact.featureMask = contact.featureMask
+                        duplicateContact.isContactHidden = contact.isContactHidden
+                        duplicateContact.typingIndicator = contact.typingIndicator
+                        duplicateContact.readReceipt = contact.readReceipt
+                        duplicateContact.importedStatus = contact.importedStatus
+                        duplicateContact.publicNickname = contact.publicNickname
+
+                        newDuplicateContacts.append(duplicateContact)
                     }
-                    print(
-                        "Added message in group '\(group.name!)' rejected by various main contacts/duplicates"
-                    )
                 }
             }
+
+            return newDuplicateContacts
+        }
+
+        guard !newDuplicateContacts.isEmpty else {
+            print("No duplicates created, terminating test.")
+            return
+        }
+
+        await em.performSave {
+
+            //
+            // create 1:1 conversation for the first duplicated contact
+            //
+
+            if let firstDuplicateContact = newDuplicateContacts.first {
+                self.addOneToOneTextMessage(
+                    "This message was received",
+                    isOwn: false,
+                    contact: firstDuplicateContact,
+                    entityManager: em
+                )
+                self.addOneToOneTextMessage(
+                    "This message was sent",
+                    isOwn: true,
+                    contact: firstDuplicateContact,
+                    entityManager: em
+                )
+                print(
+                    "Created (duplicate) 1:1 conversation with \(firstDuplicateContact.identity) and sent/received messages"
+                )
+            }
+
+            //
+            // create call history entries for duplicate contact
+            //
+
+            if let firstDuplicateContact = newDuplicateContacts.first {
+                // inspired from CallHistoryManager / CallHistoryManagerTests
+                for _ in 0..<10 {
+                    if let call = em.entityCreator.callEntity() {
+                        call.callID = NSNumber(value: UInt32.random(in: UInt32.min..<UInt32.max))
+                        call.date = Date()
+                        call.contact = firstDuplicateContact
+                    }
+                }
+                print(
+                    "Created 10 (invisible) call history entries for duplicate of \(firstDuplicateContact.identity)"
+                )
+            }
+        }
+
+        //
+        // create group with duplicate contacts
+        //
+
+        let group = try await createGroup(
+            named: "Duplicate members in this group",
+            with: allContactIdentity,
+            entityManager: em
+        )
+
+        await em.performSave {
+            group.conversation.addMembers(Set(newDuplicateContacts))
+            newDuplicateContacts.forEach { duplicateContact in
+                let mainContact = em.entityFetcher.contact(for: duplicateContact.identity)
+
+                self.addGroupTextMessage("From main contact", sender: mainContact, in: group, entityManager: em)
+                self.addGroupTextMessage(
+                    "From duplicate contact",
+                    sender: duplicateContact,
+                    in: group,
+                    entityManager: em
+                )
+            }
+            print(
+                "Created group conversation '\(group.name ?? "-")' with regular and duplicate members and received messages"
+            )
+
+            //
+            // add rejected message at the end of the group
+            //
+
+            let message = self.addGroupTextMessage(
+                "From myself. Rejected by 50% main contacts and 50% duplicates.",
+                in: group,
+                entityManager: em
+            )
+            message.sendFailed = NSNumber(booleanLiteral: true)
+            for i in 0..<newDuplicateContacts.count {
+                // alternate between regular and duplicate contacts
+                let duplicate = newDuplicateContacts[i]
+                let contact = i % 2 == 0 ? duplicate : em.entityFetcher.contact(for: duplicate.identity)
+                message.addRejectedBy(contact!)
+            }
+            print(
+                "Added message in group '\(group.name ?? "-")' rejected by various main contacts/duplicates"
+            )
         }
     }
 
@@ -213,13 +222,13 @@ class DBLoadTests: XCTestCase {
         _ = createContacts(for: ["ECHOECHO"])
         
         let entityManager = EntityManager()
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
                 conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
             }
         }
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for index in 0..<100_000 {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: index, to: Date(timeIntervalSince1970: 0))
@@ -358,16 +367,16 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
 
         let senders = ["ECHOECHO"]
-        createContacts(for: senders)
+        _ = createContacts(for: senders)
         for sender in senders {
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 if let contact = entityManager.entityFetcher.contact(for: sender) {
                     conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
                 }
             }
 
             for index in 0..<5000 {
-                entityManager.performSyncBlockAndSafe {
+                entityManager.performAndWaitSave {
                     let calendar = Calendar.current
                     let date = calendar.date(byAdding: .second, value: +index, to: Date())
                     let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
@@ -402,7 +411,7 @@ class DBLoadTests: XCTestCase {
 
         for num in 0..<1000 {
             for groupConversation in entityManager.entityFetcher.allGroupConversations() as! [Conversation] {
-                entityManager.performSyncBlockAndSafe {
+                entityManager.performAndWaitSave {
                     for contact in entityManager.entityFetcher.allContacts() as! [ContactEntity] {
                         let calendar = Calendar.current
                         let date = calendar.date(byAdding: .hour, value: 1, to: Date(timeIntervalSince1970: 0))
@@ -478,7 +487,7 @@ class DBLoadTests: XCTestCase {
         for pk in pks {
             print("add id: \(pk.key)")
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 if let contact = entityManager.entityCreator.contact() {
                     contact.identity = pk.key
                     contact.verificationLevel = 0
@@ -502,7 +511,7 @@ class DBLoadTests: XCTestCase {
             let resizedTestImage = MediaConverter.scaleImageData(testImageData!, toMaxSize: 512)?
                 .jpegData(compressionQuality: 0.99)!
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 let imageData = entityManager.entityCreator.imageData()!
                 imageData.data = resizedTestImage
                 imageData.width = 512
@@ -518,7 +527,7 @@ class DBLoadTests: XCTestCase {
         
         _ = createContacts(for: ["ECHOECHO"])
         let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
                 conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
             }
@@ -544,7 +553,7 @@ class DBLoadTests: XCTestCase {
         _ caption: String
     ) {
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             let dbFile: FileData = (entityManager.entityCreator.fileData())!
             dbFile.data = imageData
             
@@ -597,8 +606,8 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Quote Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "Quote Messages", with: [], entityManager: entityManager)
+
         // Sender
         _ = createContacts(for: ["ECHOECHO"])
         let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
@@ -612,7 +621,7 @@ class DBLoadTests: XCTestCase {
         var quotableMessages = [BaseMessage]()
         
         // Text messages
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             let outgoingMessage = entityManager.entityCreator.textMessage(
                 for: group.conversation,
                 setLastUpdate: true
@@ -707,7 +716,7 @@ class DBLoadTests: XCTestCase {
         
         var fileMessageCreationError: Error?
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             do {
                 for senderItem in senderItems {
                     let ownFileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
@@ -753,7 +762,7 @@ class DBLoadTests: XCTestCase {
         let testLocationsURL = try XCTUnwrap(testBundle.url(forResource: "test_locations", withExtension: "json"))
         let locations = try JSONDecoder().decode([Location].self, from: Data(contentsOf: testLocationsURL))
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             let ownLocationMessage = entityManager.entityCreator.locationMessage(
                 for: group.conversation,
                 setLastUpdate: true
@@ -797,7 +806,7 @@ class DBLoadTests: XCTestCase {
         
         // Create quote messages
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for index in 0..<numberOfMessagesToAdd {
                 let message = entityManager.entityCreator.textMessage(for: group.conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
@@ -834,8 +843,8 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Image File Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "Image File Messages", with: [], entityManager: entityManager)
+
         // Load image
         let testBundle = Bundle(for: DBLoadTests.self)
         let testImageURL = try XCTUnwrap(testBundle.url(forResource: "Bild-1-0", withExtension: "jpg"))
@@ -860,8 +869,8 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Sticker File Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "Sticker File Messages", with: [], entityManager: entityManager)
+
         // Load image
         let testBundle = Bundle(for: DBLoadTests.self)
         let testStickerURL = try XCTUnwrap(testBundle.url(forResource: "Sticker-sine_wave", withExtension: "png"))
@@ -892,8 +901,8 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Animated Image File Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "Animated Image File Messages", with: [], entityManager: entityManager)
+
         // Load image
         let testBundle = Bundle(for: DBLoadTests.self)
         let testAnimatedImageURL = try XCTUnwrap(testBundle.url(
@@ -921,8 +930,12 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Animated Sticker File Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(
+            named: "Animated Sticker File Messages",
+            with: [],
+            entityManager: entityManager
+        )
+
         // Load image
         let testBundle = Bundle(for: DBLoadTests.self)
         let testAnimatedStickerURL = try XCTUnwrap(testBundle.url(
@@ -956,8 +969,8 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Video File Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "Video File Messages", with: [], entityManager: entityManager)
+
         // Load image
         let testBundle = Bundle(for: DBLoadTests.self)
         let testVideoURL = try XCTUnwrap(testBundle.url(forResource: "Video-1", withExtension: "mp4"))
@@ -982,8 +995,8 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Voice File Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "Voice File Messages", with: [], entityManager: entityManager)
+
         // Load image
         let testBundle = Bundle(for: DBLoadTests.self)
         let testVoiceURL = try XCTUnwrap(testBundle.url(forResource: "audioAnalyzerTest", withExtension: "m4a"))
@@ -1013,8 +1026,8 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "File File Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "File File Messages", with: [], entityManager: entityManager)
+
         // Load image
         let testBundle = Bundle(for: DBLoadTests.self)
         let testFileURL = try XCTUnwrap(testBundle.url(forResource: "Test", withExtension: "pdf"))
@@ -1049,7 +1062,7 @@ class DBLoadTests: XCTestCase {
         // Load conversation
         var conversation: Conversation!
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contact(for: identity) {
                 conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
             }
@@ -1079,7 +1092,7 @@ class DBLoadTests: XCTestCase {
             let callType = isIncoming ? incomingCallStates[index % incomingCallStates.count] :
                 outgoingCallStates[index % outgoingCallStates.count]
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 guard let systemMessage = entityManager.entityCreator.systemMessage(for: conversation) else {
                     XCTFail("Could not create system message")
                     return
@@ -1115,7 +1128,7 @@ class DBLoadTests: XCTestCase {
     
     // MARK: Ballot Messages
     
-    func testGroupWithBallotMessages() throws {
+    func testGroupWithBallotMessages() async throws {
         // Configuration
         // There is more configuration in the loop below
         let numberOfMessagesToAdd = 100
@@ -1160,11 +1173,11 @@ class DBLoadTests: XCTestCase {
         participants.append(myIdentityStoreMock.identity)
         
         // Create group
-        let group = try XCTUnwrap(createGroup(
+        let group = try await createGroup(
             named: "Ballot Messages (\(DateFormatter.accessibilityDateTime(Date())))",
             with: participants,
             entityManager: entityManager
-        ))
+        )
         let conversation = group.conversation
         
         for index in 0..<numberOfMessagesToAdd {
@@ -1173,7 +1186,7 @@ class DBLoadTests: XCTestCase {
             let intermediateResults = index % 5 == 0
             let multipleChoice = index % 3 == 0
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 // Setup ballot
                 let baseBallot = entityManager.entityCreator.ballot()!
                 baseBallot.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)
@@ -1279,7 +1292,7 @@ class DBLoadTests: XCTestCase {
             
             var fileMessageCreationError: Error?
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 do {
                     let fileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
                         for: senderItem,
@@ -1310,15 +1323,15 @@ class DBLoadTests: XCTestCase {
     
     // MARK: Location messages
 
-    func testGroupWithLocationMessages() throws {
+    func testGroupWithLocationMessages() async throws {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "Location Messages", with: [], entityManager: entityManager)
-        
+        let group = try await createGroup(named: "Location Messages", with: [], entityManager: entityManager)
+
         // Fetch contact
         _ = _ = createContacts(for: ["ECHOECHO"])
         let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
@@ -1332,7 +1345,7 @@ class DBLoadTests: XCTestCase {
         for index in 0..<numberOfMessagesToAdd {
             let location = locations[index % locations.count]
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 let locationMessage = entityManager.entityCreator.locationMessage(
                     for: group.conversation,
                     setLastUpdate: true
@@ -1368,7 +1381,7 @@ class DBLoadTests: XCTestCase {
     
     // MARK: System messages
     
-    func testGroupWithSystemMessages() throws {
+    func testGroupWithSystemMessages() async throws {
         let memberIDsToAddAndRemove = [
             "79PNJP93",
             "86C8TPSV",
@@ -1389,58 +1402,32 @@ class DBLoadTests: XCTestCase {
             "EE365MVK",
         ]
         
-        createContacts(for: memberIDsToAddAndRemove)
-        
+        _ = createContacts(for: memberIDsToAddAndRemove)
+
         let entityManager = EntityManager()
         
         // Create group
-        let group = try createGroup(named: "System Messages", with: [], entityManager: entityManager)
+        let group = try await createGroup(named: "System Messages", with: [], entityManager: entityManager)
         let groupManager: GroupManagerProtocol = GroupManager(
             entityManager: entityManager,
-            taskManager: TaskManager(backgroundEntityManager: entityManager)
+            taskManager: TaskManagerMock()
         )
 
         // Add system messages by doing different group updates
         
-        var expectations = [XCTestExpectation]()
-        
-        // Doing this with an expectation blocks the test
-        groupManager.setName(group: group, name: "System Messages 1")
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
-        let createOrUpdate1Expectation = expectation(description: "Create or update 1")
-        groupManager.createOrUpdate(
+        try await groupManager.setName(group: group, name: "System Messages 1")
+
+        _ = try await groupManager.createOrUpdate(
             for: group.groupIdentity,
             members: Set(memberIDsToAddAndRemove),
             systemMessageDate: Date()
         )
-        .done { _ in
-            createOrUpdate1Expectation.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-            createOrUpdate1Expectation.fulfill()
-        }
-        expectations.append(createOrUpdate1Expectation)
-        
-        let createOrUpdate2Expectation = expectation(description: "Create or update 2")
-        groupManager.createOrUpdate(
+
+        _ = try await groupManager.createOrUpdate(
             for: group.groupIdentity,
             members: [],
             systemMessageDate: Date()
         )
-        .done { _ in
-            createOrUpdate2Expectation.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-            createOrUpdate2Expectation.fulfill()
-        }
-        expectations.append(createOrUpdate2Expectation)
-        
-        wait(for: expectations, timeout: 10)
     }
     
     // MARK: Example group
@@ -1448,7 +1435,7 @@ class DBLoadTests: XCTestCase {
     /// An example "Hikers" group
     ///
     /// Generates a group chat with named members and a set of messages. This is useful for demos.
-    func testExampleGroup() throws {
+    func testExampleGroup() async throws {
         let groupMemberIDsAndNames = [
             "4PBBKVUS": "Emily Yeung",
             "86C8TPSV": "Peter Schreiner",
@@ -1458,8 +1445,8 @@ class DBLoadTests: XCTestCase {
         ]
 
         // Ensure all contacts exist
-        createContacts(for: Array(groupMemberIDsAndNames.keys))
-        
+        _ = createContacts(for: Array(groupMemberIDsAndNames.keys))
+
         let entityManager = EntityManager()
 
         // Load all contacts and assign the names
@@ -1467,7 +1454,7 @@ class DBLoadTests: XCTestCase {
             let contact = try XCTUnwrap(entityManager.entityFetcher.contact(for: id))
             
             let names = name.components(separatedBy: .whitespaces)
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 contact.firstName = names.first
                 contact.lastName = names.last
             }
@@ -1475,7 +1462,7 @@ class DBLoadTests: XCTestCase {
             return contact
         }
         
-        let group = try createGroup(
+        let group = try await createGroup(
             named: "Hikers",
             with: Array(groupMemberIDsAndNames.keys),
             entityManager: entityManager
@@ -1524,7 +1511,7 @@ class DBLoadTests: XCTestCase {
         
         var fileMessageCreationError: Error?
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             do {
                 let fileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
                     for: fileSenderItem,
@@ -1547,10 +1534,14 @@ class DBLoadTests: XCTestCase {
     
     // TODO: Helper
     
-    private func createGroup(named: String, with members: [String], entityManager: EntityManager) throws -> Group {
+    private func createGroup(
+        named: String,
+        with members: [String],
+        entityManager: EntityManager
+    ) async throws -> Group {
         let groupManager: GroupManagerProtocol = GroupManager(
             entityManager: entityManager,
-            taskManager: TaskManager(backgroundEntityManager: entityManager)
+            taskManager: TaskManagerMock()
         )
 
         let groupIdentity = try GroupIdentity(
@@ -1560,34 +1551,15 @@ class DBLoadTests: XCTestCase {
 
         // Creation
         
-        var groupPlaceholder: Group?
-        let groupExpectation = expectation(description: "Create or update group")
-        
-        groupManager.createOrUpdate(
+        let (group, _) = try await groupManager.createOrUpdate(
             for: groupIdentity,
             members: Set(members),
             systemMessageDate: Date()
         )
-        .done { createdOrUpdatedGroup, _ in
-            groupPlaceholder = createdOrUpdatedGroup
-            groupExpectation.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-            groupExpectation.fulfill()
-        }
-        
-        wait(for: [groupExpectation], timeout: 10)
-        
-        // Get created group
-        let group = try XCTUnwrap(groupPlaceholder)
-        
+
         // Set name
-        groupManager.setName(group: group, name: named)
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
+        try await groupManager.setName(group: group, name: named)
+
         return group
     }
     
@@ -1665,7 +1637,7 @@ class DBLoadTests: XCTestCase {
         contact: ContactEntity,
         entityManager: EntityManager
     ) {
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             let conversation = self.getOrCreateDuplicateOneToOneConversation(
                 forContact: contact,
                 entityManager: entityManager
@@ -1740,13 +1712,13 @@ class DBLoadTests: XCTestCase {
         _ = createContacts(for: ["ECHOECHO"])
         
         let entityManager = EntityManager()
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
                 conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
             }
         }
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for index in 0..<(numberOfMessages / 2) {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: -(index * 8), to: Date())
@@ -1767,7 +1739,7 @@ class DBLoadTests: XCTestCase {
             }
         }
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for index in 0..<(numberOfMessages / 2) {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: -(index * 8), to: Date())!

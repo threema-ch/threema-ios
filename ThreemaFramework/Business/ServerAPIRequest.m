@@ -22,7 +22,6 @@
 
 #import "ServerAPIRequest.h"
 #import "ActivityIndicatorProxy.h"
-#import "SSLCAHelper.h"
 #import "UserSettings.h"
 #import "ThreemaError.h"
 #import "BundleUtil.h"
@@ -240,7 +239,13 @@
 
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler
 {
-    [SSLCAHelper session:session didReceiveAuthenticationChallenge:challenge completion:completionHandler];
+    [[SSLCAHelper new] handleWithChallenge:challenge completionHandler:^(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential, NSError * _Nullable error) {
+        if (error) {
+            DDLogError(@"SSL cert pinning, handle authentication challenge failed %@", [error localizedDescription]);
+        }
+
+        completionHandler(disposition, credential);
+    }];
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {

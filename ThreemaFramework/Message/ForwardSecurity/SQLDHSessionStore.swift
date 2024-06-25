@@ -30,7 +30,7 @@ public protocol SQLDHSessionStoreErrorHandler: AnyObject {
 public class SQLDHSessionStore: DHSessionStoreProtocol {
     private static let databaseName = "threema-fs.db"
     private static let databasePath = (
-        FileUtility.appDataDirectory?
+        FileUtility.shared.appDataDirectory?
             .appendingPathComponent(SQLDHSessionStore.databaseName).path
     )!
     
@@ -122,7 +122,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         guard let pathAsURL = URL(string: SQLDHSessionStore.databasePath) else {
             return
         }
-        FileUtility.delete(at: pathAsURL)
+        FileUtility.shared.delete(at: pathAsURL)
     }
     
     func upgradeIfNecessary() throws {

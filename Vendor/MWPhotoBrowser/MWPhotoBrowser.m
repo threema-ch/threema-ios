@@ -2039,7 +2039,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
     id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
     if ([self numberOfPhotos] > 0 && [photo underlyingImage]) {
-        NSString *filename = [FileUtility getTemporarySendableFileNameWithBase:@"image"];
+        NSString *filename = [[FileUtility shared] getTemporarySendableFileNameWithBase:@"image"];
         NSURL *photoUrl = [photo urlForExportData:filename];
         
         for (Conversation *conversation in conversations) {

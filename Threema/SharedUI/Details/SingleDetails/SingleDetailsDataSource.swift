@@ -262,7 +262,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             snapshot.appendItems(wallpaperActions)
         }
         
-        if ThreemaUtility.supportsForwardSecurity, let fsActions {
+        if let fsActions {
             snapshot.appendSections([.fsActions])
             snapshot.appendItems(fsActions)
         }
@@ -601,7 +601,9 @@ extension SingleDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        quickActions.append(contentsOf: starredQuickAction())
+        if hasStarred(in: conversation) {
+            quickActions.append(starredQuickAction())
+        }
         
         businessInjector.entityManager.performAndWait {
             if self.businessInjector.entityManager.entityFetcher.countBallots(for: conversation) > 0 {
@@ -614,6 +616,12 @@ extension SingleDetailsDataSource {
     
     private func hasMedia(for conversation: Conversation) -> Bool {
         businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
+    }
+    
+    private func hasStarred(in conversation: Conversation) -> Bool {
+        businessInjector.entityManager.performAndWait {
+            self.businessInjector.entityManager.entityFetcher.countStarredMessages(in: conversation) > 0
+        }
     }
     
     private func mediaQuickAction(for conversation: Conversation, in viewController: UIViewController) -> QuickAction {
@@ -664,14 +672,14 @@ extension SingleDetailsDataSource {
         }]
     }
     
-    private func starredQuickAction() -> [QuickAction] {
-        [QuickAction(
+    private func starredQuickAction() -> QuickAction {
+        QuickAction(
             imageName: "star.fill",
             title: "marker_details_title".localized,
             accessibilityIdentifier: "marker_details_title".localized
         ) { [weak singleDetailsViewController] _ in
             singleDetailsViewController?.startChatSearch(forStarred: true)
-        }]
+        }
     }
 }
 
@@ -1185,6 +1193,10 @@ extension SingleDetailsDataSource {
     }
     
     private var fsActions: [SingleDetails.Row]? {
+        guard ThreemaEnvironment.supportsForwardSecurity else {
+            return nil
+        }
+        
         var fsClearSessionsDisabled = true
         do {
             fsClearSessionsDisabled = try BusinessInjector().dhSessionStore

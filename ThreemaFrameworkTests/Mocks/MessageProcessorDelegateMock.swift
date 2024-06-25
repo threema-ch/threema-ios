@@ -49,6 +49,10 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
     func incomingAbstractMessageFailed(_ message: AbstractMessage) {
         // no-op
     }
+    
+    func incomingForwardSecurityMessageWithNoResultFinished(_ message: AbstractMessage) {
+        // no-op
+    }
 
     func readMessage(inConversations: Set<Conversation>?) {
         // no-op

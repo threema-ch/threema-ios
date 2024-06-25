@@ -40,6 +40,9 @@ class GroupCallParticipantCell: UICollectionViewCell {
         }
     }
     
+    // We do a round-trip here since the accessibilityLabel getter below does not support concurrency.
+    var computedAccessibilityLabel = ""
+    
     override var frame: CGRect {
         didSet {
             videoRendererView.setSize(frame.size)
@@ -236,66 +239,85 @@ class GroupCallParticipantCell: UICollectionViewCell {
             return
         }
         
-        backgroundColor = participant.idColor
-
-        // Text Label
-        nameLabel.text = participant.name
-
-        if participant.dependencies.isRunningForScreenshots {
-            nameLabel.textColor = participant.idColor
-        }
-        
-        // Image
-        avatarImageView.image = participant.avatar ?? UIImage(
-            systemName: "person.circle.fill",
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 40 * UIScreen.main.scale)
-        )
-        
-        if participant.dependencies.isRunningForScreenshots {
-            if UIDevice.current.userInterfaceIdiom == .phone {
-                NSLayoutConstraint.activate(avatarImageViewHeightConstraintScreenshots)
-                if participant.participantID.id == 0 {
-                    avatarImageView.contentMode = .scaleAspectFill
+        Task {
+            // Gather information
+            let idColor = participant.idColor
+            let displayName = participant.displayName
+            let avatar = participant.avatar
+            let audioMuteState = await participant.audioMuteState
+            let isRunningForScreenshots = await participant.dependencies.isRunningForScreenshots
+            
+            computedAccessibilityLabel = await participant.cellAccessibilityLabel()
+            
+            var localActiveCameraPosition: CameraPosition?
+            if let localParticipant = participant as? LocalParticipant {
+                localActiveCameraPosition = await localParticipant.activeCameraPosition
+            }
+            
+            // Apply information
+            Task { @MainActor in
+                backgroundColor = idColor
+                
+                // Text
+                nameLabel.text = displayName
+                
+                if isRunningForScreenshots {
+                    nameLabel.textColor = idColor
+                }
+                
+                // Image
+                avatarImageView.image = avatar ?? UIImage(
+                    systemName: "person.circle.fill",
+                    withConfiguration: UIImage.SymbolConfiguration(pointSize: 40 * UIScreen.main.scale)
+                )
+                
+                if isRunningForScreenshots {
+                    if UIDevice.current.userInterfaceIdiom == .phone {
+                        NSLayoutConstraint.activate(avatarImageViewHeightConstraintScreenshots)
+                        if participant.participantID.id == 0 {
+                            avatarImageView.contentMode = .scaleAspectFill
+                        }
+                    }
+                    else {
+                        NSLayoutConstraint.activate(avatarImageViewWidthConstraintScreenshots)
+                        avatarImageView.contentMode = .scaleAspectFill
+                    }
+                    NSLayoutConstraint.deactivate(avatarImageViewWidthConstraint)
+                    NSLayoutConstraint.activate(blurBackgroundConstrains)
+                    contentView.insertSubview(blurBackground, at: 1)
+                }
+                
+                // Audio
+                if isRunningForScreenshots {
+                    if participant.participantID.id != 3 {
+                        participantInfoStackView.removeArrangedSubview(statusSymbolView)
+                        statusSymbolView.removeFromSuperview()
+                    }
+                    statusSymbolView.tintColor = idColor
+                }
+                else {
+                    switch audioMuteState {
+                    case .muted:
+                        UIView.animate(withDuration: 0.2) {
+                            self.participantInfoStackView.insertArrangedSubview(self.statusSymbolView, at: 0)
+                        }
+                    case .unmuted:
+                        UIView.animate(withDuration: 0.2) {
+                            self.participantInfoStackView.removeArrangedSubview(self.statusSymbolView)
+                            self.statusSymbolView.removeFromSuperview()
+                        }
+                    }
+                }
+                
+                // Video mirroring
+                if let localActiveCameraPosition,
+                   localActiveCameraPosition == .front {
+                    videoRendererView.transform = CGAffineTransformMakeScale(-1, 1)
+                }
+                else {
+                    videoRendererView.transform = CGAffineTransformMakeScale(1, 1)
                 }
             }
-            else {
-                NSLayoutConstraint.activate(avatarImageViewWidthConstraintScreenshots)
-                avatarImageView.contentMode = .scaleAspectFill
-            }
-            NSLayoutConstraint.deactivate(avatarImageViewWidthConstraint)
-            NSLayoutConstraint.activate(blurBackgroundConstrains)
-            contentView.insertSubview(blurBackground, at: 1)
-        }
-
-        // Audio
-        if participant.dependencies.isRunningForScreenshots {
-            if participant.participantID.id != 3 {
-                participantInfoStackView.removeArrangedSubview(statusSymbolView)
-                statusSymbolView.removeFromSuperview()
-            }
-            statusSymbolView.tintColor = participant.idColor
-        }
-        else {
-            switch participant.audioMuteState {
-            case .muted:
-                UIView.animate(withDuration: 0.2) {
-                    self.participantInfoStackView.insertArrangedSubview(self.statusSymbolView, at: 0)
-                }
-            case .unmuted:
-                UIView.animate(withDuration: 0.2) {
-                    self.participantInfoStackView.removeArrangedSubview(self.statusSymbolView)
-                    self.statusSymbolView.removeFromSuperview()
-                }
-            }
-        }
-        
-        // Mirroring
-        if let localParticipant = participant.localParticipant,
-           localParticipant.localCameraPosition == .front {
-            videoRendererView.transform = CGAffineTransformMakeScale(-1, 1)
-        }
-        else {
-            videoRendererView.transform = CGAffineTransformMakeScale(1, 1)
         }
     }
     
@@ -311,7 +333,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
     override public var accessibilityLabel: String? {
         
         get {
-            participant?.cellAccessibilityString()
+            computedAccessibilityLabel
         }
         
         set {

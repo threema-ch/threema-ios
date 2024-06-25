@@ -24,7 +24,7 @@ import Foundation
 @objc open class MediaPreviewURLDataProcessor: NSObject {
     
     @objc public var addMore: (([Any], [MediaPreviewItem]) -> Void)?
-    public var cancelAction: (() -> Void)?
+    @objc public var cancelAction: (() -> Void)?
     public var memoryConstrained = false
     public var sendAsFile = false
     
@@ -57,7 +57,7 @@ import Foundation
             return item as? MediaPreviewItem
         case is URL, is NSURL:
             let url = item as! URL
-            let fileSize = Double(FileUtility.fileSizeInBytes(fileURL: url) ?? Int64(kMaxFileSize))
+            let fileSize = Double(FileUtility.shared.fileSizeInBytes(fileURL: url) ?? Int64(kMaxFileSize))
             let uti = UTIConverter.uti(forFileURL: url)
             let mimeType = UTIConverter.mimeType(fromUTI: uti)
             let isVideo = UTIConverter.isVideoMimeType(mimeType) || UTIConverter.isMovieMimeType(mimeType)

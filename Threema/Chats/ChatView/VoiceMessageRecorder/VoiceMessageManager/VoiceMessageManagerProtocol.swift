@@ -20,6 +20,7 @@
 
 import Combine
 import Foundation
+import ThreemaFramework
 
 enum VoiceMessageError: Equatable, LocalizedError {
     // Audio Session
@@ -64,13 +65,16 @@ enum SessionState {
 }
 
 protocol VoiceMessageManagerProtocol: NSObject {
+    associatedtype DraftStore: MessageDraftStoreProtocol
+    associatedtype MediaManager: AudioMediaManagerProtocol
+    
     var delegate: VoiceMessageAudioRecorderDelegate? { get set }
     
     var recordingStates: AnyPublisher<RecordingState, Never> { get }
     
-    var audioMediaManager: AudioMediaManagerProtocol.Type { get }
     var audioSessionManager: AudioSessionManagerProtocol { get }
     
+    var interrupted: Bool { get }
     var isRecording: Bool { get }
     var isPlaying: Bool { get }
     var lastAveragePower: Float { get }
@@ -81,6 +85,8 @@ protocol VoiceMessageManagerProtocol: NSObject {
     static func requestRecordPermission(_ handler: @escaping (Bool) -> Void)
     
     func sendFile(for conversation: Conversation) async
+    func load(_ audioFile: URL?) async
+    func savedSession(_ shouldMove: Bool) async throws -> SessionState
 }
 
 extension VoiceMessageManagerProtocol {

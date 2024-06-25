@@ -233,24 +233,15 @@ final class AppSetupStepsTests: XCTestCase {
             GroupPhotoSenderMock()
         )
         
-        return try await withCheckedThrowingContinuation { continuation in
-            groupManager.createOrUpdateDB(
-                for: groupIdentity,
-                members: Set(members.map(\.string)),
-                systemMessageDate: .now,
-                sourceCaller: .local
-            )
-            .done { group in
-                if let group {
-                    continuation.resume(returning: group)
-                }
-                else {
-                    continuation.resume(throwing: AppSetupStepsTestsError.noGroupCreated)
-                }
-            }
-            .catch { error in
-                continuation.resume(throwing: error)
-            }
+        guard let group = try await groupManager.createOrUpdateDB(
+            for: groupIdentity,
+            members: Set(members.map(\.string)),
+            systemMessageDate: .now,
+            sourceCaller: .local
+        ) else {
+            throw AppSetupStepsTestsError.noGroupCreated
         }
+
+        return group
     }
 }

@@ -64,7 +64,7 @@
     } else if ([_message isKindOfClass:[VideoMessageEntity class]]) {
         return [self videoUrl];
     } else if ([_message isKindOfClass:[FileMessageEntity class]]) {
-        NSString *filename = [FileUtility getTemporaryFileName];
+        NSString *filename = [[FileUtility shared] getTemporaryFileName];
         return [((FileMessageEntity *)_message) tmpURL:filename];
     }
 

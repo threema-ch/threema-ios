@@ -53,6 +53,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @property PortraitNavigationController *contactsNavigationController;
 @property PortraitNavigationController *conversationsNavigationController;
 
+@property ThemedNavigationController *contactList2ViewController;
+
 @property UIViewController *settingsViewController;
 @property UIViewController *profileViewController;
 
@@ -90,6 +92,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _coverView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
     [self setupSwiftUITabs];
+    if([[UserSettings sharedUserSettings] contactList2]) {
+        [self setupContactList2];
+    }
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -120,6 +126,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     _settingsViewController = nil;
     _profileViewController = nil;
+    
+    _contactList2ViewController = nil;
 }
 
 - (BOOL)shouldAutorotate {
@@ -135,6 +143,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _profileViewController = SwiftUIAdapter.createProfileView;
     [vcs addObject:_profileViewController];
     [vcs addObject:_settingsViewController];
+    [self setViewControllers:vcs animated:NO];
+}
+-(void)setupContactList2 {
+    NSMutableArray *vcs = [[NSMutableArray alloc]initWithArray:self.viewControllers];
+    _contactList2ViewController = [[ContactListNavigationViewController alloc] init];
+    [vcs addObject:_contactList2ViewController];
     [self setViewControllers:vcs animated:NO];
 }
 

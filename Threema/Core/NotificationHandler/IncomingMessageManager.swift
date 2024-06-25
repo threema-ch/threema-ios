@@ -367,6 +367,41 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
         }
     }
+    
+    func incomingForwardSecurityMessageWithNoResultFinished(_ message: AbstractMessage) {
+        if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
+            for: message,
+            stage: .abstract
+        ) {
+            pendingUserNotificationManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+            pendingUserNotificationManager.removeAllTimedUserNotifications(
+                pendingUserNotification: pendingUserNotification
+            )
+        }
+        
+        // Mark contact & conversation as dirty
+        
+        guard !AppDelegate.shared().active else {
+            // Don't mark anything as dirty if the app is active
+            return
+        }
+        
+        businessInjector.entityManager.performAndWait {
+            let databaseManager = DatabaseManager()
+            
+            if let contactEntity = self.businessInjector.entityManager.entityFetcher.contact(
+                for: message.fromIdentity
+            ) {
+                databaseManager.addDirtyObject(contactEntity)
+            }
+            
+            if let conversation = self.businessInjector.entityManager.entityFetcher.conversation(
+                forIdentity: message.fromIdentity
+            ) {
+                databaseManager.addDirtyObject(conversation)
+            }
+        }
+    }
 
     public func taskQueueEmpty(_ queueTypeName: String) {
         let queueType = TaskQueueType.queue(name: queueTypeName)

@@ -138,12 +138,12 @@ extension WCSessionManager {
     }
     
     private func allSessionsURL() -> URL {
-        let documentDir = FileUtility.appDataDirectory
+        let documentDir = FileUtility.shared.appDataDirectory
         return documentDir!.appendingPathComponent("AllWCSessions")
     }
     
     private func runningSessionsURL() -> URL {
-        let documentDir = FileUtility.appDataDirectory
+        let documentDir = FileUtility.shared.appDataDirectory
         return documentDir!.appendingPathComponent("RunningWCSessions")
     }
 }

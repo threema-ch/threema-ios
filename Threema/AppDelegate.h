@@ -51,6 +51,8 @@
 @property (nonatomic) BOOL isLockscreenDismissed;
 @property (nonatomic) UIInterfaceOrientationMask orientationLock;
 
+@property (nonatomic, readonly) BOOL isWorkContactsLoading;
+
 @property (weak, nonatomic) id<MagicTapHandler> magicTapHandler;
 
 + (AppDelegate*)sharedAppDelegate;
@@ -75,5 +77,6 @@
 - (UIViewController *)currentTopViewController;
 - (void)eraseApplicationData;
 - (void)handlePresentingScreensWithForce:(BOOL)Force;
+- (void)setIsWorkContactsLoading:(BOOL)loading;
 
 @end

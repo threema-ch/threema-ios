@@ -46,7 +46,7 @@ class DocumentPreviewItem: MediaPreviewItem {
         guard let itemURL else {
             return nil
         }
-        return FileUtility.getFileSizeDescription(for: itemURL)
+        return FileUtility.shared.getFileSizeDescription(for: itemURL)
     }
     
     var type: String? {

@@ -92,7 +92,7 @@ import Foundation
 @objcMembers public class MediatorServerInfo: NSObject {
     public let url: String
     public let blob: BlobServerInfo
-    
+
     init(deviceGroupIDFirstByteHex: String, url: String, blob: BlobServerInfo) {
         let prefix4 = String(deviceGroupIDFirstByteHex.prefix(1)).lowercased()
         let prefix8 = deviceGroupIDFirstByteHex.lowercased()
@@ -132,6 +132,82 @@ import Foundation
     }
 }
 
+public enum DomainMatchMode: String {
+    case unsupported, exact, includeSubdomains
+
+    static func matchMode(string: String) -> DomainMatchMode {
+        if string == "exact" {
+            return .exact
+        }
+        else if string == "include-subdomains" {
+            return .includeSubdomains
+        }
+        else {
+            return .unsupported
+        }
+    }
+}
+
+public enum DomainSpkisAlgorithm {
+    case unsupported, sha256
+
+    static func spskisAlgorithm(string: String) -> DomainSpkisAlgorithm {
+        string == "sha256" ? .sha256 : .unsupported
+    }
+}
+
+@objcMembers public final class Domain: NSObject {
+    public private(set) var domain: String
+    public private(set) var spkis: [[String: DomainSpkisAlgorithm]]
+    public private(set) var matchMode: DomainMatchMode
+    public private(set) var reportUris: [String]?
+
+    init(
+        _ domain: String,
+        spkis: [[String: DomainSpkisAlgorithm]],
+        matchMode: DomainMatchMode,
+        reportUris: [String]? = nil
+    ) {
+        self.domain = domain
+        self.spkis = spkis
+        self.matchMode = matchMode
+        self.reportUris = reportUris
+    }
+}
+
+extension Domain {
+    static var defaultConfig: [Domain] {
+        [
+            Domain(
+                "threema.ch",
+                spkis: [
+                    ["8kTK9HP1KHIP0sn6T2AFH3Bq+qq3wn2i/OJSMjewpFw=": .sha256],
+                    ["KKBJHJn1PQSdNTmoAfhxqWTO61r8O8bPi/JeGtP/6gg=": .sha256],
+                    ["h2gHawxPZyMCiZSkJN0dQ4RsDxowVuTmuiNQyjeU+Sk=": .sha256],
+                    ["HXqz8rMr6nBDdUX3CdyIwln8ym3qFUBwv4QGyMN2uEg=": .sha256],
+                    ["2Vpy8qUQCqc2+Lg6BgRO8G6e6vh7NmvVHTljfwP/Pfk=": .sha256],
+                    ["vGQZ8hm2h+km+q7rnJ7kF9S17BwSY0rbhwjz6nIupf0=": .sha256],
+                    ["jsQHAHKQ2oOf3rvMn9GJVIKslkhLpODGOMPSxgLeIyo=": .sha256],
+                ],
+                matchMode: .includeSubdomains,
+                reportUris: ["https://3ma.ch/pinreport"]
+            ),
+            Domain(
+                "sfu.threema.ch",
+                spkis: [
+                    ["useMPV2qPBEgxVucMPuqexG27L64zFAksHh9BehZpY0=": .sha256],
+                    ["88JttF0tDWrGT6g8H9uEZ0T8xosvZtZwWlsZuD4NvHA=": .sha256],
+                    ["F82gDLif130AsVx454ZsMxPGl9EpzB5LqY39CzVKWDQ=": .sha256],
+                    ["Jo4Re5X+mksn/Ankgrnov07caZwkkT8NezJMQf1i8cI=": .sha256],
+                ],
+                matchMode: .includeSubdomains,
+                reportUris: ["https://3ma.ch/pinreport"]
+            ),
+            
+        ]
+    }
+}
+
 @objc public protocol ServerInfoProvider {
     func chatServer(ipv6: Bool, completionHandler: @escaping (ChatServerInfo?, Error?) -> Void)
     func directoryServer(ipv6: Bool, completionHandler: @escaping (DirectoryServerInfo?, Error?) -> Void)
@@ -145,4 +221,5 @@ import Foundation
     )
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void)
     func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void)
+    func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void)
 }

@@ -84,6 +84,7 @@ struct ChatViewMessageActionProvider {
         speakText: String,
         shareItems: [Any],
         activityViewAnchor: UIView,
+        popOverSource: UIView,
         copyHandler: @escaping () -> Void,
         quoteHandler: @escaping () -> Void,
         detailsHandler: @escaping () -> Void?,
@@ -107,7 +108,8 @@ struct ChatViewMessageActionProvider {
         let delete = deleteAction(
             message: message,
             willDelete: willDelete,
-            didDelete: didDelete
+            didDelete: didDelete,
+            popOverSource: popOverSource
         )
 
         if message.conversation.distributionList == nil {
@@ -278,7 +280,8 @@ struct ChatViewMessageActionProvider {
     public static func deleteAction(
         message: BaseMessage,
         willDelete: @escaping () -> Void?,
-        didDelete: @escaping () -> Void?
+        didDelete: @escaping () -> Void?,
+        popOverSource: UIView
     ) -> MessageAction {
         MessageAction(
             title: BundleUtil.localizedString(forKey: "delete"),
@@ -339,7 +342,7 @@ struct ChatViewMessageActionProvider {
 
             UIAlertTemplate.showSheet(
                 owner: AppDelegate.shared().currentTopViewController(),
-                popOverSource: AppDelegate.shared().currentTopViewController().view,
+                popOverSource: popOverSource,
                 title: BundleUtil.localizedString(forKey: "messages_delete_selected_confirm"),
                 actions: actions
             )

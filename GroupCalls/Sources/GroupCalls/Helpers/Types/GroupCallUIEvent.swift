@@ -26,7 +26,6 @@ enum GroupCallUIEvent {
     case connected
     case error(GroupCallErrorProtocol)
     case add(ViewModelParticipant)
-    case addLocalParticipant(ViewModelParticipant)
     case remove(ParticipantID)
     case participantStateChange(ParticipantID, ParticipantStateChange)
     case forceDismissGroupCallViewController

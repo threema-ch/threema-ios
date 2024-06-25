@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "Naskenovat dokument";
+"no_contacts_loading" = "Kontakty se právě stahují ze serveru. Zobrazí se po dokončení procesu.";
+
+// Contact List
+"contactList_add_contact" = "Nový kontakt";
+"contactList_add_group" = "Nová skupina";
+
+
 
 // General
 "quotation_mark_start" = "„";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "Nebyly nalezeny žádné správcem ověřené kontakty %@.";
 "no_distribution_list" = "Žádné distribuční seznamy";
 "no_distribution_list_message" = "Zatím nemáte žádné distribuční seznamy. Vytvoříte je klepnutím na tlačítko +.";
-
 "no_contacts_syncoff" = "Zatím nemáte žádné kontakty. Zapněte synchronizaci (Nastavení > Soukromí) nebo přidejte kontakty ručně pomocí tlačítka +.";
 
 "my_profile_picture_title" = "Váš profilový obrázek";
@@ -1348,7 +1355,6 @@
 "profile_edit" = "Upravit";
 "not_connected_for_edit_profile_message" = "Zkontrolujte své připojení";
 "not_connected_for_edit_profile_title" = "Nepřipojeno";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";

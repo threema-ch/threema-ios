@@ -32,6 +32,7 @@
 @property (weak, nonatomic) IBOutlet UIView *noContactsView;
 @property (weak, nonatomic) IBOutlet UILabel *noContactsTitleLabel;
 @property (weak, nonatomic) IBOutlet UILabel *noContactsMessageLabel;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingWorkContactsIndicatorView;
 @property (weak, nonatomic) IBOutlet UIView *countContactsFooterView;
 @property (weak, nonatomic) IBOutlet UILabel *countContactsFooterLabel;
 @property CompanyDirectoryCellView *companyDirectoryCellView;

@@ -84,11 +84,9 @@ extension ImageMessageEntity: ImageMessage {
         }
         
         let filename = "v1-imageMessage-\(UUID().uuidString)"
-        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(
+        let url = FileUtility.shared.appTemporaryDirectory.appendingPathComponent(
             "\(filename).\(MEDIA_EXTENSION_IMAGE)"
-        ) else {
-            return nil
-        }
+        )
         
         do {
             try imageData.write(to: url)

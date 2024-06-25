@@ -223,7 +223,7 @@ import ThreemaFramework
         AppGroup.userDefaults().removeObject(forKey: "AlreadyUpdatedToCNContacts")
         businessInjector.contactStore.updateAllContacts()
         
-        MessageDraftStore.cleanupDrafts()
+        MessageDraftStore.shared.cleanupDrafts()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyDeletedOldDrafts")
 
         businessInjector.entityManager.performSyncBlockAndSafe {

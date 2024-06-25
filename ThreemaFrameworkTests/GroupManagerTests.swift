@@ -50,7 +50,7 @@ class GroupManagerTests: XCTestCase {
 
     /// Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-setup
     /// Section: When sending this message to all group members: 1.
-    func testSendGroupSetupIamNotCreator() throws {
+    func testSendGroupSetupIamNotCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let taskManagerMock = TaskManagerMock()
 
@@ -66,40 +66,20 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let expec = expectation(description: "Group create or update")
-
-        var resultError: Error?
-        var isErrorHandlerCalled = false
-
-        groupManager.createOrUpdate(
-            for: expectedGroupIdentity,
-            members: expectedMembers,
-            systemMessageDate: Date()
+        await XCTAssertThrowsAsyncError(
+            _ = try await groupManager.createOrUpdate(
+                for: expectedGroupIdentity,
+                members: expectedMembers,
+                systemMessageDate: Date()
+            )
         )
-        .done { _, _ in
-            expec.fulfill()
-            XCTFail("Error handler should be called")
-        }
-        .catch { error in
-            resultError = error
-            isErrorHandlerCalled = true
-            expec.fulfill()
-        }
 
-        waitForExpectations(timeout: 1)
-
-        let err = try XCTUnwrap(resultError as? GroupManager.GroupError)
-        XCTAssertTrue(isErrorHandlerCalled)
-        if case GroupManager.GroupError.notCreator = err { }
-        else {
-            XCTFail("Wrong error type")
-        }
         XCTAssertEqual(0, taskManagerMock.addedTasks.count)
     }
     
     /// Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-setup
     /// Section: When sending this message to all group members: 2.
-    func testSendGroupSetupIamCreator() throws {
+    func testSendGroupSetupIamCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -124,27 +104,11 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        var resultGroup: Group?
-        var resultNewMembers: Set<String>?
-        
-        let expec = expectation(description: "Group create or update")
-
-        groupManager.createOrUpdate(
+        let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
             for: expectedGroupIdentity,
             members: expectedMembers,
             systemMessageDate: Date()
         )
-        .done { grp, newMembers in
-            resultGroup = grp
-            resultNewMembers = newMembers
-
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-        }
-
-        waitForExpectations(timeout: 1)
 
         let actualGroup = try XCTUnwrap(resultGroup)
         XCTAssertEqual(actualGroup.groupIdentity, expectedGroupIdentity)
@@ -171,7 +135,7 @@ class GroupManagerTests: XCTestCase {
         )
     }
     
-    func testSendGroupSetupIamCreatorAddMember() throws {
+    func testSendGroupSetupIamCreatorAddMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -196,33 +160,18 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: [],
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
 
-        var resultGroup: Group?
-        var resultNewMembers: Set<String>?
-
-        let expec = expectation(description: "Group create or update")
-
-        groupManager.createOrUpdate(
+        let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
             for: expectedGroupIdentity,
             members: expectedNewMembers,
             systemMessageDate: Date()
         )
-        .done { grp, newMembers in
-            resultGroup = grp
-            resultNewMembers = newMembers
-
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-        }
-
-        waitForExpectations(timeout: 1)
 
         let resultGrp = try XCTUnwrap(resultGroup)
         XCTAssertEqual(resultGrp.groupIdentity, expectedGroupIdentity)
@@ -244,7 +193,7 @@ class GroupManagerTests: XCTestCase {
         )
     }
 
-    func testSendGroupSetupIamCreatorRemoveMember() throws {
+    func testSendGroupSetupIamCreatorRemoveMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -272,35 +221,20 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
 
-        var resultGroup: Group?
-        var resultNewMembers: Set<String>?
-        
         let expectedNewMembers = expectedMembers.filter { $0 != "MEMBER02" && $0 != "MEMBER04" }
         
-        let expec = expectation(description: "Group create or update")
-
-        groupManager.createOrUpdate(
+        let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
             for: expectedGroupIdentity,
             members: expectedNewMembers,
             systemMessageDate: Date()
         )
-        .done { grp, newMembers in
-            resultGroup = grp
-            resultNewMembers = newMembers
-
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-        }
-
-        waitForExpectations(timeout: 1)
 
         let resultGrp = try XCTUnwrap(resultGroup)
         XCTAssertEqual(resultGrp.groupIdentity, expectedGroupIdentity)
@@ -325,7 +259,7 @@ class GroupManagerTests: XCTestCase {
         )
     }
     
-    func testSendGroupSetupIamCreatorRemoveMemberWithRejectedMessages() throws {
+    func testSendGroupSetupIamCreatorRemoveMemberWithRejectedMessages() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -354,10 +288,11 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
 
         let expectedNewMembers = expectedMembers.filter { $0 != "MEMBER02" && $0 != "MEMBER04" }
@@ -381,28 +316,12 @@ class GroupManagerTests: XCTestCase {
 
             return textMessage.id
         }
-        
-        var resultGroup: Group?
-        var resultNewMembers: Set<String>?
-        
-        let expec = expectation(description: "Group create or update")
 
-        groupManager.createOrUpdate(
+        let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
             for: expectedGroupIdentity,
             members: expectedNewMembers,
             systemMessageDate: Date()
         )
-        .done { grp, newMembers in
-            resultGroup = grp
-            resultNewMembers = newMembers
-
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-        }
-
-        waitForExpectations(timeout: 1)
 
         let resultGrp = try XCTUnwrap(resultGroup)
         XCTAssertEqual(resultGrp.groupIdentity, expectedGroupIdentity)
@@ -437,7 +356,7 @@ class GroupManagerTests: XCTestCase {
 
     /// Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-setup
     /// Section: When receiving this message: 4. / 1.
-    func testReceiveGroupSetupFromBlockedContactAndUnknownGroupIamNotMember() throws {
+    func testReceiveGroupSetupFromBlockedContactAndUnknownGroupIamNotMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blacklist = ["MEMBER01"]
@@ -461,19 +380,28 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let group = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
-        )
+        await XCTAssertThrowsAsyncError(
+            _ = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
+                members: expectedMembers,
+                systemMessageDate: Date(),
+                sourceCaller: .local
+            )
+        ) { error in
+            if case GroupManager.GroupError.creatorIsBlocked(groupIdentity: expectedGroupIdentity) = error {
+                // no-op
+            }
+            else {
+                XCTFail("Wrong error type \(error)")
+            }
+        }
 
-        XCTAssertNil(group)
         XCTAssertEqual(0, taskManagerMock.addedTasks.count)
     }
 
     /// Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-setup
     /// Section: When receiving this message: 4. / 2.
-    func testReceiveGroupSetupFromBlockedContactAndUnknownGroup() throws {
+    func testReceiveGroupSetupFromBlockedContactAndUnknownGroup() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blacklist = ["MEMBER01"]
@@ -497,13 +425,22 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let group = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
-        )
+        await XCTAssertThrowsAsyncError(
+            _ = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
+                members: expectedMembers,
+                systemMessageDate: Date(),
+                sourceCaller: .local
+            )
+        ) { error in
+            if case GroupManager.GroupError.creatorIsBlocked(groupIdentity: expectedGroupIdentity) = error {
+                // no-op
+            }
+            else {
+                XCTFail("Wrong error type \(error)")
+            }
+        }
 
-        XCTAssertNil(group)
         XCTAssertEqual(1, taskManagerMock.addedTasks.count)
         let leaveTask = try XCTUnwrap(
             taskManagerMock.addedTasks
@@ -523,7 +460,7 @@ class GroupManagerTests: XCTestCase {
 
     /// Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-setup
     /// Section: When receiving this message: 5.
-    func testReceiveGroupSetupExistingGroupIamNotMember() throws {
+    func testReceiveGroupSetupExistingGroupIamNotMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let expectedGroupCreator = "MEMBER01"
@@ -550,13 +487,15 @@ class GroupManagerTests: XCTestCase {
                 groupPhotoSenderMock
             )
 
-            let initialGrp = try XCTUnwrap(
-                createOrUpdateDBWait(
-                    groupManager: groupManager,
-                    groupIdentity: expectedGroupIdentity,
-                    members: expectedInitialMembers
-                )
-            )
+            guard let initialGrp = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
+                members: expectedInitialMembers,
+                systemMessageDate: Date(),
+                sourceCaller: .local
+            ) else {
+                XCTFail("Creating initial group failed")
+                return
+            }
 
             XCTAssertEqual(4, initialGrp.numberOfMembers)
             XCTAssertTrue(initialGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
@@ -570,13 +509,15 @@ class GroupManagerTests: XCTestCase {
             XCTAssertFalse(initialGrp.isNoteGroup)
 
             // Hold old members to list chat history and to clone
-            let grp = try XCTUnwrap(
-                createOrUpdateDBWait(
-                    groupManager: groupManager,
-                    groupIdentity: expectedGroupIdentity,
-                    members: expectedMembers
-                )
-            )
+            guard let grp = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
+                members: expectedMembers,
+                systemMessageDate: Date(),
+                sourceCaller: .local
+            ) else {
+                XCTFail("Updating initial group failed")
+                return
+            }
 
             XCTAssertEqual(3, grp.numberOfMembers)
             XCTAssertTrue(grp.allMemberIdentities.contains("MEMBER01"))
@@ -590,7 +531,7 @@ class GroupManagerTests: XCTestCase {
         }
     }
     
-    func testReceiveGroupSetupExistingGroupIamNotMemberWithRejectedMessages() throws {
+    func testReceiveGroupSetupExistingGroupIamNotMemberWithRejectedMessages() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let expectedGroupCreator = "MEMBER01"
@@ -618,14 +559,16 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let initialGrp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedInitialMembers
-            )
-        )
-        
+        guard let initialGrp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedInitialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating initial group failed")
+            return
+        }
+
         XCTAssertEqual(4, initialGrp.numberOfMembers)
         XCTAssertTrue(initialGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
         XCTAssertTrue(initialGrp.allMemberIdentities.contains("MEMBER01"))
@@ -657,14 +600,16 @@ class GroupManagerTests: XCTestCase {
         }
         
         // Hold old members to list chat history and to clone
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
-        
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Updating initial group failed")
+            return
+        }
+
         XCTAssertEqual(3, grp.numberOfMembers)
         XCTAssertTrue(grp.allMemberIdentities.contains("MEMBER01"))
         XCTAssertTrue(grp.allMemberIdentities.contains("MEMBER02"))
@@ -682,7 +627,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(0, actualBaseMessage.rejectedBy?.count ?? -1)
     }
     
-    func testReceiveGroupSetupWithRevokedMember() throws {
+    func testReceiveGroupSetupWithRevokedMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
@@ -706,13 +651,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let initialGrp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedInitialMembers
-            )
-        )
+        guard let initialGrp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedInitialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating initial group failed")
+            return
+        }
 
         XCTAssertEqual(4, initialGrp.numberOfMembers)
         XCTAssertTrue(initialGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
@@ -726,14 +673,15 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(initialGrp.isNoteGroup)
 
         // Hold old members to list chat history and to clone
-            
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Updating initial group failed")
+            return
+        }
 
         XCTAssertEqual(4, grp.numberOfMembers)
         XCTAssertTrue(grp.allMemberIdentities.contains(myIdentityStoreMock.identity))
@@ -747,7 +695,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(grp.isNoteGroup)
     }
     
-    func testReceiveGroupSetupWithRevokedMemberPartiallyApplyGroupSetup() throws {
+    func testReceiveGroupSetupWithRevokedMemberPartiallyApplyGroupSetup() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
@@ -774,13 +722,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let initialGrp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedInitialMembers
-            )
-        )
+        guard let initialGrp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedInitialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating initial group failed")
+            return
+        }
 
         XCTAssertEqual(4, initialGrp.numberOfMembers)
         XCTAssertTrue(initialGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
@@ -793,13 +743,15 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(initialGrp.isSelfMember)
         XCTAssertFalse(initialGrp.isNoteGroup)
             
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Updating initial group failed")
+            return
+        }
 
         XCTAssertEqual(5, grp.numberOfMembers)
         XCTAssertTrue(grp.allMemberIdentities.contains(myIdentityStoreMock.identity))
@@ -815,7 +767,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(grp.isNoteGroup)
     }
     
-    func testReceiveGroupSetupWithMissingLocalMember() throws {
+    func testReceiveGroupSetupWithMissingLocalMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
@@ -829,24 +781,26 @@ class GroupManagerTests: XCTestCase {
         let expectedMembers = expectedInitialMembers.union(Set(arrayLiteral: "MEMBER04"))
         
         // A made up error; If we ever check for this in the future we need to change this test.
-        let error = NSError(domain: NSPOSIXErrorDomain, code: 8_765_432_187)
-            
+        let expectedError = NSError(domain: NSPOSIXErrorDomain, code: 8_765_432_187)
+
         let groupManager = GroupManager(
             myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true, errorHandler: error),
+            ContactStoreMock(callOnCompletion: true, errorHandler: expectedError),
             TaskManagerMock(),
             UserSettingsMock(),
             EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
             groupPhotoSenderMock
         )
 
-        let initialGrp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedInitialMembers
-            )
-        )
+        guard let initialGrp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedInitialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating initial group failed")
+            return
+        }
 
         XCTAssertEqual(4, initialGrp.numberOfMembers)
         XCTAssertTrue(initialGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
@@ -859,16 +813,19 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(initialGrp.isSelfMember)
         XCTAssertFalse(initialGrp.isNoteGroup)
             
-        XCTAssertNil(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
+        await XCTAssertThrowsAsyncError(
+            _ = try await groupManager.createOrUpdateDB(
+                for: expectedGroupIdentity,
+                members: expectedMembers,
+                systemMessageDate: Date(),
+                sourceCaller: .local
             )
-        )
+        ) { _ in
+//            XCTAssertEqual((error as NSError).code, (expectedError as NSError).code)
+        }
     }
 
-    func testSetName() throws {
+    func testSetName() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -894,27 +851,19 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         XCTAssertNil(grp.name)
         
-        let expec = expectation(description: "Set group name completed")
-        
-        groupManager.setName(group: grp, name: expectedName)
-            .done {
-                expec.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
-        waitForExpectations(timeout: 6)
+        try await groupManager.setName(group: grp, name: expectedName)
 
         XCTAssertEqual(expectedName, grp.name)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupRenameMessage }.count)
@@ -931,8 +880,8 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(expectedName, task.name)
     }
     
-    func testSetAndDeletePhoto() throws {
-        
+    func testSetAndDeletePhoto() async throws {
+
         // Setup
         
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -960,32 +909,24 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         XCTAssertNil(grp.profilePicture)
         
-        let expecSetGroupPhoto = expectation(description: "Set group photo")
-        
         // Run set photo test
         
-        groupManager.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
-            .done {
-                expecSetGroupPhoto.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
+        try await groupManager.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
+
         // Validate set photo test
         
-        waitForExpectations(timeout: 6)
-
         XCTAssertTrue(grp.profilePicture!.elementsEqual(expectedPhoto))
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupSetPhotoMessage }.count)
         
@@ -1005,20 +946,10 @@ class GroupManagerTests: XCTestCase {
         
         // Run delete photo test
         
-        let expecDeleteGroupPhoto = expectation(description: "Delete group photo")
-        
-        groupManager.deletePhoto(groupID: grp.groupID, creator: grp.groupCreatorIdentity, sentDate: Date())
-            .done {
-                expecDeleteGroupPhoto.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
+        try await groupManager.deletePhoto(groupID: grp.groupID, creator: grp.groupCreatorIdentity, sentDate: Date())
+
         // Validate delete photo test
         
-        waitForExpectations(timeout: 6)
-
         XCTAssertNil(grp.profilePicture)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupDeletePhotoMessage }.count)
         
@@ -1039,7 +970,7 @@ class GroupManagerTests: XCTestCase {
     }
 
     // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-    func testSendLeaveAsCreator() throws {
+    func testSendLeaveAsCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1064,12 +995,16 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
-        )
-        
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
         XCTAssertNotNil(grp)
 
         groupManager.leave(
@@ -1086,7 +1021,7 @@ class GroupManagerTests: XCTestCase {
     }
 
     // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-    func testSendLeaveAsMember() throws {
+    func testSendLeaveAsMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1112,14 +1047,17 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let grp = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        let group = try XCTUnwrap(grp)
-        let initialNumberOfMember = group.numberOfMembers
+        let initialNumberOfMember = grp.numberOfMembers
 
         groupManager.leave(
             groupID: expectedGroupIdentity.id,
@@ -1147,10 +1085,10 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(2, task.hiddenContacts.count)
         XCTAssertTrue(task.hiddenContacts.contains("MEMBER02"))
         XCTAssertTrue(task.hiddenContacts.contains("MEMBER04"))
-        XCTAssertEqual(initialNumberOfMember - 1, grp?.numberOfMembers)
+        XCTAssertEqual(initialNumberOfMember - 1, grp.numberOfMembers)
     }
 
-    func testSendLeaveToParticularMember() throws {
+    func testSendLeaveToParticularMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1173,13 +1111,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let grp = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
-        )
-
-        XCTAssertNotNil(grp)
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         groupManager.leave(
             groupID: expectedGroupIdentity.id,
@@ -1198,7 +1138,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(0, task.hiddenContacts.count)
     }
 
-    func testSendLeaveAndAdd() throws {
+    func testSendLeaveAndAdd() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1221,13 +1161,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         XCTAssertEqual(4, grp.allMemberIdentities.count)
         XCTAssertFalse(grp.didLeave)
@@ -1246,19 +1188,21 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(3, grpLeft.allMemberIdentities.count)
         XCTAssertTrue(grpLeft.didLeave)
 
-        let grpAdded = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grpAdded = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Updating group failed")
+            return
+        }
 
         XCTAssertEqual(4, grpAdded.allMemberIdentities.count)
         XCTAssertFalse(grpAdded.didLeave)
     }
     
-    func testReceiveLeaveFromMember() throws {
+    func testReceiveLeaveFromMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1287,10 +1231,11 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: initialMembers
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: initialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
 
         groupManager.leaveDB(
@@ -1322,7 +1267,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(kSystemMessageGroupMemberLeave, systemMessageTypes.last?.intValue)
     }
     
-    func testReceiveLeaveFromMemberWithRejectedMessages() throws {
+    func testReceiveLeaveFromMemberWithRejectedMessages() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1351,10 +1296,11 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: initialMembers
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: initialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
 
         let group = try XCTUnwrap(
@@ -1406,7 +1352,7 @@ class GroupManagerTests: XCTestCase {
     //      -> In step 1 the group creator will be removed from the group. And a system message 'group is not mutable
     //         anymore' will be added.
     //      -> Later in step 1 the group will be left. And system message 'group must be cloned' will be added.
-    func testReceiveLeaveFromCreator() throws {
+    func testReceiveLeaveFromCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1430,10 +1376,11 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
 
         groupManager.leaveDB(
@@ -1465,7 +1412,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(kSystemMessageGroupCreatorLeft, systemMessageTypes.last?.intValue)
     }
 
-    func testDissolveAsAdmin() throws {
+    func testDissolveAsAdmin() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1493,13 +1440,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         groupManager.dissolve(groupID: grp.groupID, to: nil)
 
@@ -1518,7 +1467,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(task.toMembers.contains("MEMBER03"))
     }
     
-    func testDissolveAsAdminWithRejectedMessages() throws {
+    func testDissolveAsAdminWithRejectedMessages() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1547,14 +1496,16 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
-        
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
         // Create two text messages with rejectedBy
         
         let messageID1: Data! = try databasePreparer.save {
@@ -1622,7 +1573,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(0, actualBaseMessage2.rejectedBy?.count ?? -1)
     }
 
-    func testDissolveAsAdminTwoMembers() throws {
+    func testDissolveAsAdminTwoMembers() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1647,13 +1598,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         groupManager.dissolve(groupID: grp.groupID, to: ["MEMBER01", "MEMBER02"])
 
@@ -1672,7 +1625,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(task.toMembers.contains("MEMBER02"))
     }
 
-    func testDissolveAsMember() throws {
+    func testDissolveAsMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -1695,13 +1648,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         groupManager.dissolve(groupID: grp.groupID, to: nil)
 
@@ -1716,7 +1671,7 @@ class GroupManagerTests: XCTestCase {
     }
 
     // Test with blocked contact
-    func testSyncAllMembers() throws {
+    func testSyncAllMembers() async throws {
         // Setup
         
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -1744,41 +1699,25 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         // Set photo
-        let expectationPhoto = expectation(description: "Set photo")
-        groupManager.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
-            .done {
-                expectationPhoto.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
-        waitForExpectations(timeout: 1)
-        
-        let expectationSyncAllMembers = expectation(description: "Sync all members")
-        
+
+        try await groupManager.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
+
         // Run
         
-        groupManager.sync(group: grp, to: nil, withoutCreateMessage: false)
-            .done {
-                expectationSyncAllMembers.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
+        try await groupManager.sync(group: grp, to: nil, withoutCreateMessage: false)
         
         // Validate
-        
-        waitForExpectations(timeout: 1)
         
         // SetPhoto, Create, Rename, SetPhoto => 4
         XCTAssertEqual(4, taskManagerMock.addedTasks.count)
@@ -1806,7 +1745,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(groupPhotoSenderMock.encryptionKey, setPhotoTask.encryptionKey)
     }
     
-    func testSyncOneMember() throws {
+    func testSyncOneMember() async throws {
         // Setup
         
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -1834,29 +1773,21 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        let expectationSync = expectation(description: "Sync")
-        
         // Run
         
-        groupManager.sync(group: grp, to: expectedToMember, withoutCreateMessage: false)
-            .done {
-                expectationSync.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
+        try await groupManager.sync(group: grp, to: expectedToMember, withoutCreateMessage: false)
+
         // Validate
-        
-        waitForExpectations(timeout: 1)
         
         // Create, Rename, DeletePhoto => 3
         XCTAssertEqual(3, taskManagerMock.addedTasks.count)
@@ -1882,7 +1813,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(expectedToMember, Set(setPhotoTask.toMembers))
     }
     
-    func testSyncUnknownMember() throws {
+    func testSyncUnknownMember() async throws {
         // Setup
         
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -1911,30 +1842,22 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        let expectationSync = expectation(description: "Sync")
-        
         // Run
         
-        groupManager.sync(group: grp, to: Set([unknownMember]), withoutCreateMessage: false)
-            .done {
-                expectationSync.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
+        try await groupManager.sync(group: grp, to: Set([unknownMember]), withoutCreateMessage: false)
+
         // Validate
         
-        waitForExpectations(timeout: 1)
-
         // A group create message with an empty member list should be synced to a unknown contact
         XCTAssertEqual(1, taskManagerMock.addedTasks.count)
         
@@ -1946,7 +1869,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(expectedMembers, createMessageTask.members)
     }
     
-    func testPeriodicSync() throws {
+    func testPeriodicSync() async throws {
         // Setup
         
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -1986,15 +1909,17 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        entityManager.performSyncBlockAndSafe {
+        await entityManager.performSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
                 for: grp.groupID,
                 with: nil
@@ -2004,25 +1929,15 @@ class GroupManagerTests: XCTestCase {
         }
 
         // Set photo
-        let expectationPhoto = expectation(description: "Set photo")
-        groupManager.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
-            .done {
-                expectationPhoto.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
-        wait(for: [expectationPhoto], timeout: 1)
-        
+
+        try await groupManager.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
+
         // Run
         
         groupManager.periodicSyncIfNeeded(for: grp)
-        
-        // Wait for delayed send photo task
-        
-        wait(for: [expectationPhotoTaskAdded], timeout: 5)
-        
+
+        await fulfillment(of: [expectationPhotoTaskAdded])
+
         // Validate
         
         let lastPeriodicSync = try XCTUnwrap(grp.lastPeriodicSync)
@@ -2054,7 +1969,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(groupPhotoSenderMock.encryptionKey, setPhotoTask.encryptionKey)
     }
     
-    func testPeriodicSyncWithDelayedPhotoSending() throws {
+    func testPeriodicSyncWithDelayedPhotoSending() async throws {
         // Setup
         
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -2085,15 +2000,17 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManagerForPreparation,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManagerForPreparation.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
                 for: grp.groupID,
                 with: nil
@@ -2103,17 +2020,8 @@ class GroupManagerTests: XCTestCase {
         }
         
         // Set photo
-        let expectationPhoto = expectation(description: "Set photo")
-        groupManagerForPreparation.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
-            .done {
-                expectationPhoto.fulfill()
-            }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
-        
-        waitForExpectations(timeout: 1)
-        
+        try await groupManagerForPreparation.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
+
         let groupManager = GroupManager(
             myIdentityStoreMock,
             contactStoreMock,
@@ -2150,7 +2058,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertNil(renameMessageTask.name)
     }
 
-    func testPeriodicSyncNoPhoto() throws {
+    func testPeriodicSyncNoPhoto() async throws {
         // Setup
 
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -2180,15 +2088,17 @@ class GroupManagerTests: XCTestCase {
             delayedGroupPhotoSenderMock
         )
 
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
                 for: grp.groupID,
                 with: nil
@@ -2230,7 +2140,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(expectedMembers, Set(deleteTask.toMembers))
     }
     
-    func testPeriodicSyncNotNeeded() throws {
+    func testPeriodicSyncNotNeeded() async throws {
         // Setup
 
         let myIdentityStoreMock = MyIdentityStoreMock()
@@ -2259,15 +2169,17 @@ class GroupManagerTests: XCTestCase {
             entityManager,
             delayedGroupPhotoSenderMock
         )
-        let grp = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
                 for: grp.groupID,
                 with: nil
@@ -2288,7 +2200,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(0, taskManagerMock.addedTasks.count)
     }
     
-    func testGetGroupImCreator() throws {
+    func testGetGroupImCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2313,13 +2225,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let expectedGroup = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let expectedGroup = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         let actualGroup = try XCTUnwrap(
             groupManager
@@ -2330,7 +2244,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(actualGroup.conversation, expectedGroup.conversation)
     }
     
-    func testGetGroupOtherCreator() throws {
+    func testGetGroupOtherCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2352,13 +2266,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let expectedGroup = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
-        )
+        guard let expectedGroup = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         let actualGroup = try XCTUnwrap(
             groupManager
@@ -2394,12 +2310,11 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        _ = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
 
         let actualActiveGroups = await groupManager.getAllActiveGroups()
@@ -2432,14 +2347,13 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        _ = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: expectedMembers
-            )
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
-        
+
         let actualActiveGroups = await groupManager.getAllActiveGroups()
         
         XCTAssertEqual(actualActiveGroups.count, 1)
@@ -2492,14 +2406,13 @@ class GroupManagerTests: XCTestCase {
         )
         let expectedMembers1 = Set<String>(allMembers[0..<3])
         
-        _ = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroup1,
-                members: expectedMembers1
-            )
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroup1,
+            members: expectedMembers1,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
-        
+
         expectedGroupIdentities.append(expectedGroup1)
 
         // Group 2: Other
@@ -2510,14 +2423,13 @@ class GroupManagerTests: XCTestCase {
         )
         let expectedMembers2 = Set<String>(allMembers[3...] + [myIdentityStoreMock.identity])
         
-        _ = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroup2,
-                members: expectedMembers2
-            )
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroup2,
+            members: expectedMembers2,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
-        
+
         expectedGroupIdentities.append(expectedGroup2)
         
         // Group 3: Left
@@ -2528,14 +2440,13 @@ class GroupManagerTests: XCTestCase {
         )
         let expectedMembers3 = Set<String>(allMembers[3...] + [myIdentityStoreMock.identity])
         
-        _ = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroup3,
-                members: expectedMembers3
-            )
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroup3,
+            members: expectedMembers3,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
-        
+
         groupManager.leave(groupWith: expectedGroup3, inform: .all)
                 
         // Run
@@ -2553,7 +2464,7 @@ class GroupManagerTests: XCTestCase {
         }
     }
     
-    func testAddMemberToGroupWithOpenBallot() throws {
+    func testAddMemberToGroupWithOpenBallot() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2583,13 +2494,15 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let group = try XCTUnwrap(
-            createOrUpdateDBWait(
-                groupManager: groupManager,
-                groupIdentity: expectedGroupIdentity,
-                members: initialMembers
-            )
-        )
+        guard let group = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: initialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
         // Add open ballot
         
@@ -2602,47 +2515,22 @@ class GroupManagerTests: XCTestCase {
         
         // Test
         
-        var resultGroup: Group?
-        var resultNewMembers: Set<String>?
-        var resultError: Error?
-        
-        let expec = expectation(description: "Group update with ballots")
-        
-        groupManager.createOrUpdate(
+        let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
             for: expectedGroupIdentity,
             members: expectedMembers,
             systemMessageDate: Date()
         )
-        .done { grp, newMembers in
-            resultGroup = grp
-            resultNewMembers = newMembers
 
-            expec.fulfill()
-        }
-        .catch { error in
-            resultError = error
-
-            expec.fulfill()
-        }
-
-        waitForExpectations(timeout: 1)
-             
-        if let error = resultError {
-            XCTFail(error.localizedDescription)
-        }
-        else {
-            XCTAssertNil(resultError)
-            XCTAssertNotNil(resultGroup)
-            XCTAssertEqual(resultGroup?.groupIdentity, expectedGroupIdentity)
-            XCTAssertEqual(resultGroup?.allMemberIdentities.count, expectedMembers.count + 1)
-            XCTAssertTrue(resultGroup!.allMemberIdentities.contains(myIdentityStoreMock.identity))
-            XCTAssertTrue(resultNewMembers!.contains(newMember))
-            // Allow MyIdentity injection in the future for `Ballot` to actually create send
-            // message tasks and check for them here
-        }
+        XCTAssertNotNil(resultGroup)
+        XCTAssertEqual(resultGroup.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(resultGroup.allMemberIdentities.count, expectedMembers.count + 1)
+        XCTAssertTrue(resultGroup.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertTrue(resultNewMembers!.contains(newMember))
+        // Allow MyIdentity injection in the future for `Ballot` to actually create send
+        // message tasks and check for them here
     }
     
-    func testCreateNoteGroup() {
+    func testCreateNoteGroup() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2663,33 +2551,35 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
         
-        let grp = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
-        )
-        
-        XCTAssertNotNil(grp)
-        XCTAssertEqual(grp?.groupID, expectedGroupIdentity.id)
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: [],
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
+        XCTAssertEqual(grp.groupID, expectedGroupIdentity.id)
 
         let conversation = entityManager.entityFetcher.conversation(
-            for: grp!.groupID,
-            creator: grp!.groupIdentity.creator.string
+            for: grp.groupID,
+            creator: grp.groupIdentity.creator.string
         )
         
         XCTAssertNotNil(conversation)
 
         let lastMessage = MessageFetcher(for: conversation!, with: entityManager).lastMessage() as! SystemMessage
         
-        XCTAssertNotNil(grp)
-        XCTAssertEqual(grp?.groupIdentity, expectedGroupIdentity)
-        XCTAssertEqual(grp?.allMemberIdentities.count, 1)
-        XCTAssertTrue(grp?.allMemberIdentities.contains(myIdentityStoreMock.identity) ?? false)
-        XCTAssertNil(grp?.lastSyncRequest)
+        XCTAssertEqual(grp.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(grp.allMemberIdentities.count, 1)
+        XCTAssertTrue(grp.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertNil(grp.lastSyncRequest)
         XCTAssertEqual(lastMessage.type, NSNumber(value: kSystemMessageStartNoteGroupInfo))
     }
     
-    func testAddMemberToNoteGroup() {
+    func testAddMemberToNoteGroup() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2709,26 +2599,30 @@ class GroupManagerTests: XCTestCase {
             entityManager,
             groupPhotoSenderMock
         )
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: [],
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
         
         let expectedNewMembers: Set<String> = ["MEMBER01"]
         for member in expectedNewMembers {
             databasePreparer.createContact(identity: member)
         }
-        let grp = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedNewMembers
-        )
-        XCTAssertNotNil(grp)
-        
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedNewMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
         let conversation = entityManager.entityFetcher.conversation(
-            for: grp!.groupID,
-            creator: grp!.groupIdentity.creator.string
+            for: grp.groupID,
+            creator: grp.groupIdentity.creator.string
         )
         XCTAssertNotNil(conversation)
         
@@ -2741,14 +2635,14 @@ class GroupManagerTests: XCTestCase {
             }
         }
         
-        XCTAssertEqual(grp?.groupIdentity, expectedGroupIdentity)
-        XCTAssertEqual(grp?.allMemberIdentities.count, expectedNewMembers.count + 1)
-        XCTAssertTrue(grp?.allMemberIdentities.contains(myIdentityStoreMock.identity) ?? false)
-        XCTAssertNil(grp?.lastSyncRequest)
+        XCTAssertEqual(grp.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(grp.allMemberIdentities.count, expectedNewMembers.count + 1)
+        XCTAssertTrue(grp.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertNil(grp.lastSyncRequest)
         XCTAssertEqual(endNoteGroupInfoCount, 1)
     }
     
-    func testRemoveMemberFromNoteGroup() {
+    func testRemoveMemberFromNoteGroup() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2774,21 +2668,25 @@ class GroupManagerTests: XCTestCase {
             entityManager,
             groupPhotoSenderMock
         )
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedMembers
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
-        let grp = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
-        )
-        XCTAssertNotNil(grp)
-        
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: [],
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
         let conversation = entityManager.entityFetcher.conversation(
-            for: grp!.groupID,
-            creator: grp!.groupIdentity.creator.string
+            for: grp.groupID,
+            creator: grp.groupIdentity.creator.string
         )
         XCTAssertNotNil(conversation)
         
@@ -2801,14 +2699,14 @@ class GroupManagerTests: XCTestCase {
             }
         }
         
-        XCTAssertEqual(grp?.groupIdentity, expectedGroupIdentity)
-        XCTAssertEqual(grp?.allMemberIdentities.count, 1)
-        XCTAssertTrue(grp?.allMemberIdentities.contains(myIdentityStoreMock.identity) ?? false)
-        XCTAssertNil(grp?.lastSyncRequest)
+        XCTAssertEqual(grp.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(grp.allMemberIdentities.count, 1)
+        XCTAssertTrue(grp.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertNil(grp.lastSyncRequest)
         XCTAssertEqual(startNoteGroupInfoCount, 1)
     }
     
-    func testAddAndRemoveMemberFromNoteGroup() {
+    func testAddAndRemoveMemberFromNoteGroup() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2828,31 +2726,36 @@ class GroupManagerTests: XCTestCase {
             entityManager,
             groupPhotoSenderMock
         )
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: [],
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
         
         let expectedNewMembers: Set<String> = ["MEMBER01"]
         for member in expectedNewMembers {
             databasePreparer.createContact(identity: member)
         }
-        createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: expectedNewMembers
+        try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedNewMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
-        let grp = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
-        )
-        XCTAssertNotNil(grp)
-        
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: [],
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
         let conversation = entityManager.entityFetcher.conversation(
-            for: grp!.groupID,
-            creator: grp!.groupIdentity.creator.string
+            for: grp.groupID,
+            creator: grp.groupIdentity.creator.string
         )
         XCTAssertNotNil(conversation)
         
@@ -2871,16 +2774,16 @@ class GroupManagerTests: XCTestCase {
             }
         }
         
-        XCTAssertEqual(grp?.groupIdentity, expectedGroupIdentity)
-        XCTAssertEqual(grp?.allMemberIdentities.count, 1)
-        XCTAssertTrue(grp?.allMemberIdentities.contains(myIdentityStoreMock.identity) ?? false)
-        XCTAssertTrue(grp?.isNoteGroup ?? false)
-        XCTAssertNil(grp?.lastSyncRequest)
+        XCTAssertEqual(grp.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(grp.allMemberIdentities.count, 1)
+        XCTAssertTrue(grp.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertTrue(grp.isNoteGroup)
+        XCTAssertNil(grp.lastSyncRequest)
         XCTAssertEqual(startNoteGroupInfoCount, 2)
         XCTAssertEqual(endNoteGroupInfoCount, 1)
     }
 
-    func testSyncNoteGroupWhenMultiDeviceIsActivated() throws {
+    func testSyncNoteGroupWhenMultiDeviceIsActivated() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -2899,40 +2802,34 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let noteGroup = createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
-        )
+        guard let noteGroup = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: [],
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
 
-        let expect = expectation(description: "sync")
+        try await groupManager.sync(group: noteGroup, to: nil, withoutCreateMessage: false)
 
-        groupManager.sync(group: noteGroup!, to: nil, withoutCreateMessage: false)
-            .done {
-                XCTAssertEqual(taskManagerMock.addedTasks.count, 3)
-                XCTAssertTrue(taskManagerMock.addedTasks.contains(where: { task in
-                    if let t = task as? TaskDefinitionSendGroupCreateMessage {
-                        return t.members.isEmpty
-                    }
-                    return false
-                }))
-                XCTAssertTrue(taskManagerMock.addedTasks.contains(where: { task in
-                    task is TaskDefinitionSendGroupRenameMessage
-                }))
-                XCTAssertTrue(taskManagerMock.addedTasks.contains(where: { task in
-                    task is TaskDefinitionSendGroupDeletePhotoMessage
-                }))
-
-                expect.fulfill()
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 3)
+        XCTAssertTrue(taskManagerMock.addedTasks.contains(where: { task in
+            if let t = task as? TaskDefinitionSendGroupCreateMessage {
+                return t.members.isEmpty
             }
-            .catch { error in
-                XCTFail("\(error)")
-            }
-
-        wait(for: [expect], timeout: 1)
+            return false
+        }))
+        XCTAssertTrue(taskManagerMock.addedTasks.contains(where: { task in
+            task is TaskDefinitionSendGroupRenameMessage
+        }))
+        XCTAssertTrue(taskManagerMock.addedTasks.contains(where: { task in
+            task is TaskDefinitionSendGroupDeletePhotoMessage
+        }))
     }
 
-    func testCreateOrUpdateBlockUnknownContact() throws {
+    func testCreateOrUpdateBlockUnknownContact() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
         let userSettingsMock = UserSettingsMock()
@@ -2963,55 +2860,16 @@ class GroupManagerTests: XCTestCase {
             groupPhotoSenderMock
         )
 
-        let expec = expectation(description: "Group create")
-
-        var result: Group?
-        groupManager.createOrUpdateDB(
+        guard let group = try await groupManager.createOrUpdateDB(
             for: expectedGroupIdentity,
             members: expectedGroupMembers,
             systemMessageDate: nil,
             sourceCaller: .local
-        )
-        .done { group in
-            result = group
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail("\(error)")
+        ) else {
+            XCTFail("Creating group failed")
+            return
         }
 
-        wait(for: [expec], timeout: 60)
-
-        let group = try XCTUnwrap(result)
         XCTAssertEqual(3, group.numberOfMembers)
-    }
-
-    /// Create or update group in DB and wait until finished.
-    @discardableResult private func createOrUpdateDBWait(
-        groupManager: GroupManagerProtocol,
-        groupIdentity: GroupIdentity,
-        members: Set<String>
-    ) -> Group? {
-        var group: Group?
-
-        let expec = expectation(description: "Group create or update")
-
-        groupManager.createOrUpdateDB(
-            for: groupIdentity,
-            members: members,
-            systemMessageDate: Date(),
-            sourceCaller: .local
-        )
-        .done { grp in
-            group = grp
-            expec.fulfill()
-        }
-        .catch { _ in
-            expec.fulfill()
-        }
-
-        wait(for: [expec], timeout: 30)
-
-        return group
     }
 }

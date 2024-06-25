@@ -237,10 +237,10 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             
             orphanedFilesInBin = filenames
             
-            if let binFolder = FileUtility.appDataDirectory?
+            if let binFolder = FileUtility.shared.appDataDirectory?
                 .appendingPathComponent(EntityDestroyer.externalDataBinPath) {
                 var binSize: Int64 = 0
-                FileUtility.pathSizeInBytes(pathURL: binFolder, size: &binSize)
+                FileUtility.shared.pathSizeInBytes(pathURL: binFolder, size: &binSize)
                 orphanedFilesBinSize = binSize
             }
             else {
@@ -270,9 +270,9 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     }
     
     private func filesInBin() -> [String]? {
-        let binFolder = FileUtility.appDataDirectory?.appendingPathComponent(EntityDestroyer.externalDataBinPath)
-        if FileUtility.isExists(fileURL: binFolder) {
-            return FileUtility.dir(pathURL: binFolder)
+        let binFolder = FileUtility.shared.appDataDirectory?.appendingPathComponent(EntityDestroyer.externalDataBinPath)
+        if FileUtility.shared.isExists(fileURL: binFolder) {
+            return FileUtility.shared.dir(pathURL: binFolder)
         }
         return nil
     }
@@ -282,20 +282,21 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             return
         }
         
-        guard let binFolder = FileUtility.appDataDirectory?.appendingPathComponent(EntityDestroyer.externalDataBinPath)
+        guard let binFolder = FileUtility.shared.appDataDirectory?
+            .appendingPathComponent(EntityDestroyer.externalDataBinPath)
         else {
             return
         }
         
-        if !FileUtility.isExists(fileURL: binFolder), !FileUtility.mkDir(at: binFolder) {
+        if !FileUtility.shared.isExists(fileURL: binFolder), !FileUtility.shared.mkDir(at: binFolder) {
             DDLogError("Bin couldn't be created.")
             return
         }
     
         for orphanedFile in orphanedFiles {
-            if let source = FileUtility.appDataDirectory?
+            if let source = FileUtility.shared.appDataDirectory?
                 .appendingPathComponent("\(EntityDestroyer.externalDataPath)/\(orphanedFile)"),
-                !FileUtility.move(source: source, destination: binFolder.appendingPathComponent(orphanedFile)) {
+                !FileUtility.shared.move(source: source, destination: binFolder.appendingPathComponent(orphanedFile)) {
                 
                 DDLogError("Orphaned file couldn't be moved to Bin.")
             }
@@ -303,36 +304,38 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     }
     
     private func restoreBin() {
-        guard let binFolder = FileUtility.appDataDirectory?.appendingPathComponent(EntityDestroyer.externalDataBinPath)
+        guard let binFolder = FileUtility.shared.appDataDirectory?
+            .appendingPathComponent(EntityDestroyer.externalDataBinPath)
         else {
             return
         }
         
-        if let files = FileUtility.dir(pathURL: binFolder) {
+        if let files = FileUtility.shared.dir(pathURL: binFolder) {
             for file in files {
-                if let destination = FileUtility.appDataDirectory?
+                if let destination = FileUtility.shared.appDataDirectory?
                     .appendingPathComponent("\(EntityDestroyer.externalDataPath)/\(file)"),
-                    !FileUtility.move(source: binFolder.appendingPathComponent(file), destination: destination) {
+                    !FileUtility.shared.move(source: binFolder.appendingPathComponent(file), destination: destination) {
                     
                     DDLogError("Orphaned file couldn't be restored.")
                 }
             }
         }
 
-        if let files = FileUtility.dir(pathURL: binFolder),
+        if let files = FileUtility.shared.dir(pathURL: binFolder),
            files.isEmpty {
 
-            FileUtility.delete(at: binFolder)
+            FileUtility.shared.delete(at: binFolder)
         }
     }
     
     private func emptyBin() {
-        guard let binFolder = FileUtility.appDataDirectory?.appendingPathComponent(EntityDestroyer.externalDataBinPath)
+        guard let binFolder = FileUtility.shared.appDataDirectory?
+            .appendingPathComponent(EntityDestroyer.externalDataBinPath)
         else {
             return
         }
         
-        FileUtility.delete(at: binFolder)
+        FileUtility.shared.delete(at: binFolder)
     }
     
     private func startProgress() -> MBProgressHUD? {
@@ -350,16 +353,16 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             }
         }
 
-        if let url = FileUtility.appDataDirectory {
-            FileUtility.logDirectoriesAndFiles(path: url, logFileName: nil)
+        if let url = FileUtility.shared.appDataDirectory {
+            FileUtility.shared.logDirectoriesAndFiles(path: url, logFileName: nil)
         }
-        if let url = FileUtility.appDocumentsDirectory {
-            FileUtility.logDirectoriesAndFiles(path: url, logFileName: nil)
+        if let url = FileUtility.shared.appDocumentsDirectory {
+            FileUtility.shared.logDirectoriesAndFiles(path: url, logFileName: nil)
         }
-        if let url = FileUtility.appCachesDirectory {
-            FileUtility.logDirectoriesAndFiles(path: url, logFileName: nil)
+        if let url = FileUtility.shared.appCachesDirectory {
+            FileUtility.shared.logDirectoriesAndFiles(path: url, logFileName: nil)
         }
-        FileUtility.logDirectoriesAndFiles(path: FileManager.default.temporaryDirectory, logFileName: nil)
+        FileUtility.shared.logDirectoriesAndFiles(path: FileManager.default.temporaryDirectory, logFileName: nil)
 
         DispatchQueue.main.async {
             progress?.hide(animated: true, afterDelay: 1.5)

@@ -122,7 +122,8 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
     
     func updateImageTo(data: Data, isGIF: Bool = false) {
         guard !isGIF else {
-            return setupGIF(data: data)
+            setupGIF(data: data)
+            return
         }
         
         guard let image = UIImage(data: data) else {
@@ -174,6 +175,7 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
         
         // Hide loading screen and unhide gif image view
         gifPlayImageView.isHidden = false
+        gifPlayImageView.image = UIImage(systemName: "play.circle.fill")
         gifContainerView.isHidden = false
         loadingView.isHidden = true
         loadingText.isHidden = true

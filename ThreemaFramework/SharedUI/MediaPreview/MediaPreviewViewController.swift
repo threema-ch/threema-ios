@@ -445,7 +445,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             title = BundleUtil.localizedString(forKey: "could_not_add_all_items_memory_constrained_title")
             message = String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "error_message_file_too_big"),
-                FileUtility.getFileSizeDescription(from: Int64(kMaxFileSize))
+                FileUtility.shared.getFileSizeDescription(from: Int64(kMaxFileSize))
             )
         }
         else if items == 1 {

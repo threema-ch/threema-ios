@@ -313,7 +313,7 @@ import PromiseKit
             .pathExtension
         fileOperationQueue.sync {
             let ogFilename = urlItem.deletingPathExtension().lastPathComponent
-            let filename = FileUtility.getUniqueFilename(from: ogFilename, directoryURL: url, pathExtension: ext)
+            let filename = FileUtility.shared.getUniqueFilename(from: ogFilename, directoryURL: url, pathExtension: ext)
             let fileURL = url.appendingPathComponent(filename).appendingPathExtension(ext)
             do {
                 try FileManager.default.copyItem(at: urlItem, to: fileURL)
@@ -335,7 +335,11 @@ import PromiseKit
                 seal.reject(ItemLoaderError.UnknownType)
                 return
             }
-            let filename = FileUtility.getTemporarySendableFileName(base: "file", directoryURL: url, pathExtension: ext)
+            let filename = FileUtility.shared.getTemporarySendableFileName(
+                base: "file",
+                directoryURL: url,
+                pathExtension: ext
+            )
             let fileURL = url.appendingPathComponent(filename).appendingPathExtension(ext)
             do {
                 try dataItem.write(to: fileURL)
@@ -374,7 +378,7 @@ import PromiseKit
             let pngExt = UTIConverter
                 .preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: UTType.png.identifier))!
             let ext = isSticker ? pngExt : jpegExt
-            let filename = FileUtility.getTemporarySendableFileName(
+            let filename = FileUtility.shared.getTemporarySendableFileName(
                 base: "image",
                 directoryURL: url,
                 pathExtension: ext

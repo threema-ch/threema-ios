@@ -23,8 +23,6 @@
 
 @interface ActivityUtil : NSObject
 
-+ (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withView:(UIView *)view andRect:(CGRect)rect;
-
 + (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withView:(UIView *)view andBarButtonItem:(UIBarButtonItem *)barButtonItem;
 
 + (UIActivityViewController *)activityViewControllerWithActivityItems:(NSArray *)activityItems applicationActivities:(NSArray *)applicationActivities;

@@ -228,7 +228,12 @@ extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        let deleteAction = Provider.deleteAction(message: message, willDelete: willDelete, didDelete: didDelete)
+        let deleteAction = Provider.deleteAction(
+            message: message,
+            willDelete: willDelete,
+            didDelete: didDelete,
+            popOverSource: chatBubbleView
+        )
         
         // Build menu
         return ([], [detailAction, selectHandler, deleteAction])

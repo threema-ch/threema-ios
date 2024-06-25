@@ -93,8 +93,13 @@
     for (ContactEntity *contact in _groupMembers) {
         [groupMemberIdentities  addObject:contact.identity];
     }
-    
-    [groupManager createOrUpdateObjcWithGroupID:groupId creator:groupCreator members:groupMemberIdentities systemMessageDate:[NSDate date] completionHandler:^(Group * _Nullable grp, __unused NSSet<NSString *> * _Nullable newMembers) {
+
+    [groupManager createOrUpdateObjcWithGroupID:groupId creator:groupCreator members:groupMemberIdentities systemMessageDate:[NSDate date] completionHandler:^(Group * _Nullable grp, NSSet<NSString *> * _Nullable newMembers, NSError * _Nullable error) {
+
+        if (error) {
+            DDLogError(@"Error while creating group: %@", [error localizedDescription]);
+            return;
+        }
 
         if (grp != nil) {
             if (_groupName) {
@@ -112,27 +117,27 @@
                     }
                 }];
             }
-            
-            UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];
-            if ([[mainTabBar selectedViewController] isKindOfClass:[ContactsNavigationController class]]) {
-                NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      grp, kKeyGroup,
-                                      nil
-                                      ];
-                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowGroup object:nil
-                                                                  userInfo:info];
-            } else {
-                NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      grp.conversation, kKeyConversation,
-                                      [NSNumber numberWithBool:YES], kKeyForceCompose,
-                                      nil
-                                      ];
-                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowConversation object:nil
-                                                                  userInfo:info];
-            }
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];
+                if ([[mainTabBar selectedViewController] isKindOfClass:[ContactsNavigationController class]]) {
+                    NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
+                                          grp, kKeyGroup,
+                                          nil
+                                          ];
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowGroup object:nil
+                                                                      userInfo:info];
+                } else {
+                    NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
+                                          grp.conversation, kKeyConversation,
+                                          [NSNumber numberWithBool:YES], kKeyForceCompose,
+                                          nil
+                                          ];
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowConversation object:nil
+                                                                      userInfo:info];
+                }
+            });
         }
-    } errorHandler:^(NSError * _Nullable error) {
-        DDLogError(@"Error while createing group: %@", [error localizedDescription]);
     }];
 }
 

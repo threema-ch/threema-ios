@@ -221,6 +221,14 @@ extension Old_BlobUploader: URLSessionTaskDelegate {
         didReceive challenge: URLAuthenticationChallenge,
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
-        SSLCAHelper.session(session, didReceive: challenge, completion: completionHandler)
+        Task {
+            do {
+                let result = try await SSLCAHelper().handle(challenge: challenge)
+                completionHandler(result.disposition, result.credential)
+            }
+            catch {
+                DDLogError("SSL cert pinning, handle authentication challenge failed \(error)")
+            }
+        }
     }
 }

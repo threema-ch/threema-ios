@@ -23,6 +23,20 @@ import ThreemaProtocols
 
 extension MDMSetup {
 
+    /// MD sync of setting one to one and group call, if MDM parameter 'th_disable_calls' or 'th_disable_group_calls' is
+    /// set
+    @objc func syncSettingCalls() {
+        let businessInjector = BusinessInjector()
+
+        guard AppSetup.isCompleted,
+              businessInjector.userSettings.enableMultiDevice,
+              existsMdmKey(MDM_KEY_DISABLE_CALLS) || existsMdmKey(MDM_KEY_DISABLE_GROUP_CALLS) else {
+            return
+        }
+
+        businessInjector.settingsStoreInternal.syncSettingCalls()
+    }
+
     /// MD sync of MDM parameter 'th_disable_add_contact'
     @objc func sync() {
         guard UserSettings.shared().enableMultiDevice,

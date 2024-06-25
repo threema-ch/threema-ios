@@ -112,7 +112,7 @@ BOOL doMigrateInProgress = false;
     if (dict[@"NSFileProtectionKey"] == NSFileProtectionCompleteUntilFirstUserAuthentication && didUpdateProtectionForExternalData) {
         // Update shared directories every time to avoid crash (IOS-1406)
         dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
-            [self updateDirectoryProtectionAtURL:[FileUtility appDataDirectory]];
+            [self updateDirectoryProtectionAtURL:[[FileUtility shared] appDataDirectory]];
         });
         return NO;
     }
@@ -141,7 +141,7 @@ BOOL doMigrateInProgress = false;
     // NSFileProtectionComplete to the more apppropriate NSFileProtectionCompleteUntilFirstUserAuthentication.
     // Note that directories may have a file protection class (which then applies to all new files created within them), but they do not have to.
     
-    [self updateProtectionAtURL:[FileUtility appDataDirectory]];
+    [self updateProtectionAtURL:[[FileUtility shared] appDataDirectory]];
     [self updateProtectionAtURL:[NSURL fileURLWithPath:NSHomeDirectory()]];
     
     NSUserDefaults *defaults = [AppGroup userDefaults];
@@ -205,7 +205,7 @@ BOOL doMigrateInProgress = false;
 }
 
 - (BOOL)storeRequiresImport {
-    NSURL *repairedThreemaDataUrl = [[FileUtility appDocumentsDirectory] URLByAppendingPathComponent:THREEMA_DB_IMPORT_FILE];
+    NSURL *repairedThreemaDataUrl = [[[FileUtility shared] appDocumentsDirectory] URLByAppendingPathComponent:THREEMA_DB_IMPORT_FILE];
     return [[NSFileManager defaultManager] fileExistsAtPath:repairedThreemaDataUrl.path];
 }
 
@@ -230,7 +230,7 @@ BOOL doMigrateInProgress = false;
             [self migrateDatabaseLocation];
             
             NSFileManager *fileManager = [NSFileManager defaultManager];
-            NSURL *documentsUrl = [FileUtility appDataDirectory];
+            NSURL *documentsUrl = [[FileUtility shared] appDataDirectory];
             NSURL *tmpUrlToExternalStorage = [documentsUrl URLByAppendingPathComponent:@"tmpPathToReplacementData"];
             NSURL *urlToExternalStorage = [documentsUrl URLByAppendingPathComponent:@".ThreemaData_SUPPORT/_EXTERNAL_DATA"];
             
@@ -360,7 +360,7 @@ BOOL doMigrateInProgress = false;
 
 - (void)removeMigrationLeftover {
     // remove any leftover from previous failed migrations
-    NSURL *documentsUrl = [FileUtility appDataDirectory];
+    NSURL *documentsUrl = [[FileUtility shared] appDataDirectory];
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSArray *files = [fileManager contentsOfDirectoryAtPath:documentsUrl.path error:nil];
     for (NSString *fileName in files) {
@@ -374,9 +374,9 @@ BOOL doMigrateInProgress = false;
 - (unsigned long long)storeSize {
     unsigned long long storeSize = 0;
     
-    NSString *documentsPath = [FileUtility appDataDirectory].path;
+    NSString *documentsPath = [[FileUtility shared] appDataDirectory].path;
     
-    storeSize += [FileUtility fileSizeInBytesObjcWithFileURL:[NSURL URLWithString:[documentsPath stringByAppendingPathComponent:THREEMA_DB_FILE]]];
+    storeSize += [[FileUtility shared] fileSizeInBytesObjcWithFileURL:[NSURL URLWithString:[documentsPath stringByAppendingPathComponent:THREEMA_DB_FILE]]];
     
     //    NSString *pathToSupportDir = [documentsPath stringByAppendingPathComponent:THREEMA_DB_EXTERNALS];
     //    storeSize += [Utils sizeOfObjectAtPath:pathToSupportDir];
@@ -422,7 +422,7 @@ BOOL doMigrateInProgress = false;
     [self migrateDatabaseLocation];
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSURL *documentsUrl = [FileUtility appDocumentsDirectory];
+    NSURL *documentsUrl = [[FileUtility shared] appDocumentsDirectory];
     NSURL *urlToImportStorage = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", documentsUrl.absoluteString, THREEMA_DB_IMPORT_FILE]];
     
     if ([fileManager fileExistsAtPath:[urlToImportStorage path]]) {
@@ -459,11 +459,11 @@ BOOL doMigrateInProgress = false;
     NSFileManager *fileManager = [NSFileManager defaultManager];
 
     // check if data is at application location, if yes move it to group directory
-    NSURL *appUrl = [FileUtility appDocumentsDirectory];
+    NSURL *appUrl = [[FileUtility shared] appDocumentsDirectory];
     NSURL *appFile = [appUrl URLByAppendingPathComponent:THREEMA_DB_FILE];
     
     if ([fileManager fileExistsAtPath:appFile.path]) {
-        NSURL *targetURL = [FileUtility appDataDirectory];
+        NSURL *targetURL = [[FileUtility shared] appDataDirectory];
         [self moveDBFilesFrom:appUrl to:targetURL];
     }
 }
@@ -532,7 +532,7 @@ BOOL doMigrateInProgress = false;
 }
 
 + (NSURL *)storeUrl {
-    return [[FileUtility appDataDirectory] URLByAppendingPathComponent:THREEMA_DB_FILE];
+    return [[[FileUtility shared] appDataDirectory] URLByAppendingPathComponent:THREEMA_DB_FILE];
 }
 
 - (unsigned long long)freeDiskSpace {
@@ -550,8 +550,8 @@ BOOL doMigrateInProgress = false;
 
 - (void)disableBackupForDatabaseDirectory:(BOOL)disable
 {
-    NSString *documentsPath = [FileUtility appDataDirectory].path;
-    NSString *applicationDocumentsPath = [FileUtility appDocumentsDirectory].path;
+    NSString *documentsPath = [[FileUtility shared] appDataDirectory].path;
+    NSString *applicationDocumentsPath = [[FileUtility shared] appDocumentsDirectory].path;
     NSString *cachePath = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject].path;
     
     NSURL *urlToExternalStorage = [NSURL fileURLWithPath:[documentsPath stringByAppendingPathComponent:@".ThreemaData_SUPPORT"]];
@@ -635,6 +635,8 @@ BOOL doMigrateInProgress = false;
         if (objects == nil) {
             return;
         }
+        
+        // TODO: (IOS-4294) Also check `objects` for duplicate entries (maybe just put them into a set)
 
         if (removeExisting) {
             DDLogInfo(@"[t-dirty-objects] Remove array of dirty objects");
@@ -682,6 +684,8 @@ BOOL doMigrateInProgress = false;
 
         [dbContext main].stalenessInterval = stalenessInterval;
     });
+    
+    // TODO: (IOS-4606) Check if these notification can be merged into one (i.e. `notifyObjectsRefresh:`)  that could be used by all observers
 
     // Notify object changes
     for (NSManagedObjectID *objectID in notifyObjectIds) {
@@ -692,6 +696,9 @@ BOOL doMigrateInProgress = false;
     if ([notifyObjectIds count] > 0) {
         DDLogInfo(@"[t-dirty-objects] Notify refresh object with nil");
         [self notifyObjectRefresh:nil];
+        
+        DDLogInfo(@"[t-dirty-objects] Notify refresh all objects");
+        [self notifyObjectsRefresh:notifyObjectIds];
     }
 }
 
@@ -721,6 +728,12 @@ BOOL doMigrateInProgress = false;
                           nil];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationDBRefreshedDirtyObject object:self userInfo:info];
+}
+
+- (void)notifyObjectsRefresh:(NSSet<NSManagedObjectID *> *)objectIDs {
+    NSDictionary *info = @{kKeyObjectIDs: objectIDs};
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationDBRefreshedDirtyObjects object:self userInfo:info];
 }
 
 - (void)addDirtyObject:(NSManagedObject *)object {
@@ -786,34 +799,34 @@ BOOL doMigrateInProgress = false;
 }
 
 - (BOOL)copyOldVersionOfDatabase {
-    NSURL *oldVersionUrl = [[FileUtility appDocumentsDirectory] URLByAppendingPathComponent:@"ThreemaDataOldVersion"];
-    if ([FileUtility isExistsWithFileURL:oldVersionUrl]) {
+    NSURL *oldVersionUrl = [[[FileUtility shared] appDocumentsDirectory] URLByAppendingPathComponent:@"ThreemaDataOldVersion"];
+    if ([[FileUtility shared] isExistsWithFileURL:oldVersionUrl]) {
         
         // delete current DB
         NSURL *databaseUrl = [DatabaseManager storeUrl];
-        [FileUtility deleteAt:databaseUrl];
+        [[FileUtility shared] deleteAt:databaseUrl];
         
         NSString *shmFile = [THREEMA_DB_FILE stringByAppendingString:@"-shm"];
-        [FileUtility deleteAt:[[FileUtility appDataDirectory] URLByAppendingPathComponent:shmFile]];
+        [[FileUtility shared] deleteAt:[[[FileUtility shared] appDataDirectory] URLByAppendingPathComponent:shmFile]];
         
         NSString *walFile = [THREEMA_DB_FILE stringByAppendingString:@"-wal"];
-        [FileUtility deleteAt:[[FileUtility appDataDirectory] URLByAppendingPathComponent:walFile]];
+        [[FileUtility shared] deleteAt:[[[FileUtility shared] appDataDirectory] URLByAppendingPathComponent:walFile]];
         
-        NSURL *externalsUrl = [[FileUtility appDataDirectory] URLByAppendingPathComponent:THREEMA_DB_EXTERNALS];
-        [FileUtility deleteAt:externalsUrl];
+        NSURL *externalsUrl = [[[FileUtility shared] appDataDirectory] URLByAppendingPathComponent:THREEMA_DB_EXTERNALS];
+        [[FileUtility shared] deleteAt:externalsUrl];
         
         // move older version of DB
-        NSURL *sourceDatabaseUrl = [[[FileUtility appDocumentsDirectory] URLByAppendingPathComponent:@"ThreemaDataOldVersion"] URLByAppendingPathComponent:THREEMA_DB_FILE];
-        (void)[FileUtility moveWithSource:sourceDatabaseUrl destination:databaseUrl];
+        NSURL *sourceDatabaseUrl = [[[[FileUtility shared] appDocumentsDirectory] URLByAppendingPathComponent:@"ThreemaDataOldVersion"] URLByAppendingPathComponent:THREEMA_DB_FILE];
+        (void)[[FileUtility shared] moveWithSource:sourceDatabaseUrl destination:databaseUrl];
         
-        NSURL *sourceExternalsUrl = [[[FileUtility appDocumentsDirectory] URLByAppendingPathComponent:@"ThreemaDataOldVersion"] URLByAppendingPathComponent:THREEMA_DB_EXTERNALS];
-        (void)[FileUtility moveWithSource:sourceExternalsUrl destination:externalsUrl];
+        NSURL *sourceExternalsUrl = [[[[FileUtility shared] appDocumentsDirectory] URLByAppendingPathComponent:@"ThreemaDataOldVersion"] URLByAppendingPathComponent:THREEMA_DB_EXTERNALS];
+        (void)[[FileUtility shared] moveWithSource:sourceExternalsUrl destination:externalsUrl];
         
         // delete older version files
-        [FileUtility deleteAt:oldVersionUrl];
+        [[FileUtility shared] deleteAt:oldVersionUrl];
         
-        NSURL *pendingMessages = [[FileUtility appDataDirectory] URLByAppendingPathComponent:@"PendingMessages"];
-        [FileUtility deleteAt:pendingMessages];
+        NSURL *pendingMessages = [[[FileUtility shared] appDataDirectory] URLByAppendingPathComponent:@"PendingMessages"];
+        [[FileUtility shared] deleteAt:pendingMessages];
         
         return YES;
     }

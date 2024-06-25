@@ -45,7 +45,7 @@ import UIKit
     public func save(_ item: SaveMediaItem, showNotifications: Bool = true, autosave: Bool = false) {
         
         defer {
-            FileUtility.delete(at: item.url)
+            FileUtility.shared.delete(at: item.url)
         }
         
         // Check access, requests if not yet granted

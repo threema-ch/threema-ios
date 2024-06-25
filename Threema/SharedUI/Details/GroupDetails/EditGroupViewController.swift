@@ -308,10 +308,14 @@ extension EditGroupViewController {
             return
         }
         
-        groupManager.setName(group: group, name: groupName)
-            .catch { error in
-                DDLogError("Unable to save group name: \(error.localizedDescription)")
+        Task { @MainActor in
+            do {
+                try await groupManager.setName(group: group, name: groupName)
             }
+            catch {
+                DDLogError("Unable to save group name: \(error)")
+            }
+        }
     }
     
     private func saveAvatarImage() {
@@ -319,23 +323,26 @@ extension EditGroupViewController {
             return
         }
         
-        if let avatarImageData {
-            groupManager.setPhoto(
-                group: group,
-                imageData: avatarImageData,
-                sentDate: Date()
-            ).catch { error in
-                DDLogError("Could not update group photo: \(error.localizedDescription)")
+        Task { @MainActor in
+            do {
+                if let avatarImageData {
+                    try await groupManager.setPhoto(
+                        group: group,
+                        imageData: avatarImageData,
+                        sentDate: Date()
+                    )
+                }
+                else {
+                    // A `nil` avatar image means it's been deleted
+                    try await groupManager.deletePhoto(
+                        groupID: group.groupID,
+                        creator: group.groupCreatorIdentity,
+                        sentDate: Date()
+                    )
+                }
             }
-        }
-        else {
-            // A `nil` avatar image means it's been deleted
-            groupManager.deletePhoto(
-                groupID: group.groupID,
-                creator: group.groupCreatorIdentity,
-                sentDate: Date()
-            ).catch { error in
-                DDLogError("Unable to delete group photo: \(error.localizedDescription)")
+            catch {
+                DDLogError("Unable to update/delete group photo: \(error)")
             }
         }
     }

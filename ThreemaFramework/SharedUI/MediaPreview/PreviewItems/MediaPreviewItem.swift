@@ -95,12 +95,8 @@ protocol MediaPreviewItemProtocol: PreviewItemProtocol {
         guard let url = itemURL else {
             return
         }
-        do {
-            try FileManager.default.removeItem(at: url)
-        }
-        catch {
-            DDLogError("Could not remove item because \(error.localizedDescription)")
-        }
+        
+        FileUtility.shared.delete(at: url)
     }
     
     func freeMemory() {

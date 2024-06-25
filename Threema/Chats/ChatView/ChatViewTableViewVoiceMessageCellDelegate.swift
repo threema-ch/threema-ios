@@ -189,7 +189,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         /// This can occur often if a user plays back the same voice messages lots of times
         /// If this fails, the temporary directory is cleaned up regularly by the app and on deinit of the
         /// ChatViewController
-        FileUtility.delete(at: currentlyPlayingURL)
+        FileUtility.shared.delete(at: currentlyPlayingURL)
     }
     
     // MARK: - ChatViewTableViewVoiceMessageCellDelegateProtocol Implementation

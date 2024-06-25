@@ -173,7 +173,7 @@
     /* Add to photo library */
     if ([UserSettings sharedUserSettings].autoSaveMedia && [message isKindOfClass:FileMessageEntity.class] && message.conversation.conversationCategory != ConversationCategoryPrivate) {
         FileMessageEntity *fileMessageEntity = (FileMessageEntity *)message;
-        NSString *filename = [FileUtility getTemporaryFileName];
+        NSString *filename = [[FileUtility shared] getTemporaryFileName];
         __block NSURL *tmpFileUrl = [fileMessageEntity tmpURL:filename];
         if (tmpFileUrl == nil) {
             DDLogError(@"No tmpFileUrl to export to and thus unable to save to photos library");

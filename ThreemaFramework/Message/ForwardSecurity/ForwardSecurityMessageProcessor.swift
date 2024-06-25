@@ -51,28 +51,50 @@ import ThreemaProtocols
         self.dhSessionStore.errorHandler = self
     }
     
+    /// Process an incoming envelope message
+    ///
+    /// - Parameters:
+    ///   - sender: Sender of message
+    ///   - envelopeMessage: Envelope message
+    /// - Returns: Decapsulated message and FS info about the message if message was not rejected or an auxiliary
+    ///            message, `(nil, nil)` otherwise (i.e. for also for successfully processed auxiliary messages)
     func processEnvelopeMessage(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage
     ) async throws -> (AbstractMessage?, FSMessageInfo?) {
+        
+        // Except for actual messages we just return `(nil, nil)` on success. This could probably be improved if the
+        // return types are rethought and maybe the session could be returned for some of the messages.
+        
         switch envelopeMessage.data {
+            
         case let initT as ForwardSecurityDataInit:
             try await processInit(sender: sender, initT: initT)
+            return (nil, nil)
+            
         case let accept as ForwardSecurityDataAccept:
             try processAccept(sender: sender, accept: accept)
+            return (nil, nil)
+            
         case let reject as ForwardSecurityDataReject:
             try await processReject(sender: sender, reject: reject)
+            return (nil, nil)
+            
         case is ForwardSecurityDataMessage:
             return try processMessage(sender: sender, envelopeMessage: envelopeMessage)
+            
         case let terminate as ForwardSecurityDataTerminate:
             try await processTerminate(sender: sender, terminate: terminate)
+            return (nil, nil)
+            
         default:
             assertionFailure("Unknown forward security message type")
         }
-        return (nil, nil)
+        
+        throw ForwardSecurityError.unknownEnvelope
     }
     
-    /// Wrapper for ObjC
+    /// Wrapper for ObjC (see `processEnvelopeMessage(sender:envelopeMessage:)` for details)
     @objc func processEnvelopeMessageObjC(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage
@@ -262,9 +284,13 @@ import ThreemaProtocols
     }
     
     @objc func hasContactUsedForwardSecurity(contact: ForwardSecurityContact) -> Bool {
+        guard let myIdentity = identityStore.identity else {
+            return false
+        }
+        
         do {
             if let bestSession = try dhSessionStore.bestDHSession(
-                myIdentity: identityStore.identity,
+                myIdentity: myIdentity,
                 peerIdentity: contact.identity
             ) {
                 // Check if any 2DH or 4DH messages have been received by looking at the ratchet count
@@ -299,6 +325,10 @@ import ThreemaProtocols
     
     // MARK: Process helper
     
+    /// Process a `ForwardSecurityDataInit` message
+    /// - Parameters:
+    ///   - sender: Sender of message
+    ///   - initT: Init message
     private func processInit(sender: ForwardSecurityContact, initT: ForwardSecurityDataInit) async throws {
         DDLogNotice(
             "[ForwardSecurity] Received init {sessionID=\(initT.sessionID),versionRange=\(initT.versionRange)} from \(sender.identity)"
@@ -400,6 +430,10 @@ import ThreemaProtocols
             .hasForwardSecuritySupport(contact) ?? true
     }
     
+    /// Process a `ForwardSecurityDataAccept` message
+    /// - Parameters:
+    ///   - sender: Sender of message
+    ///   - accept: Accept message
     private func processAccept(sender: ForwardSecurityContact, accept: ForwardSecurityDataAccept) throws {
         DDLogNotice(
             "[ForwardSecurity] Received accept {sessionID=\(accept.sessionID),versionRange=\(accept.version)} from \(sender.identity)"
@@ -477,6 +511,11 @@ import ThreemaProtocols
         ) }
     }
     
+    /// Process a "normal" Forward Security message (`ForwardSecurityDataMessage`)
+    /// - Parameters:
+    ///   - sender: Sender of message
+    ///   - envelopeMessage: Envelope message
+    /// - Returns: Message and FS info about the message if message was not rejected, `(nil, nil)` otherwise
     private func processMessage(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage
@@ -815,6 +854,10 @@ import ThreemaProtocols
         }
     }
     
+    /// Process a `ForwardSecurityDataTerminate` message
+    /// - Parameters:
+    ///   - sender: Sender of message
+    ///   - terminate: Terminate message
     private func processTerminate(
         sender: ForwardSecurityContact,
         terminate: ForwardSecurityDataTerminate
@@ -823,6 +866,12 @@ import ThreemaProtocols
             "Terminating DH session ID \(terminate.sessionID) with \(sender.identity), cause: \(terminate.cause)"
         )
         
+        // This order is verity particular, because when we update the feature mask in `ContactEntity` the sessions
+        // might also be terminated...
+        // (Improvements for this are tracked as part of SE-267)
+        
+        // 1. Delete the terminated session to prevent a termination & message for this session when the feature mask is
+        // refreshed
         let sessionExists = try dhSessionStore.exactDHSession(
             myIdentity: identityStore.identity,
             peerIdentity: sender.identity,
@@ -838,27 +887,24 @@ import ThreemaProtocols
                 sessionID: terminate.sessionID
             )
         }
-        
-        /// Refresh feature mask now, in case contact downgraded to a build without PFS
-        ///
-        /// We're waiting for the feature mask check to complete here. This is not great since we're stopping message
-        /// processing.
-        /// But we need the check to complete before deleting the session since we need to know if the contact has
-        /// downgraded its feature mask.
-        /// There is a similar check in `ContactEntity.h` which would result in a duplicate system message if we didn't
-        /// delete the session above.
-        /// (This might still lead to duplicate status messages if we have other sessions than the one we're deleting
-        /// above. But we expect this case to be rare.)
-        ///
-        /// Improvements for this are tracked as part of SE-267
+
+        // 2. Refresh feature mask to gain information if contact downgraded to a build without PFS
+        //
+        // We're waiting for the feature mask check to complete here. This is not great since we're stopping message
+        // processing.
+        // If the contact doesn't support PFS anymore, this might terminate all other sessions with this contact (a rare
+        // case) and lead to a system message.
         let hasForwardSecuritySupport = await checkFSFeatureMask(for: sender)
         
-        notifyListeners { listener in listener.sessionTerminated(
-            sessionID: terminate.sessionID,
-            contact: sender,
-            sessionUnknown: !sessionExists,
-            hasForwardSecuritySupport: hasForwardSecuritySupport
-        ) }
+        // 3. Post system message about termination, if the terminated session existed
+        notifyListeners {
+            $0.sessionTerminated(
+                sessionID: terminate.sessionID,
+                contact: sender,
+                sessionUnknown: !sessionExists,
+                hasForwardSecuritySupport: hasForwardSecuritySupport
+            )
+        }
     }
     
     private func sendMessageToContact(contact: ForwardSecurityContact, message: ForwardSecurityData) {

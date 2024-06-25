@@ -307,7 +307,10 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
             DDLogError("Could not create MWPhotoBrowser")
             return
         }
-        prepareMedia()
+
+        if currentMediaIndex == nil {
+            prepareMedia()
+        }
         
         photoBrowser.autoPlayOnAppear = autoPlayOnAppear
         photoBrowser.startOnGrid = showGrid
@@ -383,6 +386,9 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     // MARK: - ModalNavigationControllerDelegate
 
     func didDismissModalNavigationController() {
-        photoBrowser = nil
+        guard parentViewController?.navigationController?.presentedViewController != nil else {
+            photoBrowser = nil
+            return
+        }
     }
 }

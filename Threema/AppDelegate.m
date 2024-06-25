@@ -120,6 +120,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 @synthesize isAppLocked;
 @synthesize isLockscreenDismissed;
 @synthesize orientationLock;
+@synthesize isWorkContactsLoading;
 
 + (void)initialize {
     static dispatch_once_t onceToken;
@@ -172,6 +173,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     startCheckBiometrics = false;
     launchOptions = _launchOptions;
     isLockscreenDismissed = true;
+    isWorkContactsLoading = false;
     orientationLock = UIInterfaceOrientationMaskAll;
 
     [ErrorNotificationHandler setup];
@@ -913,6 +915,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
 }
 
+- (void)setIsWorkContactsLoading:(BOOL)loading {
+    isWorkContactsLoading = loading;
+    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLoadWorkContacts object:nil];
+
+}
+
 #pragma mark - Server Connection and Notifications
 
 + (void)setupConnection {
@@ -1034,7 +1042,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self removeDirectoryContents:[[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0] stringByAppendingPathComponent:@"Inbox"]];
         
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [FileUtility cleanTemporaryDirectoryWithOlderThan:nil];
+            [[FileUtility shared] cleanTemporaryDirectoryWithOlderThan:nil];
         });
         
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -1306,7 +1314,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [[ContactStore sharedContactStore] synchronizeAddressBookForceFullSync:NO onCompletion:nil onError:nil];
     }
 
-    [WorkDataFetcher checkUpdateWorkDataForce:NO onCompletion:nil onError:nil];
+    [self setIsWorkContactsLoading:true];
+    [WorkDataFetcher checkUpdateWorkDataForce:NO onCompletion:^{
+        [self setIsWorkContactsLoading:false];
+    } onError:^(NSError *error) {
+        [self setIsWorkContactsLoading:false];
+    }];
     
     [[GatewayAvatarMaker gatewayAvatarMaker] refresh];
     

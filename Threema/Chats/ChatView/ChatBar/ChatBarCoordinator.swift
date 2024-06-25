@@ -26,6 +26,7 @@ import SwiftUI
 import ThreemaFramework
 import ThreemaProtocols
 import UIKit
+import VisionKit
 
 protocol ChatBarCoordinatorDelegate: AnyObject {
     func didDismissQuoteView()
@@ -153,7 +154,7 @@ final class ChatBarCoordinator {
             previewPrecomposedImage(image)
         }
         else {
-            if let draft = MessageDraftStore.loadDraft(for: self.conversation) {
+            if let draft = MessageDraftStore.shared.loadDraft(for: self.conversation) {
                 switch draft {
                 case let .text(string):
                     self.precomposedText = string
@@ -195,16 +196,16 @@ final class ChatBarCoordinator {
                     case .background:
                         break
                     case let .closed(audioFile):
-                        MessageDraftStore.saveDraft(.audio(audioFile), for: conversation)
+                        MessageDraftStore.shared.saveDraft(.audio(audioFile), for: conversation)
                     case nil:
-                        MessageDraftStore.deleteDraft(for: conversation)
+                        MessageDraftStore.shared.deleteDraft(for: conversation)
                     }
                 }
             }
         }
         else {
             guard let currentText = chatBar.getCurrentText() else {
-                MessageDraftStore.deleteDraft(for: conversation)
+                MessageDraftStore.shared.deleteDraft(for: conversation)
                 return
             }
             
@@ -214,7 +215,7 @@ final class ChatBarCoordinator {
             
             let currentOrEmptyText = ThreemaUtility.trimCharacters(in: currentText)
             
-            MessageDraftStore.saveDraft(.text(currentOrEmptyText), for: conversation)
+            MessageDraftStore.shared.saveDraft(.text(currentOrEmptyText), for: conversation)
         }
     }
 
@@ -502,11 +503,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     private func previewPrecomposedImage(_ image: UIImage) {
         let item = ImagePreviewItem()
         let filename = "composed-image-\(UUID().uuidString).png"
-        
-        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(filename) else {
-            showPasteError()
-            return
-        }
+        let url = FileUtility.shared.appTemporaryDirectory.appendingPathComponent(filename)
         guard let imageData = MediaConverter.pngRepresentation(for: image) else {
             showPasteError()
             return
@@ -569,7 +566,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 
         var sendableRawText = rawText
         // Sending
-        // Edited Message
+        // Edit Message
         if let messageToEdit {
             guard !messageToEdit.wasSentMoreThanSixHoursAgo else {
                 showEditMessageSentTooLongAgoAlert()
@@ -604,32 +601,20 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
         // Quote Message
         else if let quoteMessage {
+            assert(conversation.distributionList == nil, "Quoting in distribution lists is not allowed!")
             sendableRawText = QuoteUtil.generateText(rawText, with: quoteMessage.id)
-
-            if let distributionList = conversation.distributionList {
-                let dm = DistributionListMessageSender(businessInjector: businessInjector)
-                dm.sanitizeAndSendText(sendableRawText, in: distributionList)
-            }
-            else {
-                businessInjector.messageSender.sanitizeAndSendText(sendableRawText, in: conversation)
-            }
-
+            businessInjector.messageSender.sendTextMessage(containing: sendableRawText, in: conversation)
             removeQuoteView()
         }
         // New Message
         else {
-            if let distributionList = conversation.distributionList {
-                let dm = DistributionListMessageSender(businessInjector: businessInjector)
-                dm.sanitizeAndSendText(sendableRawText, in: distributionList)
-            }
-            else {
-                businessInjector.messageSender.sanitizeAndSendText(sendableRawText, in: conversation)
-            }
+            // TODO: (IOS-4366) Re-Add dist list
+            businessInjector.messageSender.sendTextMessage(containing: sendableRawText, in: conversation)
         }
         
         chatBar.removeCurrentText()
         
-        MessageDraftStore.deleteDraft(for: conversation)
+        MessageDraftStore.shared.deleteDraft(for: conversation)
         
         ConversationActions(businessInjector: businessInjector).unarchive(conversation)
         
@@ -880,6 +865,17 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
         }
         chatViewController.dismiss(animated: true, completion: nil)
         BallotDispatcher.showBallotCreateViewController(for: conversation, on: chatViewController.navigationController)
+    }
+    
+    func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper) {
+        guard let chatViewController else {
+            DDLogError("chatViewController should not be nil when calling \(#function)")
+            return
+        }
+        chatViewController.dismiss(animated: true, completion: nil)
+        let vc = VNDocumentCameraViewController()
+        vc.delegate = chatViewController
+        chatViewController.present(vc, animated: true)
     }
     
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper) {

@@ -33,7 +33,7 @@
 "creator" = "Ersteller";
 "%d members" = "%d Mitglieder";
 
-"ok" = "Easy";
+"ok" = "Ja eh";
 
 "send" = "Schicke";
 "addText" = "Text ergänze";
@@ -59,7 +59,7 @@
 "error_rogue_device_message" = "De Server hät e Verbindig vomene andere Grät mit de gliiche Threema-ID erchännt.\n\nWenn Sie Ihri Threema-ID ide Zwüscheziit nöd ufeme andere Grät oder mitere ältere App-Version gnutzt händ, kontaktiered Sie bitte de Support und schicked Sie falls möglich d’Logdatei mit.";
 
 "video_too_long_title" = "Video z’lang";
-"video_too_long_message" = "Das Video isch z’lang, zum gschickt z’werde. Die maximal zuelässig Längi isch %.0f Minute.";
+"video_too_long_message" = "Das Video isch z’lang, zum gschickt z’werde. Di maximal zuelässig Längi isch %.0f Minute.";
 
 /* KKPasscodeLock */
 "On" = "Iigschalte";

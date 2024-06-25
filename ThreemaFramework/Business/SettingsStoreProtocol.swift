@@ -73,4 +73,5 @@ public protocol SettingsStoreProtocol {
 
 protocol SettingsStoreInternalProtocol {
     func updateSettingsStore(with syncSettings: Sync_Settings)
+    func syncSettingCalls()
 }

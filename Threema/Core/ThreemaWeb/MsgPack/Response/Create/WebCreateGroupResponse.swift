@@ -40,57 +40,43 @@ class WebCreateGroupResponse: WebAbstractMessage {
             createErrorResponse(errorDescription: "disabledByPolicy", completion: completion)
             return
         }
-        
-        let groupManager: GroupManagerProtocol = BusinessInjector().groupManager
-        
-        groupManager.createOrUpdate(
-            for: GroupIdentity(
-                id: NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.groupIDLength)),
-                creator: ThreemaIdentity(MyIdentityStore.shared().identity)
-            ),
-            members: Set<String>(groupRequest.members),
-            systemMessageDate: Date()
-        )
-        .done { group, _ in
-            if let name = self.groupRequest.name {
-                groupManager.setName(group: group, name: name)
-                    .catch { error in
-                        DDLogError("Error while set group name: \(error)")
+
+        Task {
+            do {
+                let businessInjector = BusinessInjector()
+                try await businessInjector.runInBackground { backgroundBusinessInjector in
+                    let (group, _) = try await backgroundBusinessInjector.groupManager.createOrUpdate(
+                        for: GroupIdentity(
+                            id: NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.groupIDLength)),
+                            creator: ThreemaIdentity(MyIdentityStore.shared().identity)
+                        ),
+                        members: Set(self.groupRequest.members),
+                        systemMessageDate: Date()
+                    )
+
+                    if let name = self.groupRequest.name {
+                        try await backgroundBusinessInjector.groupManager.setName(
+                            group: group,
+                            name: name
+                        )
                     }
-            }
 
-            if let photo = self.groupRequest.avatar {
-                self.setGroupPhoto(
-                    groupManager: groupManager,
-                    photo: photo,
-                    group: group,
-                    completion: completion
-                )
+                    if let photo = self.groupRequest.avatar {
+                        try await backgroundBusinessInjector.groupManager.setPhoto(
+                            group: group,
+                            imageData: photo,
+                            sentDate: Date()
+                        )
+                    }
+                }
             }
-
-            self.createSuccessResponse(group: group, completion: completion)
-        }
-        .catch { error in
-            DDLogError("Could not create group members: \(error)")
-            self.createErrorResponse(errorDescription: "internalError", completion: completion)
+            catch {
+                DDLogError("Could not create group: \(error)")
+                self.createErrorResponse(errorDescription: "internalError", completion: completion)
+            }
         }
     }
-    
-    func setGroupPhoto(
-        groupManager: GroupManagerProtocol,
-        photo: Data,
-        group: Group,
-        completion: @escaping () -> Void
-    ) {
-        groupManager.setPhoto(group: group, imageData: photo, sentDate: Date())
-            .catch { error in
-                self.createErrorResponse(
-                    errorDescription: "Set group photo failed: \(error.localizedDescription)",
-                    completion: completion
-                )
-            }
-    }
-    
+
     func createSuccessResponse(group: Group, completion: @escaping () -> Void) {
         ack!.success = true
         args = nil

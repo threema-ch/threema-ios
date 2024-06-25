@@ -45,7 +45,8 @@
 
 @property ProgressLabel *emailProgressLabel;
 @property ProgressLabel *phoneProgressLabel;
-@property ProgressLabel *syncProgressLabel;
+@property ProgressLabel *syncContactsProgressLabel;
+@property ProgressLabel *syncSafeProgressLabel;
 
 @property BOOL isProcessing;
 @property BOOL hasErrors;
@@ -262,20 +263,20 @@
     _syncAdressBookSemaphore = dispatch_semaphore_create(0);
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self showProgress:_syncContactsView progressValue:_syncContactValue progressText:[BundleUtil localizedStringForKey:@"syncing_contacts"]];
+        [self showContactsProgress:_syncContactsView progressValue:_syncContactValue progressText:[BundleUtil localizedStringForKey:@"syncing_contacts"]];
     });
     
     [[ContactStore sharedContactStore] synchronizeAddressBookForceFullSync:YES onCompletion:^(BOOL addressBookAccessGranted) {
         dispatch_async(dispatch_get_main_queue(), ^{
             NSString *message = [BundleUtil localizedStringForKey:@"Done"];
-            [_syncProgressLabel showSuccessMessage:message];
+            [_syncContactsProgressLabel showSuccessMessage:message];
         });
         
         [self signalSemaphore:_syncAdressBookSemaphore];
     } onError:^(NSError *error) {
         _hasErrors = YES;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [_syncProgressLabel showErrorMessage:error.localizedDescription];
+            [_syncContactsProgressLabel showErrorMessage:error.localizedDescription];
         });
         
         [self signalSemaphore:_syncAdressBookSemaphore];
@@ -315,15 +316,22 @@
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self showProgress:_enableSafeView progressValue:_enableSafeValue progressText:[BundleUtil localizedStringForKey:@"safe_preparing"]];
+        [self showSafeProgress:_enableSafeView progressValue:_enableSafeValue progressText:[BundleUtil localizedStringForKey:@"safe_preparing"]];
     });
     
     dispatch_sync(dispatch_get_main_queue(), ^{
         [safeManager activateWithIdentity:self.identityStore.identity safePassword:self.identityStore.tempSafePassword customServer:customServer serverUser:[mdmSetup safeServerUsername] serverPassword:[mdmSetup safeServerPassword] server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
             if (error != nil) {
                 _hasErrors = YES;
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    [_syncSafeProgressLabel showErrorMessage:error.localizedDescription];
+                });
                 onCompletion(NO);
             } else {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    NSString *message = [BundleUtil localizedStringForKey:@"Done"];
+                    [_syncSafeProgressLabel showSuccessMessage:message];
+                });
                 onCompletion(YES);
             }
             return;
@@ -416,24 +424,45 @@
     } completion:nil];
 }
 
-- (void) showProgress:(UIView*)container progressValue:(UILabel*)value progressText:(NSString*)text {
+- (void)showContactsProgress:(UIView*)container progressValue:(UILabel*)value progressText:(NSString*)text {
     CGRect labelRect = value.frame;
     
-    _syncProgressLabel = [[ProgressLabel alloc] initWithFrame:labelRect];
-    _syncProgressLabel.backgroundColor = [UIColor clearColor];
-    _syncProgressLabel.font = [value.font fontWithSize:14.0];
-    _syncProgressLabel.textColor = value.textColor;
+    _syncContactsProgressLabel = [[ProgressLabel alloc] initWithFrame:labelRect];
+    _syncContactsProgressLabel.backgroundColor = [UIColor clearColor];
+    _syncContactsProgressLabel.font = [value.font fontWithSize:14.0];
+    _syncContactsProgressLabel.textColor = value.textColor;
     
-    _syncProgressLabel.alpha = 0.0;
-    _syncProgressLabel.text = text;
+    _syncContactsProgressLabel.alpha = 0.0;
+    _syncContactsProgressLabel.text = text;
     
-    [container addSubview:_syncProgressLabel];
+    [container addSubview:_syncContactsProgressLabel];
     
     [UIView animateWithDuration:0.4 delay:0 options:0 animations:^{
         value.alpha = 0.0;
-        _syncProgressLabel.alpha = 1.0;
+        _syncContactsProgressLabel.alpha = 1.0;
         
-        [_syncProgressLabel showActivityIndicator];
+        [_syncContactsProgressLabel showActivityIndicator];
+    } completion:nil];
+}
+
+- (void)showSafeProgress:(UIView*)container progressValue:(UILabel*)value progressText:(NSString*)text {
+    CGRect labelRect = value.frame;
+    
+    _syncSafeProgressLabel = [[ProgressLabel alloc] initWithFrame:labelRect];
+    _syncSafeProgressLabel.backgroundColor = [UIColor clearColor];
+    _syncSafeProgressLabel.font = [value.font fontWithSize:14.0];
+    _syncSafeProgressLabel.textColor = value.textColor;
+    
+    _syncSafeProgressLabel.alpha = 0.0;
+    _syncSafeProgressLabel.text = text;
+    
+    [container addSubview:_syncSafeProgressLabel];
+    
+    [UIView animateWithDuration:0.4 delay:0 options:0 animations:^{
+        value.alpha = 0.0;
+        _syncSafeProgressLabel.alpha = 1.0;
+        
+        [_syncSafeProgressLabel showActivityIndicator];
     } completion:nil];
 }
 

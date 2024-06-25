@@ -643,6 +643,15 @@ static MyIdentityStore *instance;
     return [[NaClCrypto sharedCrypto] sharedSecretForPublicKey:publicKey secretKey:mySecretKey];
 }
 
+- (NSData*)mySharedSecret {
+    NSData *mySecretKey = [self _obtainSecretKey];
+    if (mySecretKey == nil) {
+        DDLogError(@"Cannot calculate shared secret: no secret key");
+        return nil;
+    }
+    return [[NaClCrypto sharedCrypto] sharedSecretForPublicKey:publicKey secretKey:mySecretKey];
+}
+
 - (NSData*)_obtainSecretKey {
     NSData *mySecretKey = secretKey;
     if (mySecretKey == nil && secretKeyInKeychain) {

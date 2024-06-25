@@ -36,18 +36,6 @@ actor GroupCallActor: Sendable {
     
     let proposedGroupCall: ProposedGroupCall
     
-    let groupCallBaseState: GroupCallBaseState
-    
-    // TODO: (IOS-4427)
-    nonisolated var groupCallBaseStateCopy: GroupCallBaseState {
-        try! GroupCallBaseState(
-            group: group,
-            startedAt: groupCallBaseState.startedAt,
-            dependencies: dependencies,
-            groupCallStartData: groupCallStartData
-        )
-    }
-    
     // MARK: Protocol Peek Steps Helper Variables
 
     var tokenRefreshed = false
@@ -57,6 +45,8 @@ actor GroupCallActor: Sendable {
     var isNew = false
     
     // MARK: Non-isolated Properties
+    
+    nonisolated let groupCallBaseState: GroupCallBaseState
     
     nonisolated var group: GroupCallsThreemaGroupModel {
         groupCallBaseState.group
@@ -68,10 +58,6 @@ actor GroupCallActor: Sendable {
     
     nonisolated var protocolVersion: UInt32 {
         groupCallBaseState.protocolVersion
-    }
-    
-    nonisolated var sfuBaseURL: String {
-        groupCallBaseState.sfuBaseURL
     }
     
     nonisolated var logIdentifier: String {
@@ -87,7 +73,7 @@ actor GroupCallActor: Sendable {
     lazy var viewModel = GroupCallViewModel(groupCallActor: self) {
         didSet {
             let msg = "[GroupCall] viewModel may not change after it was initially set"
-            DDLogError(msg)
+            DDLogError("\(msg)")
             assertionFailure(msg)
         }
     }
@@ -98,7 +84,6 @@ actor GroupCallActor: Sendable {
     private(set) var exactCreationTimestamp: UInt64?
 
     let localContactModel: ContactModel
-    var localParticipant: LocalParticipant? = nil
     
     // MARK: Streams
     
@@ -165,7 +150,7 @@ actor GroupCallActor: Sendable {
     init(
         localContactModel: ContactModel,
         groupModel: GroupCallsThreemaGroupModel,
-        sfuBaseURL: String,
+        sfuBaseURL: URL,
         gck: Data,
         protocolVersion: UInt32 = 1,
         startMessageReceiveDate: Date = Date(),
@@ -193,7 +178,7 @@ actor GroupCallActor: Sendable {
             groupCallDescription: groupCallBaseState
         )
         
-        self.proposedGroupCall = ProposedGroupCall(
+        self.proposedGroupCall = try ProposedGroupCall(
             groupRepresentation: groupModel,
             protocolVersion: protocolVersion,
             gck: gck,
@@ -206,24 +191,11 @@ actor GroupCallActor: Sendable {
         
         (self.uiActionQueue, self.uiActionContinuation) = AsyncStream<GroupCallUIAction>.makeStream()
         (self.uiQueue, self.uiContinuation) = AsyncStream<GroupCallUIEvent>.makeStream()
-        observeNotifications()
     }
     
     deinit {
         uiActionContinuation.finish()
         uiContinuation.finish()
-    }
-    
-    nonisolated func observeNotifications() {
-        Task {
-            let resignNotifications = await NotificationCenter.default.notifications(
-                named: UIApplication.willResignActiveNotification,
-                object: nil
-            )
-            for await _ in resignNotifications {
-                await toggleOwnVideo(true)
-            }
-        }
     }
     
     // MARK: - State Functions
@@ -250,13 +222,13 @@ actor GroupCallActor: Sendable {
             }
             catch let error as GroupCallError where !error.isFatal {
                 let message = "[GroupCall] Caught non-fatal GroupCallError: \(error)"
-                DDLogError(message)
+                DDLogError("\(message)")
                 assertionFailure(message)
                 continue
             }
             catch {
                 let message = "[GroupCall] Caught error: \(error). Tearing down."
-                DDLogError(message)
+                DDLogError("\(message)")
                 assertionFailure(message)
                 iterator = await Ending(groupCallActor: self)
             }
@@ -337,8 +309,7 @@ actor GroupCallActor: Sendable {
                     throw GroupCallError.decryptionFailure
                 }
                                 
-                // We add one for the creator, which is not included in participants
-                sfuProvidedNumberOfParticipants = decryptedCallState.participants.count + 1
+                sfuProvidedNumberOfParticipants = decryptedCallState.participants.count
                 
                 await updateButtonAndBanner()
                 
@@ -469,7 +440,7 @@ extension GroupCallActor {
         startMessage = CspE2e_GroupCallStart.with {
             $0.protocolVersion = GroupCallConfiguration.ProtocolDefines.protocolVersion
             $0.gck = gck
-            $0.sfuBaseURL = token.sfuBaseURL
+            $0.sfuBaseURL = token.sfuBaseURL.absoluteString
         }
         isNew = true
     }
@@ -528,39 +499,13 @@ extension GroupCallActor {
 
 extension GroupCallActor {
         
-    func add(_ localParticipant: LocalParticipant) async {
-        self.localParticipant = localParticipant
-        
-        let (avatar, idColor) = dependencies.groupCallParticipantInfoFetcher.fetchInfoForLocalIdentity()
-
-        let viewModelParticipant = await ViewModelParticipant(
-            localParticipant: localParticipant,
-            name: dependencies.groupCallBundleUtil.localizedString(for: "me"),
-            avatar: avatar,
-            idColor: idColor
-        )
-        uiContinuation.yield(.addLocalParticipant(viewModelParticipant))
+    func add(_ participant: ViewModelParticipant) async {
+        uiContinuation.yield(.add(participant))
         await updateButtonAndBanner()
     }
     
-    func add(_ remoteParticipant: RemoteParticipant) async {
-        
-        guard let id = await remoteParticipant.threemaIdentity?.string else {
-            return
-        }
-        let (displayName, avatar, idColor) = dependencies.groupCallParticipantInfoFetcher.fetchInfo(id: id)
-        let viewModelParticipant = await ViewModelParticipant(
-            remoteParticipant: remoteParticipant,
-            name: displayName,
-            avatar: avatar,
-            idColor: idColor
-        )
-        uiContinuation.yield(.add(viewModelParticipant))
-        await updateButtonAndBanner()
-    }
-    
-    func remove(_ remoteParticipant: RemoteParticipant) async {
-        await uiContinuation.yield(.remove(remoteParticipant.getID()))
+    func remove(_ remoteParticipant: JoinedRemoteParticipant) async {
+        uiContinuation.yield(.remove(remoteParticipant.participantID))
         await updateButtonAndBanner()
     }
     
@@ -644,17 +589,17 @@ extension GroupCallActor {
             case .error:
                 let msg = "An error occurred while waiting for the leave call confirmation signal."
                 assertionFailure(msg)
-                DDLogError(msg)
+                DDLogError("\(msg)")
             case .timeout:
                 let msg = "Waiting for call leave confirmation timed out."
                 assertionFailure(msg)
-                DDLogWarn(msg)
+                DDLogWarn("\(msg)")
             }
         }
         catch {
             let msg = "An error occurred while waiting for the call leave confirmation \(error). Terminating anyway."
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
         }
     }
     
@@ -666,7 +611,7 @@ extension GroupCallActor {
     func teardown() async {
         DDLogVerbose("[GroupCall] Leave: Actor")
         
-        state = UnJoined(groupCallActor: self)
+        state = Ended()
         await viewModel.teardown()
         
         uiContinuation.finish()

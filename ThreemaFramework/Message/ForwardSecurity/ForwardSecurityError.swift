@@ -30,4 +30,5 @@ enum ForwardSecurityError: Error {
     case messageTypeNotSupported
     case missingGroupIdentity
     case existingSession
+    case unknownEnvelope
 }

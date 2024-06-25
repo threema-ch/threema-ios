@@ -109,47 +109,40 @@ class WebUpdateGroupRequest: WebAbstractMessage {
                     return
                 }
             }
-    
-            businessInjector.groupManager.createOrUpdate(
-                for: group.groupIdentity,
-                members: Set<String>(members),
-                systemMessageDate: Date()
-            )
-            .done { group, _ in
-                if self.deleteName || self.name != nil {
-                    businessInjector.groupManager.setName(group: group, name: self.name)
-                        .done {
-                            self.ack!.success = true
-                            completion()
-                        }
-                        .catch { error in
-                            DDLogError("Could not set group name: \(error)")
-                            self.ack!.success = false
-                            self.ack!.error = "internalError"
-                            completion()
-                        }
+
+            Task {
+                do {
+                    let (group, _) = try await businessInjector.groupManager.createOrUpdate(
+                        for: group.groupIdentity,
+                        members: Set<String>(members),
+                        systemMessageDate: Date()
+                    )
+
+                    if self.deleteName || self.name != nil {
+                        try await businessInjector.groupManager.setName(
+                            group: group,
+                            name: self.name
+                        )
+                    }
+
+                    if !self.deleteAvatar,
+                       let photo = self.avatar {
+
+                        try await businessInjector.groupManager.setPhoto(
+                            group: group,
+                            imageData: photo,
+                            sentDate: Date()
+                        )
+                    }
+
+                    self.ack!.success = true
+                }
+                catch {
+                    DDLogError("Could not update group members: \(error)")
+                    self.ack!.success = false
+                    self.ack!.error = "internalError"
                 }
 
-                if !self.deleteAvatar,
-                   let photo = self.avatar {
-
-                    businessInjector.groupManager.setPhoto(group: group, imageData: photo, sentDate: Date())
-                        .done {
-                            self.ack!.success = true
-                            completion()
-                        }
-                        .catch { error in
-                            DDLogError("Could not upload group photo: \(error)")
-                            self.ack!.success = false
-                            self.ack!.error = "internalError"
-                            completion()
-                        }
-                }
-            }
-            .catch { error in
-                DDLogError("Could not update group members: \(error)")
-                self.ack!.success = false
-                self.ack!.error = "internalError"
                 completion()
             }
         }

@@ -34,7 +34,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     private let entityManager: EntityManager
     private let blobManager: BlobManagerProtocol
     private let blobMessageSender: BlobMessageSender
-
+    
     // MARK: - Lifecycle
     
     init(
@@ -55,7 +55,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         self.entityManager = entityManager
         self.blobManager = blobManger
         self.blobMessageSender = blobMessageSender
-
+        
         super.init()
     }
     
@@ -78,7 +78,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             blobMessageSender: BlobMessageSender()
         )
     }
-
+    
     convenience init(entityManager: EntityManager, taskManager: TaskManagerProtocol) {
         self.init(
             serverConnector: ServerConnector.shared(),
@@ -89,113 +89,163 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             entityManager: entityManager
         )
     }
-
+    
     // MARK: - Type specific sending
     
-    @objc public func sendTextMessage(
-        text: String?,
+    // MARK: Text
+
+    @discardableResult
+    public func sendTextMessage(
+        containing text: String,
         in conversation: Conversation,
-        quickReply: Bool,
-        requestID: String?,
-        completion: ((BaseMessage?) -> Void)?
-    ) {
-        let (messageID, receiverIdentity, group) = entityManager.performAndWaitSave {
-            var messageID: Data?
-            var receiverIdentity: String?
-            var group: Group?
-
-            if let messageConversation = self.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? Conversation,
-                // TODO: (IOS-4366) Distribution list re-add setLastUpdate
-                let message = self.entityManager.entityCreator.textMessage(
-                    for: messageConversation,
-                    setLastUpdate: true
-                ) {
-
-                var remainingBody: NSString?
-                if let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody) {
-                    message.quotedMessageID = quoteMessageID
-                    message.text = remainingBody as String?
-                }
-                else {
-                    message.text = text
-                }
-
-                if let requestID {
-                    message.webRequestID = requestID
-                }
-
-                messageID = message.id
-
-                group = self.groupManager.getGroup(conversation: message.conversation)
-                if let group {
-                    self.groupManager.periodicSyncIfNeeded(for: group)
-                }
-                else {
-                    receiverIdentity = message.conversation.contact?.identity
-                }
-            }
-
-            return (messageID, receiverIdentity, group)
-        }
-
-        guard let messageID else {
-            DDLogError("Create text message failed")
-            return
-        }
-
-        let task = TaskDefinitionSendBaseMessage(
-            messageID: messageID,
-            receiverIdentity: receiverIdentity,
-            group: group,
-            sendContactProfilePicture: !quickReply
+        sendProfilePicture: Bool = true,
+        requestID: String? = nil
+    ) async -> [TextMessage] {
+        let trimmedText = ThreemaUtility.trimCharacters(in: text)
+        let textsToSend = ThreemaUtility.trimMessageText(text: trimmedText)
+        let textMessages = await createTextMessages(
+            texts: textsToSend,
+            conversation: conversation,
+            requestID: requestID
         )
-
-        if let completion {
-            taskManager.add(taskDefinition: task) { task, error in
-                if let error {
-                    DDLogError("Error while sending message \(error)")
-                }
-                if let task = task as? TaskDefinitionSendBaseMessage,
-                   let message = self.entityManager.entityFetcher.message(
-                       with: task.messageID,
-                       conversation: conversation
-                   ) {
-                    completion(message)
-                }
-                else {
-                    completion(nil)
-                }
-            }
-        }
-        else {
-            taskManager.add(taskDefinition: task)
-        }
-
+        let tasks = await createTasks(
+            textMessages: textMessages,
+            conversation: conversation,
+            sendProfilePicture: sendProfilePicture
+        )
+        
+        await executeSendTextMessageTasks(tasks)
+        
         donateInteractionForOutgoingMessage(in: conversation)
+        
+        return textMessages
     }
     
-    public func sanitizeAndSendText(_ rawText: String, in conversation: Conversation) {
-        let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
-        let splitMessages = ThreemaUtilityObjC.getTrimmedMessages(trimmedText)
+    private func createTextMessages(
+        texts: [String],
+        conversation: Conversation,
+        requestID: String?
+    ) async -> [TextMessage] {
+        var textMessages = [TextMessage]()
         
-        if let splitMessages = splitMessages as? [String] {
-            for splitMessage in splitMessages {
-                sendTextMessage(
-                    text: splitMessage,
-                    in: conversation,
-                    quickReply: false
-                )
+        for text in texts {
+            let textMessage: TextMessage? = await entityManager.performSave {
+                
+                if let messageConversation = self.entityManager.entityFetcher
+                    .getManagedObject(by: conversation.objectID) as? Conversation,
+                    // TODO: (IOS-4366) Distribution list re-add setLastUpdate
+                    let message = self.entityManager.entityCreator.textMessage(
+                        for: messageConversation,
+                        setLastUpdate: true
+                    ) {
+                    
+                    var remainingBody: NSString?
+                    if let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody) {
+                        message.quotedMessageID = quoteMessageID
+                        message.text = remainingBody as String?
+                    }
+                    else {
+                        message.text = text
+                    }
+                    
+                    if let requestID {
+                        message.webRequestID = requestID
+                    }
+                    
+                    return message
+                }
+                return nil
+            }
+            
+            if let textMessage {
+                textMessages.append(textMessage)
             }
         }
-        else {
-            sendTextMessage(
-                text: trimmedText,
-                in: conversation,
-                quickReply: false
-            )
+        
+        assert(
+            texts.count == textMessages.count,
+            "Could not create TextMessages for all texts. Texts=\(texts.count), TextMessages=\(textMessages.count)."
+        )
+        return textMessages
+    }
+    
+    private func createTasks(
+        textMessages: [TextMessage],
+        conversation: Conversation,
+        sendProfilePicture: Bool
+    ) async -> [TaskDefinitionSendBaseMessage] {
+        var tasks = [TaskDefinitionSendBaseMessage]()
+        
+        for textMessage in textMessages {
+            let task = await entityManager.perform {
+                var task: TaskDefinitionSendBaseMessage? = nil
+                if let group = self.groupManager.getGroup(conversation: conversation) {
+                    self.groupManager.periodicSyncIfNeeded(for: group)
+                    let receivers = group.members.map(\.identity)
+                    task = TaskDefinitionSendBaseMessage(
+                        messageID: textMessage.id,
+                        group: group,
+                        receivers: receivers,
+                        sendContactProfilePicture: sendProfilePicture
+                    )
+                }
+                else if let receiver = textMessage.conversation.contact?.identity {
+                    task = TaskDefinitionSendBaseMessage(
+                        messageID: textMessage.id,
+                        receiverIdentity: receiver,
+                        sendContactProfilePicture: sendProfilePicture
+                    )
+                }
+                
+                return task
+            }
+            
+            if let task {
+                tasks.append(task)
+            }
+        }
+        
+        assert(
+            textMessages.count == tasks.count,
+            "Could not create Tasks for all TextMessages. TextMessages=\(textMessages.count), Tasks=\(tasks.count)."
+        )
+        return tasks
+    }
+    
+    private func executeSendTextMessageTasks(_ sendBaseMessageTasks: [TaskDefinitionSendBaseMessage]) async {
+        // The `TaskManager.add *MUST* be called in the right order.
+        await withCheckedContinuation { continuation in
+            var localContinuation: CheckedContinuation<Void, Never>? = continuation
+            
+            for sendBaseMessageTask in sendBaseMessageTasks {
+                taskManager.add(taskDefinition: sendBaseMessageTask) { task, error in
+                    if let error {
+                        if case TaskManagerError.flushedTask = error {
+                            assert(localContinuation != nil)
+                            localContinuation?.resume()
+                            localContinuation = nil
+                        }
+
+                        DDLogError("\(task) to send messages failed: \(error)")
+                        return
+                    }
+                    
+                    guard let task = task as? TaskDefinitionSendBaseMessage else {
+                        assertionFailure("This must not happen.")
+                        return
+                    }
+                    
+                    if let last = sendBaseMessageTasks.last, last === task {
+                        assert(localContinuation != nil)
+                        localContinuation?.resume()
+                        localContinuation = nil
+                    }
+                }
+            }
         }
     }
+    
+    // MARK: - BlobMessage
     
     public func sendBlobMessage(
         for item: URLSenderItem,
@@ -295,7 +345,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     }
                     return conversation.distributionList != nil
                 }
-
+                // TODO: (IOS-4366) Improve
                 if isDistributionList {
                     let dlSender = DistributionListMessageSender()
                     try await dlSender.sendBlobMessage(
@@ -1041,6 +1091,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             for keys in chunkedKeys {
                 taskGroup.addTask {
                     await withCheckedContinuation { continuation in
+                        var localContinuation: CheckedContinuation<Void, Never>? = continuation
+
                         var receiptMessageIDs = [Data]()
                         var receiptReadDates = [Date]()
 
@@ -1077,7 +1129,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                                     DDLogError("\(task) to send read receipts failed: \(error)")
                                     return
                                 }
-                                return continuation.resume()
+
+                                // TODO: (IOS-4471) Check crashes are gone with this change
+                                assert(localContinuation != nil)
+                                localContinuation?.resume()
+                                localContinuation = nil
                             }
                         }
                         else {
@@ -1124,6 +1180,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             for keys in chunkedKeys {
                 taskGroup.addTask {
                     await withCheckedContinuation { continuation in
+                        var localContinuation: CheckedContinuation<Void, Never>? = continuation
+
                         var receiptMessageIDs = [Data]()
                         var receiptReadDates = [Date?]()
 
@@ -1152,7 +1210,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                                     DDLogError("\(task) to send read receipts failed: \(error)")
                                     return
                                 }
-                                return continuation.resume()
+
+                                // TODO: (IOS-4471) Check crashes are gone with this change
+                                assert(localContinuation != nil)
+                                localContinuation?.resume()
+                                localContinuation = nil
                             }
                         }
                         else {

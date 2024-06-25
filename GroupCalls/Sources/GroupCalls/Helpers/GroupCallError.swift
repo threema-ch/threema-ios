@@ -49,6 +49,7 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
     case creationError
     case groupNotFound
     case invalidThreemaIDLength
+    case invalidSFUBaseURL
     case viewModelRetrieveError
     case sendStartMessageError
     case endedInMeantime
@@ -79,6 +80,7 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
         switch self {
         case .alreadyInCall, .joinError, .creationError, .groupNotFound, .invalidThreemaIDLength,
              .viewModelRetrieveError,
+             .invalidSFUBaseURL,
              .sendStartMessageError,
              .keyDerivationError,
              .keyRatchetError, .frameCryptoFailure,

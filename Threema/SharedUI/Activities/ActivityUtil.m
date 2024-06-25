@@ -21,26 +21,10 @@
 #import "ActivityUtil.h"
 #import "MessageActivityItem.h"
 #import "TTOpenInAppActivity.h"
-#import "ForwardTextActivity.h"
 #import "ForwardURLActivity.h"
-#import "QRCodeActivity.h"
 
 @implementation ActivityUtil
 
-+ (NSArray *)defaultApplicationActivities {
-    NSArray *applicationActivities = @[
-                                       [[ForwardTextActivity alloc] init],
-                                       [[ForwardURLActivity alloc] init],
-                                       [[QRCodeActivity alloc] init]
-                                       ];
-    return applicationActivities;
-}
-
-+ (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withView:(UIView *)view andRect:(CGRect)rect {
-    TTOpenInAppActivity *openInAppActivity = [[TTOpenInAppActivity alloc] initWithView:view andRect:rect];
-    
-    return [self activityViewControllerForMessage:message withTTOpenInAppActivity:openInAppActivity];
-}
 
 + (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withView:(UIView *)view andBarButtonItem:(UIBarButtonItem *)barButtonItem {
     
@@ -52,7 +36,7 @@
 + (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withTTOpenInAppActivity:(TTOpenInAppActivity *)openInAppActivity {
     MessageActivityItem *item = [MessageActivityItem activityItemFor: message];
     
-    NSMutableArray *applicationActivities = [NSMutableArray arrayWithArray:[ActivityUtil defaultApplicationActivities]];
+    NSMutableArray *applicationActivities = [NSMutableArray arrayWithObject:openInAppActivity];
     [applicationActivities addObject:openInAppActivity];
     
     UIActivityViewController *activityViewController = [[UIActivityViewController alloc] initWithActivityItems:@[item] applicationActivities:applicationActivities];

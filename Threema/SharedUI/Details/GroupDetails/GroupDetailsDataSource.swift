@@ -483,7 +483,9 @@ extension GroupDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        quickActions.append(contentsOf: starredQuickAction())
+        if hasStarred(in: conversation) {
+            quickActions.append(starredQuickAction())
+        }
         
         businessInjector.entityManager.performAndWait {
             if self.businessInjector.entityManager.entityFetcher.countBallots(for: self.conversation) > 0 {
@@ -496,6 +498,12 @@ extension GroupDetailsDataSource {
     
     private func hasMedia(for conversation: Conversation) -> Bool {
         businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
+    }
+    
+    private func hasStarred(in conversation: Conversation) -> Bool {
+        businessInjector.entityManager.performAndWait {
+            self.businessInjector.entityManager.entityFetcher.countStarredMessages(in: conversation) > 0
+        }
     }
     
     private func mediaQuickAction(for conversation: Conversation, in viewController: UIViewController) -> QuickAction {
@@ -545,14 +553,14 @@ extension GroupDetailsDataSource {
         }]
     }
     
-    private func starredQuickAction() -> [QuickAction] {
-        [QuickAction(
+    private func starredQuickAction() -> QuickAction {
+        QuickAction(
             imageName: "star.fill",
             title: "marker_details_title".localized,
             accessibilityIdentifier: "marker_details_title".localized
         ) { [weak groupDetailsViewController] _ in
             groupDetailsViewController?.startChatSearch(forStarred: true)
-        }]
+        }
     }
 }
 
@@ -819,15 +827,17 @@ extension GroupDetailsDataSource {
                 guard let strongSelf = self else {
                     return
                 }
-                
-                strongSelf.businessInjector.groupManager.sync(group: strongSelf.group)
-                    .done {
+
+                Task { @MainActor in
+                    do {
+                        try await strongSelf.businessInjector.groupManager.sync(group: strongSelf.group)
                         NotificationPresenterWrapper.shared.present(type: .groupSyncSuccess)
                     }
-                    .catch { error in
-                        DDLogError("Sync of group failed: \(error.localizedDescription)")
+                    catch {
+                        DDLogError("Sync of group failed: \(error)")
                         NotificationPresenterWrapper.shared.present(type: .groupSyncError)
                     }
+                }
             }
             rows.append(.action(synchronizeGroupAction))
         }

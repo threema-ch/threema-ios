@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "掃描文件";
+"no_contacts_loading" = "目前正在從伺服器下載聯絡人清單。下載完成後，就會顯示完整的聯絡人清單。";
+
+// Contact List
+"contactList_add_contact" = "新聯絡人";
+"contactList_add_group" = "新群組";
+
+
 
 // General
 "quotation_mark_start" = "「";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "沒有找到經管理員驗證的 %@ 聯絡人。";
 "no_distribution_list" = "沒有通訊群組列表";
 "no_distribution_list_message" = "您還未建立任何通訊組清單。按「+」按鈕即可建立通訊組清單。";
-
 "no_contacts_syncoff" = "您還沒有任何聯絡人。請開啟同步（「設定」> 「隱私權」），或按「+」按鈕手動新增聯絡人。";
 
 "my_profile_picture_title" = "您的大頭貼";
@@ -1349,7 +1356,6 @@
 "profile_edit" = "編輯";
 "not_connected_for_edit_profile_message" = "請檢查您的網路連線";
 "not_connected_for_edit_profile_title" = "沒有連線";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";

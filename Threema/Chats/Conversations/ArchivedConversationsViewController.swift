@@ -673,7 +673,7 @@ extension ArchivedConversationsViewController: NSFetchedResultsControllerDelegat
             guard let indexPath else {
                 return
             }
-            tableView.deleteRows(at: [indexPath], with: .automatic)
+            tableView.deleteRows(at: [indexPath], with: .fade)
             
             guard let obj = fetchedResultsController.fetchedObjects else {
                 return

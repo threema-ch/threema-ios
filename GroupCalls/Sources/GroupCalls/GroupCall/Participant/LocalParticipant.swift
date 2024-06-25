@@ -26,31 +26,56 @@ import WebRTC
 
 /// The participant of this this device (i.e. me)
 @GlobalGroupCallActor
-final class LocalParticipant: Participant, Sendable {
-
-    let threemaIdentity: ThreemaIdentity
-    let nickname: String
-    private let localContext: LocalContext
+final class LocalParticipant: ViewModelParticipant, Sendable {
     
-    // TODO: (IOS-4059) Move a11y string to NormalParticipant, make `dependencies` private again
-    let dependencies: Dependencies
-        
+    // MARK: - Public Properties
+    
+    nonisolated let participantID: ParticipantID
+    nonisolated let nickname: String
+    var activeCameraPosition: CameraPosition = .front
+    
+    // MARK: Crypto
+
     private var mediaKeys: MediaKeys
     private var pendingMediaKeys: MediaKeys?
     private var pendingMediaKeysIsStale = false // TODO: (IOS-4070) Maybe make this part of `MediaKeys`
+    var protocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey {
+        mediaKeys.protocolMediaKey
+    }
+
+    var pendingProtocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey? {
+        pendingMediaKeys?.protocolMediaKey
+    }
     
     private let participantType: String
     private let keyPair: KeyPair
-    /// Participant Call Cookie
+    
     private let pcck: Data
     
+    // MARK: - ViewModelParticipant
+    
+    nonisolated let threemaIdentity: ThreemaIdentity
+    let dependencies: Dependencies
+
+    nonisolated lazy var displayName: String = dependencies.groupCallParticipantInfoFetcher
+        .fetchDisplayName(for: threemaIdentity)
+    
+    nonisolated lazy var avatar: UIImage? = dependencies.groupCallParticipantInfoFetcher
+        .fetchAvatar(for: threemaIdentity)
+    
+    nonisolated lazy var idColor: UIColor = dependencies.groupCallParticipantInfoFetcher
+        .fetchIDColor(for: threemaIdentity)
+    
+    var audioMuteState: MuteState = .muted
+    var videoMuteState: MuteState = .muted
+    
+    // MARK: - Lifecycle
+
     init(
         participantID: ParticipantID,
-        localContext: LocalContext,
         localContactModel: ContactModel,
         dependencies: Dependencies
     ) {
-        self.localContext = localContext
         self.threemaIdentity = localContactModel.identity
         self.nickname = localContactModel.nickname
         self.participantType = "LocalParticipant"
@@ -65,19 +90,25 @@ final class LocalParticipant: Participant, Sendable {
         self.pcck = self.dependencies.groupCallCrypto.randomBytes(of: 16)
         
         self.mediaKeys = MediaKeys(dependencies: dependencies)
-        super.init(participantID: participantID)
+        self.participantID = participantID
     }
     
-    var protocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey {
-        mediaKeys.protocolMediaKey
-    }
-    
-    var pendingProtocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey? {
-        pendingMediaKeys?.protocolMediaKey
-    }
-    
+    // MARK: - Public functions
+
     func applyMediaKeys(to encryptor: ThreemaGroupCallFrameCryptoEncryptorProtocol) throws {
         try mediaKeys.applyMediaKeys(to: encryptor)
+    }
+    
+    func setAudioMuteState(to state: MuteState) async {
+        audioMuteState = state
+    }
+    
+    func setVideoMuteState(to state: MuteState) async {
+        videoMuteState = state
+    }
+    
+    func setActiveCameraPosition(to position: CameraPosition) async {
+        activeCameraPosition = position
     }
 }
 
@@ -131,7 +162,7 @@ extension LocalParticipant {
         guard let pendingMediaKeys else {
             let msg = "[GroupCall] [Rekey] Expected to have pending keys but there were none"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             throw GroupCallError.localProtocolViolation
         }
         

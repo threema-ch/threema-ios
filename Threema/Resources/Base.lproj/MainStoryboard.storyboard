@@ -688,6 +688,7 @@
                     <connections>
                         <outlet property="countContactsFooterLabel" destination="uT9-uH-vrD" id="gMC-79-QVC"/>
                         <outlet property="countContactsFooterView" destination="ITQ-HT-0We" id="WfP-CD-Jda"/>
+                        <outlet property="loadingWorkContactsIndicatorView" destination="OfX-pH-hZT" id="zyq-1S-TWI"/>
                         <outlet property="noContactsMessageLabel" destination="zFq-Zo-ECJ" id="ZPe-eT-aHg"/>
                         <outlet property="noContactsTitleLabel" destination="Ofe-BC-uXe" id="fNM-6u-pCk"/>
                         <outlet property="noContactsView" destination="XYi-sW-ceR" id="gMs-Sf-Dd0"/>
@@ -717,25 +718,30 @@
                     <rect key="frame" x="0.0" y="0.0" width="375" height="120"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
-                        <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" tag="101" contentMode="left" text="You don't have any contacts. Turn on synchronization, or add contacts manually using the + button." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="6" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zFq-Zo-ECJ">
-                            <rect key="frame" x="30" y="98.5" width="315" height="58"/>
-                            <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
-                            <color key="textColor" red="0.66666666669999997" green="0.66666666669999997" blue="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            <nil key="highlightedColor"/>
-                        </label>
                         <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="No contacts" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ofe-BC-uXe">
-                            <rect key="frame" x="30" y="68" width="315" height="20.5"/>
+                            <rect key="frame" x="30" y="50" width="315" height="20.5"/>
                             <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                             <color key="textColor" red="0.66666666669999997" green="0.66666666669999997" blue="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             <nil key="highlightedColor"/>
                         </label>
+                        <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" tag="101" contentMode="left" text="You don't have any contacts. Turn on synchronization, or add contacts manually using the + button." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="6" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zFq-Zo-ECJ">
+                            <rect key="frame" x="30" y="80.5" width="315" height="58"/>
+                            <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
+                            <color key="textColor" red="0.66666666669999997" green="0.66666666669999997" blue="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="OfX-pH-hZT">
+                            <rect key="frame" x="177.5" y="20" width="20" height="20"/>
+                        </activityIndicatorView>
                     </subviews>
                     <viewLayoutGuide key="safeArea" id="f7L-c4-ypy"/>
                     <constraints>
-                        <constraint firstItem="Ofe-BC-uXe" firstAttribute="top" secondItem="f7L-c4-ypy" secondAttribute="top" constant="20" id="0zs-m7-L4Y"/>
                         <constraint firstItem="zFq-Zo-ECJ" firstAttribute="leading" secondItem="f7L-c4-ypy" secondAttribute="leading" constant="30" id="D5s-4N-8gV"/>
+                        <constraint firstItem="Ofe-BC-uXe" firstAttribute="top" secondItem="OfX-pH-hZT" secondAttribute="bottom" constant="10" id="LCT-bT-F7k"/>
                         <constraint firstItem="Ofe-BC-uXe" firstAttribute="leading" secondItem="f7L-c4-ypy" secondAttribute="leading" constant="30" id="OCF-N5-Tjd"/>
+                        <constraint firstItem="OfX-pH-hZT" firstAttribute="top" secondItem="XYi-sW-ceR" secondAttribute="top" constant="20" id="kH1-CS-yeR"/>
                         <constraint firstItem="f7L-c4-ypy" firstAttribute="trailing" secondItem="zFq-Zo-ECJ" secondAttribute="trailing" constant="30" id="nSq-cz-pFo"/>
+                        <constraint firstItem="OfX-pH-hZT" firstAttribute="centerX" secondItem="XYi-sW-ceR" secondAttribute="centerX" id="pkq-M8-MDU"/>
                         <constraint firstItem="zFq-Zo-ECJ" firstAttribute="top" secondItem="Ofe-BC-uXe" secondAttribute="bottom" constant="10" id="vEb-ul-dDM"/>
                         <constraint firstItem="f7L-c4-ypy" firstAttribute="trailing" secondItem="Ofe-BC-uXe" secondAttribute="trailing" constant="30" id="y53-6d-sdZ"/>
                     </constraints>

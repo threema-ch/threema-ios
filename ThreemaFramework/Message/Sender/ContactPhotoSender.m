@@ -27,7 +27,6 @@
 #import "ContactRequestPhotoMessage.h"
 #import "NSString+Hex.h"
 #import "ActivityIndicatorProxy.h"
-#import "SSLCAHelper.h"
 #import "ContactEntity.h"
 #import "ThreemaError.h"
 #import "ContactStore.h"

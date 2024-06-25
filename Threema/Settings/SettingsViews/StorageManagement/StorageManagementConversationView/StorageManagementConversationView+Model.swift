@@ -112,7 +112,7 @@ extension StorageManagementConversationView {
 
                     DDLogNotice("[EntityDestroyer] \(count) messages deleted")
                     self.recalculate(backgroundBusinessInjector)
-                    FileUtility.cleanTemporaryDirectory(olderThan: nil)
+                    FileUtility.shared.cleanTemporaryDirectory(olderThan: nil)
 
                     await MainActor.run {
                         self.deleteInProgress = false
@@ -148,7 +148,7 @@ extension StorageManagementConversationView {
 
                     DDLogNotice("[EntityDestroyer] \(count) media files deleted")
                     self.recalculate(backgroundBusinessInjector)
-                    FileUtility.cleanTemporaryDirectory(
+                    FileUtility.shared.cleanTemporaryDirectory(
                         olderThan: option == OlderThanOption.everything ? Date() : nil
                     )
 

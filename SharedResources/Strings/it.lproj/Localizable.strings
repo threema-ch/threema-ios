@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "Scansiona documento";
+"no_contacts_loading" = "Scaricamento dei contatti dal server in corso. Appena l'operazione è terminata, i contatti verranno visualizzati.";
+
+// Contact List
+"contactList_add_contact" = "Nuovo contatto";
+"contactList_add_group" = "Nuovo gruppo";
+
+
 
 // General
 "quotation_mark_start" = "«";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "Non è stato trovato nessun contatto %@ verificato dall’amministrazione.";
 "no_distribution_list" = "Nessuna lista di distribuzione";
 "no_distribution_list_message" = "Non è ancora presente alcuna lista di distribuzione. Aggiungi una lista usando il pulsante «+».";
-
 "no_contacts_syncoff" = "La rubrica è ancora vuota. Attivare la sincronizzazione (Impostazioni > Privacy) o aggiungere contatti manualmente mediante il pulsante +.";
 
 "my_profile_picture_title" = "La tua immagine di profilo";
@@ -1348,7 +1355,6 @@
 "profile_edit" = "Modifica";
 "not_connected_for_edit_profile_message" = "Controlla la connessione";
 "not_connected_for_edit_profile_title" = "Nessuna connessione";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";

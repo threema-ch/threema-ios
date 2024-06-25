@@ -84,8 +84,9 @@ public actor GroupCallsSFUTokenFetcher: GroupCallsSFUTokenFetchAdapterProtocol {
                     return
                 }
                 
-                guard let baseURL = jsonDict["sfuBaseUrl"] as? String else {
-                    DDLogError("Could not decode SFUBaseURl")
+                guard let baseURLString = jsonDict["sfuBaseUrl"] as? String,
+                      let baseURL = URL(string: baseURLString) else {
+                    DDLogError("Could not decode SFUBaseURL")
                     checkedContinuation.resume(throwing: GroupCallsHTTPHelperError.unknownError)
                     return
                 }

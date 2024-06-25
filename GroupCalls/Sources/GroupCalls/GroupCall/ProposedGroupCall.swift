@@ -28,7 +28,7 @@ public struct ProposedGroupCall: Sendable {
     public let groupRepresentation: GroupCallsThreemaGroupModel
     public let protocolVersion: UInt32
     public let gck: Data
-    public let sfuBaseURL: String
+    public let sfuBaseURL: URL
     public let hexCallID: String
     public let startMessageReceiveDate: Date
     
@@ -42,20 +42,22 @@ public struct ProposedGroupCall: Sendable {
         groupRepresentation: GroupCallsThreemaGroupModel,
         protocolVersion: UInt32,
         gck: Data,
-        sfuBaseURL: String,
+        sfuBaseURL: URL,
         startMessageReceiveDate: Date,
         dependencies: Dependencies
-    ) {
+    ) throws {
         self.groupRepresentation = groupRepresentation
         self.protocolVersion = protocolVersion
         self.gck = gck
         self.sfuBaseURL = sfuBaseURL
         self.dependencies = dependencies
         self.startMessageReceiveDate = startMessageReceiveDate
-        self.hexCallID = (try? GroupCallID(
+        
+        let callID = try GroupCallID(
             groupIdentity: groupRepresentation.groupIdentity,
             callStartData: GroupCallStartData(protocolVersion: protocolVersion, gck: gck, sfuBaseURL: sfuBaseURL),
             dependencies: dependencies
-        ).bytes.hexEncodedString()) ?? "Unknown CallID"
+        ).bytes.hexEncodedString()
+        self.hexCallID = callID
     }
 }

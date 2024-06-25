@@ -60,7 +60,8 @@ import UIKit
     func assetsActionHelperDidSelectRecordAudio(_ picker: PPAssetsActionHelper)
     func assetsActionHelperDidSelectCreateBallot(_ picker: PPAssetsActionHelper)
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper)
-    
+    func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper)
+
     var conversationIsDistributionList: Bool { get }
 }
 
@@ -75,6 +76,7 @@ extension PPAssetsActionHelperDelegate {
     func assetsActionHelperDidSelectRecordAudio(_ picker: PPAssetsActionHelper) { }
     func assetsActionHelperDidSelectCreateBallot(_ picker: PPAssetsActionHelper) { }
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper) { }
+    func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper) { }
 }
 
 public class PPAssetsActionHelper: NSObject {
@@ -119,20 +121,6 @@ public class PPAssetsActionHelper: NSObject {
             self.delegate?.assetsActionHelperDidSelectLocation(self)
         }
         options.append(shareLocation)
-//        VoiceMessageAudioRecorder.requestRecordPermission { _ in
-//          let recordImage = UIImage(
-        //     systemName: "mic.fill",
-        //     withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
-        // )?
-        //     .withTintColor(.primary, renderingMode: .alwaysOriginal)
-        // let recordAudio = PPOption(
-        //     withTitle: BundleUtil.localizedString(forKey: "record_audio"),
-        //     withIcon: recordImage
-        // ) {
-        //     self.delegate?.assetsActionHelperDidSelectRecordAudio(self)
-        // }
-        // options.append(recordAudio)
-//        }
         
         let ballotImage = UIImage(
             systemName: "chart.pie.fill",
@@ -162,6 +150,14 @@ public class PPAssetsActionHelper: NSObject {
             self.delegate?.assetsActionHelperDidSelectShareFile(self)
         }
         options.append(shareFile)
+        
+        let scanner = PPOption(
+            withTitle: "scan_document".localized,
+            withIcon: UIImage(systemName: "doc.viewfinder.fill")
+        ) {
+            self.delegate?.assetsActionHelperDidSelectScanDocument(self)
+        }
+        options.append(scanner)
 
         var config = PPAssetsActionConfig()
         config.textAlignment = .left

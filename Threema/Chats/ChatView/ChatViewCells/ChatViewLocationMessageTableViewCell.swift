@@ -269,6 +269,7 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
             speakText: locationSummary,
             shareItems: shareItems,
             activityViewAnchor: contentView,
+            popOverSource: chatBubbleView,
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,

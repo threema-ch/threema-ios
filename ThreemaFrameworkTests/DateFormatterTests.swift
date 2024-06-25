@@ -183,6 +183,51 @@ class DateFormatterTests: XCTestCase {
         
         XCTAssertEqual(actual, expected)
     }
+    
+    func testTimeIntervalFormattedSeconds() {
+        let expected = "00:59"
+        
+        let inputSeconds: TimeInterval = 59
+        let actual = DateFormatter.timeFormatted(inputSeconds)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testTimeIntervalFormattedMinutes() {
+        let expected = "01:11"
+        
+        let inputSeconds: TimeInterval = 71
+        let actual = DateFormatter.timeFormatted(inputSeconds)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testTimeIntervalFormattedHour() {
+        let expected = "02:11:03"
+        
+        let inputSeconds: TimeInterval = 7863
+        let actual = DateFormatter.timeFormatted(inputSeconds)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testTimeIntervalFormattedHourAndSeconds() {
+        let expected = "02:11:03"
+        
+        let inputSeconds: TimeInterval = 7863
+        let actual = DateFormatter.timeFormatted(inputSeconds)
+        
+        XCTAssertEqual(actual, expected)
+        
+        // This tests if the static formatter is correctly reset to min & sec if the time interval is below 1h
+        
+        let expected2 = "00:59"
+        
+        let inputSeconds2: TimeInterval = 59
+        let actual2 = DateFormatter.timeFormatted(inputSeconds2)
+        
+        XCTAssertEqual(actual2, expected2)
+    }
 
     func testTimeFormattedSeconds() {
         let expected = "00:59"

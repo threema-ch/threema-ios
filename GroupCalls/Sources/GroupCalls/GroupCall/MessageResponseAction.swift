@@ -24,13 +24,13 @@ import ThreemaProtocols
 enum MessageResponseAction {
     case none
     
-    case epHelloAndAuth(RemoteParticipant, (Data, Data))
-    case sendAuth(RemoteParticipant, Data)
-    case handshakeCompleted(RemoteParticipant)
+    case epHelloAndAuth(PendingRemoteParticipant, (Data, Data))
+    case sendAuth(PendingRemoteParticipant, Data)
+    case handshakeCompleted(JoinedRemoteParticipant)
     
-    case participantToSFU(Groupcall_ParticipantToSfu.Envelope, RemoteParticipant, ParticipantStateChange)
+    case participantToSFU(Groupcall_ParticipantToSfu.Envelope, JoinedRemoteParticipant, ParticipantStateChange)
     case participantToParticipant(RemoteParticipant, Data)
     
-    case muteStateChanged(RemoteParticipant, ParticipantStateChange)
-    case rekeyReceived(RemoteParticipant, MediaKeys)
+    case muteStateChanged(JoinedRemoteParticipant, ParticipantStateChange)
+    case rekeyReceived(JoinedRemoteParticipant, MediaKeys)
 }

@@ -48,8 +48,6 @@ __deprecated_msg("Use ThreemaUtility instead")
 
 + (UIImage *)threemaTypeIcon __deprecated_msg("Use ThreemaUtility.otherThreemaTypeIcon or OtherThreemaTypeImageView instead");
 
-+ (NSArray *)getTrimmedMessages:(NSString *)message;
-
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo;
 
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo onCompletion:(void(^)(void))onCompletion;

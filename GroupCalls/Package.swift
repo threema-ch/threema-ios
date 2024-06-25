@@ -22,7 +22,7 @@ let package = Package(
         .package(path: "../ThreemaBlake2b"),
         .package(path: "../ThreemaEssentials"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
-        .package(url: "https://github.com/apple/swift-async-algorithms", from: "0.1.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", from: "3.8.0"),
     ],
     targets: [

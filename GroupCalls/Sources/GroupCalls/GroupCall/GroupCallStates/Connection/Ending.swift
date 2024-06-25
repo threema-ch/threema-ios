@@ -51,6 +51,6 @@ struct Ending: GroupCallState {
         /// 3.2 We continue with the context
         await groupCallContext?.leave()
                 
-        return Ended(groupCallActor: groupCallActor)
+        return Ended()
     }
 }

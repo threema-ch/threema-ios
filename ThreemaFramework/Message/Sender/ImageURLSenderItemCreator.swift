@@ -113,7 +113,7 @@ public class ImageURLSenderItemCreator: NSObject {
         }
         
         let mimeType = UTIConverter.mimeType(fromUTI: finalUti)
-        let filename = FileUtility.getTemporarySendableFileName(base: "image") + "." + (
+        let filename = FileUtility.shared.getTemporarySendableFileName(base: "image") + "." + (
             UTIConverter.preferredFileExtension(forMimeType: mimeType) ?? ""
         )
         
@@ -177,7 +177,7 @@ public class ImageURLSenderItemCreator: NSObject {
         }
         
         let mimeType = UTIConverter.mimeType(fromUTI: finalUti)
-        let filename = FileUtility.getTemporarySendableFileName(base: "image") + "." + (
+        let filename = FileUtility.shared.getTemporarySendableFileName(base: "image") + "." + (
             UTIConverter.preferredFileExtension(forMimeType: mimeType) ?? ""
         )
         
@@ -262,7 +262,7 @@ public class ImageURLSenderItemCreator: NSObject {
         let renderType: NSNumber = 1
         
         let ext = UTIConverter.preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: type))!
-        let filename = FileUtility.getTemporarySendableFileName(base: "image") + ext
+        let filename = FileUtility.shared.getTemporarySendableFileName(base: "image") + ext
         
         return URLSenderItem(
             data: data,
@@ -414,7 +414,7 @@ public class ImageURLSenderItemCreator: NSObject {
     }
     
     func imageCompressionQuality() -> Double {
-        if userSettingsImageSize.rawValue == "original" {
+        if userSettingsImageSize == .original {
             return kJPEGCompressionQualityHigh
         }
         return kJPEGCompressionQualityLow

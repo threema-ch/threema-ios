@@ -316,7 +316,7 @@ class TaskExecution: NSObject {
 
                 // Check whether the message is not already an FS message and the destination contact supports forward
                 // security (Common Send Steps (6.1))
-                if ThreemaUtility.supportsForwardSecurity,
+                if ThreemaEnvironment.supportsForwardSecurity,
                    !(message is ForwardSecurityEnvelopeMessage),
                    toContact.isForwardSecurityAvailable() {
                     do {
@@ -336,7 +336,7 @@ class TaskExecution: NSObject {
                     }
                 }
                 else {
-                    if !ThreemaUtility.supportsForwardSecurity {
+                    if !ThreemaEnvironment.supportsForwardSecurity {
                         DDLogNotice(
                             "[ForwardSecurity] Don't try sending (\(message.loggingDescription)) with FS, because FS is not supported"
                         )

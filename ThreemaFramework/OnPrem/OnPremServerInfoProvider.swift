@@ -46,7 +46,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-    
+
     func directoryServer(ipv6: Bool, completionHandler: @escaping (DirectoryServerInfo?, Error?) -> Void) {
         switch prepareConfigFetcher() {
         case let .success(fetcher):
@@ -62,7 +62,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-    
+
     func blobServer(ipv6: Bool, completionHandler: @escaping (BlobServerInfo?, Error?) -> Void) {
         switch prepareConfigFetcher() {
         case let .success(fetcher):
@@ -82,7 +82,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-    
+
     func workServer(ipv6: Bool, completionHandler: @escaping (WorkServerInfo?, Error?) -> Void) {
         switch prepareConfigFetcher() {
         case let .success(fetcher):
@@ -103,7 +103,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-    
+
     func avatarServer(ipv6: Bool, completionHandler: @escaping (AvatarServerInfo?, Error?) -> Void) {
         switch prepareConfigFetcher() {
         case let .success(fetcher):
@@ -124,7 +124,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-    
+
     func safeServer(ipv6: Bool, completionHandler: @escaping (SafeServerInfo?, Error?) -> Void) {
         switch prepareConfigFetcher() {
         case let .success(fetcher):
@@ -178,7 +178,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-    
+
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void) {
         switch prepareConfigFetcher() {
         case let .success(fetcher):
@@ -227,10 +227,44 @@ class OnPremServerInfoProvider: ServerInfoProvider {
         }
     }
 
+    func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void) {
+        switch prepareConfigFetcher() {
+        case let .success(fetcher):
+            fetcher.fetch { result in
+                switch result {
+                case let .success(config):
+                    var defaultConfig = Domain.defaultConfig
+                    if let domainsConfig = config.domains {
+                        defaultConfig.append(
+                            contentsOf: domainsConfig.rules.map {
+                                Domain(
+                                    $0.fqdn,
+                                    spkis: $0.spkis
+                                        .map { [$0.value: DomainSpkisAlgorithm.spskisAlgorithm(string: $0.algorithm)] },
+                                    matchMode: DomainMatchMode.matchMode(string: $0.matchMode)
+                                )
+                            }
+                        )
+
+                        completionHandler(defaultConfig, nil)
+                    }
+                    else {
+                        // Cert pinning is optional for OnPrem, but default Threema domains must always included
+                        completionHandler(defaultConfig, nil)
+                    }
+                case let .failure(err):
+                    completionHandler(nil, err)
+                }
+            }
+        case let .failure(err):
+            completionHandler(nil, err)
+        }
+    }
+
     private var onPremConfigFetcher: OnPremConfigFetcher?
-    
+
     private var lastConfigURLAuth: URL?
-    
+
     private func prepareConfigFetcher() -> Swift.Result<OnPremConfigFetcher, Error> {
         if let onPremConfigURL = LicenseStore.shared().onPremConfigURL {
             if let configURLAuth = makeURLWithUsernamePassword(
@@ -244,7 +278,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
                         return .success(onPremConfigFetcher!)
                     }
                 }
-                
+
                 onPremConfigFetcher = OnPremConfigFetcher(
                     configURL: configURLAuth,
                     trustedPublicKeys: BundleUtil.object(forInfoDictionaryKey: "ThreemaOnPremPublicKeys") as! [String]
@@ -262,7 +296,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             return .failure(OnPremConfigError.configurationMissing)
         }
     }
-    
+
     private func makeURLWithUsernamePassword(url: String, username: String, password: String) -> URL? {
         if let url = URL(string: url) {
             var urlComp = URLComponents(url: url, resolvingAgainstBaseURL: false)!

@@ -53,7 +53,10 @@ public final class MessageForwarder {
         
         switch message {
         case let textMessage as TextMessage:
-            businessInjector.messageSender.sendTextMessage(text: textMessage.text, in: conversation, quickReply: false)
+            businessInjector.messageSender.sendTextMessage(
+                containing: textMessage.text,
+                in: conversation
+            )
             sendAdditionalText(additionalText, to: conversation)
             
         case let locationMessage as LocationMessage:
@@ -308,6 +311,6 @@ public final class MessageForwarder {
             return
         }
         
-        businessInjector.messageSender.sendTextMessage(text: text, in: conversation, quickReply: false)
+        businessInjector.messageSender.sendTextMessage(containing: text, in: conversation)
     }
 }

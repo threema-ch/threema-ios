@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import PromiseKit
 import ThreemaEssentials
 
 /// Receivers of control message for group changes
@@ -35,48 +34,53 @@ public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
         for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date
-    ) -> Promise<(Group, Set<String>?)>
+    ) async throws -> (Group, Set<String>?)
     @discardableResult func createOrUpdateDB(
         for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date?,
         sourceCaller: SourceCaller
-    ) -> Promise<Group?>
+    ) async throws -> Group?
     func getConversation(for groupIdentity: GroupIdentity) -> Conversation?
     func getAllActiveGroups() async -> [Group]
-    func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void>
-    func setName(group: Group, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void>
-    func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date, send: Bool) -> Promise<Void>
-    func setPhoto(group: Group, imageData: Data, sentDate: Date, send: Bool) -> Promise<Void>
-    func deletePhoto(groupID: Data, creator: String, sentDate: Date, send: Bool) -> Promise<Void>
-    func sync(group: Group, to identities: Set<String>?, withoutCreateMessage: Bool)
-        -> Promise<Void>
+    func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) async throws
+    func setName(group: Group, name: String?, systemMessageDate: Date, send: Bool) async throws
+    func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date, send: Bool) async throws
+    func setPhoto(group: Group, imageData: Data, sentDate: Date, send: Bool) async throws
+    func deletePhoto(groupID: Data, creator: String, sentDate: Date, send: Bool) async throws
+    func sync(group: Group, to identities: Set<String>?, withoutCreateMessage: Bool) async throws
 }
 
 // Define "default" arguments for certains protocol methods
 extension GroupManagerProtocol {
-    public func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date) -> Promise<Void> {
-        setName(groupID: groupID, creator: creator, name: name, systemMessageDate: systemMessageDate, send: true)
+    public func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date) async throws {
+        try await setName(
+            groupID: groupID,
+            creator: creator,
+            name: name,
+            systemMessageDate: systemMessageDate,
+            send: true
+        )
     }
     
-    public func setName(group: Group, name: String?) -> Promise<Void> {
-        setName(group: group, name: name, systemMessageDate: Date(), send: true)
+    public func setName(group: Group, name: String?) async throws {
+        try await setName(group: group, name: name, systemMessageDate: Date(), send: true)
     }
     
-    public func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date) -> Promise<Void> {
-        setPhoto(groupID: groupID, creator: creator, imageData: imageData, sentDate: sentDate, send: true)
+    public func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date) async throws {
+        try await setPhoto(groupID: groupID, creator: creator, imageData: imageData, sentDate: sentDate, send: true)
     }
     
-    public func setPhoto(group: Group, imageData: Data, sentDate: Date) -> Promise<Void> {
-        setPhoto(group: group, imageData: imageData, sentDate: sentDate, send: true)
+    public func setPhoto(group: Group, imageData: Data, sentDate: Date) async throws {
+        try await setPhoto(group: group, imageData: imageData, sentDate: sentDate, send: true)
     }
     
-    public func deletePhoto(groupID: Data, creator: String, sentDate: Date) -> Promise<Void> {
-        deletePhoto(groupID: groupID, creator: creator, sentDate: sentDate, send: true)
+    public func deletePhoto(groupID: Data, creator: String, sentDate: Date) async throws {
+        try await deletePhoto(groupID: groupID, creator: creator, sentDate: sentDate, send: true)
     }
     
-    public func sync(group: Group) -> Promise<Void> {
-        sync(group: group, to: nil, withoutCreateMessage: false)
+    public func sync(group: Group) async throws {
+        try await sync(group: group, to: nil, withoutCreateMessage: false)
     }
 }
 
@@ -108,25 +112,21 @@ extension GroupManagerProtocol {
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date,
-        completionHandler: @escaping (Group, Set<String>?) -> Void,
-        errorHandler: @escaping (Error?) -> Void
-    )
+        systemMessageDate: Date
+    ) async throws -> (Group, Set<String>?)
     func createOrUpdateDBObjc(
         groupID: Data,
         creator: String,
         members: Set<String>,
         systemMessageDate: Date?,
-        sourceCaller: SourceCaller,
-        completionHandler: @escaping (Error?) -> Void
-    )
+        sourceCaller: SourceCaller
+    ) async throws
     func deletePhotoObjc(
         groupID: Data,
         creator: String,
         sentDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    )
+        send: Bool
+    ) async throws
     func getGroup(_ groupID: Data, creator: String) -> Group?
     func getGroup(conversation: Conversation) -> Group?
     func leave(groupID: Data, creator: String, toMembers: [String]?, systemMessageDate: Date)
@@ -137,30 +137,26 @@ extension GroupManagerProtocol {
         creator: String,
         name: String?,
         systemMessageDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    )
+        send: Bool
+    ) async throws
     func setNameObjc(
         group: Group,
         name: String?,
         systemMessageDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    )
+        send: Bool
+    ) async throws
     func setPhotoObjc(
         groupID: Data,
         creator: String,
         imageData: Data,
         sentDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    )
+        send: Bool
+    ) async throws
     func syncObjc(
         group: Group,
         to identities: Set<String>?,
-        withoutCreateMessage: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    )
+        withoutCreateMessage: Bool
+    ) async throws
     func sendSyncRequest(groupID: Data, creator: String, force: Bool)
     func periodicSyncIfNeeded(for group: Group)
 }
@@ -170,17 +166,13 @@ extension GroupManagerProtocolObjc {
     public func createOrUpdateObjc(
         groupID: Data,
         creator: String,
-        members: Set<String>,
-        completionHandler: @escaping (Group, Set<String>?) -> Void,
-        errorHandler: @escaping (Error?) -> Void
-    ) {
-        createOrUpdateObjc(
+        members: Set<String>
+    ) async throws -> (Group, Set<String>?) {
+        try await createOrUpdateObjc(
             groupID: groupID,
             creator: creator,
             members: members,
-            systemMessageDate: Date(),
-            completionHandler: completionHandler,
-            errorHandler: errorHandler
+            systemMessageDate: Date()
         )
     }
     

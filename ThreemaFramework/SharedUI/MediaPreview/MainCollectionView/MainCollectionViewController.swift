@@ -196,8 +196,8 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
     }
     
     private func handleImageItem(item: ImagePreviewItem, cell: ImagePreviewCollectionViewCell) {
-        let isGifMimeType = UTIConverter.isGifMimeType(UTIConverter.mimeType(fromUTI: item.uti))
         item.item.done { imageData in
+            let isGifMimeType = UTIConverter.isGifMimeType(UTIConverter.mimeType(fromUTI: item.uti))
             cell.updateImageTo(
                 data: imageData,
                 isGIF: isGifMimeType

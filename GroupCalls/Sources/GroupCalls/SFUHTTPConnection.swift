@@ -195,13 +195,10 @@ extension SFUHTTPConnection {
             return nil
         }
         
-        guard let groupCallURL =
-            URL(
-                string: "\(groupCallDescription.sfuBaseURL)/v1/\(param)/\(groupCallDescription.callID.bytes.hexEncodedString())"
-            )
-        else {
-            throw GroupCallError.serializationFailure
-        }
+        let groupCallURL = groupCallDescription.sfuBaseURL
+            .appendingPathComponent("v1")
+            .appendingPathComponent(param)
+            .appendingPathComponent(groupCallDescription.callID.bytes.hexEncodedString())
         
         DDLogInfo("[GroupCall] Checking at URL \(groupCallURL)")
 

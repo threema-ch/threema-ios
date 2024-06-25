@@ -21,7 +21,6 @@
 #import "MediaBrowserFile.h"
 #import "ImageData.h"
 #import "FileMessagePreview.h"
-#import "AnimGifMessageLoader.h"
 #import "UIImage+ColoredImage.h"
 #import "ThreemaUtilityObjC.h"
 #import "UTIConverter.h"

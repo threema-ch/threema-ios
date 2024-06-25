@@ -118,9 +118,8 @@ struct AddThreemaChannelAction {
             for (index, message) in messages.enumerated() {
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(index)) {
                     businessInjector.messageSender.sendTextMessage(
-                        text: message,
-                        in: conversation,
-                        quickReply: false
+                        containing: message,
+                        in: conversation
                     )
                 }
             }

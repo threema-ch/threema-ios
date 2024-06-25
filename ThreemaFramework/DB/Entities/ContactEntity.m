@@ -210,25 +210,41 @@ static NSString *fieldHidden = @"hidden";
 }
 
 - (void)setFeatureMask:(NSNumber *)newFeatureMask {
-    // Post a system message if we have an existing chat and enabled PFS for this contact
-    // but he has downgraded to a version which does not yet support PFS.
-    // This can happen in regular operation for example when someone switches between the release version
-    // and the multi device beta.
-    // This is tracked as part of SE-267
-    if ([self.conversations count] > 0) {
-        if ((FEATURE_MASK_FORWARD_SECURITY & [self.featureMask intValue])) {
-            // Old value had forward security
-            if (!(FEATURE_MASK_FORWARD_SECURITY & [newFeatureMask intValue])) {
-                // New value does not have forward security
-                
-                // Post system message only if a session with this contact exists
-                BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
-                ForwardSecurityContact *fsContact = [[ForwardSecurityContact alloc] initWithIdentity:[self identity] publicKey:[self publicKey]];
-                if ([[businessInjector fsmp] hasContactUsedForwardSecurityWithContact:fsContact]) {
-                    [self postPFSNotSupportedSystemMessage];
-                }
+    
+    // If the new feature mask doesn't support FS anymore terminate all sessions with this contact (& post system
+    // message if needed).
+    // This prevents that old sessions get never deleted if a contact stops supporting FS, but a terminate is never
+    // received.
+    // This also prevents a race conditions where we try to establish a session with a contact that doesn't support FS
+    // anymore, but the feature mask wasn't locally updated in the meantime. This new session might not be rejected or
+    // terminated, because only `Encapsulated` (i.e. data) FS messages are rejected when FS is disabled.
+    if (!(FEATURE_MASK_FORWARD_SECURITY & [newFeatureMask intValue])) {
+        // Check if we actually used a FS session with this contact. If not we still terminate all sessions, but won't
+        // post a system message
+        BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
+        ForwardSecurityContact *fsContact = [[ForwardSecurityContact alloc] initWithIdentity:[self identity] publicKey:[self publicKey]];
+        BOOL hasUsedForwardSecurity = [[businessInjector fsmp] hasContactUsedForwardSecurityWithContact:fsContact];
+        
+        // Terminate sessions
+        // If the contact really disabled FS it won't process the terminate, but we send it anyway just to be sure
+        [ForwardSecuritySessionTerminatorObjC terminateAllSessionsWithDisabledByRemoteFor:[self identity] completion:^(BOOL deletedAnySession) {
+            // Post system message only if we received a FS message in this session, any sessions were terminated and a
+            // conversation with this contact exists
+            if (hasUsedForwardSecurity && deletedAnySession && [self.conversations count] > 0) {
+                [self postPFSNotSupportedSystemMessage];
             }
-        }
+        } error:^(NSError * _Nonnull error) {
+            DDLogError(@"Failed to terminate sessions on downgraded feature mask: %@", error);
+        }];
+        
+        // We will continue even if termination hasn't completed...
+    }
+    
+    // Only update feature mask if actually changed. This prevents that the CD-entity is updated even though the value
+    // didn't change.
+    if (self.featureMask.intValue == newFeatureMask.intValue) {
+        DDLogNotice(@"Don't set new feature mask as it didn't change.");
+        return;
     }
     
     [self willChangeValueForKey:@"featureMask"];

@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "문서 스캔";
+"no_contacts_loading" = "현재 서버에서 연락처를 다운로드하는 중입니다. 프로세스가 완료되면 연락처가 표시됩니다.";
+
+// Contact List
+"contactList_add_contact" = "새 연락처";
+"contactList_add_group" = "새 그룹";
+
+
 
 // General
 "quotation_mark_start" = "“";
@@ -18,6 +26,7 @@
 
 "segmentcontrol_contacts" = "연락처";
 "segmentcontrol_groups" = "그룹";
+"segmentcontrol_distribution_list" = "배포 목록";
 "segmentcontrol_work_contacts" = "회사";
 
 /* WebRTC diagnostics */
@@ -62,6 +71,7 @@
 "try_again" = "다시 시도";
 "copy" = "복사";
 "save" = "저장";
+"edit" = "편집";
 "download" = "다운로드";
 "retry" = "다시 시도";
 "share" = "공유";
@@ -222,9 +232,13 @@
 
 "edit_contact_title" = "연락처 편집";
 "edit_group_title" = "그룹 편집";
+"edit_distribution_list_title" = "배포 목록 편집";
+
 "first_name_placeholder" = "이름";
 "last_name_placeholder" = "성";
 "group_name_placeholder" = "그룹명";
+"distribution_list_name_placeholder" = "배포 목록 이름";
+
 "no_nickname_title" = "닉네임 없음";
 "no_nickname_message" = "정말 닉네임을 설정하지 않겠습니까? 다른 사람들이 앱을 시작하기 전에는 사용자의 메시지를 인식하기 어려울 수 있습니다.";
 
@@ -283,6 +297,8 @@
 "messages_delete_selected_confirm" = "이 기기에서 선택한 메시지를 삭제하시겠습니까?";
 "conversation_delete_confirm" = "이 기기에서 이 대화를 삭제하시겠습니까?";
 "delete_n" = "삭제 (%d)";
+"message_delete_for_everyone" = "모두에 대한 메시지 삭제";
+
 "message_cannot_play_movie" = "동영상을 재생할 수 없습니다.";
 
 "identity_not_found_title" = "알 수 없는 아이디";
@@ -315,6 +331,7 @@
 "delete_file" = "파일 삭제";
 "send_location" = "위치 보내기";
 "record_audio" = "오디오 녹음";
+"record_continue" = "오디오 녹음 계속";
 "scan_qr" = "QR 코드 스캔";
 "share_file" = "파일 공유";
 "add_item_caption" = "캡션 추가";
@@ -366,6 +383,15 @@
 "group_admin_delete_confirm" = "이 그룹을 해체하시겠습니까?";
 "group_dissolve_button" = "그룹 해체";
 "group_delete" = "그룹 삭제";
+
+"distribution_list_recipients_section_header" = "수신자 (%d)";
+"distribution_list_no_recipient_title" = "수신자 없음";
+"distribution_list_one_recipient_title" = "수신자 1명";
+"distribution_list_multiple_recipients_title" = "수신자 %d명";
+
+"distribution_list_delete" = "배포 목록 삭제";
+"distribution_list_create" = "새 배포 목록";
+"distribution_list_edit" = "배포 목록 편집";
 
 "group name" = "그룹 이름";
 "existing groups" = "기존 그룹";
@@ -460,6 +486,8 @@
 "no_groups_message" = "아직 그룹이 없습니다. + 버튼을 사용하여 수동으로 그룹을 추가하십시오.";
 "no_work_contacts" = "%@ 사용자";
 "no_work_contacts_message" = "관리자 확인된 %@ 연락처를 찾을 수 없습니다.";
+"no_distribution_list" = "배포 목록 없음";
+"no_distribution_list_message" = "아직 배포 목록이 없습니다. + 버튼을 탭하여 생성하세요.";
 "no_contacts_syncoff" = "아직 연락처가 없습니다. 동기화를 켜거나(설정 > 개인 정보), + 버튼을 사용하여 수동으로 연락처를 추가하십시오.";
 
 "my_profile_picture_title" = "프로필 사진";
@@ -577,13 +605,25 @@
 "app_setup_steps_failed_message" = "인터넷 연결을 확인하고 다시 시도하세요. 문제가 지속되면 지원팀에 문의하세요.";
 
 /* License Key */
+"enter_license_infoview_subtitle" = "회사용";
+"enter_license_infoview_more_link" = "[Threema Work에 대해 자세히 알아보기](link)";
+
+"enter_license_infoview_private_use" = "개인용";
+"enter_license_infoview_threema_description" = "개인 사용자라면 일반 Threema 앱을 다운로드하세요.";
+"enter_license_infoview_appstore_link" = "App Store의 Threema";
+"enter_license_infoview_login" = "로그인";
+
+/* License Key */
 "enter_license_title" = "자격 증명 입력";
 /* MWPhotoBrowser */
 "Done" = "완료";
-"enter_license_description" = "Threema Work는 기업을 위한 메신저입니다. 회사에서 제공한 자격 증명을 입력하세요.";
-"enter_license_onprem_description" = "Threema OnPrem은 기업을 위한 자체 호스팅 메신저입니다. 회사에서 제공한 자격 증명을 입력하세요.";
+"enter_license_description" = "회사에서 제공한 Threema Work 자격 증명을 입력하세요.";
+"enter_license_onprem_description" = "회사에서 제공한 Threema OnPrem 자격 증명을 입력하세요.";
 "enter_license_work_admin_description" = "자격 증명을 잊으셨나요? Threema Work 관리자에게 연락하십시오.";
 "enter_license_onprem_admin_description" = "자격 증명을 잊으셨나요? Threema OnPrem 관리자에게 문의하세요.";
+"enter_license_onprem_error_config" = "잘못된 구성. Threema OnPrem 관리자에게 문의하세요. (코드: %d)";
+"enter_license_onprem_error_version" = "지원되지 않는 버전. Threema OnPrem 관리자에게 문의하세요. (코드: %d)";
+"enter_license_onprem_error_credentials" = "잘못된 자격 증명. Threema OnPrem 관리자에게 문의하세요. (코드: %d)";
 "more_work_info" = "%@에 대해 더 알아보기.";
 "Save" = "저장";
 "enter_license_username_placeholder" = "사용자 이름";
@@ -767,6 +807,8 @@
 "group_call_started_by_contact_system_message" = "%@님이 그룹 통화를 시작하셨습니다.";
 "group_call_started_by_local_system_message" = "당신이 그룹 통화를 시작하셨습니다.";
 "group_call_ended_system_message" = "그룹 통화가 종료되었습니다.";
+"group_call_started_disabled" = "그룹 통화가 시작되었습니다. 설정에서 그룹 통화를 켜서 참여하세요.";
+
 "group_call_notification_body_preview" = "%@님에 의해 시작된 그룹 통화";
 "group_call_notification_body" = "그룹 통화 시작";
 
@@ -821,6 +863,14 @@
 "archived_title" = "아카이브됨";
 "conversations_global_search_placeholder" = "검색";
 "one_to_one_chat" = "일대일 대화";
+"conversations_global_search_section_header_tokens" = "메시지 유형";
+"conversations_global_search_token_text" = "텍스트 메시지";
+"conversations_global_search_token_captions" = "미디어 캡션";
+"conversations_global_search_token_polls" = "투표";
+"conversations_global_search_token_locations" = "위치";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "별 표시";
+
 "select_all" = "모두 선택";
 "deselect_all" = "모두 선택 해제";
 "no_archived_chats" = "아카이브된 대화 없음";
@@ -849,6 +899,8 @@
 "group_delete_sheet_title" = "\"%@\" 삭제하시겠습니까?";
 "group_delete_sheet_message" = "이 그룹을 삭제하시겠습니까?";
 "group_delete_button" = "그룹 및 채팅 기록 삭제";
+
+"distribution_list_delete_sheet_title" = "배포 목록을 삭제할까요?";
 
 "selected_count" = "%d개 선택됨";
 "all_selected" = "모두 선택됨";
@@ -1284,12 +1336,12 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "settings_advanced_successfully_reset_unread_count_label" = "읽지 않은 메시지 수가 성공적으로 재설정되었습니다.";
 
 // Sentry
-"sentry_crash_send_title" = "%@ 예기치 않게 종료됨";
-"sentry_crash_send_description" = "익명의 충돌 보고서를 제출할 수 있습니다. 충돌의 원인을 설명하는 세부 사항은 기본 문제를 해결하는 데 도움이 됩니다.";
+"sentry_crash_send_title" = "문제 발생";
+"sentry_crash_send_description" = "익명으로 신고할 수 있습니다. 문제가 발생하기 전에 발생한 상호 작용에 대한 세부 정보는 근본적인 문제를 해결하는 데 도움이 됩니다.";
 "sentry_crash_send_yes" = "익명 보고서 보내기";
 "sentry_crash_send_no" = "보내지 않음";
 
-"sentry_crash_comment_placeholder" = "크래시 보고서";
+"sentry_crash_comment_placeholder" = "세부 정보";
 
 // Profile
 "profile_share_id_text" = "내 Threema ID";
@@ -1304,7 +1356,6 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "profile_edit" = "그룹";
 "not_connected_for_edit_profile_message" = "연결을 확인해주세요.";
 "not_connected_for_edit_profile_title" = "연결되지 않음";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema 아이디";
@@ -1628,12 +1679,15 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 
 // ChatBar
 "chat_bar_quote_close_button" = "인용문 닫기";
+"chat_bar_edited_message_close_button" = "메시지 편집 취소";
+
 // ChatDetailView
 "detailView_title" = "인용문 닫기";
 "detailView_messageID" = "메시지 ID";
 "detailView_group_acknowledged" = "동의함 (%d)";
 "detailView_group_declined" = "동의하지 않음 (%d)";
 "detailView_group_file_size" = "파일 크기";
+"detailView_consumed" = "처음 재생됨";
 "detailView_created_footer" = "생성됨: %@";
 
 "message_display_status_none" = "없음";
@@ -1645,6 +1699,9 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "message_display_status_delivered_incoming" = "받음";
 "message_display_status_read" = "읽음";
 "message_display_status_failed" = "실패";
+"message_display_status_deleted_message" = "삭제됨";
+"message_display_status_edited_message" = "편집됨";
+
 // In-app notifications
 "notification_copying_succeeded" = "아이템 복사됨";
 "notification_copying_failed" = "복사 실패";
@@ -1722,9 +1779,13 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 // Chat bar
 "accessibility_chatbar_label" = "채팅 입력 필드";
 "accessibility_chatbar_hint" = "메시지 작성.";
-"accessibility_chatbar_quote_label" = "선택한 인용 메시지: %@.";
-"accessibility_chatbar_close_quote_button_label" = "인용 종료.";
-"accessibility_chatbar_close_quote_button_hint" = "선택한 메시지의 인용 종료.";
+"accessibility_chatbar_quote_label" = "인용할 메시지: %@.";
+"accessibility_chatbar_close_quote_button_label" = "인용 취소.";
+"accessibility_chatbar_close_quote_button_hint" = "선택한 메시지의 인용을 취소합니다.";
+"accessibility_chatbar_edited_message_label" = "편집할 메시지: %@.";
+"accessibility_chatbar_close_edited_message_button_label" = "편집 취소.";
+"accessibility_chatbar_close_edited_message_button_hint" = "선택한 메시지의 편집을 취소합니다.";
+
 // Message senders
 "accessibility_senderDescription_ownMessage" = "귀하의 %@";
 "accessibility_senderDescription_otherMessage_group" = "%@님으로부터 %@";
@@ -1769,6 +1830,8 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "accessibility_poll_closed" = "마감";
 "accessibility_file_duration" = "통화 시간: %@.";
 "accessibility_voice_message_playing" = "현재 재생 중.";
+"accessibility_voice_message_unplayed" = "아직 재생되지 않음.";
+
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "동의, %@";
 "accessibility_status_declined_plus_time" = "동의, %@";
@@ -1876,3 +1939,24 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "application_shortcut_item_scan_qr_code" = "QR 코드 스캔";
 "application_shortcut_item_my_id" = "내 프로필";
 
+// This should be as short as possible, as alternative when translating use "Marked".
+"marker_details_title" = "별 표시";
+"marker_action_star" = "별";
+"marker_action_remove_star" = "별 제거";
+"marker_accessibility_label" = "별 표시.";
+
+// This should be as short as possible, as alternative when translating use "Marked".
+"search_token_starred_title" = "별 표시";
+
+// Delete / Edit message
+"edit_message" = "메시지 편집";
+"edit_message_can_not_edit" = "메시지가 6시간 이상 전에 전송되었으므로 더 이상 편집할 수 없습니다.";
+"edit_message_not_sent_to" = "다음 그룹 구성원은 편집 내용을 볼 수 없습니다: %@";
+"delete_message_not_sent_to" = "다음 그룹 구성원에 대해서는 메시지가 삭제되지 않습니다: %@";
+"delete_edit_message_not_sent_to_others" = "%d명";
+"delete_message_requirement" = "메시지를 삭제하려면 최신 Threema 버전을 설치해야 합니다.";
+"edit_message_requirement" = "편집 내용을 보려면 최신 Threema 버전을 설치해야 합니다.";
+
+"edit_message_text_to_long" = "텍스트가 너무 길어서 메시지를 편집할 수 없습니다.";
+"edited_message_state" = "편집됨";
+"deleted_message" = "이 메시지는 삭제되었습니다";

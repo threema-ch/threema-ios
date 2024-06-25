@@ -46,14 +46,14 @@ final class GroupCallBaseState {
     /// This property is only used to display alerts. The actual maximum is enforced by the SFU.
     var maxParticipants: Int?
     
-    let sfuBaseURL: String
+    let sfuBaseURL: URL
     let protocolVersion: UInt32
     
     private let keys: GroupCallKeys
     private let dependencies: Dependencies
     private let groupCallStartData: GroupCallStartData
     
-    private let frameCryptoContext: ThreemaGroupCallFrameCryptoContextProtocol
+    private var frameCryptoContext: ThreemaGroupCallFrameCryptoContextProtocol
     private let frameCryptoContextLock = NSLock()
     
     init(
@@ -120,7 +120,8 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
     }
     
     @GlobalGroupCallActor
-    func addDecryptor(to participant: RemoteParticipant) async throws {
+    func addDecryptor(to participant: JoinedRemoteParticipant) throws {
+        DDLogNotice("[GroupCall] Add decryptor for \(participant.participantID.id).")
         try frameCryptoContextLock.withLock {
             guard participant.participantID.id < UInt16.max else {
                 throw GroupCallError.localProtocolViolation
@@ -143,6 +144,13 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
             let uInt16ParticipantID = UInt16(participant.id)
             
             frameCryptoContext.removeDecryptor(for: uInt16ParticipantID)
+        }
+    }
+
+    // TODO: (IOS-4669) This fixes issues when rejoining a call. Check why this is needed and if it is a good approach
+    func resetFrameCryptoContext() {
+        frameCryptoContextLock.withLock {
+            frameCryptoContext = ThreemaGroupCallFrameCryptoContext(gckh: keys.gckh)
         }
     }
     

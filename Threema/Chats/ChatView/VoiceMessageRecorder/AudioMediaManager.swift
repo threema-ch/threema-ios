@@ -20,51 +20,9 @@
 
 import AVFoundation
 import CocoaLumberjackSwift
+import ThreemaFramework
 
-class AudioMediaManager: AudioMediaManagerProtocol {
-    static func cleanupFiles(_ urls: [URL]) {
-        DispatchQueue.global(qos: .background).async {
-            try? urls.deleteItems()
-        }
-    }
-    
-    static func tmpAudioURL(with namedFile: String) -> URL {
-        let fullFileName = "\(namedFile)-\(DateFormatter.getDateForExport(.now))"
-        let tmpDir = FileManager.default.temporaryDirectory
-        let url = tmpDir.appendingPathComponent(fullFileName).appendingPathExtension(MEDIA_EXTENSION_AUDIO)
-
-        DDLogInfo("fileURL: \(url)")
-        return url
-    }
-    
-    static func moveToPersistentDir(from url: URL) -> Result<URL, VoiceMessageError> {
-        guard let persistentDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-        else {
-            return .failure(.fileOperationFailed)
-        }
-        return moveFile(
-            from: url,
-            to: persistentDir
-                .appendingPathComponent(url.lastPathComponent)
-        )
-    }
-    
-    private static func moveFile(from url: URL, to newURL: URL) -> Result<URL, VoiceMessageError> {
-        do {
-            if FileManager.default.fileExists(atPath: newURL.path) {
-                return .success(newURL)
-            }
-            
-            try FileManager.default.moveItem(at: url, to: newURL)
-            DDLogInfo("Moved file from: \(url.path) to: \(newURL.path)")
-            return .success(newURL)
-        }
-        catch {
-            DDLogError("Error occurred moving file: \(error.localizedDescription)")
-            return .failure(.fileOperationFailed)
-        }
-    }
-    
+class AudioMediaManager<FileUtil: FileUtilityProtocol>: AudioMediaManagerProtocol {
     static func concatenateRecordingsAndSave(
         combine urls: [URL],
         to audioFile: URL
@@ -93,7 +51,7 @@ class AudioMediaManager: AudioMediaManagerProtocol {
     
     static func save(_ asset: AVAsset, to url: URL) async -> Result<Void, VoiceMessageError> {
         // remove old file
-        try? url.deleteItem()
+        FileUtil.shared.delete(at: url)
         
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
             return .failure(.assetNotFound)

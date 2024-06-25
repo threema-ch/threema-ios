@@ -129,20 +129,25 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
 
     private func sendMessage(conversation: Conversation, completion: @escaping () -> Void) {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-            let businessInjector = BusinessInjector()
-            businessInjector.messageSender.sendTextMessage(
-                text: self.text,
-                in: conversation,
-                quickReply: false,
-                requestID: self.requestID,
-                completion: { message in
+            Task {
+                let businessInjector = BusinessInjector()
+                let textMessages = await businessInjector.messageSender.sendTextMessage(
+                    containing: self.text,
+                    in: conversation,
+                    requestID: self.requestID
+                )
+                if let message = textMessages.first, textMessages.count == 1 {
                     self.baseMessage = message
-                    completion()
-                    if conversation.conversationVisibility == .archived {
-                        conversation.conversationVisibility = .default
-                    }
                 }
-            )
+                else {
+                    assertionFailure("This must not happen.")
+                }
+                
+                completion()
+                if conversation.conversationVisibility == .archived {
+                    conversation.conversationVisibility = .default
+                }
+            }
         } onTimeout: {
             DDLogError("Sending text message via web client time out")
         }

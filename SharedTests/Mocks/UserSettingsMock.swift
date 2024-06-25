@@ -126,7 +126,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
 
     var keepMessagesDays = -1
 
-    var enableFSv12ForTesting = true
-
     var safeIntroShown = false
+    
+    var contactList2 = false
 }

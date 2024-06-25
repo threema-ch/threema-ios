@@ -24,20 +24,22 @@ import Foundation
 @objc public class LogManager: NSObject {
     
     private static var isDebug = false
-    @objc public static let validationLogFile: URL? = FileUtility.appDataDirectory?
+    @objc public static let validationLogFile: URL? = FileUtility.shared.appDataDirectory?
         .appendingPathComponent("validation_log.txt")
-    @objc public static let debugLogFile: URL? = FileUtility.appDataDirectory?.appendingPathComponent("debug_log.txt")
+    @objc public static let debugLogFile: URL? = FileUtility.shared.appDataDirectory?
+        .appendingPathComponent("debug_log.txt")
     
     // Setup logs that should be accessible though Finder/iTunes (document directory) as they are helpful if setup fails
-    @objc public static let dbMigrationLogFile: URL? = FileUtility.appDocumentsDirectory?.appendingPathComponent(
+    @objc public static let dbMigrationLogFile: URL? = FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(
         "db-migration.log"
     )
-    public static let safeRestoreLogFile: URL? = FileUtility.appDocumentsDirectory?.appendingPathComponent(
+    public static let safeRestoreLogFile: URL? = FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(
         "safe-restore.log"
     )
-    @objc public static let appSetupStepsLogFile: URL? = FileUtility.appDocumentsDirectory?.appendingPathComponent(
-        "app-setup-steps.log"
-    )
+    @objc public static let appSetupStepsLogFile: URL? = FileUtility.shared.appDocumentsDirectory?
+        .appendingPathComponent(
+            "app-setup-steps.log"
+        )
             
     /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels
     /// like in <CocoaLumberjack/DDLog.h>
@@ -95,7 +97,7 @@ import Foundation
     }
     
     @objc public static func deleteLogFile(_ logFile: URL?) {
-        FileUtility.delete(at: logFile)
+        FileUtility.shared.delete(at: logFile)
     }
     
     @objc public static func logFileSize(_ logFile: URL?) -> Int64 {
@@ -103,7 +105,7 @@ import Foundation
             return 0
         }
         
-        return FileUtility.fileSizeInBytes(fileURL: logFile) ?? 0
+        return FileUtility.shared.fileSizeInBytes(fileURL: logFile) ?? 0
     }
 
     /// Get Log Level dependent on if is in debug environment or not.

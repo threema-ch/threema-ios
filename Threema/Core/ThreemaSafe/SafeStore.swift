@@ -182,6 +182,10 @@ import ThreemaFramework
     
     // MARK: - safe server
     
+    /// Checks Threema Safe server has changed. Server can defined thru MDM or default server for OnPrem thru OPPF file.
+    /// - Parameters:
+    ///   - mdmSetup: MDM setup configuration
+    ///   - completion: True if server has changed
     @objc func isSafeServerChanged(mdmSetup: MDMSetup, completion: @escaping (Bool) -> Void) {
         if mdmSetup.isSafeBackupServerPreset() {
             completion(
@@ -902,40 +906,42 @@ import ThreemaFramework
                    let groupCreator = bGroup.creator,
                    let members = bGroup.members {
                     
-                    groupManager.createOrUpdateDB(
-                        for: GroupIdentity(
-                            id: Data(BytesUtility.toBytes(hexString: groupID)!),
-                            creator: ThreemaIdentity(groupCreator)
-                        ),
-                        members: Set<String>(members.map { $0.uppercased() }),
-                        systemMessageDate: nil,
-                        sourceCaller: .local
-                    )
-                    .done { group in
-                        guard let group else {
-                            DDLogWarn("Safe restore group could not be created")
-                            return
-                        }
-                        var category: ConversationCategory = .default
-
-                        if let isPrivate = bGroup.private,
-                           isPrivate {
-                            category = .private
-                        }
-
-                        entityManager.performSyncBlockAndSafe {
-                            group.conversation.groupName = bGroup.groupname
-                            group.conversation.conversationCategory = category
-
-                            if let lastUpdate = bGroup.lastUpdate {
-                                group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
+                    Task { @MainActor in
+                        do {
+                            guard let group = try await groupManager.createOrUpdateDB(
+                                for: GroupIdentity(
+                                    id: Data(BytesUtility.toBytes(hexString: groupID)!),
+                                    creator: ThreemaIdentity(groupCreator)
+                                ),
+                                members: Set<String>(members.map { $0.uppercased() }),
+                                systemMessageDate: nil,
+                                sourceCaller: .local
+                            ) else {
+                                DDLogWarn("Safe restore group could not be created")
+                                return
                             }
-                        }
 
-                        // No sync is needed as this will be done in the `AppUpdateSteps`
-                    }
-                    .catch { error in
-                        DDLogError("Safe restore group failed: \(error)")
+                            var category: ConversationCategory = .default
+
+                            if let isPrivate = bGroup.private,
+                               isPrivate {
+                                category = .private
+                            }
+
+                            await entityManager.performSave {
+                                group.conversation.groupName = bGroup.groupname
+                                group.conversation.conversationCategory = category
+
+                                if let lastUpdate = bGroup.lastUpdate {
+                                    group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
+                                }
+                            }
+
+                            // No sync is needed as this will be done in the `AppUpdateSteps`
+                        }
+                        catch {
+                            DDLogError("Safe restore group failed: \(error)")
+                        }
                     }
                 }
                 else {

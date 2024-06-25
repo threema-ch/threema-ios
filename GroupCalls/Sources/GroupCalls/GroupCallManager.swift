@@ -172,6 +172,7 @@ public final actor GroupCallManager {
         /// 2. Refresh the SFU Token if necessary. If the SFU Token refresh fails within 10s, abort these steps and
         /// notify the user.
         guard let refreshedToken = try await dependencies.httpHelper.refreshTokenWithTimeout(10) else {
+            isCurrentlyJoiningOrJoinedCall = false
             throw GroupCallError.creationError
         }
         
@@ -269,13 +270,6 @@ public final actor GroupCallManager {
         await createdCall.createStartMessage(token: token, gck: gck)
 
         return createdCall
-    }
-    
-    private func updateBanner(for call: GroupCallActor) {
-        Task {
-            let buttonAndBannerUpdate = await GroupCallBannerButtonUpdate(actor: call, hideComponent: false)
-            singletonDelegate?.updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: buttonAndBannerUpdate)
-        }
     }
     
     private func showIncomingGroupCallNotification(
@@ -649,7 +643,7 @@ extension GroupCallManager {
                 let msg =
                     "[GroupCall] We may only have one chosen call for each group. But despite resetting it just above we still have multiple."
                 assertionFailure(msg)
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 return nil
             }
             
@@ -765,28 +759,22 @@ extension GroupCallManager {
         participantThreemaIdentities: [ThreemaIdentity]
     ) async -> GroupCallViewController {
         
-        let localParticipantInfo = dependencies.groupCallParticipantInfoFetcher.fetchInfoForLocalIdentity()
-        let localParticipant = await ViewModelParticipant(
-            id: ParticipantID(id: 0),
-            identity: ThreemaIdentity(localID),
-            name: dependencies.groupCallBundleUtil.localizedString(for: "me"),
-            avatar: localParticipantInfo.avatar,
-            idColor: localParticipantInfo.color,
+        let localParticipant = await LocalParticipant(
+            participantID: ParticipantID(id: 0),
+            localContactModel: localContactModel,
             dependencies: dependencies
         )
         
-        var participantsList = [localParticipant]
+        var participantsList: [ViewModelParticipant] = [localParticipant]
         
         for (index, participantThreemaIdentity) in participantThreemaIdentities.enumerated() {
-            let participantInfo = dependencies.groupCallParticipantInfoFetcher
-                .fetchInfo(id: participantThreemaIdentity.string)
-            let participant = await ViewModelParticipant(
-                id: ParticipantID(id: UInt32(index + 1)),
-                identity: participantThreemaIdentities[index],
-                name: participantInfo.displayName!,
-                avatar: participantInfo.avatar,
-                idColor: participantInfo.color,
-                dependencies: dependencies
+     
+            let participant = await ScreenshotParticipant(
+                participantID: ParticipantID(id: UInt32(index + 1)),
+                threemaIdentity: participantThreemaIdentity,
+                dependencies: dependencies,
+                audioMuteState: .muted,
+                videoMuteState: .muted
             )
             participantsList.append(participant)
         }
@@ -794,7 +782,8 @@ extension GroupCallManager {
         let viewModel = GroupCallViewModel(
             screenshotGroupName: groupName,
             localParticipant: localParticipant,
-            participantsList: participantsList
+            participantsList: participantsList,
+            dependencies: dependencies
         )
         
         return await GroupCallViewController(

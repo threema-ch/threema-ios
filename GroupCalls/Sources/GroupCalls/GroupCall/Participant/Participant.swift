@@ -21,33 +21,7 @@
 import Foundation
 import ThreemaEssentials
 
-class Participant {
-    
-    // MARK: - Public properties
-
-    let participantID: ParticipantID
-    
-    var localCameraPosition: CameraPosition = .front
-
-    // MARK: - Lifecycle
-
-    init(participantID: ParticipantID) {
-        self.participantID = participantID
-    }
-}
-
-// MARK: - Equatable
-
-extension Participant: Equatable {
-    static func == (lhs: Participant, rhs: Participant) -> Bool {
-        lhs.participantID == rhs.participantID
-    }
-}
-
-// MARK: - Hashable
-
-extension Participant: Hashable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(participantID)
-    }
+@GlobalGroupCallActor
+protocol Participant {
+    nonisolated var participantID: ParticipantID { get }
 }

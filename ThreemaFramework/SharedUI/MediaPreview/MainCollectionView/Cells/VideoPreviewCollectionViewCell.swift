@@ -62,6 +62,7 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
     
     func videoLoaded() {
         playButton.isHidden = false
+        playButton.image = UIImage(systemName: "play.circle.fill")
         loadingView.isHidden = true
     }
     

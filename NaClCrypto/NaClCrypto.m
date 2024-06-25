@@ -291,15 +291,16 @@
     @try {
         return [self symmetricDecryptData:ciphertext withKey:key nonce:nonce];
     } @catch (NSException *exception) {
-        DDLogError(@"Failed to symmetric decrypt data: %@", exception.name);
+        DDLogError(@"Failed to symmetric decrypt data: %@ [%@]", exception.name, exception.reason);
         return nil;
     }
 }
 
 - (NSData*)symmetricDecryptData:(NSData*)ciphertext withKey:(NSData*)key nonce:(NSData*)nonce {
-    
-    if (key.length != kNaClCryptoSymmKeySize)
-        @throw([NSException exceptionWithName:@"BadSymmetricKeySizeException" reason:@"Invalid symmetric key size" userInfo:nil]);
+    if (key.length != kNaClCryptoSymmKeySize) {
+        NSString *message = [NSString stringWithFormat:@"Invalid symmetric key size (%lu)", (unsigned long)key.length];
+        @throw([NSException exceptionWithName:@"BadSymmetricKeySizeException" reason:message userInfo:nil]);
+    }
     
     if (nonce.length != kNaClCryptoSymmNonceSize)
         @throw([NSException exceptionWithName:@"BadSymmetricNonceSizeException" reason:@"Invalid symmetric nonce size" userInfo:nil]);

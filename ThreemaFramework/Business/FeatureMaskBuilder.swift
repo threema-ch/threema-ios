@@ -99,7 +99,7 @@ import ThreemaProtocols
             .file(enabled: true)
             .voip(enabled: true)
             .videoCalls(enabled: true)
-            .forwardSecurity(enabled: ThreemaUtility.supportsForwardSecurity)
+            .forwardSecurity(enabled: ThreemaEnvironment.supportsForwardSecurity)
             .groupCalls(enabled: BusinessInjector().settingsStore.enableThreemaGroupCalls)
             .editMessage(enabled: true)
             .deleteMessage(enabled: true)

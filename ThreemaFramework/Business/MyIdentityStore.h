@@ -42,6 +42,7 @@
 - (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)publicKey;
 - (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey;
 - (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey;
+- (NSData*)mySharedSecret;
 - (NSData*)keySecret;
 - (BOOL)isKeychainLocked;
 

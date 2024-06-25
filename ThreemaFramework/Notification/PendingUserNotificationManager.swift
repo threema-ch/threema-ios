@@ -631,7 +631,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     static var pathPendingUserNotifications: String {
         var path: String?
         if path == nil {
-            path = FileUtility.appDataDirectory!.appendingPathComponent("PendingUserNotifications").path
+            path = FileUtility.shared.appDataDirectory!.appendingPathComponent("PendingUserNotifications").path
         }
         return path!
     }
@@ -639,7 +639,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     static var pathProcessedUserNotifications: String {
         var path: String?
         if path == nil {
-            path = FileUtility.appDataDirectory!.appendingPathComponent("ProcessedUserNotifications").path
+            path = FileUtility.shared.appDataDirectory!.appendingPathComponent("ProcessedUserNotifications").path
         }
         return path!
     }

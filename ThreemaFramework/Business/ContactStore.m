@@ -242,7 +242,12 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
         void (^linkingFinished)(ContactEntity *) = ^(ContactEntity *contact){
             if (added) {
-                [mediatorSyncableContacts updateAllWithIdentity:contact.identity added:added];
+                __block NSString *identity = contact.identity;
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                    [mediatorSyncableContacts updateAllWithIdentity:identity added:added];
+                    onCompletion(contact);
+                });
+                return;
             }
             onCompletion(contact);
         };
@@ -410,7 +415,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     NSSet *excludedIds = [NSSet setWithArray:userSettings.syncExclusionList];
     NSMutableArray *allIdentities = [NSMutableArray new];
 
-    dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         dispatch_group_t dispatchGroup = dispatch_group_create();
 
         for (NSDictionary *identityData in identities) {
@@ -433,10 +438,11 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
             dispatch_group_enter(dispatchGroup);
 
-            [self addContactWithIdentity:identity publicKey:[[NSData alloc] initWithBase64EncodedString:[identityData objectForKey:@"publicKey"] options:0] cnContactId:cnContactId verificationLevel:kVerificationLevelServerVerified state:nil type:nil featureMask:nil acquaintanceLevel:ContactAcquaintanceLevelDirect alerts:NO contactSyncer:mediatorSyncableContacts onCompletion:^(ContactEntity *contact) {
-
-                dispatch_group_leave(dispatchGroup);
-            }];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self addContactWithIdentity:identity publicKey:[[NSData alloc] initWithBase64EncodedString:[identityData objectForKey:@"publicKey"] options:0] cnContactId:cnContactId verificationLevel:kVerificationLevelServerVerified state:nil type:nil featureMask:nil acquaintanceLevel:ContactAcquaintanceLevelDirect alerts:NO contactSyncer:mediatorSyncableContacts onCompletion:^(ContactEntity *contact) {
+                    dispatch_group_leave(dispatchGroup);
+                }];
+            });
         }
         DDLogNotice(@"[ContactSync] Found %lu new address book contacts", (unsigned long)allIdentities.count);
 
@@ -1685,8 +1691,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 if (featureMask.integerValue >= 0) {
                     NSString *identityString = [identities objectAtIndex:i];
                     ContactEntity *contact = [entityManager.entityFetcher contactForId: identityString];
-                    if (![contact.featureMask isEqualToNumber:featureMask]) {
-                        contact.featureMask = featureMask;
+                    NSNumber *oldFeatureMask = contact.featureMask;
+                    contact.featureMask = featureMask; // Always update feature mask of local contact
+                    if (![oldFeatureMask isEqualToNumber:featureMask]) {
                         [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
                     }
                 }
@@ -1822,8 +1829,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 }
                 
                 if (![featureMask isEqual:[NSNull null]]) {
-                    if (![contact.featureMask isEqualToNumber:featureMask]) {
-                        contact.featureMask = featureMask;
+                    NSNumber *oldFeatureMask = contact.featureMask;
+                    contact.featureMask = featureMask; // Always update feature mask of local contact
+                    if (![oldFeatureMask isEqualToNumber:featureMask]) {
                         [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
                     }
                 }

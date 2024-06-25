@@ -64,7 +64,7 @@ class BlobDownloaderTests: XCTestCase {
         let response = HTTPURLResponse(url: resolvedURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[resolvedURL] = (
-            (nil, testData, response),
+            (nil, testData, response, nil),
             nil
         )
         

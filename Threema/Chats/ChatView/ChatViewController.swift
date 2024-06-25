@@ -22,9 +22,11 @@ import CocoaLumberjackSwift
 import Combine
 import GroupCalls
 import OSLog
+import PDFKit
 import ThreemaEssentials
 import ThreemaFramework
 import UIKit
+import VisionKit
 import WebRTC
 
 /// The chat view!
@@ -739,7 +741,7 @@ final class ChatViewController: ThemedViewController {
 
         DispatchQueue.global().async {
             /// Clean up temporary files that might be leftover from playing voice messages
-            FileUtility.cleanTemporaryDirectory()
+            FileUtility.shared.cleanTemporaryDirectory()
         }
     }
     
@@ -2986,5 +2988,34 @@ extension ChatViewController: GroupCallBannerButtonViewDelegate {
                 in: group, intent: .join
             )
         }
+    }
+}
+
+// MARK: - VNDocumentCameraViewControllerDelegate
+
+extension ChatViewController: VNDocumentCameraViewControllerDelegate {
+    func documentCameraViewController(
+        _ controller: VNDocumentCameraViewController,
+        didFinishWith scan: VNDocumentCameraScan
+    ) {
+        let pdfDocument = PDFDocument()
+        for i in 0..<scan.pageCount {
+            let img = scan.imageOfPage(at: i)
+            guard let pdfPage = PDFPage(image: img) else {
+                return
+            }
+            pdfDocument.insert(pdfPage, at: i)
+        }
+        
+        guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper),
+              let pdfData = pdfDocument.dataRepresentation()
+        else {
+            let message = "Could not create SendMediaAction in \(#function)"
+            assertionFailure(message)
+            return
+        }
+        
+        controller.dismiss(animated: true)
+        sendMediaAction.showPreview(forAssets: [PhotosAccessHelper.storePDFToTmpDir(pdfData: pdfData)])
     }
 }

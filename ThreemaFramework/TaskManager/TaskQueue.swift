@@ -443,7 +443,7 @@ final class TaskQueue {
     }
 
     func queuePath() -> URL? {
-        let path = FileUtility.appDataDirectory
+        let path = FileUtility.shared.appDataDirectory
         return path?.appendingPathComponent("\(queueType.name())Queue", isDirectory: false)
     }
 
@@ -590,9 +590,9 @@ final class TaskQueue {
 
     private func save() {
         if let queuePath = queuePath() {
-            FileUtility.delete(at: queuePath)
+            FileUtility.shared.delete(at: queuePath)
             if let queueData = encode(),
-               !FileUtility.write(fileURL: queuePath, contents: queueData) {
+               !FileUtility.shared.write(fileURL: queuePath, contents: queueData) {
                 DDLogError("Could not save queue into file")
             }
         }

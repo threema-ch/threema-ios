@@ -752,6 +752,10 @@
     return numImages + numVideos + numFiles;
 }
 
+- (NSInteger)countStarredMessagesInConversation:(Conversation *)conversation {
+    return [self countEntityNamed:@"Message" withPredicate:@"conversation == %@ AND messageMarkers.star == 1", conversation];
+}
+
 - (NSInteger)countUnreadMessagesForConversation:(Conversation *)conversation {
     return [self countEntityNamed:@"Message" withPredicate:@"isOwn == NO AND read == NO AND conversation == %@ ", conversation];
 }
@@ -924,10 +928,10 @@
     }];
 }
 
-- (NSBatchUpdateResult *)executeBatchUpdateRequest:(NSBatchUpdateRequest *)batchUpdateRequst {
+- (NSBatchUpdateResult *)executeBatchUpdateRequest:(NSBatchUpdateRequest *)batchUpdateRequest {
     NSError *error;
     NSBatchUpdateResult *result;
-    result = [_managedObjectContext executeRequest:batchUpdateRequst error:&error];
+    result = [_managedObjectContext executeRequest:batchUpdateRequest error:&error];
     
     if (error != nil) {
         DDLogError(@"Executing update batch request failed: %@, %@", error, [error userInfo]);

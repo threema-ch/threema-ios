@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import MBProgressHUD
 import UIKit
 
@@ -211,8 +212,6 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         navigationItem.leftBarButtonItem?.isEnabled = false
         navigationItem.rightBarButtonItem?.isEnabled = false
         view.isUserInteractionEnabled = false
-        MBProgressHUD.showAdded(to: view, animated: true)
-
         let queue = DispatchQueue.global(qos: .userInitiated)
         queue.async {
             // is already activated means is in change password mode, deactivate safe and activate with new password
@@ -230,7 +229,17 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 maxBackupBytes: self.maxBackupBytes != nil ? NSNumber(integerLiteral: self.maxBackupBytes!) : nil,
                 retentionDays: self.retentionDays != nil ? NSNumber(integerLiteral: self.retentionDays!) : nil
             ) { error in
-                if let error {
+                if let safeError = error as? SafeManager.SafeError {
+                    DDLogError("\(safeError.errorDescription ?? safeError.localizedDescription)")
+                    DispatchQueue.main.async {
+                        UIAlertTemplate.showAlert(
+                            owner: self,
+                            title: BundleUtil.localizedString(forKey: "safe_error_preparing"),
+                            message: safeError.errorDescription ?? safeError.localizedDescription
+                        )
+                    }
+                }
+                else if let error {
                     DispatchQueue.main.async {
                         UIAlertTemplate.showAlert(
                             owner: self,

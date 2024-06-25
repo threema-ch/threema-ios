@@ -60,7 +60,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
 
             backgroundBusinessInjector.groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
 
-            MessageDraftStore.deleteDraft(for: conversation)
+            MessageDraftStore.shared.deleteDraft(for: conversation)
             
             ack!.success = true
             

@@ -60,7 +60,6 @@
 #import "ProtocolDefines.h"
 #import "UserSettings.h"
 #import "MyIdentityStore.h"
-#import "AnimGifMessageLoader.h"
 #import "ValidationLogger.h"
 #import "BallotMessageDecoder.h"
 #import "GroupMessageProcessor.h"
@@ -297,17 +296,24 @@
     
     @try {
         if ([amsg isKindOfClass:[ForwardSecurityEnvelopeMessage class]]) {
-            if ([ThreemaUtility supportsForwardSecurity]) {
+            if ([ThreemaEnvironment supportsForwardSecurity]) {
                 [self processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage*)amsg senderPublicKey:senderPublicKey onCompletion:^(AbstractMessage *unwrappedMessage, id fsMessageInfo) {
 
-                    // Don't allow double encapsulated forward security messages
-                    // This is also checked when decoding messages in MessageDecoder+Swift.swift lines 26ff
-                    if ((unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]])) {
-                        processAbstractMessageBlock(unwrappedMessage, fsMessageInfo);
+                    if (unwrappedMessage != nil) {
+                        // Don't allow double encapsulated forward security messages
+                        // This is also checked when decoding messages in MessageDecoder+Swift.swift lines 41ff
+                        if ([unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]]) {
+                            [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
+                            onError(nil, fsMessageInfo);
+                        } else {
+                            // Happy path for normal messages
+                            processAbstractMessageBlock(unwrappedMessage, fsMessageInfo);
+                        }
                     } else {
-                        // This is also reached if `amsg` is `nil` because it was an FS state message or the message was rejected
-                        [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
-                        onError(nil, fsMessageInfo); // drop message
+                        // An auxiliary FS message was successfully processed or a message was rejected
+                        // Mark contact and conversation as dirty & remove notification
+                        [messageProcessorDelegate incomingForwardSecurityMessageWithNoResultFinished:amsg];
+                        onError(nil, fsMessageInfo); // Drop message
                     }
                 } onError:^(NSError *error) {
                     if ([error.userInfo objectForKey:@"ShouldRetry"]) {

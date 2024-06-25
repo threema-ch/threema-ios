@@ -29,6 +29,7 @@ final class GroupCallActorTests: XCTestCase {
     fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
     fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
     fileprivate lazy var groupModel = GroupCallsThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
+    fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
     
     func testBasicInit() throws {
         let dependencies = MockDependencies().create()
@@ -36,7 +37,7 @@ final class GroupCallActorTests: XCTestCase {
         let groupCallActor = try! GroupCallActor(
             localContactModel: localContactModel,
             groupModel: groupModel,
-            sfuBaseURL: "",
+            sfuBaseURL: sfuBaseURL,
             gck: gck,
             dependencies: dependencies
         )
@@ -49,7 +50,7 @@ final class GroupCallActorTests: XCTestCase {
         let groupCallActor = try! GroupCallActor(
             localContactModel: localContactModel,
             groupModel: groupModel,
-            sfuBaseURL: "",
+            sfuBaseURL: sfuBaseURL,
             gck: Data(repeating: 0x01, count: 32),
             dependencies: dependencies
         )
@@ -69,7 +70,7 @@ final class GroupCallActorTests: XCTestCase {
         let groupCallActor = try! GroupCallActor(
             localContactModel: localContactModel,
             groupModel: groupModel,
-            sfuBaseURL: "",
+            sfuBaseURL: sfuBaseURL,
             gck: gck,
             dependencies: dependencies
         )
@@ -87,7 +88,7 @@ final class GroupCallActorTests: XCTestCase {
         let groupCallActor = try GroupCallActor(
             localContactModel: localContactModel,
             groupModel: groupModel,
-            sfuBaseURL: "",
+            sfuBaseURL: sfuBaseURL,
             gck: gck,
             startMessageReceiveDate: .now,
             dependencies: dependencies
@@ -105,7 +106,7 @@ final class GroupCallActorTests: XCTestCase {
         let groupCallActor = try! GroupCallActor(
             localContactModel: localContactModel,
             groupModel: groupModel,
-            sfuBaseURL: "",
+            sfuBaseURL: sfuBaseURL,
             gck: gck,
             startMessageReceiveDate: Date.distantPast,
             dependencies: dependencies

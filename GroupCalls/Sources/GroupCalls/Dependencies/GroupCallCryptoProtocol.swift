@@ -37,7 +37,7 @@ public protocol GroupCallCryptoProtocol: Sendable {
     
     /// Returns the shared secret with a given Threema ID
     /// - Parameter identity: The Threema ID of the contact for which we want to calculate the shared secret with.
-    /// The contact for this Threema ID must already be present in the database.
+    /// The contact for this Threema ID must already be present in the database, the local ID.
     /// - Returns: Shared Secret with the Threema ID passed into `identity`.
     /// Nil if the contact for this identity does not exist or something went wrong
     func sharedSecret(with identity: String) -> Data?

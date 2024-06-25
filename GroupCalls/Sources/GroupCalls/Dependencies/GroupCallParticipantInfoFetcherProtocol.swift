@@ -19,17 +19,23 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import UIKit
 
 public protocol GroupCallParticipantInfoFetcherProtocol {
-    /// Fetches data needed to create a `ViewModelParticipant` for a given Threema-ID-String
-    /// - Parameters:
-    ///   - id: ThreemaID-String
-    /// - Returns: Optional display name, optional avatar and IDColor
-    func fetchInfo(id: String) -> (displayName: String?, avatar: UIImage?, color: UIColor)
     
-    /// Fetches data needed to create a `ViewModelParticipant` for the local Threema-ID
-    /// - Parameters:
-    /// - Returns: Optional avatar and IDColor
-    func fetchInfoForLocalIdentity() -> (avatar: UIImage?, color: UIColor)
+    /// Fetches the avatar image of a contact for the given ThreemaIdentity
+    /// - Parameter id: ThreemaIdentity
+    /// - Returns: Avatar image if it exists
+    func fetchAvatar(for id: ThreemaIdentity) -> UIImage?
+    
+    /// Fetches the display name of a contact for the given ThreemaIdentity
+    /// - Parameter id: ThreemaIdentity
+    /// - Returns: Display name (might also be the ID-string)
+    func fetchDisplayName(for id: ThreemaIdentity) -> String
+    
+    /// Fetches the ID Color of a contact for the given ThreemaIdentity
+    /// - Parameter id: ThreemaIdentity
+    /// - Returns: ID Color or primary color
+    func fetchIDColor(for id: ThreemaIdentity) -> UIColor
 }

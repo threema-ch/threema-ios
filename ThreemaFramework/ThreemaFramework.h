@@ -126,7 +126,6 @@
 #import <ThreemaFramework/RequestedThumbnail.h>
 #import <ThreemaFramework/ServerConnector.h>
 #import <ThreemaFramework/SocketProtocolDelegate.h>
-#import <ThreemaFramework/SSLCAHelper.h>
 #import <ThreemaFramework/SystemMessage.h>
 #import <ThreemaFramework/Tag.h>
 #import <ThreemaFramework/TaskExecutionTransactionDelegate.h>

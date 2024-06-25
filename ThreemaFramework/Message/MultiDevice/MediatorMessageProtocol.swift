@@ -135,28 +135,10 @@ enum MediatorMessageProtocolError: Error {
             mt == .deleteMessage ||
             mt == .groupDeleteMessage ||
             mt == .editMessage ||
-            mt == .groupEditMessage
+            mt == .groupEditMessage ||
+            mt == .groupCallStart
     }
     
-    static func isGroupMessage(_ type: Int32) -> Bool {
-        let mt = getMultiDeviceMessageType(for: type)
-        return mt == .groupAudio ||
-            mt == .groupSetup ||
-            mt == .groupDeleteProfilePicture ||
-            mt == .groupDeliveryReceipt ||
-            mt == .groupFile ||
-            mt == .groupImage ||
-            mt == .groupLeave ||
-            mt == .groupLocation ||
-            mt == .groupPollSetup ||
-            mt == .groupPollVote ||
-            mt == .groupName ||
-            mt == .groupSyncRequest ||
-            mt == .groupSetProfilePicture ||
-            mt == .groupText ||
-            mt == .groupVideo
-    }
-
     // MARK: Chat server protocol extension for WebSocket
 
     static func isMediatorMessage(_ message: Data) -> Bool {

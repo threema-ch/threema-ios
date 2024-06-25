@@ -224,7 +224,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         }
         
         nameLabel.text = message.localizedSenderName
-        dateLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: message.sectionDate)
+        dateLabel.text = DateFormatter.relativeMediumDateAndShortTime(for: message.sectionDate)
         markerStarImageView.isHidden = !(message.messageMarkers?.star.boolValue ?? false)
         
         if let previewableMessage = message as? PreviewableMessage {

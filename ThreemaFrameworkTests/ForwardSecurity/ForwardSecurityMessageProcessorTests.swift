@@ -173,8 +173,6 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     }
     
     func test4DHGroupMessage() async throws {
-        try XCTSkipIf(!ThreemaEnvironment.fsEnableV12, "This only works with PFS 1.2 and up")
-
         try await test4DH()
         
         // Alice sends a group message to Bob
@@ -514,15 +512,9 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(.v10, aliceSession.current4DHVersions?.local)
         XCTAssertEqual(try aliceSession.state, .RL44)
         XCTAssertEqual(aliceSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        XCTAssertEqual(
-            try! DHSession.supportedVersionWithin(majorVersion: .v10),
-            ThreemaEnvironment.fsEnableV12 ? .v12 : .v11
-        )
-        XCTAssertEqual(
-            try! DHSession.supportedVersionWithin(majorVersion: .v10),
-            ThreemaEnvironment.fsEnableV12 ? .v12 : .v11
-        )
-        XCTAssertEqual(aliceSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(try! DHSession.supportedVersionWithin(majorVersion: .v10), .v12)
+        XCTAssertEqual(try! DHSession.supportedVersionWithin(majorVersion: .v10), .v12)
+        XCTAssertEqual(aliceSession.outgoingOfferedVersion, .v12)
         XCTAssertEqual(aliceSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, .v10)
         
@@ -534,7 +526,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(.v10, bobSession.current4DHVersions?.local)
         XCTAssertEqual(try bobSession.state, .R24)
         XCTAssertEqual(bobSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v12)
         XCTAssertEqual(bobSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
         
@@ -548,7 +540,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         )
         XCTAssertEqual(try bobSession.state, .R24)
         XCTAssertEqual(bobSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v12)
         XCTAssertEqual(bobSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
         
@@ -556,7 +548,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try sendTextMessage(message: ForwardSecurityMessageProcessorTests.aliceMessage1, senderContext: aliceContext)
         XCTAssertEqual(try aliceSession.state, .RL44)
         XCTAssertEqual(aliceSession.current4DHVersions, DHVersions.restored(local: .v10, remote: .v10))
-        XCTAssertEqual(aliceSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(aliceSession.outgoingOfferedVersion, .v12)
         XCTAssertEqual(aliceSession.outgoingAppliedVersion, .v10)
         XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, .v10)
         
@@ -570,10 +562,10 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(try bobSession.state, .RL44)
         XCTAssertEqual(
             bobSession.current4DHVersions,
-            DHVersions.restored(local: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11, remote: .v10)
+            DHVersions.restored(local: .v12, remote: .v10)
         )
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
-        XCTAssertEqual(bobSession.outgoingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v12)
+        XCTAssertEqual(bobSession.outgoingAppliedVersion, .v12)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
     
         // Now Bob sends a message with offered and applied version 1.1.
@@ -584,10 +576,10 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(try bobSession.state, .RL44)
         XCTAssertEqual(
             bobSession.current4DHVersions,
-            DHVersions.restored(local: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11, remote: .v10)
+            DHVersions.restored(local: .v12, remote: .v10)
         )
-        XCTAssertEqual(bobSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
-        XCTAssertEqual(bobSession.outgoingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(bobSession.outgoingOfferedVersion, .v12)
+        XCTAssertEqual(bobSession.outgoingAppliedVersion, .v12)
         XCTAssertEqual(bobSession.minimumIncomingAppliedVersion, .v10)
         
         // Alice processes Bob's message (where 1.1 is offered and applied). This updates both Alice's local/outgoing
@@ -601,15 +593,11 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(try aliceSession.state, .RL44)
         XCTAssertEqual(
             aliceSession.current4DHVersions,
-            DHVersions
-                .restored(
-                    local: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11,
-                    remote: ThreemaEnvironment.fsEnableV12 ? .v12 : .v11
-                )
+            DHVersions.restored(local: .v12, remote: .v12)
         )
-        XCTAssertEqual(aliceSession.outgoingOfferedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
-        XCTAssertEqual(aliceSession.outgoingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
-        XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, ThreemaEnvironment.fsEnableV12 ? .v12 : .v11)
+        XCTAssertEqual(aliceSession.outgoingOfferedVersion, .v12)
+        XCTAssertEqual(aliceSession.outgoingAppliedVersion, .v12)
+        XCTAssertEqual(aliceSession.minimumIncomingAppliedVersion, .v12)
     }
     
     func testRequiredVersionForMessageTypes() async throws {

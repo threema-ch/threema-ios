@@ -287,19 +287,22 @@ typedef enum : NSUInteger {
     }
 
     [self dismissViewControllerAnimated:YES completion:^{
-        [groupManager createOrUpdateObjcWithGroupID:_group.groupID creator:[[MyIdentityStore sharedMyIdentityStore] identity] members:groupMemberIdentities systemMessageDate:[NSDate date] completionHandler:^(Group * _Nullable grp, NSSet<NSString *> * _Nullable newMembers) {
-            
+        [groupManager createOrUpdateObjcWithGroupID:_group.groupID creator:[[MyIdentityStore sharedMyIdentityStore] identity] members:groupMemberIdentities systemMessageDate:[NSDate date] completionHandler:^(Group * _Nullable grp, NSSet<NSString *> * _Nullable newMembers, NSError * _Nullable error) {
+
+            if (error) {
+                DDLogError(@"Could not update group members: %@", error.localizedDescription);
+                return;
+            }
+
             // Sync only new members
             // This is logic that should move to the GroupManager in the future
             if (grp != nil && newMembers != nil) {
-                [groupManager syncObjcWithGroup:grp to:nil withoutCreateMessage:YES completionHandler:^(NSError * _Nullable error){
-                    if (error != nil) {
+                [groupManager syncObjcWithGroup:grp to:newMembers withoutCreateMessage:YES completionHandler:^(NSError * _Nullable error) {
+                    if (error) {
                         DDLogError(@"Error syncing group: %@", error.localizedDescription);
                     }
                 }];
             }
-        } errorHandler:^(NSError * _Nullable error) {
-            DDLogError(@"Could not update group members: %@", error.localizedDescription);
         }];
     }];
 }

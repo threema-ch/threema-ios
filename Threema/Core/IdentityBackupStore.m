@@ -114,7 +114,7 @@ static const NSString *backupFileName = @"idbackup.txt";
 }
 
 + (NSString*)backupFilePath {
-    return [[FileUtility appDocumentsDirectory].path stringByAppendingPathComponent:(NSString*)backupFileName];
+    return [[[FileUtility shared] appDocumentsDirectory].path stringByAppendingPathComponent:(NSString*)backupFileName];
 }
 
 + (void)syncKeychainWithFile {

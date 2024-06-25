@@ -137,6 +137,8 @@ class MediatorReflectedOutgoingMessageProcessor {
             return try process(outgoingMessage: omsg, voipCallHangupMessage: amsg as! BoxVoIPCallHangupMessage)
         case is BoxVoIPCallRingingMessage:
             return try process(outgoingMessage: omsg, voipCallRingingMessage: amsg as! BoxVoIPCallRingingMessage)
+        case is GroupCallStartMessage:
+            return try process(outgoingMessage: omsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
         default:
             return Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
                 message: "Reflected outgoing message type \(omsg.loggingDescription) will be not processed"
@@ -534,6 +536,22 @@ class MediatorReflectedOutgoingMessageProcessor {
                 delegate.incomingMessageFinished(amsg)
             }
         }
+    }
+    
+    // MARK: Process reflected outgoing GroupCallStart messages
+
+    private func process(
+        outgoingMessage omsg: D2d_OutgoingMessage,
+        groupCallStartMessage amsg: GroupCallStartMessage
+    ) throws -> Promise<Void> {
+        
+        try messageStore.save(
+            groupCallStartMessage: amsg,
+            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: true
+        )
     }
 
     // MARK: Misc

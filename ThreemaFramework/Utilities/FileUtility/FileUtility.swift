@@ -21,18 +21,18 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public class FileUtility: NSObject {
+@objc public final class FileUtility: NSObject, FileUtilityProtocol {
     
-    @objc public static let appDataDirectory: URL? = FileManager.default.containerURL(
+    @objc public let appDataDirectory: URL? = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: AppGroup.groupID()
     )
     
-    @objc public static let appDocumentsDirectory: URL? = FileManager.default.urls(
+    @objc public let appDocumentsDirectory: URL? = FileManager.default.urls(
         for: .documentDirectory,
         in: .userDomainMask
     ).last
     
-    @objc public static let appCachesDirectory: URL? = FileManager.default.urls(
+    @objc public let appCachesDirectory: URL? = FileManager.default.urls(
         for: .cachesDirectory,
         in: .userDomainMask
     ).last
@@ -40,14 +40,16 @@ import Foundation
     /// Temporary app directory
     ///
     /// Please remove data stored here that is no longer needed: https://stackoverflow.com/a/25067497
-    @objc public static let appTemporaryDirectory: URL? = FileManager.default.temporaryDirectory
+    @objc public let appTemporaryDirectory: URL = FileManager.default.temporaryDirectory
+    
+    @objc public static let shared = FileUtility()
     
     /// Get size of dictionary, including subdirectries.
     ///
     /// - Parameters:
     ///    - pathURL: root url to get size
     ///    - size: total size of directory
-    public static func pathSizeInBytes(pathURL: URL, size: inout Int64) {
+    public func pathSizeInBytes(pathURL: URL, size: inout Int64) {
         let fileManager = FileManager.default
         
         do {
@@ -78,7 +80,7 @@ import Foundation
     ///    - fileURL: url of file
     ///
     /// - Returns: file size in bytes
-    public static func fileSizeInBytes(fileURL: URL) -> Int64? {
+    public func fileSizeInBytes(fileURL: URL) -> Int64? {
         let fileManager = FileManager.default
         
         do {
@@ -96,47 +98,47 @@ import Foundation
     /// - Parameters:
     ///    - fileURL: url of file
     /// - Returns: file size in bytes or 0
-    @objc public static func fileSizeInBytesObjc(fileURL: URL) -> Int64 {
+    @objc public func fileSizeInBytesObjc(fileURL: URL) -> Int64 {
         if let fileSize = fileSizeInBytes(fileURL: fileURL) {
             return fileSize
         }
         return 0
     }
     
-    @objc public static func getFileSizeDescription(for fileURL: URL) -> String? {
+    @objc public func getFileSizeDescription(for fileURL: URL) -> String? {
         guard let fileSize = fileSizeInBytes(fileURL: fileURL) else {
             return nil
         }
         return getFileSizeDescription(from: fileSize)
     }
     
-    @objc public static func getFileSizeDescription(from fileSize: Int64) -> String {
+    @objc public func getFileSizeDescription(from fileSize: Int64) -> String {
         ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .binary)
     }
     
-    @objc public static func getTemporaryFileName() -> String {
+    @objc public func getTemporaryFileName() -> String {
         var filename = ProcessInfo().globallyUniqueString
         let url = FileManager.default.temporaryDirectory
         var fileURL = url.appendingPathComponent(filename)
 
-        while FileUtility.isExists(fileURL: fileURL) {
+        while isExists(fileURL: fileURL) {
             filename = ProcessInfo().globallyUniqueString
             fileURL = url.appendingPathComponent(filename)
         }
         return filename
     }
     
-    @objc public static func getTemporarySendableFileName(
+    @objc public func getTemporarySendableFileName(
         base: String,
         directoryURL: URL,
         pathExtension: String? = nil
     ) -> String {
         let filename = base + "-" + DateFormatter.getDateForFilename(Date())
         
-        return FileUtility.getUniqueFilename(from: filename, directoryURL: directoryURL, pathExtension: pathExtension)
+        return getUniqueFilename(from: filename, directoryURL: directoryURL, pathExtension: pathExtension)
     }
     
-    @objc public static func getUniqueFilename(
+    @objc public func getUniqueFilename(
         from filename: String,
         directoryURL: URL,
         pathExtension: String? = nil
@@ -149,7 +151,7 @@ import Foundation
         }
         
         var i = 0
-        while FileUtility.isExists(fileURL: fileURL) {
+        while isExists(fileURL: fileURL) {
             newFilename = filename.appending("-\(i)")
             fileURL = directoryURL.appendingPathComponent(newFilename)
             if let pathExtension {
@@ -161,12 +163,12 @@ import Foundation
         return newFilename
     }
     
-    @objc public static func getTemporarySendableFileName(base: String) -> String {
+    @objc public func getTemporarySendableFileName(base: String) -> String {
         let url = FileManager.default.temporaryDirectory
         return getTemporarySendableFileName(base: base, directoryURL: url)
     }
     
-    @objc public static func isExists(fileURL: URL?) -> Bool {
+    @objc public func isExists(fileURL: URL?) -> Bool {
         guard let fileURL else {
             return false
         }
@@ -175,7 +177,7 @@ import Foundation
         return fileManager.fileExists(atPath: fileURL.path)
     }
     
-    @objc public static func dir(pathURL: URL?) -> [String]? {
+    @objc public func dir(pathURL: URL?) -> [String]? {
         guard let pathURL else {
             return nil
         }
@@ -192,7 +194,7 @@ import Foundation
     ///
     /// - Parameters:
     ///    - at: URL to file or directory
-    @objc public static func delete(at: URL?) {
+    @objc public func delete(at: URL?) {
         guard let atURL = at else {
             return
         }
@@ -203,13 +205,7 @@ import Foundation
         }
     }
 
-    /// Create directory, but no intermediate directories.
-    ///
-    /// - Parameters:
-    ///   - at: URL of directory
-    ///
-    /// - Returns: True was successfully created
-    public static func mkDir(at: URL) -> Bool {
+    public func mkDir(at: URL) -> Bool {
         let fileManager = FileManager.default
         
         do {
@@ -224,12 +220,12 @@ import Foundation
         return false
     }
     
-    @objc public static func move(source: URL, destination: URL) -> Bool {
+    @objc public func move(source: URL, destination: URL) -> Bool {
         let fileManager = FileManager.default
         
         do {
             try fileManager.moveItem(at: source, to: destination)
-            
+            DDLogInfo("Moved file from: \(source.path) to: \(destination.path)")
             return true
         }
         catch {
@@ -238,16 +234,23 @@ import Foundation
         
         return false
     }
-
-    public static func write(fileURL: URL?, text: String) -> Bool {
-        guard let fileURL else {
-            return false
+    
+    @objc public func copy(source: URL, destination: URL) -> Bool {
+        let fileManager = FileManager.default
+        
+        do {
+            try fileManager.copyItem(at: source, to: destination)
+            DDLogInfo("Copied file from: \(source.path) to: \(destination.path)")
+            return true
+        }
+        catch {
+            DDLogError(error.localizedDescription)
         }
         
-        return FileUtility.write(fileURL: fileURL, contents: Data(text.utf8))
+        return false
     }
     
-    @discardableResult public static func write(fileURL: URL?, contents: Data?) -> Bool {
+    @discardableResult public func write(fileURL: URL?, contents: Data?) -> Bool {
         guard let fileURL else {
             return false
         }
@@ -256,7 +259,7 @@ import Foundation
         return fileManager.createFile(atPath: fileURL.path, contents: contents, attributes: nil)
     }
     
-    public static func read(fileURL: URL?) -> Data? {
+    public func read(fileURL: URL?) -> Data? {
         guard let fileURL else {
             return nil
         }
@@ -280,7 +283,7 @@ import Foundation
     /// - Parameters:
     ///    - filePath: path to appending file
     ///    - text: content to addend
-    public static func append(fileURL: URL?, text: String) -> Bool {
+    public func append(fileURL: URL?, text: String) -> Bool {
         guard let fileURL else {
             return false
         }
@@ -303,18 +306,13 @@ import Foundation
             result = true
         }
         else {
-            result = FileUtility.write(fileURL: fileURL, text: text)
+            result = write(fileURL: fileURL, text: text)
         }
         
         return result
     }
 
-    /// Log list directories and files into debug_log.txt and write to application documents folder.
-    ///
-    /// - Parameters:
-    ///    - path: Root directory to list objects
-    ///    - logFileName: Name of log file stored in application documents folder
-    @objc public static func logDirectoriesAndFiles(path: URL, logFileName: String?) {
+    @objc public func logDirectoriesAndFiles(path: URL, logFileName: String?) {
         let fileManager = FileManager.default
         
         do {
@@ -358,8 +356,8 @@ import Foundation
         }
     }
     
-    @objc public static func cleanTemporaryDirectory(olderThan: Date? = nil) {
-        guard let fiveDaysAgo = Calendar.current.date(byAdding: .day, value: -5, to: Date()) else {
+    @objc public func cleanTemporaryDirectory(olderThan: Date? = nil) {
+        guard let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: Date()) else {
             DDLogError("Could not get date for five days ago")
             return
         }
@@ -373,7 +371,7 @@ import Foundation
                 )
                 .filter {
                     try $0.promisedItemResourceValues(forKeys: [.contentModificationDateKey])
-                        .contentModificationDate! < olderThan ?? fiveDaysAgo
+                        .contentModificationDate! < olderThan ?? twoDaysAgo
                 }
             
             for item in oldTempFiles {
@@ -384,32 +382,5 @@ import Foundation
         catch {
             DDLogError("An error occurred while cleaning the temporary directory \(error)")
         }
-    }
-    
-    /// Remove all items in a directory
-    /// - Parameter directoryURL: URL of the directory
-    public static func removeItemsInDirectory(directoryURL: URL) {
-        if let items = FileUtility.dir(pathURL: directoryURL) {
-            for item in items {
-                let itemURL = URL(fileURLWithPath: "\(directoryURL.path)/\(item)")
-                FileUtility.delete(at: itemURL)
-            }
-        }
-    }
-    
-    public static func removeItemsInAllDirectories() {
-        if let docDir = FileUtility.appDocumentsDirectory {
-            FileUtility.removeItemsInDirectory(directoryURL: docDir)
-        }
-        if let dataDir = FileUtility.appDataDirectory {
-            FileUtility.removeItemsInDirectory(directoryURL: dataDir)
-        }
-        if let cacheDir = FileUtility.appCachesDirectory {
-            FileUtility.removeItemsInDirectory(directoryURL: cacheDir)
-        }
-        if let tempDir = FileUtility.appTemporaryDirectory {
-            FileUtility.removeItemsInDirectory(directoryURL: tempDir)
-        }
-        DDLogNotice("Deleted items in all directories.")
     }
 }

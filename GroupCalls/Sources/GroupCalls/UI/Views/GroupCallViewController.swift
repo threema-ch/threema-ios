@@ -184,10 +184,7 @@ public class GroupCallViewController: UIViewController {
     }
     
     @objc private func orientationChanged() {
-        // "Fixes" a bug when rotating iPhones
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
-            self.updateCollectionViewLayout()
-        }
+        updateCollectionViewLayout()
     }
     
     @MainActor
@@ -253,7 +250,7 @@ extension GroupCallViewController: GroupCallViewModelDelegate {
 
     func updateCollectionViewLayout() {
         Task { @MainActor in
-            collectionView.updateLayout()
+            collectionView.updateLayout(view: view)
         }
     }
     

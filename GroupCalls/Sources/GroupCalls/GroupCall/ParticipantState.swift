@@ -30,45 +30,40 @@ final class ParticipantState {
     
     // MARK: - Private Properties
     
-    private var pendingParticipants = Set<RemoteParticipant>()
-    private var participants = Set<RemoteParticipant>()
+    private var pendingParticipants = Set<PendingRemoteParticipant>()
+    private var joinedParticipants = Set<JoinedRemoteParticipant>()
     
     // MARK: - Lifecycle
     
     init(
         localParticipant: LocalParticipant,
-        pendingParticipants: Set<RemoteParticipant> = Set<RemoteParticipant>(),
-        participants: Set<RemoteParticipant> = Set<RemoteParticipant>()
+        pendingParticipants: Set<PendingRemoteParticipant> = Set<PendingRemoteParticipant>(),
+        joinedParticipants: Set<JoinedRemoteParticipant> = Set<JoinedRemoteParticipant>()
     ) {
         self.localParticipant = localParticipant
         self.pendingParticipants = pendingParticipants
-        self.participants = participants
+        self.joinedParticipants = joinedParticipants
     }
     
     // MARK: - Update Functions
     
-    func add(pending: RemoteParticipant) {
+    func add(pending: PendingRemoteParticipant) {
         DDLogNotice("[GroupCall] \(#function) Added pending participant \(pending.participantID.id)")
         pendingParticipants.insert(pending)
     }
     
-    /// Promotes the participant from pending to normal participant
+    /// Updates the promotion state
     /// - Parameter participant: The participant to promote
     /// - Returns: True if promoted, false if was already promoted
-    func promote(_ participant: RemoteParticipant) throws -> Bool {
-        DDLogNotice("[GroupCall] \(#function) Promoted participant \(participant.participantID.id)")
-        guard participant.isHandshakeCompleted else {
+    func registerPromotion(of promotedParticipant: JoinedRemoteParticipant) throws {
+        
+        guard !joinedParticipants.contains(where: { $0.participantID == promotedParticipant.participantID }) else {
             throw GroupCallError.promotionError
         }
         
-        guard !participants.contains(where: { $0.participantID == participant.participantID }) else {
-            return false
-        }
+        removePendingParticipant(promotedParticipant.participantID)
         
-        pendingParticipants.remove(participant)
-        participants.insert(participant)
-        
-        return true
+        joinedParticipants.insert(promotedParticipant)
     }
     
     func remove(_ participantID: ParticipantID) {
@@ -85,16 +80,34 @@ final class ParticipantState {
     }
     
     func removeParticipant(_ participantID: ParticipantID) {
-        guard let participant = participants.first(where: { $0.participantID == participantID }) else {
+        guard let joinedParticipant = joinedParticipants.first(where: { $0.participantID == participantID }) else {
             return
         }
         
-        participants.remove(participant)
+        joinedParticipants.remove(joinedParticipant)
+    }
+    
+    func find(_ participantID: ParticipantID) -> RemoteParticipant? {
+        if let pendingParticipant = findPendingParticipant(participantID) {
+            return pendingParticipant
+        }
+        else if let participant = findJoinedParticipant(participantID) {
+            return participant
+        }
+        return nil
+    }
+    
+    private func findPendingParticipant(_ participantID: ParticipantID) -> PendingRemoteParticipant? {
+        pendingParticipants.first(where: { $0.participantID == participantID })
+    }
+    
+    private func findJoinedParticipant(_ participantID: ParticipantID) -> JoinedRemoteParticipant? {
+        joinedParticipants.first(where: { $0.participantID == participantID })
     }
     
     func setRemoteContext(participantID: ParticipantID, remoteContext: RemoteContext) {
-        if let index = participants.firstIndex(where: { $0.participantID == participantID }) {
-            participants[index].setRemoteContext(remoteContext)
+        if let index = joinedParticipants.firstIndex(where: { $0.participantID == participantID }) {
+            joinedParticipants[index].setRemoteContext(remoteContext)
             DDLogNotice(
                 "[GroupCall] updated transceivers for regular participant \(participantID.id)"
             )
@@ -115,16 +128,12 @@ final class ParticipantState {
 
 extension ParticipantState {
     // State Getters; Required for Protocol Conformance
-    func getCurrentParticipants() -> Set<RemoteParticipant> {
-        participants
+    func getCurrentParticipants() -> Set<JoinedRemoteParticipant> {
+        joinedParticipants
     }
     
-    func getPendingParticipants() -> Set<RemoteParticipant> {
+    func getPendingParticipants() -> Set<PendingRemoteParticipant> {
         pendingParticipants
-    }
-    
-    func getAllParticipants() -> Set<RemoteParticipant> {
-        participants.union(pendingParticipants)
     }
     
     func getLocalParticipant() -> LocalParticipant {

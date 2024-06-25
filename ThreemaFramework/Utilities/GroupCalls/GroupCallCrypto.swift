@@ -58,28 +58,34 @@ struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
     }
     
     /// Returns the shared secret with the given Threema ID
-    /// - Parameter identity: A valid Threema ID which is already present in the database
+    /// - Parameter identity: A valid Threema ID which is already present in the database, or the local ID.
     /// - Returns: The shared secret or nil if it cannot be calculated
     /// crashes if the contact or public key cannot be found
     func sharedSecret(with identity: String) -> Data? {
         let businessInjector = BusinessInjector()
-        guard let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) else {
-            DDLogError("[GroupCall] Contact not found with id: \(identity)")
-            return nil
+        
+        if identity == businessInjector.myIdentityStore.identity {
+            return businessInjector.myIdentityStore.mySharedSecret()
         }
-        
-        var publicKey: Data?
-        
-        businessInjector.entityManager.performBlockAndWait {
-            publicKey = contact.publicKey
+        else {
+            guard let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) else {
+                DDLogError("[GroupCall] Contact not found with id: \(identity)")
+                return nil
+            }
+            
+            var publicKey: Data?
+            
+            businessInjector.entityManager.performBlockAndWait {
+                publicKey = contact.publicKey
+            }
+            
+            guard let publicKey else {
+                DDLogError("[GroupCall] Public Key not found for contact with id: \(identity)")
+                return nil
+            }
+            
+            return businessInjector.myIdentityStore.sharedSecret(withPublicKey: publicKey)
         }
-        
-        guard let publicKey else {
-            DDLogError("[GroupCall] Public Key not found for contact with id: \(identity)")
-            return nil
-        }
-        
-        return businessInjector.myIdentityStore.sharedSecret(withPublicKey: publicKey)
     }
     
     // MARK: - Cryptographic Random Data and Padding

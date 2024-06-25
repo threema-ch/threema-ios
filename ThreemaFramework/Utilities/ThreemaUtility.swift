@@ -56,7 +56,7 @@ public final class ThreemaUtility: NSObject {
         let suffix = mainBundle.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as! String
         let build = mainBundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as! String
         
-        return "\(version)\(suffix)b\(build)\(ThreemaEnvironment.env().description())"
+        return "\(version)\(suffix)b\(build)\(ThreemaEnvironment.env().shortDescription)"
     }()
     
     /// Format: 4.7 (2687)
@@ -71,7 +71,7 @@ public final class ThreemaUtility: NSObject {
         let suffix = mainBundle.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as! String
         let build = mainBundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as! String
         
-        return "\(version)\(suffix) (\(build)\(ThreemaEnvironment.env().description()))"
+        return "\(version)\(suffix) (\(build)\(ThreemaEnvironment.env().shortDescription))"
     }()
     
     private static let additionalMDMString: String = {
@@ -125,16 +125,6 @@ public final class ThreemaUtility: NSObject {
     @objc public static let isWorkFlavor = ThreemaApp.current == .work ||
         ThreemaApp.current == .blue ||
         ThreemaApp.current == .onPrem
-    
-    // TODO: (IOS-4362) Move into `ThreemaEnvironment`
-    @objc public static var supportsForwardSecurity: Bool {
-        let bi = BusinessInjector()
-        if bi.userSettings.enableMultiDevice {
-            return false
-        }
-        
-        return true
-    }
     
     /// Icon to show if `Contact.showOtherThreemaIcon` is `true`
     ///
@@ -307,5 +297,60 @@ public final class ThreemaUtility: NSObject {
         formatter.allowedUnits = [.minute, .second]
         
         return formatter.string(from: .init(totalSeconds)) ?? ""
+    }
+    
+    /// Trims a given message be of`kMaxMessageLen` length at most
+    /// - Parameter text: Text to check
+    /// - Returns: Array containing split messages, or the original text if it was short enough
+    public static func trimMessageText(text: String, length: Int = Int(kMaxMessageLen)) -> [String] {
+       
+        guard !text.replacingOccurrences(of: " ", with: "").isEmpty else {
+            return []
+        }
+        
+        // If the text is shorter than the max length, we return directly
+        if Data(text.utf8).count <= length {
+            return [text]
+        }
+        
+        var remainingMessage = text
+        var trimmedMessages = [String]()
+        var tempTrimmedMessage = text
+        
+        while !remainingMessage.isEmpty {
+            var stringToCheck: String
+            
+            if Data(tempTrimmedMessage.utf8).count <= length {
+                stringToCheck = tempTrimmedMessage
+            }
+            else {
+                if let lastSpace = tempTrimmedMessage.lastIndex(of: " ") {
+                    let postSpaceCount = tempTrimmedMessage.distance(from: lastSpace, to: tempTrimmedMessage.endIndex)
+                    stringToCheck = String(tempTrimmedMessage.dropLast(postSpaceCount))
+                    
+                    if stringToCheck.isEmpty {
+                        remainingMessage = String(remainingMessage.dropFirst())
+                        stringToCheck = String(tempTrimmedMessage.dropFirst())
+                    }
+                }
+                else {
+                    stringToCheck = String(tempTrimmedMessage.dropLast())
+                }
+            }
+
+            if Data(stringToCheck.utf8).count <= length {
+                trimmedMessages.append(stringToCheck)
+                remainingMessage = String(remainingMessage.dropFirst(stringToCheck.count))
+                tempTrimmedMessage = remainingMessage
+                if tempTrimmedMessage.isEmpty {
+                    break
+                }
+            }
+            else {
+                tempTrimmedMessage = stringToCheck
+            }
+        }
+        
+        return trimmedMessages.map { $0.trimmingCharacters(in: .whitespaces) }
     }
 }

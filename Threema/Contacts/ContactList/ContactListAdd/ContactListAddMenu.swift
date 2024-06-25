@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2016-2023 Threema GmbH
+// Copyright (c) 2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,8 +18,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import "BlobMessageLoader.h"
+import Foundation
 
-@interface AnimGifMessageLoader : BlobMessageLoader
-
-@end
+class ContactListAddMenu<Item: MenuItem>: UIMenu {
+    convenience init(_ didSelect: @escaping (Item) -> Void) {
+        self.init(children: Item.allCases.map { item in
+            UIAction(title: item.label, image: item.icon.uiImage) { _ in
+                didSelect(item)
+            }
+        })
+    }
+}

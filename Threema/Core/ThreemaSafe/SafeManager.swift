@@ -44,6 +44,16 @@ import Foundation
         case backupFailed(message: String)
         case restoreError(message: String)
         case restoreFailed(message: String)
+        
+        public var errorDescription: String? {
+            switch self {
+            case let .activateFailed(message),
+                 let .backupFailed(message: message),
+                 let .restoreError(message: message),
+                 let .restoreFailed(message: message):
+                return localizedDescription + " [\(message)]"
+            }
+        }
     }
     
     init(
@@ -109,7 +119,8 @@ import Foundation
     
     // Activate safe with password of MDM
     @objc func activateThroughMDM() {
-        guard let mdm = MDMSetup(setup: false) else {
+        guard let mdm = MDMSetup(setup: false),
+              let safePassword = mdm.safePassword() else {
             return
         }
 
@@ -127,7 +138,7 @@ import Foundation
         
         activate(
             identity: MyIdentityStore.shared().identity,
-            safePassword: mdm.safePassword(),
+            safePassword: safePassword,
             customServer: customServer,
             serverUser: serverUser,
             serverPassword: serverPassword,
@@ -509,7 +520,7 @@ import Foundation
                 completion(nil, config.maxBackupBytes, config.retentionDays)
             }
             catch {
-                completion("Invalid response data", nil, nil)
+                completion("Invalid response data: \(error)", nil, nil)
             }
         }
     }
@@ -793,7 +804,12 @@ import Foundation
                         }
                     }
                     catch {
-                        self.logger.logString(error.localizedDescription)
+                        if let safeError = error as? SafeError {
+                            self.logger.logString(safeError.errorDescription)
+                        }
+                        else {
+                            self.logger.logString(error.localizedDescription)
+                        }
                         
                         self.safeConfigManager
                             .setLastResult(
@@ -1002,8 +1018,8 @@ import Foundation
                     
                     if let decryptedData {
                         // Save decrypted backup data into application documents folder, for analyzing failures
-                        _ = FileUtility.write(
-                            fileURL: FileUtility.appDocumentsDirectory?
+                        _ = FileUtility.shared.write(
+                            fileURL: FileUtility.shared.appDocumentsDirectory?
                                 .appendingPathComponent("safe-backup.json"),
                             text: String(bytes: decryptedData, encoding: .utf8)!
                         )
@@ -1158,8 +1174,10 @@ import Foundation
         }
     }
     
+    /// Checks Threema Safe configuration for Threema Work and OnPrem
     @objc func performThreemaSafeLaunchChecks() {
-        guard let mdm = MDMSetup(setup: false) else {
+        guard LicenseStore.shared().getRequiresLicenseKey(),
+              let mdm = MDMSetup(setup: false) else {
             return
         }
         // We abort if we are currently creating a backup, e.g. from app setup
@@ -1175,7 +1193,7 @@ import Foundation
             deactivate()
         }
         // Else if Safe activated, check if server has been changed by MDM
-        else if LicenseStore.shared().getRequiresLicenseKey(), isActivated {
+        else if isActivated {
             safeStore.isSafeServerChanged(mdmSetup: mdm) { changed in
                 guard changed else {
                     return

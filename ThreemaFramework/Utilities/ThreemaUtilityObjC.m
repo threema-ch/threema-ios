@@ -209,55 +209,6 @@
     }
 }
 
-+ (NSArray *)getTrimmedMessages:(NSString *)message {
-    NSMutableArray *trimmedMessages = nil;
-    // Enforce maximum text message length
-    NSData *trimmedMessageData = [message dataUsingEncoding:NSUTF8StringEncoding];
-    if (trimmedMessageData.length > kMaxMessageLen) {
-        trimmedMessages = [NSMutableArray new];
-        BOOL finished = NO;
-        NSString *tmpTrimmedMessage = [NSString stringWithString:message];
-        while (!finished) {
-            NSString *checkString = nil;
-            if ([tmpTrimmedMessage lengthOfBytesUsingEncoding:NSUTF8StringEncoding] > kMaxMessageLen) {
-                NSRange lastWhiteSpaceRange= [tmpTrimmedMessage rangeOfString: @" " options: NSBackwardsSearch];
-                if (lastWhiteSpaceRange.location != NSNotFound) {
-                    checkString = [tmpTrimmedMessage substringWithRange:NSMakeRange(0, lastWhiteSpaceRange.location)];
-                    if (checkString.length == 0) {
-                        NSRange range = [tmpTrimmedMessage rangeOfComposedCharacterSequenceAtIndex:tmpTrimmedMessage.length-1];
-                        checkString = [tmpTrimmedMessage substringWithRange:NSMakeRange(0, range.location)];
-                    }
-                } else {
-                    NSRange range = [tmpTrimmedMessage rangeOfComposedCharacterSequenceAtIndex:tmpTrimmedMessage.length-1];
-                    checkString = [tmpTrimmedMessage substringWithRange:NSMakeRange(0, range.location)];
-                }
-            } else {
-                checkString = tmpTrimmedMessage;
-            }
-            
-            if ([checkString lengthOfBytesUsingEncoding:NSUTF8StringEncoding] <= kMaxMessageLen) {
-                NSRange stringLocation = [message rangeOfString:checkString options:NSLiteralSearch];
-                if (stringLocation.location == NSNotFound) {
-                    NSLog(@"FAILED!!!!!!!!!!!!");
-                    return nil;
-                }
-                [trimmedMessages addObject:checkString];
-                
-                message = [message substringWithRange:NSMakeRange(stringLocation.location + stringLocation.length, message.length - (stringLocation.location + stringLocation.length))];
-                tmpTrimmedMessage = [NSString stringWithString:message];
-                
-                if (tmpTrimmedMessage.length == 0) {
-                    finished = YES;
-                }
-            } else {
-                tmpTrimmedMessage = checkString;
-            }
-        }
-    }
-    
-    return trimmedMessages;
-}
-
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo {
     [self sendErrorLocalNotification:title body:body userInfo:userInfo onCompletion:nil];
 }

@@ -323,7 +323,12 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageAction {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        let deleteAction = Provider.deleteAction(message: message, willDelete: willDelete, didDelete: didDelete)
+        let deleteAction = Provider.deleteAction(
+            message: message,
+            willDelete: willDelete,
+            didDelete: didDelete,
+            popOverSource: chatBubbleView
+        )
         
         // Message markers
         let markStarAction = Provider.addStarMarkerAction(message: message) { message in

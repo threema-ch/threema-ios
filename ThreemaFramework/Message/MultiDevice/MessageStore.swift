@@ -402,31 +402,53 @@ class MessageStore: MessageStoreProtocol {
 
         DDLogNotice("Reflected group-setup \(groupIdentity) with \(amsg.groupMembers?.count ?? 0) members")
 
-        return frameworkInjector.groupManager.createOrUpdateDB(
-            for: groupIdentity,
-            members: Set<String>(amsg.groupMembers.map { $0 as! String }),
-            systemMessageDate: amsg.date,
-            sourceCaller: .sync
-        )
-        .then { group -> Promise<Void> in
-            guard group != nil else {
-                throw MediatorReflectedProcessorError.groupCreateFailed(groupIdentity: groupIdentity)
+        return Promise { seal in
+            Task {
+                do {
+                    guard let group = try await frameworkInjector.groupManager.createOrUpdateDB(
+                        for: groupIdentity,
+                        members: Set<String>(amsg.groupMembers.map { $0 as! String }),
+                        systemMessageDate: amsg.date,
+                        sourceCaller: .sync
+                    ) else {
+                        seal.reject(MediatorReflectedProcessorError.groupCreateFailed(groupIdentity: groupIdentity))
+                        return
+                    }
+
+                    self.changedConversationAndGroupEntity(
+                        groupID: amsg.groupID,
+                        groupCreatorIdentity: amsg.groupCreator
+                    )
+                    seal.fulfill_()
+                }
+                catch {
+                    seal.reject(error)
+                }
             }
-            self.changedConversationAndGroupEntity(groupID: amsg.groupID, groupCreatorIdentity: amsg.groupCreator)
-            return Promise()
         }
     }
 
     func save(groupDeletePhotoMessage amsg: GroupDeletePhotoMessage) -> Promise<Void> {
-        frameworkInjector.groupManager.deletePhoto(
-            groupID: amsg.groupID,
-            creator: amsg.groupCreator,
-            sentDate: amsg.date,
-            send: false
-        )
-        .then { () -> Promise<Void> in
-            self.changedConversationAndGroupEntity(groupID: amsg.groupID, groupCreatorIdentity: amsg.groupCreator)
-            return Promise()
+        Promise { seal in
+            Task {
+                do {
+                    try await frameworkInjector.groupManager.deletePhoto(
+                        groupID: amsg.groupID,
+                        creator: amsg.groupCreator,
+                        sentDate: amsg.date,
+                        send: false
+                    )
+
+                    self.changedConversationAndGroupEntity(
+                        groupID: amsg.groupID,
+                        groupCreatorIdentity: amsg.groupCreator
+                    )
+                    seal.fulfill_()
+                }
+                catch {
+                    seal.reject(error)
+                }
+            }
         }
     }
 
@@ -441,16 +463,27 @@ class MessageStore: MessageStoreProtocol {
     }
 
     func save(groupRenameMessage amsg: GroupRenameMessage) -> Promise<Void> {
-        frameworkInjector.groupManager.setName(
-            groupID: amsg.groupID,
-            creator: amsg.groupCreator,
-            name: amsg.name,
-            systemMessageDate: amsg.date,
-            send: false
-        )
-        .then { () -> Promise<Void> in
-            self.changedConversationAndGroupEntity(groupID: amsg.groupID, groupCreatorIdentity: amsg.groupCreator)
-            return Promise()
+        Promise { seal in
+            Task {
+                do {
+                    try await frameworkInjector.groupManager.setName(
+                        groupID: amsg.groupID,
+                        creator: amsg.groupCreator,
+                        name: amsg.name,
+                        systemMessageDate: amsg.date,
+                        send: false
+                    )
+
+                    self.changedConversationAndGroupEntity(
+                        groupID: amsg.groupID,
+                        groupCreatorIdentity: amsg.groupCreator
+                    )
+                    seal.fulfill_()
+                }
+                catch {
+                    seal.reject(error)
+                }
+            }
         }
     }
 
@@ -765,18 +798,19 @@ class MessageStore: MessageStoreProtocol {
                 }
 
                 return Promise { seal in
-                    _ = self.frameworkInjector.entityManager.performAndWait {
-                        self.frameworkInjector.groupManager.setPhoto(
-                            groupID: amsg.groupID,
-                            creator: amsg.groupCreator,
-                            imageData: data,
-                            sentDate: amsg.date,
-                            send: false
-                        )
-                        .done {
+                    Task {
+                        do {
+                            try await self.frameworkInjector.groupManager.setPhoto(
+                                groupID: amsg.groupID,
+                                creator: amsg.groupCreator,
+                                imageData: data,
+                                sentDate: amsg.date,
+                                send: false
+                            )
+
                             seal.fulfill_()
                         }
-                        .catch { error in
+                        catch {
                             seal.reject(error)
                         }
                     }
@@ -1099,13 +1133,18 @@ class MessageStore: MessageStoreProtocol {
     
     func save(
         groupCallStartMessage: GroupCallStartMessage,
-        decodedCallStartMessage: CspE2e_GroupCallStart,
         senderIdentity: String,
         createdAt: Date,
         reflectedAt: Date,
         isOutgoing: Bool
     ) throws -> Promise<Void> {
-        Promise { seal in
+        
+        guard let decodedCallStartMessage = groupCallStartMessage.decoded
+        else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: groupCallStartMessage.loggingDescription)
+        }
+        
+        return Promise { seal in
             Task {
                 await self.frameworkInjector.entityManager.performSave {
                     
@@ -1121,12 +1160,18 @@ class MessageStore: MessageStoreProtocol {
                         return
                     }
                     
-                    let fromIdentity = groupCallStartMessage.fromIdentity == self.frameworkInjector.myIdentityStore
-                        .identity ? nil : groupCallStartMessage.fromIdentity
+                    guard let fromIdentity = groupCallStartMessage.fromIdentity else {
+                        seal
+                            .reject(
+                                MediatorReflectedProcessorError
+                                    .messageNotProcessed(message: groupCallStartMessage.loggingDescription)
+                            )
+                        return
+                    }
                     
                     GlobalGroupCallsManagerSingleton.shared.handleMessage(
                         rawMessage: decodedCallStartMessage,
-                        from: fromIdentity!,
+                        from: fromIdentity,
                         in: conversation,
                         receiveDate: groupCallStartMessage.date,
                         onCompletion: {

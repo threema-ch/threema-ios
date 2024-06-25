@@ -29,7 +29,8 @@ final class GroupCallContextTests: XCTestCase {
     
     fileprivate lazy var creatorIdentity = ThreemaIdentity("ECHOECHO")
     fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
-    
+    fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
+
     @GlobalGroupCallActor
     func testBasicInit() throws {
         let certificate = RTCCertificate(privateKey: "helloWorld", certificate: "helloWorld", fingerprint: "helloWorld")
@@ -53,7 +54,6 @@ final class GroupCallContextTests: XCTestCase {
         
         let localParticipant = LocalParticipant(
             participantID: ParticipantID(id: 0),
-            localContext: LocalContext(),
             localContactModel: localContactModel,
             dependencies: dependencies
         )
@@ -68,7 +68,7 @@ final class GroupCallContextTests: XCTestCase {
             ),
             startedAt: Date(),
             dependencies: dependencies,
-            groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: "")
+            groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: sfuBaseURL)
         )
         
         mockPeerConnectionCtx.transceivers = [MockRTCRtpTransceiver]()
@@ -121,7 +121,6 @@ final class GroupCallContextTests: XCTestCase {
         
         let localParticipant = LocalParticipant(
             participantID: ParticipantID(id: 0),
-            localContext: LocalContext(),
             localContactModel: localContactModel,
             dependencies: dependencies
         )
@@ -137,7 +136,7 @@ final class GroupCallContextTests: XCTestCase {
             groupCallStartData: GroupCallStartData(
                 protocolVersion: 0,
                 gck: Data(repeating: 0x01, count: 32),
-                sfuBaseURL: ""
+                sfuBaseURL: sfuBaseURL
             )
         )
         
@@ -213,7 +212,6 @@ final class GroupCallContextTests: XCTestCase {
             
                 let localParticipant = await LocalParticipant(
                     participantID: ParticipantID(id: 0),
-                    localContext: LocalContext(),
                     localContactModel: self.localContactModel,
                     dependencies: dependencies
                 )
@@ -232,7 +230,7 @@ final class GroupCallContextTests: XCTestCase {
                     groupCallStartData: GroupCallStartData(
                         protocolVersion: 0,
                         gck: Data(repeating: 0x01, count: 32),
-                        sfuBaseURL: ""
+                        sfuBaseURL: self.sfuBaseURL
                     )
                 )
                 
@@ -313,7 +311,7 @@ final class GroupCallContextTests: XCTestCase {
                 let reaction = try! await groupCallContext.handle(envelope)
             
                 if case let .participantToParticipant(participant, data) = reaction {
-                    let id = participant.participantID.id
+                    let id = await participant.participantID.id
                     print("ID is \(id)")
                     XCTAssertEqual(id, envelope.sender)
                     XCTAssertGreaterThan(data.count, 0)

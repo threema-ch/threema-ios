@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "Dokument scannen";
+"no_contacts_loading" = "Die Kontakte werden gerade vom Server heruntergeladen. Sobald der Vorgang abgeschlossen ist, werden die Kontakte angezeigt.";
+
+// Contact List
+"contactList_add_contact" = "Neuer Kontakt";
+"contactList_add_group" = "Neue Gruppe";
+
+
 
 // General
 "quotation_mark_start" = "«";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "Keine vom Administrator überprüften %@-Kontakte gefunden.";
 "no_distribution_list" = "Keine Verteilerlisten";
 "no_distribution_list_message" = "Sie haben noch keine Verteilerlisten. Tippen Sie auf den «+»-Button, um eine zu erstellen.";
-
 "no_contacts_syncoff" = "Sie haben noch keine Kontakte. Schalten Sie die Synchronisierung ein (Einstellungen > Privatsphäre), oder fügen Sie Kontakte manuell mit dem «+»-Button hinzu.";
 
 "my_profile_picture_title" = "Ihr Profilbild";
@@ -856,6 +863,7 @@
 "archived_title" = "Archiviert";
 "conversations_global_search_placeholder" = "Suchen";
 "one_to_one_chat" = "Einzelchats";
+"conversations_global_search_section_header_tokens" = "Nachrichtentypen";
 "conversations_global_search_token_text" = "Textnachrichten";
 "conversations_global_search_token_captions" = "Medienunterschriften";
 "conversations_global_search_token_polls" = "Umfragen";
@@ -1348,7 +1356,6 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "profile_edit" = "Bearbeiten";
 "not_connected_for_edit_profile_message" = "Bitte prüfen Sie Ihre Verbindung";
 "not_connected_for_edit_profile_title" = "Keine Verbindung";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema-ID";

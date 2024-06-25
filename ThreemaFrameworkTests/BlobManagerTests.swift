@@ -134,7 +134,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         let dataResponse = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, dataResponse),
+            (nil, encryptedBlobData, dataResponse, nil),
             {
                 expectationData.fulfill()
             }
@@ -144,7 +144,7 @@ class BlobManagerTests: XCTestCase {
         let doneURL = try await doneURL(with: baseURLString, and: blobID)
         let doneResponse = HTTPURLResponse(url: doneURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURL] = (
-            (nil, encryptedBlobData, doneResponse),
+            (nil, encryptedBlobData, doneResponse, nil),
             {
                 expectationDone.fulfill()
             }
@@ -190,7 +190,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 expectationThumbnail.fulfill()
             }
@@ -205,7 +205,7 @@ class BlobManagerTests: XCTestCase {
             headerFields: nil
         )
         URLProtocolMock.mockResponses[doneURLThumbnail] = (
-            (nil, encryptedBlobData, doneResponseThumbnail),
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
             {
                 expectationDoneThumbnail.fulfill()
             }
@@ -215,7 +215,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, response),
+            (nil, encryptedBlobData, response, nil),
             {
                 expectationData.fulfill()
             }
@@ -225,7 +225,7 @@ class BlobManagerTests: XCTestCase {
         let doneURLData = try await doneURL(with: baseURLString, and: blobID)
         let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURLData] = (
-            (nil, encryptedBlobData, doneResponseData),
+            (nil, encryptedBlobData, doneResponseData, nil),
             {
                 expectationDoneData.fulfill()
             }
@@ -281,7 +281,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 expectationThumbnail.fulfill()
             }
@@ -295,7 +295,7 @@ class BlobManagerTests: XCTestCase {
             headerFields: nil
         )
         URLProtocolMock.mockResponses[doneURLThumbnail] = (
-            (nil, encryptedBlobData, doneResponseThumbnail),
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
             {
                 XCTFail("Done must not be called")
             }
@@ -305,7 +305,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, response),
+            (nil, encryptedBlobData, response, nil),
             {
                 expectationData.fulfill()
             }
@@ -314,7 +314,7 @@ class BlobManagerTests: XCTestCase {
         let doneURLData = try await doneURL(with: baseURLString, and: blobID)
         let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURLData] = (
-            (nil, encryptedBlobData, doneResponseData),
+            (nil, encryptedBlobData, doneResponseData, nil),
             {
                 XCTFail("Done must no be called")
             }
@@ -363,7 +363,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         let response = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, response),
+            (nil, encryptedBlobData, response, nil),
             {
                 expectationData.fulfill()
             }
@@ -373,7 +373,7 @@ class BlobManagerTests: XCTestCase {
         let doneURL = try await doneURL(with: baseURLString, and: blobID)
         let doneResponse = HTTPURLResponse(url: doneURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURL] = (
-            (nil, encryptedBlobData, doneResponse),
+            (nil, encryptedBlobData, doneResponse, nil),
             {
                 expectationDone.fulfill()
             }
@@ -422,7 +422,7 @@ class BlobManagerTests: XCTestCase {
         let thumbnailURL = try await blobURL(with: baseURLString, and: thumbnailID, direction: .incoming)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, nil, nil),
+            (nil, nil, nil, nil),
             {
                 XCTFail("This should not be called since, we already have all the data of the file message.")
             }
@@ -431,7 +431,7 @@ class BlobManagerTests: XCTestCase {
         let blobURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         
         URLProtocolMock.mockResponses[blobURL] = (
-            (nil, nil, nil),
+            (nil, nil, nil, nil),
             {
                 XCTFail("This should not be called since, we already have all the data of the file message.")
             }
@@ -496,7 +496,7 @@ class BlobManagerTests: XCTestCase {
         let url = try await blobURL(with: baseURLString, and: testBlobID, direction: .outgoing)
         let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[url] = (
-            (nil, testBlobID, response),
+            (nil, testBlobID, response, nil),
             {
                 expectation.fulfill()
             }
@@ -542,7 +542,7 @@ class BlobManagerTests: XCTestCase {
         // check below for testBlobID again.
         var counter = 0
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, testBlobID, responseData),
+            (nil, testBlobID, responseData, nil),
             {
                 counter += 1
                 if counter == 2 {
@@ -593,7 +593,7 @@ class BlobManagerTests: XCTestCase {
         let responseData = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, testBlobID, responseData),
+            (nil, testBlobID, responseData, nil),
             {
                 XCTFail("This should not be called since, we do not have to upload the data of the file message.")
             }
@@ -636,7 +636,7 @@ class BlobManagerTests: XCTestCase {
             GroupPhotoSenderMock()
         )
         
-        let grp = try createOrUpdateDBWait(
+        let grp = try await createOrUpdateDBWait(
             groupManager: groupManager,
             groupIdentity: expectedGroupIdentity,
             members: []
@@ -668,7 +668,7 @@ class BlobManagerTests: XCTestCase {
         let responseData = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
 
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, testBlobID, responseData),
+            (nil, testBlobID, responseData, nil),
             {
                 XCTFail("This should not be called since, we do not have to upload the data of the file message.")
             }
@@ -749,7 +749,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 expectationThumbnail.fulfill()
             }
@@ -764,7 +764,7 @@ class BlobManagerTests: XCTestCase {
             headerFields: nil
         )
         URLProtocolMock.mockResponses[doneURLThumbnail] = (
-            (nil, encryptedBlobData, doneResponseThumbnail),
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
             {
                 expectationDoneThumbnail.fulfill()
             }
@@ -774,7 +774,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, response),
+            (nil, encryptedBlobData, response, nil),
             {
                 expectationData.fulfill()
             }
@@ -784,7 +784,7 @@ class BlobManagerTests: XCTestCase {
         let doneURLData = try await doneURL(with: baseURLString, and: blobID)
         let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURLData] = (
-            (nil, encryptedBlobData, doneResponseData),
+            (nil, encryptedBlobData, doneResponseData, nil),
             {
                 expectationDoneData.fulfill()
             }
@@ -836,7 +836,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 expectationThumbnail.fulfill()
             }
@@ -851,7 +851,7 @@ class BlobManagerTests: XCTestCase {
             headerFields: nil
         )
         URLProtocolMock.mockResponses[doneURLThumbnail] = (
-            (nil, encryptedBlobData, doneResponseThumbnail),
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
             {
                 expectationDoneThumbnail.fulfill()
             }
@@ -861,7 +861,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, response),
+            (nil, encryptedBlobData, response, nil),
             {
                 expectationData.fulfill()
             }
@@ -871,7 +871,7 @@ class BlobManagerTests: XCTestCase {
         let doneURLData = try await doneURL(with: baseURLString, and: blobID)
         let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURLData] = (
-            (nil, encryptedBlobData, doneResponseData),
+            (nil, encryptedBlobData, doneResponseData, nil),
             {
                 expectationDoneData.fulfill()
             }
@@ -923,7 +923,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 expectationThumbnail.fulfill()
             }
@@ -938,7 +938,7 @@ class BlobManagerTests: XCTestCase {
             headerFields: nil
         )
         URLProtocolMock.mockResponses[doneURLThumbnail] = (
-            (nil, encryptedBlobData, doneResponseThumbnail),
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
             {
                 expectationDoneThumbnail.fulfill()
             }
@@ -948,7 +948,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, response),
+            (nil, encryptedBlobData, response, nil),
             {
                 expectationData.fulfill()
             }
@@ -958,7 +958,7 @@ class BlobManagerTests: XCTestCase {
         let doneURLData = try await doneURL(with: baseURLString, and: blobID)
         let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURLData] = (
-            (nil, encryptedBlobData, doneResponseData),
+            (nil, encryptedBlobData, doneResponseData, nil),
             {
                 expectationDoneData.fulfill()
             }
@@ -1010,7 +1010,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 expectationThumbnail.fulfill()
             }
@@ -1025,7 +1025,7 @@ class BlobManagerTests: XCTestCase {
             headerFields: nil
         )
         URLProtocolMock.mockResponses[doneURLThumbnail] = (
-            (nil, encryptedBlobData, doneResponseThumbnail),
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
             {
                 expectationDoneThumbnail.fulfill()
             }
@@ -1035,7 +1035,7 @@ class BlobManagerTests: XCTestCase {
         let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
         
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, response),
+            (nil, encryptedBlobData, response, nil),
             {
                 expectationData.fulfill()
             }
@@ -1045,7 +1045,7 @@ class BlobManagerTests: XCTestCase {
         let doneURLData = try await doneURL(with: baseURLString, and: blobID)
         let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
         URLProtocolMock.mockResponses[doneURLData] = (
-            (nil, encryptedBlobData, doneResponseData),
+            (nil, encryptedBlobData, doneResponseData, nil),
             {
                 expectationDoneData.fulfill()
             }
@@ -1096,7 +1096,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 XCTFail("This must no be called since we don't want an auto sync to start.")
             }
@@ -1106,7 +1106,7 @@ class BlobManagerTests: XCTestCase {
         let dataResponse = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
 
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, dataResponse),
+            (nil, encryptedBlobData, dataResponse, nil),
             {
                 XCTFail("This must no be called since we don't want an auto sync to start.")
             }
@@ -1143,7 +1143,7 @@ class BlobManagerTests: XCTestCase {
         let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
         
         URLProtocolMock.mockResponses[thumbnailURL] = (
-            (nil, encryptedThumbnailData, response),
+            (nil, encryptedThumbnailData, response, nil),
             {
                 XCTFail("This must no be called since we don't want an auto sync to start.")
             }
@@ -1153,7 +1153,7 @@ class BlobManagerTests: XCTestCase {
         let dataResponse = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
 
         URLProtocolMock.mockResponses[dataURL] = (
-            (nil, encryptedBlobData, dataResponse),
+            (nil, encryptedBlobData, dataResponse, nil),
             {
                 XCTFail("This must no be called since we don't want an auto sync to start.")
             }
@@ -1226,27 +1226,13 @@ class BlobManagerTests: XCTestCase {
         groupManager: GroupManagerProtocol,
         groupIdentity: GroupIdentity,
         members: Set<String>
-    ) throws -> Group {
-        var group: Group?
-
-        let expec = expectation(description: "Group create or update")
-
-        groupManager.createOrUpdateDB(
+    ) async throws -> Group {
+        let group = try await groupManager.createOrUpdateDB(
             for: groupIdentity,
             members: members,
             systemMessageDate: Date(),
             sourceCaller: .local
         )
-        .done { grp in
-            group = grp
-            expec.fulfill()
-        }
-        .catch { _ in
-            expec.fulfill()
-        }
-
-        wait(for: [expec], timeout: 30)
-
         return try XCTUnwrap(group)
     }
 }

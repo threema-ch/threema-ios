@@ -65,6 +65,9 @@ static dispatch_queue_t directContextsQueue;
         [privateContext setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
         [privateContext setParentContext:mainContext];
         privateContext.automaticallyMergesChangesFromParent = YES;
+        
+        // Listen to dirty object notifications to refresh private context
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshDirtyObjects:) name:kNotificationDBRefreshedDirtyObjects object:nil];
     }
     return self;
 }
@@ -83,12 +86,10 @@ static dispatch_queue_t directContextsQueue;
             [privateContext setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
             [privateContext setParentContext:mainContext];
             privateContext.automaticallyMergesChangesFromParent = YES;
-
         }
     }
     return self;
 }
-
 
 #endif
 
@@ -136,6 +137,22 @@ static dispatch_queue_t directContextsQueue;
         contexts = [directContexts copy];
     });
     return contexts;
+}
+
+#pragma mark - Private
+
+- (void)refreshDirtyObjects:(NSNotification*)notification {
+    NSSet<NSManagedObjectID *> *objectIDs = [notification.userInfo objectForKey:kKeyObjectIDs];
+    
+    // This notification should only be observed when a private context exists, but we check anyway
+    if (privateContext) {
+        for (NSManagedObject *objectID in objectIDs) {
+            [privateContext performBlock:^{
+                NSManagedObject *object = [privateContext objectWithID:objectID];
+                [privateContext refreshObject:object mergeChanges:YES];
+            }];
+        }
+    }
 }
 
 @end

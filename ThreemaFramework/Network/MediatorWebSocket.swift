@@ -173,17 +173,18 @@ extension MediatorWebSocket: CertificatePinning {
             return
         }
 
-        // TODO: Remove this if is IOS-4359 (Use fingerprints from OPPF for certificate pinning of MD connections) implemented
-        guard ThreemaApp.current != .onPrem else {
-            completion(.success)
-            return
+        var pinningState: PinningState = .failed(nil)
+        let semaphore = DispatchSemaphore(value: 0)
+
+        SSLCAHelper().evaluate(trust: trust, domain: domain) { trust in
+            if trust {
+                pinningState = .success
+            }
+            semaphore.signal()
         }
 
-        if SSLCAHelper.trust(trust, domain: domain) {
-            completion(.success)
-        }
-        else {
-            completion(.failed(nil))
-        }
+        semaphore.wait()
+
+        completion(pinningState)
     }
 }

@@ -125,9 +125,12 @@
         else if ([grp isMemberWithIdentity:_message.fromIdentity] == NO) {
             if (grp.isSelfCreator == YES) {
                 DDLogInfo(@"%@ is not member of group %@, resend group info", _message.fromIdentity, _message.groupId);
-                [self sync:grp toMember:_message.fromIdentity];
+                [self sync:grp toMember:_message.fromIdentity onCompletion:^{
+                    onCompletion(YES);
+                }];
+                return;
             }
-            
+
             onCompletion(YES);
         }
         else if ([_message isKindOfClass:[GroupLeaveMessage class]]) {
@@ -136,12 +139,16 @@
         } else if ([_message isKindOfClass:[GroupRequestSyncMessage class]]) {
             if (grp.isSelfCreator == YES) {
                 if (grp.state == GroupStateActive) {
-                    [self sync:grp toMember:_message.fromIdentity];
+                    [self sync:grp toMember:_message.fromIdentity onCompletion:^{
+                        onCompletion(YES);
+                    }];
+                    return;
                 }
                 else {
                     [groupManager dissolveWithGroupID:grp.groupID to:[[NSSet alloc] initWithArray:@[_message.fromIdentity]]];
                 }
             }
+
             onCompletion(YES);
         } else {
             if (grp.isSelfMember) {
@@ -160,11 +167,12 @@
  Sync group setup to particular member.
  @param toMember: Receiver of GroupCreateMessage
  */
-- (void)sync:(Group *)group toMember:(NSString *)toMember {
+- (void)sync:(Group *)group toMember:(NSString *)toMember onCompletion:(void (^)(void))onCompletion {
     [groupManager syncObjcWithGroup:group to:[[NSSet alloc] initWithArray:@[toMember]] withoutCreateMessage:NO completionHandler:^(NSError * _Nullable error) {
         if (error != nil) {
             DDLogError(@"Error syncing group: %@", error.localizedDescription);
         }
+        onCompletion();
     }];
 }
 

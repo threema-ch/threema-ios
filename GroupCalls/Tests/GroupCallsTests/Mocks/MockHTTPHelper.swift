@@ -26,7 +26,7 @@ final class MockHTTPHelper: GroupCallsSFUTokenFetchAdapterProtocol {
     
     convenience init() {
         let token = SFUToken(
-            sfuBaseURL: "http://sfu.threema.ch",
+            sfuBaseURL: URL(string: "http://sfu.threema.ch")!,
             hostNameSuffixes: ["test", "test"],
             sfuToken: "",
             expiration: Int.max

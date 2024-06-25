@@ -154,28 +154,40 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
                         return nil
                     }
                     
+                    guard let sfuBaseURL = URL(string: groupCallEntity.sfuBaseURL) else {
+                        return nil
+                    }
+                    
+                    assert(groupCallEntity.sfuBaseURL == sfuBaseURL.absoluteString, "These must match.")
+                    
                     let groupModel = GroupCallsThreemaGroupModel(
                         groupIdentity: group.groupIdentity,
                         groupName: group.name ?? ""
                     )
                     
                     var startMessage = CspE2e_GroupCallStart()
-                    startMessage.sfuBaseURL = groupCallEntity.sfuBaseURL
+                    startMessage.sfuBaseURL = sfuBaseURL.absoluteString
                     startMessage.protocolVersion = groupCallEntity.protocolVersion.uint32Value
                     startMessage.gck = groupCallEntity.gck
 
-                    let proposedGroupCall = ProposedGroupCall(
-                        groupRepresentation: groupModel,
-                        protocolVersion: startMessage.protocolVersion,
-                        gck: startMessage.gck,
-                        sfuBaseURL: startMessage.sfuBaseURL,
-                        startMessageReceiveDate: groupCallEntity.startMessageReceiveDate,
-                        dependencies: self.dependencies
-                    )
-
-                    DDLogNotice("[GroupCall] [DB] Load call with callID \(proposedGroupCall.hexCallID)")
-                    
-                    return proposedGroupCall
+                    do {
+                        let proposedGroupCall = try ProposedGroupCall(
+                            groupRepresentation: groupModel,
+                            protocolVersion: startMessage.protocolVersion,
+                            gck: startMessage.gck,
+                            sfuBaseURL: sfuBaseURL,
+                            startMessageReceiveDate: groupCallEntity.startMessageReceiveDate,
+                            dependencies: self.dependencies
+                        )
+                        DDLogNotice("[GroupCall] [DB] Load call with callID \(proposedGroupCall.hexCallID)")
+                        return proposedGroupCall
+                    }
+                    catch {
+                        let message = "[GroupCall] Could not get create ProposedGroupCall for call from DB."
+                        DDLogError("\(message)")
+                        assertionFailure(message)
+                    }
+                    return nil
                 }
         }
         
@@ -247,8 +259,8 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             return
         }
         
-        guard await isValidSFUURL(convRawMessage.sfuBaseURL) else {
-            DDLogError("[GroupCall] Received message with invalid SFU-URL: \(convRawMessage.sfuBaseURL)")
+        guard let sfuBaseURL = URL(string: convRawMessage.sfuBaseURL), await validateSFUBaseURL(sfuBaseURL) else {
+            DDLogError("[GroupCall] Received message with invalid SFU-URL String: \(convRawMessage.sfuBaseURL)")
             return
         }
         
@@ -257,14 +269,24 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
             return
         }
         
-        let proposedGroupCall = ProposedGroupCall(
-            groupRepresentation: groupModel,
-            protocolVersion: convRawMessage.protocolVersion,
-            gck: convRawMessage.gck,
-            sfuBaseURL: convRawMessage.sfuBaseURL,
-            startMessageReceiveDate: receiveDate,
-            dependencies: dependencies
-        )
+        let proposedGroupCall: ProposedGroupCall
+        
+        do {
+            proposedGroupCall = try ProposedGroupCall(
+                groupRepresentation: groupModel,
+                protocolVersion: convRawMessage.protocolVersion,
+                gck: convRawMessage.gck,
+                sfuBaseURL: sfuBaseURL,
+                startMessageReceiveDate: receiveDate,
+                dependencies: dependencies
+            )
+        }
+        catch {
+            let message = "[GroupCall] Could not get create ProposedGroupCall for incoming message."
+            DDLogError("\(message)")
+            assertionFailure(message)
+            return
+        }
         
         let wrappedMessage = WrappedGroupCallStartMessage(
             startMessage: convRawMessage,
@@ -411,16 +433,16 @@ public final class GlobalGroupCallsManagerSingleton: NSObject {
         }
     }
     
-    private func isValidSFUURL(_ baseURL: String) async -> Bool {
+    private func validateSFUBaseURL(_ url: URL) async -> Bool {
         do {
             let token = try await httpHelper.sfuCredentials()
             // When receiving the SFU information, ensure the _SFU Base URL_ uses the scheme
-            // `https` and the included hostname ends with one of the _Allowed SFU Hostname
-            // Suffixes_.
-            return token.isAllowedBaseURL(baseURL: baseURL)
+            // `https` and the included hostname ends with one of the
+            // _Allowed SFU Hostname Suffixes_.
+            return token.isValidSFUBaseURL(url)
         }
         catch {
-            DDLogError("[GroupCall] Invalid baseURL: \(baseURL)")
+            DDLogError("[GroupCall] Invalid baseURL: \(url.absoluteString)")
             return false
         }
     }
@@ -439,11 +461,11 @@ extension GlobalGroupCallsManagerSingleton {
                 fatalError()
             }
         
-            let proposedGroupCall = ProposedGroupCall(
+            let proposedGroupCall = try! ProposedGroupCall(
                 groupRepresentation: groupModel,
                 protocolVersion: convRawMessage.protocolVersion,
                 gck: convRawMessage.gck,
-                sfuBaseURL: convRawMessage.sfuBaseURL,
+                sfuBaseURL: URL(string: convRawMessage.sfuBaseURL)!,
                 startMessageReceiveDate: messageReceiveDate,
                 dependencies: dependencies
             )
@@ -515,42 +537,32 @@ extension GlobalGroupCallsManagerSingleton {
             return
         }
         
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performAndWait {
             let conversation = businessInjector.entityManager.entityFetcher
                 .existingObject(with: conversationObjectID) as! Conversation
             
-            businessInjector.messageSender.sendTextMessage(text: "*CallID*", in: conversation, quickReply: false)
+            businessInjector.messageSender.sendTextMessage(containing: "*CallID*", in: conversation)
             businessInjector.messageSender.sendTextMessage(
-                text: callIDString,
-                in: conversation,
-                quickReply: false,
-                requestID: nil
+                containing: callIDString,
+                in: conversation
             )
             
             businessInjector.messageSender.sendTextMessage(
-                text: "*CallInfo*",
-                in: conversation,
-                quickReply: false,
-                requestID: nil
+                containing: "*CallInfo*",
+                in: conversation
             )
             businessInjector.messageSender.sendTextMessage(
-                text: callInfoString,
-                in: conversation,
-                quickReply: false,
-                requestID: nil
+                containing: callInfoString,
+                in: conversation
             )
             
             businessInjector.messageSender.sendTextMessage(
-                text: "*GCK*",
-                in: conversation,
-                quickReply: false,
-                requestID: nil
+                containing: "*GCK*",
+                in: conversation
             )
             businessInjector.messageSender.sendTextMessage(
-                text: "\(startMessage.gck.hexEncodedString())",
-                in: conversation,
-                quickReply: false,
-                requestID: nil
+                containing: "\(startMessage.gck.hexEncodedString())",
+                in: conversation
             )
         }
     }
@@ -576,7 +588,7 @@ extension GlobalGroupCallsManagerSingleton {
 
 extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProtocol {
     public func removeFromStoredCalls(_ proposedGroupCall: ProposedGroupCall) {
-        currentBusinessInjector.entityManager.performBlockAndWait {
+        currentBusinessInjector.entityManager.performAndWait {
             let toDeleteGroupCalls = self.currentBusinessInjector.entityManager.entityFetcher
                 .allGroupCallEntities().compactMap { groupCallEntity -> GroupCallEntity? in
                     guard let groupCallEntity = groupCallEntity as? GroupCallEntity else {
@@ -587,7 +599,7 @@ extension GlobalGroupCallsManagerSingleton: GroupCallManagerDatabaseDelegateProt
                         return nil
                     }
                     
-                    guard groupCallEntity.sfuBaseURL == proposedGroupCall.sfuBaseURL else {
+                    guard groupCallEntity.sfuBaseURL == proposedGroupCall.sfuBaseURL.absoluteString else {
                         return nil
                     }
                     

@@ -32,7 +32,7 @@ public struct GroupCallBannerButtonUpdate: Sendable {
     init(actor: GroupCallActor, hideComponent: Bool) async {
         self.groupIdentity = actor.group.groupIdentity
         self.numberOfParticipants = await actor.numberOfJoinedParticipants()
-        self.startDate = await actor.callStartDate() ?? .now
+        self.startDate = await actor.callStartDate()
         self.joinState = await actor.joinState()
         self.hideComponent = hideComponent
     }

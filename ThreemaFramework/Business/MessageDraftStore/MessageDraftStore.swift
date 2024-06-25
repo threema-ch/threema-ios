@@ -21,37 +21,25 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objcMembers public class MessageDraftStore: NSObject {
+@objcMembers public final class MessageDraftStore: NSObject, MessageDraftStoreProtocol {
+    public static let shared = MessageDraftStore()
     
-    /// Deletes the draft message associated with the given conversation.
-    /// - Parameter conversation: The conversation for which the draft will be deleted.
-    public static func deleteDraft(for conversation: Conversation) {
+    public func deleteDraft(for conversation: Conversation) {
         @MessageDraftCoordinator(conversation: conversation) var draft
         draft = nil
     }
     
-    /// Loads the draft message associated with the given conversation.
-    /// - Parameter conversation: The conversation for which the draft will be loaded.
-    /// - Returns: An optional `Draft` object if a draft exists, otherwise `nil`.
-    public static func loadDraft(for conversation: Conversation) -> Draft? {
+    public func loadDraft(for conversation: Conversation) -> Draft? {
         @MessageDraftCoordinator(conversation: conversation) var draft
         return draft
     }
-    
-    /// Saves the draft message for a given conversation.
-    /// - Parameters:
-    ///   - draft: The `Draft` object to be saved.
-    ///   - conversation: The conversation for which the draft will be saved.
-    public static func saveDraft(_ draft: Draft, for conversation: Conversation) {
+ 
+    public func saveDraft(_ draft: Draft, for conversation: Conversation) {
         @MessageDraftCoordinator(conversation: conversation) var oldDraft
         oldDraft = draft
     }
-    
-    /// Cleans up old draft messages that are no longer needed.
-    /// This method checks if old drafts have already been deleted to avoid redundant cleanup.
-    /// It iterates over all contacts and their conversations, collecting draft information.
-    /// Finally, it updates the draft storage with the collected draft data.
-    public static func cleanupDrafts() {
+  
+    public func cleanupDrafts() {
         if let alreadyDeletedOldDrafts = MessageDraftCoordinator.MessageDraft.alreadyDeletedOldDrafts,
            alreadyDeletedOldDrafts {
             return
@@ -79,39 +67,6 @@ import Foundation
                 draft = value
             }
         }
-    }
-    
-    /// Generates a preview for the draft message associated with a given conversation.
-    /// The preview is styled with the specified text style and tint color.
-    /// - Parameters:
-    ///   - conversation: The conversation for which the draft preview will be generated.
-    ///   - textStyle: The font text style to be used for the preview.
-    ///   - tint: The tint color to be applied to the preview text.
-    /// - Returns: An optional `NSAttributedString` representing the styled draft preview, or `nil` if no draft is
-    /// available.
-    public static func previewForDraft(
-        for conversation: Conversation,
-        textStyle: UIFont.TextStyle,
-        tint: UIColor
-    ) -> NSAttributedString? {
-        guard let draft = MessageDraftStore.loadDraft(for: conversation) else {
-            return nil
-        }
-        let parsedDraft = MarkupParser()
-            .previewString(for: draft.string, font: .preferredFont(forTextStyle: textStyle))
-        let index = min(parsedDraft.length, 100)
-        let trimmedDraft = parsedDraft.attributedSubstring(from: NSRange(location: 0, length: index))
-        let mutableDraft = NSMutableAttributedString(attributedString: trimmedDraft)
-        
-        mutableDraft.removeAttribute(
-            NSAttributedString.Key.link,
-            range: NSRange(location: 0, length: mutableDraft.length)
-        )
-        mutableDraft.addAttributes(
-            [NSAttributedString.Key.foregroundColor: tint],
-            range: NSRange(location: 0, length: mutableDraft.length)
-        )
-        return mutableDraft
     }
 }
 
@@ -181,12 +136,8 @@ public enum Draft {
                 guard !isEmpty else {
                     return
                 }
-                do {
-                    try FileManager.default.removeItem(atPath: draft.path)
-                }
-                catch {
-                    DDLogError("\(error)")
-                }
+                
+                FileUtility.shared.delete(at: draft)
             default:
                 // Text is not stored on disk, future drafts might
                 break
@@ -199,7 +150,7 @@ public enum Draft {
         case let .text(draft):
             draft.isEmpty
         case let .audio(draft):
-            !FileManager.default.fileExists(atPath: draft.path)
+            !FileUtility.shared.isExists(fileURL: draft)
         }
     }
 }

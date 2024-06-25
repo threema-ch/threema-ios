@@ -44,7 +44,7 @@ public class WallpaperStore {
         let filename = wallpapers[key] ?? uniqueFilename()
         let wallpaperPath: URL = wallpaperPath(filename: filename)
         
-        FileUtility.write(fileURL: wallpaperPath, contents: MediaConverter.pngRepresentation(for: wallpaper))
+        FileUtility.shared.write(fileURL: wallpaperPath, contents: MediaConverter.pngRepresentation(for: wallpaper))
         
         wallpapers.updateValue(filename, forKey: key)
         
@@ -70,7 +70,7 @@ public class WallpaperStore {
         
         if let wallpapers = AppGroup.userDefaults().dictionary(forKey: Constants.wallpaperKey),
            let filename = wallpapers[key] as? String,
-           let data = FileUtility.read(fileURL: wallpaperPath(filename: filename)),
+           let data = FileUtility.shared.read(fileURL: wallpaperPath(filename: filename)),
            let wallpaper = UIImage(data: data) {
             return wallpaper
         }
@@ -97,7 +97,7 @@ public class WallpaperStore {
         let wallpapers = AppGroup.userDefaults().dictionary(forKey: Constants.wallpaperKey)
         if var wallpapers, let filename = wallpapers[key] as? String {
             let wallpaperPath = wallpaperPath(filename: filename)
-            FileUtility.delete(at: wallpaperPath)
+            FileUtility.shared.delete(at: wallpaperPath)
             wallpapers.removeValue(forKey: key)
             
             setAppDefaults(wallpapers: wallpapers, key: Constants.wallpaperKey)
@@ -113,7 +113,7 @@ public class WallpaperStore {
         if let wallpapers = AppGroup.userDefaults().dictionary(forKey: Constants.wallpaperKey) {
             for wallpaperEntry in wallpapers {
                 let wallpaperPath = wallpaperPath(filename: wallpaperEntry.key)
-                FileUtility.delete(at: wallpaperPath)
+                FileUtility.shared.delete(at: wallpaperPath)
             }
         }
         setAppDefaults(wallpapers: Dictionary(), key: Constants.wallpaperKey)
@@ -157,7 +157,11 @@ public class WallpaperStore {
     private func uniqueFilename() -> String {
         let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).map(\.path)[0]
         let docURL = URL(fileURLWithPath: documentsDir)
-        return FileUtility.getUniqueFilename(from: Constants.wallpaperKey, directoryURL: docURL, pathExtension: nil)
+        return FileUtility.shared.getUniqueFilename(
+            from: Constants.wallpaperKey,
+            directoryURL: docURL,
+            pathExtension: nil
+        )
     }
     
     private func defaultWallPaperDark() -> UIImage {

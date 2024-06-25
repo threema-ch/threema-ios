@@ -20,13 +20,13 @@
 
 import ThreemaProtocols
 
-@objc public class ThreemaEnvironment: NSObject {
-    @objc public enum EnvironmentType: Int {
+public class ThreemaEnvironment: NSObject {
+    @objc public enum EnvironmentType: Int, CustomStringConvertible {
         case appStore
         case testFlight
         case xcode
         
-        public func description() -> String {
+        public var shortDescription: String {
             switch self {
             case .appStore:
                 return ""
@@ -34,6 +34,17 @@ import ThreemaProtocols
                 return "-T"
             case .xcode:
                 return "-X"
+            }
+        }
+        
+        public var description: String {
+            switch self {
+            case .appStore:
+                "appstore"
+            case .testFlight:
+                "testflight"
+            case .xcode:
+                "xcode"
             }
         }
     }
@@ -49,6 +60,20 @@ import ThreemaProtocols
         }
         
         return .appStore
+    }
+    
+    // MARK: - Feature flags
+    
+    // MARK: Forward security
+    
+    /// Does this client support Forward Security?
+    @objc public static var supportsForwardSecurity: Bool {
+        let bi = BusinessInjector()
+        if bi.userSettings.enableMultiDevice {
+            return false
+        }
+        
+        return true
     }
     
     /// Max FS supported by this client. Mostly useful for manual testing of upgrades.
@@ -84,10 +109,7 @@ import ThreemaProtocols
         #endif
     }
     
-    // TODO: (IOS-4362) Remove
-    @objc public static var fsEnableV12: Bool {
-        true
-    }
+    // MARK: Distribution list
     
     @objc static var distributionListsActive: Bool {
         #if DEBUG
@@ -96,6 +118,8 @@ import ThreemaProtocols
             return false
         #endif
     }
+    
+    // MARK: Delete & edit messages
     
     @objc public static var deleteEditMessage: Bool {
         #if DEBUG
@@ -109,7 +133,7 @@ import ThreemaProtocols
         #endif
     }
 
-    // MARK: - CallKit
+    // MARK: CallKit
     
     @objc public static func supportsCallKit() -> Bool {
         let locale = Locale.current

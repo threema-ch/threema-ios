@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2024 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,29 +18,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import "QRCodeViewController.h"
-#import "QRCodeGenerator.h"
-#import "BundleUtil.h"
+import Foundation
+import ThreemaFramework
 
-@interface QRCodeViewController ()
-
-@end
-
-@implementation QRCodeViewController
-
-- (void)viewDidLoad {
-    [super viewDidLoad];
+enum ContactListFilterItem: MenuItem, CaseIterable {
+    case contacts, groups, distributionLists
     
-    self.title = [BundleUtil localizedStringForKey:@"qr_code"];
+    var id: Self { self }
+    
+    var label: String {
+        switch self {
+        case .contacts:
+            "segmentcontrol_contacts".localized
+        case .groups:
+            "segmentcontrol_groups".localized
+        case .distributionLists:
+            "segmentcontrol_distribution_list".localized
+        }
+    }
+    
+    var icon: ThreemaImageResource {
+        switch self {
+        case .contacts:
+            .systemImage("person.2.fill")
+        case .groups:
+            .systemImage("person.3.fill")
+        case .distributionLists:
+            .systemImage("megaphone.fill")
+        }
+    }
 }
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    
-    _qrImageView.image = [QRCodeGenerator renderQrCodeString:_qrData withDimension:_qrImageView.frame.size.width*2];
-    _qrImageView.alpha = 0.75;
-    
-    _qrLabel.text = _qrData;
-}
-
-@end

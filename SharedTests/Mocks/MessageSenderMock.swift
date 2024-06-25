@@ -138,8 +138,4 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
     func doSendTypingIndicator(to conversation: Conversation) -> Bool {
         true
     }
-
-    func sanitizeAndSendText(_ rawText: String, in conversation: Conversation) {
-        // no-op
-    }
 }

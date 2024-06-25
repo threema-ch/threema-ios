@@ -240,6 +240,25 @@ public class DateFormatter: NSObject {
         return mediumWeekdayDayMonthAndYearDateFormatter!.string(from: date)
     }
     
+    /// Localized short weekday, medium day, medium month, long year and short time string
+    ///
+    /// - Note: Marked as private, because it's only used internally
+    ///
+    /// Examples in multiple locales:
+    /// - Sat, Feb 01, 2020, 1:14 PM (en_US)
+    /// - Sa. 01. Feb. 2020, 13:14 (de_DE)
+    /// - sam. 01 févr. 2020, 13:14 (fr_CH)
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Localized short weekday, medium day, medium month, full year and short time string
+    private static func mediumWeekdayDayMonthLongYearAndShortTime(_ date: Date) -> String {
+        if mediumWeekdayDayMonthLongYearAndShortTimeFormatter == nil {
+            mediumWeekdayDayMonthLongYearAndShortTimeFormatter = dateFormatter(for: "EE dd MMM yyyy, j:mm")
+        }
+        
+        return mediumWeekdayDayMonthLongYearAndShortTimeFormatter!.string(from: date)
+    }
+    
     /// Localized short weekday, medium day and medium month
     ///
     /// - Note: Marked as private, because it's only used internally
@@ -259,6 +278,25 @@ public class DateFormatter: NSObject {
         return mediumWeekdayDayAndMonthDateFormatter!.string(from: date)
     }
     
+    /// Localized short weekday, medium day, medium month and short time
+    ///
+    /// - Note: Marked as private, because it's only used internally
+    ///
+    /// Examples in multiple locales:
+    /// - Sat, Feb 01 at 1:14 PM (en_US)
+    /// - Sa. 01. Feb., 13:14 (de_DE)
+    /// - sam. 01 févr. à 13:14 (fr_CH)
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Localized short weekday, medium day and medium month
+    private static func mediumWeekdayDayMonthAndShortTime(_ date: Date) -> String {
+        if mediumWeekdayDayMonthAndShortTimeDateFormatter == nil {
+            mediumWeekdayDayMonthAndShortTimeDateFormatter = dateFormatter(for: "EE dd MMM, j:mm")
+        }
+        
+        return mediumWeekdayDayMonthAndShortTimeDateFormatter!.string(from: date)
+    }
+    
     /// Localized weekday
     ///
     /// - Note: Marked as private, because it's only used internally
@@ -276,6 +314,25 @@ public class DateFormatter: NSObject {
         }
         
         return weekdayFormatter!.string(from: date)
+    }
+    
+    /// Localized weekday and time
+    ///
+    /// - Note: Marked as private, because it's only used internally
+    ///
+    /// Examples in multiple locales:
+    /// - Saturday at 1:14 PM
+    /// - Samstag, 13:14
+    /// - Samedi à 13:14
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Localized short weekday, medium day and medium month
+    private static func weekdayAndTime(_ date: Date) -> String {
+        if weekdayAndTimeFormatter == nil {
+            weekdayAndTimeFormatter = dateFormatter(for: "EEEE, j:mm")
+        }
+        
+        return weekdayAndTimeFormatter!.string(from: date)
     }
     
     /// Localized short weekday, medium day, medium month and long year string including short time
@@ -435,6 +492,36 @@ public class DateFormatter: NSObject {
         }
     }
     
+    /// Localized relative date and time
+    ///
+    /// Localized text for today and yesterday, weekday for the current week, and weekday, day and month for the rest of
+    /// this calendar year. To each the time is appended. For previous years it also shows the year.
+    ///
+    /// Examples in multiple locales:
+    /// - Today at 1:14 PM, Yesterday at 1:14 PM, Monday at 1:14 PM, ..., Sat, Feb 01 at 1:14 PM, ..., Tue, Dec 31, 2019
+    ///   at 1:14 PM, Sat, Feb 01 2019 at 1:14 PM (en_US)
+    /// - Heute, 13:14, Gestern, 13:14, Montag, 13:14, ..., Sa. 01. Feb., 13:14, ..., Di. 31. Dez. 2019, Sa. 01. Feb.
+    ///   2019 (de_DE)
+    /// - aujourd’hui à 13:14, hier à 13:14, lun. à 13:14, ..., sam. 01 févr. à 13:14, ..., mar. 31 déc. 2019 à 13:14,
+    ///   sam. 01 févr. 2019 à 13:14  (fr_CH)
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Localized relative date and time
+    public static func relativeMediumDateAndShortTime(for date: Date) -> String {
+        if isDateInTodayOrYesterday(date) {
+            return relativeLongStyleDateShortStyleTime(date)
+        }
+        else if isDateInLastSixDays(date) {
+            return weekdayAndTime(date)
+        }
+        else if isDateInThisCalendarYear(date) {
+            return mediumWeekdayDayMonthAndShortTime(date)
+        }
+        else {
+            return mediumWeekdayDayMonthLongYearAndShortTime(date)
+        }
+    }
+    
     /// Localized relative time or date
     ///
     /// If `date` is in today it will show the time. Otherwise a relative date like `relativeMediumDate(for:)`.
@@ -556,7 +643,7 @@ public class DateFormatter: NSObject {
     
     // MARK: - Time conversion
     
-    static let timeFormatter = DateComponentsFormatter().then {
+    private static let timeFormatter = DateComponentsFormatter().then {
         $0.zeroFormattingBehavior = .pad
         $0.allowedUnits = [.minute, .second]
     }
@@ -569,6 +656,9 @@ public class DateFormatter: NSObject {
         timeFormatter.then {
             if totalSeconds > 3600 {
                 $0.allowedUnits = [.hour, .minute, .second]
+            }
+            else {
+                $0.allowedUnits = [.minute, .second]
             }
         }
         .string(from: totalSeconds)
@@ -646,7 +736,11 @@ public class DateFormatter: NSObject {
         
         shortDayMonthAndYearDateFormatter = nil
         mediumWeekdayDayMonthAndYearDateFormatter = nil
+        mediumWeekdayDayMonthLongYearAndShortTimeFormatter = nil
+        weekdayFormatter = nil
+        weekdayAndTimeFormatter = nil
         mediumWeekdayDayAndMonthDateFormatter = nil
+        mediumWeekdayDayMonthAndShortTimeDateFormatter = nil
         longWeekdayDayMonthAndYearDateFormatter = nil
         mediumWeekdayDayMonthYearAndTimeDateFormatter = nil
         
@@ -674,8 +768,11 @@ public class DateFormatter: NSObject {
     
     private static var shortDayMonthAndYearDateFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayMonthAndYearDateFormatter: Foundation.DateFormatter?
+    private static var mediumWeekdayDayMonthLongYearAndShortTimeFormatter: Foundation.DateFormatter?
     private static var weekdayFormatter: Foundation.DateFormatter?
+    private static var weekdayAndTimeFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayAndMonthDateFormatter: Foundation.DateFormatter?
+    private static var mediumWeekdayDayMonthAndShortTimeDateFormatter: Foundation.DateFormatter?
     private static var longWeekdayDayMonthAndYearDateFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayMonthYearAndTimeDateFormatter: Foundation.DateFormatter?
     

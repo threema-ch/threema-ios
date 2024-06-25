@@ -179,7 +179,10 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PUSHFILTER_TYPE_BLOCK_LISTED	2
 
 #define kJPEGCompressionQualityLow 0.8
-#define kJPEGCompressionQualityHigh 0.99
+#define kJPEGCompressionQualityHigh 0.81
+
+#define kNSETimeout 25.0
+
 
 static Float64 const kShareExtensionMaxImagePreviewSize = 15*1024*1024;
 static Float64 const kShareExtensionMaxFileShareSize = 45*1024*1024;

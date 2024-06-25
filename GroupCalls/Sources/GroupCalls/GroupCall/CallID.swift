@@ -39,7 +39,7 @@ struct GroupCallID: Sendable {
         let groupID = groupIdentity.id
         let protocolVersion = Data(repeating: UInt8(callStartData.protocolVersion), count: 1)
         let gck = callStartData.gck
-        let baseURL = Data(callStartData.sfuBaseURL.utf8)
+        let baseURL = Data(callStartData.sfuBaseURL.absoluteString.utf8)
         
         let inputs = [creatorID, groupID, protocolVersion, gck, baseURL]
         

@@ -435,7 +435,7 @@ class GroupTests: XCTestCase {
         }
     }
     
-    func testSortedFirstNameMembersMeCreator() throws {
+    func testSortedFirstNameMembersMeCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
             secretKey: MockData.generatePublicKey()
@@ -478,26 +478,13 @@ class GroupTests: XCTestCase {
             id: MockData.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
-        var group: Group?
 
-        let expec = expectation(description: "Create group")
-
-        groupManager.createOrUpdateDB(
+        let group = try await groupManager.createOrUpdateDB(
             for: groupIdentity,
             members: Set(members.map(\.identity).compactMap { $0 }),
             systemMessageDate: Date(),
             sourceCaller: .local
         )
-        .done { grp in
-            group = grp
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-            expec.fulfill()
-        }
-
-        wait(for: [expec], timeout: 3)
 
         guard let group else {
             XCTFail("Group create failed")
@@ -528,7 +515,7 @@ class GroupTests: XCTestCase {
         }
     }
 
-    func testSortedLastNameMembersMeCreator() throws {
+    func testSortedLastNameMembersMeCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
             secretKey: MockData.generatePublicKey()
@@ -572,28 +559,15 @@ class GroupTests: XCTestCase {
             id: MockData.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
-        var group: Group?
 
-        let expec = expectation(description: "Create group")
-
-        groupManager.createOrUpdateDB(
+        let group = try await groupManager.createOrUpdateDB(
             for: groupIdentity,
             members: Set(members.map(\.identity).compactMap { $0 }),
             systemMessageDate: Date(),
             sourceCaller: .local
         )
-        .done { grp in
-            group = grp
-            expec.fulfill()
-        }
-        .catch { error in
-            XCTFail(error.localizedDescription)
-            expec.fulfill()
-        }
 
-        wait(for: [expec], timeout: 3)
-
-        guard let grp = group else {
+        guard let group else {
             XCTFail("Group create failed")
             return
         }
@@ -607,7 +581,7 @@ class GroupTests: XCTestCase {
         // Run last name order
 
         userSettings.sortOrderFirstName = false
-        let sortedContactsLastName = grp.sortedMembers
+        let sortedContactsLastName = group.sortedMembers
 
         // Validate
         XCTAssertEqual(expectedOrderLastName.count, sortedContactsLastName.count)

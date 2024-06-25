@@ -30,10 +30,9 @@ final class JoiningTests: XCTestCase {
     fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
     fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
     fileprivate lazy var groupModel = GroupCallsThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
-    
-    func testBasicInit() async {
+    fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
 
-        let sfuBaseURL = ""
+    func testBasicInit() async {
         let gck = Data(count: 32)
         let dependencies = MockDependencies().create()
         
@@ -56,7 +55,6 @@ final class JoiningTests: XCTestCase {
     }
     
     func testEndOn404() async {
-        let sfuBaseURL = ""
         let gck = Data(repeating: 0x01, count: 32)
         
         let mockHTTPClient = MockHTTPClient(returnCode: 404)

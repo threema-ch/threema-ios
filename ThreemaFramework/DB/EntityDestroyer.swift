@@ -247,6 +247,11 @@ import Foundation
         // Just delete media for message types like `AudioMessageEntity`, `FileMessageEntity`, `ImageMessageEntity` and
         // `VideoMessageEntity`
         try deleteMedias(of: [message], messageType: type(of: message))
+        
+        // Remove all reactions
+        message.userack = 0
+        message.userackDate = nil
+        message.groupDeliveryReceipts = nil
 
         if let message = message as? LocationMessage {
             message.latitude = 0
@@ -455,7 +460,7 @@ import Foundation
             let count = deleteMessages(of: conversation)
             DDLogDebug("\(count) messages deleted from conversation")
             
-            MessageDraftStore.deleteDraft(for: conversation)
+            MessageDraftStore.shared.deleteDraft(for: conversation)
         }
         else if let contact = object as? ContactEntity {
             // Remove all conversations and messages for this contact
@@ -510,7 +515,11 @@ import Foundation
         
         // Load all external filenames
         if let files = FileUtility
-            .dir(pathURL: FileUtility.appDataDirectory?.appendingPathComponent("\(EntityDestroyer.externalDataPath)/")),
+            .shared
+            .dir(
+                pathURL: FileUtility.shared.appDataDirectory?
+                    .appendingPathComponent("\(EntityDestroyer.externalDataPath)/")
+            ),
             !files.isEmpty {
             
             // Load all filenames from DB
@@ -768,9 +777,9 @@ import Foundation
 
         if !list.isEmpty {
             for filename in list {
-                let fileURL = FileUtility.appDataDirectory?
+                let fileURL = FileUtility.shared.appDataDirectory?
                     .appendingPathComponent("\(EntityDestroyer.externalDataPath)/\(filename)")
-                FileUtility.delete(at: fileURL)
+                FileUtility.shared.delete(at: fileURL)
             }
         }
     }

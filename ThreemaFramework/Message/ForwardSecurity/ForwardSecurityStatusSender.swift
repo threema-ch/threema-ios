@@ -95,7 +95,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             )
         }
         
-        if let groupIdentity, ThreemaEnvironment.fsEnableV12 {
+        if let groupIdentity {
             // 3. If `group_identity` has been provided:
             handleRejectedGroupMessage(
                 rejectedMessageID: rejectedMessageID,
@@ -180,11 +180,13 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             }
             
             if group.isOwnGroup {
-                entityManager.performBlock {
-                    groupManager.sync(group: group, to: Set([sender.string]), withoutCreateMessage: false)
-                        .catch { error in
-                            DDLogError("Error while syncing group: \(error)")
-                        }
+                Task {
+                    do {
+                        try await groupManager.sync(group: group, to: Set([sender.string]), withoutCreateMessage: false)
+                    }
+                    catch {
+                        DDLogError("Error while syncing group: \(error)")
+                    }
                 }
             }
         }

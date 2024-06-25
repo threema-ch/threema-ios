@@ -28,11 +28,7 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
     
     var keyRefreshTask: Task<Void, Error>?
     
-    func sendPostHandshakeMediaKeys(to remoteParticipant: GroupCalls.RemoteParticipant) async throws {
-        // Noop
-    }
-    
-    func removeDecryptor(for participant: GroupCalls.RemoteParticipant) throws {
+    func removeDecryptor(for participant: GroupCalls.JoinedRemoteParticipant) throws {
         // Noop
     }
     
@@ -42,7 +38,7 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
         existingParticipants: Bool
     ) async throws {
         for addParticipant in add {
-            let participant = RemoteParticipant(
+            let participant = PendingRemoteParticipant(
                 participantID: addParticipant,
                 dependencies: dependencies,
                 groupCallMessageCrypto: groupCallMessageCrypto,
@@ -75,7 +71,7 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
     
     func updatePendingParticipants(add: [GroupCalls.ParticipantID], remove: [GroupCalls.ParticipantID]) async throws {
         for addParticipant in add {
-            let participant = RemoteParticipant(
+            let participant = PendingRemoteParticipant(
                 participantID: addParticipant,
                 dependencies: dependencies,
                 groupCallMessageCrypto: groupCallMessageCrypto,
@@ -86,11 +82,11 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
         }
     }
     
-    var pendingParticipants = Set<GroupCalls.RemoteParticipant>()
+    var pendingParticipants = Set<GroupCalls.PendingRemoteParticipant>()
     
-    var participants = Set<GroupCalls.RemoteParticipant>()
+    var joinedParticipants = Set<GroupCalls.JoinedRemoteParticipant>()
     
-    func participant(with participantID: GroupCalls.ParticipantID) -> GroupCalls.RemoteParticipant? {
+    func participant(with participantID: GroupCalls.ParticipantID) -> GroupCalls.JoinedRemoteParticipant? {
         nil
     }
     
@@ -136,7 +132,7 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
         // Noop
     }
     
-    func rekeyReceived(from: GroupCalls.RemoteParticipant, with mediaKeys: GroupCalls.MediaKeys) throws {
+    func rekeyReceived(from: GroupCalls.JoinedRemoteParticipant, with mediaKeys: GroupCalls.MediaKeys) throws {
         // Noop
     }
     
@@ -170,7 +166,7 @@ final class MockGroupCallCtx: GroupCallContextProtocol {
     }
     
     func numberOfParticipants() -> Int {
-        participants.count
+        joinedParticipants.count
     }
 
     func numberOfPendingParticipants() -> Int {

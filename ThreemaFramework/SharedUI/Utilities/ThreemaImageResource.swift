@@ -24,14 +24,27 @@ import SwiftUI
 public enum ThreemaImageResource {
     case systemImage(String)
     case bundleImage(String)
-    
-    var image: Image {
+}
+
+extension ThreemaImageResource {
+    public var image: Image {
         switch self {
         case let .systemImage(name):
             Image(systemName: name)
         case let .bundleImage(name):
             Image(uiImage: BundleUtil.imageNamed(name) ?? UIImage())
                 .renderingMode(.template)
+        }
+    }
+}
+
+extension ThreemaImageResource {
+    public var uiImage: UIImage {
+        switch self {
+        case let .systemImage(name):
+            UIImage(systemName: name) ?? UIImage()
+        case let .bundleImage(name):
+            BundleUtil.imageNamed(name) ?? UIImage()
         }
     }
 }

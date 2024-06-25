@@ -68,7 +68,8 @@ struct Connecting: GroupCallState {
             dtlsParameters: dtlsParameters
         )
         
-        let groupCallDescription = groupCallActor.groupCallBaseStateCopy
+        let groupCallDescription = groupCallActor.groupCallBaseState
+        groupCallDescription.resetFrameCryptoContext()
         
         self.connectionContext = try ConnectionContext(
             certificate: certificate,
@@ -81,7 +82,6 @@ struct Connecting: GroupCallState {
                 
         let localParticipant = LocalParticipant(
             participantID: localParticipantID,
-            localContext: LocalContext(),
             localContactModel: self.groupCallActor.localContactModel,
             dependencies: self.groupCallActor.dependencies
         )
@@ -139,14 +139,6 @@ struct Connecting: GroupCallState {
         
         // swiftformat:disable:next acronyms
         let participantIDs = envelope.participantIds
-        
-        /// **Protocol Step: Group Call Join Steps** 6. If the hello.participants contains less than 4 items, set the
-        /// initial capture state of the microphone to on. We only do this if the microphone access was granted.
-        
-        // swiftformat:disable:next acronyms
-        if envelope.participantIds.count < 4, AVAudioSession.sharedInstance().recordPermission == .granted {
-            await groupCallActor.toggleOwnAudio(false)
-        }
         
         guard !Task.isCancelled else {
             return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)

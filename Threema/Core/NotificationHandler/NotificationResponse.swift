@@ -329,6 +329,11 @@ class NotificationResponse: NSObject {
     }
 
     private func handleReplyMessage() {
+        
+        guard let userText else {
+            return
+        }
+        
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
             let businessInjector = BusinessInjector()
             
@@ -348,7 +353,7 @@ class NotificationResponse: NSObject {
                         )
                         self.updateMessageAsRead(for: baseMessage)
                         self.sendUserText(
-                            text: self.userText,
+                            text: userText,
                             conversation: conversation,
                             isConnectionEstablished: true
                         )
@@ -356,7 +361,7 @@ class NotificationResponse: NSObject {
                 }
                 else {
                     self.updateMessageAsRead(for: baseMessage)
-                    self.sendUserText(text: self.userText, conversation: conversation, isConnectionEstablished: true)
+                    self.sendUserText(text: userText, conversation: conversation, isConnectionEstablished: true)
                 }
             }
             else {
@@ -372,7 +377,7 @@ class NotificationResponse: NSObject {
                let conversation = baseMessage.conversation {
                 
                 self.updateMessageAsRead(for: baseMessage)
-                self.sendUserText(text: self.userText, conversation: conversation, isConnectionEstablished: false)
+                self.sendUserText(text: userText, conversation: conversation, isConnectionEstablished: false)
             }
             else {
                 self.sendReplyError()
@@ -381,48 +386,18 @@ class NotificationResponse: NSObject {
         }
     }
     
-    private func sendUserText(text: String?, conversation: Conversation, isConnectionEstablished: Bool) {
-        let trimmedMessages = ThreemaUtilityObjC.getTrimmedMessages(text) as? [String]
-
-        if trimmedMessages == nil {
-            let trimmedMessageData = Data(userText!.utf8)
-            if trimmedMessageData.count > Int(kMaxMessageLen) {
-                sendReplyError()
-                finishResponse()
-                return
-            }
-
-            businessInjector.messageSender.sendTextMessage(
-                text: text,
+    private func sendUserText(text: String, conversation: Conversation, isConnectionEstablished: Bool) {
+        Task {
+            await businessInjector.messageSender.sendTextMessage(
+                containing: text,
                 in: conversation,
-                quickReply: true,
-                requestID: nil,
-                completion: { _ in
-                    if !isConnectionEstablished {
-                        self.sendReplyError()
-                    }
-                    self.finishResponse()
-                }
+                sendProfilePicture: false
             )
-        }
-        else {
-            for (index, object) in trimmedMessages!.enumerated() {
-                businessInjector.messageSender.sendTextMessage(
-                    text: object,
-                    in: conversation,
-                    quickReply: true,
-                    requestID: nil,
-                    completion: { _ in
-                        if index == trimmedMessages!.count - 1 {
-                            if !isConnectionEstablished {
-                                self.sendReplyError()
-                            }
-                            self.finishResponse()
-                            return
-                        }
-                    }
-                )
+            
+            if !isConnectionEstablished {
+                self.sendReplyError()
             }
+            self.finishResponse()
         }
     }
 

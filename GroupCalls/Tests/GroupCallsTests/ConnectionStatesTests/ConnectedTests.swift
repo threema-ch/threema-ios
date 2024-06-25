@@ -32,10 +32,10 @@ final class ConnectedTests: XCTestCase {
     fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
     fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
     fileprivate lazy var groupModel = GroupCallsThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
-    
+    fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
+
     @GlobalGroupCallActor
     func testBasicInit() async {
-        let sfuBaseURL = ""
         let gck = Data(repeating: 0x01, count: 32)
         let dependencies = MockDependencies().create()
         
@@ -50,7 +50,7 @@ final class ConnectedTests: XCTestCase {
         let groupCallStartData = GroupCallStartData(
             protocolVersion: 0,
             gck: Data(repeating: 0x01, count: 32),
-            sfuBaseURL: ""
+            sfuBaseURL: sfuBaseURL
         )
         
         let groupCallMessageCrypto = try! GroupCallBaseState(
@@ -76,7 +76,7 @@ final class ConnectedTests: XCTestCase {
         let expectation = XCTestExpectation(description: "Connected cancelled")
         
         XCTAssertEqual(groupCallCtx.pendingParticipants.count, 0)
-        XCTAssertEqual(groupCallCtx.participants.count, 0)
+        XCTAssertEqual(groupCallCtx.joinedParticipants.count, 0)
         
         let task = Task.detached {
             let newState = try await connected.next()
@@ -115,13 +115,12 @@ final class ConnectedTests: XCTestCase {
         wait(for: [expectation], timeout: 30.0)
         
         XCTAssertEqual(groupCallCtx.pendingParticipants.count, 10)
-        XCTAssertEqual(groupCallCtx.participants.count, 0)
+        XCTAssertEqual(groupCallCtx.joinedParticipants.count, 0)
     }
     
     // TODO: (IOS-3875) Timeout
     @GlobalGroupCallActor
     func testNewParticipantsJoin() async {
-        let sfuBaseURL = ""
         let gck = Data(repeating: 0x01, count: 32)
         let dependencies = MockDependencies().create()
         
@@ -136,7 +135,7 @@ final class ConnectedTests: XCTestCase {
         let groupCallStartData = GroupCallStartData(
             protocolVersion: 0,
             gck: Data(repeating: 0x01, count: 32),
-            sfuBaseURL: ""
+            sfuBaseURL: sfuBaseURL
         )
         
         let groupCallMessageCrypto = try! GroupCallBaseState(
@@ -162,7 +161,7 @@ final class ConnectedTests: XCTestCase {
         let expectation = XCTestExpectation(description: "Connected cancelled")
         
         XCTAssertEqual(groupCallCtx.pendingParticipants.count, 0)
-        XCTAssertEqual(groupCallCtx.participants.count, 0)
+        XCTAssertEqual(groupCallCtx.joinedParticipants.count, 0)
         
         let task = Task.detached {
             let newState = try await connected.next()
@@ -207,7 +206,7 @@ final class ConnectedTests: XCTestCase {
         wait(for: [expectation], timeout: 30.0)
         
         XCTAssertEqual(groupCallCtx.pendingParticipants.count, 60)
-        XCTAssertEqual(groupCallCtx.participants.count, 0)
+        XCTAssertEqual(groupCallCtx.joinedParticipants.count, 0)
     }
     
     // TODO: (IOS-3875) Timeout
@@ -216,14 +215,13 @@ final class ConnectedTests: XCTestCase {
             let outerExpectation = XCTestExpectation(description: "Outer Expectation")
         
             Task.detached {
-                let sfuBaseURL = ""
                 let gck = Data(repeating: 0x01, count: 32)
                 let dependencies = MockDependencies().create()
             
                 let groupCallActor = try! GroupCallActor(
                     localContactModel: self.localContactModel,
                     groupModel: self.groupModel,
-                    sfuBaseURL: sfuBaseURL,
+                    sfuBaseURL: self.sfuBaseURL,
                     gck: gck,
                     dependencies: dependencies
                 )
@@ -231,7 +229,7 @@ final class ConnectedTests: XCTestCase {
                 let groupCallStartData = GroupCallStartData(
                     protocolVersion: 0,
                     gck: Data(repeating: 0x01, count: 32),
-                    sfuBaseURL: ""
+                    sfuBaseURL: self.sfuBaseURL
                 )
             
                 let groupCallMessageCrypto = try! GroupCallBaseState(

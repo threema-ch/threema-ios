@@ -625,14 +625,9 @@ class MediatorReflectedIncomingMessageProcessor {
         
         messageProcessorDelegate.incomingMessageStarted(amsg)
         
-        guard let decodedGroupCallStart = amsg.decoded else {
-            throw MediatorReflectedProcessorError.messageNotProcessed(message: imsg.loggingDescription)
-        }
-        
         try getGroup(for: amsg)
         return try messageStore.save(
             groupCallStartMessage: amsg,
-            decodedCallStartMessage: decodedGroupCallStart,
             senderIdentity: getSenderIdentity(for: imsg),
             createdAt: getCreatedAt(for: imsg),
             reflectedAt: reflectedAt,

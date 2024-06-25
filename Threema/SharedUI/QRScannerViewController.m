@@ -173,15 +173,16 @@
     }];
     if (_captureSession) {
         if (_running) return;
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-            [_captureSession startRunning];
-        });
         _metadataOutput.metadataObjectTypes = _metadataOutput.availableMetadataObjectTypes;
         
         if ([[VoIPCallStateManager shared] currentCallState] == CallStateIdle) {
             [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient withOptions:0 error:nil];
             [[AVAudioSession sharedInstance] setActive:YES error:nil];
         }
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            [_captureSession startRunning];
+        });
         
         _running = YES;
     }

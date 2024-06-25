@@ -456,7 +456,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.enableThreemaGroupCalls != enableThreemaGroupCalls else {
                 return
             }
-            updateUserSettingsAsync()
+            syncAndSave()
         }
     }
     
@@ -574,6 +574,12 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             userSettings.sendReadReceipts = newValue
             sendReadReceipts = newValue
         }
+        
+        if syncSettings.hasGroupCallPolicy {
+            let newValue = syncSettings.groupCallPolicy == .allowGroupCall
+            userSettings.enableThreemaGroupCalls = newValue
+            enableThreemaGroupCalls = newValue
+        }
     }
     
     /// Saves made changes
@@ -652,6 +658,11 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             hasChanges = true
         }
         
+        if userSettings.enableThreemaGroupCalls != enableThreemaGroupCalls {
+            syncSettings.groupCallPolicy = enableThreemaGroupCalls ? .allowGroupCall : .denyGroupCall
+            hasChanges = true
+        }
+        
         guard hasChanges else {
             isSyncing(false, failed: false)
             NotificationPresenterWrapper().present(type: .settingsSyncSuccess)
@@ -717,7 +728,26 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             }
         }
     }
-    
+
+    /// Sync setting one to one and group call, a temporary method as long MDM sync isn't implemented
+    public func syncSettingCalls() {
+        guard userSettings.enableMultiDevice,
+              let taskManager else {
+            return
+        }
+
+        var syncSettings = Sync_Settings()
+        syncSettings.o2OCallPolicy = userSettings.enableThreemaCall ? .allowO2OCall : .denyO2OCall
+        syncSettings.groupCallPolicy = userSettings.enableThreemaGroupCalls ? .allowGroupCall : .denyGroupCall
+
+        let task = TaskDefinitionSettingsSync(syncSettings: syncSettings)
+        taskManager.add(taskDefinition: task) { _, error in
+            if let error {
+                DDLogError("Sync setting group call failed: \(error)")
+            }
+        }
+    }
+
     // MARK: - Private Functions
     
     @objc private func incomingUpdate() {

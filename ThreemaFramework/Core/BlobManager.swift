@@ -530,7 +530,7 @@ public actor BlobManager: BlobManagerProtocol {
         var isGroupMessage: Bool?
         var messageID: String?
         let em = entityManager
-        em.performSyncBlockAndSafe {
+        em.performAndWaitSave {
             guard let fetchedMessage = em.entityFetcher.existingObject(with: objectID) as? BaseMessage
             else {
                 return

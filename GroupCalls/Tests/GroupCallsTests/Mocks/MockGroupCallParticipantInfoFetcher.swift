@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import UIKit
 @testable import GroupCalls
 
@@ -27,11 +28,15 @@ final class MockGroupCallParticipantInfoFetcher { }
 // MARK: - GroupCallParticipantInfoFetcherProtocol
 
 extension MockGroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol {
-    func fetchInfo(id: String) -> (displayName: String?, avatar: UIImage?, color: UIColor) {
-        (id, UIImage(systemName: "person.fill"), .red)
+    func fetchAvatar(for id: ThreemaEssentials.ThreemaIdentity) -> UIImage? {
+        UIImage(systemName: "person.fill")
     }
     
-    func fetchInfoForLocalIdentity() -> (avatar: UIImage?, color: UIColor) {
-        (UIImage(systemName: "person.fill"), .red)
+    func fetchDisplayName(for id: ThreemaEssentials.ThreemaIdentity) -> String {
+        id.string
+    }
+    
+    func fetchIDColor(for id: ThreemaEssentials.ThreemaIdentity) -> UIColor {
+        UIColor.red
     }
 }

@@ -1625,6 +1625,12 @@ struct pktExtension {
     });
 }
 
+- (void)incomingForwardSecurityMessageWithNoResultFinished:(AbstractMessage *)message {
+    dispatch_async(queueMessageProcessorDelegate, ^{
+        [clientMessageProcessorDelegate incomingForwardSecurityMessageWithNoResultFinished:message];
+    });
+}
+
 - (void)readMessage:(NSSet *)inConversations {
     dispatch_async(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate readMessage:inConversations];

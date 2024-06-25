@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import PromiseKit
 import ThreemaEssentials
 import ThreemaFramework
 
@@ -60,62 +59,58 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     
     // MARK: - Protocol implementation
 
-    func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void> {
-        Promise()
+    func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) async throws {
+        // no-op
     }
     
-    func setName(group: Group, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void> {
-        Promise()
+    func setName(group: Group, name: String?, systemMessageDate: Date, send: Bool) async throws {
+        // no-op
     }
     
-    func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date, send: Bool) -> Promise<Void> {
-        Promise()
+    func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date, send: Bool) async throws {
+        // no-op
     }
     
-    func setPhoto(group: Group, imageData: Data, sentDate: Date, send: Bool) -> Promise<Void> {
-        Promise()
+    func setPhoto(group: Group, imageData: Data, sentDate: Date, send: Bool) async throws {
+        // no-op
     }
     
-    func deletePhoto(groupID: Data, creator: String, sentDate: Date, send: Bool) -> Promise<Void> {
-        Promise()
+    func deletePhoto(groupID: Data, creator: String, sentDate: Date, send: Bool) async throws {
+        // no-op
     }
 
     func sync(
         group: Group,
         to members: Set<String>?,
         withoutCreateMessage: Bool
-    ) -> Promise<Void> {
+    ) async throws {
         syncCalls.append(SyncCall(group: group, receivers: members))
-        
-        return Promise()
     }
 
     func createOrUpdate(
         for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date
-    ) -> Promise<(Group, Set<String>?)> {
-        Promise(error: GroupManager.GroupError.notCreator)
+    ) async throws -> (Group, Set<String>?) {
+        throw GroupManager.GroupError.notCreator
     }
 
     func createOrUpdateObjc(
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date,
-        completionHandler: @escaping (Group, Set<String>?) -> Void,
-        errorHandler: @escaping (Error?) -> Void
-    ) {
-        // no-op
+        systemMessageDate: Date
+    ) async throws -> (Group, Set<String>?) {
+        throw GroupManager.GroupError.notCreator
     }
 
-    @discardableResult func createOrUpdateDB(
+    func createOrUpdateDB(
         for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date?,
         sourceCaller: SourceCaller
-    ) -> Promise<Group?> {
-        Promise { $0.fulfill(nil) }
+    ) async throws -> Group? {
+        nil
     }
 
     func createOrUpdateDBObjc(
@@ -123,31 +118,23 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         creator: String,
         members: Set<String>,
         systemMessageDate: Date?,
-        sourceCaller: SourceCaller,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        createOrUpdateDB(
+        sourceCaller: SourceCaller
+    ) async throws {
+        try await createOrUpdateDB(
             for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)),
             members: members,
             systemMessageDate: systemMessageDate,
             sourceCaller: sourceCaller
         )
-        .done { _ in
-            completionHandler(nil)
-        }
-        .catch { error in
-            completionHandler(error)
-        }
     }
 
     func deletePhotoObjc(
         groupID: Data,
         creator: String,
         sentDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        completionHandler(nil)
+        send: Bool
+    ) async throws {
+        // no-op
     }
     
     func getConversation(for groupIdentity: GroupIdentity) -> Conversation? {
@@ -195,20 +182,18 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         creator: String,
         name: String?,
         systemMessageDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        completionHandler(nil)
+        send: Bool
+    ) async throws {
+        // no-op
     }
 
     func setNameObjc(
         group: Group,
         name: String?,
         systemMessageDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        completionHandler(nil)
+        send: Bool
+    ) async throws {
+        // no-op
     }
 
     func setPhotoObjc(
@@ -216,19 +201,17 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         creator: String,
         imageData: Data,
         sentDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        completionHandler(nil)
+        send: Bool
+    ) async throws {
+        // no-op
     }
     
     func syncObjc(
         group: Group,
         to members: Set<String>?,
-        withoutCreateMessage: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        completionHandler(nil)
+        withoutCreateMessage: Bool
+    ) async throws {
+        // no-op
     }
     
     func sendSyncRequest(groupID: Data, creator: String, force: Bool) {

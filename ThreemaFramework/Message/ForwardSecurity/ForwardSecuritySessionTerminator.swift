@@ -36,22 +36,40 @@ public class ForwardSecuritySessionTerminator {
         self.store = store ?? newStore
     }
     
-    public func terminateAllSessions(with contact: ContactEntity, cause: CspE2eFs_Terminate.Cause) throws {
+    /// Terminate all sessions with the provided contact and cause
+    /// - Parameters:
+    ///   - contact: Contact to terminate all sessions with
+    ///   - cause: Cause of termination
+    /// - Returns: `true` if there existed any sessions that were terminated
+    public func terminateAllSessions(with contact: ContactEntity, cause: CspE2eFs_Terminate.Cause) throws -> Bool {
         try terminateAllSessions(with: contact.identity, cause: cause)
     }
     
-    public func terminateAllSessions(with identity: String, cause: CspE2eFs_Terminate.Cause) throws {
-        try businessInjector.entityManager.performAndWaitSave {
+    /// Terminate all sessions with the provided identity and cause
+    /// - Parameters:
+    ///   - identity: Identity to terminate all sessions with
+    ///   - cause: Cause of termination
+    /// - Returns: `true` if there existed any sessions that were terminated
+    public func terminateAllSessions(with identity: String, cause: CspE2eFs_Terminate.Cause) throws -> Bool {
+        guard let myIdentity = businessInjector.myIdentityStore.identity else {
+            DDLogError("Unable to terminate all sessions with \(identity), because no my identity exists")
+            return false
+        }
+        
+        return try businessInjector.entityManager.performAndWaitSave {
             guard let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) else {
-                return
+                return false
             }
+            
             if contact.forwardSecurityState.intValue == 1 {
                 DDLogVerbose("Reset Forward Security State for Contact \(identity)")
             }
             contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
             
+            var numberOfSessionsTerminated = 0
+            
             while let session = try self.store.bestDHSession(
-                myIdentity: self.businessInjector.myIdentityStore.identity,
+                myIdentity: myIdentity,
                 peerIdentity: identity
             ) {
                 let terminate = ForwardSecurityDataTerminate(sessionID: session.id, cause: cause)
@@ -60,14 +78,18 @@ public class ForwardSecuritySessionTerminator {
                 
                 self.businessInjector.messageSender.sendMessage(abstractMessage: message, isPersistent: true)
                 
-                DDLogVerbose("Terminate FS session with id \(session.id.description)")
+                DDLogNotice("Terminate FS session with id \(session.id.description)")
                 
                 try self.store.deleteDHSession(
                     myIdentity: self.businessInjector.myIdentityStore.identity,
                     peerIdentity: contact.identity,
                     sessionID: session.id
                 )
+                
+                numberOfSessionsTerminated += 1
             }
+            
+            return numberOfSessionsTerminated > 0
         }
     }
     

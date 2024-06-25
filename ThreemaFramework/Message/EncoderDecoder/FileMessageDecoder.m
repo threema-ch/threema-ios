@@ -24,7 +24,6 @@
 #import "FileMessageEntity.h"
 #import "EntityCreator.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
-#import "PinnedHTTPSURLLoader.h"
 #import "ThreemaError.h"
 #import "NaClCrypto.h"
 #import "ServerConnector.h"

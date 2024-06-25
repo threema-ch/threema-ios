@@ -37,11 +37,11 @@ public final class GroupCallViewModel: Sendable {
 
     private(set) var ownAudioMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.audio {
         didSet {
+            toolBarDelegate?.updateToggleAudioButton()
+            
             guard oldValue != ownAudioMuteState else {
                 return
             }
-            
-            toolBarDelegate?.updateToggleAudioButton()
             
             guard AVAudioSession.sharedInstance().recordPermission == .granted else {
                 return
@@ -62,11 +62,11 @@ public final class GroupCallViewModel: Sendable {
     
     private(set) var ownVideoMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.video {
         didSet {
+            toolBarDelegate?.updateToggleVideoButton()
+            
             guard oldValue != ownAudioMuteState else {
                 return
             }
-            
-            toolBarDelegate?.updateToggleVideoButton()
             
             guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
                 return
@@ -94,7 +94,7 @@ public final class GroupCallViewModel: Sendable {
     private weak var viewDelegate: GroupCallViewModelDelegate?
     private weak var toolBarDelegate: GroupCallToolbarDelegate?
     
-    private var localParticipant: ViewModelParticipant? = nil
+    private var localParticipant: LocalParticipant?
     
     // Screenshot
     private var isRunningForScreenshots = false
@@ -110,12 +110,19 @@ public final class GroupCallViewModel: Sendable {
         subscribeToEvents()
     }
     
-    // Only use when running screenshots
+    /// Only use when running screenshots
     init(
         screenshotGroupName: String,
-        localParticipant: ViewModelParticipant,
-        participantsList: [ViewModelParticipant]
+        localParticipant: LocalParticipant,
+        participantsList: [ViewModelParticipant],
+        dependencies: Dependencies
     ) {
+        guard dependencies.isRunningForScreenshots else {
+            fatalError(
+                "[GroupCalls] Tried to initialize GroupCallViewModel for screenshots even though we are not running for screenshots."
+            )
+        }
+        
         self.localParticipant = localParticipant
         self.participantsList = participantsList
         self.isRunningForScreenshots = true
@@ -249,13 +256,6 @@ public final class GroupCallViewModel: Sendable {
             startPeriodicUIUpdatesIfNeeded()
             await groupCallActor?.connectedConfirmed()
             
-        case let .add(newParticipant):
-            DDLogNotice("[GroupCall] [GroupCallUI] Add participant \(newParticipant.participantID.id)")
-            await add(newParticipant)
-            Task { @MainActor in
-                viewDelegate?.updateCollectionViewLayout()
-            }
-            
         case let .remove(participantID):
             DDLogNotice("[GroupCall] [GroupCallUI] Remove participant \(participantID)")
             await remove(participantID)
@@ -266,13 +266,19 @@ public final class GroupCallViewModel: Sendable {
         case let .participantStateChange(participant, change):
             DDLogNotice("[GroupCall] Reconfigure participant \(participant.id)")
             
-            handleMuteStateChange(for: participant, change: change)
+            await handleMuteStateChange(for: participant, change: change)
             
             await publishSnapshot(reconfigure: [participant])
             
-        case let .addLocalParticipant(localParticipant):
-            self.localParticipant = localParticipant
-            await add(localParticipant)
+        case let .add(viewModelParticipant):
+            if let localParticipant = viewModelParticipant as? LocalParticipant {
+                self.localParticipant = localParticipant
+            }
+            await add(viewModelParticipant)
+            
+            Task { @MainActor in
+                viewDelegate?.updateCollectionViewLayout()
+            }
             
         case let .audioMuteChange(newState):
             await handleOwnAudioMuteStateChange(newState: newState)
@@ -281,10 +287,11 @@ public final class GroupCallViewModel: Sendable {
             await handleOwnVideoMuteStateChange(newState: newState)
 
         case let .videoCameraChange(position):
-            if let localParticipant {
-                localParticipant.localParticipant?.localCameraPosition = position
-                await publishSnapshot(reconfigure: [localParticipant.participantID])
+            guard let localParticipant else {
+                return
             }
+            await localParticipant.setActiveCameraPosition(to: position)
+            await publishSnapshot(reconfigure: [localParticipant.participantID])
             
         case .forceDismissGroupCallViewController:
             await viewDelegate?.dismissGroupCallView(animated: false)
@@ -351,7 +358,9 @@ public final class GroupCallViewModel: Sendable {
             
         case .authorized:
             ownVideoMuteState = newState
-            localParticipant.videoMuteState = newState == .muted ? .muted : .unmuted
+            let muteState: MuteState = newState == .muted ? .muted : .unmuted
+            await localParticipant.setVideoMuteState(to: muteState)
+            
             await publishSnapshot(reconfigure: [localParticipant.participantID])
             
         @unknown default:
@@ -380,7 +389,8 @@ public final class GroupCallViewModel: Sendable {
             
         case .granted:
             ownAudioMuteState = newState
-            localParticipant.audioMuteState = newState == .muted ? .muted : .unmuted
+            let muteState: MuteState = newState == .muted ? .muted : .unmuted
+            await localParticipant.setAudioMuteState(to: muteState)
             await publishSnapshot(reconfigure: [localParticipant.participantID])
             
         @unknown default:
@@ -388,18 +398,18 @@ public final class GroupCallViewModel: Sendable {
         }
     }
     
-    private func handleMuteStateChange(for participantID: ParticipantID, change: ParticipantStateChange) {
+    private func handleMuteStateChange(for participantID: ParticipantID, change: ParticipantStateChange) async {
         
-        guard let participant = participantsList.first(where: { $0.participantID == participantID }) else {
+        guard let participant = participant(for: participantID) else {
             DDLogNotice("[ViewModel] \(#function)")
             return
         }
         
         switch change {
         case let .audioState(muteState):
-            participant.audioMuteState = muteState
+            await participant.setAudioMuteState(to: muteState)
         case let .videoState(muteState):
-            participant.videoMuteState = muteState
+            await participant.setVideoMuteState(to: muteState)
         }
     }
 
@@ -434,7 +444,7 @@ public final class GroupCallViewModel: Sendable {
         
         var track: RTCVideoTrack?
         
-        if participant == localParticipant {
+        if participant.participantID == localParticipant?.participantID {
             track = await groupCallActor?.localContext()
         }
         else {

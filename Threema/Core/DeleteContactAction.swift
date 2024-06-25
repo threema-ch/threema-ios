@@ -284,7 +284,7 @@ extension DeleteContactAction {
                 guard let conversation = genericConversation as? Conversation else {
                     continue
                 }
-                MessageDraftStore.deleteDraft(for: conversation)
+                MessageDraftStore.shared.deleteDraft(for: conversation)
                 WallpaperStore.shared.deleteWallpaper(for: conversation.objectID)
             }
         }

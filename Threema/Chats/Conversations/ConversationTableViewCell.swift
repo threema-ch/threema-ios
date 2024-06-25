@@ -593,7 +593,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         
         if let conversation {
-            let draft = MessageDraftStore.loadDraft(for: conversation)
+            let draft = MessageDraftStore.shared.loadDraft(for: conversation)
             updateColorsForDateDraftLabel(isDraft: draft?.string != nil)
         }
         
@@ -887,7 +887,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        if let draft = MessageDraftStore.previewForDraft(
+        if let draft = MessageDraftStore.shared.previewForDraft(
             for: conversation,
             textStyle: Configuration.dateDraftTextStyle,
             tint: Colors.textLight
@@ -1025,7 +1025,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)), \(BundleUtil.localizedString(forKey: "doNotDisturb_mention"))"
         }
         
-        if let draft = MessageDraftStore.loadDraft(for: conversation)?.string {
+        if let draft = MessageDraftStore.shared.loadDraft(for: conversation)?.string {
             // Drafts
             updateAccessibility(with: draft, accessibilityString: accessibilityText)
             return

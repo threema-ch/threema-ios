@@ -24,5 +24,5 @@ import Foundation
 struct GroupCallStartData: Sendable {
     let protocolVersion: UInt32
     let gck: Data
-    let sfuBaseURL: String
+    let sfuBaseURL: URL
 }

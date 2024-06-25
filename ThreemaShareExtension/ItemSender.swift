@@ -204,54 +204,38 @@ class ItemSender: NSObject {
     }
     
     private func sendString(message: String, toConversation: Conversation) {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             self.delegate?.setProgress(
                 progress: 0.1,
                 forItem: self.progressItemKey(item: message, conversation: toConversation)!
             )
             
-            let messages = ThreemaUtilityObjC.getTrimmedMessages(message)
-            let businessInjector = BusinessInjector()
-
-            if let messages {
-                for m in messages {
-                    businessInjector.messageSender.sendTextMessage(
-                        text: m as? String,
-                        in: toConversation,
-                        quickReply: false,
-                        requestID: nil,
-                        completion: self.textMessageCompletionHandler(baseMessage:)
-                    )
-                }
-            }
-            else {
-                businessInjector.messageSender.sendTextMessage(
-                    text: message,
-                    in: toConversation,
-                    quickReply: false,
-                    requestID: nil,
-                    completion: self.textMessageCompletionHandler(baseMessage:)
+            Task {
+                let textMessages = await BusinessInjector().messageSender.sendTextMessage(
+                    containing: message,
+                    in: toConversation
                 )
+                Task { @MainActor in
+                    self.textMessageCompletionHandler(textMessages: textMessages)
+                }
             }
         }
     }
     
-    @objc private func textMessageCompletionHandler(baseMessage: BaseMessage?) {
-        if let message = baseMessage as? TextMessage {
-            delegate?.finishedItem(item: [progressItemKey(item: message.text!, conversation: message.conversation)])
+    private func textMessageCompletionHandler(textMessages: [TextMessage]) {
+        for textMessage in textMessages {
+            delegate?
+                .finishedItem(item: [progressItemKey(item: textMessage.text!, conversation: textMessage.conversation)])
             
-            if message.conversation.conversationVisibility == .archived {
-                message.conversation.conversationVisibility = .default
+            if textMessage.conversation.conversationVisibility == .archived {
+                textMessage.conversation.conversationVisibility = .default
             }
             
-            DatabaseManager.db()?.addDirtyObject(message.conversation)
-            DatabaseManager.db()?.addDirtyObject(message.conversation.lastMessage)
+            DatabaseManager.db()?.addDirtyObject(textMessage.conversation)
+            DatabaseManager.db()?.addDirtyObject(textMessage.conversation.lastMessage)
             
             sentItemCount! += 1
             checkIsFinished()
-        }
-        else {
-            DDLogError("Expected a TextMessage but received something else \(type(of: baseMessage))")
         }
     }
     

@@ -141,7 +141,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize keepMessagesDays;
 
-@synthesize enableFSv12ForTesting;
+@synthesize contactList2;
 
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
@@ -154,6 +154,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `VideoCallInChatInfoShown`
 /// - `VideoCallInfoShown`
 /// - `VideoCallSpeakerInfoShown`
+/// - `EnableFSv1_2ForTesting`
 
 static UserSettings *instance;
 
@@ -260,7 +261,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                         [NSNumber numberWithBool:NO], @"GroupCallsDebugMessages",
                                         @-1, @"KeepMessagesDays",
-                                        [NSNumber numberWithBool:YES], @"EnableFSv1_2ForTesting",
+                                        [NSNumber numberWithBool:NO], @"ContactList2",
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
@@ -381,7 +382,7 @@ static UserSettings *instance;
     blockCommunication = [defaults boolForKey:@"BlockCommunication"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
-    enableFSv12ForTesting = [defaults boolForKey:@"EnableFSv1_2ForTesting"];
+    contactList2 = [defaults boolForKey:@"ContactList2"];
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -890,9 +891,9 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setEnableFSv12ForTesting:(BOOL)newEnableFSv12ForTesting {
-    enableFSv12ForTesting = newEnableFSv12ForTesting;
-    [defaults setBool:enableFSv12ForTesting forKey:@"EnableFSv1_2ForTesting"];
+- (void)setContactList2:(BOOL)newContactList2 {
+    contactList2 = newContactList2;
+    [defaults setBool:contactList2 forKey:@"ContactList2"];
     [defaults synchronize];
 }
 

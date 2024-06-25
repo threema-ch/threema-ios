@@ -41,37 +41,9 @@ public class DistributionListMessageSender {
     }
     
     // MARK: - Text
-
-    public func sanitizeAndSendText(_ rawText: String, in distributionList: DistributionListEntity) {
-        let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
-        let splitMessages = ThreemaUtilityObjC.getTrimmedMessages(trimmedText)
-        
-        entityManager.performSyncBlockAndSafe {
-            if let splitMessages = splitMessages as? [String] {
-                for splitMessage in splitMessages {
-                    self.sendTextMessage(
-                        text: splitMessage,
-                        in: distributionList,
-                        quickReply: false,
-                        requestID: nil,
-                        completion: nil
-                    )
-                }
-            }
-            else {
-                self.sendTextMessage(
-                    text: trimmedText,
-                    in: distributionList,
-                    quickReply: false,
-                    requestID: nil,
-                    completion: nil
-                )
-            }
-        }
-    }
     
     public func sendTextMessage(
-        text: String?,
+        text: String,
         in distributionList: DistributionListEntity,
         quickReply: Bool,
         requestID: String?,
@@ -87,9 +59,9 @@ public class DistributionListMessageSender {
             if let memberConversation = entityManager.conversation(for: member.identity, createIfNotExisting: true) {
                 
                 businessInjector.messageSender.sendTextMessage(
-                    text: text,
+                    containing: text,
                     in: memberConversation,
-                    quickReply: quickReply
+                    sendProfilePicture: !quickReply
                 )
             }
         }

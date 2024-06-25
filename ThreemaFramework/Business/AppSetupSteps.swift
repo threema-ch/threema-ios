@@ -123,7 +123,7 @@ public struct AppSetupSteps: Sendable {
         // 6.  If FS is supported by the client, run the _FS Refresh Steps_ with
         //     `solicited-contacts`.
         // In general FS should always be supported
-        if ThreemaUtility.supportsForwardSecurity, !solicitedContactIdentities.isEmpty {
+        if ThreemaEnvironment.supportsForwardSecurity, !solicitedContactIdentities.isEmpty {
             DDLogNotice("Run FS refresh steps...")
             await ForwardSecurityRefreshSteps(
                 backgroundBusinessInjector: backgroundBusinessInjector,
@@ -153,10 +153,14 @@ public struct AppSetupSteps: Sendable {
         DDLogNotice("Refresh \(allActiveGroups.count) active groups")
         for group in allActiveGroups {
             if group.isOwnGroup {
-                backgroundBusinessInjector.groupManager.sync(group: group)
-                    .catch { error in
+                Task {
+                    do {
+                        try await backgroundBusinessInjector.groupManager.sync(group: group)
+                    }
+                    catch {
                         DDLogError("Failed so sync group (\(group.groupIdentity): \(error). Continue...")
                     }
+                }
             }
             else {
                 // Sync is not force if there was another request sent recently. We don't expect this to be the case,

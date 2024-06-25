@@ -392,6 +392,7 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
             speakText: message.text,
             shareItems: shareItems,
             activityViewAnchor: contentView,
+            popOverSource: chatBubbleView,
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,

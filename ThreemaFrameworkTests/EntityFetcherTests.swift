@@ -526,19 +526,11 @@ extension GroupManagerProtocol {
         for groupIdentity: GroupIdentity,
         members: Set<String>
     ) async throws -> Group? {
-        try await withCheckedThrowingContinuation { continuation in
-            createOrUpdateDB(
-                for: groupIdentity,
-                members: members,
-                systemMessageDate: nil,
-                sourceCaller: .local
-            )
-            .done { group in
-                continuation.resume(returning: group)
-            }
-            .catch { error in
-                continuation.resume(throwing: error)
-            }
-        }
+        try await createOrUpdateDB(
+            for: groupIdentity,
+            members: members,
+            systemMessageDate: nil,
+            sourceCaller: .local
+        )
     }
 }

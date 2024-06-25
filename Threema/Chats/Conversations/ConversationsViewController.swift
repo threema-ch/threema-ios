@@ -1042,7 +1042,7 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
             guard let indexPath else {
                 return
             }
-            tableView.deleteRows(at: [indexPath], with: .automatic)
+            tableView.deleteRows(at: [indexPath], with: .fade)
             
         case .move:
             if let indexPath,

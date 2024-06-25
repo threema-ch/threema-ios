@@ -20,7 +20,6 @@
 
 import CocoaLumberjackSwift
 import Foundation
-import PromiseKit
 import ThreemaEssentials
 
 public final class GroupManager: NSObject, GroupManagerProtocol {
@@ -109,10 +108,10 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date
-    ) -> Promise<(Group, Set<String>?)> {
+    ) async throws -> (Group, Set<String>?) {
 
         guard groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) else {
-            return Promise(error: GroupError.notCreator)
+            throw GroupError.notCreator
         }
         
         // Is oldMembers nil, means the group is new and there aren't old members
@@ -120,55 +119,53 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         var removedMembers = [String]()
 
         // If group already exists get old and removed members
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             if let oldConversation = self.getConversation(for: groupIdentity) {
                 oldMembers = oldConversation.members.map(\.identity)
                 removedMembers = oldMembers!.filter { !members.contains($0) }
             }
         }
 
-        return createOrUpdateDB(
+        guard let group = try await createOrUpdateDB(
             for: groupIdentity,
             members: members,
             systemMessageDate: systemMessageDate,
             sourceCaller: .local
-        ).then { group -> Promise<(Group, Set<String>?)> in
-            guard let group else {
-                return Promise(error: GroupError.groupNotFound)
-            }
+        ) else {
+            throw GroupError.groupNotFound
+        }
 
-            var newMembers: Set<String>?
-            self.entityManager.performBlockAndWait {
-                if let oldMembers,
-                   let conversation = self.getConversation(for: GroupIdentity(
-                       id: group.groupID,
-                       creator: group.groupIdentity.creator
-                   )) {
-                    newMembers = Set(
-                        conversation.members
-                            .filter { !oldMembers.contains($0.identity) }
-                            .map(\.identity)
-                    )
-                    if newMembers?.isEmpty == true {
-                        newMembers = nil
-                    }
+        var newMembers: Set<String>?
+        await entityManager.perform {
+            if let oldMembers,
+               let conversation = self.getConversation(for: GroupIdentity(
+                   id: group.groupID,
+                   creator: group.groupIdentity.creator
+               )) {
+                newMembers = Set(
+                    conversation.members
+                        .filter { !oldMembers.contains($0.identity) }
+                        .map(\.identity)
+                )
+                if newMembers?.isEmpty == true {
+                    newMembers = nil
                 }
             }
-
-            if groupIdentity.creator.string.elementsEqual(self.myIdentityStore.identity) {
-                // Send group create message to each active member
-                let task = TaskDefinitionSendGroupCreateMessage(
-                    group: group,
-                    to: group.allActiveMemberIdentitiesWithoutCreator,
-                    removed: removedMembers,
-                    members: members
-                )
-
-                self.taskManager.add(taskDefinition: task)
-            }
-
-            return Promise { $0.fulfill((group, newMembers)) }
         }
+
+        if groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) {
+            // Send group create message to each active member
+            let task = TaskDefinitionSendGroupCreateMessage(
+                group: group,
+                to: group.allActiveMemberIdentitiesWithoutCreator,
+                removed: removedMembers,
+                members: members
+            )
+
+            taskManager.add(taskDefinition: task)
+        }
+
+        return (group, newMembers)
     }
 
     /// Objective-c bridge
@@ -176,21 +173,13 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date,
-        completionHandler: @escaping (Group, Set<String>?) -> Void,
-        errorHandler: @escaping (Error?) -> Void
-    ) {
-        createOrUpdate(
+        systemMessageDate: Date
+    ) async throws -> (Group, Set<String>?) {
+        try await createOrUpdate(
             for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)),
             members: members,
             systemMessageDate: systemMessageDate
         )
-        .done { group, newMembers in
-            completionHandler(group, newMembers)
-        }
-        .catch { error in
-            errorHandler(error)
-        }
     }
 
     /// Create or update group members in DB.
@@ -201,12 +190,13 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     ///   - sourceCaller: Delete member (is hidden contact) only is not `SourceCaller.sync`
     /// - Returns: Created or updated group or is Nil when group is deleted
     /// - Throws: GroupError.contactForCreatorMissing, GroupError.contactForMemberMissing
+    @discardableResult
     public func createOrUpdateDB(
         for groupIdentity: GroupIdentity,
         members: Set<String>,
         systemMessageDate: Date?,
         sourceCaller: SourceCaller
-    ) -> Promise<Group?> {
+    ) async throws -> Group? {
         if !groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) {
             // Record a pseudo sync request so we won't trigger another one if we process
             // messages in this new group while we are still processing the group create
@@ -232,16 +222,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 DDLogWarn(
                     "Group (\(groupIdentity)) not created, because creator is blocked, i sent group leave messages to its members"
                 )
-                return Promise(error: GroupError.creatorIsBlocked(groupIdentity: groupIdentity))
+                throw GroupError.creatorIsBlocked(groupIdentity: groupIdentity)
             }
 
             creatorContact = entityManager.entityFetcher.contact(for: groupIdentity.creator.string)
             guard creatorContact != nil else {
-                return Promise(error: GroupError.contactForCreatorMissing)
+                throw GroupError.contactForCreatorMissing
             }
         }
-
-        var group: Group?
 
         // Adjust group members and group state
         var allMembers = Set<String>(members)
@@ -255,7 +243,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
             // First fetch all contacts
             var identitiesToFetch = [String]()
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 for member in members.filter({ $0 != self.myIdentityStore.identity }) {
                     if self.entityManager.entityFetcher.contact(for: member) == nil {
                         identitiesToFetch.append(member)
@@ -263,180 +251,169 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 }
             }
             
-            return fetchContacts(identities: identitiesToFetch).then { fetchedIdentities in
-                when(fulfilled: fetchedIdentities).then { fetchedIdentities -> Promise<Group?> in
-                    var internalError: Error?
+            let fetchedIdentities = try await fetchContacts(for: identitiesToFetch)
 
-                    self.entityManager.performSyncBlockAndSafe {
-                        let conversation: Conversation
-                        if let existingConversation = self.entityManager.entityFetcher.conversation(
-                            for: groupIdentity.id,
-                            creator: groupIdentity.creator.string
-                        ) {
-                            conversation = existingConversation
-                        }
-                        else {
-                            conversation = self.entityManager.entityCreator.conversation()
-                            conversation.groupID = groupIdentity.id
-                            conversation.contact = creatorContact
-                            conversation.groupMyIdentity = self.myIdentityStore.identity
-                        }
-
-                        let groupEntity: GroupEntity
-                        if let existingGroup = self.entityManager.entityFetcher.groupEntity(for: conversation) {
-                            groupEntity = existingGroup
-                        }
-                        else {
-                            groupEntity = self.entityManager.entityCreator.groupEntity()
-                            groupEntity.groupID = groupIdentity.id
-                            groupEntity.groupCreator = creatorContact != nil ? groupIdentity.creator.string : nil
-                            groupEntity.state = NSNumber(value: GroupState.active.rawValue)
-                            groupNewCreated = true
-                        }
-                        groupEntity.lastPeriodicSync = Date()
-
-                        let currentMembers: [String] = conversation.members.map(\.identity)
-
-                        // I am member of this group, set group state active
-                        if groupEntity.state != NSNumber(value: GroupState.active.rawValue) {
-                            groupEntity.state = NSNumber(value: GroupState.active.rawValue)
-
-                            if let systemMessageDate {
-                                self.postSystemMessage(
-                                    in: conversation,
-                                    type: kSystemMessageGroupSelfAdded,
-                                    arg: nil,
-                                    date: systemMessageDate
-                                )
-                            }
-                        }
-
-                        // My ID should be set on active group conversation (could be an old ID e.g. after restored a
-                        // backup)
-                        if let groupMyIdentity = conversation.groupMyIdentity,
-                           !groupMyIdentity.elementsEqual(self.myIdentityStore.identity) {
-                            conversation.groupMyIdentity = self.myIdentityStore.identity
-                        }
-
-                        // Remove deleted members
-                        for memberIdentity in currentMembers {
-                            guard !allMembers.contains(memberIdentity) else {
-                                continue
-                            }
-
-                            if let memberContact = self.entityManager.entityFetcher.contact(for: memberIdentity) {
-                                conversation.removeMembersObject(memberContact)
-
-                                if let systemMessageDate {
-                                    self.postSystemMessage(
-                                        in: conversation,
-                                        member: memberContact,
-                                        type: kSystemMessageGroupMemberForcedLeave,
-                                        date: systemMessageDate
-                                    )
-                                }
-
-                                if sourceCaller != .sync, memberContact.isContactHidden {
-                                    self.contactStore.deleteContact(
-                                        identity: memberIdentity,
-                                        entityManagerObject: self.entityManager
-                                    )
-                                }
-                            }
-                        }
-                        
-                        // Add new members
-                        for memberIdentity in allMembers {
-                            guard !currentMembers.contains(memberIdentity),
-                                  !memberIdentity.elementsEqual(self.myIdentityStore.identity) else {
-                                continue
-                            }
-
-                            guard let contact = self.entityManager.entityFetcher.contact(for: memberIdentity) else {
-                                let isIdentityRevoked = fetchedIdentities.contains { contactState in
-                                    if case .revokedOrInvalid(memberIdentity) = contactState {
-                                        return true
-                                    }
-                                    else if case .blocked(memberIdentity) = contactState {
-                                        return true
-                                    }
-                                    return false
-                                }
-                                if isIdentityRevoked {
-                                    // Do nothing because the contact never existed or was revoked or blocked
-                                    DDLogVerbose("Skip invalid, revoked or blocked contact")
-                                    continue
-                                }
-                                else {
-                                    internalError = GroupError.contactForMemberMissing
-                                    return
-                                }
-                            }
-
-                            conversation.addMembersObject(contact)
-
-                            if let systemMessageDate {
-                                self.postSystemMessage(
-                                    in: conversation,
-                                    member: contact,
-                                    type: kSystemMessageGroupMemberAdd,
-                                    date: systemMessageDate
-                                )
-                            }
-                        }
-
-                        if groupIdentity.creator.string.elementsEqual(self.myIdentityStore.identity) {
-                            // Check is note group or not anymore
-                            if allMembers.count == 1, allMembers.contains(self.myIdentityStore.identity) {
-                                self.postSystemMessage(
-                                    in: conversation,
-                                    type: kSystemMessageStartNoteGroupInfo,
-                                    arg: nil,
-                                    date: Date()
-                                )
-                            }
-                            else if !groupNewCreated, allMembers.count > 1, currentMembers.isEmpty {
-                                self.postSystemMessage(
-                                    in: conversation,
-                                    type: kSystemMessageEndNoteGroupInfo,
-                                    arg: nil,
-                                    date: Date()
-                                )
-                            }
-                        }
-
-                        let lastSyncRequestSince = Date(timeIntervalSinceNow: TimeInterval(-kGroupSyncRequestInterval))
-                        let lastSyncRequest = self.entityManager.entityFetcher.lastGroupSyncRequest(
-                            for: groupIdentity.id,
-                            groupCreator: groupIdentity.creator.string,
-                            since: lastSyncRequestSince
-                        )
-                        
-                        let localGroup = Group(
-                            myIdentityStore: self.myIdentityStore,
-                            userSettings: self.userSettings,
-                            groupEntity: groupEntity,
-                            conversation: conversation,
-                            lastSyncRequest: lastSyncRequest?.lastSyncRequest
-                        )
-                                                
-                        self.refreshRejectedMessages(in: localGroup)
-                        
-                        group = localGroup
-                    }
-
-                    if let internalError {
-                        return Promise(error: internalError)
-                    }
-
-                    return Promise { $0.fulfill(group) }
+            return try await entityManager.performSave {
+                let conversation: Conversation
+                if let existingConversation = self.entityManager.entityFetcher.conversation(
+                    for: groupIdentity.id,
+                    creator: groupIdentity.creator.string
+                ) {
+                    conversation = existingConversation
                 }
+                else {
+                    conversation = self.entityManager.entityCreator.conversation()
+                    conversation.groupID = groupIdentity.id
+                    conversation.contact = creatorContact
+                    conversation.groupMyIdentity = self.myIdentityStore.identity
+                }
+
+                let groupEntity: GroupEntity
+                if let existingGroup = self.entityManager.entityFetcher.groupEntity(for: conversation) {
+                    groupEntity = existingGroup
+                }
+                else {
+                    groupEntity = self.entityManager.entityCreator.groupEntity()
+                    groupEntity.groupID = groupIdentity.id
+                    groupEntity.groupCreator = creatorContact != nil ? groupIdentity.creator.string : nil
+                    groupEntity.state = NSNumber(value: GroupState.active.rawValue)
+                    groupNewCreated = true
+                }
+                groupEntity.lastPeriodicSync = Date()
+
+                let currentMembers: [String] = conversation.members.map(\.identity)
+
+                // I am member of this group, set group state active
+                if groupEntity.state != NSNumber(value: GroupState.active.rawValue) {
+                    groupEntity.state = NSNumber(value: GroupState.active.rawValue)
+
+                    if let systemMessageDate {
+                        self.postSystemMessage(
+                            in: conversation,
+                            type: kSystemMessageGroupSelfAdded,
+                            arg: nil,
+                            date: systemMessageDate
+                        )
+                    }
+                }
+
+                // My ID should be set on active group conversation (could be an old ID e.g. after restored a
+                // backup)
+                if let groupMyIdentity = conversation.groupMyIdentity,
+                   !groupMyIdentity.elementsEqual(self.myIdentityStore.identity) {
+                    conversation.groupMyIdentity = self.myIdentityStore.identity
+                }
+
+                // Remove deleted members
+                for memberIdentity in currentMembers {
+                    guard !allMembers.contains(memberIdentity) else {
+                        continue
+                    }
+
+                    if let memberContact = self.entityManager.entityFetcher.contact(for: memberIdentity) {
+                        conversation.removeMembersObject(memberContact)
+
+                        if let systemMessageDate {
+                            self.postSystemMessage(
+                                in: conversation,
+                                member: memberContact,
+                                type: kSystemMessageGroupMemberForcedLeave,
+                                date: systemMessageDate
+                            )
+                        }
+
+                        if sourceCaller != .sync, memberContact.isContactHidden {
+                            self.contactStore.deleteContact(
+                                identity: memberIdentity,
+                                entityManagerObject: self.entityManager
+                            )
+                        }
+                    }
+                }
+
+                // Add new members
+                for memberIdentity in allMembers {
+                    guard !currentMembers.contains(memberIdentity),
+                          !memberIdentity.elementsEqual(self.myIdentityStore.identity) else {
+                        continue
+                    }
+
+                    guard let contact = self.entityManager.entityFetcher.contact(for: memberIdentity) else {
+                        let isIdentityRevoked = fetchedIdentities.contains { contactState in
+                            if case .revokedOrInvalid(memberIdentity) = contactState {
+                                return true
+                            }
+                            else if case .blocked(memberIdentity) = contactState {
+                                return true
+                            }
+                            return false
+                        }
+                        if isIdentityRevoked {
+                            // Do nothing because the contact never existed or was revoked or blocked
+                            DDLogVerbose("Skip invalid, revoked or blocked contact")
+                            continue
+                        }
+                        else {
+                            throw GroupError.contactForMemberMissing
+                        }
+                    }
+
+                    conversation.addMembersObject(contact)
+
+                    if let systemMessageDate {
+                        self.postSystemMessage(
+                            in: conversation,
+                            member: contact,
+                            type: kSystemMessageGroupMemberAdd,
+                            date: systemMessageDate
+                        )
+                    }
+                }
+
+                if groupIdentity.creator.string.elementsEqual(self.myIdentityStore.identity) {
+                    // Check is note group or not anymore
+                    if allMembers.count == 1, allMembers.contains(self.myIdentityStore.identity) {
+                        self.postSystemMessage(
+                            in: conversation,
+                            type: kSystemMessageStartNoteGroupInfo,
+                            arg: nil,
+                            date: Date()
+                        )
+                    }
+                    else if !groupNewCreated, allMembers.count > 1, currentMembers.isEmpty {
+                        self.postSystemMessage(
+                            in: conversation,
+                            type: kSystemMessageEndNoteGroupInfo,
+                            arg: nil,
+                            date: Date()
+                        )
+                    }
+                }
+
+                let lastSyncRequestSince = Date(timeIntervalSinceNow: TimeInterval(-kGroupSyncRequestInterval))
+                let lastSyncRequest = self.entityManager.entityFetcher.lastGroupSyncRequest(
+                    for: groupIdentity.id,
+                    groupCreator: groupIdentity.creator.string,
+                    since: lastSyncRequestSince
+                )
+
+                let group = Group(
+                    myIdentityStore: self.myIdentityStore,
+                    userSettings: self.userSettings,
+                    groupEntity: groupEntity,
+                    conversation: conversation,
+                    lastSyncRequest: lastSyncRequest?.lastSyncRequest
+                )
+
+                self.refreshRejectedMessages(in: group)
+
+                return group
             }
         }
         else {
             if !groupIdentity.creator.string.elementsEqual(myIdentityStore.identity) {
                 // I'm not member or creator of the group
-                entityManager.performSyncBlockAndSafe {
+                return await entityManager.performSave {
                     if let groupEntity = self.entityManager.entityFetcher.groupEntity(
                         for: groupIdentity.id,
                         with: groupIdentity.creator.string
@@ -469,7 +446,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                                 since: lastSyncRequestSince
                             )
                             
-                            let localGroup = Group(
+                            let group = Group(
                                 myIdentityStore: self.myIdentityStore,
                                 userSettings: self.userSettings,
                                 groupEntity: groupEntity,
@@ -477,9 +454,9 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                                 lastSyncRequest: lastSyncRequest?.lastSyncRequest
                             )
                             
-                            self.refreshRejectedMessages(in: localGroup)
+                            self.refreshRejectedMessages(in: group)
                             
-                            group = localGroup
+                            return group
                         }
                         else {
                             DDLogWarn("Conversation entity for \(groupIdentity) not found")
@@ -488,13 +465,15 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     else {
                         DDLogWarn("Group entity for \(groupIdentity) not found")
                     }
+
+                    return nil
                 }
             }
             else {
                 DDLogNotice("I'm creator of the group \(groupIdentity) but not member")
             }
 
-            return Promise { $0.fulfill(group) }
+            return nil
         }
     }
 
@@ -504,21 +483,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         creator: String,
         members: Set<String>,
         systemMessageDate: Date?,
-        sourceCaller: SourceCaller,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        createOrUpdateDB(
+        sourceCaller: SourceCaller
+    ) async throws {
+        try await createOrUpdateDB(
             for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)),
             members: members,
             systemMessageDate: systemMessageDate,
             sourceCaller: sourceCaller
         )
-        .done(on: .global()) { _ in
-            completionHandler(nil)
-        }
-        .catch { error in
-            completionHandler(error)
-        }
     }
     
     /// Individually fetches the contacts with the listed identities from the database or requests them individually
@@ -526,58 +498,76 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     /// Use `fetchContacts` to fetch multiple contacts
     /// - Parameter identities: identities to fetch from the database or directory server
     /// - Returns: The fetched contact or an error
-    private func fetchContacts(identities: [String]) -> Promise<[Promise<FetchedContactOrError>]> {
-        Promise { seal in
-            self.contactStore.prefetchIdentityInfo(Set(identities)) {
-                let fetchResults = identities.map { identity in
-                    Promise<FetchedContactOrError> { singleContactSeal in
+    private func fetchContacts(for identities: [String]) async throws -> [FetchedContactOrError] {
+        let prefetchedIdentities = try await prefetchIdentities(for: identities)
+
+        return await withTaskGroup(
+            of: FetchedContactOrError.self,
+            returning: [FetchedContactOrError].self
+        ) { taskGroup in
+            prefetchedIdentities.forEach { identity in
+                taskGroup.addTask {
+                    await withCheckedContinuation { continuation in
                         self.contactStore.fetchPublicKey(
                             for: identity,
                             acquaintanceLevel: .group,
                             entityManager: self.entityManager,
                             onCompletion: { _ in
                                 guard self.entityManager.entityFetcher.contact(for: identity) != nil else {
-                                    singleContactSeal.fulfill(.localNotFound)
+                                    continuation.resume(returning: .localNotFound)
                                     return
                                 }
-                                singleContactSeal.fulfill(.added)
+                                continuation.resume(returning: .added)
                             }
                         ) { error in
                             DDLogError("Error fetch public key")
                             if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain,
                                nsError.code == 404 {
-                                singleContactSeal.fulfill(.revokedOrInvalid(identity))
+                                continuation.resume(returning: .revokedOrInvalid(identity))
                             }
                             else if let nsError = error as? NSError,
                                     nsError.code == ThreemaProtocolError.blockUnknownContact.rawValue {
-                                singleContactSeal.fulfill(.blocked(identity))
+                                continuation.resume(returning: .blocked(identity))
                             }
                             else {
-                                singleContactSeal.fulfill(.error)
+                                continuation.resume(returning: .error)
                             }
                         }
                     }
                 }
-                seal.fulfill(fetchResults)
+            }
+
+            var fetchedResults = [FetchedContactOrError]()
+            for await fetchedResult in taskGroup {
+                fetchedResults.append(fetchedResult)
+            }
+            return fetchedResults
+        }
+    }
+
+    private func prefetchIdentities(for identities: [String]) async throws -> Set<String> {
+        try await withCheckedThrowingContinuation { continuation in
+            self.contactStore.prefetchIdentityInfo(Set(identities)) {
+                continuation.resume(returning: Set(identities))
             } onError: { error in
-                seal.reject(error)
+                continuation.resume(throwing: error)
             }
         }
     }
-    
+
     // MARK: - Set name
     
-    @discardableResult public func setName(
+    public func setName(
         groupID: Data,
         creator: String,
         name: String?,
         systemMessageDate: Date,
         send: Bool
-    ) -> Promise<Void> {
+    ) async throws {
         guard let grp = getGroup(groupID, creator: creator) else {
-            return Promise(error: GroupError.groupNotFound)
+            throw GroupError.groupNotFound
         }
-        return setName(group: grp, name: name, systemMessageDate: systemMessageDate, send: send)
+        return try await setName(group: grp, name: name, systemMessageDate: systemMessageDate, send: send)
     }
     
     /// Update group name in DB. If I'm the creator send group rename message (`GroupRenameMessage`) to members.
@@ -587,18 +577,18 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     ///   - name: New name of the group
     ///   - systemMessageDate: Date for new system message
     ///   - send: Send group rename messages if I'm the creator?
-    @discardableResult public func setName(
+    public func setName(
         group: Group,
         name: String?,
         systemMessageDate: Date,
         send: Bool
-    ) -> Promise<Void> {
+    ) async throws {
         guard group.name != name else {
             // Name didn't change
-            return Promise()
+            return
         }
         
-        entityManager.performSyncBlockAndSafe {
+        await entityManager.performSave {
             guard let conversation = self.entityManager.entityFetcher.conversation(
                 for: group.groupID,
                 creator: group.groupCreatorIdentity
@@ -607,7 +597,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             }
 
             conversation.groupName = name
-            
+
             self.postSystemMessage(
                 in: conversation,
                 type: kSystemMessageRenameGroup,
@@ -618,10 +608,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         
         if send, group.isOwnGroup {
             let task = createGroupRenameTask(for: group, to: group.allActiveMemberIdentitiesWithoutCreator)
-            return add(task: task)
-        }
-        else {
-            return Promise()
+            try await add(task: task)
         }
     }
     
@@ -631,16 +618,9 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         creator: String,
         name: String?,
         systemMessageDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        setName(groupID: groupID, creator: creator, name: name, systemMessageDate: systemMessageDate)
-            .done(on: .global()) {
-                completionHandler(nil)
-            }
-            .catch { error in
-                completionHandler(error)
-            }
+        send: Bool
+    ) async throws {
+        try await setName(groupID: groupID, creator: creator, name: name, systemMessageDate: systemMessageDate)
     }
     
     /// Objective-C bridge
@@ -648,31 +628,24 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         group: Group,
         name: String?,
         systemMessageDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        setName(group: group, name: name, systemMessageDate: systemMessageDate, send: send)
-            .done(on: .global()) {
-                completionHandler(nil)
-            }
-            .catch { error in
-                completionHandler(error)
-            }
+        send: Bool
+    ) async throws {
+        try await setName(group: group, name: name, systemMessageDate: systemMessageDate, send: send)
     }
     
     // MARK: - Set photo
     
-    @discardableResult public func setPhoto(
+    public func setPhoto(
         groupID: Data,
         creator: String,
         imageData: Data,
         sentDate: Date,
         send: Bool
-    ) -> Promise<Void> {
+    ) async throws {
         guard let grp = getGroup(groupID, creator: creator) else {
-            return Promise(error: GroupError.groupNotFound)
+            throw GroupError.groupNotFound
         }
-        return setPhoto(group: grp, imageData: imageData, sentDate: sentDate, send: send)
+        return try await setPhoto(group: grp, imageData: imageData, sentDate: sentDate, send: send)
     }
     
     /// Update group photo and upload photo and send group set photo message (`GroupSetPhotoMessage`) to members, if I'm
@@ -685,15 +658,15 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     ///   - send: If `True` and I'm the creator: upload photo and send group set photo messages
     /// - Throws: GroupError.groupConversationNotFound, GroupError.decodingFailed
     ///           GroupError.notCreator, GroupError.photoUploadFailed, GroupError.blobIDOrKeyMissing
-    @discardableResult public func setPhoto(
+    public func setPhoto(
         group: Group,
         imageData: Data,
         sentDate: Date,
         send: Bool
-    ) -> Promise<Void> {
+    ) async throws {
 
-        let (conversationObjectID, conversationGroupImageSetDate, conversationGroupImageData) = entityManager
-            .performAndWait {
+        let (conversationObjectID, conversationGroupImageSetDate, conversationGroupImageData) = await entityManager
+            .perform {
                 let conversation = self.entityManager.entityFetcher.conversation(
                     for: group.groupID,
                     creator: group.groupCreatorIdentity
@@ -702,7 +675,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             }
 
         guard let conversationObjectID else {
-            return Promise(error: GroupError.groupConversationNotFound)
+            throw GroupError.groupConversationNotFound
         }
 
         var imageDataSend: Data?
@@ -749,25 +722,22 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 }
             }
             catch {
-                return Promise(error: error)
+                throw error
             }
 
             imageDataSend = imageData
         }
         else {
-            return Promise(error: GroupError.decodingFailed)
+            throw GroupError.decodingFailed
         }
         
         if send, group.isOwnGroup,
            let imageDataSend {
-            return sendPhoto(
+            try await sendPhoto(
                 to: group,
                 imageData: imageDataSend,
                 toMembers: group.allActiveMemberIdentitiesWithoutCreator
             )
-        }
-        else {
-            return Promise()
         }
     }
     
@@ -777,16 +747,9 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         creator: String,
         imageData: Data,
         sentDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        setPhoto(groupID: groupID, creator: creator, imageData: imageData, sentDate: sentDate, send: send)
-            .done(on: .global()) {
-                completionHandler(nil)
-            }
-            .catch { error in
-                completionHandler(error)
-            }
+        send: Bool
+    ) async throws {
+        try await setPhoto(groupID: groupID, creator: creator, imageData: imageData, sentDate: sentDate, send: send)
     }
     
     // MARK: - Delete photo
@@ -800,24 +763,22 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     ///   - sentDate: Sent date of delete photo message
     ///   - send: True send group delete photo message if I'm the creator
     ///  - Throws: GroupError.groupNotFound, GroupError.groupConversationNotFound
-    @discardableResult public func deletePhoto(
+    public func deletePhoto(
         groupID: Data,
         creator: String,
         sentDate: Date,
         send: Bool
-    ) -> Promise<Void> {
+    ) async throws {
         guard let grp = getGroup(groupID, creator: creator) else {
-            return Promise(error: GroupError.groupNotFound)
+            throw GroupError.groupNotFound
         }
 
-        var internalError: Error?
-        entityManager.performSyncBlockAndSafe {
+        try await entityManager.performSave {
             guard let conversation = self.entityManager.entityFetcher.conversation(
                 for: grp.groupID,
                 creator: grp.groupCreatorIdentity
             ) else {
-                internalError = GroupError.groupConversationNotFound
-                return
+                throw GroupError.groupConversationNotFound
             }
             conversation.groupImageSetDate = sentDate
             
@@ -833,16 +794,10 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 )
             }
         }
-        if let internalError {
-            return Promise(error: internalError)
-        }
-        
+
         if send, grp.isOwnGroup {
             let task = createDeletePhotoTask(for: grp, to: grp.allActiveMemberIdentitiesWithoutCreator)
-            return add(task: task)
-        }
-        else {
-            return Promise()
+            try await add(task: task)
         }
     }
     
@@ -851,16 +806,9 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         groupID: Data,
         creator: String,
         sentDate: Date,
-        send: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        deletePhoto(groupID: groupID, creator: creator, sentDate: sentDate, send: send)
-            .done(on: .global()) {
-                completionHandler(nil)
-            }
-            .catch { error in
-                completionHandler(error)
-            }
+        send: Bool
+    ) async throws {
+        try await deletePhoto(groupID: groupID, creator: creator, sentDate: sentDate, send: send)
     }
     
     // MARK: - Leave
@@ -881,7 +829,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // Send leave group message even I'm left the group already or the group not exists
         var currentMembers = [String]()
         var hiddenContacts = [String]()
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             if let conversation = self
                 .getConversation(for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator))) {
                 currentMembers = conversation.members.map(\.identity)
@@ -926,7 +874,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     ///   - member: Member who left the group
     ///   - systemMessageDate: Date for new system message
     public func leaveDB(groupID: Data, creator: String, member: String, systemMessageDate: Date) {
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let grp = self.getGroup(groupID, creator: creator) else {
                 DDLogWarn("Group not found")
                 return
@@ -950,7 +898,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             if let contact = conversation.members.first(where: { contact -> Bool in
                 contact.identity.elementsEqual(member)
             }) {
-                self.entityManager.performSyncBlockAndSafe {
+                self.entityManager.performAndWaitSave {
                     conversation.removeMembersObject(contact)
                 }
 
@@ -980,7 +928,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 }
             }
             else if member.elementsEqual(self.myIdentityStore.identity), !grp.didLeave {
-                self.entityManager.performSyncBlockAndSafe {
+                self.entityManager.performAndWaitSave {
                     groupEntity.state = NSNumber(value: GroupState.left.rawValue)
                     if !(conversation.groupMyIdentity?.elementsEqual(self.myIdentityStore.identity) ?? false) {
                         conversation.groupMyIdentity = self.myIdentityStore.identity
@@ -1008,7 +956,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         groupID: Data,
         to identities: Set<String>?
     ) {
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             if let group = self.getGroup(groupID, creator: self.myIdentityStore.identity) {
                 guard group.isSelfCreator else {
                     return
@@ -1085,19 +1033,20 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         group: Group,
         to identities: Set<String>?,
         withoutCreateMessage: Bool
-    ) -> Promise<Void> {
+    ) async throws {
         // Ensure that we are the creator
         guard group.isOwnGroup else {
-            return Promise(error: GroupError.notCreator)
+            throw GroupError.notCreator
         }
         
         guard let identities else {
             // Sync to all members
-            return sync(
+            try await sync(
                 group: group,
                 to: group.allActiveMemberIdentitiesWithoutCreator,
                 withoutCreateMessage: withoutCreateMessage
             )
+            return
         }
         
         // If we have a list of receivers filter between members and non-members.
@@ -1112,26 +1061,16 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             }
         }
         
-        return when(
-            fulfilled:
-            sync(group: group, to: activeMembers, withoutCreateMessage: withoutCreateMessage),
-            syncToRemovedMembers(group: group, to: removedMembers)
-        )
+        try await sync(group: group, to: activeMembers, withoutCreateMessage: withoutCreateMessage)
+        try await syncToRemovedMembers(group: group, to: removedMembers)
     }
     
     public func syncObjc(
         group: Group,
         to identities: Set<String>?,
-        withoutCreateMessage: Bool,
-        completionHandler: @escaping (Error?) -> Void
-    ) {
-        sync(group: group, to: identities, withoutCreateMessage: withoutCreateMessage)
-            .done(on: .global()) {
-                completionHandler(nil)
-            }
-            .catch { error in
-                completionHandler(error)
-            }
+        withoutCreateMessage: Bool
+    ) async throws {
+        try await sync(group: group, to: identities, withoutCreateMessage: withoutCreateMessage)
     }
     
     /// Send sync request for this group, is not already requested in the last 7 days (see `kGroupSyncRequestInterval`).
@@ -1227,7 +1166,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             taskManager.add(taskDefinition: deletePhotoTask)
         }
                 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let groupEntity = self.entityManager.entityFetcher.groupEntity(
                 for: group.groupID,
                 with: group.groupCreatorIdentity != self.myIdentityStore.identity ? group
@@ -1242,13 +1181,16 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         
         // 6. If the group has a profile picture, send a `set-profile-picture` group control message to the sender.
         if let profilePicture = group.profilePicture {
-            sendPhoto(to: group, imageData: profilePicture, toMembers: toMembers)
-                .catch { error in
+            Task {
+                do {
+                    try await self.sendPhoto(to: group, imageData: profilePicture, toMembers: toMembers)
+                }
+                catch {
                     // Note: This might never be called if the task was persisted at some point in
                     // the meantime
                     DDLogError("Periodic group sync photo sending failed: \(error)")
                     // Reset last periodic sync date if photo sending failed
-                    self.entityManager.performSyncBlockAndSafe {
+                    await self.entityManager.performSave {
                         if let groupEntity = self.entityManager.entityFetcher.groupEntity(
                             for: group.groupID,
                             with: group.groupCreatorIdentity != self.myIdentityStore.identity ? group
@@ -1258,6 +1200,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                         }
                     }
                 }
+            }
         }
     }
     
@@ -1276,7 +1219,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     @objc public func getGroup(_ groupID: Data, creator: String) -> Group? {
         var group: Group?
 
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let conversation = self.entityManager.entityFetcher.conversation(
                 for: groupID,
                 creator: creator
@@ -1299,7 +1242,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     @objc public func getGroup(conversation: Conversation) -> Group? {
         var group: Group?
 
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let groupEntity = self.entityManager.entityFetcher.groupEntity(for: conversation) else {
                 return
             }
@@ -1382,7 +1325,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     }
     
     private func postSystemMessage(in conversation: Conversation, type: Int, arg: Data?, date: Date) {
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             // Insert system message to document this change
             let sysMsg = self.entityManager.entityCreator.systemMessage(for: conversation)
             sysMsg?.type = NSNumber(integerLiteral: type)
@@ -1398,39 +1341,39 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         group: Group,
         to toMembers: [String],
         withoutCreateMessage: Bool
-    ) -> Promise<Void> {
+    ) async throws {
         /// Sync group if `toMembers` empty to reflect note groups if multi device activated.
         guard !(toMembers.isEmpty && !userSettings.enableMultiDevice) else {
-            return Promise()
+            return
         }
 
         // Prepare sync tasks
     
-        func runGroupCreateTask() -> Promise<Void> {
+        func runGroupCreateTask() async throws {
             guard !withoutCreateMessage else {
-                return Promise()
+                return
             }
             
             guard let conversation =
                 getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupIdentity.creator))
             else {
-                return Promise(error: GroupError.groupConversationNotFound)
+                throw GroupError.groupConversationNotFound
             }
 
             // 5. Send a group-setup message with the current group members, ...
             let task = createGroupCreateSyncTask(for: group, conversation: conversation, to: toMembers)
-            return add(task: task)
+            try await add(task: task)
         }
         
         // ...followed by a group-name message to the sender.
-        func runGroupNameTask() -> Promise<Void> {
+        func runGroupNameTask() async throws {
             let task = createGroupRenameTask(for: group, to: toMembers)
-            return add(task: task)
+            try await add(task: task)
         }
         
-        func runGroupPhotoTask() -> Promise<Void> {
+        func runGroupPhotoTask() async throws {
             var profilePicture: Data?
-            entityManager.performBlockAndWait {
+            await entityManager.perform {
                 profilePicture = group.profilePicture
             }
 
@@ -1438,36 +1381,31 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 // 7. If the group has no profile picture, send a `delete-profile-picture` group
                 // control message to the sender.
                 let task = createDeletePhotoTask(for: group, to: toMembers)
-                return add(task: task)
+                try await add(task: task)
+                return
             }
             
             // 6. If the group has a profile picture, send a `set-profile-picture` group control
             // message to the sender.
-            return sendPhoto(to: group, imageData: data, toMembers: toMembers)
+            try await sendPhoto(to: group, imageData: data, toMembers: toMembers)
         }
         
-        return firstly {
-            runGroupCreateTask()
-        }
-        .then {
-            runGroupNameTask()
-        }
-        .then {
-            runGroupPhotoTask()
-        }
+        try await runGroupCreateTask()
+        try await runGroupNameTask()
+        try await runGroupPhotoTask()
     }
     
     private func syncToRemovedMembers(
         group: Group,
         to removedMembers: [String]
-    ) -> Promise<Void> {
+    ) async throws {
         guard !removedMembers.isEmpty else {
-            return Promise()
+            return
         }
         guard let conversation =
             getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupIdentity.creator))
         else {
-            return Promise()
+            return
         }
         
         let members = Set(conversation.members.map(\.identity))
@@ -1478,37 +1416,37 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             members: members
         )
         
-        return add(task: emptyCreateTask)
+        try await add(task: emptyCreateTask)
     }
     
     private func sendPhoto(
         to group: Group,
         imageData: Data,
         toMembers: [String]
-    ) -> Promise<Void> {
+    ) async throws {
         guard group.isOwnGroup else {
-            return Promise(error: GroupError.notCreator)
+            throw GroupError.notCreator
         }
 
         // Core Data concurrency problem, store group infos for reloading group
         let groupID = group.groupID
         let groupCreatorIdentity = group.groupCreatorIdentity
         
-        return Promise { seal in
+        let task: TaskDefinitionSendGroupSetPhotoMessage = try await withCheckedThrowingContinuation { continuation in
             groupPhotoSender.start(
                 withImageData: imageData,
                 isNoteGroup: group.isNoteGroup
             ) { blobID, encryptionKey in
                 guard let blobID, let encryptionKey else {
-                    seal.reject(GroupError.blobIDOrKeyMissing)
+                    continuation.resume(throwing: GroupError.blobIDOrKeyMissing)
                     return
                 }
 
                 guard let group = self.getGroup(groupID, creator: groupCreatorIdentity) else {
-                    seal.reject(GroupError.groupNotFound)
+                    continuation.resume(throwing: GroupError.groupNotFound)
                     return
                 }
-                
+
                 let task = TaskDefinitionSendGroupSetPhotoMessage(
                     group: group,
                     from: self.myIdentityStore.identity,
@@ -1517,14 +1455,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     blobID: blobID,
                     encryptionKey: encryptionKey
                 )
-                
-                seal.fulfill(task)
+
+                continuation.resume(returning: task)
             } onError: { _ in
-                seal.reject(GroupError.photoUploadFailed)
+                continuation.resume(throwing: GroupError.photoUploadFailed)
             }
-        }.then { task in
-            self.add(task: task)
         }
+
+        try await add(task: task)
     }
         
     private func createGroupCreateSyncTask(
@@ -1567,16 +1505,21 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         )
     }
     
-    private func add(task: TaskDefinitionProtocol) -> Promise<Void> {
-        Promise { seal in
+    private func add(task: TaskDefinitionProtocol) async throws {
+        // swiftformat:disable:next all
+        return try await withCheckedThrowingContinuation { continuation in
             taskManager.add(taskDefinition: task) { _, error in
-                seal.resolve(error)
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                continuation.resume()
             }
         }
     }
     
     private func recordSendSyncRequest(_ groupIdentity: GroupIdentity) {
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             // Record this sync request
             let lastSyncRequest: LastGroupSyncRequest = self.entityManager.entityCreator.lastGroupSyncRequest()
             lastSyncRequest.groupID = groupIdentity.id

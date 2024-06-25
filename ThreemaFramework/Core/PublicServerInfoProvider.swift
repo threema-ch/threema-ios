@@ -148,4 +148,8 @@ class PublicServerInfoProvider: ServerInfoProvider {
             url: BundleUtil.object(forInfoDictionaryKey: "ThreemaRendezvousServerURL") as! String
         ), nil)
     }
+
+    func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void) {
+        completionHandler(Domain.defaultConfig, nil)
+    }
 }

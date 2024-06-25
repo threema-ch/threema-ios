@@ -141,7 +141,7 @@
 }
 
 - (void)showUsingDocumentInteractionControllerOn:(UIViewController *)targetViewController {
-    NSString *filename = [FileUtility getTemporarySendableFileNameWithBase:@"file"];
+    NSString *filename = [[FileUtility shared] getTemporarySendableFileNameWithBase:@"file"];
     _tmpFileUrl = [_fileMessageEntity tmpURL:filename];
     [_fileMessageEntity exportDataToURL:_tmpFileUrl];
         
@@ -171,7 +171,7 @@
 }
 
 - (void)showUsingQuickLookPreviewOn:(UIViewController *)targetViewController {
-    NSString *filename = [FileUtility getTemporarySendableFileNameWithBase:@"file"];
+    NSString *filename = [[FileUtility shared] getTemporarySendableFileNameWithBase:@"file"];
     _tmpFileUrl = [_fileMessageEntity tmpURL:filename];
     [_fileMessageEntity exportDataToURL:_tmpFileUrl];
     

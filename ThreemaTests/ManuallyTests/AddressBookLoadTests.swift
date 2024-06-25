@@ -35,13 +35,13 @@ class AddressBoolLoadTests: XCTestCase {
         let testBundle = Bundle(for: AddressBoolLoadTests.self)
         if let filePath = testBundle.path(forResource: "test_sandbox_ids", ofType: "txt") {
 
-            let fileSandboxContacts = FileUtility.appDocumentsDirectory?
+            let fileSandboxContacts = FileUtility.shared.appDocumentsDirectory?
                 .appendingPathComponent("test_sandbox_contacts.vcf")
-            let fileSandboxEmailHashes = FileUtility.appDocumentsDirectory?
+            let fileSandboxEmailHashes = FileUtility.shared.appDocumentsDirectory?
                 .appendingPathComponent("test_sandbox_email_hashes.txt")
 
-            FileUtility.delete(at: fileSandboxContacts)
-            FileUtility.delete(at: fileSandboxEmailHashes)
+            FileUtility.shared.delete(at: fileSandboxContacts)
+            FileUtility.shared.delete(at: fileSandboxEmailHashes)
 
             let ids = try String(contentsOfFile: filePath, encoding: .utf8)
             for id in ids.components(separatedBy: .newlines) {
@@ -64,22 +64,22 @@ class AddressBoolLoadTests: XCTestCase {
 
                     print(id)
 
-                    _ = FileUtility.append(fileURL: fileSandboxContacts, text: vCard)
-                    _ = FileUtility.append(fileURL: fileSandboxEmailHashes, text: emailHash)
+                    _ = FileUtility.shared.append(fileURL: fileSandboxContacts, text: vCard)
+                    _ = FileUtility.shared.append(fileURL: fileSandboxEmailHashes, text: emailHash)
                 }
             }
         }
     }
 
     func testImportVCardIntoAddressBook() throws {
-        if let fileSandboxContacts = FileUtility.appDocumentsDirectory?
+        if let fileSandboxContacts = FileUtility.shared.appDocumentsDirectory?
             .appendingPathComponent("test_sandbox_contacts.vcf"),
-            FileUtility.isExists(fileURL: fileSandboxContacts) {
+            FileUtility.shared.isExists(fileURL: fileSandboxContacts) {
             let importContactsData = try Data(contentsOf: fileSandboxContacts)
             let importContacts = try CNContactVCardSerialization.contacts(with: importContactsData)
             print(importContacts.map { "\($0.givenName) \($0.familyName)" })
 
-            let expec = expectation(description: "Import contacts")
+            let expect = expectation(description: "Import contacts")
 
             processCNContactStore { contactStore in
                 do {
@@ -115,20 +115,55 @@ class AddressBoolLoadTests: XCTestCase {
                     }
                     try contactStore.execute(saveRequest)
 
-                    expec.fulfill()
+                    expect.fulfill()
                 }
                 catch {
                     print("Error while import contacts")
                 }
             }
 
-            wait(for: [expec], timeout: 10)
+            wait(for: [expect], timeout: 10)
         }
         else {
             XCTFail(
                 "File test_sandbox_contacts.cvf could not be loaded, please run func testGenerateVCardsAndEmailHashes() first!"
             )
         }
+    }
+
+    func testDeleteAddressBook() throws {
+        let expect = expectation(description: "Delete contacts")
+
+        processCNContactStore { contactStore in
+            do {
+                var existingContacts = [CNContact]()
+
+                let fetchRequest =
+                    CNContactFetchRequest(keysToFetch: [
+                        CNContactFormatter
+                            .descriptorForRequiredKeys(for: .fullName),
+                    ])
+                try contactStore.enumerateContacts(with: fetchRequest) { contact, _ in
+                    if contact.givenName == "Testuser" {
+                        existingContacts.append(contact)
+                    }
+                }
+
+                // Delete contact
+                let delRequest = CNSaveRequest()
+                for contact in existingContacts {
+                    delRequest.delete(contact.mutableCopy() as! CNMutableContact)
+                }
+                try contactStore.execute(delRequest)
+
+                expect.fulfill()
+            }
+            catch {
+                print("Error while deleting contacts")
+            }
+        }
+
+        wait(for: [expect], timeout: 10)
     }
 
     // Process action on address book

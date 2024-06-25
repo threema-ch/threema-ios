@@ -4,6 +4,14 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "文書をスキャン";
+"no_contacts_loading" = "連絡先は現在サーバーからダウンロード中です。処理が完了すると表示されます。";
+
+// Contact List
+"contactList_add_contact" = "新しい連絡先";
+"contactList_add_group" = "新しいグループ";
+
+
 
 // General
 "quotation_mark_start" = "”";
@@ -480,7 +488,6 @@
 "no_work_contacts_message" = "管理者が確認した%@の連絡先は見つかりませんでした。";
 "no_distribution_list" = "配布リストなし";
 "no_distribution_list_message" = "まだ配布リストがありません。+ボタンをタップして作成してください。";
-
 "no_contacts_syncoff" = "まだ連絡先がありません。同期を有効（設定 > プライバシー）にするか、＋ボタンを使って手動で連絡先を追加してください。";
 
 "my_profile_picture_title" = "あなたのプロフィール画像";
@@ -1349,7 +1356,6 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "profile_edit" = "編集";
 "not_connected_for_edit_profile_message" = "接続を確認してください。";
 "not_connected_for_edit_profile_title" = "接続なし";
-
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";

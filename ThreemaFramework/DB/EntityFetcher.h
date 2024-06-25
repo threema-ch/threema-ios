@@ -197,7 +197,7 @@ typedef enum : NSUInteger {
 ///   - onError: called if the fetch request returns an error. Is always called on the main thread.
 - (void)executeCountFetchRequest:(nonnull NSFetchRequest *)fetchRequest onCompletion:(nonnull void(^)(NSInteger count))onCompletion onError:(nullable void(^)(NSError * _Nonnull))onError;
 
-- (NSBatchUpdateResult *)executeBatchUpdateRequest:(NSBatchUpdateRequest *)batchUpdateRequst;
+- (NSBatchUpdateResult *)executeBatchUpdateRequest:(NSBatchUpdateRequest *)batchUpdateRequest;
 
 - (NSInteger)countBallotsForConversation:(Conversation *)conversation;
 
@@ -214,6 +214,8 @@ typedef enum : NSUInteger {
 - (NSArray *)unreadMessagesForConversation:(Conversation *)conversation;
 
 - (NSInteger)countMediaMessagesForConversation:(Conversation *)conversation;
+
+- (NSInteger)countStarredMessagesInConversation:(Conversation *)conversation;
 
 - (NSInteger)countUnreadMessagesForConversation:(Conversation *)conversation;
 

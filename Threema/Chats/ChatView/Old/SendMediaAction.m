@@ -194,6 +194,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                     });
                 };
                 
+                __weak typeof(self) weakSelf = self;
+                _mediaPreviewDataProcessor.cancelAction = ^{
+                    [weakSelf clearTemporaryDirectoryItems:assets];
+                };
             } else {
                 if (lastSelection != nil) {
                     assets = [lastSelection arrayByAddingObjectsFromArray:assets];
@@ -230,6 +234,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                         [weakSelf.helper showPickerWithViewController:selectionViewController limit:50-prevSelection.count];
                     });
                     
+                };
+                
+                _mediaPreviewDataProcessor.cancelAction = ^{
+                    [weakSelf clearTemporaryDirectoryItems:assets];
                 };
             }
         }
@@ -314,6 +322,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }];
     };
     
+    _mediaPreviewDataProcessor.cancelAction = ^{
+        [weakSelf clearTemporaryDirectoryItems:assets];
+    };
+        
     [self.chatViewController presentViewController:navController animated:YES completion:nil];
 }
 
@@ -333,6 +345,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self hideVideoEncodeProgressHUD];
                     });
+                    [self clearTemporaryDirectoryItems:assets];
                     return;
                 } else if (item) {
                     [itemArray addObject:item];
@@ -385,6 +398,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self hideVideoEncodeProgressHUD];
             });
+            [self clearTemporaryDirectoryItems:assets];
             return;
         }
     }
@@ -407,6 +421,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self hideVideoEncodeProgressHUD];
                 });
+                [self clearTemporaryDirectoryItems:itemArray];
                 return;
             }
             
@@ -421,15 +436,21 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                     MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
                     [messageSender sendBlobMessageFor:item inConversationWithID:conversation.objectID correlationID:correlationID webRequestID:nil completion:^(NSError *error) {
                         dispatch_semaphore_signal(_sequentialSema);
+                        if (i + 1 == k) {
+                            [self clearTemporaryDirectoryItems:itemArray];
+                        }
                     }];
                 } else {
                     [NotificationPresenterWrapper.shared presentSendingError];
                     dispatch_semaphore_signal(_sequentialSema);
+                    if (i + 1 == k) {
+                        [self clearTemporaryDirectoryItems:itemArray];
+                    }
                 }
             } else {
                 // Video
                 AVAsset *item = itemArray[i];
-                [self sendVideoAsset:item onCompletion:^{
+                [self sendVideoAsset:item caption:captions[i] onCompletion:^{
                     dispatch_semaphore_signal(sema);
                 }];
                 dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
@@ -439,15 +460,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                                                                       selector:@selector(checkVideoDone)
                                                                       userInfo:nil
                                                                        repeats:YES];
-                
-                if (![captions[i] isEqualToString:@""]) {
-                    MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
-                    [messageSender sendTextMessageWithText:captions[i]
-                                                        in:self.chatViewController.conversation
-                                                        quickReply:false
-                                                        requestID:nil
-                                                        completion:nil];
-                }
             }
         }
     }
@@ -494,6 +506,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 [defaultManager removeItemAtURL:items[i] error:&err];
                 if (err != nil) {
                     DDLogError(@"Could not clear item in temporary directory. Error: %@", err.description);
+                }
+            }
+            else if ([items[i] isKindOfClass:URLSenderItem.class]) {
+                URLSenderItem *item = (URLSenderItem *)items[i];
+                if (item.url != nil) {
+                    [defaultManager removeItemAtURL:item.url error:&err];
+                    if (err != nil) {
+                        DDLogError(@"Could not clear item in temporary directory. Error: %@", err.description);
+                    }
                 }
             }
         }
@@ -698,14 +719,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return;
     
     AVURLAsset *asset = [AVURLAsset URLAssetWithURL:_pickedVideoURL options:nil];
-    [self sendVideoAsset:asset onCompletion:^{
+    [self sendVideoAsset:asset caption: @""onCompletion:^{
         _pickedVideoSent = YES;
         if (_pickedVideoSent && _pickedVideoSaved)
             [[NSFileManager defaultManager] removeItemAtURL:_pickedVideoURL error:nil];
     }];
 }
 
-- (void)sendVideoAsset:(AVAsset*)asset onCompletion:(void(^)(void))onCompletion {
+- (void)sendVideoAsset:(AVAsset*)asset caption:(NSString*)caption onCompletion:(void(^)(void))onCompletion {
     dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         VideoURLSenderItemCreator *senderCreator = [[VideoURLSenderItemCreator alloc] init];
         senderCreator.encodeProgressDelegate = self;
@@ -720,6 +741,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [self.videoEncoders addObject:exportSession];
         
         URLSenderItem *senderItem = [senderCreator senderItemFrom:asset on:exportSession];
+        
+        if (![caption isEqualToString:@""]) {
+            senderItem.caption = caption;
+        }
         Conversation *conversation = self.chatViewController.conversation;
         if (senderItem != nil && conversation != nil) {
             MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];

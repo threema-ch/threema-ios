@@ -449,6 +449,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         // Block calling the apply function of the data source
         // This must only be used directly below and must be called exactly *once*.
         let applyBlock = {
+            // Apply should always be called on the main thread (IOS-4490)
+            assert(Thread.isMainThread)
             self.apply(snapshotInfo.snapshot, animatingDifferences: shouldAnimate) {
                 DDLogVerbose("Did apply new snapshot")
                 assert(Thread.isMainThread)
@@ -995,7 +997,11 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             
             current.reconfigureItems(current.itemIdentifiers)
             
-            self.apply(current)
+            // Apply should always be called on the main thread (IOS-4490)
+            DispatchQueue.main.async {
+                assert(Thread.isMainThread)
+                self.apply(current)
+            }
         }
     }
     
@@ -1015,7 +1021,11 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             
             current.reconfigureItems(cells)
             
-            self.apply(current)
+            // Apply should always be called on the main thread (IOS-4490)
+            DispatchQueue.main.async {
+                assert(Thread.isMainThread)
+                self.apply(current)
+            }
         }
     }
 }

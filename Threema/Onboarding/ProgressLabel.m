@@ -89,15 +89,29 @@
 }
 
 - (void)showErrorMessage:(NSString *)errorMessage {
-    [self setStatusImage:@"exclamationmark.circle.fill"];
-    
-    _label.text = errorMessage;
+    if ([NSThread isMainThread]) {
+        [self setStatusImage:@"exclamationmark.circle.fill"];
+        _label.text = errorMessage;
+    }
+    else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [self setStatusImage:@"exclamationmark.circle.fill"];
+            _label.text = errorMessage;
+        });
+    }
 }
 
 - (void)showSuccessMessage:(NSString *)successMessage {
-    [self setStatusImage:@"checkmark.circle.fill"];
-    
-    _label.text = successMessage;
+    if ([NSThread isMainThread]) {
+        [self setStatusImage:@"checkmark.circle.fill"];
+        _label.text = successMessage;
+    }
+    else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [self setStatusImage:@"checkmark.circle.fill"];
+            _label.text = successMessage;
+        });
+    }
 }
 
 - (void)setStatusImage:(NSString *)imageName {

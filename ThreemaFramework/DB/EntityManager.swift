@@ -941,7 +941,7 @@ extension EntityManager {
                 }
             }
 
-            message.deletedAt = Date()
+            message.deletedAt = abstractMessage.date
             message.lastEditedAt = nil
 
             // Delete content of this base message
@@ -1006,11 +1006,11 @@ extension EntityManager {
             }
 
             if let textMessage = message as? TextMessage {
-                textMessage.lastEditedAt = Date()
+                textMessage.lastEditedAt = abstractMessage.date
                 textMessage.text = e2eEditMessage.text
             }
             else if let fileMessage = message as? FileMessageEntity {
-                fileMessage.lastEditedAt = Date()
+                fileMessage.lastEditedAt = abstractMessage.date
                 fileMessage.caption = e2eEditMessage.text
                 fileMessage.json = FileMessageEncoder.jsonString(for: fileMessage)
             }

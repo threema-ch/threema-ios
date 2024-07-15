@@ -134,10 +134,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 [cachedIdentities addObject:identityInfo];
             }
         }
-        else if ([prefetchCache.allKeys containsObject:identity]) {
-            NSDictionary *prefetchedIdentityInfo = [prefetchCache objectForKey:identity];
-            [cachedIdentities addObject:prefetchedIdentityInfo];
-        }
         else {
             allIdentitiesAreCached = false;
             break;

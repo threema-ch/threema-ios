@@ -992,10 +992,14 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                         }
                         
                         [self addWorkContactAndUpdateFeatureMaskWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName acquaintanceLevel:acquaintanceLevel onCompletion:^(ContactEntity * _Nonnull contactEntity) {
-                            onCompletion(publicKey);
+                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                                onCompletion(publicKey);
+                            });
                         } onError:^(NSError * _Nonnull error) {
-                            DDLogError(@"Add work contact failed: %@", error.localizedDescription);
-                            onError(error);
+                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                                DDLogError(@"Add work contact failed: %@", error.localizedDescription);
+                                onError(error);
+                            });
                         }];
                         return;
                     }
@@ -1005,7 +1009,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             // Block message if user is not in our subscription
             if (userSettings.blockUnknown) {
                 DDLogVerbose(@"Block unknown contacts is on and contact not found in work list - discarding message");
-                onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:ThreemaProtocolErrorBlockUnknownContact]);
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                    onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:ThreemaProtocolErrorBlockUnknownContact]);
+                });
             } else {
                 [self fetchAddContactAndSyncWithIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:em onCompletion:onCompletion onError:onError];
             }

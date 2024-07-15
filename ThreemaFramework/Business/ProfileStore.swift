@@ -114,13 +114,13 @@ import ThreemaProtocols
 
                 // TODO: (IOS-3874) Test if we should set `syncUserProfile.identityLinks.links` to an empty array so it is explicitly set when linked mobile number & linked email are removed or pending.
                 
-                if myIdentityStore.linkedMobileNo != profile.mobilePhoneNo, !profile.isLinkMobileNoPending {
+                if !profile.isLinkMobileNoPending {
                     var link = Sync_UserProfile.IdentityLinks.IdentityLink()
                     link.phoneNumber = profile.mobilePhoneNo ?? ""
                     syncUserProfile.identityLinks.links.append(link)
                 }
 
-                if myIdentityStore.linkedEmail != profile.email, !profile.isLinkEmailPending {
+                if !profile.isLinkEmailPending {
                     var link = Sync_UserProfile.IdentityLinks.IdentityLink()
                     link.email = profile.email ?? ""
                     syncUserProfile.identityLinks.links.append(link)

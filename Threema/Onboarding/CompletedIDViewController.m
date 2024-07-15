@@ -323,15 +323,11 @@
         [safeManager activateWithIdentity:self.identityStore.identity safePassword:self.identityStore.tempSafePassword customServer:customServer serverUser:[mdmSetup safeServerUsername] serverPassword:[mdmSetup safeServerPassword] server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
             if (error != nil) {
                 _hasErrors = YES;
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    [_syncSafeProgressLabel showErrorMessage:error.localizedDescription];
-                });
+                [_syncSafeProgressLabel showErrorMessage:error.localizedDescription];
                 onCompletion(NO);
             } else {
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    NSString *message = [BundleUtil localizedStringForKey:@"Done"];
-                    [_syncSafeProgressLabel showSuccessMessage:message];
-                });
+                NSString *message = [BundleUtil localizedStringForKey:@"Done"];
+                [_syncSafeProgressLabel showSuccessMessage:message];
                 onCompletion(YES);
             }
             return;

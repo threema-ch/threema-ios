@@ -37,7 +37,7 @@ public class DeleteRevokeIdentityManager: NSObject {
     static func deleteLocalData() async {
         do {
             let multiDeviceManager = MultiDeviceManager()
-            try await multiDeviceManager.disableMultiDevice()
+            try await multiDeviceManager.disableMultiDevice(runForwardSecurityRefreshSteps: false)
         }
         catch {
             DDLogError("Disabling multi-device: \(error)")

@@ -27,7 +27,13 @@ public protocol MultiDeviceManagerProtocol {
     var thisDevice: DeviceInfo { get }
     func otherDevices() -> Promise<[DeviceInfo]>
     func drop(device: DeviceInfo) -> Promise<Void>
-    func disableMultiDevice() async throws
+    func disableMultiDevice(runForwardSecurityRefreshSteps: Bool) async throws
+}
+
+extension MultiDeviceManagerProtocol {
+    public func disableMultiDevice(runForwardSecurityRefreshSteps: Bool = true) async throws {
+        try await disableMultiDevice(runForwardSecurityRefreshSteps: runForwardSecurityRefreshSteps)
+    }
 }
 
 public enum MultiDeviceManagerError: Error {
@@ -112,7 +118,9 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         return when(fulfilled: drops)
     }
     
-    public func disableMultiDevice() async throws {
+    /// Disable multi device and update feature mask
+    /// - Parameter runForwardSecurityRefreshSteps: Run refresh steps for all solicitedContactIdentities
+    public func disableMultiDevice(runForwardSecurityRefreshSteps: Bool = true) async throws {
         try await withCheckedThrowingContinuation { continuation in
             otherDevices()
                 .then { otherDevices -> Promise<Void> in
@@ -168,6 +176,9 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         
         // Run refresh steps for all solicitedContactIdentities.
         // (See _Application Update Steps_ in the Threema Protocols for details.)
+        guard runForwardSecurityRefreshSteps else {
+            return
+        }
         
         DDLogNotice("Fetch solicited contacts")
         let solicitedContactIdentities = await entityManager.perform {

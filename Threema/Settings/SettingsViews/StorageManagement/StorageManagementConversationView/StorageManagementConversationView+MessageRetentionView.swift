@@ -125,20 +125,20 @@ extension StorageManagementConversationView {
                 return nil
             }
             
-            let deleteMessage: String
-            if let toBeDeleted, toBeDeleted > 0 {
-                deleteMessage = String.localizedStringWithFormat(
-                    "automatic_delete_confirmation_message_immediate_deletion".localized,
-                    toBeDeleted,
-                    selection.localizedDescription
-                )
-            }
-            else {
-                deleteMessage = String.localizedStringWithFormat(
-                    "automatic_delete_confirmation_message_no_immediate_deletion".localized,
-                    selection.localizedDescription
-                )
-            }
+            let deleteMessage =
+                if let toBeDeleted, toBeDeleted > 0 {
+                    String.localizedStringWithFormat(
+                        "automatic_delete_confirmation_message_immediate_deletion".localized,
+                        toBeDeleted,
+                        selection.localizedDescription
+                    )
+                }
+                else {
+                    String.localizedStringWithFormat(
+                        "automatic_delete_confirmation_message_no_immediate_deletion".localized,
+                        selection.localizedDescription
+                    )
+                }
             
             return deleteMessage
         }

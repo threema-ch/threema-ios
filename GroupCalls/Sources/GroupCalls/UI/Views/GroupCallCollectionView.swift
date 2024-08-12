@@ -109,7 +109,7 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     }
     
     private func handleChangeOfVisibleParticipants(visibleCells: Set<GroupCallParticipantCell>) async {
-        let visibleCellsParticipantIDs = Set(visibleCells.compactMap(\.participantID))
+        let visibleCellsParticipantIDs = Set<ParticipantID>(visibleCells.compactMap(\.participant?.participantID))
         let removedCellsParticipantIDs = previouslyVisibleCellsParticipantIDs.subtracting(visibleCellsParticipantIDs)
         let addedCellsParticipantIDs = visibleCellsParticipantIDs.subtracting(previouslyVisibleCellsParticipantIDs)
         

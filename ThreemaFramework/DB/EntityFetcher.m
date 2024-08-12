@@ -319,6 +319,10 @@
     }
 }
 
+- (Conversation *)conversationForDistributionListID:(NSNumber *)distributionListID  {
+    return [self singleEntityNamed:@"Conversation" withPredicate: @"distributionList.distributionListID == %@", distributionListID];
+}
+
 - (ContactEntity *)contactForId:(NSString *)identity {
     return [self singleEntityNamed:@"Contact" withPredicate: @"identity == %@", identity];
 }
@@ -870,6 +874,15 @@
     return nil;
 }
 
+- (DistributionListEntity *) distributionListEntityForConversation:(Conversation *)conversation {
+    return [self singleEntityNamed:@"DistributionList" withPredicate: @"conversation == %@", conversation];
+}
+
+- (DistributionListEntity *) distributionListEntityForDistributionListID:(NSNumber *)distributionListID {
+    return [self singleEntityNamed:@"DistributionList" withPredicate: @"distributionListID == %@", distributionListID];
+  
+}
+
 - (LastGroupSyncRequest *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate {
     return [self singleEntityNamed:@"LastGroupSyncRequest" withPredicate: @"groupId == %@ AND groupCreator == %@ AND lastSyncRequest >= %@", groupId, groupCreator, sinceDate];
 }
@@ -1178,7 +1191,7 @@
     return [self allEntitiesNamed:@"Call" sortedBy:sortDescriptors withPredicate:@"contact.identity == %@ AND callID == %u AND date > %@", identity, callID, twoWeeksAgo];
 }
 
-- (NSArray *)allGroupCallEntities {
+- (NSArray<GroupCallEntity *> *)allGroupCallEntities {
     return [self allEntitiesNamed:@"GroupCallEntity" sortedBy:nil withPredicate:nil];
 }
 

@@ -4,6 +4,12 @@
  
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
+"scan_document" = "Scannar il document";
+// Contact List
+"contactList_add_contact" = "Nov contact";
+"contactList_add_group" = "Nova gruppa";
+
+
 
 // General
 "quotation_mark_start" = "«";
@@ -98,7 +104,6 @@
 "threema_id" = "ID da Threema";
 "nickname" = "Surnum";
 "add_button" = "Agiuntar";
-"chatview_contextmenu_select" = "Selecziunar ...";
 "learn_more" = "Ulteriuras infos ...";
 "file_message_image" = "Maletg";
 "file_message_sticker" = "Stickers";
@@ -107,6 +112,10 @@
 "file_message_voice" = "Messadi discurrì";
 "file_message_file" = "Datoteca";
 "chat" = "Chat"; /* noun */
+
+"share_menu" = "Parter ...";
+"forward_menu" = "Renviar ...";
+"chatview_contextmenu_select" = "Selecziunar ...";
 
 "chat_back_button_accessibility" = "Betg legì %d";
 
@@ -287,8 +296,10 @@
 "messages_delete_all_confirm_title" = "Stizzar tut ils messadis en quest chat sin quest apparat?";
 "messages_delete_all_confirm_message" = "Quai vul dir era tut las medias e tut ils documents.";
 "messages_delete_selected_confirm" = "Es ti segir che ti vuls stizzar ils messadis tschernids?";
+"message_delete_confirm" = "Stizzar quest messadi?";
 "conversation_delete_confirm" = "Es ti segir che ti vuls stizzar quest chat sin quest apparat?";
 "delete_n" = "Stizzar (%d)";
+"message_delete_for_me" = "Stizzar sin quest apparat";
 "message_delete_for_everyone" = "Stizzar il messadi per tuts";
 
 "message_cannot_play_movie" = "Il film na po betg vegnir mussà.";
@@ -795,6 +806,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "group_call_open_button_title" = "Avrir";
 "group_call_participants_title" = "Participant: %@";
 
+/* Group Calls */
+"group_call_started_by_contact_system_message" = "%@ ha cumenzà in telefonat da gruppa";
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protegia tia sfera privata uschè consequentamain sco nagin auter messenger. En nossa decleraziun davart la protecziun da datas chattas ti ulteriuras infurmaziuns.";
 "privacy_policy_about_work" = "%@ protegia tia sfera privata uschè consequentamain sco nagin auter messenger. En nossa decleraziun davart la protecziun da datas chattas ti ulteriuras infurmaziuns.";
@@ -1298,8 +1311,6 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "compose_bar_record_button_accessibility_label" = "Registrar in messadi discurrì";
 "compose_bar_send_message_button_accessibility_label" = "Trametter messadi";
 "compose_bar_attachment_button_accessibility_label" = "Selecziunar medias";
-"play_record_audio_view_controller_general_error_title" = "Betg reussì da registrar";
-"play_record_audio_view_controller_general_error_message" = "Pervia d'ina errur betg enconuschenta n'èsi per il mument betg pussaivel da registrar in messadi discurrì.";
 "hardware_keyboard_send_on_enter_discoverability_title" = "Trametter messadi";
 
 // New Ballot Message Cell
@@ -1313,3 +1324,4 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "vote_system_message_default" = "Survegnì ina vusch per in'enquista nunenconuschenta.";
 // ChatBar
 "chat_bar_quote_close_button" = "Serrar il citat";
+

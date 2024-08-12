@@ -25,7 +25,7 @@ import ThreemaEssentials
 
 extension GroupCallManager {
     public func getGroupModel(for groupConversationManagedObjectID: NSManagedObjectID) async
-        -> GroupCallsThreemaGroupModel? {
+        -> GroupCallThreemaGroupModel? {
         guard UserSettings.shared().enableThreemaGroupCalls else {
             DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return nil
@@ -48,7 +48,7 @@ extension GroupCallManager {
                 
                 let groupIdentity = group.groupIdentity
                 
-                let groupModel = GroupCallsThreemaGroupModel(
+                let groupModel = GroupCallThreemaGroupModel(
                     groupIdentity: groupIdentity,
                     groupName: group.name ?? ""
                 )

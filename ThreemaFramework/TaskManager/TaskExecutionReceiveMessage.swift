@@ -60,7 +60,7 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             -> Promise<AbstractMessageAndFSMessageInfo?> in
             guard let processedMsg = abstractMessageAndFSMessageInfo?.message,
                   let fsMessageInfo = abstractMessageAndFSMessageInfo?.fsMessageInfo as? FSMessageInfo else {
-                DDLogWarn(
+                DDLogDebug(
                     "[ForwardSecurity] FS version upgrade not processed, because message or FS message info is empty"
                 )
                 return Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
@@ -83,7 +83,7 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                         .catch { error in
                             // TODO: (IOS-4421) In this case the message already shows up in the chat but does not complete processing (no delivery receipt & server ack). This can be improved: IOS-4421
                             DDLogNotice(
-                                "[ForwardSecurity] Upgraded versions, but no persisted them, because failed to send out empty message."
+                                "[ForwardSecurity] Upgraded versions, but no persisted them, because failed to send out empty message"
                             )
                             seal.reject(error)
                         }
@@ -93,7 +93,9 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 return Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
             }
         }
-        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?) -> Promise<AbstractMessageAndFSMessageInfo?> in
+        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?) -> Promise<
+            AbstractMessageAndFSMessageInfo?
+        > in
             guard let processedMsg = abstractMessageAndFSMessageInfo?.message else {
                 DDLogWarn("Message would not be processed (skip reflecting message)")
                 return Promise { $0.fulfill(nil) }
@@ -112,7 +114,9 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                     Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
                 }
         }
-        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?) -> Promise<AbstractMessageAndFSMessageInfo?> in
+        .then { (abstractMessageAndFSMessageInfo: AbstractMessageAndFSMessageInfo?) -> Promise<
+            AbstractMessageAndFSMessageInfo?
+        > in
             guard let processedMsg = abstractMessageAndFSMessageInfo?.message else {
                 DDLogWarn("Message would not be processed (skip send delivery receipt)")
                 return Promise { $0.fulfill(nil) }

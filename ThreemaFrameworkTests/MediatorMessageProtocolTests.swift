@@ -94,7 +94,8 @@ class MediatorMessageProtocolTests: XCTestCase {
             messageID: 1,
             receiverIdentity: "ECHOECHO",
             createdAt: createdAt,
-            nonce: MockData.generateMessageNonce()
+            nonce: MockData.generateMessageNonce(),
+            deviceID: MockData.deviceID.paddedLittleEndian()
         )
         let encryptedMessage = mediatorMessageProtocol.encodeEnvelope(envelope: envelopeOutgoingMessage)
         

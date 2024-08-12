@@ -48,7 +48,7 @@ actor GroupCallActor: Sendable {
     
     nonisolated let groupCallBaseState: GroupCallBaseState
     
-    nonisolated var group: GroupCallsThreemaGroupModel {
+    nonisolated var group: GroupCallThreemaGroupModel {
         groupCallBaseState.group
     }
     
@@ -60,10 +60,6 @@ actor GroupCallActor: Sendable {
         groupCallBaseState.protocolVersion
     }
     
-    nonisolated var logIdentifier: String {
-        "\(groupCallBaseState.callID.bytes.base64EncodedString().prefix(6))"
-    }
-    
     nonisolated var receivedMoreThan10HoursAgo: Bool {
         startMessageReceiveDate.timeIntervalSinceNow < -(60 * 60 * 10)
     }
@@ -72,7 +68,7 @@ actor GroupCallActor: Sendable {
 
     lazy var viewModel = GroupCallViewModel(groupCallActor: self) {
         didSet {
-            let msg = "[GroupCall] viewModel may not change after it was initially set"
+            let msg = "[GroupCall] ViewModel may not change after it was initially set"
             DDLogError("\(msg)")
             assertionFailure(msg)
         }
@@ -130,8 +126,8 @@ actor GroupCallActor: Sendable {
                     await updateButtonAndBanner()
                 }
             default:
-                DDLogWarn(
-                    "[GroupCall] State changed but no notice given to the view model for state \(state.self)"
+                DDLogNotice(
+                    "[GroupCall] State changed to \(state.self), but no notice given to the view model"
                 )
             }
         }
@@ -149,7 +145,7 @@ actor GroupCallActor: Sendable {
     
     init(
         localContactModel: ContactModel,
-        groupModel: GroupCallsThreemaGroupModel,
+        groupModel: GroupCallThreemaGroupModel,
         sfuBaseURL: URL,
         gck: Data,
         protocolVersion: UInt32 = 1,
@@ -234,7 +230,7 @@ actor GroupCallActor: Sendable {
             }
         }
         
-        /// **Leave Call** 4. All other things are cleaned up now, we finish with the actor itself.
+        /// **Leave Call** 6. All other things are cleaned up now, we finish with the actor itself.
         await leaveCall(runRefreshSteps: true)
     }
     
@@ -308,26 +304,28 @@ actor GroupCallActor: Sendable {
                     DDLogError("[GroupCall] Peek Could not decrypt encrypted call state")
                     throw GroupCallError.decryptionFailure
                 }
+                
+                DDLogVerbose("[GroupCall] Peeked group call state: \(decryptedCallState)")
                                 
                 sfuProvidedNumberOfParticipants = decryptedCallState.participants.count
                 
                 await updateButtonAndBanner()
                 
                 DDLogNotice(
-                    "[GroupCall] [PeriodicCleanup] Still running call with id \(logIdentifier)"
+                    "[GroupCall] [PeriodicCleanup] Still running call with id \(callID)"
                 )
             }
             return .running
             
         case .notDetermined:
             DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] Not determined call with id \(logIdentifier)"
+                "[GroupCall] [PeriodicCleanup] Not determined call with id \(callID)"
             )
             return .invalid
             
         case .invalidRequest:
             DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] Invalid Request for call with id \(logIdentifier)"
+                "[GroupCall] [PeriodicCleanup] Invalid Request for call with id \(callID)"
             )
             await updateButtonAndBanner(hide: true)
             return .ended
@@ -337,15 +335,11 @@ actor GroupCallActor: Sendable {
             
         case .notRunning:
             DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] Not running call with id \(logIdentifier)"
+                "[GroupCall] [PeriodicCleanup] Not running call with id \(callID)"
             )
             await updateButtonAndBanner(hide: true)
             return .ended
         }
-    }
-    
-    func connectedConfirmed() {
-        uiActionContinuation.yield(.connectedConfirmed)
     }
     
     func joinState() -> GroupCallJoinState {
@@ -399,10 +393,10 @@ actor GroupCallActor: Sendable {
     
     func numberOfJoinedParticipants() -> Int {
         if joinState() == .notJoined {
-            return sfuProvidedNumberOfParticipants
+            sfuProvidedNumberOfParticipants
         }
         else {
-            return viewModel.numberOfParticipants
+            viewModel.numberOfParticipants
         }
     }
     
@@ -419,8 +413,8 @@ extension GroupCallActor {
         startJoining = true
 
         /// **Protocol Step: Group Call Join Steps**
-        /// 1. Let intent be either only join or create or join. Let call be the given group call to be joined (or
-        /// created).
+        /// 1. Let `intent` be either _only join_ or _create or join_. Let `call` be the
+        ///   given group call to be joined (or created).
         /// Note: `call` is here the class itself.
         
         // We start the process loop.
@@ -429,7 +423,7 @@ extension GroupCallActor {
             guard let self else {
                 return
             }
-            await self.process(state: self.state)
+            await process(state: state)
         })
         
         DDLogNotice("[GroupCall] Call is not yet connected but is \(state). Wait…")
@@ -451,8 +445,9 @@ extension GroupCallActor {
         }
         
         /// **Protocol Step: Group Call Join Steps**
-        /// 7.1 Optionally add an artificial wait period of 2s minus the time elapsed since step 1. Since we do not have
-        /// the elapsed time, we estimate it to 1.5s.
+        /// 7.1. Optionally add an artificial wait period of 2s minus the time elapsed
+        ///    since step 1.
+        /// Since we do not have the elapsed time, we estimate it to 1.5s.
         sendCallStartMessageDelayTask = Task {
             try? await Task.sleep(seconds: 1.5)
         }
@@ -468,8 +463,8 @@ extension GroupCallActor {
         
         sendCallStartMessageDelayTask = nil
         
-        /// 7.2 Announce (the previously created but not yet sent) call in the associated group by sending it as a
-        /// GroupCallStart message.
+        /// 7.2 Announce (the previously created but not yet sent) `call` in the
+        ///    associated group by sending it as a `GroupCallStart` message.
         let wrappedMessage = WrappedGroupCallStartMessage(
             startMessage: startMessage,
             groupIdentity: group.groupIdentity
@@ -532,12 +527,7 @@ extension GroupCallActor {
     
     func beginLeaveCall() {
         /// **Leave Call** 2. To terminate the process loop, we yield `.leave`
-        guard currentTask != nil else {
-            Task {
-                await viewModel.leaveCall()
-            }
-            return
-        }
+
         // We cancel the start message delay task if we were connecting
         sendCallStartMessageDelayTask?.cancel()
         
@@ -545,7 +535,7 @@ extension GroupCallActor {
     }
     
     func leaveCall(runRefreshSteps: Bool = false) async {
-        DDLogVerbose("[GroupCall] Teardown: Actor")
+        DDLogNotice("[GroupCall] Leave: Actor")
         state = UnJoined(groupCallActor: self)
 
         await updateButtonAndBanner()
@@ -587,17 +577,18 @@ extension GroupCallActor {
             case .result:
                 break
             case .error:
-                let msg = "An error occurred while waiting for the leave call confirmation signal."
+                let msg = "[GroupCall] An error occurred while waiting for the leave call confirmation signal"
                 assertionFailure(msg)
                 DDLogError("\(msg)")
             case .timeout:
-                let msg = "Waiting for call leave confirmation timed out."
+                let msg = "[GroupCall] Waiting for call leave confirmation timed out"
                 assertionFailure(msg)
                 DDLogWarn("\(msg)")
             }
         }
         catch {
-            let msg = "An error occurred while waiting for the call leave confirmation \(error). Terminating anyway."
+            let msg =
+                "[GroupCall] An error occurred while waiting for the call leave confirmation. Terminate anyway. \(error)"
             assertionFailure(msg)
             DDLogError("\(msg)")
         }
@@ -609,7 +600,7 @@ extension GroupCallActor {
     }
 
     func teardown() async {
-        DDLogVerbose("[GroupCall] Leave: Actor")
+        DDLogNotice("[GroupCall] Teardown: Actor")
         
         state = Ended()
         await viewModel.teardown()

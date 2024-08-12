@@ -107,7 +107,7 @@ class AddressBoolLoadTests: XCTestCase {
 
                     // Add contact
                     let saveRequest = CNSaveRequest()
-                    importContacts.forEach { importContact in
+                    for importContact in importContacts {
                         saveRequest.add(
                             importContact.mutableCopy() as! CNMutableContact,
                             toContainerWithIdentifier: nil

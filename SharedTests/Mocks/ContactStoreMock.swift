@@ -75,6 +75,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         for identity: String?,
         acquaintanceLevel: ContactAcquaintanceLevel,
         entityManager entityManagerObject: NSObject,
+        ignoreBlockUnknown: Bool,
         onCompletion: @escaping (Data?) -> Void,
         onError: ((Error?) -> Void)? = nil
     ) {
@@ -123,7 +124,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         }
     }
     
-    func reflect(_ contact: ContactEntity?) {
+    func reflect(_ identity: String?) {
         // no-op
     }
     

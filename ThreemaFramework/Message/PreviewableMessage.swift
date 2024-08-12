@@ -79,8 +79,13 @@ extension PreviewableMessage {
     public func previewAttributedText(for configuration: PreviewableMessageConfiguration = .default)
         -> NSAttributedString {
         // Trim text as Swift string to prevent emoji cropping
-        let trimmedString = String(previewText.prefix(configuration.trimmingCount))
+        var trimmedString = String(previewText.prefix(configuration.trimmingCount))
         
+        // To make the deleted text cursive, we insert "_"
+        if deletedAt != nil {
+            trimmedString = "_\(trimmedString)_"
+        }
+            
         let parsedString = MarkupParser().previewString(for: trimmedString, font: configuration.font)
         let configuredAttributedText = NSMutableAttributedString(attributedString: parsedString)
         configuredAttributedText.mutableString.replaceOccurrences(
@@ -138,14 +143,13 @@ extension PreviewableMessage {
             !(self is SystemMessage) // TODO: We might need to update this for group calls
         
         if shouldShowName {
-            let attributedName: NSAttributedString
-            
-            if let name = sender?.displayName {
-                attributedName = NSAttributedString(string: "\(name): ")
-            }
-            else {
-                attributedName = NSAttributedString(string: "\(BundleUtil.localizedString(forKey: "me")): ")
-            }
+            let attributedName =
+                if let name = sender?.displayName {
+                    NSAttributedString(string: "\(name): ")
+                }
+                else {
+                    NSAttributedString(string: "\(BundleUtil.localizedString(forKey: "me")): ")
+                }
             configuredAttributedText.insert(attributedName, at: 0)
         }
         

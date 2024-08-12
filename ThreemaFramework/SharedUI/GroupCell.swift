@@ -65,22 +65,26 @@ public final class GroupCell: ThemedCodeTableViewCell {
             }
             
             topMetadataLabel.text = group.membersTitleSummary
+            membersListLabel.text = group.membersList
 
             let entityManager = EntityManager()
-            entityManager.performBlockAndWait {
-                self.membersListLabel.text = group.membersList
-
-                self.updateAvatar(for: group.conversation)
+            entityManager.performAndWait {
+                if let conversation = entityManager.entityFetcher.conversation(
+                    for: group.groupID,
+                    creator: group.groupCreatorIdentity
+                ) {
+                    self.updateAvatar(for: conversation)
+                }
             }
         }
     }
     
     // MARK: - Subviews
     
-    private lazy var avatarSizeConstraint: NSLayoutConstraint = {
-        // Always use max height as possible
-        avatarImageView.heightAnchor.constraint(lessThanOrEqualToConstant: configuration.maxAvatarSize)
-    }()
+    // Always use max height as possible
+    private lazy var avatarSizeConstraint: NSLayoutConstraint = avatarImageView.heightAnchor.constraint(
+        lessThanOrEqualToConstant: configuration.maxAvatarSize
+    )
     
     private lazy var avatarImageView: UIImageView = {
         let imageView = UIImageView(image: configuration.loadingAvatarImage)

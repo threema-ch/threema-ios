@@ -62,7 +62,7 @@ import Foundation
                 }
             }
             
-            drafts.forEach { (key: Draft.Key, value: [String: String]) in
+            for (key, value) in drafts {
                 @MessageDraftCoordinator.MessageDraft(key: key) var draft
                 draft = value
             }
@@ -187,8 +187,8 @@ extension Draft: Equatable {
 
             guard let newValue else {
                 // New value is Empty, delete everything
-                Draft.Key.allCases.forEach {
-                    @MessageDraft(key: $0) var draft
+                for item in Draft.Key.allCases {
+                    @MessageDraft(key: item) var draft
                     $draft.load(storeKey: storeKey)?.delete()
                     draft.removeValue(forKey: storeKey)
                         .map { deletedDraft in

@@ -54,7 +54,7 @@ class MediaPreviewCarouselAccessibilityElement: UIAccessibilityElement {
                 return text
             }
             
-            guard let index = self.currentMediaItem else {
+            guard let index = currentMediaItem else {
                 return text
             }
             

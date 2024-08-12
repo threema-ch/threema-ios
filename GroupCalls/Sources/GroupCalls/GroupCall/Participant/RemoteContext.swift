@@ -79,23 +79,23 @@ struct RemoteAudioContext: Sendable {
     
     static func create(_ transceiver: RTCRtpTransceiver) throws -> RemoteAudioContext {
         guard transceiver.mediaType == .audio else {
-            DDLogError("[GroupCall] Invalid transceiver kind for remote audio context: \(transceiver.mediaType)")
+            DDLogError("[GroupCall] Invalid transceiver kind for remote audio context=\(transceiver.mediaType)")
             throw GroupCallRemoteContextError.invalidTransceiverAudioType
         }
         
         guard transceiver.direction == .recvOnly ||
             transceiver.direction == .sendRecv else {
-            DDLogError("[GroupCall] Invalid transceiver direction for remote audio context: \(transceiver.direction)")
+            DDLogError("[GroupCall] Invalid transceiver direction for remote audio context=\(transceiver.direction)")
             throw GroupCallRemoteContextError.invalidTransceiverAudioDirection
         }
         
         guard let t = transceiver.receiver.track else {
-            DDLogError("[GroupCall] Missing track on transceiver: \(transceiver.direction)")
+            DDLogError("[GroupCall] Missing track on transceiver=\(transceiver.direction)")
             throw GroupCallRemoteContextError.missingAudioTrackOnReceiver
         }
                 
         guard let track = t as? RTCAudioTrack else {
-            DDLogError("[GroupCall] Invalid track type for remote audio context: \(t.description)")
+            DDLogError("[GroupCall] Invalid track type for remote audio context=\(t.description)")
             throw GroupCallRemoteContextError.invalidAudioTrackType
         }
         
@@ -119,23 +119,23 @@ struct RemoteVideoContext: Sendable {
     
     static func create(_ transceiver: RTCRtpTransceiver) throws -> RemoteVideoContext {
         guard transceiver.mediaType == .video else {
-            DDLogError("[GroupCall] Invalid transceiver kind for remote video context: \(transceiver.mediaType)")
+            DDLogError("[GroupCall] Invalid transceiver kind for remote video context=\(transceiver.mediaType)")
             throw GroupCallRemoteContextError.invalidTransceiverVideoType
         }
         
         guard transceiver.direction == .recvOnly ||
             transceiver.direction == .sendRecv else {
-            DDLogError("[GroupCall] Invalid transceiver direction for remote video context: \(transceiver.direction)")
+            DDLogError("[GroupCall] Invalid transceiver direction for remote video context=\(transceiver.direction)")
             throw GroupCallRemoteContextError.invalidTransceiverVideoDirection
         }
         
         guard let t = transceiver.receiver.track else {
-            DDLogError("[GroupCall] Missing track on transceiver: \(transceiver.direction)")
+            DDLogError("[GroupCall] Missing track on transceiver=\(transceiver.direction)")
             throw GroupCallRemoteContextError.missingVideoTrackOnReceiver
         }
         
         guard let track = t as? RTCVideoTrack else {
-            DDLogError("[GroupCall] Invalid track type for remote video context: \(t.description)")
+            DDLogError("[GroupCall] Invalid track type for remote video context=\(t.description)")
             throw GroupCallRemoteContextError.invalidVideoTrackType
         }
         

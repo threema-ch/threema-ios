@@ -25,7 +25,7 @@ import ThreemaProtocols
 public struct ProposedGroupCall: Sendable {
     // MARK: - Public Properties
 
-    public let groupRepresentation: GroupCallsThreemaGroupModel
+    public let groupRepresentation: GroupCallThreemaGroupModel
     public let protocolVersion: UInt32
     public let gck: Data
     public let sfuBaseURL: URL
@@ -39,7 +39,7 @@ public struct ProposedGroupCall: Sendable {
     // MARK: - Lifecycle
     
     public init(
-        groupRepresentation: GroupCallsThreemaGroupModel,
+        groupRepresentation: GroupCallThreemaGroupModel,
         protocolVersion: UInt32,
         gck: Data,
         sfuBaseURL: URL,

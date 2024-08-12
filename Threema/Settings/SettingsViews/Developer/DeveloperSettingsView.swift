@@ -75,6 +75,12 @@ struct DeveloperSettingsView: View {
                 } label: {
                     Text("Launch Modals")
                 }
+                
+                NavigationLink {
+                    AudioErrorDebugView()
+                } label: {
+                    Text("Audio Error Debug View")
+                }
             }
             
             Section("Multi-Device") {
@@ -155,7 +161,8 @@ struct DeveloperSettingsView: View {
                     .foregroundColor(.red)
             }
             
-            if ThreemaEnvironment.env() == .xcode {
+            // Add this option to testflight for green and blue apps
+            if ThreemaEnvironment.env() == .xcode || ThreemaEnvironment.env() == .testFlight {
                 Section("🚨🚨🚨 Data Deletion") {
                     Button("🚨 Simulate Restore (Delete Keychain)") {
                         showDeleteKeychainItemsConfirmation = true

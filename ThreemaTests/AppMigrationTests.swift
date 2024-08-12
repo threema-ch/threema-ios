@@ -63,6 +63,7 @@ class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion5_7()
         setupDataForMigrationVersion5_9()
         setupDataForMigrationVersion5_9_2()
+        setupDataForMigrationVersion6_2()
 
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
@@ -195,6 +196,9 @@ class AppMigrationTests: XCTestCase {
         XCTAssertNil(AppGroup.userDefaults().object(forKey: "PendingCreateID"))
         // .noSetup because my identity is not valid
         XCTAssertEqual(AppSetupState.notSetup, AppSetup.state)
+        
+        // Checks for 6.2 migration
+        XCTAssertNil(AppGroup.userDefaults().object(forKey: "LastWorkUpdateRequest"))
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -457,5 +461,10 @@ class AppMigrationTests: XCTestCase {
     private func setupDataForMigrationVersion5_9_2() {
         // Setup should be completed
         AppGroup.userDefaults().set(false, forKey: "PendingCreateID")
+    }
+    
+    private func setupDataForMigrationVersion6_2() {
+        AppGroup.userDefaults().set(["Key", "Value"], forKey: "LastWorkUpdateRequest")
+        AppGroup.userDefaults().synchronize()
     }
 }

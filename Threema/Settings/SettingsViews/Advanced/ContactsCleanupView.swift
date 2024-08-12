@@ -176,13 +176,13 @@ struct ContactsCleanupView: View {
                                     for: conversation
                                 )
                             
-                            let groupInfo: String
-                            if let group = entityManager.entityFetcher.groupEntity(for: conversation) {
-                                groupInfo = ", GroupID=\(getCoreDataID(group)), GroupState=\(group.state)"
-                            }
-                            else {
-                                groupInfo = ", GroupID=-"
-                            }
+                            let groupInfo =
+                                if let group = entityManager.entityFetcher.groupEntity(for: conversation) {
+                                    ", GroupID=\(getCoreDataID(group)), GroupState=\(group.state)"
+                                }
+                                else {
+                                    ", GroupID=-"
+                                }
                             
                             let convType = conversation.isGroup() ? "Group" : "OneToOne"
                             let convLastUpdate = conversation.lastUpdate != nil ? ISOFormatter
@@ -233,7 +233,7 @@ struct ContactsCleanupView: View {
         do {
             let messages = try fetch.execute() as [BaseMessage]
             if !messages.isEmpty {
-                messages.forEach { message in
+                for message in messages {
                     message.sender = mainContact
                 }
                 
@@ -268,7 +268,7 @@ struct ContactsCleanupView: View {
             let calls = try fetch.execute() as [CallEntity]
 
             if !calls.isEmpty {
-                calls.forEach { call in
+                for call in calls {
                     // call.contact = mainContact -> does not work bc. of missing @dynamic, see CallEntity.m
                     entityManager.entityDestroyer.deleteObject(object: call)
                 }
@@ -293,10 +293,10 @@ struct ContactsCleanupView: View {
         partialID: String,
         entityManager: EntityManager
     ) {
-        duplicateContacts.forEach { duplicateContact in
+        for duplicateContact in duplicateContacts {
             if let conversations = entityManager.entityFetcher
                 .conversations(forMember: duplicateContact) as? [Conversation], !conversations.isEmpty {
-                conversations.forEach { conversation in
+                for conversation in conversations {
                     conversation.removeMembersObject(duplicateContact)
                     conversation.addMembersObject(mainContact)
                 }
@@ -320,15 +320,15 @@ struct ContactsCleanupView: View {
     ) {
         var rejectedMessages = [BaseMessage]()
         
-        duplicateContacts.forEach { duplicateContact in
+        for duplicateContact in duplicateContacts {
             if let rejectedByContact = duplicateContact.rejectedMessages {
                 rejectedMessages.append(contentsOf: rejectedByContact)
             }
         }
                                   
         if !rejectedMessages.isEmpty {
-            rejectedMessages.forEach { message in
-                duplicateContacts.forEach { contact in
+            for message in rejectedMessages {
+                for contact in duplicateContacts {
                     message.removeRejectedBy(contact)
                 }
                 message.addRejectedBy(mainContact)

@@ -123,15 +123,23 @@
             onCompletion(YES);
         }
         else if ([grp isMemberWithIdentity:_message.fromIdentity] == NO) {
+            // 4. If the sender is not a member of the group:
+            //     1. If the user is the creator of the group, send a
+            //        [`group-setup`](ref:e2e.group-setup) with an empty members list back
+            //        to the sender, discard the message and abort these steps.
+            //     2. Send a [`group-sync-request`](ref:e2e.group-sync-request) to the
+            //        group creator, discard the message and abort these steps.
+
             if (grp.isSelfCreator == YES) {
                 DDLogInfo(@"%@ is not member of group %@, resend group info", _message.fromIdentity, _message.groupId);
                 [self sync:grp toMember:_message.fromIdentity onCompletion:^{
                     onCompletion(YES);
                 }];
-                return;
             }
-
-            onCompletion(YES);
+            else {
+                [self sendSyncRequest];
+                onCompletion(YES);
+            }
         }
         else if ([_message isKindOfClass:[GroupLeaveMessage class]]) {
             [groupManager leaveDBWithGroupID:_message.groupId creator:_message.groupCreator member:_message.fromIdentity systemMessageDate:_message.date];
@@ -183,7 +191,6 @@
     if ([_message isKindOfClass:[GroupRequestSyncMessage class]] == NO &&
         !([_message isKindOfClass:[GroupLeaveMessage class]] == YES && [_message.groupCreator isEqualToString:_message.fromIdentity])) {
 
-        // do that only if it's not from notification extension file
         DDLogWarn(@"Group (id: %@ creator: %@) not found for message from %@. Discard message.", [NSString stringWithHexData:_message.groupId], _message.groupCreator, _message.fromIdentity);
         [groupManager sendSyncRequestWithGroupID:_message.groupId creator:_message.groupCreator force:false];
     }

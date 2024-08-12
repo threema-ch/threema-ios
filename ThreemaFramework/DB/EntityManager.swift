@@ -523,10 +523,10 @@ extension EntityManager {
 
     func conversation(forMessage message: AbstractMessage) -> Conversation? {
         if let groupMessage = message as? AbstractGroupMessage {
-            return groupConversation(forMessage: groupMessage, fetcher: entityFetcher)
+            groupConversation(forMessage: groupMessage, fetcher: entityFetcher)
         }
         else {
-            return oneToOneConversation(forMessage: message, fetcher: entityFetcher)
+            oneToOneConversation(forMessage: message, fetcher: entityFetcher)
         }
     }
 
@@ -947,7 +947,7 @@ extension EntityManager {
             // Delete content of this base message
             try self.entityDestroyer.deleteMessageContent(of: message)
 
-            conversation.updateLastMessage(with: self)
+            conversation.updateLastDisplayMessage(with: self)
 
             return message
         }
@@ -1004,15 +1004,23 @@ extension EntityManager {
                     }
                 }
             }
-
+            
+            let history = self.entityCreator.messageHistoryEntry(for: message)
+          
             if let textMessage = message as? TextMessage {
-                textMessage.lastEditedAt = abstractMessage.date
+                history?.text = textMessage.text
                 textMessage.text = e2eEditMessage.text
+                textMessage.lastEditedAt = abstractMessage.date
             }
             else if let fileMessage = message as? FileMessageEntity {
-                fileMessage.lastEditedAt = abstractMessage.date
+                history?.text = fileMessage.caption
                 fileMessage.caption = e2eEditMessage.text
                 fileMessage.json = FileMessageEncoder.jsonString(for: fileMessage)
+                fileMessage.lastEditedAt = abstractMessage.date
+            }
+            else if let history {
+                DDLogWarn("Received edit for unsupported message type")
+                self.entityDestroyer.deleteObject(object: history)
             }
 
             return message

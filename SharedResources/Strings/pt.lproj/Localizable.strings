@@ -106,7 +106,6 @@
 "threema_id" = "ID Threema";
 "nickname" = "Apelido público";
 "add_button" = "Adicionar";
-"chatview_contextmenu_select" = "Selecione...";
 "learn_more" = "Saiba mais...";
 "file_message_image" = "Imagem";
 "file_message_sticker" = "Sticker";
@@ -115,6 +114,10 @@
 "file_message_voice" = "Mensagem de voz";
 "file_message_file" = "Arquivo";
 "chat" = "conversa"; /* noun */
+
+"share_menu" = "Compartilhar...";
+"forward_menu" = "Encaminhar…";
+"chatview_contextmenu_select" = "Selecione...";
 
 "chat_back_button_accessibility" = "%d não lido(s)";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "Excluir todas mensagens neste bate-papo deste dispostiivo?";
 "messages_delete_all_confirm_message" = "Isso inclui toda mídia e documentos.";
 "messages_delete_selected_confirm" = "Excluir mensagens selecionadas deste dispositivo?";
+"message_delete_confirm" = "Excluir esta mensagem?";
 "conversation_delete_confirm" = "Excluir este bate-papo deste dispositivo?";
 "delete_n" = "Excluir (%d)";
-"message_delete_for_everyone" = "Excluir mensagem para todos";
+"message_delete_for_me" = "Excluir deste dispositivo";
+"message_delete_for_everyone" = "Excluir para Todos";
 
 "message_cannot_play_movie" = "Não foi possível reproduzir o filme.";
 
@@ -478,7 +483,7 @@
 "pull_to_sync_429_message" = "O limite de sincronizações de contato permitidas por dia foi atingido. Continue com a sincronização amanhã ou contate o suporte do Threema.";
 "pull_to_sync_429_message_work" = "O limite de sincronizações de contato permitidas por dia foi atingido. Continue com a sincronização amanhã ou contate o seu administrador do %@.";
 
-"synchronizing" = "Sincronizando...";
+"synchronizing" = "Sincronizando…";
 
 "no_contacts_syncon" = "Você ainda não possui contatos. A sincronização está ativada, mas parece que nenhum dos seus contatos da agenda de contatos está no Threema (convide-os!).";
 "no_contacts" = "Nenhum contato";
@@ -656,7 +661,7 @@
 "invite_sms_body" = "Oi! Vamos usar o Threema para conversar de forma segura e simples! Minha ID Threema é:  https://threema.id/%@";
 "invite_facebook_text" = "Eu uso o Threema, o aplicativo de mensagens seguro que protege a privacidade dos usuários. Minha Threema ID é: https://threema.id/%@";
 "invite_twitter_text" = "Eu uso o Threema, o aplicativo de mensagens seguro que protege a privacidade dos usuários. Minha ID Threema é: https://threema.id/%@";
-"invite_using" = "Convide um amigo através de...";
+"invite_using" = "Convide um amigo via...";
 "sms" = "Mensagem de texto";
 
 /* Notifications Text */
@@ -712,7 +717,7 @@
 "quote_interaction_hint" = "Pula para a mensagem citada";
 
 /* TTOpenInAppActivity */
-"Open in ..." = "Abrir em...";
+"Open in ..." = "Abrir em…";
 
 /* VoiceOver long labels */
 "restore" = "Restaurar";
@@ -781,15 +786,15 @@
 
 "call_voip_not_supported_title" = "Chamada do Threema";
 "call_voip_not_supported_text" = "Este contato ainda não pode receber chamadas do Threema";
-"call_contact_not_reachable" = "Não possível acessar contacto...";
+"call_contact_not_reachable" = "Não foi possível acessar o contato...";
 
 "call_status_idle" = "Pronto";
 "call_status_wait_ringing" = "Iniciar";
 "call_status_ringing" = "Tocando";
 "call_status_incom_ringing" = "Chamada do Threema";
-"call_status_initializing" = "Conectando";
+"call_status_initializing" = "Conectando…";
 "call_status_calling" = "Conectado";
-"call_status_reconnecting" = "Conectando";
+"call_status_reconnecting" = "Conectando…";
 "call_status_unknown" = "Desconhecido";
 "call_status_blocked" = "Contato bloqueado";
 "call_status_failed_title" = "Chamada do Threema";
@@ -1104,7 +1109,8 @@
 "settings_list_media_title" = "Mídia";
 "settings_list_storage_management_title" = "Gerenciamento de armazenamento";
 "settings_list_passcode_lock_title" = "Bloqueio por código";
-"settings_threema_calls" = "Chamadas do Threema";
+"settings_threema_calls" = "Chamadas";
+"settings_list_threema_desktop_title" = "Threema 2.0 para Desktop (Beta)";
 "settings_list_threema_web_title" = "Desktop/Web";
 
 "settings_list_network_title" = "Status da rede";
@@ -1146,13 +1152,16 @@
 "settings_privacy_read_receipts" = "Confirmações de leitura";
 "settings_privacy_typing_indicator" = "Indicadores de digitação";
 
+"settings_privacy_poi_header" = "Dados de localização";
+"settings_privacy_choose_poi" = "Exibir POIs";
+"settings_privacy_poi_footer" = "Se ativado, pontos de interesse próximos a você serão exibidos quando você compartilhar sua localização. Para esse fim, sua localização é enviada ao servidor.";
+
 "settings_privacy_TIRR_reset_all" = "Redefinir para todos os contatos";
 "settings_privacy_TIRR_reset_footer" = "Redefinir todos os contatos para a configuração padrão.";
 "settings_privacy_TIRR_reset_alert_title" = "Redefinir";
 "settings_privacy_TIRR_reset_alert_message" = "Redefinir todos os contatos para a configuração padrão. A ação não pode ser desfeita.";
 "settings_privacy_TIRR_reset_alert_action" = "Redefinir tudo";
 
-"settings_privacy_choose_poi" = "Escolher POIs";
 "settings_privacy_hide_private_chats" = "Ocultar conversas privadas";
 "settings_privacy_hide_private_chats_footer" = "Oculta todas as conversas privadas no painel de conversas. Você precisa definir uma senha para ativar esta opção.";
 
@@ -1204,7 +1213,7 @@
 "settings_notification_type_preview_complete_description" = "Exibe o nome completo e a foto de perfil do contato. Algumas informações relacionadas a interações são compartilhadas com o sistema operacional. [Saiba mais...](%@)";
 "settings_notification_type_preview_complete_sender_name" = "João da Silva";
 
-"settings_notification_type_preview_message_text" = "Mensagem de exemplo...";
+"settings_notification_type_preview_message_text" = "Mensagem de exemplo…";
 "settings_notification_type_preview_no_button" = "Desativar notificações push";
 
 // Chat Settings
@@ -1649,23 +1658,31 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "notification_threemaweb_connectionlost_title" = "Conexão perdida com o aplicativo para computador/cliente da web";
 "notification_threemaweb_connectionlost_body" = "Para continuar usando o cliente do aplicativo para computador/cliente da web, reabra o aplicativo.";
 
+"settings_threema_web_desktop_banner_title" = "Novo: Threema 2.0 para Desktop (Beta)";
+"settings_threema_web_desktop_banner_message" = "Toque aqui para experimentar a próxima geração do aplicativo para desktop com suporte a vários dispositivos.";
+
 "settings_threema_web_connected" = "Desktop/Web conectado";
 "settings_threema_web_connectioninfo" = "Seu dispositivo precisa ser desbloqueado com o %@ operando em primeiro plano para ficar conectado. Enquanto estiver conectado, seu dispositivo não será bloqueado automaticamente.";
-"settings_threema_web_linked_device_section_header" = "Multi-dispositivos";
-"settings_threema_web_linked_device_section_footer" = "O dispositivo vinculado pode ser usado mesmo se %@ estiver em segundo plano ou este dispositivo estiver offline.";
-"settings_threema_web_section_header" = "Dispositivos conectados diretamente";
 "settings_threema_web_multi_device_qr_code_title" = "Código QR errado";
-"settings_threema_web_multi_device_qr_code_message" = "Toque em \"%@\" e depois em \"%@\" para se vincular a este aplicativo para computador.";
+"settings_threema_web_multi_device_qr_code_message" = "Navegue de volta para “%@” e selecione “%@” para vincular a este aplicativo de desktop.";
 
 "chat_text_view_placeholder" = "Nova mensagem";
 "compose_bar_camera_button_accessibility_label" = "Abrir câmera";
 "compose_bar_image_picker_button_accessibility_label" = "Abrir seletor de imagem";
 "compose_bar_record_button_accessibility_label" = "Gravar mensagem de voz";
 "compose_bar_send_message_button_accessibility_label" = "Enviar mensagem";
+"compose_bar_send_edited_message_button_accessibility_label" = "Confirmar a edição";
 "compose_bar_attachment_button_accessibility_label" = "Adicionar anexos";
-"play_record_audio_view_controller_general_error_title" = "Gravação falhou";
-"play_record_audio_view_controller_general_error_message" = "Devido a um erro desconhecido, uma mensagem de voz não pode ser gravada no momento";
 "hardware_keyboard_send_on_enter_discoverability_title" = "Enviar mensagem";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "Nenhuma mensagem de voz possível.";
+"voice_recorder_error_message" = "Tente novamente ou entre em contato com o suporte.";
+"voice_recorder_call_state_not_idle" = "Chamada ativa";
+"voice_recorder_playback_failure" = "Erro de reprodução";
+"voice_recorder_recording_error" = "Erro de gravação";
+"voice_recorder_recording_cancelled" = "Gravação cancelada";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "Você votou em %@.";
@@ -1680,7 +1697,6 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 
 // ChatBar
 "chat_bar_quote_close_button" = "Fechar citação";
-"chat_bar_edited_message_close_button" = "Cancelar a edição da mensagem";
 
 // ChatDetailView
 "detailView_title" = "Detalhes da mensagem";
@@ -1690,6 +1706,9 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "detailView_group_file_size" = "Tamanho do arquivo";
 "detailView_consumed" = "Primeira reprodução";
 "detailView_created_footer" = "Criado em: %@";
+"detailView_edit_history_header" = "Editar histórico";
+"detailView_edit_history_current" = "Atual";
+"detailView_edit_history_no_caption" = "Sem legenda";
 
 "message_display_status_none" = "Nenhum(a)";
 "message_display_status_user_acknowledged" = "Concordou";
@@ -1834,16 +1853,16 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "accessibility_voice_message_unplayed" = "Não reproduzido.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Concordo, %@";
-"accessibility_status_declined_plus_time" = "Recusado, %@";
-"accessibility_status_sending_plus_time" = "Enviando, %@";
-"accessibility_status_sent_plus_time" = "Enviado, %@";
-"accessibility_status_delivered_plus_time" = "Entregue, %@";
-"accessibility_status_read_plus_time" = "Lido, %@";
-"accessibility_status_failed_plus_time" = "Falhas, %@";
-"accessibility_status_group_acknowledged_plus_time" = "De acordo: %i, %@%@";
-"accessibility_status_group_declined_plus_time" = "Recusaram: %i, %@%@";
-"accessibility_status_group_acknowledged_declined_plus_time" = "%i concordam, %i recusaram, %@%@";
+"accessibility_status_acknowledged" = "Concordou";
+"accessibility_status_declined" = "Recusou";
+"accessibility_status_sending" = "Enviando";
+"accessibility_status_sent" = "Enviada";
+"accessibility_status_delivered" = "Entregue";
+"accessibility_status_read" = "Lida";
+"accessibility_status_failed" = "Falha";
+"accessibility_status_group_acknowledged" = "De acordo: %i, %@";
+"accessibility_status_group_declined" = "Recusaram: %i, %@";
+"accessibility_status_group_acknowledged_declined" = "%i concordam, %i recusaram, %@";
 "accessibility_status_group_acknowledged_my_reaction" = "Eu concordei";
 "accessibility_status_group_declined_my_reaction" = "Eu recusei";
 

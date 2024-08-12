@@ -106,7 +106,7 @@ public class ThreemaPushNotification: NSObject {
         }
     }
     
-    /// Initializer for `NSCoding`
+    /// Initializer for `NSSecureCoding`
     /// - Parameter coder: Coder to decode from
     public required init?(coder: NSCoder) {
         guard let commandString = coder
@@ -132,13 +132,10 @@ public class ThreemaPushNotification: NSObject {
     }
 }
 
-// MARK: - NSCoding
+// MARK: - NSSecureCoding
 
-extension ThreemaPushNotification: NSCoding {
-
-    // We still need to use NSCoding (instead of Codable), because there are dependencies
-    // used in `PendingMessage` that are in Obj-C.
-    // When we can remove this, `ThreemaPushNotification` can become a struct.
+extension ThreemaPushNotification: NSSecureCoding {
+    public static var supportsSecureCoding = true
     
     public func encode(with coder: NSCoder) {
         coder.encode(command.rawValue, forKey: ThreemaPushNotificationDictionary.commandKey.rawValue)

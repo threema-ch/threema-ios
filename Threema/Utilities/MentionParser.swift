@@ -78,24 +78,24 @@ class MentionParser {
         func attributes(font: UIFont) -> [NSAttributedString.Key: Any]? {
             switch self {
             case .asterisk:
-                return [
+                [
                     NSAttributedString.Key.font: UIFont.systemFont(fontSize: font.pointSize, traits: [.traitBold])!,
                     NSAttributedString.Key.tokenType: TokenType.bold,
                 ]
             case .underscore:
-                return [
+                [
                     NSAttributedString.Key.font: UIFont.systemFont(fontSize: font.pointSize, traits: [.traitItalic])!,
                     NSAttributedString.Key.tokenType: TokenType.italic,
                 ]
             case .tilde:
-                return [
+                [
                     NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
                     NSAttributedString.Key.tokenType: TokenType.strikethrough,
                 ]
             case .url:
-                return [NSAttributedString.Key.foregroundColor: Colors.primary]
+                [NSAttributedString.Key.foregroundColor: Colors.primary]
             default:
-                return nil
+                nil
             }
         }
     }

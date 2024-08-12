@@ -141,14 +141,14 @@ final class ProfileViewModel: ObservableObject {
             guard let self else {
                 return
             }
-            self.loadQRCode()
-            self.loadNickname()
-            self.loadLinkedEmail()
-            self.loadLinkedMobile()
-            self.loadProfilePicture()
-            self.loadRevocationDetail()
+            loadQRCode()
+            loadNickname()
+            loadLinkedEmail()
+            loadLinkedMobile()
+            loadProfilePicture()
+            loadRevocationDetail()
             
-            self.isThreemaSafeActivated = self.safeManager.isActivated
+            isThreemaSafeActivated = safeManager.isActivated
         }
     }
     
@@ -180,8 +180,8 @@ final class ProfileViewModel: ObservableObject {
                 guard let self, linked else {
                     return
                 }
-                self.businessInjector.myIdentityStore.linkEmailPending = false
-                self.linkedEmail = self.businessInjector.myIdentityStore.linkedEmail
+                businessInjector.myIdentityStore.linkEmailPending = false
+                self.linkedEmail = businessInjector.myIdentityStore.linkedEmail
             } onError: { _ in }
         }
         else {
@@ -379,10 +379,4 @@ extension ProfileViewModel.DelegateHandler: ModalNavigationControllerDelegate {
     func didDismissModalNavigationController() {
         didDismissModal()
     }
-}
-
-extension Notification.Name {
-    static let identityLinkedWithMobileNo = Notification.Name("ThreemaIdentityLinkedWithMobileNo")
-    static let navigateSafeSetup = Notification.Name(kNotificationShowSafeSetup)
-    static let incomingProfileSync = Notification.Name(kNotificationIncomingProfileSynchronization)
 }

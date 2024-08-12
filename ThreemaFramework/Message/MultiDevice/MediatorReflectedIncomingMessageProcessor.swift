@@ -59,82 +59,82 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         switch amsg.self {
         case is BoxAudioMessage:
-            return try process(incomingMessage: imsg, audioMessage: amsg as! BoxAudioMessage)
+            try process(incomingMessage: imsg, audioMessage: amsg as! BoxAudioMessage)
         case is BoxBallotCreateMessage:
-            return try process(incomingMessage: imsg, ballotCreateMessage: amsg as! BoxBallotCreateMessage)
+            try process(incomingMessage: imsg, ballotCreateMessage: amsg as! BoxBallotCreateMessage)
         case is BoxBallotVoteMessage:
-            return try process(incomingMessage: imsg, ballotVoteMessage: amsg as! BoxBallotVoteMessage)
+            try process(incomingMessage: imsg, ballotVoteMessage: amsg as! BoxBallotVoteMessage)
         case is BoxFileMessage:
-            return try process(incomingMessage: imsg, fileMessage: amsg as! BoxFileMessage)
+            try process(incomingMessage: imsg, fileMessage: amsg as! BoxFileMessage)
         case is BoxImageMessage:
-            return try process(incomingMessage: imsg, imageMessage: amsg as! BoxImageMessage)
+            try process(incomingMessage: imsg, imageMessage: amsg as! BoxImageMessage)
         case is BoxLocationMessage:
-            return try process(incomingMessage: imsg, locationMessage: amsg as! BoxLocationMessage)
+            try process(incomingMessage: imsg, locationMessage: amsg as! BoxLocationMessage)
         case is BoxTextMessage:
-            return try process(incomingMessage: imsg, textMessage: amsg as! BoxTextMessage)
+            try process(incomingMessage: imsg, textMessage: amsg as! BoxTextMessage)
         case is BoxVideoMessage:
-            return try process(incomingMessage: imsg, videoMessage: amsg as! BoxVideoMessage)
+            try process(incomingMessage: imsg, videoMessage: amsg as! BoxVideoMessage)
         case is ContactDeletePhotoMessage:
-            return process(contactDeletePhotoMessage: amsg as! ContactDeletePhotoMessage)
+            process(contactDeletePhotoMessage: amsg as! ContactDeletePhotoMessage)
         case is ContactRequestPhotoMessage:
-            return process(contactRequestPhotoMessage: amsg as! ContactRequestPhotoMessage)
+            process(contactRequestPhotoMessage: amsg as! ContactRequestPhotoMessage)
         case is ContactSetPhotoMessage:
-            return process(contactSetPhotoMessage: amsg as! ContactSetPhotoMessage)
+            process(contactSetPhotoMessage: amsg as! ContactSetPhotoMessage)
         case is DeliveryReceiptMessage:
-            return try process(incomingMessage: imsg, deliveryReceiptMessage: amsg as! DeliveryReceiptMessage)
+            try process(incomingMessage: imsg, deliveryReceiptMessage: amsg as! DeliveryReceiptMessage)
         case is DeleteMessage:
-            return try process(incomingMessage: imsg, deleteMessage: amsg as! DeleteMessage)
+            try process(incomingMessage: imsg, deleteMessage: amsg as! DeleteMessage)
         case is DeleteGroupMessage:
-            return try process(incomingMessage: imsg, deleteGroupMessage: amsg as! DeleteGroupMessage)
+            try process(incomingMessage: imsg, deleteGroupMessage: amsg as! DeleteGroupMessage)
         case is EditMessage:
-            return try process(incomingMessage: imsg, editMessage: amsg as! EditMessage)
+            try process(incomingMessage: imsg, editMessage: amsg as! EditMessage)
         case is EditGroupMessage:
-            return try process(incomingMessage: imsg, editGroupMessage: amsg as! EditGroupMessage)
+            try process(incomingMessage: imsg, editGroupMessage: amsg as! EditGroupMessage)
         case is GroupCreateMessage:
-            return try process(groupCreateMessage: amsg as! GroupCreateMessage)
+            try process(groupCreateMessage: amsg as! GroupCreateMessage)
         case is GroupDeletePhotoMessage:
-            return try process(groupDeletePhotoMessage: amsg as! GroupDeletePhotoMessage)
+            try process(groupDeletePhotoMessage: amsg as! GroupDeletePhotoMessage)
         case is GroupLeaveMessage:
-            return process(groupLeaveMessage: amsg as! GroupLeaveMessage)
+            process(groupLeaveMessage: amsg as! GroupLeaveMessage)
         case is GroupRenameMessage:
-            return try process(groupRenameMessage: amsg as! GroupRenameMessage)
+            try process(groupRenameMessage: amsg as! GroupRenameMessage)
         case is GroupSetPhotoMessage:
-            return try process(groupSetPhotoMessage: amsg as! GroupSetPhotoMessage)
+            try process(groupSetPhotoMessage: amsg as! GroupSetPhotoMessage)
         case is GroupDeliveryReceiptMessage:
-            return try process(incomingMessage: imsg, groupDeliveryReceiptMessage: amsg as! GroupDeliveryReceiptMessage)
+            try process(incomingMessage: imsg, groupDeliveryReceiptMessage: amsg as! GroupDeliveryReceiptMessage)
         case is GroupAudioMessage:
-            return try process(incomingMessage: imsg, groupAudioMessage: amsg as! GroupAudioMessage)
+            try process(incomingMessage: imsg, groupAudioMessage: amsg as! GroupAudioMessage)
         case is GroupBallotCreateMessage:
-            return try process(incomingMessage: imsg, groupBallotCreateMessage: amsg as! GroupBallotCreateMessage)
+            try process(incomingMessage: imsg, groupBallotCreateMessage: amsg as! GroupBallotCreateMessage)
         case is GroupBallotVoteMessage:
-            return try process(incomingMessage: imsg, groupBallotVoteMessage: amsg as! GroupBallotVoteMessage)
+            try process(incomingMessage: imsg, groupBallotVoteMessage: amsg as! GroupBallotVoteMessage)
         case is GroupFileMessage:
-            return try process(incomingMessage: imsg, groupFileMessage: amsg as! GroupFileMessage)
+            try process(incomingMessage: imsg, groupFileMessage: amsg as! GroupFileMessage)
         case is GroupImageMessage:
-            return try process(incomingMessage: imsg, groupImageMessage: amsg as! GroupImageMessage)
+            try process(incomingMessage: imsg, groupImageMessage: amsg as! GroupImageMessage)
         case is GroupLocationMessage:
-            return try process(incomingMessage: imsg, groupLocationMessage: amsg as! GroupLocationMessage)
+            try process(incomingMessage: imsg, groupLocationMessage: amsg as! GroupLocationMessage)
         case is GroupTextMessage:
-            return try process(incomingMessage: imsg, groupTextMessage: amsg as! GroupTextMessage)
+            try process(incomingMessage: imsg, groupTextMessage: amsg as! GroupTextMessage)
         case is GroupVideoMessage:
-            return try process(incomingMessage: imsg, groupVideoMessage: amsg as! GroupVideoMessage)
+            try process(incomingMessage: imsg, groupVideoMessage: amsg as! GroupVideoMessage)
         case is BoxVoIPCallOfferMessage:
-            return try process(incomingMessage: imsg, voipCallOfferMessage: amsg as! BoxVoIPCallOfferMessage)
+            try process(incomingMessage: imsg, voipCallOfferMessage: amsg as! BoxVoIPCallOfferMessage)
         case is BoxVoIPCallAnswerMessage:
-            return try process(incomingMessage: imsg, voipCallAnswerMessage: amsg as! BoxVoIPCallAnswerMessage)
+            try process(incomingMessage: imsg, voipCallAnswerMessage: amsg as! BoxVoIPCallAnswerMessage)
         case is BoxVoIPCallIceCandidatesMessage:
-            return try process(
+            try process(
                 incomingMessage: imsg,
                 voipCallIceCandidatesMessage: amsg as! BoxVoIPCallIceCandidatesMessage
             )
         case is BoxVoIPCallHangupMessage:
-            return try process(incomingMessage: imsg, voipCallHangupMessage: amsg as! BoxVoIPCallHangupMessage)
+            try process(incomingMessage: imsg, voipCallHangupMessage: amsg as! BoxVoIPCallHangupMessage)
         case is BoxVoIPCallRingingMessage:
-            return try process(incomingMessage: imsg, voipCallRingingMessage: amsg as! BoxVoIPCallRingingMessage)
+            try process(incomingMessage: imsg, voipCallRingingMessage: amsg as! BoxVoIPCallRingingMessage)
         case is GroupCallStartMessage:
-            return try process(incomingMessage: imsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
+            try process(incomingMessage: imsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
         default:
-            return Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
+            Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
                 message: "Reflected incoming message type \(imsg.loggingDescription) will be not processed"
             ))
             }

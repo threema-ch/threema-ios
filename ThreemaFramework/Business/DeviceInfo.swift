@@ -40,20 +40,20 @@ public enum Platform: Int {
 
     public var rawValue: Int {
         switch self {
-        case .unspecified: return 0
-        case .android: return 1
-        case .ios: return 2
-        case .desktop: return 3
-        case .web: return 4
+        case .unspecified: 0
+        case .android: 1
+        case .ios: 2
+        case .desktop: 3
+        case .web: 4
         }
     }
     
     public var systemSymbolName: String {
         switch self {
         case .ios, .android:
-            return "iphone"
+            "iphone"
         case .desktop, .web, .unspecified:
-            return "desktopcomputer"
+            "desktopcomputer"
         }
     }
 }

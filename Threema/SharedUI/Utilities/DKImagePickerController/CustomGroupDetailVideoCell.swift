@@ -48,7 +48,7 @@ class CustomGroupDetailVideoCell: CustomGroupDetailImageCell {
     override weak var asset: DKAsset? {
         didSet {
             if let asset {
-                let videoDurationLabel = self.videoInfoView.viewWithTag(-1) as! UILabel
+                let videoDurationLabel = videoInfoView.viewWithTag(-1) as! UILabel
                 let minutes = Int(asset.duration!) / 60
                 let seconds = Int(round(asset.duration!)) % 60
                 videoDurationLabel.text = String(format: "\(minutes):%02d", seconds)

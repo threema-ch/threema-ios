@@ -251,14 +251,14 @@ class MessageStore: MessageStoreProtocol {
                                 }
                             }
                         }
-                        else if deliveryReceiptMessage.receiptType == .ack {
+                        else if deliveryReceiptMessage.receiptType == .ack, msg.deletedAt == nil {
                             DDLogNotice("Message ID \(msg.id.hexString) has been user acknowledged by recipient")
                             self.frameworkInjector.entityManager.performAndWaitSave {
                                 msg.userack = true
                                 msg.userackDate = createdAt
                             }
                         }
-                        else if deliveryReceiptMessage.receiptType == .decline {
+                        else if deliveryReceiptMessage.receiptType == .decline, msg.deletedAt == nil {
                             DDLogNotice("Message ID \(msg.id.hexString) has been user declined by recipient")
                             self.frameworkInjector.entityManager.performAndWaitSave {
                                 msg.userack = false
@@ -300,7 +300,7 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageFinished(deleteMessage)
         }
 
-        conversation.updateLastMessage(with: frameworkInjector.entityManager)
+        conversation.updateLastDisplayMessage(with: frameworkInjector.entityManager)
     }
 
     func save(deleteGroupMessage: DeleteGroupMessage, createdAt: Date, isOutgoing: Bool) throws {
@@ -316,7 +316,7 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageFinished(deleteGroupMessage)
         }
 
-        conversation.updateLastMessage(with: frameworkInjector.entityManager)
+        conversation.updateLastDisplayMessage(with: frameworkInjector.entityManager)
     }
 
     func save(editMessage: EditMessage, createdAt: Date, isOutgoing: Bool) throws {
@@ -1146,44 +1146,44 @@ class MessageStore: MessageStoreProtocol {
         
         return Promise { seal in
             Task {
-                await self.frameworkInjector.entityManager.performSave {
-                    
-                    guard let conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(
+                let conversationObjectID = await self.frameworkInjector.entityManager.perform {
+                    self.frameworkInjector.entityManager.entityFetcher.conversation(
                         for: groupCallStartMessage.groupID,
                         creator: groupCallStartMessage.groupCreator
-                    ) else {
-                        seal
-                            .reject(
-                                MediatorReflectedProcessorError
-                                    .messageNotProcessed(message: groupCallStartMessage.loggingDescription)
-                            )
-                        return
-                    }
-                    
-                    guard let fromIdentity = groupCallStartMessage.fromIdentity else {
-                        seal
-                            .reject(
-                                MediatorReflectedProcessorError
-                                    .messageNotProcessed(message: groupCallStartMessage.loggingDescription)
-                            )
-                        return
-                    }
-                    
-                    GlobalGroupCallsManagerSingleton.shared.handleMessage(
-                        rawMessage: decodedCallStartMessage,
-                        from: fromIdentity,
-                        in: conversation,
-                        receiveDate: groupCallStartMessage.date,
-                        onCompletion: {
-                            if !isOutgoing {
-                                self.messageProcessorDelegate.incomingMessageFinished(groupCallStartMessage)
-                            }
-                            self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
-
-                            seal.fulfill_()
-                        }
-                    )
+                    )?.objectID
                 }
+
+                guard let conversationObjectID else {
+                    seal.reject(
+                        MediatorReflectedProcessorError.messageNotProcessed(
+                            message: groupCallStartMessage.loggingDescription
+                        )
+                    )
+                    return
+                }
+                
+                guard let fromIdentity = groupCallStartMessage.fromIdentity else {
+                    seal.reject(
+                        MediatorReflectedProcessorError.messageNotProcessed(
+                            message: groupCallStartMessage.loggingDescription
+                        )
+                    )
+                    return
+                }
+                
+                await GlobalGroupCallManagerSingleton.shared.handleMessage(
+                    rawMessage: decodedCallStartMessage,
+                    from: fromIdentity,
+                    in: conversationObjectID,
+                    receiveDate: groupCallStartMessage.date
+                )
+                
+                if !isOutgoing {
+                    self.messageProcessorDelegate.incomingMessageFinished(groupCallStartMessage)
+                }
+                self.messageProcessorDelegate.changedManagedObjectID(conversationObjectID)
+                
+                seal.fulfill_()
             }
         }
     }

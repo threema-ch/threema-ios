@@ -21,8 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-class WebUpdateConnectionInfoRequest: NSObject, NSCoding {
-    
+class WebUpdateConnectionInfoRequest: NSObject {
     let id: Data
     let resume: WebConnection?
     
@@ -100,19 +99,9 @@ class WebUpdateConnectionInfoRequest: NSObject, NSCoding {
             return
         }
     }
-    
-    required init?(coder aDecoder: NSCoder) {
-        self.id = aDecoder.decodeObject(forKey: "id") as! Data
-        self.resume = aDecoder.decodeObject(forKey: "resume") as? WebConnection
-    }
-    
-    func encode(with aCoder: NSCoder) {
-        aCoder.encode(id, forKey: "id")
-        aCoder.encode(resume, forKey: "resume")
-    }
 }
 
-class WebConnection: NSObject, NSCoding {
+class WebConnection: NSObject {
     var id: Data
     var sequenceNumber: UInt32? // chunk id
     
@@ -120,20 +109,6 @@ class WebConnection: NSObject, NSCoding {
         self.id = connection["id"] as! Data
         if connection["sequenceNumber"] != nil {
             self.sequenceNumber = WebConnection.convertToUInt32(sn: connection["sequenceNumber"]!)
-        }
-    }
-    
-    // MARK: NSCoding
-
-    public required init?(coder aDecoder: NSCoder) {
-        self.id = aDecoder.decodeObject(forKey: "id") as! Data
-        self.sequenceNumber = UInt32(aDecoder.decodeInt32(forKey: "sequenceNumber"))
-    }
-    
-    public func encode(with aCoder: NSCoder) {
-        aCoder.encode(id, forKey: "id")
-        if sequenceNumber != nil {
-            aCoder.encode(Int32(sequenceNumber!), forKey: "sequenceNumber")
         }
     }
     

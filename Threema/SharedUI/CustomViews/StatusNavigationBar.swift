@@ -129,7 +129,7 @@ import UIKit
             }
             // Group Calls
             else if NavigationBarPromptHandler.isGroupCallActive {
-                GlobalGroupCallsManagerSingleton.shared.showGroupCallViewController()
+                GlobalGroupCallManagerSingleton.shared.showGroupCallViewController()
             }
         }
     }

@@ -27,7 +27,7 @@ enum ChunkCacheError: Error {
     case timeTravelBackwards
 }
 
-class WebChunkCache: NSObject, NSCoding {
+class WebChunkCache: NSObject {
     
     private var _sequenceNumber: WebSequenceNumber
     private var _byteLength = 0
@@ -117,26 +117,5 @@ class WebChunkCache: NSObject, NSCoding {
                 }
             }
         }
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        // super.init(coder:) is optional, see notes below
-        self._sequenceNumber = aDecoder.decodeObject(forKey: "_sequenceNumber") as! WebSequenceNumber
-        self._byteLength = aDecoder.decodeInteger(forKey: "_byteLength")
-        
-        let tmpCache = aDecoder.decodeObject(forKey: "cache")
-        if tmpCache is [[UInt8]?] {
-            self.cache = aDecoder.decodeObject(forKey: "cache") as! [[UInt8]?]
-        }
-        else {
-            self.cache = [[UInt8]?]()
-        }
-    }
-    
-    func encode(with aCoder: NSCoder) {
-        // super.encodeWithCoder(aCoder) is optional, see notes below
-        aCoder.encode(_sequenceNumber, forKey: "_sequenceNumber")
-        aCoder.encode(_byteLength, forKey: "_byteLength")
-        aCoder.encode(cache, forKey: "cache")
     }
 }

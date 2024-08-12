@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22757" systemVersion="23C64" minimumToolsVersion="Xcode 11.0" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23F79" minimumToolsVersion="Xcode 11.0" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
     <entity name="AudioData" representedClassName="AudioData" syncable="YES">
         <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AudioMessage" inverseName="audio" inverseEntity="AudioMessage"/>
@@ -139,8 +139,8 @@
         <relationship name="members" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="groupConversations" inverseEntity="Contact"/>
         <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Tag" inverseName="conversations" inverseEntity="Tag"/>
     </entity>
-    <entity name="DistributionList" representedClassName="DistributionList" syncable="YES" codeGenerationType="class">
-        <attribute name="distributionListId" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+    <entity name="DistributionList" representedClassName="DistributionListEntity" syncable="YES">
+        <attribute name="distributionListID" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <relationship name="conversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="distributionList" inverseEntity="Conversation"/>
     </entity>

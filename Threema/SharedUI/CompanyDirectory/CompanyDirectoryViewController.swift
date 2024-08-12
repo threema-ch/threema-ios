@@ -453,17 +453,17 @@ extension CompanyDirectoryViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {
-        if title == "*" {
+        if title == .broadcasts {
             return sectionTitles.count
         }
         
-        if sectionTitles.contains(title) == true {
+        if sectionTitles.contains(title) {
             return sectionTitles.firstIndex(of: title) ?? 0
         }
         else {
             var tempIndex = 0
             for str in allSectionTitles {
-                if sectionTitles.contains(str) == true {
+                if sectionTitles.contains(str) {
                     tempIndex += 1
                 }
                 if str == title {

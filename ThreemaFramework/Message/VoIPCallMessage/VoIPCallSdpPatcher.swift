@@ -53,7 +53,7 @@ public class VoIPCallSdpPatcher: NSObject {
         case unknownSection
     }
     
-    internal enum SdpSection: String {
+    enum SdpSection: String {
         case GLOBAL
         case MEDIA_AUDIO
         case MEDIA_VIDEO
@@ -63,14 +63,14 @@ public class VoIPCallSdpPatcher: NSObject {
         func isRtpSection() -> Bool {
             switch self {
             case .GLOBAL, .MEDIA_DATA_CHANNEL, .MEDIA_UNKNOWN:
-                return false
+                false
             case .MEDIA_AUDIO, .MEDIA_VIDEO:
-                return true
+                true
             }
         }
     }
     
-    internal enum LineAction {
+    enum LineAction {
         case ACCEPT
         case REJECT
         case REWRITE
@@ -91,12 +91,12 @@ public class VoIPCallSdpPatcher: NSObject {
     
     private var rtpHeaderExtensionConfig: RtpHeaderExtensionConfig = .DISABLE
     
-    internal struct SdpPatcherContext {
-        internal var type: SdpType
-        internal var config: VoIPCallSdpPatcher
-        internal var payloadTypeOpus: String
-        internal var rtpExtensionIDRemapper: RtpExtensionIDRemapper
-        internal var section: SdpSection
+    struct SdpPatcherContext {
+        var type: SdpType
+        var config: VoIPCallSdpPatcher
+        var payloadTypeOpus: String
+        var rtpExtensionIDRemapper: RtpExtensionIDRemapper
+        var section: SdpSection
         
         init(type: SdpType, config: VoIPCallSdpPatcher, payloadTypeOpus: String) {
             self.type = type
@@ -107,7 +107,7 @@ public class VoIPCallSdpPatcher: NSObject {
         }
     }
     
-    internal struct Line {
+    struct Line {
         private(set) var line: String
         private var action: LineAction?
         
@@ -141,7 +141,7 @@ public class VoIPCallSdpPatcher: NSObject {
         }
     }
 
-    internal struct RtpExtensionIDRemapper {
+    struct RtpExtensionIDRemapper {
         private var currentID: Int?
         private var maxID: Int?
         private var extensionIDMap = [String: Int]()
@@ -572,14 +572,14 @@ public class VoIPCallSdpPatcher: NSObject {
     ) throws -> LineAction {
         // Rewrite if local offer, otherwise accept
         if context.type == .LOCAL_OFFER {
-            return try line.rewrite(line: String(
+            try line.rewrite(line: String(
                 format: "a=extmap:%i %@",
                 context.rtpExtensionIDRemapper.assignID(uriAndAttributes: uriAndAttributes),
                 uriAndAttributes
             ))
         }
         else {
-            return try line.accept()
+            try line.accept()
         }
     }
 }

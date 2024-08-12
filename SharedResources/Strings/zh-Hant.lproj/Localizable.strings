@@ -106,7 +106,6 @@
 "threema_id" = "Threema ID";
 "nickname" = "暱稱";
 "add_button" = "新增";
-"chatview_contextmenu_select" = "選擇…";
 "learn_more" = "了解更多…";
 "file_message_image" = "圖片";
 "file_message_sticker" = "貼圖";
@@ -115,6 +114,10 @@
 "file_message_voice" = "語音訊息";
 "file_message_file" = "檔案";
 "chat" = "對話"; /* noun */
+
+"share_menu" = "分享…";
+"forward_menu" = "轉寄…";
+"chatview_contextmenu_select" = "選擇…";
 
 "chat_back_button_accessibility" = "%d則未讀訊息";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "在此裝置中刪除此聊天中的所有訊息嗎？";
 "messages_delete_all_confirm_message" = "這包括所有媒體和檔案。";
 "messages_delete_selected_confirm" = "在此裝置中刪除選定的訊息嗎？";
+"message_delete_confirm" = "刪除這則訊息嗎？";
 "conversation_delete_confirm" = "在此裝置中刪除此對話嗎？";
 "delete_n" = "刪除 (%d)";
-"message_delete_for_everyone" = "在所有人的裝置上刪除訊息";
+"message_delete_for_me" = "在此裝置中刪除";
+"message_delete_for_everyone" = "為所有人刪除";
 
 "message_cannot_play_movie" = "無法播放影片。";
 
@@ -473,12 +478,12 @@
 "backup_exclude" = "透過 iTunes 或 iCloud 備份電話時，ID匯出將不包括在內。請手動儲存ID匯出，以免遺失。";
 
 /* Contacts */
-"pull_to_sync" = "下拉以同步...";
+"pull_to_sync" = "下拉以同步…";
 "bad_identity_backup" = "ID 匯出資料無效，或者您輸入了錯誤的密碼。請使用您建立匯出時選擇的密碼以還原您的 Threema ID。請檢查您的輸入，再試一次。";
 "pull_to_sync_429_message" = "已達到每天允許的聯絡人同步數量上限。 請到明天繼續同步，或聯絡 Threema 的客戶支援。";
 "pull_to_sync_429_message_work" = "已達到每天允許的聯絡人同步數量上限。 請到明天繼續同步，或聯絡您的 %@ 管理員。";
 
-"synchronizing" = "正在同步...";
+"synchronizing" = "正在同步…";
 
 "no_contacts_syncon" = "您還沒有任何聯絡人。同步已經開始，但在通訊錄中的聯絡人看似都不在 Threema 上（您可以邀請他們加入）。";
 "no_contacts" = "沒有聯絡人";
@@ -655,7 +660,7 @@
 "invite_sms_body" = "嘿！讓我們使用 Threema 以安全和符合隱私的方式進行通訊！我的 Threema ID：https://threema.id/%@";
 "invite_facebook_text" = "我使用Threema，這是保護使用者隱私的安全即時通訊工具。我的 Threema ID：https://threema.id/%@";
 "invite_twitter_text" = "我使用Threema，這是保護使用者隱私的安全即時通訊工具。我的 Threema ID：https://threema.id/%@";
-"invite_using" = "透過...邀請好友";
+"invite_using" = "透過…邀請好友";
 "sms" = "文字訊息";
 
 /* Notifications Text */
@@ -711,14 +716,14 @@
 "quote_interaction_hint" = "跳至引用的訊息";
 
 /* TTOpenInAppActivity */
-"Open in ..." = "在...開啟";
+"Open in ..." = "在…開啟";
 
 /* VoiceOver long labels */
 "restore" = "還原";
 
 /* PullToRefresh */
-"pull_to_refresh" = "下拉以重新整理";
-"refreshing" = "載入中...";
+"pull_to_refresh" = "下拉以重新整理…";
+"refreshing" = "載入中…";
 
 /* Threema Channel */
 "threema_channel_intro" = "將 Threema Channel 新增至您的聯絡人嗎？";
@@ -727,7 +732,7 @@
 
 /* Push decryption */
 "decryption_push_reply" = "回覆";
-"decryption_push_placeholder" = "回覆...";
+"decryption_push_placeholder" = "回覆…";
 "decryption_push_agree" = "同意";
 "decryption_push_disagree" = "不同意";
 
@@ -780,15 +785,15 @@
 
 "call_voip_not_supported_title" = "Threema 通話";
 "call_voip_not_supported_text" = "您的聯絡人不支援 Threema 通話";
-"call_contact_not_reachable" = "無法聯絡至聯絡人...";
+"call_contact_not_reachable" = "無法聯絡至聯絡人…";
 
 "call_status_idle" = "準備就緒";
 "call_status_wait_ringing" = "初始化";
 "call_status_ringing" = "響鈴中";
 "call_status_incom_ringing" = "Threema 通話";
-"call_status_initializing" = "連線中...";
+"call_status_initializing" = "連線中…";
 "call_status_calling" = "已連線";
-"call_status_reconnecting" = "連線中...";
+"call_status_reconnecting" = "連線中…";
 "call_status_unknown" = "未知";
 "call_status_blocked" = "被封鎖的聯絡人";
 "call_status_failed_title" = "Threema 通話";
@@ -1104,7 +1109,8 @@
 "settings_list_media_title" = "多媒體";
 "settings_list_storage_management_title" = "儲存管理";
 "settings_list_passcode_lock_title" = "密碼鎖";
-"settings_threema_calls" = "Threema 通話";
+"settings_threema_calls" = "通話";
+"settings_list_threema_desktop_title" = "Threema 2.0 電腦版（測試版）";
 "settings_list_threema_web_title" = "桌面版/網頁版";
 
 "settings_list_network_title" = "網路狀態";
@@ -1146,13 +1152,16 @@
 "settings_privacy_read_receipts" = "已讀標記";
 "settings_privacy_typing_indicator" = "打字狀態";
 
+"settings_privacy_poi_header" = "位置資料";
+"settings_privacy_choose_poi" = "顯示POI";
+"settings_privacy_poi_footer" = "如果開啟此功能，在分享位置時會顯示附近的POI。您的位置會被傳送至我們的伺服器。";
+
 "settings_privacy_TIRR_reset_all" = "重設所有聯絡人";
 "settings_privacy_TIRR_reset_footer" = "將所有聯絡人重設為預設設定。";
 "settings_privacy_TIRR_reset_alert_title" = "重設";
 "settings_privacy_TIRR_reset_alert_message" = "將所有聯絡人重設為預設設定。此作業不能被還原。";
 "settings_privacy_TIRR_reset_alert_action" = "重設所有內容";
 
-"settings_privacy_choose_poi" = "選擇POI";
 "settings_privacy_hide_private_chats" = "隱藏私密對話";
 "settings_privacy_hide_private_chats_footer" = "在對話畫面中隱藏所有私密對話，您需要設定密碼鎖才能啟用此設定。";
 
@@ -1204,7 +1213,7 @@
 "settings_notification_type_preview_complete_description" = "顯示聯絡人的全名和大頭貼。分享互動的資訊會與iOS系統分享。 [了解更多...](%@)";
 "settings_notification_type_preview_complete_sender_name" = "王小明";
 
-"settings_notification_type_preview_message_text" = "示例訊息...";
+"settings_notification_type_preview_message_text" = "示例訊息…";
 "settings_notification_type_preview_no_button" = "停用推播通知";
 
 // Chat Settings
@@ -1648,23 +1657,31 @@
 "notification_threemaweb_connectionlost_title" = "與桌面版應用程式 / 網頁版用戶端失去連線";
 "notification_threemaweb_connectionlost_body" = "如要繼續使用桌面版應用程式 / 網頁版用戶端，請重新啟動應用程式。";
 
+"settings_threema_web_desktop_banner_title" = "最新消息：推出 Threema 電腦版 2.0（測試版）";
+"settings_threema_web_desktop_banner_message" = "按一下這裡試用支援多裝置登入的新一代電腦版應用程式。";
+
 "settings_threema_web_connected" = "已連線至桌面版/網頁版";
 "settings_threema_web_connectioninfo" = "為了保持與桌面版/網頁版的連結，您的裝置必須解鎖，並在前景執行 %@。連結後，您的裝置將不會自動鎖定。";
-"settings_threema_web_linked_device_section_header" = "多裝置";
-"settings_threema_web_linked_device_section_footer" = "即使 %@ 在背景或此裝置離線時，也可以使用新連結的裝置。";
-"settings_threema_web_section_header" = "直接連結的裝置";
 "settings_threema_web_multi_device_qr_code_title" = "QR碼有錯誤";
-"settings_threema_web_multi_device_qr_code_message" = "先按一下「%@」，然後再按一下「%@」，以連結至此桌面應用程式。";
+"settings_threema_web_multi_device_qr_code_message" = "先返回「%@」，然後選擇「%@」，以連結至此桌面應用程式。";
 
 "chat_text_view_placeholder" = "新訊息";
 "compose_bar_camera_button_accessibility_label" = "開啟攝影機";
 "compose_bar_image_picker_button_accessibility_label" = "開啟圖像選取器";
 "compose_bar_record_button_accessibility_label" = "錄製語音訊息";
 "compose_bar_send_message_button_accessibility_label" = "傳送訊息";
+"compose_bar_send_edited_message_button_accessibility_label" = "確認編輯";
 "compose_bar_attachment_button_accessibility_label" = "新增附件";
-"play_record_audio_view_controller_general_error_title" = "錄製失敗";
-"play_record_audio_view_controller_general_error_message" = "由於發生了未知錯誤，暫時無法錄製語音訊息。";
 "hardware_keyboard_send_on_enter_discoverability_title" = "傳送訊息";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "無法進行語音訊息。";
+"voice_recorder_error_message" = "請再試一次，或者可以聯絡我們的支援人員。";
+"voice_recorder_call_state_not_idle" = "通話進行中";
+"voice_recorder_playback_failure" = "播放錯誤";
+"voice_recorder_recording_error" = "錄製錯誤";
+"voice_recorder_recording_cancelled" = "錄製已取消";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "您投了%@一票。";
@@ -1679,7 +1696,6 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "關閉引用";
-"chat_bar_edited_message_close_button" = "取消編輯訊息";
 
 // ChatDetailView
 "detailView_title" = "訊息詳情";
@@ -1689,6 +1705,9 @@
 "detailView_group_file_size" = "檔案大小";
 "detailView_consumed" = "首次播放";
 "detailView_created_footer" = "建立於：%@";
+"detailView_edit_history_header" = "編輯記錄";
+"detailView_edit_history_current" = "目前";
+"detailView_edit_history_no_caption" = "無編輯記錄";
 
 "message_display_status_none" = "無";
 "message_display_status_user_acknowledged" = "已同意";
@@ -1833,16 +1852,16 @@
 "accessibility_voice_message_unplayed" = "還未播放";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "已同意, %@";
-"accessibility_status_declined_plus_time" = "已拒絕, %@";
-"accessibility_status_sending_plus_time" = "傳送中, %@";
-"accessibility_status_sent_plus_time" = "已傳送, %@";
-"accessibility_status_delivered_plus_time" = "已送達, %@";
-"accessibility_status_read_plus_time" = "已讀取, %@";
-"accessibility_status_failed_plus_time" = "失敗, %@";
-"accessibility_status_group_acknowledged_plus_time" = "%i 同意，%@%@";
-"accessibility_status_group_declined_plus_time" = "%i 拒絕，%@%@";
-"accessibility_status_group_acknowledged_declined_plus_time" = "%i 同意，%i 拒絕，%@%@";
+"accessibility_status_acknowledged" = "已同意";
+"accessibility_status_declined" = "已拒絕";
+"accessibility_status_sending" = "傳送中";
+"accessibility_status_sent" = "已傳送";
+"accessibility_status_delivered" = "已送達";
+"accessibility_status_read" = "已讀取";
+"accessibility_status_failed" = "失敗";
+"accessibility_status_group_acknowledged" = "%i 同意，%@";
+"accessibility_status_group_declined" = "%i 拒絕，%@";
+"accessibility_status_group_acknowledged_declined" = "%i 同意，%i 拒絕，%@";
 "accessibility_status_group_acknowledged_my_reaction" = "我同意";
 "accessibility_status_group_declined_my_reaction" = "我拒絕";
 
@@ -1951,8 +1970,8 @@
 // Delete / Edit message
 "edit_message" = "編輯訊息";
 "edit_message_can_not_edit" = "該訊息已傳送超過6小時，因此無法再編輯。";
-"edit_message_not_sent_to" = "以下群組成員將無法看到您對訊息的編輯：%@";
-"delete_message_not_sent_to" = "以下群組成員的訊息不會被刪除：%@";
+"edit_message_not_sent_to" = "以下群組成員將無法看到您對訊息的編輯：\n%@";
+"delete_message_not_sent_to" = "以下群組成員的訊息不會被刪除：\n%@";
 "delete_edit_message_not_sent_to_others" = "%d 其他人";
 "delete_message_requirement" = "如要同時為對方刪除訊息，對方需要安裝最新的 Threema 版本。";
 "edit_message_requirement" = "對方如要檢視已編輯的訊息，他們需要安裝最新的 Threema 版本。";

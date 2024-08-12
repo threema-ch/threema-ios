@@ -218,7 +218,7 @@
         
         [self handleConversation:conversation data:conversationData];
         MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
-        conversation.lastMessage = [messageFetcher lastMessage];
+        conversation.lastMessage = [messageFetcher lastDisplayMessage];
     }
 }
 
@@ -342,7 +342,7 @@
 /// Handle text and parse QuoteV1 into QuoteV2
 - (BaseMessage *)handleTextMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
     BaseMessage *lastMessage = conversation.lastMessage;
-    TextMessage *message = [_entityManager.entityCreator textMessageForConversation:conversation setLastUpdate:true];
+    TextMessage *message = [_entityManager.entityCreator textMessageForConversation:conversation];
     message.text = [self localizedStringForKey:@"content" in:messageData];
     if ([message.text containsString:@"> "]) {
         message.quotedMessageId = lastMessage.id;
@@ -424,7 +424,7 @@
 }
 
 - (BaseMessage *)handleLocationMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
-    LocationMessage *message = [_entityManager.entityCreator locationMessageForConversation:conversation setLastUpdate:true];
+    LocationMessage *message = [_entityManager.entityCreator locationMessageForConversation:conversation];
     NSArray *location = [self localizedArrayForKey:@"content" in:messageData];
     if (location.count == 4) {
         message.latitude = location[0];

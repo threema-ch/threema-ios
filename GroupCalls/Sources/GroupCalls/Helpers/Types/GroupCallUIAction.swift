@@ -24,7 +24,6 @@ enum GroupCallUIAction: Equatable {
     case none
     
     // Local Participant
-    case connectedConfirmed
     case leave
     
     case muteVideo

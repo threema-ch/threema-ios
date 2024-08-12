@@ -470,4 +470,65 @@ class PendingUserNotificationManagerTests: XCTestCase {
             )
         }
     }
+    
+    func testPendingUserNotificationEncodeDecode() throws {
+        let expectedMessageID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedFromIdentity = "SENDER01"
+
+        let abstractMsg = BoxTextMessage()
+        abstractMsg.text = "Test 1234"
+        abstractMsg.messageID = expectedMessageID
+        abstractMsg.fromIdentity = expectedFromIdentity
+
+        let pendingManager1 = PendingUserNotificationManager(
+            UserNotificationManagerMock(),
+            UserNotificationCenterManagerMock(),
+            PushSettingManagerMock(),
+            EntityManager()
+        )
+        guard let pendingNotification1 = pendingManager1.pendingUserNotification(
+            for: abstractMsg,
+            stage: .abstract
+        ) else {
+            XCTFail()
+            return
+        }
+        
+        let pendingNotifications = [pendingNotification1]
+        
+        let archivedData = try NSKeyedArchiver.archivedData(
+            withRootObject: pendingNotifications,
+            requiringSecureCoding: true
+        )
+        
+        let unarchived = try NSKeyedUnarchiver.unarchivedObject(
+            ofClasses: [
+                PendingUserNotification.self,
+                NSString.self,
+                AbstractMessage.self,
+                NSData.self,
+                NSDate.self,
+                NSArray.self,
+            ],
+            from: archivedData
+        ) as? [PendingUserNotification]
+        
+        let unarchivedUnwrapped = try XCTUnwrap(unarchived)
+        XCTAssertEqual(unarchivedUnwrapped.first?.key, pendingNotification1.key)
+        
+        let processed = [pendingNotification1.key]
+        
+        let archivedData2 = try NSKeyedArchiver.archivedData(
+            withRootObject: processed,
+            requiringSecureCoding: true
+        )
+        
+        let unarchived2 = try NSKeyedUnarchiver.unarchivedObject(
+            ofClasses: [NSArray.self, NSString.self],
+            from: archivedData2
+        ) as? [String]
+        
+        let unarchivedUnwrapped2 = try XCTUnwrap(unarchived2)
+        XCTAssertEqual(unarchivedUnwrapped2.first, pendingNotification1.key)
+    }
 }

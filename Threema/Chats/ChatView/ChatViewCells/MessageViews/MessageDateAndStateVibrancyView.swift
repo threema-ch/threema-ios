@@ -46,25 +46,22 @@ final class MessageDateAndStateVibrancyView {
     }
     
     private lazy var dateAndStateView = MessageDateAndStateView()
-    private lazy var blurEffectViewWorkaroundDateAndStateView: MessageDateAndStateView = {
-        let view = MessageDateAndStateView()
-        
-        if UIAccessibility.isReduceTransparencyEnabled {
-            view.overrideColor = Colors.textLight
-        }
-        else if UIAccessibility.isDarkerSystemColorsEnabled {
-            view.overrideColor = Colors.text
-        }
-        else {
-            view.overrideColor = .clear
-        }
-        
-        return view
-    }()
-    
+    private lazy var blurEffectViewWorkaroundDateAndStateView = MessageDateAndStateView()
+     
     // MARK: - Updates
     
     func updateColors() {
+        
+        if UIAccessibility.isReduceTransparencyEnabled {
+            blurEffectViewWorkaroundDateAndStateView.overrideColor = Colors.textLight
+        }
+        else if UIAccessibility.isDarkerSystemColorsEnabled {
+            blurEffectViewWorkaroundDateAndStateView.overrideColor = Colors.text
+        }
+        else {
+            blurEffectViewWorkaroundDateAndStateView.overrideColor = .clear
+        }
+        
         dateAndStateView.updateColors()
         blurEffectViewWorkaroundDateAndStateView.updateColors()
     }

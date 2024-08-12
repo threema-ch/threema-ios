@@ -60,7 +60,7 @@ class ScreenshotParticipant: ViewModelParticipant {
     ) {
         guard dependencies.isRunningForScreenshots else {
             fatalError(
-                "[GroupCalls] Tried to initialize ScreenshotParticipant even though we are not running for screenshots."
+                "[GroupCall] Tried to initialize ScreenshotParticipant even though we are not running for screenshots"
             )
         }
         

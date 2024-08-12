@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+// swiftformat:disable:next blankLineAfterImports
 @_implementationOnly import CThreemaBlake2b
 // @_implementationOnly is needed such that we don't need to expose `CThreemaBlake2b` to module clients
 // https://forums.swift.org/t/issue-with-third-party-dependencies-inside-a-xcframework-through-spm/41977/3

@@ -31,7 +31,7 @@ final class GroupCallViewModelTests: XCTestCase {
     fileprivate lazy var creatorIdentity = ThreemaIdentity("ECHOECHO")
     fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
     fileprivate lazy var localContactModel = ContactModel(identity: creatorIdentity, nickname: "ECHOECHO")
-    fileprivate lazy var groupModel = GroupCallsThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
+    fileprivate lazy var groupModel = GroupCallThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
     fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
 
     func testBasicInit() async throws {

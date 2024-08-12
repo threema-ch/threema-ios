@@ -423,14 +423,13 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             }
         }
         
-        let snapshotApplyDoneDispatchGroup: DispatchGroup?
-        
-        if snapshotInfo.mustWaitForApply {
-            snapshotApplyDoneDispatchGroup = DispatchGroup()
-        }
-        else {
-            snapshotApplyDoneDispatchGroup = nil
-        }
+        let snapshotApplyDoneDispatchGroup: DispatchGroup? =
+            if snapshotInfo.mustWaitForApply {
+                DispatchGroup()
+            }
+            else {
+                nil
+            }
         
         snapshotApplyDoneDispatchGroup?.enter()
         
@@ -599,19 +598,19 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ) -> Bool {
         let currentHasUnreadMessageLine = current.itemIdentifiers.reversed().contains(where: { cellType in
             if case .unreadLine(state: _) = cellType {
-                return true
+                true
             }
             else {
-                return false
+                false
             }
         })
         
         let nextHasUnreadMessageLine = next.itemIdentifiers.reversed().contains(where: { cellType in
             if case .unreadLine(state: _) = cellType {
-                return true
+                true
             }
             else {
-                return false
+                false
             }
         })
         
@@ -625,19 +624,19 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ) -> Bool {
         let currentHasUnreadMessageLine = current.itemIdentifiers.reversed().contains(where: { cellType in
             if cellType == .typingIndicator {
-                return true
+                true
             }
             else {
-                return false
+                false
             }
         })
         
         let nextHasUnreadMessageLine = next.itemIdentifiers.reversed().contains(where: { cellType in
             if cellType == .typingIndicator {
-                return true
+                true
             }
             else {
-                return false
+                false
             }
         })
         
@@ -664,8 +663,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             return
         }
         
-        messageObservers.forEach {
-            $0.invalidate()
+        for messageObserver in messageObservers {
+            messageObserver.invalidate()
         }
         
         observers.removeValue(forKey: id)
@@ -797,7 +796,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         }
         
         deselectAllMessages()
-        conversation.updateLastMessage(with: entityManager)
+        conversation.updateLastDisplayMessage(with: entityManager)
         
         delegate?.didDeleteMessages()
     }
@@ -834,7 +833,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         }
         
         deselectAllMessages()
-        conversation.updateLastMessage(with: entityManager)
+        conversation.updateLastDisplayMessage(with: entityManager)
         
         delegate?.didDeleteMessages()
     }

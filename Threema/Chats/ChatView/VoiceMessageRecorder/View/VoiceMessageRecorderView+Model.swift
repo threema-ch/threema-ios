@@ -148,16 +148,20 @@ extension VoiceMessageRecorderView.Model: VoiceMessageAudioRecorderDelegate {
     }
     
     func handleError(_ error: some LocalizedError) {
-        DDLogError("\(error.localizedDescription)")
-        guard let current = AppDelegate.shared().currentTopViewController() else {
-            return
-        }
+        DDLogError("[Voice Recorder] Error during recording: \(error)")
         DispatchQueue.main.async {
-            UIAlertTemplate.showAlert(
-                owner: current,
-                title: error.localizedDescription,
-                message: ""
-            )
+            guard let error = error as? VoiceMessageError else {
+                NotificationPresenterWrapper.shared.present(
+                    type: .init(
+                        notificationText: "voice_recorder_recording_error".localized,
+                        notificationStyle: .error
+                    ),
+                    subtitle: "voice_recorder_error_message".localized
+                )
+                return
+            }
+            
+            error.showAlert()
         }
     }
 }

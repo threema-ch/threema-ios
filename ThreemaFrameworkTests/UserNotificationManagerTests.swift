@@ -409,7 +409,7 @@ class UserNotificationManagerTests: XCTestCase {
 
         var pushSetting = PushSetting(identity: expectedSenderID, groupIdentity: nil, _type: .off)
         pushSetting.setPeriodOffTime(.time1Day)
-        userSettingsMock.pushSettings = [try JSONEncoder().encode(pushSetting)]
+        userSettingsMock.pushSettings = try [JSONEncoder().encode(pushSetting)]
 
         let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
         pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
@@ -487,7 +487,7 @@ class UserNotificationManagerTests: XCTestCase {
 
         var pushSetting = PushSetting(identity: nil, groupIdentity: expectedGroupIdentity, _type: .off)
         pushSetting.setPeriodOffTime(.time1Day)
-        userSettingsMock.pushSettings = [try JSONEncoder().encode(pushSetting)]
+        userSettingsMock.pushSettings = try [JSONEncoder().encode(pushSetting)]
 
         let settingsStoreMock = SettingsStoreMock()
         settingsStoreMock.pushShowPreview = true
@@ -867,7 +867,7 @@ class UserNotificationManagerTests: XCTestCase {
                     }
                 )
             }
-
+            conversation.members = Set([contact])
             let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
             
             groupManagerMock.getGroupReturns.append(Group(
@@ -884,6 +884,7 @@ class UserNotificationManagerTests: XCTestCase {
             message.groupCreator = groupCreator
             message.text = "This is a group message"
             message.messageID = Data(BytesUtility.toBytes(hexString: expectedMessageID)!)
+            message.fromIdentity = expectedSenderID
 
             let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
             pendingUserNotification

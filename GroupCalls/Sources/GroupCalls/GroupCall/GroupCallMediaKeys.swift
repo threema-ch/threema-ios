@@ -83,14 +83,14 @@ final class MediaKeys {
     func applyMediaKeys(to encryptor: ThreemaGroupCallFrameCryptoEncryptorProtocol) throws {
         guard epoch < UInt8.max else {
             DDLogError(
-                "[GroupCall] Could not apply pcmk because epoch was too big. \(epoch) but maximum is \(UInt8.max)"
+                "[GroupCall] Could not apply pcmk because epoch was too big. Epoch is \(epoch) but maximum is \(UInt8.max)."
             )
             throw GroupCallError.keyRatchetError
         }
         
         guard ratchetCounter < UInt8.max else {
             DDLogError(
-                "[GroupCall] Could not apply pcmk because ratchetCounter was too big. \(ratchetCounter) but maximum is \(UInt8.max)"
+                "[GroupCall] Could not apply pcmk because ratchetCounter was too big. RatchetCounter is \(ratchetCounter) but maximum is \(UInt8.max)."
             )
             throw GroupCallError.keyRatchetError
         }
@@ -104,14 +104,14 @@ final class MediaKeys {
     func applyMediaKeys(to decryptor: ThreemaGroupCallFrameCryptoDecryptorProtocol) throws {
         guard epoch < UInt8.max else {
             DDLogError(
-                "[GroupCall] Could not apply pcmk because epoch was too big. \(epoch) but maximum is \(UInt8.max)"
+                "[GroupCall] Could not apply pcmk because epoch was too big. Epoch is \(epoch) but maximum is \(UInt8.max)."
             )
             throw GroupCallError.keyRatchetError
         }
         
         guard ratchetCounter < UInt8.max else {
             DDLogError(
-                "[GroupCall] Could not apply pcmk because ratchetCounter was too big. \(ratchetCounter) but maximum is \(UInt8.max)"
+                "[GroupCall] Could not apply pcmk because ratchetCounter was too big. RatchetCounter is \(ratchetCounter) but maximum is \(UInt8.max)."
             )
             throw GroupCallError.keyRatchetError
         }

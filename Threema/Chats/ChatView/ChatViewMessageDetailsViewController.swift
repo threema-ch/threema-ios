@@ -38,8 +38,10 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         case groupAcknowledgements(_ count: Int)
         case groupDeclines(_ count: Int)
         
-        case fileMetadata
+        case editHistory
         
+        case fileMetadata
+       
         case messageStates
         
         case metadata
@@ -57,6 +59,11 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         case editedMessage
 
         case groupReaction(_ groupDeliveryReceipt: GroupDeliveryReceipt)
+        
+        // Warning: `EditHistoryItem` should not be stored directly inside the snapshot, but rather outside. As this is
+        // only an issue when the details are shown during an edit update we leave it as is. (See `Hashable`
+        // implementation of `EditHistoryItem` for details)
+        case historyItem(_ item: EditHistoryItem)
         
         case consumed
         
@@ -98,10 +105,12 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                     at: indexPath
                 )
                 
+                // Deactivate because we don't assign a delegate for the context menu and things like quote would be
+                // hard to implement
                 cell.isUserInteractionEnabled = false
                 cell.backgroundColor = Colors.backgroundTableViewCell
                 
-                // A bit hacky: Adjust spacing and flipping so it looks correct
+                // A bit hacky: Adjust spacing
                 if let chatViewBaseTableViewCell = cell as? ChatViewBaseTableViewCell {
                     chatViewBaseTableViewCell.bubbleTopSpacingConstraint.constant = ChatViewConfiguration
                         .ChatBubble.defaultGroupTopBottomInset
@@ -183,6 +192,11 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                     image: image
                 )
                 
+            case let .historyItem(historyItem):
+                let cell: ChatViewMessageDetailsMessageHistoryTableViewCell = tableView.dequeueCell(for: indexPath)
+                cell.historyItem = historyItem
+                return cell
+                
             case .perfectForwardSecrecy:
                 return strongSelf.configuredCell(
                     in: tableView,
@@ -211,17 +225,24 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         headerProvider: { _, section in
             switch section {
             case let .groupAcknowledgements(count):
-                return String.localizedStringWithFormat(
+                String.localizedStringWithFormat(
                     BundleUtil.localizedString(forKey: "detailView_group_acknowledged"),
                     count
                 )
             case let .groupDeclines(count):
-                return String.localizedStringWithFormat(
+                String.localizedStringWithFormat(
                     BundleUtil.localizedString(forKey: "detailView_group_declined"),
                     count
                 )
+            case .editHistory:
+                if let entries = self.message?.historyEntries, !entries.isEmpty {
+                    "detailView_edit_history_header".localized
+                }
+                else {
+                    nil
+                }
             default:
-                return nil
+                nil
             }
         },
         footerProvider: { [weak self] _, section in
@@ -270,6 +291,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             forCellReuseIdentifier: ChatViewMessageDetailsViewController.contentConfigurationCellIdentifier
         )
         tableView.registerCell(ChatViewMessageDetailsGroupReactionTableViewCell.self)
+        tableView.registerCell(ChatViewMessageDetailsMessageHistoryTableViewCell.self)
         tableView.registerCell(DebugInfoTableViewCell.self)
                 
         tableView.delegate = self
@@ -294,6 +316,10 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         observeMessage(\.readDate) { [weak self] in
             self?.updateSnapshot(reconfigure: [.messageDisplayState(.read)])
+        }
+        
+        observeMessage(\.lastEditedAt) { [weak self] in
+            self?.updateSnapshot(reconfigure: [])
         }
         
         observeMessage(\.userackDate) { [weak self] in
@@ -400,6 +426,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         content.image = image
         
+        content.secondaryTextProperties.color = .secondaryLabel
         content.imageProperties.preferredSymbolConfiguration = UIImage.SymbolConfiguration(scale: .medium)
         content.imageProperties.tintColor = .label
         
@@ -446,21 +473,32 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
 //            snapshot.appendItems([.messageDisplayState(.failed)])
 //        }
         
-        if messageDisplayState == .userAcknowledged || messageDisplayState == .userDeclined {
-            snapshot.appendSections([.reaction])
-            snapshot.appendItems([.messageDisplayState(messageDisplayState)])
+        // We do not show reactions for deleted messages
+        if message.deletedAt == nil {
+            if messageDisplayState == .userAcknowledged || messageDisplayState == .userDeclined {
+                snapshot.appendSections([.reaction])
+                snapshot.appendItems([.messageDisplayState(messageDisplayState)])
+            }
+            
+            let groupAcknowledgements = message.groupReactions(for: .acknowledged)
+            if !groupAcknowledgements.isEmpty {
+                snapshot.appendSections([.groupAcknowledgements(groupAcknowledgements.count)])
+                snapshot.appendItems(groupAcknowledgements.map { .groupReaction($0) })
+            }
+            
+            let groupDeclines = message.groupReactions(for: .declined)
+            if !groupDeclines.isEmpty {
+                snapshot.appendSections([.groupDeclines(groupDeclines.count)])
+                snapshot.appendItems(groupDeclines.map { .groupReaction($0) })
+            }
         }
         
-        let groupAcknowledgements = message.groupReactions(for: .acknowledged)
-        if !groupAcknowledgements.isEmpty {
-            snapshot.appendSections([.groupAcknowledgements(groupAcknowledgements.count)])
-            snapshot.appendItems(groupAcknowledgements.map { .groupReaction($0) })
-        }
-        
-        let groupDeclines = message.groupReactions(for: .declined)
-        if !groupDeclines.isEmpty {
-            snapshot.appendSections([.groupDeclines(groupDeclines.count)])
-            snapshot.appendItems(groupDeclines.map { .groupReaction($0) })
+        /// Note: Ideally we would use an approach where we can reconfigure the cells for the history, by storing the
+        /// information not inside the snapshot. (See `Hashable` implementation of `EditHistoryItem` for details.)
+        let historyRows = historyRows(for: message)
+        if !historyRows.isEmpty {
+            snapshot.appendSections([.editHistory])
+            snapshot.appendItems(historyRows, toSection: .editHistory)
         }
         
         if message is FileMessage {
@@ -533,6 +571,42 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         }
         
         return snapshot
+    }
+    
+    private func historyRows(for message: BaseMessage) -> [Row] {
+        // Only add any rows if there are any history messages
+        guard let historyEntries = message.historyEntries, !historyEntries.isEmpty else {
+            return []
+        }
+        
+        var rows = [Row]()
+        
+        // Add content of message first
+        switch message {
+        case let textMessage as TextMessage:
+            let item = EditHistoryItem(textMessage: textMessage)
+            rows.append(.historyItem(item))
+            
+        case let fileMessage as FileMessage:
+            let item = EditHistoryItem(fileMessage: fileMessage)
+            rows.append(.historyItem(item))
+            
+        default:
+            assertionFailure("The message \(message.loggingDescription) doesn't support editing")
+        }
+        
+        // Add all entries
+        let entryItemRows = historyEntries
+            .sorted { $0.editDate > $1.editDate }
+            .map {
+                Row.historyItem(
+                    EditHistoryItem(messageHistoryEntry: $0)
+                )
+            }
+        
+        rows.append(contentsOf: entryItemRows)
+        
+        return rows
     }
 }
 

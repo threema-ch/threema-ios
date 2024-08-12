@@ -33,7 +33,8 @@ class MentionableIdentity: Hashable {
     
     lazy var corpus: String = {
         switch contactKind {
-        case .all: return BundleUtil.localizedString(forKey: "all").lowercased()
+        case .all:
+            return BundleUtil.localizedString(forKey: "all").lowercased()
         case let ContactKind.contact(identity):
             guard let contact = entityFetcher.contact(for: identity) else {
                 DDLogError("Created MentionableIdentity for a contact that doesn't exist")
@@ -45,7 +46,8 @@ class MentionableIdentity: Hashable {
     
     lazy var contactImage: UIImage? = {
         switch contactKind {
-        case .all: return AvatarMaker.shared().unknownPersonImage()
+        case .all:
+            return AvatarMaker.shared().unknownPersonImage()
         case let ContactKind.contact(identity):
             guard let contact = entityFetcher.contact(for: identity) else {
                 DDLogError("Created MentionableIdentity for a contact that doesn't exist")
@@ -57,7 +59,8 @@ class MentionableIdentity: Hashable {
     
     lazy var displayName: String = {
         switch contactKind {
-        case .all: return BundleUtil.localizedString(forKey: "all")
+        case .all:
+            return BundleUtil.localizedString(forKey: "all")
         case let ContactKind.contact(identity):
             guard let contact = entityFetcher.contact(for: identity) else {
                 DDLogError("Created MentionableIdentity for a contact that doesn't exist")
@@ -67,19 +70,23 @@ class MentionableIdentity: Hashable {
         }
     }()
     
+    // swiftformat:disable:next redundantClosure
     lazy var identity: String = {
         switch contactKind {
-        case .all: return ""
+        case .all:
+            ""
         case let ContactKind.contact(identity):
-            return identity
+            identity
         }
     }()
     
+    // swiftformat:disable:next redundantClosure
     lazy var mentionIdentity: String = {
         switch contactKind {
-        case .all: return "@@@@@@@@"
+        case .all:
+            "@@@@@@@@"
         case let ContactKind.contact(identity):
-            return identity
+            identity
         }
     }()
     

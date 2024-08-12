@@ -106,7 +106,6 @@
 "threema_id" = "Threema-ID";
 "nickname" = "Nickname";
 "add_button" = "Dezue tue";
-"chatview_contextmenu_select" = "Uswähle...";
 "learn_more" = "Wiiteri Infos…";
 "file_message_image" = "Bild";
 "file_message_sticker" = "Sticker";
@@ -115,6 +114,10 @@
 "file_message_voice" = "Sprachnachricht";
 "file_message_file" = "Datei";
 "chat" = "Chat"; /* noun */
+
+"share_menu" = "Teile …";
+"forward_menu" = "Wiiterleite …";
+"chatview_contextmenu_select" = "Uswähle...";
 
 "chat_back_button_accessibility" = "%d ungläse";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "All Nachrichte i dem Chat vo dem Grät lösche?";
 "messages_delete_all_confirm_message" = "Das beinhaltet au alli Medie und Dokument.";
 "messages_delete_selected_confirm" = "Usgwählti Nachrichte vo dem Grät lösche?";
+"message_delete_confirm" = "Die Nachricht lösche?";
 "conversation_delete_confirm" = "De Chat vo dem Grät lösche?";
 "delete_n" = "Lösche (%d)";
-"message_delete_for_everyone" = "Nachricht für all lösche";
+"message_delete_for_me" = "Vo dem Grät lösche";
+"message_delete_for_everyone" = "Nachricht für alli lösche";
 
 "message_cannot_play_movie" = "Film cha nöd abgspilt werde.";
 
@@ -478,7 +483,7 @@
 "pull_to_sync_429_message" = "S’Limit vode erlaubte Kontaktsynchronisatione pro Tag isch erreicht. Mached Sie mit de Synchronisierig morn wiiter, oder kontaktiered Sie de Threema-Support.";
 "pull_to_sync_429_message_work" = "S’Limit vode erlaubte Kontaktsynchronisatione pro Tag isch erreicht. Mached Sie mit de Synchronisation morn wiiter, oder kontaktiered Sie Ihre %@-Administrator.";
 
-"synchronizing" = "Synchronisiere…";
+"synchronizing" = "Synchronisiere …";
 
 "no_contacts_syncon" = "Sie händ no kei Kontäkt. D’Synchronisierig isch igschalte, aber offebar hät no niemer vo Ihrne Kontäkt Threema installiert (ladet Sie sie ii!).";
 "no_contacts" = "Kei Kontäkt";
@@ -655,7 +660,7 @@
 "invite_sms_body" = "Hallo! Lah üs sicher und dateschutzkonform über Threema kommuniziere! Mini Threema-ID: https://threema.id/%@";
 "invite_facebook_text" = "Ich bruuch Threema, de sicheri Instant Messenger, wo d’Privatsphäre schützt. Mini Threema-ID: https://threema.id/%@";
 "invite_twitter_text" = "Ich bruuch Threema, de sicheri Instant Messenger, wo d’Privatsphäre schützt. Mini Threema-ID: https://threema.id/%@";
-"invite_using" = "Fründe zu Threema iilade mit…";
+"invite_using" = "Fründe zu Threema iilade mit …";
 "sms" = "SMS";
 
 /* Notifications Text */
@@ -711,14 +716,14 @@
 "quote_interaction_hint" = "Springt zude zitierte Nachricht";
 
 /* TTOpenInAppActivity */
-"Open in ..." = "Ufmache in…";
+"Open in ..." = "Ufmache in …";
 
 /* VoiceOver long labels */
 "restore" = "Wiederherstelle";
 
 /* PullToRefresh */
 "pull_to_refresh" = "Abezieh";
-"refreshing" = "Aktualisiere…";
+"refreshing" = "Aktualisiere …";
 
 /* Threema Channel */
 "threema_channel_intro" = "Wänd Sie de Threema Channel zu Ihrne Kontäkt dezue tue?";
@@ -727,7 +732,7 @@
 
 /* Push decryption */
 "decryption_push_reply" = "Antworte";
-"decryption_push_placeholder" = "Antworte…";
+"decryption_push_placeholder" = "Antworte …";
 "decryption_push_agree" = "Bestätige";
 "decryption_push_disagree" = "Ablehne";
 
@@ -1104,6 +1109,7 @@
 "settings_list_storage_management_title" = "Speichermanagement";
 "settings_list_passcode_lock_title" = "Code-Sperri";
 "settings_threema_calls" = "Threema-Arüef";
+"settings_list_threema_desktop_title" = "Threema 2.0 für Desktop (Beta)";
 "settings_list_threema_web_title" = "Desktop/Web";
 
 "settings_list_network_title" = "Netzwerchstatus";
@@ -1145,13 +1151,16 @@
 "settings_privacy_read_receipts" = "Läsebestätigunge";
 "settings_privacy_typing_indicator" = "Mälde, wenn ich tippe";
 
+"settings_privacy_poi_header" = "Standortdate";
+"settings_privacy_choose_poi" = "POIs uswähle";
+"settings_privacy_poi_footer" = "Wenn aktiviert, werded bim Teile vom Standort öffentlichi Ort («Points of Interest») i Ihrere Nöchi aazeigt. Für das wird Ihre Standort an Server übermittled.";
+
 "settings_privacy_TIRR_reset_all" = "All Kontäkt zruggsetze";
 "settings_privacy_TIRR_reset_footer" = "Setzt all Kontäkt uf d’Standardiistellig zrugg.";
 "settings_privacy_TIRR_reset_alert_title" = "Zruggsetze";
 "settings_privacy_TIRR_reset_alert_message" = "All Kontäkt werded uf d’Standardiistellig zrugggsetzt. Cha nöd rückgängig gmacht werde.";
 "settings_privacy_TIRR_reset_alert_action" = "All zruggsetze";
 
-"settings_privacy_choose_poi" = "POIs uswähle";
 "settings_privacy_hide_private_chats" = "Privati Chats verstecke";
 "settings_privacy_hide_private_chats_footer" = "All private Chats werded ide Chatübersicht usbländet. D’Code-Sperri mues aktiviert sii, zum die Iistellig z’aktiviere.";
 
@@ -1251,7 +1260,7 @@
 "automatic_delete_confirmation_message_immediate_deletion" = "%d Nachrichte aller Art werded jetzt glöscht, und all Nachrichte älter als %@ werded ab sofort automatisch glöscht. Hiiwis: Offeni Umfrage und Notizgruppe sind devo nöd betroffe.";
 "automatic_delete_on_confirmation_button" = "Automatischs Lösche iischalte";
 "automatic_delete_off_confirmation_button" = "Automatischs Lösche usschalte";
-"delete_in_progress" = "Löscht…";
+"delete_in_progress" = "Löscht …";
 "one_year_title" = "1 Jahr";
 "one_year" = "1 Jahr";
 "six_months_title" = "6 Mönet";
@@ -1647,11 +1656,11 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 "notification_threemaweb_connectionlost_title" = "Verbindig zude Desktop-App / zum Web-Client isch trännt worde";
 "notification_threemaweb_connectionlost_body" = "Zum d’Desktop-App oder de Web-Client wiiter z’bruuche, mached Sie bitte d’App uf.";
 
+"settings_threema_web_desktop_banner_title" = "Neu: Threema 2.0 für Desktop (Beta)";
+"settings_threema_web_desktop_banner_message" = "Da tippe, zum di nöchst Generation vode Desktop-App mit Multi-Device-Understützig z’bruuche.";
+
 "settings_threema_web_connected" = "Desktop/Web verbunde";
 "settings_threema_web_connectioninfo" = "Ihres Grät muess entsperrt und %@ im Vordergrund sii, demit d’Verbindig ufrechterhalte blibt. Binere aktive Verbindig wird s’Grät nöd automatisch gsperrt.";
-"settings_threema_web_linked_device_section_header" = "Multi-Device";
-"settings_threema_web_linked_device_section_footer" = "S’verchnüpfte Grät chan au gnutzt werde, wenn %@ im Hindergrund oder das Grät offline isch.";
-"settings_threema_web_section_header" = "Direkt verbundeni Grät";
 "settings_threema_web_multi_device_qr_code_title" = "Falsche QR-Code";
 "settings_threema_web_multi_device_qr_code_message" = "Tipped Sie uf «%@» und dänn «%@», zum mit dere Desktop-App z’verchnüpfe.";
 
@@ -1660,10 +1669,18 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 "compose_bar_image_picker_button_accessibility_label" = "Bilduswahl ufmache";
 "compose_bar_record_button_accessibility_label" = "Sprachnachricht ufneh";
 "compose_bar_send_message_button_accessibility_label" = "Nachricht verschicke";
+"compose_bar_send_edited_message_button_accessibility_label" = "Änderig bestätige";
 "compose_bar_attachment_button_accessibility_label" = "Medie uswähle";
-"play_record_audio_view_controller_general_error_title" = "Ufnahm fehlgschlage";
-"play_record_audio_view_controller_general_error_message" = "Wägeme unbekannte Fehler cha im Moment kei Sprachnachricht ufgnoh werde.";
 "hardware_keyboard_send_on_enter_discoverability_title" = "Nachricht abschicke";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "Kei Sprachnachricht möglich.";
+"voice_recorder_error_message" = "Bitte versueched Sie’s nomal, oder wändet Sie sich an Support.";
+"voice_recorder_call_state_not_idle" = "Aktive Aaruef";
+"voice_recorder_playback_failure" = "Widergabefehler";
+"voice_recorder_recording_error" = "Fehler bide Sprachufnahm";
+"voice_recorder_recording_cancelled" = "Ufnahm abbroche";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "Sie händ für %@ gstimmt.";
@@ -1678,7 +1695,6 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 
 // ChatBar
 "chat_bar_quote_close_button" = "Zitat schlüsse";
-"chat_bar_edited_message_close_button" = "Nachricht bearbeite abbräche";
 
 // ChatDetailView
 "detailView_title" = "Nachrichtedetails";
@@ -1688,6 +1704,9 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 "detailView_group_file_size" = "Dateigrössi";
 "detailView_consumed" = "S’erscht Mal abgspilt";
 "detailView_created_footer" = "Erstellt: %@";
+"detailView_edit_history_header" = "Bearbeitigsverlauf";
+"detailView_edit_history_current" = "Aktuell";
+"detailView_edit_history_no_caption" = "Kei Bildunderschrift";
 
 "message_display_status_none" = "Keine";
 "message_display_status_user_acknowledged" = "Bestätigt";
@@ -1832,16 +1851,16 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 "accessibility_voice_message_unplayed" = "Nonig abgspilt.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Bestätigt, %@";
-"accessibility_status_declined_plus_time" = "Abglehnt, %@";
-"accessibility_status_sending_plus_time" = "Usgehend, %@";
-"accessibility_status_sent_plus_time" = "Verschickt, %@.";
-"accessibility_status_delivered_plus_time" = "Zuegstellt, %@";
-"accessibility_status_read_plus_time" = "Gläse, %@";
-"accessibility_status_failed_plus_time" = "Fehler, %@";
-"accessibility_status_group_acknowledged_plus_time" = "Bestätigt vo %i, %@%@";
-"accessibility_status_group_declined_plus_time" = "Abglehnt vo %i, %@%@";
-"accessibility_status_group_acknowledged_declined_plus_time" = "Bestätigt vo %i, abglehnt vo %i, %@%@";
+"accessibility_status_acknowledged" = "Bestätigt";
+"accessibility_status_declined" = "Abglehnt";
+"accessibility_status_sending" = "Usgehend";
+"accessibility_status_sent" = "Versändet.";
+"accessibility_status_delivered" = "Zuegstellt";
+"accessibility_status_read" = "Gläse";
+"accessibility_status_failed" = "Fehler";
+"accessibility_status_group_acknowledged" = "Bestätigt vo %i, %@";
+"accessibility_status_group_declined" = "Abglehnt vo %i, %@";
+"accessibility_status_group_acknowledged_declined" = "Bestätigt vo %i, abglehnt vo %i, %@";
 "accessibility_status_group_acknowledged_my_reaction" = "Ich ha bestätigt";
 "accessibility_status_group_declined_my_reaction" = "Ich ha abglehnt";
 

@@ -49,6 +49,7 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
     }
     
     override func prepareForReuse() {
+        player?.pause()
         showLoadingScreen()
         if let video = currentVideo {
             video.removeFromSuperlayer()
@@ -116,10 +117,18 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
             DDLogError("Could not create AudioSession for .moviePlayback")
         }
         
+        // Clean up previously added views and gesture recognizers
+        for subview in videoBackgroundView.subviews {
+            subview.removeFromSuperview()
+        }
+        gestureRecognizers?.removeAll()
+        
         let timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
             if playerItem.status != .readyToPlay, playerItem.status != .failed {
                 return
             }
+            timer.invalidate()
+            
             DispatchQueue.main.async {
                 self.videoBackgroundView.isHidden = false
 
@@ -131,14 +140,11 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
                 
                 let tapGR = UITapGestureRecognizer(target: self, action: #selector(VideoImageCell.handleTap(_:)))
                 tapGR.delegate = self
-                tapGR.numberOfTapsRequired = 1
                 view.addGestureRecognizer(tapGR)
                 
                 self.videoLoaded()
-                timer.invalidate()
             }
         }
-        timer.tolerance = 0.1
     }
     
     func togglePlaying() {
@@ -146,9 +152,15 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
             pauseVideo()
         }
         else {
-            isPlaying = true
-            playButton.isHidden = true
-            player?.play()
+            playVideo()
+        }
+    }
+    
+    func playVideo() {
+        DispatchQueue.main.async {
+            self.isPlaying = true
+            self.playButton.isHidden = true
+            self.player?.play()
         }
     }
     

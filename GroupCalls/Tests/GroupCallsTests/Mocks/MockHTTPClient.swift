@@ -22,7 +22,7 @@ import Foundation
 import ThreemaProtocols
 @testable import GroupCalls
 
-final class MockHTTPClient: GroupCallsHTTPClientAdapterProtocol {
+final class MockHTTPClient: GroupCallHTTPClientAdapterProtocol {
     typealias CallID = Data
     typealias PeekResponse = ThreemaProtocols.Groupcall_SfuHttpResponse.Peek
     

@@ -26,54 +26,54 @@ extension Colors {
     public class var backgroundChatLines: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray500.color
+            Asset.SharedColors.gray500.color
         case .dark:
-            return Asset.SharedColors.gray450.color
+            Asset.SharedColors.gray450.color
         }
     }
     
     public class func backgroundChatLines(colorTheme: Theme) -> UIColor {
         switch colorTheme {
         case .light, .undefined:
-            return Asset.SharedColors.gray500.color
+            Asset.SharedColors.gray500.color
         case .dark:
-            return Asset.SharedColors.gray450.color
+            Asset.SharedColors.gray450.color
         }
     }
     
     public class var chatBubbleReceived: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray250.color
+            Asset.SharedColors.gray250.color
         case .dark:
-            return Asset.SharedColors.gray800.color
+            Asset.SharedColors.gray800.color
         }
     }
     
     public class var chatBubbleReceivedSelected: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray350.color
+            Asset.SharedColors.gray350.color
         case .dark:
-            return Asset.SharedColors.gray550.color
+            Asset.SharedColors.gray550.color
         }
     }
     
     public class var backgroundChatBar: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray100.color
+            Asset.SharedColors.gray100.color
         case .dark:
-            return Asset.SharedColors.gray900.color
+            Asset.SharedColors.gray900.color
         }
     }
     
     public class var chatBarInput: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.gray1000.color
+            Asset.SharedColors.gray1000.color
         }
     }
         
@@ -92,36 +92,36 @@ extension Colors {
     @objc public class var backgroundAudioPlayer: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray100.color
+            Asset.SharedColors.gray100.color
         case .dark:
-            return Asset.SharedColors.gray800.color
+            Asset.SharedColors.gray800.color
         }
     }
     
     @objc public class var backgroundAudioPlayerButton: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray200.color
+            Asset.SharedColors.gray200.color
         case .dark:
-            return Asset.SharedColors.gray900.color
+            Asset.SharedColors.gray900.color
         }
     }
     
     @objc public class var backgroundSpeedButton: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray300.color
+            Asset.SharedColors.gray300.color
         case .dark:
-            return Asset.SharedColors.gray900.color
+            Asset.SharedColors.gray900.color
         }
     }
     
     @objc public class var fillMicrophoneButton: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray600.color
+            Asset.SharedColors.gray600.color
         case .dark:
-            return Asset.SharedColors.gray400.color
+            Asset.SharedColors.gray400.color
         }
     }
     
@@ -132,18 +132,18 @@ extension Colors {
     @objc public class var ballotRowLight: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray200.color
+            Asset.SharedColors.gray200.color
         case .dark:
-            return Asset.SharedColors.gray700.color
+            Asset.SharedColors.gray700.color
         }
     }
     
     @objc public class var ballotRowDark: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray300.color
+            Asset.SharedColors.gray300.color
         case .dark:
-            return Asset.SharedColors.gray800.color
+            Asset.SharedColors.gray800.color
         }
     }
     
@@ -154,36 +154,36 @@ extension Colors {
     public class var backgroundThumbnailCollectionView: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.gray900.color
+            Asset.SharedColors.gray900.color
         }
     }
     
     public class var backgroundPreviewCollectionViewCell: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray200.color
+            Asset.SharedColors.gray200.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
     public class var systemMessageBackground: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray150.color
+            Asset.SharedColors.gray150.color
         case .dark:
-            return Asset.SharedColors.gray900.color
+            Asset.SharedColors.gray900.color
         }
     }
 
     public class var thumbnailProgressViewColor: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray30.color
+            Asset.SharedColors.gray30.color
         case .dark:
-            return Asset.SharedColors.gray850.color
+            Asset.SharedColors.gray850.color
         }
     }
 }

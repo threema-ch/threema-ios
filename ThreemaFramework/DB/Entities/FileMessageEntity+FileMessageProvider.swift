@@ -29,19 +29,19 @@ extension FileMessageEntity: FileMessageProvider {
     public var fileMessageType: FileMessageType {
         switch renderType {
         case .imageMessage:
-            return .image(self)
+            .image(self)
         case .stickerMessage:
-            return .sticker(self)
+            .sticker(self)
         case .animatedImageMessage:
-            return .animatedImage(self)
+            .animatedImage(self)
         case .animatedStickerMessage:
-            return .animatedSticker(self)
+            .animatedSticker(self)
         case .videoMessage:
-            return .video(self)
+            .video(self)
         case .voiceMessage:
-            return .voice(self)
+            .voice(self)
         case .fileMessage:
-            return .file(self)
+            .file(self)
         }
     }
 }
@@ -148,22 +148,22 @@ extension FileMessageEntity: ThumbnailDisplayMessage {
     private var assetResourceType: PHAssetResourceType? {
         switch fileMessageType {
         case .image, .animatedImage, .sticker, .animatedSticker:
-            return .photo
+            .photo
         case .video:
-            return .video
+            .video
         case .voice, .file:
-            return nil
+            nil
         }
     }
     
     public var assetResourceTypeForAutosave: PHAssetResourceType? {
         switch fileMessageType {
         case .image, .animatedImage:
-            return .photo
+            .photo
         case .video:
-            return .video
+            .video
         case .voice, .file, .sticker, .animatedSticker:
-            return nil
+            nil
         }
     }
     

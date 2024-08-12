@@ -117,15 +117,12 @@ final class ChatViewDeletedMessageTableViewCell: ChatViewBaseTableViewCell, Meas
         messageDateAndStateView,
     ])
 
-    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = {
-        [
-            contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
-            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ]
-
-    }()
+    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = [
+        contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
+        contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+    ]
 
     private lazy var containerView: UIView = {
         let view = UIView()
@@ -169,47 +166,79 @@ final class ChatViewDeletedMessageTableViewCell: ChatViewBaseTableViewCell, Meas
 
 extension ChatViewDeletedMessageTableViewCell: Reusable { }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewDeletedMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
 
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
-
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
+        
         guard let message = deletedMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
+        typealias Provider = ChatViewMessageActionsProvider
         
-        let detailAction = Provider.detailsAction {
+        // Only allow unstar if the message is starred
+        let primaryActions: Provider.MessageActionsSection?
+        if message.messageMarkers?.star.boolValue ?? false {
+            // MessageMarkers
+            let markStarHandler = { (message: BaseMessage) in
+                self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+            }
+            
+            primaryActions = Provider.defaultPrimaryActionsSection(
+                message: message,
+                ackHandler: nil,
+                markStarHandler: markStarHandler
+            )
+        }
+        else {
+            primaryActions = nil
+        }
+        
+        // Details
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
             
-        let selectHandler = Provider.selectAction {
+        // Select
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        let deleteAction = Provider.deleteAction(
+        // Build menu
+        
+        let basicActions = Provider.defaultBasicActions(
             message: message,
+            popOverSource: chatBubbleView,
+            detailsHandler: detailsHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            popOverSource: chatBubbleView
+            didDelete: didDelete
         )
         
-        // Build menu
-        return ([], [detailAction, selectHandler, deleteAction])
+        return [
+            primaryActions,
+            .init(sectionType: .inline, actions: basicActions),
+        ].compactMap { $0 }
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
+        set {
+            // no-op
+        }
     }
 }

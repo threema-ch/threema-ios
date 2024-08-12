@@ -63,16 +63,16 @@ public class URLSessionManager {
             
             // No session found, creating new one. If it is a background session we store it. Else we just return the
             // default session
-            let createdSession: URLSession
-            if createAsBackgroundSession {
-                createdSession = sessionProvider.backgroundSession(
-                    identifier: String(hash),
-                    delegate: delegate
-                )
-            }
-            else {
-                createdSession = sessionProvider.defaultSession(delegate: delegate)
-            }
+            let createdSession: URLSession =
+                if createAsBackgroundSession {
+                    sessionProvider.backgroundSession(
+                        identifier: String(hash),
+                        delegate: delegate
+                    )
+                }
+                else {
+                    sessionProvider.defaultSession(delegate: delegate)
+                }
             
             sessionStore[hash] = createdSession
             return createdSession

@@ -106,7 +106,6 @@
 "threema_id" = "ID Threema";
 "nickname" = "Surnom public";
 "add_button" = "Ajouter";
-"chatview_contextmenu_select" = "Sélectionner…";
 "learn_more" = "En savoir plus…";
 "file_message_image" = "Image";
 "file_message_sticker" = "Autocollant";
@@ -115,6 +114,10 @@
 "file_message_voice" = "Message vocal";
 "file_message_file" = "Fichier";
 "chat" = "discussion"; /* noun */
+
+"share_menu" = "Partager…";
+"forward_menu" = "Transférer…";
+"chatview_contextmenu_select" = "Sélectionner…";
 
 "chat_back_button_accessibility" = "%d non lu(s)";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "Supprimer tous les messages de cette conversation sur cet appareil ?";
 "messages_delete_all_confirm_message" = "Cela inclut tous les médias et documents.";
 "messages_delete_selected_confirm" = "Êtes-vous sûr de vouloir supprimer les messages sélectionnés de cet appareil ?";
+"message_delete_confirm" = "Supprimer ce message ?";
 "conversation_delete_confirm" = "Voulez-vous vraiment supprimer cette conversation sur cet appareil ?";
 "delete_n" = "Supprimer (%d)";
-"message_delete_for_everyone" = "Supprimer le message pour tous";
+"message_delete_for_me" = "Supprimer de cet appareil";
+"message_delete_for_everyone" = "Supprimer pour tout le monde";
 
 "message_cannot_play_movie" = "Impossible de lire le film.";
 
@@ -473,7 +478,7 @@
 "backup_exclude" = "L’exportation d’ID ne sera pas incluse quand vous sauvegarderez votre téléphone via iTunes ou iCloud. Enregistrez manuellement l’exportation d’ID pour ne pas la perdre.";
 
 /* Contacts */
-"pull_to_sync" = "Tirer pour synchroniser...";
+"pull_to_sync" = "Tirer pour synchroniser…";
 "bad_identity_backup" = "Les données d’exportation d’ID sont invalides ou vous avez saisi un mot de passe incorrect. Utilisez le mot de passe choisi lors de la création de l’exportation pour restaurer votre ID Threema. Vérifiez votre saisie et réessayez.";
 "pull_to_sync_429_message" = "La limite de synchronisations de contacts autorisées par jour a été atteinte. Veuillez poursuivre la synchronisation demain ou contacter le service clientèle de Threema.";
 "pull_to_sync_429_message_work" = "La limite de synchronisations de contacts autorisées par jour a été atteinte. Veuillez poursuivre la synchronisation demain ou contacter votre administrateur %@.";
@@ -717,8 +722,8 @@
 "restore" = "Restaurer";
 
 /* PullToRefresh */
-"pull_to_refresh" = "Tirer pour";
-"refreshing" = "Mise à jour";
+"pull_to_refresh" = "Tirer pour actualiser...";
+"refreshing" = "Chargement...";
 
 /* Threema Channel */
 "threema_channel_intro" = "Ajouter la chaîne Threema à vos contacts ?";
@@ -727,7 +732,7 @@
 
 /* Push decryption */
 "decryption_push_reply" = "Répondre";
-"decryption_push_placeholder" = "Répondre...";
+"decryption_push_placeholder" = "Répondre…";
 "decryption_push_agree" = "Accuser réception";
 "decryption_push_disagree" = "Désapprouver";
 
@@ -786,9 +791,9 @@
 "call_status_wait_ringing" = "Initialiser";
 "call_status_ringing" = "Cela sonne";
 "call_status_incom_ringing" = "Appel Threema";
-"call_status_initializing" = "Connexion";
+"call_status_initializing" = "Connexion…";
 "call_status_calling" = "Connecté";
-"call_status_reconnecting" = "Connexion";
+"call_status_reconnecting" = "Connexion…";
 "call_status_unknown" = "Inconnu";
 "call_status_blocked" = "Contact bloqué";
 "call_status_failed_title" = "Appel Threema";
@@ -1104,7 +1109,8 @@ En utilisant Threema Safe, vous pouvez restaurer votre ID, vos contacts et vos g
 "settings_list_media_title" = "Média";
 "settings_list_storage_management_title" = "Gestion du stockage";
 "settings_list_passcode_lock_title" = "Verrouillage du code";
-"settings_threema_calls" = "Appels Threema";
+"settings_threema_calls" = "Appels";
+"settings_list_threema_desktop_title" = "Threema 2.0 pour le bureau (Bêta)";
 "settings_list_threema_web_title" = "Desktop/Web";
 
 "settings_list_network_title" = "Statut du réseau";
@@ -1146,13 +1152,16 @@ En utilisant Threema Safe, vous pouvez restaurer votre ID, vos contacts et vos g
 "settings_privacy_read_receipts" = "Confirmations de lecture";
 "settings_privacy_typing_indicator" = "Indicateurs de frappe";
 
+"settings_privacy_poi_header" = "Données de la position";
+"settings_privacy_choose_poi" = "Afficher les POI";
+"settings_privacy_poi_footer" = "Si activée, les points d'intérêt à proximité seront affichés lorsque vous partagez votre position. À cet effet, votre position est envoyée au serveur.";
+
 "settings_privacy_TIRR_reset_all" = "Réinitialiser pour tous les contacts";
 "settings_privacy_TIRR_reset_footer" = "Réinitialiser tous les contacts au paramètre par défaut.";
 "settings_privacy_TIRR_reset_alert_title" = "Réinitialiser";
 "settings_privacy_TIRR_reset_alert_message" = "Réinitialiser tous les contacts au paramètre par défaut. Cette action est irréversible.";
 "settings_privacy_TIRR_reset_alert_action" = "Tout réinitialiser";
 
-"settings_privacy_choose_poi" = "Choisir les points d'intérêt";
 "settings_privacy_hide_private_chats" = "Masquer les discussions privées";
 "settings_privacy_hide_private_chats_footer" = "Masquez toutes les discussions privées dans l'aperçu des discussions. Vous devez définir un code afin d'activer ce paramètre.";
 
@@ -1648,23 +1657,31 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "notification_threemaweb_connectionlost_title" = "Perte de connexion à l'application de bureau/au client Web";
 "notification_threemaweb_connectionlost_body" = "Pour continuer à utiliser l'application de bureau/le client Web, veuillez rouvrir l'application.";
 
+"settings_threema_web_desktop_banner_title" = "Nouveau : Threema 2.0 pour le bureau (Bêta)";
+"settings_threema_web_desktop_banner_message" = "Appuyez ici pour essayer la prochaine génération de l'application de bureau avec support multi-appareils.";
+
 "settings_threema_web_connected" = "Desktop/Web connecté";
 "settings_threema_web_connectioninfo" = "Votre appareil doit être déverrouillé avec %@ fonctionnant en premier plan pour rester connecté. En étant connecté, votre appareil ne sera pas automatiquement verrouillé.";
-"settings_threema_web_linked_device_section_header" = "Multi-appareils";
-"settings_threema_web_linked_device_section_footer" = "L'appareil associé peut être utilisé même si %@ est en arrière-plan ou cet appareil est hors ligne.";
-"settings_threema_web_section_header" = "Appareils connectés directement";
 "settings_threema_web_multi_device_qr_code_title" = "Code QR erroné";
-"settings_threema_web_multi_device_qr_code_message" = "Touchez « %@ » puis « %@ » pour associer à cette application pour ordinateur.";
+"settings_threema_web_multi_device_qr_code_message" = "Naviguez vers « %@ » et sélectionnez « %@ » pour associer cette application de bureau.";
 
 "chat_text_view_placeholder" = "Nouveau message";
 "compose_bar_camera_button_accessibility_label" = "Ouvrir la caméra";
 "compose_bar_image_picker_button_accessibility_label" = "Ouvrir le sélecteur d'image";
 "compose_bar_record_button_accessibility_label" = "Enregistrer un message vocal";
 "compose_bar_send_message_button_accessibility_label" = "Envoyer un message";
+"compose_bar_send_edited_message_button_accessibility_label" = "Confirmer la modification";
 "compose_bar_attachment_button_accessibility_label" = "Ajouter des pièces jointes";
-"play_record_audio_view_controller_general_error_title" = "Échec de l'enregistrement";
-"play_record_audio_view_controller_general_error_message" = "Impossible d'enregistrer un message vocal pour l'instant à cause d'une erreur inconnue";
 "hardware_keyboard_send_on_enter_discoverability_title" = "Envoyer un message";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "Aucun message vocal possible.";
+"voice_recorder_error_message" = "Veuillez réessayer ou contacter notre assistance.";
+"voice_recorder_call_state_not_idle" = "Appel actif";
+"voice_recorder_playback_failure" = "Erreur de lecture";
+"voice_recorder_recording_error" = "Erreur d'enregistrement";
+"voice_recorder_recording_cancelled" = "Enregistrement annulé";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "Vous avez voté pour %@.";
@@ -1679,7 +1696,6 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 
 // ChatBar
 "chat_bar_quote_close_button" = "Fin de citation";
-"chat_bar_edited_message_close_button" = "Annuler le message de modification";
 
 // ChatDetailView
 "detailView_title" = "Détails du message";
@@ -1689,6 +1705,9 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "detailView_group_file_size" = "Taille de fichier";
 "detailView_consumed" = "Lu en premier";
 "detailView_created_footer" = "Créé : %@";
+"detailView_edit_history_header" = "Modifier l'historique";
+"detailView_edit_history_current" = "Actuel";
+"detailView_edit_history_no_caption" = "Pas de légende";
 
 "message_display_status_none" = "Aucun";
 "message_display_status_user_acknowledged" = "En accord";
@@ -1833,16 +1852,16 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "accessibility_voice_message_unplayed" = "Pas encore lu.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "A accepté, %@";
-"accessibility_status_declined_plus_time" = "A décliné, %@";
-"accessibility_status_sending_plus_time" = "Envoi, %@";
-"accessibility_status_sent_plus_time" = "Envoyé, %@";
-"accessibility_status_delivered_plus_time" = "Livré, %@";
-"accessibility_status_read_plus_time" = "Lu, %@";
-"accessibility_status_failed_plus_time" = "Échoué, %@";
-"accessibility_status_group_acknowledged_plus_time" = "Accepté par %i, %@%@";
-"accessibility_status_group_declined_plus_time" = "Refusé par %i, %@%@";
-"accessibility_status_group_acknowledged_declined_plus_time" = "Accepté par %i, refusé par %i, %@%@";
+"accessibility_status_acknowledged" = "Accepté";
+"accessibility_status_declined" = "Refusé";
+"accessibility_status_sending" = "Envoi en cours";
+"accessibility_status_sent" = "Envoyé";
+"accessibility_status_delivered" = "Livré";
+"accessibility_status_read" = "Lu";
+"accessibility_status_failed" = "Échec";
+"accessibility_status_group_acknowledged" = "Accepté par %i, %@";
+"accessibility_status_group_declined" = "Refusé par %i, %@";
+"accessibility_status_group_acknowledged_declined" = "Accepté par %i, refusé par %i, %@";
 "accessibility_status_group_acknowledged_my_reaction" = "J'ai accepté";
 "accessibility_status_group_declined_my_reaction" = "J'ai refusé";
 
@@ -1951,8 +1970,8 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 // Delete / Edit message
 "edit_message" = "Modifier le message";
 "edit_message_can_not_edit" = "Ce message a été envoyé il y a plus de 6 heures, il ne peut donc plus être modifié.";
-"edit_message_not_sent_to" = "Les membres suivants du groupe ne pourront pas voir vos modifications : %@";
-"delete_message_not_sent_to" = "Ce message ne sera pas supprimé pour les membres suivants du groupe : %@";
+"edit_message_not_sent_to" = "Les membres suivants du groupe ne pourront pas voir vos modifications :\n %@";
+"delete_message_not_sent_to" = "Le message ne sera pas supprimé pour les membres suivants du groupe :\n %@";
 "delete_edit_message_not_sent_to_others" = "%d autres";
 "delete_message_requirement" = "Pour les messages devant être supprimés, la dernière version de Threema devra être installée.";
 "edit_message_requirement" = "Pour voir les modifications, la dernière version de Threema devra être installée.";

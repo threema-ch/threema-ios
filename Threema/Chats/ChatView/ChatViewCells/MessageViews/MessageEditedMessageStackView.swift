@@ -54,7 +54,7 @@ final class MessageEditedMessageStackView: UIStackView {
                 removeArrangedSubview(spacerView)
             case .spaced:
                 if !arrangedSubviews.contains(where: { $0 == spacerView }) {
-                    insertArrangedSubview(spacerView, at: 2)
+                    insertArrangedSubview(spacerView, at: 1)
                 }
             }
         }
@@ -164,7 +164,7 @@ final class MessageEditedMessageStackView: UIStackView {
 
     private func updateEditMessage(editMessage: BaseMessage) {
         // Assign Values & configure layout
-        titleLabel.text = BundleUtil.localizedString(forKey: "edited_message_state")
+        titleLabel.text = BundleUtil.localizedString(forKey: "edit")
 
         updateContent()
         updateLayout()

@@ -276,7 +276,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     }
     
     private func invalidateObservers() {
-        observers.forEach { observer in
+        for observer in observers {
             observer.invalidate()
         }
         observers.removeAll()
@@ -287,56 +287,69 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
 
 extension ChatViewBallotMessageTableViewCell: Reusable { }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewBallotMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
     
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
-
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
+        
         guard let message = ballotMessageAndNeighbors?.message else {
             return nil
         }
         
-        typealias Provider = ChatViewMessageActionProvider
+        typealias Provider = ChatViewMessageActionsProvider
+        
+        // Primary actions
+        
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
+        }
+        
+        // Message markers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
+        
+        let primaryActions = Provider.defaultPrimaryActionsSection(
+            message: message,
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler
+        )
+        
+        // Basic actions
         
         // Details
-        let detailsHandler = {
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
-        let detailsAction = Provider.detailsAction(handler: detailsHandler)
-        
-        let selectHandler = Provider.selectAction {
+        // Select
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        let deleteAction = Provider.deleteAction(
+        let basicActions = Provider.defaultBasicActions(
             message: message,
+            popOverSource: chatBubbleView,
+            detailsHandler: detailsHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            popOverSource: chatBubbleView
+            didDelete: didDelete
         )
         
-        // Message markers
-        let markStarAction = Provider.addStarMarkerAction(message: message) { message in
-            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
-        }
-        
         // Build menu
-        return ([markStarAction], [detailsAction, selectHandler, deleteAction])
+        return [primaryActions, .init(sectionType: .inline, actions: basicActions)]
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

@@ -94,7 +94,6 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
                     
                     fileMessagePreview = FileMessagePreview(for: fileMessageEntity)
                     fileMessagePreview?.show(on: chatViewController?.navigationController)
-                    
                 case let .video(videoMessage):
                     play(videoMessage: videoMessage)
                 case .animatedImage, .animatedSticker:
@@ -102,8 +101,10 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
                 default:
                     photoBrowserWrapper.openPhotoBrowser(for: message)
                 }
+            
             case .downloading:
                 cancelBlobSyncAction(objectID: message.objectID)
+            
             case .dataDeleted, .fileNotFound:
                 return
             }

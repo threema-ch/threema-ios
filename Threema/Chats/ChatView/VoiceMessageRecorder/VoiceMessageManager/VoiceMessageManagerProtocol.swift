@@ -22,43 +22,6 @@ import Combine
 import Foundation
 import ThreemaFramework
 
-enum VoiceMessageError: Equatable, LocalizedError {
-    // Audio Session
-    case audioSessionFailure
-    case couldNotActivateCategory
-    case callStateNotIdle
-    case exportFailed
-    // Audio Playback
-    case audioFileMissing
-    case playbackFailure
-    // Audio Recording
-    case noRecordPermission
-    case recordingCancelled
-    case assetNotFound
-    case couldNotSave
-    case recorderInitFailure
-    // Generic Errors
-    case error(NSError)
-    case fileOperationFailed
-    
-    var failureReason: String? {
-        switch self {
-        case .recorderInitFailure:
-            return "play_record_audio_view_controller_general_error_message".localized
-            
-        default:
-            return nil
-        }
-    }
-    
-    var localizedDescription: String {
-        switch self {
-        case _:
-            "play_record_audio_view_controller_general_error_title".localized
-        }
-    }
-}
-
 enum SessionState {
     case background
     case closed(audioFile: URL)

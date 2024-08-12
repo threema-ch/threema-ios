@@ -28,9 +28,9 @@ public final class Colors: NSObject {
 
         public var name: String {
             switch self {
-            case .dark: return "Dark"
-            case .light: return "Light"
-            case .undefined: return "Light"
+            case .dark: "Dark"
+            case .light: "Light"
+            case .undefined: "Light"
             }
         }
     }
@@ -53,16 +53,16 @@ public final class Colors: NSObject {
         }
     }
         
-    internal class func color(for colorAsset: ColorAsset) -> UIColor {
+    class func color(for colorAsset: ColorAsset) -> UIColor {
         switch theme {
         case .light, .undefined:
-            return colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+            colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
         case .dark:
-            return darkColor(for: colorAsset)
+            darkColor(for: colorAsset)
         }
     }
     
-    internal class func darkColor(for colorAsset: ColorAsset) -> UIColor {
+    class func darkColor(for colorAsset: ColorAsset) -> UIColor {
         colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
     }
 }

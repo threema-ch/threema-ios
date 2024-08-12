@@ -191,10 +191,10 @@ struct EnabledMultiDeviceListView: View {
                     // (so the ordering is consistent across refreshes)
                     let sortedDevices = devices.sorted {
                         if $0.label != $1.label {
-                            return $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending
+                            $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending
                         }
                         else {
-                            return $0.deviceID < $1.deviceID
+                            $0.deviceID < $1.deviceID
                         }
                     }
                     

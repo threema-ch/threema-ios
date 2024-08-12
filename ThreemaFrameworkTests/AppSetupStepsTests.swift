@@ -106,6 +106,9 @@ final class AppSetupStepsTests: XCTestCase {
         )
         try await appSetupSteps.run()
         
+        // wait 2 seconds because own group restore run in a own task
+        _ = XCTWaiter.wait(for: [expectation(description: "Wait for task; sync own groups")], timeout: 2.0)
+        
         // Validate
         
         // Update own feature mask

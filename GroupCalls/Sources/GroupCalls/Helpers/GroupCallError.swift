@@ -88,31 +88,31 @@ public enum GroupCallError: Error, GroupCallErrorProtocol {
              .badMessage, .badParticipantState, .firstMessageNotReceived, .invalidToken, .unsupportedMessage,
              .serializationFailure, .encryptionFailure, .decryptionFailure,
              .streamCreationError, .endedInMeantime:
-            return true
+            true
         case .captureError:
-            return false
+            false
         }
     }
     
     public var alertTitleKey: String {
         switch self {
         case .alreadyInCall:
-            return "group_call_error_already_in_call_title"
+            "group_call_error_already_in_call_title"
         case .endedInMeantime:
-            return "group_call_error_ended_in_meantime_title"
+            "group_call_error_ended_in_meantime_title"
         default:
-            return "group_call_error_generic_title"
+            "group_call_error_generic_title"
         }
     }
     
     public var alertMessageKey: String {
         switch self {
         case .alreadyInCall:
-            return "group_call_error_already_in_call_message"
+            "group_call_error_already_in_call_message"
         case .endedInMeantime:
-            return "group_call_error_ended_in_meantime_message"
+            "group_call_error_ended_in_meantime_message"
         default:
-            return "group_call_error_generic_title"
+            "group_call_error_generic_title"
         }
     }
 }

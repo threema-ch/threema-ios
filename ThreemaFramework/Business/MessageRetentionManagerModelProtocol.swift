@@ -29,7 +29,7 @@ public protocol MessageRetentionManagerModelProtocol {
 }
 
 extension MessageRetentionManagerModelProtocol {
-    internal func deletionDate(_ days: Int) -> Date? {
+    func deletionDate(_ days: Int) -> Date? {
         Calendar.current.date(byAdding: .day, value: -days, to: Date.currentDate)
     }
 }

@@ -44,6 +44,7 @@ enum TaskExecutionError: Error {
     case invalidContact(message: String)
     case ownContact(message: String)
     case multiDeviceNotSupported
+    case nonceGenerationFailed
 }
 
 class TaskExecution: NSObject {
@@ -90,13 +91,13 @@ class TaskExecution: NSObject {
 
         var envelope: D2d_Envelope
 
-        var body: Data?
-        if let quotedMessage = message as? QuotedMessageProtocol {
-            body = quotedMessage.quotedBody()
-        }
-        else {
-            body = message.body()
-        }
+        let body: Data? =
+            if let quotedMessage = message as? QuotedMessageProtocol {
+                quotedMessage.quotedBody()
+            }
+            else {
+                message.body()
+            }
 
         // Get envelope and its Reflect ID. It's sender me, than must be an outgoing message!
         if message.fromIdentity == frameworkInjector.myIdentityStore.identity {
@@ -113,7 +114,8 @@ class TaskExecution: NSObject {
                     groupID: groupID.littleEndian(),
                     groupCreatorIdentity: groupCreator,
                     createdAt: message.date,
-                    nonces: messageNonces()
+                    nonces: messageNonces(),
+                    deviceID: frameworkInjector.multiDeviceManager.thisDevice.deviceID
                 )
             }
             else {
@@ -123,7 +125,8 @@ class TaskExecution: NSObject {
                     messageID: message.messageID.littleEndian(),
                     receiverIdentity: message.toIdentity,
                     createdAt: message.date,
-                    nonce: messageNonce(for: message.toIdentity)
+                    nonce: messageNonce(for: message.toIdentity),
+                    deviceID: frameworkInjector.multiDeviceManager.thisDevice.deviceID
                 )
             }
         }
@@ -337,18 +340,18 @@ class TaskExecution: NSObject {
                 }
                 else {
                     if !ThreemaEnvironment.supportsForwardSecurity {
-                        DDLogNotice(
-                            "[ForwardSecurity] Don't try sending (\(message.loggingDescription)) with FS, because FS is not supported"
+                        DDLogDebug(
+                            "[ForwardSecurity] Don't try sending \(message.loggingDescription) with FS, because FS is not supported"
                         )
                     }
                     else if message is ForwardSecurityEnvelopeMessage {
-                        DDLogNotice(
-                            "[ForwardSecurity] Don't try sending (\(message.loggingDescription)) with FS, because it is already an FS message"
+                        DDLogDebug(
+                            "[ForwardSecurity] Don't try sending \(message.loggingDescription) with FS, because it is already an FS message"
                         )
                     }
                     else if !toContact.isForwardSecurityAvailable() {
                         DDLogNotice(
-                            "[ForwardSecurity] Don't try sending (\(message.loggingDescription)) with FS, because \(toContact.identity) doesn't support FS: FeatureMask=\(toContact.featureMask)"
+                            "[ForwardSecurity] Don't try sending \(message.loggingDescription) with FS, because \(toContact.identity) doesn't support it: featureMask=\(toContact.featureMask)"
                         )
                     }
                 }
@@ -368,17 +371,32 @@ class TaskExecution: NSObject {
                             seal.reject(err)
                         }
                         
+                        guard let nonce = NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.nonceLength)) else {
+                            seal.reject(TaskExecutionError.nonceGenerationFailed)
+                            return
+                        }
+                        
                         // We have an auxiliary (control) message to send before the actual message
                         guard let boxAuxMsg = self.frameworkInjector.entityManager.performAndWait({
                             auxMessage.makeBox(
                                 toContact,
                                 myIdentityStore: self.frameworkInjector.myIdentityStore,
-                                // TODO: (IOS-4242)
-                                nonce: NaClCrypto.shared().randomBytes(Int32(kNaClCryptoNonceSize))
+                                nonce: nonce
                             )
                         }) else {
                             failure()
                             return
+                        }
+                        
+                        // TODO: (IOS-4751) Check as described in protocol, see ticket for more information
+                        if !auxMessage.flagDontQueue() {
+                            do {
+                                try self.frameworkInjector.nonceGuard.processed(boxedMessage: boxAuxMsg)
+                            }
+                            catch {
+                                seal.reject(error)
+                                return
+                            }
                         }
 
                         do {
@@ -417,6 +435,7 @@ class TaskExecution: NSObject {
                             return
                         }
 
+                        // TODO: (IOS-4751) Check as described in protocol, see ticket for more information
                         if !message.flagDontQueue() {
                             do {
                                 try self.frameworkInjector.nonceGuard.processed(boxedMessage: boxMsg)
@@ -511,14 +530,30 @@ class TaskExecution: NSObject {
                         return
                     }
                     
+                    guard let nonce = NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.nonceLength)) else {
+                        
+                        seal.reject(TaskExecutionError.nonceGenerationFailed)
+                        return
+                    }
+
                     guard let boxMsg = message.makeBox(
                         toContact,
                         myIdentityStore: self.frameworkInjector.myIdentityStore,
-                        // TODO: (IOS-4242)
-                        nonce: NaClCrypto.shared().randomBytes(Int32(kNaClCryptoNonceSize))
+                        nonce: nonce
                     ) else {
                         seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
                         return
+                    }
+                    
+                    // TODO: (IOS-4751) Check as described in protocol, see ticket for more information
+                    if !message.flagDontQueue() {
+                        do {
+                            try self.frameworkInjector.nonceGuard.processed(boxedMessage: boxMsg)
+                        }
+                        catch {
+                            seal.reject(error)
+                            return
+                        }
                     }
                     
                     do {
@@ -688,7 +723,7 @@ class TaskExecution: NSObject {
         else if let task = task as? TaskDefinitionSendGroupCreateMessage {
             identities = Set(task.toMembers)
             if let removeMembers = task.removedMembers {
-                removeMembers.forEach { member in
+                for member in removeMembers {
                     identities.insert(member)
                 }
             }
@@ -755,7 +790,7 @@ class TaskExecution: NSObject {
             excludeReceivers = taskSend.messageAlreadySentTo
         }
 
-        excludeReceivers.forEach { (key: String, value: Data) in
+        for (key, value) in excludeReceivers {
             taskNonce.nonces[key] = value
         }
 
@@ -806,7 +841,8 @@ class TaskExecution: NSObject {
         message: AbstractMessage
     ) -> Bool {
         if groupCreatorIdentity.hasPrefix("*"), groupCreatorIdentity.elementsEqual(message.toIdentity),
-           !(groupName?.hasPrefix("☁") ?? false), !(message is GroupLeaveMessage),
+           !(groupName?.hasPrefix(Constants.messageStoringGatewayGroupPrefix) ?? false),
+           !(message is GroupLeaveMessage),
            !(message is GroupRequestSyncMessage) {
             DDLogWarn("Drop message to gateway id without store-incoming-message")
 

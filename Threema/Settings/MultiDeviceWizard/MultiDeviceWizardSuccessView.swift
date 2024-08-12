@@ -53,7 +53,6 @@ struct MultiDeviceWizardSuccessView: View {
                     .bold()
             }
             .buttonStyle(.borderedProminent)
-            
             .navigationBarBackButtonHidden()
         }
     }

@@ -28,7 +28,7 @@ extension Message {
             return try serializedData(partial: partial)
         }
         catch {
-            DDLogError("[GroupCalls] Serialization failed due to error: \(error.localizedDescription).")
+            DDLogError("[GroupCall] Serialization failed: \(error)")
             throw GroupCallError.serializationFailure
         }
     }

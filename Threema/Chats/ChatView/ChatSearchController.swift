@@ -306,7 +306,7 @@ final class ChatSearchController: NSObject {
                 
                 // TODO: (IOS-2904) Only fetch object IDs
                 // TODO: (IOS-4469) Simplify
-                self.context.performAndWait {
+                context.performAndWait {
                     if !hasTokens {
                         self.filteredMessageObjectIDs = self.entityFetcher.messagesContaining(
                             searchText,

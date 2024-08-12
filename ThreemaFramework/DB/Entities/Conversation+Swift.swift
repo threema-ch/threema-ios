@@ -23,10 +23,12 @@ import ThreemaEssentials
 
 extension Conversation {
     
-    @objc public func updateLastMessage(with entityManager: EntityManager) {
+    /// Set `lastMessage` property to correct last message
+    /// - Parameter entityManager: Entity manager to be used for the update
+    @objc public func updateLastDisplayMessage(with entityManager: EntityManager) {
         entityManager.performAndWaitSave {
             let messageFetcher = MessageFetcher(for: self, with: entityManager)
-            guard let message = messageFetcher.lastMessage() else {
+            guard let message = messageFetcher.lastDisplayMessage() else {
                 self.lastMessage = nil
                 return
             }

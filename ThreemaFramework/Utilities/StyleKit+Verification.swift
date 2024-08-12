@@ -24,16 +24,15 @@ extension StyleKit {
     public static func verificationImage(for level: Int) -> UIImage {
         switch level {
         case 0:
-            return StyleKit.verification0
+            StyleKit.verification0
         case 1:
-            return StyleKit.verification1
+            StyleKit.verification1
         case 2:
-            return StyleKit.verification2
+            StyleKit.verification2
         case 3:
-            return StyleKit.verification3
+            StyleKit.verification3
         case 4:
-            return StyleKit.verification4
-
+            StyleKit.verification4
         default:
             fatalError("Unknown verification level \(level)")
         }
@@ -42,16 +41,15 @@ extension StyleKit {
     public static func verificationImageBig(for level: Int) -> UIImage {
         switch level {
         case 0:
-            return StyleKit.verificationBig0
+            StyleKit.verificationBig0
         case 1:
-            return StyleKit.verificationBig1
+            StyleKit.verificationBig1
         case 2:
-            return StyleKit.verificationBig2
+            StyleKit.verificationBig2
         case 3:
-            return StyleKit.verificationBig3
+            StyleKit.verificationBig3
         case 4:
-            return StyleKit.verificationBig4
-
+            StyleKit.verificationBig4
         default:
             fatalError("Unknown verification level \(level)")
         }

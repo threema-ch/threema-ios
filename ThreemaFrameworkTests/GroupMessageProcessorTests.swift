@@ -71,8 +71,12 @@ class GroupMessageProcessorTests: XCTestCase {
                 "JAMES007",
                 1,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
-            // Section: When receiving this message: 1.
+            // Spec group-sync-request:
+            //     When receiving this message as a group control message (wrapped by
+            //     [`group-creator-container`](ref:e2e.group-creator-container)):
+            //
+            //     1. Look up the group. If the group could not be found, discard the message
+            //        and abort these steps.
             [
                 "Do nothing, because no group found for incoming GroupRequestSyncMessage (creator=sender)",
                 GroupRequestSyncMessage(),
@@ -80,8 +84,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 0,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
-            // Section: When receiving this message: 2.
             [
                 "Do nothing, because no group found for incoming GroupRequestSyncMessage",
                 GroupRequestSyncMessage(),
@@ -89,9 +91,12 @@ class GroupMessageProcessorTests: XCTestCase {
                 "JAMES007",
                 0,
             ],
-            
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-            // Section: When receiving this message: 1.
+            // Spec group-leave:
+            //     When receiving this message as a group control message (wrapped by
+            //     [`group-member-container`](ref:e2e.group-member-container)):
+            //
+            //     1. If the sender is the creator of the group, discard the message and
+            //        abort these steps.
             [
                 "Do nothing, because no group found for incoming GroupLeaveMessage from creator",
                 GroupLeaveMessage(),
@@ -99,9 +104,9 @@ class GroupMessageProcessorTests: XCTestCase {
                 "CREATOR1",
                 0,
             ],
-            
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-            // Section: When receiving this message: 3. / 1.
+            //     3. If the group could not be found or is marked as _left_:
+            //        1. If the user is the creator of the group (as alleged by the
+            //        message), discard the message and abort these steps.
             [
                 "Do nothing, because no group found for incoming GroupLeaveMessage from member and i'm creator",
                 GroupLeaveMessage(),
@@ -109,9 +114,9 @@ class GroupMessageProcessorTests: XCTestCase {
                 "JAMES007",
                 0,
             ],
-            
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-            // Section: When receiving this message: 3. / 2.
+            //     3. If the group could not be found or is marked as _left_:
+            //         2. Send a [`group-sync-request`](ref:e2e.group-sync-request) to the
+            //            group creator, discard the message and abort these steps.
             [
                 "Send GroupRequestSyncMessage and add do pending messages, because no group found for regular GroupLeaveMessage from member",
                 GroupLeaveMessage(),
@@ -175,7 +180,7 @@ class GroupMessageProcessorTests: XCTestCase {
 
         // prepare test db
 
-        [expectedMember01, expectedMember02, expectedMember03].forEach { member in
+        for member in [expectedMember01, expectedMember02, expectedMember03] {
             databasePreparer.createContact(identity: member.string)
         }
 
@@ -200,20 +205,23 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#n:e2e:groups
-            // Section: Receiving 4.
+            // Spec receiving:
+            //     The following steps are defined as _Common Group Receive Steps_ and will
+            //     be applied in most cases for group messages:
+            //
+            //     4. If the sender is not a member of the group:
+            //         2. Send a [`group-sync-request`](ref:e2e.group-sync-request) to the
+            //            group creator, discard the message and abort these steps.
             [
                 "Send GroupRequestSyncMessage, because the member of this message is not in group and i'm NOT creator",
                 GroupTextMessage(),
                 "MEMBER04",
-                false,
+                true,
                 false,
                 false,
                 false,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
-            // Section: 1.
             [
                 "Do nothing, sender is creator of the group",
                 GroupRequestSyncMessage(),
@@ -234,8 +242,11 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-            // Section: When receiving this message: 4.
+            // Spec group-leave:
+            //     When receiving this message as a group control message (wrapped by
+            //     [`group-member-container`](ref:e2e.group-member-container)):
+            //
+            //     4. Remove the member from the local group.
             [
                 "Member left the group",
                 GroupLeaveMessage(),
@@ -246,8 +257,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-            // Section: When receiving this message: 4.
             [
                 "Creator left the group",
                 GroupLeaveMessage(),
@@ -296,6 +305,8 @@ class GroupMessageProcessorTests: XCTestCase {
                 return
             }
 
+            groupManager.deleteAllSyncRequestRecords()
+
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             message.groupID = expectedGroupIdentity.id
@@ -334,7 +345,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 test[3] as! Bool,
                 ddLoggerMock
                     .exists(
-                        message: "\(message.fromIdentity!) is not member of group \(message.groupID.hexString), add to pending messages and request group sync"
+                        message: "Group ID \(expectedGroupIdentity.id.hexString) (creator \(expectedGroupIdentity.creator.string)) not found. Requesting sync from creator."
                     ),
                 testDescription
             )
@@ -374,7 +385,7 @@ class GroupMessageProcessorTests: XCTestCase {
 
         // prepare test db
 
-        [expectedMember01, expectedMember02, expectedMember03].forEach { member in
+        for member in [expectedMember01, expectedMember02, expectedMember03] {
             databasePreparer.createContact(identity: member.string)
         }
 
@@ -409,8 +420,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 true,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
-            // Section: 1.
             [
                 "Do nothing, sender is creator of the group",
                 GroupRequestSyncMessage(),
@@ -421,8 +430,13 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
-            // Section: When receiving this message: 4.
+            // Spec group-sync-request:
+            //     When receiving this message as a group control message (wrapped by
+            //     [`group-creator-container`](ref:e2e.group-creator-container)):
+            //
+            //     3. If the group is marked as _left_ or the sender is not a member of the
+            //        group, send a [`group-setup`](ref:e2e.group-setup) with an empty
+            //        members list back to the sender and abort these steps.
             [
                 "Sync this group, because answer regular GroupRequestSyncMessage from member",
                 GroupRequestSyncMessage(),
@@ -433,8 +447,9 @@ class GroupMessageProcessorTests: XCTestCase {
                 true,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-sync-request
-            // Section: When receiving this message: 5.
+            //     4. Send a [`group-setup`](ref:e2e.group-setup) message with the current
+            //        group members, followed by a [`group-name`](ref:e2e.group-name)
+            //        message to the sender.
             [
                 "Sync this group, because answer regular GroupRequestSyncMessage from member",
                 GroupRequestSyncMessage(),
@@ -445,8 +460,11 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-            // Section: When receiving this message: 4.
+            // Spec group-leave:
+            //     When receiving this message as a group control message (wrapped by
+            //     [`group-member-container`](ref:e2e.group-member-container)):
+            //
+            //     4. Remove the member from the local group.
             [
                 "Member left the group",
                 GroupLeaveMessage(),
@@ -457,8 +475,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
             ],
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp-e2e/#m:e2e:group-leave
-            // Section: When receiving this message: 4.
             [
                 "Creator left the group",
                 GroupLeaveMessage(),
@@ -574,7 +590,7 @@ class GroupMessageProcessorTests: XCTestCase {
         let expectedMember02 = "MEMBER02"
         let expectedMember03 = "MEMBER03"
 
-        [expectedMember01, expectedMember02, expectedMember03].forEach { member in
+        for member in [expectedMember01, expectedMember02, expectedMember03] {
             databasePreparer.createContact(identity: member)
         }
 
@@ -590,7 +606,7 @@ class GroupMessageProcessorTests: XCTestCase {
         // 4: dissolve group
         // 5: sent leave group
         let tests = [
-            // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp.struct/index.html#n:e2e:receiving
+            // Spec e2e:receiving
             // Section: 3.
             [
                 "Dissolve group to sender, because I'm creator but left the group",

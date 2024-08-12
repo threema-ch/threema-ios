@@ -29,13 +29,13 @@ enum ChatBubbleShape {
     /// - Returns: Bezier path of rect
     static func roundedRect(for frame: CGRect, with traitCollection: UITraitCollection) -> UIBezierPath {
         if traitCollection.preferredContentSizeCategory < .large {
-            return UIBezierPath(
+            UIBezierPath(
                 roundedRect: frame,
                 cornerRadius: ChatViewConfiguration.ChatBubble.smallerContentSizeConfigurationCornerRadius
             )
         }
         else {
-            return UIBezierPath(roundedRect: frame, cornerRadius: ChatViewConfiguration.ChatBubble.cornerRadius)
+            UIBezierPath(roundedRect: frame, cornerRadius: ChatViewConfiguration.ChatBubble.cornerRadius)
         }
     }
     

@@ -32,7 +32,7 @@ final class DistributionListDetailsDataSource: UITableViewDiffableDataSource<
     
     private let displayMode: DistributionListDetailsDisplayMode
 
-    private let distributionList: DistributionListEntity
+    private let distributionList: DistributionList
     private let conversation: Conversation
     
     private weak var distributionListDetailsViewController: DistributionListDetailsViewController?
@@ -47,7 +47,7 @@ final class DistributionListDetailsDataSource: UITableViewDiffableDataSource<
     // MARK: - Lifecycle
     
     init(
-        for distributionList: DistributionListEntity,
+        for distributionList: DistributionList,
         displayMode: DistributionListDetailsDisplayMode,
         distributionListDetailsViewController: DistributionListDetailsViewController,
         tableView: UITableView
@@ -57,7 +57,8 @@ final class DistributionListDetailsDataSource: UITableViewDiffableDataSource<
         self.distributionListDetailsViewController = distributionListDetailsViewController
         self.tableView = tableView
 
-        self.conversation = distributionList.conversation!
+        let em = EntityManager()
+        self.conversation = em.entityFetcher.conversation(for: distributionList.distributionListID as NSNumber)!
 
         super.init(tableView: tableView, cellProvider: cellProvider)
     }
@@ -224,9 +225,9 @@ extension DistributionListDetailsDataSource {
     func quickActions(in viewController: UIViewController) -> [QuickAction] {
         switch displayMode {
         case .default:
-            return defaultQuickActions(in: viewController)
+            defaultQuickActions(in: viewController)
         case .conversation:
-            return []
+            []
         }
     }
     
@@ -234,7 +235,7 @@ extension DistributionListDetailsDataSource {
         var actions = [QuickAction]()
         
         let messageQuickAction = QuickAction(
-            imageName: "threema.bubble.fill",
+            imageName: "threema.lock.bubble.right.fill",
             title: BundleUtil.localizedString(forKey: "message"),
             accessibilityIdentifier: "DistributionListDetailsDataSourceMessageQuickActionButton"
         ) { [weak self] _ in
@@ -353,9 +354,9 @@ extension DistributionListDetailsDataSource {
             if let indexPathForSelectedRow = strongSelf.tableView?.indexPathForSelectedRow {
                 cell = strongSelf.tableView?.cellForRow(at: indexPathForSelectedRow)
             }
-
+            
             ConversationsViewControllerHelper.handleDeletion(
-                of: strongSelf.distributionList.conversation!,
+                of: strongSelf.conversation,
                 owner: strongDistributionListDetailsViewController,
                 cell: cell,
                 singleFunction: .delete

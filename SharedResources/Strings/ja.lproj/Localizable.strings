@@ -106,7 +106,6 @@
 "threema_id" = "Threema ID";
 "nickname" = "名前";
 "add_button" = "追加";
-"chatview_contextmenu_select" = "選択";
 "learn_more" = "詳細…";
 "file_message_image" = "画像";
 "file_message_sticker" = "スタンプ";
@@ -115,6 +114,10 @@
 "file_message_voice" = "音声メッセージ";
 "file_message_file" = "ファイル";
 "chat" = "チャット"; /* noun */
+
+"share_menu" = "共有…";
+"forward_menu" = "転送…";
+"chatview_contextmenu_select" = "選択";
 
 "chat_back_button_accessibility" = "%d件未読";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "この端末からこのトークの全メッセージを削除しますか？";
 "messages_delete_all_confirm_message" = "これにはすべての写真と動画、文書が含まれます。";
 "messages_delete_selected_confirm" = "この端末から選択したメッセージを削除しますか？";
+"message_delete_confirm" = "このメッセージを削除しますか？";
 "conversation_delete_confirm" = "この端末からこのトークを削除しますか？";
 "delete_n" = "削除 (%d)";
-"message_delete_for_everyone" = "全員へのメッセージを削除";
+"message_delete_for_me" = "この端末から削除";
+"message_delete_for_everyone" = "全員に対して削除";
 
 "message_cannot_play_movie" = "動画の再生ができません。";
 
@@ -655,7 +660,7 @@
 "invite_sms_body" = "こんにちは！Threemaを使って、プライバシーに配慮した安全なコミュニケーションをしていきましょう。私のThreema IDは https://threema.id/%@ です。";
 "invite_facebook_text" = "私は、ユーザーのプライバシーを保護する安全なインスタントメッセンジャーであるThreemaを使用しています。私のThreema IDは https://threema.id/%@ です。";
 "invite_twitter_text" = "私は、ユーザーのプライバシーを保護する安全なインスタントメッセンジャーであるThreemaを使用しています。私のThreema IDは https://threema.id/%@ です。";
-"invite_using" = "友達を招待";
+"invite_using" = "友達をここから招待...";
 "sms" = "テキストメッセージ";
 
 /* Notifications Text */
@@ -711,7 +716,7 @@
 "quote_interaction_hint" = "引用されたメッセージへ飛ぶ";
 
 /* TTOpenInAppActivity */
-"Open in ..." = "で開く";
+"Open in ..." = "ここで開く...";
 
 /* VoiceOver long labels */
 "restore" = "復旧";
@@ -727,7 +732,7 @@
 
 /* Push decryption */
 "decryption_push_reply" = "返信";
-"decryption_push_placeholder" = "返信...";
+"decryption_push_placeholder" = "返信…";
 "decryption_push_agree" = "同意";
 "decryption_push_disagree" = "反対";
 
@@ -780,15 +785,15 @@
 
 "call_voip_not_supported_title" = "Threema通話";
 "call_voip_not_supported_text" = "あなたの連絡先はThreema通話に対応していません";
-"call_contact_not_reachable" = "連絡が取れません...";
+"call_contact_not_reachable" = "連絡が取れません…";
 
 "call_status_idle" = "準備完了";
 "call_status_wait_ringing" = "初期化";
 "call_status_ringing" = "呼び出し中";
 "call_status_incom_ringing" = "Threema通話";
-"call_status_initializing" = "接続中...";
+"call_status_initializing" = "接続中…";
 "call_status_calling" = "接続済";
-"call_status_reconnecting" = "接続中...";
+"call_status_reconnecting" = "接続中…";
 "call_status_unknown" = "不明";
 "call_status_blocked" = "連絡先をブロック";
 "call_status_failed_title" = "Threema通話";
@@ -1104,7 +1109,8 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "settings_list_media_title" = "写真と動画";
 "settings_list_storage_management_title" = "ストレージ管理";
 "settings_list_passcode_lock_title" = "パスコードロック";
-"settings_threema_calls" = "Threema通話";
+"settings_threema_calls" = "通話";
+"settings_list_threema_desktop_title" = "デスクトップ版 Threema 2.0（ベータ）";
 "settings_list_threema_web_title" = "デスクトップ／ウェブ";
 
 "settings_list_network_title" = "通信状態";
@@ -1146,13 +1152,16 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "settings_privacy_read_receipts" = "既読";
 "settings_privacy_typing_indicator" = "入力中アイコン";
 
+"settings_privacy_poi_header" = "位置データ";
+"settings_privacy_choose_poi" = "POIsを表示";
+"settings_privacy_poi_footer" = "オンにすると、位置情報を共有するときに近くの興味のあるポイントが表示されます。このため、位置情報がサーバーに送信されます。";
+
 "settings_privacy_TIRR_reset_all" = "すべての連絡先をリセット";
 "settings_privacy_TIRR_reset_footer" = "すべての連絡先をデフォルト設定にリセットします。";
 "settings_privacy_TIRR_reset_alert_title" = "リセット";
 "settings_privacy_TIRR_reset_alert_message" = "すべての連絡先をデフォルト設定にリセットします。この操作は元に戻すことができません。";
 "settings_privacy_TIRR_reset_alert_action" = "すべてリセット";
 
-"settings_privacy_choose_poi" = "POIsを選ぶ";
 "settings_privacy_hide_private_chats" = "プライベートトークを隠す";
 "settings_privacy_hide_private_chats_footer" = "トークの概要ですべてのプライベートトークを非表示にします。この設定を有効にするには、パスコードを設定する必要があります。";
 
@@ -1204,7 +1213,7 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "settings_notification_type_preview_complete_description" = "連絡先のフルネームとプロフィール画像を表示します。インタラクションに関する一部の情報は、オペレーティングシステムと共有されます。［詳細…］（%@）";
 "settings_notification_type_preview_complete_sender_name" = "守屋 秘密";
 
-"settings_notification_type_preview_message_text" = "メッセージの例...";
+"settings_notification_type_preview_message_text" = "メッセージの例…";
 "settings_notification_type_preview_no_button" = "プッシュ通知を無効にする";
 
 // Chat Settings
@@ -1648,23 +1657,31 @@ iTunesのバックアップを作成してから行ってください。";
 "notification_threemaweb_connectionlost_title" = "ウェブ/デスクトップアプリへの接続が失われました";
 "notification_threemaweb_connectionlost_body" = "引き続きウェブアプリをご利用いただくには、アプリを再度開いてください。";
 
+"settings_threema_web_desktop_banner_title" = "新登場：デスクトップ版 Threema 2.0（ベータ）";
+"settings_threema_web_desktop_banner_message" = "次世代のデスクトップアプリを複数のデバイスで対応するには、ここをタップしてお試しください。";
+
 "settings_threema_web_connected" = "デスクトップ／ウェブ接続済み";
 "settings_threema_web_connectioninfo" = "接続を維持するには、フォアグラウンドで%@を実行した状態で端末をロック解除する必要があります。接続中は、端末は自動的にロックされません。";
-"settings_threema_web_linked_device_section_header" = "複数端末";
-"settings_threema_web_linked_device_section_footer" = "紐付けされた端末は、%@がバックグラウンドであっても、この端末がオフラインであっても使用できます。";
-"settings_threema_web_section_header" = "直接接続された端末";
 "settings_threema_web_multi_device_qr_code_title" = "誤ったQRコード";
-"settings_threema_web_multi_device_qr_code_message" = "\"%@”をタップし、次に\"%@\"をタップすると、このデスクトップアプリにリンクします。";
+"settings_threema_web_multi_device_qr_code_message" = "「%@」に戻り、「%@」を選択してこのデスクトップアプリにリンクしてください。";
 
 "chat_text_view_placeholder" = "新規メッセージ";
 "compose_bar_camera_button_accessibility_label" = "カメラを開く";
 "compose_bar_image_picker_button_accessibility_label" = "画像ピッカーを開く";
 "compose_bar_record_button_accessibility_label" = "音声メッセージを録音";
 "compose_bar_send_message_button_accessibility_label" = "メッセージを送信";
+"compose_bar_send_edited_message_button_accessibility_label" = "編集を確定する";
 "compose_bar_attachment_button_accessibility_label" = "添付ファイルを追加";
-"play_record_audio_view_controller_general_error_title" = "録音失敗";
-"play_record_audio_view_controller_general_error_message" = "現在、不明なエラーのため、音声メッセージを録音することができません";
 "hardware_keyboard_send_on_enter_discoverability_title" = "メッセージを送信";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "音声メッセージは使用できません。";
+"voice_recorder_error_message" = "もう一度お試しになるか、サポートにお問い合わせください。";
+"voice_recorder_call_state_not_idle" = "通話中";
+"voice_recorder_playback_failure" = "再生エラー";
+"voice_recorder_recording_error" = "録音エラー";
+"voice_recorder_recording_cancelled" = "録音がキャンセルされました";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "あなたは%@に投票しました。";
@@ -1679,7 +1696,6 @@ iTunesのバックアップを作成してから行ってください。";
 
 // ChatBar
 "chat_bar_quote_close_button" = "引用終了";
-"chat_bar_edited_message_close_button" = "メッセージの編集をキャンセル";
 
 // ChatDetailView
 "detailView_title" = "メッセージ詳細";
@@ -1688,7 +1704,10 @@ iTunesのバックアップを作成してから行ってください。";
 "detailView_group_declined" = "反対（%d）";
 "detailView_group_file_size" = "ファイルサイズ";
 "detailView_consumed" = "初回再生日";
-"detailView_created_footer" = "%@ は作成されました";
+"detailView_created_footer" = "%@ に作成されました";
+"detailView_edit_history_header" = "履歴を編集";
+"detailView_edit_history_current" = "現在";
+"detailView_edit_history_no_caption" = "キャプションなし";
 
 "message_display_status_none" = "なし";
 "message_display_status_user_acknowledged" = "同意した";
@@ -1833,16 +1852,16 @@ iTunesのバックアップを作成してから行ってください。";
 "accessibility_voice_message_unplayed" = "まだ再生されていません。";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "同意済み、%@";
-"accessibility_status_declined_plus_time" = "拒否済み、%@";
-"accessibility_status_sending_plus_time" = "送信中、%@";
-"accessibility_status_sent_plus_time" = "送信済み、%@";
-"accessibility_status_delivered_plus_time" = "配信済み、%@";
-"accessibility_status_read_plus_time" = "既読、%@";
-"accessibility_status_failed_plus_time" = "失敗、%@";
-"accessibility_status_group_acknowledged_plus_time" = "%i、%@%@が同意";
-"accessibility_status_group_declined_plus_time" = "%i、%@%@が拒否";
-"accessibility_status_group_acknowledged_declined_plus_time" = "%iが同意、%i、%@%@が拒否";
+"accessibility_status_acknowledged" = "同意した";
+"accessibility_status_declined" = "拒否済み";
+"accessibility_status_sending" = "送信中";
+"accessibility_status_sent" = "送信済み";
+"accessibility_status_delivered" = "配信済み";
+"accessibility_status_read" = "既読";
+"accessibility_status_failed" = "失敗";
+"accessibility_status_group_acknowledged" = "%i、%@が同意";
+"accessibility_status_group_declined" = "%i、%@が拒否";
+"accessibility_status_group_acknowledged_declined" = "%iが同意、%i、%@が拒否";
 "accessibility_status_group_acknowledged_my_reaction" = "同意しました";
 "accessibility_status_group_declined_my_reaction" = "拒否しました";
 
@@ -1951,8 +1970,8 @@ iTunesのバックアップを作成してから行ってください。";
 // Delete / Edit message
 "edit_message" = "メッセージを編集";
 "edit_message_can_not_edit" = "このメッセージは6時間以上前に送信されているため、もう編集することはできません。";
-"edit_message_not_sent_to" = "次のグループメンバーは、編集内容を見ることができません:  %@";
-"delete_message_not_sent_to" = "次のグループメンバーに対して、メッセージを削除することができません: %@";
+"edit_message_not_sent_to" = "次のグループメンバーはあなたの編集を表示することができません: %@";
+"delete_message_not_sent_to" = "次のグループメンバーに対してメッセージは削除されません:  %@";
 "delete_edit_message_not_sent_to_others" = "その他%d人";
 "delete_message_requirement" = "メッセージを削除するには、該当する受信者に最新バージョンのThreemaをインストールしてもらう必要があります。";
 "edit_message_requirement" = "編集内容を確認するには、最新バージョンのThreemaをインストールする必要があります。";

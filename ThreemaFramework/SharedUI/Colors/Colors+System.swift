@@ -24,18 +24,18 @@ extension Colors {
     @objc public class var preferredStatusBarStyle: UIStatusBarStyle {
         switch Colors.theme {
         case .light, .undefined:
-            return .default
+            .default
         case .dark:
-            return .lightContent
+            .lightContent
         }
     }
     
     public class var activityIndicatorViewStyle: UIActivityIndicatorView.Style {
         switch Colors.theme {
         case .light, .undefined:
-            return .gray
+            .gray
         case .dark:
-            return .white
+            .white
         }
     }
 }

@@ -26,7 +26,7 @@ enum ScalabilityMode {
     var temporalLayers: Int {
         switch self {
         case .L1T3:
-            return 3
+            3
         }
     }
 }

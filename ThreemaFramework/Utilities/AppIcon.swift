@@ -41,74 +41,73 @@ public enum AppIcon: CaseIterable {
     public var iconName: String? {
         switch self {
         case .default:
-            return nil
+            nil
         case .icon2019:
-            return "icon_2019"
+            "icon_2019"
         case .icon20131:
-            return "icon_2013_march"
+            "icon_2013_march"
         case .icon20132:
-            return "icon_2013_september"
+            "icon_2013_september"
         case .anniversary10:
-            return "icon_10_years"
+            "icon_10_years"
         }
     }
         
     public var displayTitle: String {
         switch self {
         case .default:
-            return BundleUtil.localizedString(forKey: "app_icon_title_current")
+            BundleUtil.localizedString(forKey: "app_icon_title_current")
         case .icon2019:
-            return BundleUtil.localizedString(forKey: "app_icon_title_current")
+            BundleUtil.localizedString(forKey: "app_icon_title_current")
         case .icon20131:
-            return BundleUtil.localizedString(forKey: "app_icon_title_first")
+            BundleUtil.localizedString(forKey: "app_icon_title_first")
         case .icon20132:
-            return BundleUtil.localizedString(forKey: "app_icon_title_second")
+            BundleUtil.localizedString(forKey: "app_icon_title_second")
         case .anniversary10:
-            return BundleUtil.localizedString(forKey: "app_icon_title_celebration")
+            BundleUtil.localizedString(forKey: "app_icon_title_celebration")
         }
     }
     
     public var displayInfo: String {
         switch self {
         case .default:
-            return BundleUtil.localizedString(forKey: "app_icon_description_current")
+            BundleUtil.localizedString(forKey: "app_icon_description_current")
         case .icon2019:
-            return BundleUtil.localizedString(forKey: "app_icon_description_current")
+            BundleUtil.localizedString(forKey: "app_icon_description_current")
         case .icon20131:
-            return BundleUtil.localizedString(forKey: "app_icon_description_first")
+            BundleUtil.localizedString(forKey: "app_icon_description_first")
         case .icon20132:
-            return BundleUtil.localizedString(forKey: "app_icon_description_second")
+            BundleUtil.localizedString(forKey: "app_icon_description_second")
         case .anniversary10:
-            return BundleUtil.localizedString(forKey: "app_icon_description_celebration")
+            BundleUtil.localizedString(forKey: "app_icon_description_celebration")
         }
     }
     
     public var preview: UIImage {
-        let image: UIImage?
-        
-        switch self {
-        case .default:
-            switch ThreemaApp.current {
-            case .threema:
-                image = UIImage(named: "icon_2019_consumer_full")
-            case .work:
-                image = UIImage(named: "icon_2019_work_full")
-            case .onPrem:
-                image = UIImage(named: "icon_2019_onprem_full")
-            case .green:
-                image = UIImage(named: "icon_2019_green_full")
-            case .blue:
-                image = UIImage(named: "icon_2019_blue_full")
+        let image: UIImage? =
+            switch self {
+            case .default:
+                switch ThreemaApp.current {
+                case .threema:
+                    UIImage(named: "icon_2019_consumer_full")
+                case .work:
+                    UIImage(named: "icon_2019_work_full")
+                case .onPrem:
+                    UIImage(named: "icon_2019_onprem_full")
+                case .green:
+                    UIImage(named: "icon_2019_green_full")
+                case .blue:
+                    UIImage(named: "icon_2019_blue_full")
+                }
+            case .icon2019:
+                UIImage(named: "icon_2019_consumer_full")
+            case .icon20131:
+                UIImage(named: "icon_2013_march_full")
+            case .icon20132:
+                UIImage(named: "icon_2013_september_full")
+            case .anniversary10:
+                UIImage(named: "icon_10_years_full")
             }
-        case .icon2019:
-            image = UIImage(named: "icon_2019_consumer_full")
-        case .icon20131:
-            image = UIImage(named: "icon_2013_march_full")
-        case .icon20132:
-            image = UIImage(named: "icon_2013_september_full")
-        case .anniversary10:
-            image = UIImage(named: "icon_10_years_full")
-        }
         guard let image else {
             return UIImage(systemName: "questionmark.square.dashed")!
         }

@@ -33,15 +33,16 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     
     private enum Row: Hashable {
         case distributionListName
-        case contact(_ contact: ContactEntity)
+        case contact(_ contact: Contact)
         case addRecipient(action: Details.Action)
     }
     
-    private var recipients = [ContactEntity]()
-    private let entityManager = EntityManager()
+    private var recipients = Set<Contact>()
+    private let businessInjector = BusinessInjector()
     
-    private var distributionList: DistributionListEntity? = nil
-    
+    private var distributionList: DistributionList?
+    private var conversation: Conversation?
+
     // MARK: - Private properties
 
     private lazy var dataSource = UITableViewDiffableDataSource<
@@ -59,29 +60,29 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         
         case let .contact(contact):
             let contactCell: ContactCell = tableView.dequeueCell(for: indexPath)
-            contactCell.content = .contact(Contact(contactEntity: contact))
+            contactCell.content = .contact(contact)
             return contactCell
+            
         case let .addRecipient(action):
             let addRecipientCell: MembersActionDetailsTableViewCell = tableView.dequeueCell(for: indexPath)
             addRecipientCell.action = action
             return addRecipientCell
-        default:
-            fatalError("Not supported")
         }
     }
     
     private var avatarImageData: Data?
-    private var distributionListName: String?
+    private var distributionListName = ""
     
     // MARK: - Views
     
     private lazy var editAvatarView: EditAvatarView = {
         
         let initialAvatarImage: UIImage?
-        
-        if let image = distributionList?.conversation?.groupImage, let uiImage = image.uiImage {
-            initialAvatarImage = AvatarMaker.maskImage(uiImage)
-            avatarImageData = image.data
+
+        if let distributionList, let profilePictureData = distributionList.profilePicture,
+           let image = UIImage(data: profilePictureData) {
+            initialAvatarImage = AvatarMaker.shared().maskedProfilePicture(image, size: 200)
+            avatarImageData = profilePictureData
         }
         else {
             initialAvatarImage = AvatarMaker.shared().unknownDistributionListImage()
@@ -101,7 +102,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
             guard let newImageData,
                   let newImage = UIImage(data: newImageData) else {
                 
-                let newAvatarImage = AvatarMaker.shared().unknownGroupImage()
+                let newAvatarImage = AvatarMaker.shared().unknownDistributionListImage()
                 
                 strongSelf.updateSaveButtonState()
                 return (newAvatarImage, true)
@@ -145,13 +146,18 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     
     // MARK: - Lifecycle
         
-    convenience init(distributionList: DistributionListEntity?) {
+    convenience init(distributionList: DistributionList?) {
         self.init()
         self.distributionList = distributionList
         
-        if distributionList != nil {
-            populateInfo()
+        guard let distributionList else {
+            return
         }
+        
+        self.conversation = businessInjector.entityManager.entityFetcher
+            .conversation(for: distributionList.distributionListID as NSNumber)
+        
+        populateInfo()
     }
     
     override func viewDidLoad() {
@@ -160,6 +166,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         configureController()
         configureNavigationBar()
         configureTableView()
+        updateRecipientsCountLabel()
         registerCells()
         configureSnapshot()
         addObservers()
@@ -251,9 +258,9 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     }
     
     private func populateInfo() {
-        distributionListName = String(distributionList?.name ?? "")
-        if let preExistingRecipients = distributionList?.conversation?.members {
-            recipients = Array(preExistingRecipients)
+        distributionListName = String(distributionList?.displayName ?? "")
+        if let preExistingRecipients = distributionList?.recipients {
+            recipients = preExistingRecipients
             refresh()
         }
     }
@@ -261,9 +268,9 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     // MARK: - Updates
 
     private func updateSaveButtonState() {
-        // Deactivate save button as long as name is empty, or no recipients is empty
-        guard let distributionListName, !distributionListName.isEmpty, !recipients.isEmpty,
-              nameDidChange || avatarImageDidChange else {
+        // Deactivate save button as long as name is empty, recipients is empty, or nothing changed
+        guard !distributionListName.isEmpty, !recipients.isEmpty,
+              nameDidChange || avatarImageDidChange || recipientsDidChange else {
             saveButton.isEnabled = false
             return
         }
@@ -292,54 +299,51 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         tableView.contentInset = newContentInsets
         tableView.scrollIndicatorInsets = newContentInsets
     }
+    
+    private func updateRecipientsCountLabel() {
+        guard let header = tableView.headerView(forSection: 1) as? DetailsSectionHeaderView else {
+            return
+        }
+        
+        header.title = String.localizedStringWithFormat(
+            "distribution_list_recipients_section_header".localized,
+            recipients.count
+        )
+    }
   
     // MARK: - Actions
 
     @objc private func save() {
-        let em = EntityManager()
-        em.performSyncBlockAndSafe {
-            
-            if let distributionList = self.distributionList, let conversation = distributionList.conversation {
+        let distributionListManager = businessInjector.distributionListManager
 
-                distributionList.name = (self.distributionListName ?? "") as NSString
-
-                if let avatarImageData = self.avatarImageData, let image = UIImage(data: avatarImageData) {
+        if let distributionList {
+                
+            distributionListManager.setName(of: distributionList, to: distributionListName)
+            distributionListManager.setRecipients(of: distributionList, to: recipients)
+            distributionListManager.setProfilePicture(of: distributionList, to: avatarImageData)
+            dismiss(animated: true)
+        }
+        else {
+            let entityManager = businessInjector.entityManager
+            var conversation: Conversation?
+                
+            do {
+                entityManager.performAndWaitSave {
+                    conversation = entityManager.entityCreator.conversation()
+                }
                     
-                    let dbImage = self.entityManager.entityCreator.imageData()
-                    dbImage?.data = avatarImageData
-                    dbImage?.width = NSNumber(floatLiteral: Double(image.size.width))
-                    dbImage?.height = NSNumber(floatLiteral: Double(image.size.height))
-                    conversation.groupImage = dbImage
+                guard let conversation else {
+                    throw DistributionListManager.DistributionListError.creationFailure
                 }
-                conversation.members = Set(self.recipients)
-                
-                self.dismiss(animated: true)
-            }
-            else {
-                
-                guard let conversation = em.entityCreator.conversation(),
-                      let distributionList = em.entityCreator.distributionListEntity() else {
-                    fatalError()
-                }
-                
-                let id = Int64.random(in: 0..<Int64.max)
-                // swiftformat:disable:next acronyms
-                distributionList.distributionListId = NSNumber(value: id)
-                
-                conversation.distributionList = distributionList
-                distributionList.name = (self.distributionListName ?? "") as NSString
-                
-                if let avatarImageData = self.avatarImageData, let image = UIImage(data: avatarImageData) {
-                    let dbImage = self.entityManager.entityCreator.imageData()
-                    dbImage?.data = avatarImageData
-                    dbImage?.width = NSNumber(floatLiteral: Double(image.size.width))
-                    dbImage?.height = NSNumber(floatLiteral: Double(image.size.height))
-                    conversation.groupImage = dbImage
-                }
-                
-                conversation.members = Set(self.recipients)
-                
-                self.dismiss(animated: true) {
+                    
+                try distributionListManager.createDistributionList(
+                    conversation: conversation,
+                    name: distributionListName,
+                    imageData: avatarImageData,
+                    recipients: recipients
+                )
+                    
+                dismiss(animated: true) {
                     // Open after creation
                     let info = [kKeyConversation: conversation, kKeyForceCompose: true] as [String: Any]
                     NotificationCenter.default.post(
@@ -349,6 +353,9 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
                     )
                 }
             }
+            catch {
+                UIAlertTemplate.showAlert(owner: self, title: "something went wrong", message: "OOPS")
+            }
         }
     }
     
@@ -356,7 +363,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         dismiss(animated: true)
     }
 
-    func addRecipientsAction() -> Details.Action {
+    private func addRecipientsAction() -> Details.Action {
         let localizedAddRecipientsButton = BundleUtil.localizedString(forKey: "group_manage_members_button")
         let action = Details.Action(
             title: localizedAddRecipientsButton,
@@ -381,9 +388,21 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
                 guard let selection = selection as? Set<ContactEntity> else {
                     return
                 }
-                strongSelf.recipients = Array(selection)
+                strongSelf.recipients = Set(selection.map {
+                    Contact(contactEntity: $0)
+                })
                 strongSelf.configureSnapshot()
                 strongSelf.updateSaveButtonState()
+                strongSelf.updateRecipientsCountLabel()
+            }
+            
+            if !strongSelf.recipients.isEmpty {
+                strongSelf.businessInjector.entityManager.performAndWait {
+                    let contactEntities: Set<ContactEntity> = Set(strongSelf.recipients.compactMap {
+                        strongSelf.businessInjector.entityManager.entityFetcher.contact(for: $0.identity.string)
+                    })
+                    pickRecipientsViewController.setMembers(contactEntities)
+                }
             }
             
             pickRecipientsViewController.didSelect = completion
@@ -429,11 +448,18 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
 
 extension DistributionListCreateEditViewController {
     private var nameDidChange: Bool {
-        String(distributionList?.name ?? "") != distributionListName
+        distributionList?.displayName != distributionListName
+    }
+    
+    private var recipientsDidChange: Bool {
+        distributionList?.recipients != recipients
     }
     
     private var avatarImageDidChange: Bool {
-        avatarImageData != distributionList?.conversation?.groupImage?.data
+        if let distributionList, distributionList.profilePicture == avatarImageData {
+            return false
+        }
+        return true
     }
     
     @objc private func hideKeyboard() {
@@ -493,7 +519,7 @@ extension DistributionListCreateEditViewController: EditNameTableViewCellDelegat
             "There should only be a cell for the group name"
         )
         
-        distributionListName = newText
+        distributionListName = newText ?? ""
         updateSaveButtonState()
     }
 }

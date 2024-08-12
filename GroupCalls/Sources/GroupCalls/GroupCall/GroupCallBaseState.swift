@@ -40,7 +40,7 @@ protocol GroupCallFrameCryptoAdapterProtocol: Sendable {
 /// Contains the base state for the group call
 /// Contains all keys that won't change over the lifetime of the group call
 final class GroupCallBaseState {
-    let group: GroupCallsThreemaGroupModel
+    let group: GroupCallThreemaGroupModel
     let callID: GroupCallID
     let startedAt: Date
     /// This property is only used to display alerts. The actual maximum is enforced by the SFU.
@@ -57,7 +57,7 @@ final class GroupCallBaseState {
     private let frameCryptoContextLock = NSLock()
     
     init(
-        group: GroupCallsThreemaGroupModel,
+        group: GroupCallThreemaGroupModel,
         startedAt: Date,
         dependencies: Dependencies,
         groupCallStartData: GroupCallStartData
@@ -89,7 +89,7 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
     func attachEncryptor(to transceiver: RTCRtpTransceiver, myParticipantID: ParticipantID) throws {
         frameCryptoContextLock.withLock {
             let logMediaKind = transceiver.mediaType == .audio ? "opus" : "vp8"
-            let logTag = "\(myParticipantID.id).\(transceiver.mid).\(logMediaKind).sender"
+            let logTag = "\(myParticipantID).\(transceiver.mid).\(logMediaKind).sender"
             self.frameCryptoContext.getEncryptor()
                 .attach(transceiver.sender, mediaType: transceiver.mediaType, tag: logTag)
         }
@@ -121,7 +121,7 @@ extension GroupCallBaseState: GroupCallFrameCryptoAdapterProtocol {
     
     @GlobalGroupCallActor
     func addDecryptor(to participant: JoinedRemoteParticipant) throws {
-        DDLogNotice("[GroupCall] Add decryptor for \(participant.participantID.id).")
+        DDLogNotice("[GroupCall] Add decryptor for \(participant.participantID)")
         try frameCryptoContextLock.withLock {
             guard participant.participantID.id < UInt16.max else {
                 throw GroupCallError.localProtocolViolation
@@ -214,8 +214,8 @@ extension GroupCallBaseState: GroupCallMessageCryptoProtocol {
             return symmetricEncrypt(by: gcnhak, plainText: plainText, nonce: nonce)
         }
         catch {
-            let msg = "Could not encrypt cipher text because of an error \(error)"
-            DDLogError(msg)
+            let msg = "[GroupCall] Could not encrypt cipher text: \(error)"
+            DDLogError("\(msg)")
             assertionFailure(msg)
             
             throw GroupCallError.encryptionFailure
@@ -228,8 +228,8 @@ extension GroupCallBaseState: GroupCallMessageCryptoProtocol {
             return symmetricDecrypt(by: gcnhak, cipherText: cipherText, nonce: nonce)
         }
         catch {
-            let msg = "Could not decrypt cipher text because of an error \(error)"
-            DDLogError(msg)
+            let msg = "[GroupCall] Could not decrypt cipher text: \(error)"
+            DDLogError("\(msg)")
             assertionFailure(msg)
             
             throw GroupCallError.encryptionFailure

@@ -47,7 +47,9 @@
 
 + (void)showBallotCreateViewControllerForConversation:(Conversation *)conversation onNavigationController:(UINavigationController*)navigationController {
     BallotCreateViewController *viewController = [BallotCreateViewController ballotCreateViewControllerForConversation: conversation];
-    [self presentAsModal:viewController onNavigationController:navigationController];
+    ModalNavigationController *modalNav = [[ModalNavigationController alloc] initWithRootViewController:viewController];
+    modalNav.modalInPresentation = YES;
+    [navigationController presentViewController:modalNav animated:YES completion:nil];
 }
 
 + (void)presentAsModal:(UIViewController*)viewController onNavigationController:(UINavigationController*)navigationController {

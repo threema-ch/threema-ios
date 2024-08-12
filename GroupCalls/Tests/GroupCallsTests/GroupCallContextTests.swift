@@ -44,15 +44,15 @@ final class GroupCallContextTests: XCTestCase {
         
         let mockPeerConnection = MockRTCPeerConnection()
         
-        let mockDataChannelCtx = MockDataChannelCtx()
+        let mockDataChannelCtx = MockDataChannelContext()
                 
-        let mockPeerConnectionCtx = MockPeerConnectionCtx(
+        let mockPeerConnectionCtx = MockPeerConnectionContext(
             peerConnection: mockPeerConnection,
             dataChannelContext: mockDataChannelCtx
         )
         let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()
         
-        let localParticipant = LocalParticipant(
+        let localParticipant = try LocalParticipant(
             participantID: ParticipantID(id: 0),
             localContactModel: localContactModel,
             dependencies: dependencies
@@ -62,7 +62,7 @@ final class GroupCallContextTests: XCTestCase {
         let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
 
         let groupCallDescription = try! GroupCallBaseState(
-            group: GroupCallsThreemaGroupModel(
+            group: GroupCallThreemaGroupModel(
                 groupIdentity: groupIdentity,
                 groupName: "ECHOECHO"
             ),
@@ -80,7 +80,7 @@ final class GroupCallContextTests: XCTestCase {
         mockPeerConnectionCtx.transceivers.append(newMockTransceiver2)
         //        mockPeerConnectionCtx.transceivers.append(newMockTransceiver3)
         
-        let connectionCtx = ConnectionContext<MockPeerConnectionCtx, MockRTCRtpTransceiver>(
+        let connectionCtx = ConnectionContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
             certificate: certificate,
             cryptoContext: mockCryptoAdapter,
             sessionParameters: sessionParameters,
@@ -88,7 +88,7 @@ final class GroupCallContextTests: XCTestCase {
             peerConnectionContext: mockPeerConnectionCtx
         )
         
-        _ = try GroupCallContext<MockPeerConnectionCtx, MockRTCRtpTransceiver>(
+        _ = try GroupCallContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
             connectionContext: connectionCtx,
             localParticipant: localParticipant,
             dependencies: dependencies,
@@ -109,17 +109,17 @@ final class GroupCallContextTests: XCTestCase {
         
         let mockPeerConnection = MockRTCPeerConnection()
         
-        let mockDataChannelCtx = MockDataChannelCtx()
+        let mockDataChannelCtx = MockDataChannelContext()
         
         //        let peerConnectionCtx = PeerConnectionCtx(peerConnection: mockPeerConnection, dataChannelCtx:
         //        mockDataChannelCtx)
         
-        let mockPeerConnectionCtx = MockPeerConnectionCtx(
+        let mockPeerConnectionCtx = MockPeerConnectionContext(
             peerConnection: mockPeerConnection,
             dataChannelContext: mockDataChannelCtx
         )
         
-        let localParticipant = LocalParticipant(
+        let localParticipant = try LocalParticipant(
             participantID: ParticipantID(id: 0),
             localContactModel: localContactModel,
             dependencies: dependencies
@@ -127,7 +127,7 @@ final class GroupCallContextTests: XCTestCase {
         
         let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
         let groupCallDescription = try! GroupCallBaseState(
-            group: GroupCallsThreemaGroupModel(
+            group: GroupCallThreemaGroupModel(
                 groupIdentity: groupIdentity,
                 groupName: "ECHOECHO"
             ),
@@ -151,7 +151,7 @@ final class GroupCallContextTests: XCTestCase {
         mockPeerConnectionCtx.transceivers.append(newMockTransceiver2)
         //        mockPeerConnectionCtx.transceivers.append(newMockTransceiver3)
         
-        let connectionCtx = ConnectionContext<MockPeerConnectionCtx, MockRTCRtpTransceiver>(
+        let connectionCtx = ConnectionContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
             certificate: certificate,
             cryptoContext: mockCryptoAdapter,
             sessionParameters: sessionParameters,
@@ -159,7 +159,7 @@ final class GroupCallContextTests: XCTestCase {
             peerConnectionContext: mockPeerConnectionCtx
         )
         
-        let groupCallContext = try GroupCallContext<MockPeerConnectionCtx, MockRTCRtpTransceiver>(
+        let groupCallContext = try GroupCallContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
             connectionContext: connectionCtx,
             localParticipant: localParticipant,
             dependencies: dependencies,
@@ -200,17 +200,17 @@ final class GroupCallContextTests: XCTestCase {
             
                 let mockPeerConnection = MockRTCPeerConnection()
             
-                let mockDataChannelCtx = MockDataChannelCtx()
+                let mockDataChannelCtx = MockDataChannelContext()
             
                 //        let peerConnectionCtx = PeerConnectionCtx(peerConnection: mockPeerConnection, dataChannelCtx:
                 //        mockDataChannelCtx)
             
-                let mockPeerConnectionCtx = MockPeerConnectionCtx(
+                let mockPeerConnectionCtx = MockPeerConnectionContext(
                     peerConnection: mockPeerConnection,
                     dataChannelContext: mockDataChannelCtx
                 )
             
-                let localParticipant = await LocalParticipant(
+                let localParticipant = try await LocalParticipant(
                     participantID: ParticipantID(id: 0),
                     localContactModel: self.localContactModel,
                     dependencies: dependencies
@@ -221,7 +221,7 @@ final class GroupCallContextTests: XCTestCase {
                     creator: ThreemaIdentity("ECHOECHO")
                 )
                 let groupCallDescription = try! GroupCallBaseState(
-                    group: GroupCallsThreemaGroupModel(
+                    group: GroupCallThreemaGroupModel(
                         groupIdentity: groupIdentity,
                         groupName: "ECHOECHO"
                     ),
@@ -243,7 +243,7 @@ final class GroupCallContextTests: XCTestCase {
                 mockPeerConnectionCtx.transceivers.append(newMockTransceiver1)
                 mockPeerConnectionCtx.transceivers.append(newMockTransceiver2)
             
-                let connectionCtx = await ConnectionContext<MockPeerConnectionCtx, MockRTCRtpTransceiver>(
+                let connectionCtx = await ConnectionContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
                     certificate: certificate,
                     cryptoContext: mockCryptoAdapter,
                     sessionParameters: sessionParameters,
@@ -251,7 +251,7 @@ final class GroupCallContextTests: XCTestCase {
                     peerConnectionContext: mockPeerConnectionCtx
                 )
             
-                let groupCallContext = try await GroupCallContext<MockPeerConnectionCtx, MockRTCRtpTransceiver>(
+                let groupCallContext = try await GroupCallContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
                     connectionContext: connectionCtx,
                     localParticipant: localParticipant,
                     dependencies: dependencies,
@@ -311,7 +311,7 @@ final class GroupCallContextTests: XCTestCase {
                 let reaction = try! await groupCallContext.handle(envelope)
             
                 if case let .participantToParticipant(participant, data) = reaction {
-                    let id = await participant.participantID.id
+                    let id = participant.participantID.id
                     print("ID is \(id)")
                     XCTAssertEqual(id, envelope.sender)
                     XCTAssertGreaterThan(data.count, 0)

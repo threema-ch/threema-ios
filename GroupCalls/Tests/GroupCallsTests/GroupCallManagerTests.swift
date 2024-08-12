@@ -26,104 +26,103 @@ import WebRTC
 import XCTest
 @testable import GroupCalls
 
-#if compiler(>=5.8)
-    final class GroupCallManagerTests: XCTestCase {
+final class GroupCallManagerTests: XCTestCase {
         
-        fileprivate lazy var creatorIdentity = ThreemaIdentity("OCHEOCHE")
-        fileprivate lazy var localIdentity = ThreemaIdentity("ECHOECHO")
-        fileprivate lazy var localContactModel = ContactModel(identity: localIdentity, nickname: "ECHOECHO")
-        fileprivate lazy var basicGroupIdentity = GroupIdentity(
-            id: Data(repeating: 0x00, count: 8),
-            creator: creatorIdentity
-        )
-        fileprivate lazy var basicGroupModel = GroupCallsThreemaGroupModel(
-            groupIdentity: basicGroupIdentity,
-            groupName: "TESTGROUP"
-        )
-        fileprivate lazy var otherGroupIdentity = GroupIdentity(
-            id: Data(repeating: 0x01, count: 8),
-            creator: creatorIdentity
-        )
-        fileprivate lazy var otherGroupModel = GroupCallsThreemaGroupModel(
-            groupIdentity: otherGroupIdentity,
-            groupName: "TESTGROUP"
-        )
-        fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
+    fileprivate lazy var creatorIdentity = ThreemaIdentity("OCHEOCHE")
+    fileprivate lazy var localIdentity = ThreemaIdentity("ECHOECHO")
+    fileprivate lazy var localContactModel = ContactModel(identity: localIdentity, nickname: "ECHOECHO")
+    fileprivate lazy var basicGroupIdentity = GroupIdentity(
+        id: Data(repeating: 0x00, count: 8),
+        creator: creatorIdentity
+    )
+    fileprivate lazy var basicGroupModel = GroupCallThreemaGroupModel(
+        groupIdentity: basicGroupIdentity,
+        groupName: "TESTGROUP"
+    )
+    fileprivate lazy var otherGroupIdentity = GroupIdentity(
+        id: Data(repeating: 0x01, count: 8),
+        creator: creatorIdentity
+    )
+    fileprivate lazy var otherGroupModel = GroupCallThreemaGroupModel(
+        groupIdentity: otherGroupIdentity,
+        groupName: "TESTGROUP"
+    )
+    fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
         
-        // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
-        func testExample() async throws {
-            let expectation = XCTestExpectation(description: "Handle succeeds")
+    // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
+    func testExample() async throws {
+        let expectation = XCTestExpectation(description: "Handle succeeds")
 
-            Task.detached {
-                let dependencies = MockDependencies().create()
+        Task.detached {
+            let dependencies = MockDependencies().create()
 
-                let proposedGroupCall = try ProposedGroupCall(
-                    groupRepresentation: self.basicGroupModel,
-                    protocolVersion: 1,
-                    gck: Data(repeating: 0x03, count: 40),
-                    sfuBaseURL: self.sfuBaseURL,
-                    startMessageReceiveDate: Date(),
-                    dependencies: dependencies
-                )
+            let proposedGroupCall = try ProposedGroupCall(
+                groupRepresentation: self.basicGroupModel,
+                protocolVersion: 1,
+                gck: Data(repeating: 0x03, count: 40),
+                sfuBaseURL: self.sfuBaseURL,
+                startMessageReceiveDate: Date(),
+                dependencies: dependencies
+            )
 
-                let groupCallManager = GroupCallManager(
-                    dependencies: dependencies,
-                    localContactModel: self.localContactModel
-                )
+            let groupCallManager = GroupCallManager(
+                dependencies: dependencies,
+                localContactModel: self.localContactModel
+            )
 
-                await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
+            await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
 
 //                while await !(groupCallManager.hasRunningGroupCalls(in: proposedGroupCall)) {
 //                    await Task.yield()
 //                    try await Task.sleep(seconds: 1)
 //                }
 
-                expectation.fulfill()
-            }
-
-            await fulfillment(of: [expectation], timeout: 5.0)
+            expectation.fulfill()
         }
 
-        // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
-        func test0() async throws {
-            let expectation = XCTestExpectation(description: "Handle succeeds")
+        await fulfillment(of: [expectation], timeout: 5.0)
+    }
 
-            let dependencies = MockDependencies().create()
+    // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
+    func test0() async throws {
+        let expectation = XCTestExpectation(description: "Handle succeeds")
 
-            Task.detached {
+        let dependencies = MockDependencies().create()
 
-                let groupCallManager = GroupCallManager(
-                    dependencies: dependencies,
-                    localContactModel: self.localContactModel
-                )
+        Task.detached {
 
-                let proposedGroupCall1 = try ProposedGroupCall(
-                    groupRepresentation: self.basicGroupModel,
-                    protocolVersion: 1,
-                    gck: Data(repeating: 0x03, count: 40),
-                    sfuBaseURL: self.sfuBaseURL,
-                    startMessageReceiveDate: Date(),
-                    dependencies: dependencies
-                )
-                let proposedGroupCall2 = try ProposedGroupCall(
-                    groupRepresentation: self.basicGroupModel,
-                    protocolVersion: 1,
-                    gck: Data(repeating: 0x04, count: 40),
-                    sfuBaseURL: self.sfuBaseURL,
-                    startMessageReceiveDate: Date(),
-                    dependencies: dependencies
-                )
+            let groupCallManager = GroupCallManager(
+                dependencies: dependencies,
+                localContactModel: self.localContactModel
+            )
 
-                let proposedGroupCalls = [proposedGroupCall1, proposedGroupCall2]
+            let proposedGroupCall1 = try ProposedGroupCall(
+                groupRepresentation: self.basicGroupModel,
+                protocolVersion: 1,
+                gck: Data(repeating: 0x03, count: 40),
+                sfuBaseURL: self.sfuBaseURL,
+                startMessageReceiveDate: Date(),
+                dependencies: dependencies
+            )
+            let proposedGroupCall2 = try ProposedGroupCall(
+                groupRepresentation: self.basicGroupModel,
+                protocolVersion: 1,
+                gck: Data(repeating: 0x04, count: 40),
+                sfuBaseURL: self.sfuBaseURL,
+                startMessageReceiveDate: Date(),
+                dependencies: dependencies
+            )
 
-                for proposedGroupCall in proposedGroupCalls {
-                    await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
+            let proposedGroupCalls = [proposedGroupCall1, proposedGroupCall2]
+
+            for proposedGroupCall in proposedGroupCalls {
+                await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
 
 //                    while await !(groupCallManager.hasRunningGroupCalls(in: proposedGroupCall)) {
 //                        await Task.yield()
 //                        try await Task.sleep(seconds: 1)
 //                    }
-                }
+            }
 
 //                let allGroupCalls = await groupCallManager.groupCalls(in: groupModel)
 //                for (i, allGroupCall) in allGroupCalls.enumerated() {
@@ -166,49 +165,49 @@ import XCTest
 //                    Unmanaged.passUnretained(goldViewModel).toOpaque().hashValue
 //                )
 
-                expectation.fulfill()
+            expectation.fulfill()
+        }
+
+        await fulfillment(of: [expectation], timeout: 5.0)
+    }
+    
+    // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
+    func test1() async throws {
+        let expectation = XCTestExpectation(description: "Handle succeeds")
+
+        let dependencies = MockDependencies().create()
+        let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
+        let numberOfCalls = 20
+
+        Task.detached {
+            let localIdentity = "ECHOECHO"
+
+            let groupCallManager = GroupCallManager(
+                dependencies: dependencies,
+                localContactModel: self.localContactModel
+            )
+
+            let proposedGroupCalls = (0..<numberOfCalls).map { i in
+                try! ProposedGroupCall(
+                    groupRepresentation: self.basicGroupModel,
+                    protocolVersion: 1,
+                    gck: Data(repeating: UInt8(i), count: 40),
+                    sfuBaseURL: self.sfuBaseURL,
+                    startMessageReceiveDate: Date(),
+                    dependencies: dependencies
+                )
             }
 
-            await fulfillment(of: [expectation], timeout: 5.0)
-        }
-    
-        // TODO: (IOS-3880) Test disabled: Check whether this still makes sense
-        func test1() async throws {
-            let expectation = XCTestExpectation(description: "Handle succeeds")
+            XCTAssertEqual(proposedGroupCalls.count, numberOfCalls)
 
-            let dependencies = MockDependencies().create()
-            let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
-            let numberOfCalls = 20
-
-            Task.detached {
-                let localIdentity = "ECHOECHO"
-
-                let groupCallManager = GroupCallManager(
-                    dependencies: dependencies,
-                    localContactModel: self.localContactModel
-                )
-
-                let proposedGroupCalls = (0..<numberOfCalls).map { i in
-                    try! ProposedGroupCall(
-                        groupRepresentation: self.basicGroupModel,
-                        protocolVersion: 1,
-                        gck: Data(repeating: UInt8(i), count: 40),
-                        sfuBaseURL: self.sfuBaseURL,
-                        startMessageReceiveDate: Date(),
-                        dependencies: dependencies
-                    )
-                }
-
-                XCTAssertEqual(proposedGroupCalls.count, numberOfCalls)
-
-                for proposedGroupCall in proposedGroupCalls {
-                    await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
+            for proposedGroupCall in proposedGroupCalls {
+                await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
                     
 //                    while await !(groupCallManager.hasRunningGroupCalls(in: proposedGroupCall)) {
 //                        await Task.yield()
 //                        try await Task.sleep(seconds: 1)
 //                    }
-                }
+            }
 
 //                let allGroupCalls = await groupCallManager.groupCalls(in: groupModel)
 //                for (i, allGroupCall) in allGroupCalls.enumerated() {
@@ -274,122 +273,120 @@ import XCTest
 //                    Unmanaged.passUnretained(goldViewModel).toOpaque().hashValue
 //                )
 
-                expectation.fulfill()
-            }
+            expectation.fulfill()
+        }
 
-            await fulfillment(of: [expectation], timeout: 5.0)
-        }
+        await fulfillment(of: [expectation], timeout: 5.0)
+    }
         
-        func testPeekSteps() async throws {
-            let dependencies = MockDependencies().create()
-            let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
-            let numberOfCalls = 20
+    func testPeekSteps() async throws {
+        let dependencies = MockDependencies().create()
+        let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
+        let numberOfCalls = 20
             
-            let groupCallManager = GroupCallManager(dependencies: dependencies, localContactModel: localContactModel)
+        let groupCallManager = GroupCallManager(dependencies: dependencies, localContactModel: localContactModel)
             
-            var groupCalls = Set<GroupCallActor>()
+        var groupCalls = Set<GroupCallActor>()
             
-            for i in 0..<numberOfCalls {
-                let newCall = try XCTUnwrap(GroupCallActor(
-                    localContactModel: localContactModel,
-                    groupModel: otherGroupModel,
-                    sfuBaseURL: URL(string: "https://\(i).test")!,
-                    gck: Data(repeating: UInt8(i), count: 32),
-                    dependencies: dependencies
-                ))
-                
-                await newCall.setExactCallStartDate(UInt64(i))
-                
-                groupCalls.insert(newCall)
-            }
-            
-            XCTAssertTrue(groupCalls.count == numberOfCalls)
-            
-            let goldChosenCall = groupCalls.randomElement()
-            await goldChosenCall?.setExactCallStartDate(UInt64(numberOfCalls + 10))
-            
-            let chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
-            
-            await print(
-                "Gold chosen call \(String(describing: goldChosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: goldChosenCall?.exactCreationTimestamp))"
-            )
-            await print(
-                "Actual chosen call \(String(describing: chosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: chosenCall?.exactCreationTimestamp))"
-            )
-            
-            let chosenStartDate = await chosenCall!.exactCreationTimestamp!
-            for groupCall in groupCalls {
-                let otherStartDate = await groupCall.exactCreationTimestamp!
-                print("\(otherStartDate) < \(chosenStartDate)")
-                let smaller = otherStartDate <= chosenStartDate
-                XCTAssertTrue(smaller)
-            }
-            
-            XCTAssert(goldChosenCall == chosenCall)
-        }
-        
-        func testPeekStepsChosenCallChanges() async throws {
-            let dependencies = MockDependencies().create()
-            let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
-            let numberOfCalls = 20
-                        
-            let groupCallManager = GroupCallManager(dependencies: dependencies, localContactModel: localContactModel)
-            
-            var groupCalls = Set<GroupCallActor>()
-            
-            for i in 0..<numberOfCalls {
-                let newCall = try XCTUnwrap(GroupCallActor(
-                    localContactModel: localContactModel,
-                    groupModel: otherGroupModel,
-                    sfuBaseURL: URL(string: "https://\(i).test")!,
-                    gck: Data(repeating: UInt8(i), count: 32),
-                    dependencies: dependencies
-                ))
-                
-                await newCall.setExactCallStartDate(UInt64(i))
-                
-                groupCalls.insert(newCall)
-            }
-            
-            let goldChosenCall = groupCalls.randomElement()
-            await goldChosenCall?.setExactCallStartDate(UInt64(numberOfCalls + 10))
-            
-            var chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
-            
-            XCTAssert(goldChosenCall == chosenCall)
-            
-            let newNumberOfCalls = numberOfCalls + 50
-            
-            for i in numberOfCalls..<newNumberOfCalls {
-                let newCall = try XCTUnwrap(GroupCallActor(
-                    localContactModel: localContactModel,
-                    groupModel: otherGroupModel,
-                    sfuBaseURL: URL(string: "https://\(i).test")!,
-                    gck: Data(repeating: UInt8(i), count: 32),
-                    dependencies: dependencies
-                ))
-                
-                await newCall.setExactCallStartDate(UInt64(i))
-                
-                groupCalls.insert(newCall)
-            }
-            
-            let newGoldCall = try XCTUnwrap(GroupCallActor(
+        for i in 0..<numberOfCalls {
+            let newCall = try XCTUnwrap(GroupCallActor(
                 localContactModel: localContactModel,
                 groupModel: otherGroupModel,
-                sfuBaseURL: URL(string: "sfu.threema.test")!,
-                gck: Data(repeating: 0x01, count: 32),
+                sfuBaseURL: URL(string: "https://\(i).test")!,
+                gck: Data(repeating: UInt8(i), count: 32),
                 dependencies: dependencies
             ))
-            
-            await newGoldCall.setExactCallStartDate(UInt64(newNumberOfCalls + 1))
-            
-            groupCalls.insert(newGoldCall)
-            
-            chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
-            
-            XCTAssert(newGoldCall == chosenCall)
+                
+            await newCall.setExactCallStartDate(UInt64(i))
+                
+            groupCalls.insert(newCall)
         }
+            
+        XCTAssertTrue(groupCalls.count == numberOfCalls)
+            
+        let goldChosenCall = groupCalls.randomElement()
+        await goldChosenCall?.setExactCallStartDate(UInt64(numberOfCalls + 10))
+            
+        let chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
+            
+        await print(
+            "Gold chosen call \(String(describing: goldChosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: goldChosenCall?.exactCreationTimestamp))"
+        )
+        await print(
+            "Actual chosen call \(String(describing: chosenCall?.callID.bytes.hexEncodedString())) has start date \(String(describing: chosenCall?.exactCreationTimestamp))"
+        )
+            
+        let chosenStartDate = await chosenCall!.exactCreationTimestamp!
+        for groupCall in groupCalls {
+            let otherStartDate = await groupCall.exactCreationTimestamp!
+            print("\(otherStartDate) < \(chosenStartDate)")
+            let smaller = otherStartDate <= chosenStartDate
+            XCTAssertTrue(smaller)
+        }
+            
+        XCTAssert(goldChosenCall == chosenCall)
     }
-
-#endif
+        
+    func testPeekStepsChosenCallChanges() async throws {
+        let dependencies = MockDependencies().create()
+        let mockHTTPClient = (dependencies.groupCallsHTTPClientAdapter as! MockHTTPClient)
+        let numberOfCalls = 20
+                        
+        let groupCallManager = GroupCallManager(dependencies: dependencies, localContactModel: localContactModel)
+            
+        var groupCalls = Set<GroupCallActor>()
+            
+        for i in 0..<numberOfCalls {
+            let newCall = try XCTUnwrap(GroupCallActor(
+                localContactModel: localContactModel,
+                groupModel: otherGroupModel,
+                sfuBaseURL: URL(string: "https://\(i).test")!,
+                gck: Data(repeating: UInt8(i), count: 32),
+                dependencies: dependencies
+            ))
+                
+            await newCall.setExactCallStartDate(UInt64(i))
+                
+            groupCalls.insert(newCall)
+        }
+            
+        let goldChosenCall = groupCalls.randomElement()
+        await goldChosenCall?.setExactCallStartDate(UInt64(numberOfCalls + 10))
+            
+        var chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
+            
+        XCTAssert(goldChosenCall == chosenCall)
+            
+        let newNumberOfCalls = numberOfCalls + 50
+            
+        for i in numberOfCalls..<newNumberOfCalls {
+            let newCall = try XCTUnwrap(GroupCallActor(
+                localContactModel: localContactModel,
+                groupModel: otherGroupModel,
+                sfuBaseURL: URL(string: "https://\(i).test")!,
+                gck: Data(repeating: UInt8(i), count: 32),
+                dependencies: dependencies
+            ))
+                
+            await newCall.setExactCallStartDate(UInt64(i))
+                
+            groupCalls.insert(newCall)
+        }
+            
+        let newGoldCall = try XCTUnwrap(GroupCallActor(
+            localContactModel: localContactModel,
+            groupModel: otherGroupModel,
+            sfuBaseURL: URL(string: "sfu.threema.test")!,
+            gck: Data(repeating: 0x01, count: 32),
+            dependencies: dependencies
+        ))
+            
+        await newGoldCall.setExactCallStartDate(UInt64(newNumberOfCalls + 1))
+            
+        groupCalls.insert(newGoldCall)
+            
+        chosenCall = try await groupCallManager.getCurrentlyChosenCall(from: groupCalls)
+            
+        XCTAssert(newGoldCall == chosenCall)
+    }
+}

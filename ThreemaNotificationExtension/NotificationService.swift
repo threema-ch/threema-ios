@@ -147,9 +147,9 @@ class NotificationService: UNNotificationServiceExtension {
                 backgroundBusinessInjector.serverConnector
                     .backgroundEntityManagerForMessageProcessing = backgroundBusinessInjector.entityManager
 
+                // TODO: (IOS-4677) Shouldn't we always process GC messages?
                 if backgroundBusinessInjector.settingsStore.enableThreemaGroupCalls {
-                    GlobalGroupCallsManagerSingleton.shared
-                        .processBackgroundBusinessInjector = backgroundBusinessInjector
+                    GlobalGroupCallManagerSingleton.injectedBackgroundBusinessInjector = backgroundBusinessInjector
                 }
                 
                 // Refresh all DB objects before access it
@@ -782,6 +782,7 @@ extension NotificationService: MessageProcessorDelegate {
                     
                     onCompletion?(self)
                 }
+
         default:
             onCompletion?(self)
             DDLogError("Message couldn't be processed as VoIP call.")

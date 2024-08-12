@@ -50,10 +50,10 @@ extension StorageManagementConversationView {
         
         static func retentionOption(from days: Int) -> OlderThanOption {
             if let option = OlderThanOption.allRetentionCases.first(where: { $0.days == days }) {
-                return option
+                option
             }
             else {
-                return .custom(days)
+                .custom(days)
             }
         }
         
@@ -91,23 +91,23 @@ extension StorageManagementConversationView {
         var localizedTitleDescription: String {
             switch self {
             case .oneYear:
-                return "one_year_title".localized
+                "one_year_title".localized
             case .sixMonths:
-                return "six_months_title".localized
+                "six_months_title".localized
             case .threeMonths:
-                return "three_months_title".localized
+                "three_months_title".localized
             case .oneMonth:
-                return "one_month_title".localized
+                "one_month_title".localized
             case .oneWeek:
-                return "one_week_title".localized
+                "one_week_title".localized
             case .everything:
-                return "everything".localized
+                "everything".localized
             case .forever:
-                return "forever".localized
+                "forever".localized
             case let .custom(days) where days <= 0: // MDM Setting
-                return "forever".localized
+                "forever".localized
             case let .custom(days): // MDM Setting
-                return String.localizedStringWithFormat(
+                String.localizedStringWithFormat(
                     "number_of_days".localized,
                     days
                 )
@@ -117,21 +117,21 @@ extension StorageManagementConversationView {
         var localizedDescription: String {
             switch self {
             case .oneYear:
-                return "one_year".localized
+                "one_year".localized
             case .sixMonths:
-                return "six_months".localized
+                "six_months".localized
             case .threeMonths:
-                return "three_months".localized
+                "three_months".localized
             case .oneMonth:
-                return "one_month".localized
+                "one_month".localized
             case .oneWeek:
-                return "one_week".localized
+                "one_week".localized
             case .everything:
-                return "everything".localized
+                "everything".localized
             case .forever:
-                return "forever".localized
+                "forever".localized
             case .custom:
-                return ""
+                ""
             }
         }
         

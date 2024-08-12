@@ -372,19 +372,18 @@ public class ImageURLSenderItemCreator: NSObject {
     // MARK: - Public Helper Functions
 
     func imageMaxSize(_ image: UIImage? = nil) -> CGFloat {
-        var maxSize: CGFloat
-        
-        switch userSettingsImageSize {
-        case .small, .medium, .large, .extraLarge:
-            maxSize = userSettingsImageSize.resolution
-        case .original:
-            if let image {
-                maxSize = max(image.size.width, image.size.height) * image.scale
+        var maxSize: CGFloat =
+            switch userSettingsImageSize {
+            case .small, .medium, .large, .extraLarge:
+                userSettingsImageSize.resolution
+            case .original:
+                if let image {
+                    max(image.size.width, image.size.height) * image.scale
+                }
+                else {
+                    0
+                }
             }
-            else {
-                maxSize = 0
-            }
-        }
         
         if AppGroup.getCurrentType() == AppGroupTypeShareExtension,
            maxSize > ImageSenderItemSize.large.resolution {

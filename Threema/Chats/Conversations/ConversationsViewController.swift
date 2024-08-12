@@ -384,14 +384,13 @@ extension ConversationsViewController {
     private func createPinAction(conversation: Conversation) -> UIContextualAction {
         
         let isPinned = conversation.conversationVisibility == .pinned
-        let pinTitle: String
-        
-        if isPinned {
-            pinTitle = BundleUtil.localizedString(forKey: "unpin")
-        }
-        else {
-            pinTitle = BundleUtil.localizedString(forKey: "pin")
-        }
+        let pinTitle: String =
+            if isPinned {
+                BundleUtil.localizedString(forKey: "unpin")
+            }
+            else {
+                BundleUtil.localizedString(forKey: "pin")
+            }
         
         let pinAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
             
@@ -424,14 +423,13 @@ extension ConversationsViewController {
     private func createReadAction(conversation: Conversation) -> UIContextualAction {
         
         let hasUnread = conversation.unreadMessageCount.intValue != 0
-        let unreadTitle: String
-        
-        if hasUnread {
-            unreadTitle = BundleUtil.localizedString(forKey: "read")
-        }
-        else {
-            unreadTitle = BundleUtil.localizedString(forKey: "unread")
-        }
+        let unreadTitle: String =
+            if hasUnread {
+                BundleUtil.localizedString(forKey: "read")
+            }
+            else {
+                BundleUtil.localizedString(forKey: "unread")
+            }
         
         let readAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
             

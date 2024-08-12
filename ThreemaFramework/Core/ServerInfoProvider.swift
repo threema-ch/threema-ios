@@ -137,13 +137,13 @@ public enum DomainMatchMode: String {
 
     static func matchMode(string: String) -> DomainMatchMode {
         if string == "exact" {
-            return .exact
+            .exact
         }
         else if string == "include-subdomains" {
-            return .includeSubdomains
+            .includeSubdomains
         }
         else {
-            return .unsupported
+            .unsupported
         }
     }
 }

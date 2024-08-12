@@ -29,11 +29,11 @@ enum AudioSessionError: Equatable, LocalizedError {
     var localizedDescription: String {
         switch self {
         case .couldNotActivateCategory:
-            return "Could not activate audio session category"
+            "Could not activate audio session category"
         case .callStateNotIdle:
-            return "Call state is not idle"
+            "Call state is not idle"
         case let .error(error):
-            return error.localizedDescription
+            error.localizedDescription
         }
     }
 }
@@ -136,8 +136,8 @@ class AudioSessionManager: AudioSessionManagerProtocol {
             DDLogInfo("Play/Record audio: Available input port: \($0.portType)")
         }
         
-        session.currentRoute.outputs.forEach {
-            DDLogInfo("Play/Record audio: Current output port: \($0.portType)")
+        for output in session.currentRoute.outputs {
+            DDLogInfo("Play/Record audio: Current output port: \(output.portType)")
         }
     }
 }

@@ -96,7 +96,7 @@
 "cNq-Pt-Uma.title" = "연락처 선택";
 
 /* Class = "UILabel"; text = "Include in phone backup"; ObjectID = "d2g-FC-ibo"; */
-"d2g-FC-ibo.text" = "휴대폰 백업에 포함";
+"d2g-FC-ibo.text" = "전화 백업에 포함";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
 "dgK-0J-UrZ.footerTitle" = "#do not translate#이 데이터와 선택한 비밀번호는 다른 기기에서 귀하의 ID를 복원하는 데 사용할 수 있습니다. 이를 적절한 위치에 복사하여 붙여넣거나, 자신에게 이메일로 보내거나, 다른 기기에서 QR 코드를 스캔할 수 있습니다.";

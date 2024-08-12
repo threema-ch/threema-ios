@@ -44,25 +44,25 @@ public enum FileMessageType {
     public var symbolName: String {
         switch self {
         case .image, .sticker:
-            return "photo.fill"
+            "photo.fill"
         case .animatedImage, .animatedSticker:
-            return "photo.artframe"
+            "photo.artframe"
         case .video:
             // Own icon used because SFSymbols is reserved
-            return "threema.video.fill"
+            "threema.video.fill"
         case .voice:
-            return "mic.fill"
+            "mic.fill"
         case .file:
-            return "doc.fill"
+            "doc.fill"
         }
     }
     
     public var defaultInteractionSymbolName: String? {
         switch self {
         case .animatedImage, .animatedSticker, .video:
-            return "play.fill"
+            "play.fill"
         case .image, .sticker, .voice, .file:
-            return nil
+            nil
         }
     }
     
@@ -70,17 +70,17 @@ public enum FileMessageType {
     public var localizedDescription: String {
         switch self {
         case .image:
-            return BundleUtil.localizedString(forKey: "file_message_image")
+            BundleUtil.localizedString(forKey: "file_message_image")
         case .sticker, .animatedSticker:
-            return BundleUtil.localizedString(forKey: "file_message_sticker")
+            BundleUtil.localizedString(forKey: "file_message_sticker")
         case .animatedImage:
-            return BundleUtil.localizedString(forKey: "file_message_animated_image")
+            BundleUtil.localizedString(forKey: "file_message_animated_image")
         case .video:
-            return BundleUtil.localizedString(forKey: "file_message_video")
+            BundleUtil.localizedString(forKey: "file_message_video")
         case .voice:
-            return BundleUtil.localizedString(forKey: "file_message_voice")
+            BundleUtil.localizedString(forKey: "file_message_voice")
         case .file:
-            return BundleUtil.localizedString(forKey: "file_message_file")
+            BundleUtil.localizedString(forKey: "file_message_file")
         }
     }
 }

@@ -93,7 +93,7 @@ class QuickActionsView: UIStackView {
     }
     
     private func configureView() {
-        [firstStackContainer, secondStackContainer].forEach { stackView in
+        for stackView in [firstStackContainer, secondStackContainer] {
             stackView.axis = .horizontal
             stackView.distribution = .fillEqually
             stackView.spacing = configuration.buttonSpacing

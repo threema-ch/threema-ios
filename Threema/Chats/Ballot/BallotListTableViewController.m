@@ -179,7 +179,7 @@
             [[_entityManager entityDestroyer] deleteObjectWithObject:ballot];
         }];
         
-        [_conversation updateLastMessageWith:_entityManager];
+        [_conversation updateLastDisplayMessageWith:_entityManager];
 
         [self loadData];
         

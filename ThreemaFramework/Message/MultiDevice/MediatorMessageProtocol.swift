@@ -555,6 +555,7 @@ enum MediatorMessageProtocolError: Error {
     ///   - receiverIdentity: Receiver of the message
     ///   - createdAt: Message date
     ///   - nonce: One for one-to-one message
+    ///   - deviceID: ID of the device
     /// - Returns: Envelope with outgoing message
     func getEnvelopeForOutgoingMessage(
         type: Int32,
@@ -562,13 +563,14 @@ enum MediatorMessageProtocolError: Error {
         messageID: UInt64,
         receiverIdentity: String,
         createdAt: Date,
-        nonce: Data
+        nonce: Data,
+        deviceID: UInt64
     ) -> D2d_Envelope {
         // swiftformat:disable:next all
         var conversationID = D2d_ConversationId()
         conversationID.contact = receiverIdentity
         
-        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt, [nonce])
+        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt, [nonce], deviceID)
     }
     
     /// Create Envelope for outgoing message.
@@ -580,6 +582,7 @@ enum MediatorMessageProtocolError: Error {
     ///   - groupCreatorIdentity: Group ID of message
     ///   - createdAt: Message date
     ///   - nonces: Count of members minus one for group message
+    ///   - deviceID: ID of the device
     /// - Returns: Envelope with outgoing group message
     func getEnvelopeForOutgoingMessage(
         type: Int32,
@@ -588,7 +591,8 @@ enum MediatorMessageProtocolError: Error {
         groupID: UInt64,
         groupCreatorIdentity: String,
         createdAt: Date,
-        nonces: [Data]
+        nonces: [Data],
+        deviceID: UInt64
     ) -> D2d_Envelope {
         var group = Common_GroupIdentity()
         group.groupID = groupID
@@ -598,7 +602,7 @@ enum MediatorMessageProtocolError: Error {
         var conversationID = D2d_ConversationId()
         conversationID.group = group
 
-        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt, nonces)
+        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt, nonces, deviceID)
     }
     
     private func getEnvelopeForOutgoingMessage(
@@ -608,7 +612,8 @@ enum MediatorMessageProtocolError: Error {
         // swiftformat:disable:next all
         _ conversationID: D2d_ConversationId,
         _ createdAt: Date,
-        _ nonces: [Data]
+        _ nonces: [Data],
+        _ deviceID: UInt64
     ) -> D2d_Envelope {
         var outgoingMessage = D2d_OutgoingMessage()
         outgoingMessage.type = MediatorMessageProtocol.getMultiDeviceMessageType(for: type)
@@ -622,13 +627,14 @@ enum MediatorMessageProtocolError: Error {
 
         var envelope = D2d_Envelope()
         envelope.padding = BytesUtility.paddingRandom()
+        envelope.deviceID = deviceID
         envelope.outgoingMessage = outgoingMessage
 
         return envelope
     }
 
     // swiftformat:disable:next all
-    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId) -> D2d_Envelope {
+    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId, deviceID: UInt64) -> D2d_Envelope {
         var outgoingMessageUpdate = D2d_OutgoingMessageUpdate()
         var updateMessage = D2d_OutgoingMessageUpdate.Update()
         updateMessage.sent = D2d_OutgoingMessageUpdate.Sent()
@@ -638,6 +644,7 @@ enum MediatorMessageProtocolError: Error {
 
         var envelope = D2d_Envelope()
         envelope.padding = BytesUtility.paddingRandom()
+        envelope.deviceID = deviceID
         envelope.outgoingMessageUpdate = outgoingMessageUpdate
 
         return envelope
@@ -844,85 +851,85 @@ enum MediatorMessageProtocolError: Error {
     static func getMultiDeviceMessageType(for type: Int32) -> Common_CspE2eMessageType {
         switch type {
         case MSGTYPE_AUDIO:
-            return .deprecatedAudio
+            .deprecatedAudio
         case MSGTYPE_BALLOT_CREATE:
-            return .pollSetup
+            .pollSetup
         case MSGTYPE_BALLOT_VOTE:
-            return .pollVote
+            .pollVote
         case MSGTYPE_DELIVERY_RECEIPT:
-            return .deliveryReceipt
+            .deliveryReceipt
         case MSGTYPE_FILE:
-            return .file
+            .file
         case MSGTYPE_GROUP_AUDIO:
-            return .groupAudio
+            .groupAudio
         case MSGTYPE_GROUP_BALLOT_CREATE:
-            return .groupPollSetup
+            .groupPollSetup
         case MSGTYPE_GROUP_BALLOT_VOTE:
-            return .groupPollVote
+            .groupPollVote
         case MSGTYPE_GROUP_CREATE:
-            return .groupSetup
+            .groupSetup
         case MSGTYPE_GROUP_DELETE_PHOTO:
-            return .groupDeleteProfilePicture
+            .groupDeleteProfilePicture
         case MSGTYPE_GROUP_DELIVERY_RECEIPT:
-            return .groupDeliveryReceipt
+            .groupDeliveryReceipt
         case MSGTYPE_GROUP_FILE:
-            return .groupFile
+            .groupFile
         case MSGTYPE_GROUP_IMAGE:
-            return .groupImage
+            .groupImage
         case MSGTYPE_GROUP_LEAVE:
-            return .groupLeave
+            .groupLeave
         case MSGTYPE_GROUP_LOCATION:
-            return .groupLocation
+            .groupLocation
         case MSGTYPE_GROUP_RENAME:
-            return .groupName
+            .groupName
         case MSGTYPE_GROUP_REQUEST_SYNC:
-            return .groupSyncRequest
+            .groupSyncRequest
         case MSGTYPE_GROUP_SET_PHOTO:
-            return .groupSetProfilePicture
+            .groupSetProfilePicture
         case MSGTYPE_GROUP_TEXT:
-            return .groupText
+            .groupText
         case MSGTYPE_GROUP_VIDEO:
-            return .groupVideo
+            .groupVideo
         case MSGTYPE_GROUP_CALL_START:
-            return .groupCallStart
+            .groupCallStart
         case MSGTYPE_IMAGE:
-            return .deprecatedImage
+            .deprecatedImage
         case MSGTYPE_LOCATION:
-            return .location
+            .location
         case MSGTYPE_TEXT:
-            return .text
+            .text
         case MSGTYPE_VIDEO:
-            return .deprecatedVideo
+            .deprecatedVideo
         case MSGTYPE_VOIP_CALL_OFFER:
-            return .callOffer
+            .callOffer
         case MSGTYPE_VOIP_CALL_ANSWER:
-            return .callAnswer
+            .callAnswer
         case MSGTYPE_VOIP_CALL_ICECANDIDATE:
-            return .callIceCandidate
+            .callIceCandidate
         case MSGTYPE_VOIP_CALL_HANGUP:
-            return .callHangup
+            .callHangup
         case MSGTYPE_VOIP_CALL_RINGING:
-            return .callRinging
+            .callRinging
         case MSGTYPE_CONTACT_SET_PHOTO:
-            return .contactSetProfilePicture
+            .contactSetProfilePicture
         case MSGTYPE_CONTACT_DELETE_PHOTO:
-            return .contactDeleteProfilePicture
+            .contactDeleteProfilePicture
         case MSGTYPE_CONTACT_REQUEST_PHOTO:
-            return .contactRequestProfilePicture
+            .contactRequestProfilePicture
         case MSGTYPE_TYPING_INDICATOR:
-            return .typingIndicator
+            .typingIndicator
         case MSGTYPE_EMPTY:
-            return .empty
+            .empty
         case MSGTYPE_EDIT:
-            return .editMessage
+            .editMessage
         case MSGTYPE_DELETE:
-            return .deleteMessage
+            .deleteMessage
         case MSGTYPE_GROUP_EDIT:
-            return .groupEditMessage
+            .groupEditMessage
         case MSGTYPE_GROUP_DELETE:
-            return .groupDeleteMessage
+            .groupDeleteMessage
         default:
-            return .invalidType
+            .invalidType
         }
     }
 
@@ -953,25 +960,25 @@ extension D2d_Envelope: D2d_LoggingDescriptionProtocol {
     var loggingDescription: String {
         switch content {
         case let .contactSync(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .distributionListSync(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .groupSync(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .incomingMessage(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .incomingMessageUpdate(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .outgoingMessage(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .outgoingMessageUpdate(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .settingsSync(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         case let .userProfileSync(msg):
-            return msg.loggingDescription
+            msg.loggingDescription
         default:
-            return "(unknown multi device message type)"
+            "(unknown multi device message type)"
         }
     }
 }

@@ -23,7 +23,7 @@ import Foundation
 
 /// Tagging convention of Log Entry/Message:
 ///     - One tag: "[t-tag-1] Message of log entry..."
-///     - Multible tags: "[t-tag-1,t-tag-2,...] Message of log entry..."
+///     - Multiple tags: "[t-tag-1,t-tag-2,...] Message of log entry..."
 /// Used Tags:
 /// [t-dirty-objects]: Dirty objects in Core Data
 /// [t-push-notification]: APNS

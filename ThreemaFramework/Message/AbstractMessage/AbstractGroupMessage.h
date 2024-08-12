@@ -20,7 +20,7 @@
 
 #import "AbstractMessage.h"
 
-@interface AbstractGroupMessage : AbstractMessage <NSCoding>
+@interface AbstractGroupMessage : AbstractMessage <NSSecureCoding>
 
 @property (nonatomic, strong) NSString *groupCreator;
 @property (nonatomic, strong) NSData *groupId NS_SWIFT_NAME(groupID);

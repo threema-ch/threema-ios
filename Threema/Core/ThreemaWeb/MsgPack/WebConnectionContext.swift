@@ -21,12 +21,11 @@
 import CocoaLumberjackSwift
 import Foundation
 
-protocol WebConnectionContextDelegate: AnyObject {
+protocol WebConnectionContextDelegate: WCConnection {
     func currentWCSession() -> WCSession
 }
 
-class WebConnectionContext: NSObject, NSCoding, NSCopying {
-    
+class WebConnectionContext: NSObject, NSCopying {
     var delegate: WebConnectionContextDelegate
     var chunkCache = WebChunkCache(sequenceNumber: WebSequenceNumber(minValue: 0, maxValue: UInt64(UINT32_MAX)))
     var connectionInfoRequest: WebUpdateConnectionInfoRequest?
@@ -132,46 +131,6 @@ class WebConnectionContext: NSObject, NSCoding, NSCopying {
         }
     }
     
-    // MARK: NSCoding
-
-    required init?(coder aDecoder: NSCoder) {
-        // super.init(coder:) is optional, see notes below
-        self.chunkCache = aDecoder.decodeObject(forKey: "chunkCache") as! WebChunkCache
-        if let unchunkerSerialize = aDecoder.decodeObject(forKey: "unchunker") as? [[UInt8]] {
-            for chunk in unchunkerSerialize {
-                let chunkData = Data(chunk)
-                do {
-                    try unchunker.addChunk(bytes: chunkData)
-                }
-                catch {
-                    // error can't add old chunk
-                }
-            }
-        }
-        self.messageCounter = UInt32(aDecoder.decodeInt32(forKey: "messageCounter"))
-        self.incomingSequenceNumber = UInt32(aDecoder.decodeInt32(forKey: "incomingSequenceNumber"))
-        self._connectionID = aDecoder.decodeObject(forKey: "_connectionId") as! Data
-        if let previousContext = aDecoder.decodeObject(forKey: "previousConnectionContext") as? WebConnectionContext {
-            self._previousContext = previousContext
-        }
-        self.delegate = aDecoder.decodeObject(forKey: "delegate") as! WebConnectionContextDelegate
-    }
-    
-    func encode(with aCoder: NSCoder) {
-        // super.encodeWithCoder(aCoder) is optional, see notes below
-        aCoder.encode(chunkCache, forKey: "chunkCache")
-        _ = unchunker.gc(maxAge: 20)
-        aCoder.encode(unchunker.serialize(), forKey: "unchunker")
-        aCoder.encode(Int32(messageCounter), forKey: "messageCounter")
-        aCoder.encode(Int32(incomingSequenceNumber), forKey: "incomingSequenceNumber")
-        aCoder.encode(_connectionID, forKey: "_connectionId")
-        if _previousContext != nil {
-            _previousContext!.previousConnectionContext = nil
-            aCoder.encode(_previousContext, forKey: "previousConnectionContext")
-        }
-        aCoder.encode(delegate, forKey: "delegate")
-    }
-    
     func copy(with zone: NSZone? = nil) -> Any {
         let copy = WebConnectionContext(
             connectionID: _connectionID,
@@ -181,7 +140,7 @@ class WebConnectionContext: NSObject, NSCoding, NSCopying {
             messageCounter: messageCounter,
             incomingSequenceNumber: incomingSequenceNumber,
             cacheTimer: cacheTimer,
-            delegate: delegate as! WCConnection
+            delegate: delegate as WCConnection
         )
         return copy
     }

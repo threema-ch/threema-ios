@@ -60,10 +60,10 @@ class WebMessagesUpdate: WebAbstractMessage {
                 }
             }
         }
-            
+        
         self.mode = objectMode.rawValue
         
-        if objectMode == .removed {
+        if objectMode == .removed || baseMessage.deletedAt != nil {
             let messageObject = WebMessageObject(message: baseMessage, conversation: conversation)
             self.message = messageObject.removedObjectDict()
         }

@@ -22,6 +22,7 @@
 #import "Conversation.h"
 #import "ErrorHandler.h"
 #import "DatabaseManager.h"
+#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 @interface EntityCreator ()
 
@@ -30,6 +31,8 @@
 @end
 
 @class MessageMarkers;
+@class MessageHistoryEntryEntity;
+
 @implementation EntityCreator
 
 - (instancetype)initWith:(NSManagedObjectContext *) managedObjectContext
@@ -164,13 +167,12 @@
     return (AudioData *)[self createEntityOfType: @"AudioData"];
 }
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate  {
+- (TextMessage *)textMessageForConversation:(Conversation *)conversation {
     BaseMessage *message = [self createEntityOfType: @"TextMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
-    if(lastUpdate == YES) {
-        conversation.lastUpdate = [NSDate date];
-    }
+    conversation.lastUpdate = [NSDate date];
+    
     return (TextMessage *)message;
 }
 
@@ -210,13 +212,12 @@
     return (AudioMessageEntity *)message;
 }
 
-- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate  {
+- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation {
     BaseMessage *message = [self createEntityOfType: @"LocationMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
-    if(lastUpdate == YES) {
-        conversation.lastUpdate = [NSDate date];
-    }
+    conversation.lastUpdate = [NSDate date];
+    
     return (LocationMessage *)message;
 }
 
@@ -300,6 +301,33 @@
 - (MessageMarkers *)messageMarkers {
     MessageMarkers *markers = (MessageMarkers *)[self createEntityOfType:@"MessageMarkers"];
     return markers;
+}
+
+- (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessage *)message {
+    MessageHistoryEntryEntity *historyEntry = (MessageHistoryEntryEntity *)[self createEntityOfType:@"MessageHistoryEntry"];
+    historyEntry.message = message;
+    
+    if (message.isOwn) {
+        if (message.lastEditedAt != nil) {
+            historyEntry.editDate = message.lastEditedAt;
+        }
+        else {
+            historyEntry.editDate = message.date;
+        }
+    }
+    else {
+        if (message.lastEditedAt != nil) {
+            historyEntry.editDate = message.lastEditedAt;
+        }
+        else if (message.remoteSentDate != nil) {
+            historyEntry.editDate = message.remoteSentDate;
+        }
+        else {
+            historyEntry.editDate = message.date;
+        }
+    }
+    
+    return historyEntry;
 }
 
 - (WebClientSession *)webClientSession {

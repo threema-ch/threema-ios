@@ -136,10 +136,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }()
     
     /// Distance of symbol center from trailing end
-    private lazy var statusSymbolXCenterTrailingDistance: CGFloat = {
+    private lazy var statusSymbolXCenterTrailingDistance: CGFloat = constantScaler.scaledValue(
         // Adapt for content size categories
-        constantScaler.scaledValue(for: Configuration.lastMessageStateTrailingDistance)
-    }()
+        for: Configuration.lastMessageStateTrailingDistance
+    )
     
     /// The scaled size of the avatar
     private lazy var scaledAvatarSize: CGFloat = {
@@ -248,7 +248,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             }
             
             DDLogVerbose("[GroupCall] Group Call Join Button tapped")
-            GlobalGroupCallsManagerSingleton.shared.startGroupCall(
+            GlobalGroupCallManagerSingleton.shared.startGroupCall(
                 in: group,
                 intent: .join
             )
@@ -416,7 +416,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             updateCell()
             Task { @MainActor in
                 await updateGroupCallButton(
-                    GlobalGroupCallsManagerSingleton.shared.globalGroupCallObserver
+                    GlobalGroupCallManagerSingleton.shared.globalGroupCallObserver
                         .getCurrentItem()
                 )
             }
@@ -427,7 +427,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
 
     private(set) var navigationController: UINavigationController?
     
-    private var groupCallGroupModel: GroupCallsThreemaGroupModel?
+    private var groupCallGroupModel: GroupCallThreemaGroupModel?
 
     // MARK: - Configuration
     
@@ -707,7 +707,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         
         Task {
-            groupCallButtonBannerObserver = GlobalGroupCallsManagerSingleton.shared.globalGroupCallObserver.publisher
+            groupCallButtonBannerObserver = GlobalGroupCallManagerSingleton.shared.globalGroupCallObserver.publisher
                 .pub
                 .filter { [weak self] update in
                     guard let strongSelf = self, let conversation = strongSelf.conversation else {
@@ -1110,10 +1110,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
 
     private func getPushSetting() -> PushSetting {
         if let group {
-            return group.pushSetting
+            group.pushSetting
         }
         else if let contact = conversation?.contact {
-            return businessInjector.pushSettingManager.find(forContact: contact.threemaIdentity)
+            businessInjector.pushSettingManager.find(forContact: contact.threemaIdentity)
         }
         else {
             fatalError("No push settings for conversation found")
@@ -1480,7 +1480,7 @@ extension ConversationTableViewCell {
             return
         }
         
-        GlobalGroupCallsManagerSingleton.shared.globalGroupCallObserver.publisher.pub
+        GlobalGroupCallManagerSingleton.shared.globalGroupCallObserver.publisher.pub
             // We'd rather filter on some other queue, but the conversation is loaded on the main thread and
             // checking on
             // another thread will cause CD concurrency issues.

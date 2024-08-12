@@ -113,20 +113,19 @@ extension Ballot {
         configuration: UIImage.Configuration? = nil
     ) -> NSMutableAttributedString {
         
-        var text: String
-        
-        // Assign the correct text and icon depending on state of ballot
-        if !isClosed() {
-            if let choices = localizedLocalIdentityVotedChoices {
-                text = choices
+        let text: String =
+            // Assign the correct text and icon depending on state of ballot
+            if !isClosed() {
+                if let choices = localizedLocalIdentityVotedChoices {
+                    choices
+                }
+                else {
+                    localizedParticipantsVoted
+                }
             }
             else {
-                text = localizedParticipantsVoted
+                localizedMostVotedChoices
             }
-        }
-        else {
-            text = localizedMostVotedChoices
-        }
         
         let attributedString = NSMutableAttributedString(string: text)
 

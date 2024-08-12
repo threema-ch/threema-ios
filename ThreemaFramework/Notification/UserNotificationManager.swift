@@ -314,10 +314,19 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             }
         }
         
-        // Are we still member?
+        // Group checks
         if let groupMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
-            guard let group = groupManager.getGroup(groupMessage.groupID, creator: groupMessage.groupCreator),
-                  !group.didLeave, !group.didForcedLeave else {
+            guard let group = groupManager.getGroup(groupMessage.groupID, creator: groupMessage.groupCreator) else {
+                return false
+            }
+            
+            // Are we still member?
+            guard !group.didLeave, !group.didForcedLeave else {
+                return false
+            }
+            
+            // Is sender still member?
+            guard group.isMember(identity: groupMessage.fromIdentity) else {
                 return false
             }
         }
@@ -353,13 +362,13 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             // We only show nickname for restrictive notifications, otherwise we always use the display name.
             switch settingsStore.notificationType {
             case .restrictive:
-                return senderContact.publicNickname ?? senderIdentity
+                senderContact.publicNickname ?? senderIdentity
             case .balanced, .complete:
-                return senderContact.displayName
+                senderContact.displayName
             }
         }
         else {
-            return nickname(for: pendingUserNotification)
+            nickname(for: pendingUserNotification)
         }
     }
     

@@ -57,7 +57,7 @@ struct GroupCallKeys: Sendable {
             self.threemaBlake2b = threemaBlake2bLocal
         }
         catch {
-            DDLogError("[GroupCall]: Unable to initialize group call keys: \(error)")
+            DDLogError("[GroupCall] Unable to initialize group call keys: \(error)")
             throw GroupCallError.keyDerivationError
         }
     }
@@ -80,7 +80,7 @@ extension GroupCallKeys {
             )
         }
         catch {
-            DDLogError("[GroupCall]: Unable to derive GCNHAK: \(error)")
+            DDLogError("[GroupCall] Unable to derive GCNHAK: \(error)")
             throw GroupCallError.keyDerivationError
         }
     }
@@ -101,7 +101,7 @@ extension GroupCallKeys {
             return try ThreemaBlake2b.hash(inputs, salt: saltData, personal: personalData, hashLength: .b32)
         }
         catch {
-            DDLogError("[GroupCall]: Unable to derive call id: \(error)")
+            DDLogError("[GroupCall] Unable to derive call id: \(error)")
             throw GroupCallError.keyDerivationError
         }
     }
@@ -120,7 +120,7 @@ extension GroupCallKeys {
             )
         }
         catch {
-            DDLogError("[GroupCall]: Unable to derive PCMK: \(error)")
+            DDLogError("[GroupCall] Unable to derive PCMK: \(error)")
             throw GroupCallError.keyDerivationError
         }
     }

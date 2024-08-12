@@ -44,11 +44,11 @@ public class Group: NSObject {
         public var shortDisplayName: String {
             switch self {
             case .me:
-                return meString
+                meString
             case let .contact(contact):
-                return contact.shortDisplayName
+                contact.shortDisplayName
             case .unknown:
-                return unknownString
+                unknownString
             }
         }
         
@@ -56,19 +56,19 @@ public class Group: NSObject {
         public var description: String {
             switch self {
             case .me:
-                return meString
+                meString
             case let .contact(contact):
-                return contact.displayName
+                contact.displayName
             case .unknown:
-                return unknownString
+                unknownString
             }
         }
 
         public var identity: String? {
             switch self {
-            case let .contact(contact): return contact.identity.string
-            case let .me(identity): return identity
-            default: return nil
+            case let .contact(contact): contact.identity.string
+            case let .me(identity): identity
+            default: nil
             }
         }
     }
@@ -277,7 +277,17 @@ public class Group: NSObject {
     @objc public var isOwnGroup: Bool {
         isSelfCreator && state == .active
     }
+    
+    /// True if group is created by a gateway ID
+    var isGatewayGroup: Bool {
+        groupCreatorIdentity.hasPrefix("*")
+    }
 
+    /// True if group is created by a gateway ID and if group is message storing
+    public var isMessageStoringGatewayGroup: Bool {
+        isGatewayGroup && name?.hasPrefix(Constants.messageStoringGatewayGroupPrefix) ?? false
+    }
+    
     /// Returns true if me is group creator
     @objc public var isSelfCreator: Bool {
         (conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false)
@@ -344,13 +354,13 @@ public class Group: NSObject {
     public var creator: Creator {
         if conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false,
            conversationContact == nil {
-            return .me(myIdentityStore.identity)
+            .me(myIdentityStore.identity)
         }
         else if let contact = conversationContact {
-            return .contact(contact)
+            .contact(contact)
         }
         else {
-            return .unknown
+            .unknown
         }
     }
     
@@ -374,10 +384,10 @@ public class Group: NSObject {
     
     public var membersTitleSummary: String {
         if numberOfMembers == 1 {
-            return Group.oneMemberTitleString
+            Group.oneMemberTitleString
         }
         else {
-            return String.localizedStringWithFormat(
+            String.localizedStringWithFormat(
                 Group.multipleMemberTitleString,
                 numberOfMembers
             )
@@ -437,11 +447,6 @@ public class Group: NSObject {
         // Always add creator
         allSortedMembers.append(creator)
         
-        // Add me if I'm a member and not the creator
-        if isSelfMember, !isOwnGroup {
-            allSortedMembers.append(.me(myIdentityStore.identity))
-        }
-        
         // Add everybody else expect the creator
         allSortedMembers.append(
             contentsOf: members.sorted(with: userSettings)
@@ -449,6 +454,11 @@ public class Group: NSObject {
                 .filter { $0.identity != creator.identity }
         )
 
+        // Add me if I'm a member and not the creator
+        if isSelfMember, !isOwnGroup {
+            allSortedMembers.append(.me(myIdentityStore.identity))
+        }
+        
         return allSortedMembers
     }
     

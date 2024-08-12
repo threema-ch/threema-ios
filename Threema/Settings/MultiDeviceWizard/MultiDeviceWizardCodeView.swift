@@ -83,10 +83,8 @@ struct MultiDeviceWizardCodeView: View {
             }
         }
         .padding(.horizontal)
-        
         .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
         .navigationBarBackButtonHidden()
-        
         .onAppear {
             animate = true
             wizardVM.advanceState(.code)

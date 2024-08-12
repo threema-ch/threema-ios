@@ -105,7 +105,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 expectation.fulfill()
             }.store(in: &cancellables)
         
-        guard MessageFetcher(for: conversation, with: entityManager).lastMessage() != nil else {
+        guard MessageFetcher(for: conversation, with: entityManager).lastDisplayMessage() != nil else {
             fatalError()
         }
         
@@ -500,7 +500,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     
     private func createMessage(in conversation: Conversation, entityManager: EntityManager) {
         entityManager.performSyncBlockAndSafe {
-            let textMessage = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
+            let textMessage = entityManager.entityCreator.textMessage(for: conversation)!
             textMessage.text = "Hello World"
         }
     }

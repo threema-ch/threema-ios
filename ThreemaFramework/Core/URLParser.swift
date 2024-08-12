@@ -86,15 +86,15 @@ public enum URLParser {
         switch threemaDeviceGroupURL.path {
         case "/join":
             if let fragment = threemaDeviceGroupURL.fragment {
-                let cleanedUpFragment: String
-                // From the protocol documentation: All URLs should have a trailing slash.
-                // We still support non trailing slashes...
-                if fragment.last == "/" {
-                    cleanedUpFragment = String(fragment.dropLast(1))
-                }
-                else {
-                    cleanedUpFragment = fragment
-                }
+                let cleanedUpFragment: String =
+                    // From the protocol documentation: All URLs should have a trailing slash.
+                    // We still support non trailing slashes...
+                    if fragment.last == "/" {
+                        String(fragment.dropLast(1))
+                    }
+                    else {
+                        fragment
+                    }
                 
                 return .deviceGroupJoinRequestOffer(urlSafeBase64: cleanedUpFragment)
             }
@@ -109,10 +109,10 @@ public enum URLParser {
         // TODO: Parse threema.ch & threema.id urls
         
         if webURL.isIDNASafe {
-            return .url(url: webURL)
+            .url(url: webURL)
         }
         else {
-            return .unsafeURL(url: webURL)
+            .unsafeURL(url: webURL)
         }
     }
 }

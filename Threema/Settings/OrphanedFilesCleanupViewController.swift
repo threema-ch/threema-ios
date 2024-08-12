@@ -88,27 +88,27 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 0:
-            return BundleUtil.localizedString(forKey: "settings_advanced_orphaned_files_cleanup")
+            BundleUtil.localizedString(forKey: "settings_advanced_orphaned_files_cleanup")
         case 1:
-            return BundleUtil.localizedString(forKey: "settings_orphaned_files_title")
+            BundleUtil.localizedString(forKey: "settings_orphaned_files_title")
         case 2:
-            return BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_title")
+            BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_title")
         case 3:
-            return BundleUtil.localizedString(forKey: "settings_orphaned_files_log_title")
+            BundleUtil.localizedString(forKey: "settings_orphaned_files_log_title")
         default:
-            return nil
+            nil
         }
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         switch section {
         case 0:
-            return ""
+            ""
         case 1:
             if let orphanedFiles,
                !orphanedFiles.isEmpty {
                 
-                return String.localizedStringWithFormat(
+                String.localizedStringWithFormat(
                     BundleUtil.localizedString(forKey: "settings_orphaned_files_footer"),
                     "\(orphanedFiles.count)",
                     "\((totalFilesCount ?? 0) + orphanedFiles.count)",
@@ -116,13 +116,13 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                 )
             }
             else {
-                return BundleUtil.localizedString(forKey: "settings_orphaned_files_footer_no_files")
+                BundleUtil.localizedString(forKey: "settings_orphaned_files_footer_no_files")
             }
         case 2:
             if let orphanedFilesInBin,
                !orphanedFilesInBin.isEmpty {
                 
-                return String.localizedStringWithFormat(
+                String.localizedStringWithFormat(
                     BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_footer"),
                     "\(orphanedFilesInBin.count)",
                     ByteCountFormatter.string(
@@ -133,10 +133,10 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                 )
             }
             else {
-                return BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_footer_no_files")
+                BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_footer_no_files")
             }
         default:
-            return nil
+            nil
         }
     }
     
@@ -260,7 +260,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
         tableView.reloadData()
     }
     
-    override internal func updateColors() {
+    override func updateColors() {
         super.updateColors()
         
         orphanedFilesMoveToBin.textColor = Colors.textLink

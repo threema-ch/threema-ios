@@ -131,20 +131,20 @@ public final class ThreemaUtility: NSObject {
     /// If you need a view for it use `OtherThreemaTypeImageView`
     public static var otherThreemaTypeIcon: UIImage {
         if isWorkFlavor {
-            return StyleKit.houseIcon
+            StyleKit.houseIcon
         }
         else {
-            return StyleKit.workIcon
+            StyleKit.workIcon
         }
     }
     
     /// Accessibility label to use if `Contact.showOtherThreemaIcon` is `true`
     public static var otherThreemaTypeAccessibilityLabel: String {
         if isWorkFlavor {
-            return BundleUtil.localizedString(forKey: "threema_type_icon_private_accessibility_label")
+            BundleUtil.localizedString(forKey: "threema_type_icon_private_accessibility_label")
         }
         else {
-            return BundleUtil.localizedString(forKey: "threema_type_icon_work_accessibility_label")
+            BundleUtil.localizedString(forKey: "threema_type_icon_work_accessibility_label")
         }
     }
     

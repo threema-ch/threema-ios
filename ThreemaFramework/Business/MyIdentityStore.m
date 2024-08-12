@@ -84,7 +84,6 @@ static MyIdentityStore *instance;
             }
         }
         
-        
         [self migrateProfilePicture];
     }
     return self;
@@ -272,11 +271,14 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] removeObjectForKey:@"Category"];
     [[AppGroup userDefaults] removeObjectForKey:@"CompanyName"];
     [[AppGroup userDefaults] removeObjectForKey:@"DirectoryCategories"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LastWorkUpdateRequest"];
+    [[AppGroup userDefaults] removeObjectForKey:@"LastWorkUpdateRequestHash"];
     [[AppGroup userDefaults] removeObjectForKey:@"LastWorkUpdateDate"];
     [[AppGroup userDefaults] removeObjectForKey:@"MessageDrafts"];
     [[AppGroup userDefaults] removeObjectForKey:@"PushNotificationEncryptionKey"];
     [[AppGroup userDefaults] removeObjectForKey:@"MatchToken"];
+    
+    // Should be already removed in app migration
+    [[AppGroup userDefaults] removeObjectForKey:@"LastWorkUpdateRequest"];
     
     // Reset app setup state. See `AppSetup` for usage of this key
     [[AppGroup userDefaults] removeObjectForKey:kAppSetupStateKey];
@@ -557,12 +559,12 @@ static MyIdentityStore *instance;
     return sortedKeys;
 }
 
-- (NSDictionary *)lastWorkUpdateRequest {
-    return [[AppGroup userDefaults] objectForKey:@"LastWorkUpdateRequest"];
+- (NSData *)lastWorkUpdateRequestHash {
+    return [[AppGroup userDefaults] objectForKey:@"LastWorkUpdateRequestHash"];
 }
 
-- (void)setLastWorkUpdateRequest:(NSDictionary *)lastWorkUpdateRequest {
-    [[AppGroup userDefaults] setObject:lastWorkUpdateRequest forKey:@"LastWorkUpdateRequest"];
+- (void)setLastWorkUpdateRequestHash:(NSData *)lastWorkUpdateRequestHash {
+    [[AppGroup userDefaults] setObject:lastWorkUpdateRequestHash forKey:@"LastWorkUpdateRequestHash"];
     [[AppGroup userDefaults] synchronize];
 }
 

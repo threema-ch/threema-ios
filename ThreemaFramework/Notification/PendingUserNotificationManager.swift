@@ -195,9 +195,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 return
             }
 
-            if pendingUserNotification.abstractMessage is EditMessage,
-               pendingUserNotification.baseMessage != nil,
-               userNotificationCenterManager.isDelivered(contentKey: pendingUserNotification.contentKey) {
+            if pendingUserNotification.abstractMessage is EditMessage ||
+                pendingUserNotification.abstractMessage is EditGroupMessage,
+                pendingUserNotification.baseMessage != nil,
+                userNotificationCenterManager.isDelivered(contentKey: pendingUserNotification.contentKey) {
 
                 // In general for edit message will not displayed a notification, but if a notification has already been
                 // delivered, the content of the notification is changed. Therefore `canShowUserNotification` is not
@@ -490,64 +491,86 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
 
     /// Loads the lists of pending and processed user notifications.
     public func loadAll() {
+        // Processed
         PendingUserNotificationManager.processedQueue.sync {
-            if FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathProcessedUserNotifications) {
-                if var savedProcessedUserNotifications = NSKeyedUnarchiver
-                    .unarchiveObject(
-                        withFile: PendingUserNotificationManager
-                            .pathProcessedUserNotifications
-                    ) as? [String] {
-
-                    PendingUserNotificationManager.processedUserNotifications = savedProcessedUserNotifications
-                }
-                else {
-                    DDLogError("File of processed user notifications could not be decoded")
-                }
+            guard FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathProcessedUserNotifications),
+                  let data = FileUtility.shared
+                  .read(fileURL: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications))
+            else {
+                return
             }
+            
+            guard let savedProcessedUserNotifications = try? NSKeyedUnarchiver.unarchivedObject(
+                ofClasses: [NSArray.self, NSString.self],
+                from: data
+            ) as? [String] else {
+                DDLogError("[Push] File of processed user notifications could not be decoded, removing file")
+                try? FileManager.default
+                    .removeItem(atPath: PendingUserNotificationManager.pathProcessedUserNotifications)
+                return
+            }
+            
+            PendingUserNotificationManager.processedUserNotifications = savedProcessedUserNotifications
         }
 
-        if FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathPendingUserNotifications) {
-            PendingUserNotificationManager.pendingQueue.sync {
-                if let savedPendingUserNotifications = NSKeyedUnarchiver
-                    .unarchiveObject(
-                        withFile: PendingUserNotificationManager
-                            .pathPendingUserNotifications
-                    ) as? [PendingUserNotification] {
-                    
-                    guard PendingUserNotificationManager.pendingUserNotifications == nil else {
-                        return
-                    }
-                    PendingUserNotificationManager.pendingUserNotifications = [PendingUserNotification]()
-                    
-                    for pendingUserNotification in savedPendingUserNotifications {
-                        if isProcessed(pendingUserNotification: pendingUserNotification) {
-                            continue
-                        }
-                        
-                        if let exists = PendingUserNotificationManager.pendingUserNotifications?
-                            .contains(where: { $0.key == pendingUserNotification.key }), exists {
-                            DDLogWarn("[Push] PendingUserNotification duplicate")
-                        }
-                        else {
-                            if pendingUserNotification.baseMessage == nil,
-                               let baseMessageID = pendingUserNotification.baseMessageID,
-                               let abstractMessage = pendingUserNotification.abstractMessage,
-                               let conversation = entityManager.conversation(forMessage: abstractMessage) {
-                                pendingUserNotification.baseMessage = self.entityManager
-                                    .entityFetcher.message(with: baseMessageID, conversation: conversation)
-                            }
-                            PendingUserNotificationManager.pendingUserNotifications?.append(pendingUserNotification)
-                        }
-                    }
-                    
-                    PendingUserNotificationManager.savePendingUserNotifications()
-                }
-                else {
-                    DDLogError("File of pending user notifications could not be decoded")
-                }
+        // Pending
+        PendingUserNotificationManager.pendingQueue.sync {
+            guard PendingUserNotificationManager.pendingUserNotifications == nil else {
+                return
             }
+            
+            guard FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathPendingUserNotifications),
+                  let data = FileUtility.shared
+                  .read(fileURL: URL(fileURLWithPath: PendingUserNotificationManager.pathPendingUserNotifications))
+            else {
+                return
+            }
+            
+            guard let savedPendingUserNotifications = try? NSKeyedUnarchiver.unarchivedObject(
+                ofClasses: [
+                    PendingUserNotification.self,
+                    NSString.self,
+                    AbstractMessage.self,
+                    NSData.self,
+                    NSDate.self,
+                ],
+                from: data
+            ) as? [PendingUserNotification] else {
+                DDLogError("[Push] File of pending user notifications could not be decoded, removing file")
+                try? FileManager.default.removeItem(atPath: PendingUserNotificationManager.pathPendingUserNotifications)
+                return
+            }
+            
+            PendingUserNotificationManager.pendingUserNotifications = [PendingUserNotification]()
+                    
+            for pendingUserNotification in savedPendingUserNotifications {
+                guard !isProcessed(pendingUserNotification: pendingUserNotification) else {
+                    DDLogWarn("[Push] PendingUserNotification already processed")
+                    continue
+                }
+                
+                guard !(
+                    PendingUserNotificationManager.pendingUserNotifications?
+                        .contains(where: { $0.key == pendingUserNotification.key }) ?? false
+                ) else {
+                    DDLogWarn("[Push] PendingUserNotification duplicate")
+                    continue
+                }
+           
+                if pendingUserNotification.baseMessage == nil,
+                   let baseMessageID = pendingUserNotification.baseMessageID,
+                   let abstractMessage = pendingUserNotification.abstractMessage,
+                   let conversation = entityManager.conversation(forMessage: abstractMessage) {
+                    pendingUserNotification.baseMessage = self.entityManager
+                        .entityFetcher.message(with: baseMessageID, conversation: conversation)
+                }
+                
+                PendingUserNotificationManager.pendingUserNotifications?.append(pendingUserNotification)
+            }
+            PendingUserNotificationManager.savePendingUserNotifications()
         }
         
+        // Limit
         PendingUserNotificationManager.processedQueue.sync {
             guard var savedProcessedUserNotifications = PendingUserNotificationManager.processedUserNotifications,
                   !savedProcessedUserNotifications.isEmpty else {
@@ -587,7 +610,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                !pendingUserNotifications.isEmpty {
                 let archivedData = try NSKeyedArchiver.archivedData(
                     withRootObject: pendingUserNotifications,
-                    requiringSecureCoding: false
+                    requiringSecureCoding: true
                 )
                 try archivedData.write(to: URL(fileURLWithPath: pathPendingUserNotifications))
             }
@@ -616,7 +639,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                !processedUserNotifications.isEmpty {
                 let archivedData = try NSKeyedArchiver.archivedData(
                     withRootObject: processedUserNotifications,
-                    requiringSecureCoding: false
+                    requiringSecureCoding: true
                 )
                 try archivedData.write(to: URL(fileURLWithPath: pathProcessedUserNotifications))
             }

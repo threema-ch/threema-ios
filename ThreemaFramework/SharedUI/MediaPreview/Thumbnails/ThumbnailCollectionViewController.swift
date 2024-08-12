@@ -248,10 +248,10 @@ extension ThumbnailCollectionViewController: UICollectionViewDropDelegate {
     )
         -> UICollectionViewDropProposal {
         if destinationIndexPath?.section != 0 {
-            return UICollectionViewDropProposal(operation: .forbidden)
+            UICollectionViewDropProposal(operation: .forbidden)
         }
         else {
-            return UICollectionViewDropProposal(
+            UICollectionViewDropProposal(
                 operation: .move,
                 intent: .insertAtDestinationIndexPath
             )
@@ -283,48 +283,49 @@ extension ThumbnailCollectionViewController: UICollectionViewDropDelegate {
                     dropItem.dragItem,
                     toItemAt: destinationIndexPath
                 )
-            })
-            
-            if weakSelf.parent?.currentItem == sourceIndexPath {
-                weakSelf.parent?.currentItem = destinationIndexPath
-            }
-            else {
-                if destinationIndexPath < weakSelf.parent!.currentItem, sourceIndexPath > weakSelf.parent!.currentItem {
-                    weakSelf.parent?.currentItem = IndexPath(
-                        item: min(weakSelf.parent!.currentItem.item + 1, weakSelf.parent!.mediaData.count - 1),
-                        section: 0
-                    )
+       
+                if weakSelf.parent?.currentItem == sourceIndexPath {
+                    weakSelf.parent?.currentItem = destinationIndexPath
                 }
-                else if destinationIndexPath > weakSelf.parent!.currentItem,
-                        sourceIndexPath < weakSelf.parent!.currentItem {
-                    weakSelf.parent?.currentItem = IndexPath(
-                        item: max(weakSelf.parent!.currentItem.item - 1, 0),
-                        section: 0
-                    )
-                }
-                else if destinationIndexPath == weakSelf.parent!.currentItem {
-                    if sourceIndexPath < weakSelf.parent!.currentItem {
-                        weakSelf.parent?.currentItem = IndexPath(
-                            item: max(weakSelf.parent!.currentItem.item - 1, 0),
-                            section: 0
-                        )
-                    }
-                    else {
+                else {
+                    if destinationIndexPath < weakSelf.parent!.currentItem,
+                       sourceIndexPath > weakSelf.parent!.currentItem {
                         weakSelf.parent?.currentItem = IndexPath(
                             item: min(weakSelf.parent!.currentItem.item + 1, weakSelf.parent!.mediaData.count - 1),
                             section: 0
                         )
                     }
+                    else if destinationIndexPath > weakSelf.parent!.currentItem,
+                            sourceIndexPath < weakSelf.parent!.currentItem {
+                        weakSelf.parent?.currentItem = IndexPath(
+                            item: max(weakSelf.parent!.currentItem.item - 1, 0),
+                            section: 0
+                        )
+                    }
+                    else if destinationIndexPath == weakSelf.parent!.currentItem {
+                        if sourceIndexPath < weakSelf.parent!.currentItem {
+                            weakSelf.parent?.currentItem = IndexPath(
+                                item: max(weakSelf.parent!.currentItem.item - 1, 0),
+                                section: 0
+                            )
+                        }
+                        else {
+                            weakSelf.parent?.currentItem = IndexPath(
+                                item: min(weakSelf.parent!.currentItem.item + 1, weakSelf.parent!.mediaData.count - 1),
+                                section: 0
+                            )
+                        }
+                    }
                 }
-            }
             
-            weakSelf.parent?.largeCollectionView.selectItem(
-                at: weakSelf.parent?.currentItem,
-                animated: true,
-                scrollPosition: .centeredHorizontally
-            )
-            weakSelf.parent?.updateSelection()
-            weakSelf.parent?.shouldScrollTo(indexPath: weakSelf.parent!.currentItem)
+                weakSelf.parent?.largeCollectionView.selectItem(
+                    at: weakSelf.parent?.currentItem,
+                    animated: true,
+                    scrollPosition: .centeredHorizontally
+                )
+                weakSelf.parent?.updateSelection()
+                weakSelf.parent?.shouldScrollTo(indexPath: weakSelf.parent!.currentItem)
+            })
         }
     }
     

@@ -32,8 +32,8 @@ public struct Dependencies: @unchecked Sendable {
     
     // MARK: - Internal Properties
     
-    let groupCallsHTTPClientAdapter: GroupCallsHTTPClientAdapterProtocol
-    let httpHelper: GroupCallsSFUTokenFetchAdapterProtocol
+    let groupCallsHTTPClientAdapter: GroupCallHTTPClientAdapterProtocol
+    let httpHelper: GroupCallSFUTokenFetchAdapterProtocol
     let groupCallCrypto: GroupCallCryptoProtocol
     let groupCallDateFormatter: GroupCallDateFormatterProtocol
     let userSettings: GroupCallUserSettingsProtocol
@@ -47,8 +47,8 @@ public struct Dependencies: @unchecked Sendable {
     // MARK: - Lifecycle
     
     public init(
-        groupCallsHTTPClientAdapter: GroupCallsHTTPClientAdapterProtocol,
-        httpHelper: GroupCallsSFUTokenFetchAdapterProtocol,
+        groupCallsHTTPClientAdapter: GroupCallHTTPClientAdapterProtocol,
+        httpHelper: GroupCallSFUTokenFetchAdapterProtocol,
         groupCallCrypto: GroupCallCryptoProtocol,
         groupCallDateFormatter: GroupCallDateFormatterProtocol,
         userSettings: GroupCallUserSettingsProtocol,

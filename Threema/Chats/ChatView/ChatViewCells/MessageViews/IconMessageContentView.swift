@@ -34,10 +34,10 @@ final class IconMessageContentView: UIView {
     }()
     
     /// Distance of icon center from leading side
-    private lazy var iconXCenterLeadingDistance: CGFloat = {
+    private lazy var iconXCenterLeadingDistance: CGFloat = UIFontMetrics.default.scaledValue(
         // Adapt for content size categories
-        UIFontMetrics.default.scaledValue(for: ChatViewConfiguration.Content.defaultIconCenterInset)
-    }()
+        for: ChatViewConfiguration.Content.defaultIconCenterInset
+    )
     
     /// Offset of text label from leading side
     private lazy var textStackViewLeadingDistance: CGFloat = {

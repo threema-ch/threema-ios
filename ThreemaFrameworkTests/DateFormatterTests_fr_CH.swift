@@ -47,14 +47,13 @@ class DateFormatterTests_fr_CH: XCTestCase {
     let expectedRelativeMediumDateThisYear_fr_CH = " 01 janv."
     let expectedRelativeMediumDateLastCalendarYear_fr_CH = " 31 déc. "
     let expectedRelativeMediumDateMoreThanAYearAgo_fr_CH = "ven. 01 févr. 2019"
-    let expectedRelativeMediumDateAndShortTimeYesterday_fr_CH: String = {
+    let expectedRelativeMediumDateAndShortTimeYesterday_fr_CH =
         if #available(iOS 17.4, *) {
-            return "hier à "
+            "hier à "
         }
         else {
-            return "hier, "
+            "hier, "
         }
-    }()
     
     let expectedRelativeMediumDateAndShortTimeThisYear_fr_CH = " 01 janv. à 13:14"
     let expectedRelativeMediumDateAndShortTimeLastCalendarYear_start_fr_CH = " 31 déc. "
@@ -63,42 +62,39 @@ class DateFormatterTests_fr_CH: XCTestCase {
     let expectedRelativeTimeTodayAndMediumDateOtherwiseToday_fr_CH = "13:14"
     let expectedRelativeTimeTodayAndMediumDateOtherwiseYesterday_fr_CH = "hier"
 
-    let expectedRelativeLongStyleDateShortStyleTimeTomorrow_fr_CH: String = {
+    let expectedRelativeLongStyleDateShortStyleTimeTomorrow_fr_CH =
         if #available(iOS 17.4, *) {
-            return "demain à 02:03"
+            "demain à 02:03"
         }
         else if #available(iOS 17.0, *) {
-            return "demain, 02:03"
+            "demain, 02:03"
         }
         else {
-            return "demain à 02:03"
+            "demain à 02:03"
         }
-    }()
     
-    let expectedRelativeLongStyleDateShortStyleTimeToday_fr_CH: String = {
+    let expectedRelativeLongStyleDateShortStyleTimeToday_fr_CH =
         if #available(iOS 17.4, *) {
-            return "aujourd’hui à 13:14"
+            "aujourd’hui à 13:14"
         }
         else if #available(iOS 17.0, *) {
-            return "aujourd’hui, 13:14"
+            "aujourd’hui, 13:14"
         }
         else {
-            return "aujourd’hui à 13:14"
+            "aujourd’hui à 13:14"
         }
-    }()
     
     let expectedAccessibilityDateTime_fr_CH = "1 février 2020 à 13:14"
-    let expectedAccessibilityRelativeDayTime_fr_CH: String = {
+    let expectedAccessibilityRelativeDayTime_fr_CH =
         if #available(iOS 17.4, *) {
-            return "1 février 2020 à 13:14"
+            "1 février 2020 à 13:14"
         }
         else if #available(iOS 17.0, *) {
-            return "1 février 2020, 13:14"
+            "1 février 2020, 13:14"
         }
         else {
-            return "1 février 2020 à 13:14"
+            "1 février 2020 à 13:14"
         }
-    }()
     
     // MARK: - Test formats provided by the system
     

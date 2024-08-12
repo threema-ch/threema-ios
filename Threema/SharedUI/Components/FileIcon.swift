@@ -192,9 +192,9 @@ final class FileIcon: UIImageView {
     private func extensionsSFSymbolName(for extensionString: String) -> String? {
         switch extensionString.lowercased() {
         case "vcf": // A contact file
-            return "person.crop.circle"
+            "person.crop.circle"
         default:
-            return nil
+            nil
         }
     }
     

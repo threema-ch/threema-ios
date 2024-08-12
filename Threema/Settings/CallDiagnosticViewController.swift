@@ -36,24 +36,24 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
     var factory = RTCPeerConnectionFactory()
     var isDiagnosticRunning = false
     
-    internal let webrtcLogger = RTCCallbackLogger()
+    let webrtcLogger = RTCCallbackLogger()
     
-    internal var kCANDIDATE_ATTRIBUTE: NSRegularExpression?
-    internal var kSP = "\\s"
-    internal var kICE_CHAR = "[a-zA-Z\\d\\+\\/]"
-    internal var kFOUNDATION: String
-    internal var kCOMPONENT_ID = "\\d{1,5}"
-    internal var kTRANSPORT = "[uU][dD][pP]"
-    internal var kPRIORITY = "\\d{1,10}"
-    internal var kCANDIDATE_TYPES = "(host|srflx|prflx|relay)"
-    internal var kCAND_TYPE: String
-    internal var kCONNECTION_ADDRESS = "\\S+"
-    internal var kREL_ADDR: String
-    internal var kPORT = "\\d{1,5}"
-    internal var kREL_PORT: String
-    internal var kBYTE_STRING = "\\S+"
-    internal var kEXTENSION_ATT_NAME: String
-    internal var kEXTENSION_ATT_VALUE: String
+    var kCANDIDATE_ATTRIBUTE: NSRegularExpression?
+    var kSP = "\\s"
+    var kICE_CHAR = "[a-zA-Z\\d\\+\\/]"
+    var kFOUNDATION: String
+    var kCOMPONENT_ID = "\\d{1,5}"
+    var kTRANSPORT = "[uU][dD][pP]"
+    var kPRIORITY = "\\d{1,10}"
+    var kCANDIDATE_TYPES = "(host|srflx|prflx|relay)"
+    var kCAND_TYPE: String
+    var kCONNECTION_ADDRESS = "\\S+"
+    var kREL_ADDR: String
+    var kPORT = "\\d{1,5}"
+    var kREL_PORT: String
+    var kBYTE_STRING = "\\S+"
+    var kEXTENSION_ATT_NAME: String
+    var kEXTENSION_ATT_VALUE: String
 
     required init?(coder aDecoder: NSCoder) {
         self.kFOUNDATION = String(format: "%@{1,32}", kICE_CHAR)
@@ -219,7 +219,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
             
             do {
                 let configuration = RTCConfiguration()
-                configuration.iceServers = [try result.get()]
+                configuration.iceServers = try [result.get()]
                 configuration.iceTransportPolicy = .all
                 configuration.bundlePolicy = .maxBundle
                 configuration.rtcpMuxPolicy = .require

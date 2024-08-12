@@ -24,9 +24,9 @@ extension Colors {
     @objc public class var text: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         case .dark:
-            return Asset.SharedColors.gray30.color
+            Asset.SharedColors.gray30.color
         }
     }
     
@@ -75,9 +75,9 @@ extension Colors {
     @objc public class var textInverted: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
@@ -88,18 +88,18 @@ extension Colors {
     @objc public class var textQuoteID: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray700.color
+            Asset.SharedColors.gray700.color
         case .dark:
-            return Asset.SharedColors.gray500.color
+            Asset.SharedColors.gray500.color
         }
     }
     
     @objc public class var textQuote: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray600.color
+            Asset.SharedColors.gray600.color
         case .dark:
-            return Asset.SharedColors.gray400.color
+            Asset.SharedColors.gray400.color
         }
     }
     
@@ -122,9 +122,9 @@ extension Colors {
     @objc public class var textChatDateCustomImage: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray650.color
+            Asset.SharedColors.gray650.color
         case .dark:
-            return Asset.SharedColors.gray300.color
+            Asset.SharedColors.gray300.color
         }
     }
 }

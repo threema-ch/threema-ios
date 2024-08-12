@@ -100,7 +100,7 @@ extension StorageManagementConversationView {
                         .entityDestroyer
                         .deleteMessages(
                             olderThan: option.date,
-                            for: self.conversation?.objectID
+                            for: conversation?.objectID
                         ) else {
                         DDLogNotice("[EntityDestroyer] no messages got deleted")
                         await MainActor.run {
@@ -111,7 +111,7 @@ extension StorageManagementConversationView {
                     }
 
                     DDLogNotice("[EntityDestroyer] \(count) messages deleted")
-                    self.recalculate(backgroundBusinessInjector)
+                    recalculate(backgroundBusinessInjector)
                     FileUtility.shared.cleanTemporaryDirectory(olderThan: nil)
 
                     await MainActor.run {
@@ -136,7 +136,7 @@ extension StorageManagementConversationView {
                         .entityDestroyer
                         .deleteMedias(
                             olderThan: option.date,
-                            for: self.conversation?.objectID
+                            for: conversation?.objectID
                         ) else {
                         DDLogNotice("[EntityDestroyer] media files deleted")
                         await MainActor.run {
@@ -147,7 +147,7 @@ extension StorageManagementConversationView {
                     }
 
                     DDLogNotice("[EntityDestroyer] \(count) media files deleted")
-                    self.recalculate(backgroundBusinessInjector)
+                    recalculate(backgroundBusinessInjector)
                     FileUtility.shared.cleanTemporaryDirectory(
                         olderThan: option == OlderThanOption.everything ? Date() : nil
                     )
@@ -185,8 +185,8 @@ extension StorageManagementConversationView {
         ) {
             var messagesCount = 0
             var mediaCount = 0
-            conversations.forEach {
-                let fetcher = MessageFetcher(for: $0, with: backgroundEntityManager)
+            for conversation in conversations {
+                let fetcher = MessageFetcher(for: conversation, with: backgroundEntityManager)
                 messagesCount += fetcher.count()
                 mediaCount += fetcher.mediaCount()
             }
@@ -195,8 +195,8 @@ extension StorageManagementConversationView {
                 guard let self else {
                     return
                 }
-                self.totalMessagesCount = messagesCount
-                self.totalMediaCount = mediaCount
+                totalMessagesCount = messagesCount
+                totalMediaCount = mediaCount
             }
         }
         

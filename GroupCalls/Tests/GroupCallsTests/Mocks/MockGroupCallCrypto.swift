@@ -60,7 +60,7 @@ final class MockGroupCallCrypto: GroupCallCryptoProtocol {
         return Data(repeating: 0x01, count: 32)
     }
     
-    func generateKeyPair() -> (publicKey: Data, privateKey: Data)? {
+    func generateKeyPair() throws -> (publicKey: Data, privateKey: Data) {
         #if !DEBUG
             // This may only
             fatalError()

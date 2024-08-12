@@ -85,8 +85,13 @@ final class ChatProfileView: UIStackView {
                 return
             }
 
+            // Because the sizing in the navigation bar changes slightly for the system components (i.e. back button &
+            // label) we need to also adjust the width such that unread counts < 100 are not cut off. As the sizing
+            // changes are small we take the log of the scaler.
+            let scaler = log10(UIFontMetrics.default.scaledValue(for: 10))
             widthConstraint.constant = (
-                safeAreaAdjustedNavigationBarWidth - ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset
+                safeAreaAdjustedNavigationBarWidth -
+                    (scaler * ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset)
             )
             
             setNeedsLayout() // "Commit" update
@@ -108,6 +113,7 @@ final class ChatProfileView: UIStackView {
     private var observers = [NSKeyValueObservation]()
     private lazy var memberObservers = [NSKeyValueObservation]()
 
+    // We skip the scaler here that is applied above on `safeAreaAdjustedNavigationBarWidth` updates
     private lazy var widthConstraint = widthAnchor.constraint(
         equalToConstant: safeAreaAdjustedNavigationBarWidth -
             ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset
@@ -408,6 +414,7 @@ final class ChatProfileView: UIStackView {
         
         // No need to call on creation as we already do the update when calling `updateColors`
         observe(group, \.profilePicture, callOnCreation: false) { [weak self] in
+            AvatarMaker.shared().clearCacheForProfilePicture()
             self?.updateAvatar()
         }
         
@@ -497,6 +504,11 @@ final class ChatProfileView: UIStackView {
     }
     
     @objc private func updateAvatar() {
+        guard !conversation.isGroup() else {
+            updateGroupAvatar()
+            return
+        }
+        
         AvatarMaker.shared().avatar(
             for: conversation,
             size: ChatViewConfiguration.Profile.maxAvatarSize,
@@ -507,15 +519,31 @@ final class ChatProfileView: UIStackView {
                 return
             }
             
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.avatarImageView.image = avatarImage
             }
         }
     }
     
+    @objc private func updateGroupAvatar() {
+        guard let profilePictureData = group?.profilePicture,
+              let profilePicture = UIImage(data: profilePictureData) else {
+            Task { @MainActor in
+                self.avatarImageView.image = AvatarMaker.shared().unknownGroupImage()
+            }
+            return
+        }
+
+        let maskedProfilePicture = AvatarMaker.maskImage(profilePicture)
+        
+        Task { @MainActor in
+            self.avatarImageView.image = maskedProfilePicture
+        }
+    }
+    
     private func updateGroupMembersListLabel() {
         let businessInjector = BusinessInjector()
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performAndWait {
             let group = businessInjector.groupManager.getGroup(conversation: self.conversation)
             // We always want at least one space in the label to keep it at a constant height
             self.membersListLabel.text = group?.membersList ?? " "
@@ -524,7 +552,9 @@ final class ChatProfileView: UIStackView {
     
     private func updateDistributionListRecipientsLabel() {
         // We always want at least one space in the label to keep it at a constant height
-        membersListLabel.text = conversation.distributionList?.recipientList ?? "No Recipents"
+        let distributionList = BusinessInjector().distributionListManager.distributionList(for: conversation)
+        
+        membersListLabel.text = distributionList?.recipientsSummary ?? " "
     }
     
     // MARK: - Actions
@@ -626,10 +656,10 @@ final class ChatProfileView: UIStackView {
     override var accessibilityHint: String? {
         get {
             if conversation.isGroup() {
-                return BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_group")
+                BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_group")
             }
             else {
-                return BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_contact")
+                BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_contact")
             }
         }
         set {

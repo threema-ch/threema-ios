@@ -35,7 +35,7 @@ extension View {
     
     var wrappedNavigationView: some View {
         isModallyPresented
-            ? self.onAppear {
+            ? onAppear {
                 (topViewController as? ModalNavigationController).map {
                     BrandingUtils.updateTitleLogo(in: $0)
                 }

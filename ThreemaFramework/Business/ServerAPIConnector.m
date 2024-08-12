@@ -652,8 +652,13 @@
         request[@"csi"] = identityStore.csi;
     if (identityStore.category != nil)
         request[@"category"] = identityStore.category;
+    
+    NSData *requestData = [NSJSONSerialization dataWithJSONObject:request options:NSJSONWritingPrettyPrinted error:nil];
+    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(requestData.bytes, (CC_LONG)requestData.length, digest);
+    NSData *requestHash = [NSData dataWithBytes:digest length:sizeof(digest)];
 
-    if ((force == NO && [request isEqualToDictionary:identityStore.lastWorkUpdateRequest] && ![identityStore sendUpdateWorkInfoStatus])
+    if ((force == NO && [requestHash isEqualToData:identityStore.lastWorkUpdateRequestHash] && ![identityStore sendUpdateWorkInfoStatus])
         || [AppGroup getCurrentType] != AppGroupTypeApp) {
         // request hasn't changed since last update and it's the same date
         // or it's a extension
@@ -665,7 +670,7 @@
     
     [self sendSignedRequest:request toApiPath:@"identity/update_work_info" forStore:identityStore onCompletion:^(id jsonObject) {
         if ([jsonObject[@"success"] boolValue]) {
-            identityStore.lastWorkUpdateRequest = request;
+            identityStore.lastWorkUpdateRequestHash = requestHash;
             [identityStore setLastWorkUpdateDate:[NSDate date]];
             onCompletion(true);
         } else {

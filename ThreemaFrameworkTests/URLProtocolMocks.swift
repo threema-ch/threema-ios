@@ -32,7 +32,7 @@ class URLProtocolMock: URLProtocol {
         error: Error?,
         data: Data?,
         response: HTTPURLResponse?,
-        challenge: URLAuthenticationChallenge?
+        challenges: [URLAuthenticationChallenge]?
     )
     typealias RequestCompletedCallback = () -> Void
     
@@ -57,7 +57,7 @@ class URLProtocolMock: URLProtocol {
         
         URLProtocolMock.requests[url] = request
         
-        guard let ((error, data, response, challenge), completion) = URLProtocolMock.mockResponses[url] else {
+        guard let ((error, data, response, challenges), completion) = URLProtocolMock.mockResponses[url] else {
             client?.urlProtocol(self, didFailWithError: URLProtocolMockError.noMockResponse)
             return
         }
@@ -74,8 +74,10 @@ class URLProtocolMock: URLProtocol {
             client?.urlProtocol(self, didLoad: dataStrong)
         }
 
-        if let challenge {
-            client?.urlProtocol(self, didReceive: challenge)
+        if let challenges {
+            for challenge in challenges {
+                client?.urlProtocol(self, didReceive: challenge)
+            }
         }
 
         client?.urlProtocolDidFinishLoading(self)

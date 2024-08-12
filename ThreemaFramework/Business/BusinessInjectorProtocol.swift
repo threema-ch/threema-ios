@@ -26,6 +26,7 @@ public protocol BusinessInjectorProtocol: AnyObject {
     var conversationStore: any ConversationStoreProtocol { get }
     var entityManager: EntityManager { get }
     var groupManager: GroupManagerProtocol { get }
+    var distributionListManager: DistributionListManagerProtocol { get }
     var licenseStore: LicenseStore { get }
     var messageSender: MessageSenderProtocol { get }
     var multiDeviceManager: MultiDeviceManagerProtocol { get }

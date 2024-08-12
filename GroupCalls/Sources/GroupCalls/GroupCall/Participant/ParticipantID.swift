@@ -30,6 +30,14 @@ struct ParticipantID: Sendable {
     }
 }
 
+// MARK: - CustomStringConvertible
+
+extension ParticipantID: CustomStringConvertible {
+    var description: String {
+        String(id)
+    }
+}
+
 // MARK: - Equatable
 
 extension ParticipantID: Equatable {

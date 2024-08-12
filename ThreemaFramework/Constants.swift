@@ -59,4 +59,10 @@ public enum Constants {
     ///
     /// - SeeAlso: kAppSetupStateKey
     public static let appSetupStateKey = kAppSetupStateKey
+    
+    public static let messageStoringGatewayGroupPrefix = "☁"
+}
+
+extension String {
+    public static var broadcasts: String { "*" }
 }

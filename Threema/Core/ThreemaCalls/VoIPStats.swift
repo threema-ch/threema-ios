@@ -20,7 +20,7 @@
 
 import Foundation
 
-internal protocol VoIPStatsRepresentation {
+protocol VoIPStatsRepresentation {
     func getShortRepresentation() -> String
     func getRepresentation() -> String
 }
@@ -44,17 +44,17 @@ internal protocol VoIPStatsRepresentation {
     @objc public var crypto = false
 }
 
-internal enum Direction {
+enum Direction {
     case inbound
     case outbound
 }
 
-internal enum CodecMimeTypePrimary {
+enum CodecMimeTypePrimary {
     case unknown
     case audio
     case video
     
-    internal static func fromRepresentation(string: String?) -> CodecMimeTypePrimary {
+    static func fromRepresentation(string: String?) -> CodecMimeTypePrimary {
         if string == nil {
             return .unknown
         }
@@ -68,25 +68,25 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal func toShortRepresentation() -> String {
+    func toShortRepresentation() -> String {
         switch self {
         case .audio:
-            return "a"
+            "a"
         case .video:
-            return "v"
+            "v"
         case .unknown:
-            return "?"
+            "?"
         }
     }
     
-    internal func toRepresentation() -> String {
+    func toRepresentation() -> String {
         switch self {
         case .audio:
-            return "audio"
+            "audio"
         case .video:
-            return "video"
+            "video"
         case .unknown:
-            return "?"
+            "?"
         }
     }
 }
@@ -114,11 +114,11 @@ internal enum CodecMimeTypePrimary {
     
     private var totalFramesReceived: UInt64?
     
-    internal class BytesTransferred: VoIPStatsRepresentation {
+    class BytesTransferred: VoIPStatsRepresentation {
         public let sent: UInt64?
         public let received: UInt64?
 
-        internal init(_ entry: RTCStatistics) {
+        init(_ entry: RTCStatistics) {
             if let sentNumber = entry.values["bytesSent"] as? NSNumber {
                 self.sent = UInt64(truncating: sentNumber)
             }
@@ -160,13 +160,13 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class Candidate: VoIPStatsRepresentation {
+    class Candidate: VoIPStatsRepresentation {
         public let address: String?
         public let type: String?
         public let protocol_: String?
         public let network: String?
         
-        internal init(_ entry: RTCStatistics) {
+        init(_ entry: RTCStatistics) {
             self.address = entry.values["ip"] as? String
             self.type = entry.values["candidateType"] as? String
             self.protocol_ = entry.values["protocol"] as? String
@@ -194,8 +194,8 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class CandidatePair: VoIPStatsRepresentation {
-        internal enum State: String {
+    class CandidatePair: VoIPStatsRepresentation {
+        enum State: String {
             case unknown
             case frozen
             case waiting
@@ -260,7 +260,7 @@ internal enum CodecMimeTypePrimary {
             self.usesRelay = CandidatePair.usesRelay(entry, local: local, remote: remote)
         }
         
-        internal static func lookupCandidates(
+        static func lookupCandidates(
             localCandidateID: String?,
             remoteCandidateID: String?,
             report: RTCStatisticsReport
@@ -389,19 +389,19 @@ internal enum CodecMimeTypePrimary {
             // 'x' -> failed: No connection could be established via this pair and no further
             //        attempts will be made.
             switch state {
-            case .unknown: return "?"
-            case .frozen: return "-"
-            case .waiting: return "."
-            case .in_progress: return "+"
-            case .succeeded: return "o"
-            case .failed: return "x"
+            case .unknown: "?"
+            case .frozen: "-"
+            case .waiting: "."
+            case .in_progress: "+"
+            case .succeeded: "o"
+            case .failed: "x"
             }
         }
     }
     
-    internal class Codec: VoIPStatsRepresentation {
+    class Codec: VoIPStatsRepresentation {
         
-        internal struct CodecMimeType {
+        struct CodecMimeType {
             public let primary: CodecMimeTypePrimary
             public let secondary: String
         }
@@ -473,7 +473,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class Rtp: VoIPStatsRepresentation {
+    class Rtp: VoIPStatsRepresentation {
         private let codecs: [String: Codec]
         
         public let codecID: String?
@@ -556,7 +556,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class InboundRtp: Rtp {
+    class InboundRtp: Rtp {
         public init(
             _ entry: RTCStatistics,
             codecs: [String: Codec],
@@ -641,7 +641,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class OutboundRtp: Rtp {
+    class OutboundRtp: Rtp {
         public init(
             _ entry: RTCStatistics,
             codecs: [String: Codec],
@@ -686,7 +686,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class Track: VoIPStatsRepresentation {
+    class Track: VoIPStatsRepresentation {
         public let kind: String
         public var frameWidth: UInt64?
         public var frameHeight: UInt64?
@@ -787,7 +787,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class RtpTransceiver: VoIPStatsRepresentation {
+    class RtpTransceiver: VoIPStatsRepresentation {
         
         public let transceiver: RTCRtpTransceiver
 
@@ -914,26 +914,26 @@ internal enum CodecMimeTypePrimary {
         private func mediaType() -> String {
             switch transceiver.mediaType {
             case .audio:
-                return "audio"
+                "audio"
             case .video:
-                return "video"
+                "video"
             default:
-                return "?"
+                "?"
             }
         }
         
         private func direction() -> String {
             switch transceiver.direction {
             case .sendRecv:
-                return "send/recv"
+                "send/recv"
             case .sendOnly:
-                return "send"
+                "send"
             case .recvOnly:
-                return "recv"
+                "recv"
             case .inactive:
-                return "inactive"
+                "inactive"
             default:
-                return "?"
+                "?"
             }
         }
         
@@ -946,7 +946,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class RoundTripTime: VoIPStatsRepresentation {
+    class RoundTripTime: VoIPStatsRepresentation {
         private let latest: Double?
         private var average: Double?
         
@@ -997,7 +997,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class Transport: VoIPStatsRepresentation {
+    class Transport: VoIPStatsRepresentation {
         public let selectedCandidatePairID: String
         private let bytesTransferred: BytesTransferred
         private let dtlsState: String
@@ -1023,7 +1023,7 @@ internal enum CodecMimeTypePrimary {
         }
     }
     
-    internal class Crypto: VoIPStatsRepresentation {
+    class Crypto: VoIPStatsRepresentation {
         private let dtlsVersion: String
         private let dtlsCipher: String
         private let srtpCipher: String
@@ -1074,7 +1074,7 @@ internal enum CodecMimeTypePrimary {
     }
 
     // O(n^2) but could be optimised for O(n) if needed
-    internal func extract() {
+    func extract() {
         inboundCodecs = [String: Codec]()
         outboundCodecs = [String: Codec]()
 
@@ -1383,7 +1383,7 @@ public struct VoIPStatsState {
 
 // Convert byte count into human readable number
 // Based on: https://stackoverflow.com/a/3758880
-internal func toHumanReadableByteCount(_ value: UInt64) -> String {
+func toHumanReadableByteCount(_ value: UInt64) -> String {
     let unit: UInt64 = 1024
     if value < unit {
         return "\(value)B"
@@ -1397,14 +1397,14 @@ internal func toHumanReadableByteCount(_ value: UInt64) -> String {
 }
 
 // Convert ms to seconds
-internal func msToSeconds(_ value: String?) -> String {
+func msToSeconds(_ value: String?) -> String {
     guard let value = Double(value) else {
         return "n/a"
     }
     return String(format: "%.3f", value / 1000)
 }
 
-internal func msToSeconds(_ value: Double?) -> String {
+func msToSeconds(_ value: Double?) -> String {
     guard value != nil else {
         return "n/a"
     }
@@ -1412,14 +1412,14 @@ internal func msToSeconds(_ value: Double?) -> String {
 }
 
 // Calculate a fraction
-internal func toFraction(_ dividend: String?, divisor: String?) -> String {
+func toFraction(_ dividend: String?, divisor: String?) -> String {
     guard let dividend = Double(dividend), let divisor = Double(divisor), divisor > 0 else {
         return "n/a"
     }
     return String(format: "%.1f", dividend / divisor)
 }
 
-internal func candidatePairID(statsID: String?) -> String {
+func candidatePairID(statsID: String?) -> String {
     if statsID == nil {
         return "???"
     }
@@ -1430,7 +1430,7 @@ internal func candidatePairID(statsID: String?) -> String {
     return "???"
 }
 
-internal func calculateVideoBitrate(
+func calculateVideoBitrate(
     previousTimestamp: Double,
     previousBytes: UInt64,
     currentTimestamp: Double,

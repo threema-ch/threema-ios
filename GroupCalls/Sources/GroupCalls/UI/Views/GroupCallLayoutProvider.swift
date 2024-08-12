@@ -31,10 +31,10 @@ class GroupCallLayoutProvider {
     ) -> UICollectionViewCompositionalLayout {
         // TODO: (IOS-4049) Decide layout based on `UIUserInterfaceSizeClass` in the trait collection instead of this
         if UIDevice.current.userInterfaceIdiom == .pad {
-            return createLayoutForPads(numberOfParticipants: numberOfParticipants, view: view)
+            createLayoutForPads(numberOfParticipants: numberOfParticipants, view: view)
         }
         else {
-            return createLayoutForPhones(numberOfParticipants: numberOfParticipants, view: view)
+            createLayoutForPhones(numberOfParticipants: numberOfParticipants, view: view)
         }
     }
     
@@ -69,14 +69,14 @@ class GroupCallLayoutProvider {
     }
     
     @MainActor private static func cellHeightFactorPhone(numberOfParticipants: Int, view: UIView) -> Double {
-        let safeAreaHeight: Double
-        if view.bounds.height != 0 {
-            safeAreaHeight = view.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
-        }
-        else {
-            // Fallback to never return 0
-            safeAreaHeight = UIScreen.main.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
-        }
+        let safeAreaHeight: Double =
+            if view.bounds.height != 0 {
+                view.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+            }
+            else {
+                // Fallback to never return 0
+                UIScreen.main.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+            }
         
         assert(safeAreaHeight != 0.0, "This should never return 0")
         
@@ -91,9 +91,9 @@ class GroupCallLayoutProvider {
     private static func verticalFractionPhone(numberOfParticipants: Int) -> Double {
         switch numberOfParticipants {
         case 3...:
-            return 0.5
+            0.5
         default:
-            return 1.0
+            1.0
         }
     }
     
@@ -138,14 +138,14 @@ class GroupCallLayoutProvider {
     }
     
     @MainActor private static func cellHeightFactorPad(numberOfParticipants: Int, view: UIView) -> Double {
-        let safeAreaHeight: Double
-        if view.bounds.height != 0 {
-            safeAreaHeight = view.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
-        }
-        else {
-            // Fallback to never return 0
-            safeAreaHeight = UIScreen.main.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
-        }
+        let safeAreaHeight: Double =
+            if view.bounds.height != 0 {
+                view.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+            }
+            else {
+                // Fallback to never return 0
+                UIScreen.main.bounds.height - view.safeAreaInsets.top - view.safeAreaInsets.bottom
+            }
         
         assert(safeAreaHeight != 0.0, "This should never return 0")
         
@@ -160,14 +160,14 @@ class GroupCallLayoutProvider {
     }
     
     @MainActor private static func verticalFractionPad(numberOfParticipants: Int, view: UIView) -> Double {
-        let safeAreaWidth: Double
-        if view.bounds.height != 0 {
-            safeAreaWidth = view.bounds.width - view.safeAreaInsets.left - view.safeAreaInsets.right
-        }
-        else {
-            // Fallback to never return 0
-            safeAreaWidth = UIScreen.main.bounds.width - view.safeAreaInsets.left - view.safeAreaInsets.right
-        }
+        let safeAreaWidth: Double =
+            if view.bounds.height != 0 {
+                view.bounds.width - view.safeAreaInsets.left - view.safeAreaInsets.right
+            }
+            else {
+                // Fallback to never return 0
+                UIScreen.main.bounds.width - view.safeAreaInsets.left - view.safeAreaInsets.right
+            }
         
         assert(safeAreaWidth != 0.0, "This should never return 0")
         

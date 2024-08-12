@@ -143,28 +143,22 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         messageDateAndStateView,
     ])
     
-    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = {
-        [
-            contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
-            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ]
-        
-    }()
+    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = [
+        contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
+        contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+    ]
     
-    private lazy var contentStackViewWithQuoteConstraints: [NSLayoutConstraint] = {
-        [
-            contentStack.topAnchor.constraint(
-                equalTo: messageQuoteStackView.bottomAnchor,
-                constant: ChatViewConfiguration.Quote.quoteTextCellDistance
-            ),
-            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ]
-
-    }()
+    private lazy var contentStackViewWithQuoteConstraints: [NSLayoutConstraint] = [
+        contentStack.topAnchor.constraint(
+            equalTo: messageQuoteStackView.bottomAnchor,
+            constant: ChatViewConfiguration.Quote.quoteTextCellDistance
+        ),
+        contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+    ]
     
     private lazy var containerView: UIView = {
         let view = UIView()
@@ -287,7 +281,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     }
     
     private func invalidateObservers() {
-        observers.forEach { observer in
+        for observer in observers {
             observer.invalidate()
         }
         observers.removeAll()
@@ -319,29 +313,27 @@ extension ChatViewTextMessageTableViewCell: MessageTextViewDelegate {
 
 extension ChatViewTextMessageTableViewCell: Reusable { }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
     
-    func messageActions() -> (
-        primaryActions: [ChatViewMessageActionProvider.MessageAction],
-        generalActions: [ChatViewMessageActionProvider.MessageAction]
-    )? {
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
 
         guard let message = textMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
+        typealias Provider = ChatViewMessageActionsProvider
         
-        // Copy
-        let copyHandler = {
-            UIPasteboard.general.string = message.text
-            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
-        // Share
-        let shareItems = [message.text as Any]
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
         
         // Quote
         let quoteHandler = {
@@ -352,56 +344,53 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
             chatViewTableViewCellDelegate.showQuoteView(message: message)
         }
         
+        // Edit Message
+        let editHandler: Provider.DefaultHandler = {
+            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
+        }
+        
+        // Copy
+        let copyHandler = {
+            UIPasteboard.general.string = message.text
+            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+        }
+        
         // Details
-        let detailsHandler = {
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
         // Select
-        let selectHandler = {
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
-        }
-        
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
-            
-        // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
-            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
-        }
-
-        // Edit Message
-        let editHandler = {
-            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
         }
 
         // Build menu
         return Provider.defaultActions(
             message: message,
-            speakText: message.text,
-            shareItems: shareItems,
             activityViewAnchor: contentView,
             popOverSource: chatBubbleView,
-            copyHandler: copyHandler,
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler,
             quoteHandler: quoteHandler,
+            editHandler: editHandler,
+            copyHandler: copyHandler,
+            shareItems: [message.text as Any],
+            speakText: message.text,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            ackHandler: ackHandler,
-            markStarHandler: markStarHandler,
-            editHandler: editHandler
+            didDelete: didDelete
         )
     }
     

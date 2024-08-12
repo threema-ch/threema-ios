@@ -66,8 +66,11 @@ final class MessageThumbnailTapView: UIView {
         return progressView
     }()
     
-    private lazy var metadataView = MessageSymbolMetadataView()
-    private lazy var metadataBlurBackgroundContainerView = MessageMetadataBlurBackgroundView(rootView: metadataView)
+    private lazy var metadataView = MessageSymbolMetadataVibrancyView()
+    private lazy var metadataBlurBackgroundContainerView = MessageMetadataBlurBackgroundView(
+        rootView: metadataView.vibrancyAffectedView,
+        nonVibrantRootView: metadataView.vibrancyUnaffectedView
+    )
     
     private lazy var dateAndStateView = MessageDateAndStateVibrancyView()
     private lazy var dateAndStateBlurBackgroundContainerView = MessageMetadataBlurBackgroundView(
@@ -194,8 +197,8 @@ final class MessageThumbnailTapView: UIView {
             ),
         ]
         
-        notRequiredConstraints.forEach {
-            $0.priority = .defaultHigh
+        for notRequiredConstraint in notRequiredConstraints {
+            notRequiredConstraint.priority = .defaultHigh
         }
         
         NSLayoutConstraint.activate(notRequiredConstraints)
@@ -373,6 +376,8 @@ final class MessageThumbnailTapView: UIView {
     
     func updateColors() {
         progressView.progressTintColor = Colors.thumbnailProgressViewColor
+        metadataBlurBackgroundContainerView.updateColors()
+        dateAndStateBlurBackgroundContainerView.updateColors()
         dateAndStateView.updateColors()
         metadataView.updateColors()
     }

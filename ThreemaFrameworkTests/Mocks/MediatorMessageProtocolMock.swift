@@ -160,7 +160,8 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         groupID: UInt64,
         groupCreatorIdentity: String,
         createdAt: Date,
-        nonces: [Data]
+        nonces: [Data],
+        deviceID: UInt64
     ) -> D2d_Envelope {
         D2d_Envelope()
     }
@@ -171,7 +172,8 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         messageID: UInt64,
         receiverIdentity: String,
         createdAt: Date,
-        nonce: Data
+        nonce: Data,
+        deviceID: UInt64
     ) -> D2d_Envelope {
         mmp.getEnvelopeForOutgoingMessage(
             type: type,
@@ -179,12 +181,13 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
             messageID: messageID,
             receiverIdentity: receiverIdentity,
             createdAt: createdAt,
-            nonce: nonce
+            nonce: nonce,
+            deviceID: deviceID
         )
     }
 
     // swiftformat:disable:next all
-    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId) -> D2d_Envelope {
+    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId, deviceID: UInt64) -> D2d_Envelope {
         D2d_Envelope()
     }
 

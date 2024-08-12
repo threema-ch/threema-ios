@@ -26,7 +26,7 @@ public struct SFUToken: Sendable {
     
     public var stillValid: Bool {
         DDLogNotice(
-            "[GroupCall] SFUToken expiration date is \(expirationDate) and is \(expirationDate.timeIntervalSinceNow > 0 ? "still valid." : "not valid anymore.")"
+            "[GroupCall] SFUToken expiration date is \(expirationDate) and is \(expirationDate.timeIntervalSinceNow > 0 ? "still valid" : "not valid anymore")"
         )
         
         return expirationDate.timeIntervalSinceNow > 0
@@ -89,7 +89,7 @@ public struct SFUToken: Sendable {
                     host = componentsString
                 }
                 else {
-                    DDLogError("[SFUToken] Could not create host from host and port: \(host):\(port)")
+                    DDLogError("[GroupCall] [SFUToken] Could not create host from \(host):\(port)")
                     host = "\(host):\(port)"
                 }
             }

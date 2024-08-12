@@ -24,7 +24,7 @@ import GroupCalls
 
 @objc class GroupCallUIHelper: NSObject {
     @objc func setGlobalGroupCallsManagerSingletonUIDelegate() {
-        GlobalGroupCallsManagerSingleton.shared.uiDelegate = self
+        GlobalGroupCallManagerSingleton.shared.uiDelegate = self
     }
 }
 
@@ -53,13 +53,13 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
     
     func showGroupCallFullAlert(maxParticipants: Int?, onOK: @escaping () -> Void) {
         let title = "group_call_alert_full_title".localized
-        let message: String
-        if let maxParticipants {
-            message = String.localizedStringWithFormat("group_call_alert_full_message_count".localized, maxParticipants)
-        }
-        else {
-            message = "group_call_alert_full_message".localized
-        }
+        let message =
+            if let maxParticipants {
+                String.localizedStringWithFormat("group_call_alert_full_message_count".localized, maxParticipants)
+            }
+            else {
+                "group_call_alert_full_message".localized
+            }
         
         Task { @MainActor in
             UIAlertTemplate.showAlert(

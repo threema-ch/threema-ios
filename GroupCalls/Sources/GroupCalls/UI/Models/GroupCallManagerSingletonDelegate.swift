@@ -22,7 +22,7 @@ import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
 
-/// Protocol that allows delegation from the `GroupCallManager` to the `GlobalGroupCallsManagerSingleton`
+/// Protocol that allows delegation from the `GroupCallManager` to the `GlobalGroupCallManagerSingleton`
 public protocol GroupCallManagerSingletonDelegate: AnyObject {
     /// Tries to present the given `GroupCallViewController`
     /// - Parameter viewController: `GroupCallViewController` to be shown
@@ -36,10 +36,10 @@ public protocol GroupCallManagerSingletonDelegate: AnyObject {
     
     /// Used to show a notification for the new incoming group call
     /// - Parameters:
-    ///   - groupModel: GroupCallsThreemaGroupModel
+    ///   - groupModel: GroupCallThreemaGroupModel
     ///   - senderThreemaID: The threema id of the sender
     nonisolated func showIncomingGroupCallNotification(
-        groupModel: GroupCallsThreemaGroupModel,
+        groupModel: GroupCallThreemaGroupModel,
         senderThreemaID: ThreemaIdentity
     )
     

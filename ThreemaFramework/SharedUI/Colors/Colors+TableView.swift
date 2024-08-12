@@ -24,36 +24,36 @@ extension Colors {
     @objc public class var separator: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray400.color
+            Asset.SharedColors.gray400.color
         case .dark:
-            return Asset.SharedColors.gray750.color
+            Asset.SharedColors.gray750.color
         }
     }
     
     @objc public class var backgroundTableView: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray150.color
+            Asset.SharedColors.gray150.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
     @objc public class var plainBackgroundTableView: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
     @objc public class var backgroundTableHeaderView: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray200.color
+            Asset.SharedColors.gray200.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
@@ -64,18 +64,18 @@ extension Colors {
     @objc public class var backgroundTableViewCellSelected: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.backgroundCellSelectedLight.color
+            Asset.SharedColors.backgroundCellSelectedLight.color
         case .dark:
-            return Asset.SharedColors.backgroundCellSelectedDark.color
+            Asset.SharedColors.backgroundCellSelectedDark.color
         }
     }
     
     @objc public class var backgroundTableViewCellShareExtensionSelected: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray400.color
+            Asset.SharedColors.gray400.color
         case .dark:
-            return Asset.SharedColors.gray350.color
+            Asset.SharedColors.gray350.color
         }
     }
 }

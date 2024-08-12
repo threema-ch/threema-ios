@@ -58,7 +58,7 @@ extension SFUHTTPConnection {
         
         guard httpStatus.statusCode == 200 || httpStatus.statusCode == 400 || httpStatus.statusCode == 401 else {
             DDLogWarn(
-                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) returned \(httpStatus.statusCode) instead of 200, 400 or 401. Remove call"
+                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID) returned \(httpStatus.statusCode) instead of 200, 400 or 401. Removing call"
             )
             return .notRunning
         }
@@ -72,7 +72,7 @@ extension SFUHTTPConnection {
         
         if httpStatus.statusCode == 400 {
             DDLogWarn(
-                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) failed with 400, because the provided data invalid or call ids don't match"
+                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID) failed with 400, because the provided data invalid or call ids don't match"
             )
             return .invalidRequest
         }
@@ -98,55 +98,52 @@ extension SFUHTTPConnection {
                 throw error
             }
             else {
-                DDLogError("[GroupCall] [Join Steps] An unknown error occurred.")
+                DDLogError("[GroupCall] [Join Steps] An unknown error occurred")
                 return .notDetermined
             }
             
         case .timeout:
-            DDLogError("[GroupCall] [Join Steps] Join timed out.")
+            DDLogError("[GroupCall] [Join Steps] Join timed out")
             return .timeout
             
         case let .result(result):
             
             guard let (data, status) = result else {
-                DDLogError("[GroupCall] [Join Steps] Undetermined result.")
+                DDLogError("[GroupCall] [Join Steps] Undetermined result")
                 return .notDetermined
             }
             
             guard let httpStatus = status as? HTTPURLResponse else {
-                DDLogError("[GroupCall] [Join Steps] Group call not running.")
+                DDLogError("[GroupCall] [Join Steps] Group call not running")
                 return .notRunning
             }
             
             /// **Protocol Step: Group Call Join Steps**
-            /// 3. If the received status code is 503, notify the user that the group call is full and abort these
-            /// steps.
+            /// 3. If the received status code is `503`, notify the user that the group call
+            ///   is full and abort these steps.
             if httpStatus.statusCode == 503 {
-                DDLogWarn(
-                    "[GroupCall] [Join Steps] Group call is full."
-                )
+                DDLogWarn("[GroupCall] [Join Steps] Group call is full")
                 return .full
             }
             
+            if httpStatus.statusCode == 401 {
+                DDLogWarn("[GroupCall] [Join Steps] Our credentials have expired. Try again in some time.")
+                return .notDetermined
+            }
+            
             /// **Protocol Step: Group Call Join Steps**
-            /// 4. If the server could not be reached or the received status code is not 200 or if the Join response
-            /// could not be decoded, abort these steps and notify the user.
-            guard httpStatus.statusCode == 200 || httpStatus.statusCode == 401 else {
+            /// 4. If the server could not be reached or the received status code is not
+            ///   `200` or if the _Join_ response could not be decoded, abort these steps
+            ///   and notify the user.
+            guard httpStatus.statusCode == 200 else {
                 DDLogWarn(
-                    "[GroupCall] [Join Steps] Peek for group call \(groupCallDescription.callID.bytes.hexEncodedString()) returned \(httpStatus.statusCode) instead of 200. Remove call"
+                    "[GroupCall] [Join Steps] Peek for group call \(groupCallDescription.callID) returned \(httpStatus.statusCode) instead of 200. Removing call"
                 )
                 return .notRunning
             }
             
-            if httpStatus.statusCode == 401 {
-                DDLogWarn(
-                    "[GroupCall] [Join Steps] Our credentials have expired. Try again in some time."
-                )
-                return .notDetermined
-            }
-            
             guard let joinResponse = try? Groupcall_SfuHttpResponse.Join(serializedData: data) else {
-                DDLogError("[GroupCall] [Join Steps] Could not create join from received data.")
+                DDLogError("[GroupCall] [Join Steps] Could not create join from received data")
                 return .notDetermined
             }
             
@@ -163,9 +160,9 @@ extension SFUHTTPConnection {
         var param: String {
             switch self {
             case .peek:
-                return "peek"
+                "peek"
             case .join:
-                return "join"
+                "join"
             }
         }
     }
@@ -178,14 +175,13 @@ extension SFUHTTPConnection {
         /// 3. Set the encoded `SfuHttpRequest.Peek`/`SfuHttpRequest.Join` message as body.
         
         let param: String = requestType.param
-        let requestBody: Data
-        
-        switch requestType {
-        case .peek:
-            requestBody = try create(.peek)
-        case let .join(certificate):
-            requestBody = try create(.join(certificate))
-        }
+        let requestBody: Data =
+            switch requestType {
+            case .peek:
+                try create(.peek)
+            case let .join(certificate):
+                try create(.join(certificate))
+            }
         
         guard let authorizationToken = try? await dependencies.httpHelper.sfuCredentials() else {
             throw GroupCallError.invalidToken
@@ -200,7 +196,7 @@ extension SFUHTTPConnection {
             .appendingPathComponent(param)
             .appendingPathComponent(groupCallDescription.callID.bytes.hexEncodedString())
         
-        DDLogInfo("[GroupCall] Checking at URL \(groupCallURL)")
+        DDLogNotice("[GroupCall] Checking at URL \(groupCallURL)")
 
         return try await dependencies.groupCallsHTTPClientAdapter.sendPeek(
             authorization: "ThreemaSfuToken \(authorizationToken.sfuToken)",

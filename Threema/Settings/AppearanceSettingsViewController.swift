@@ -263,22 +263,22 @@ extension AppearanceSettingsViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0:
-            return 1
+            1
         case 1:
             switch ThreemaApp.current {
             case .threema:
-                return 1
+                1
             default:
-                return 0
+                0
             }
         case 2:
-            return 1
+            1
         case 3:
-            return 2
+            2
         case 4:
-            return 2
+            2
         default:
-            return 0
+            0
         }
     }
     

@@ -106,6 +106,16 @@ extension LicenseViewController: WKNavigationDelegate {
     
     func webView(
         _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: any Error
+    ) {
+        if (error as NSError).code == URLError.Code.notConnectedToInternet.rawValue {
+            NotificationPresenterWrapper.shared.present(type: .noConnection)
+        }
+    }
+    
+    func webView(
+        _ webView: WKWebView,
         decidePolicyFor navigationAction: WKNavigationAction,
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {

@@ -75,7 +75,7 @@ public class ProcessedVersions: CustomStringConvertible {
     }
     
     public var description: String {
-        "offered=\(offeredVersion), applied=\(appliedVersion), pending=\(String(describing: pending4DHVersion))"
+        "offered=\(offeredVersion), applied=\(appliedVersion), pending=\(pending4DHVersion?.description ?? "nil")"
     }
 }
 
@@ -124,13 +124,13 @@ extension DHSession {
         public var description: String {
             switch self {
             case .L20:
-                return "L20"
+                "L20"
             case .RL44:
-                return "RL44"
+                "RL44"
             case .R20:
-                return "R20"
+                "R20"
             case .R24:
-                return "R24"
+                "R24"
             }
         }
     }
@@ -182,7 +182,7 @@ public class DHSession: CustomStringConvertible, Equatable {
     var newSessionCommitted: Bool {
         didSet {
             if newSessionCommitted == false, oldValue == true {
-                DDLogWarn("New session committed should never be reset to false")
+                DDLogWarn("[ForwardSecurity] New session committed should never be reset to false")
                 assertionFailure()
             }
         }
@@ -222,9 +222,9 @@ public class DHSession: CustomStringConvertible, Equatable {
                 case .L20, .R20:
                     
                     // There should be no 4DH versions in this state
-                    if current4DHVersions != nil {
+                    if let current4DHVersions {
                         DDLogError(
-                            "[ForwardSecurity] getOutgoingOfferedVersion: Unexpected current4DHVersions in L20 state"
+                            "[ForwardSecurity] outgoingOfferedVersion: Unexpected current4DHVersions=\(current4DHVersions) in L20 state"
                         )
                     }
 
@@ -239,7 +239,7 @@ public class DHSession: CustomStringConvertible, Equatable {
                     // We expect 4DH versions to be available in these states
                     guard let current4DHVersions else {
                         DDLogError(
-                            "[ForwardSecurity] getOutgoingOfferedVersion: Missing current4DHVersions in state \(tempState)"
+                            "[ForwardSecurity] outgoingOfferedVersion: Missing current4DHVersions in state=\(tempState)"
                         )
                         return .v10
                     }
@@ -259,9 +259,9 @@ public class DHSession: CustomStringConvertible, Equatable {
             case .L20, .R20:
                 
                 // There should be no 4DH versions in this state
-                if current4DHVersions != nil {
+                if let current4DHVersions {
                     DDLogError(
-                        "[ForwardSecurity] getOutgoingOfferedVersion: Unexpected current4DHVersions in L20 state"
+                        "[ForwardSecurity] outgoingOfferedVersion: Unexpected current4DHVersions=\(current4DHVersions) in L20 state"
                     )
                 }
 
@@ -276,7 +276,7 @@ public class DHSession: CustomStringConvertible, Equatable {
                 // We expect 4DH versions to be available in these states
                 guard let current4DHVersions else {
                     DDLogError(
-                        "[ForwardSecurity] getOutgoingOfferedVersion: Missing current4DHVersions in state\(tempState)"
+                        "[ForwardSecurity] outgoingOfferedVersion: Missing current4DHVersions in state=\(tempState)"
                     )
                     return .v10
                 }
@@ -298,9 +298,9 @@ public class DHSession: CustomStringConvertible, Equatable {
         case .L20, .R20:
             
             // There should be no 4DH versions in this state
-            if current4DHVersions != nil {
+            if let current4DHVersions {
                 DDLogError(
-                    "[ForwardSecurity] getOutgoingAppliedVersion: Unexpected current4DHVersions in \(tempState) state"
+                    "[ForwardSecurity] outgoingAppliedVersion: Unexpected current4DHVersions=\(current4DHVersions) in state=\(tempState)"
                 )
             }
 
@@ -314,9 +314,7 @@ public class DHSession: CustomStringConvertible, Equatable {
             
             // We expect 4DH versions to be available in these states
             guard let current4DHVersions else {
-                DDLogError(
-                    "[ForwardSecurity] getOutgoingAppliedVersion: Missing current4DHVersions in \(tempState) state"
-                )
+                DDLogError("[ForwardSecurity] outgoingAppliedVersion: Missing current4DHVersions in state=\(tempState)")
                 return .v10
             }
             return current4DHVersions.local
@@ -336,9 +334,9 @@ public class DHSession: CustomStringConvertible, Equatable {
             
         case .L20, .R20:
             // There should be no 4DH versions in this state
-            if current4DHVersions != nil {
+            if let current4DHVersions {
                 DDLogError(
-                    "[ForwardSecurity] getMinimumIncomingAppliedVersion: Unexpected current4DHVersions in L20 state"
+                    "[ForwardSecurity] minimumIncomingAppliedVersion: Unexpected current4DHVersions=\(current4DHVersions) in L20 state"
                 )
             }
 
@@ -361,7 +359,7 @@ public class DHSession: CustomStringConvertible, Equatable {
             // We expect 4DH versions to be available in these states
             guard let current4DHVersions else {
                 DDLogError(
-                    "[ForwardSecurity] getMinimumIncomingAppliedVersion: Missing current4DHVersions in state: \(tempState)"
+                    "[ForwardSecurity] minimumIncomingAppliedVersion: Missing current4DHVersions in state=\(tempState)"
                 )
                 return .v10
             }
@@ -399,7 +397,7 @@ public class DHSession: CustomStringConvertible, Equatable {
             }
             
             let description =
-                "Illegal DH session state: myRatchet2DH=\(myRatchet2DH != nil), myRatchet4DH=\(myRatchet4DH != nil), peerRatched2DH=\(peerRatchet2DH != nil), peerRatchet4DH=\(peerRatchet4DH != nil)"
+                "Illegal DH session state: myRatchet2DH=\(myRatchet2DH != nil), myRatchet4DH=\(myRatchet4DH != nil), peerRatchet2DH=\(peerRatchet2DH != nil), peerRatchet4DH=\(peerRatchet4DH != nil)"
             DDLogError("[ForwardSecurity] \(description)")
             throw DHSession.State.StateError.invalidStateError(description)
         }
@@ -439,7 +437,7 @@ public class DHSession: CustomStringConvertible, Equatable {
         
         initKDF2DH(dhStaticStatic: dhStaticStatic, dhStaticEphemeral: dhStaticEphemeral, peer: false)
         DDLogNotice(
-            "[ForwardSecurity] New initiator DHSession initialized for peer: \(peerIdentity), localVersion: \(localVersion)"
+            "[ForwardSecurity] New initiator DHSession initialized for peer=\(peerIdentity), localVersion=\(localVersion)"
         )
     }
     
@@ -474,7 +472,7 @@ public class DHSession: CustomStringConvertible, Equatable {
         let negotiatedVersion = try negotiateMajorAndMinorVersion(from: localVersion, and: version)
         self.current4DHVersions = DHVersions.negotiated(version: negotiatedVersion)
         DDLogNotice(
-            "[ForwardSecurity] New responder DHSession initialized for peer: \(peerIdentity), version: \(version), localVersion: \(localVersion)"
+            "[ForwardSecurity] New responder DHSession initialized for peer=\(peerIdentity), version=\(version), localVersion=\(localVersion)"
         )
     }
     
@@ -518,8 +516,8 @@ public class DHSession: CustomStringConvertible, Equatable {
             break
         }
         
-        DDLogNotice(
-            "[ForwardSecurity] Existing DHSession restored for peer: \(peerIdentity), version: \(current4DHVersions?.description ?? "nil"), localVersion: \(localVersion)"
+        DDLogDebug(
+            "[ForwardSecurity] Existing DHSession loaded for peer=\(peerIdentity), version=\(current4DHVersions?.description ?? "nil"), localVersion=\(localVersion)"
         )
     }
     
@@ -610,8 +608,8 @@ public class DHSession: CustomStringConvertible, Equatable {
     // Process the provided versions of an incoming message.
     // Returns the processed versions to be committed once the message has been processed.
     func processIncomingMessageVersion(message: ForwardSecurityDataMessage) throws -> ProcessedVersions {
-        DDLogNotice(
-            "[ForwardSecurity] Process incoming message in session \(description). Message \(message.type) with offeredVersion=\(message.offeredVersion), appliedVersion=\(message.appliedVersion)"
+        DDLogVerbose(
+            "[ForwardSecurity] Process version for incoming message \(description). Message \(message.type) with offeredVersion=\(message.offeredVersion), appliedVersion=\(message.appliedVersion)"
         )
         
         // Determine offered and applied version from the message
@@ -650,7 +648,7 @@ public class DHSession: CustomStringConvertible, Equatable {
         if message.type == .twodh {
             // A 2DH message is only valid in R20 and R24 state
             if state != .R20, state != .R24 {
-                throw RejectMessageError.rejectMessageError(description: "Unexpected 2DH message in state: \(state)")
+                throw RejectMessageError.rejectMessageError(description: "Unexpected 2DH message in state=\(state)")
             }
             
             // TODO(ANDR-2452): We don't save the remote `Init` version range at the moment and simply
@@ -680,7 +678,7 @@ public class DHSession: CustomStringConvertible, Equatable {
         else {
             // A 4DH message is only valid in R24, L44 or R44 state
             if state != .R24 && state != .RL44 {
-                throw RejectMessageError.rejectMessageError(description: "Unexpected 4DH message in state: \(state)")
+                throw RejectMessageError.rejectMessageError(description: "Unexpected 4DH message in state=\(state)")
             }
             
             guard let current4DHVersions else {
@@ -712,16 +710,16 @@ public class DHSession: CustomStringConvertible, Equatable {
             // maximum commonly supported offered version.
             //
             // Note: There should be no gaps, so the resulting version should exist.
-            var newLocalVersion: CspE2eFs_Version? = try
-                CspE2eFs_Version(rawValue: min(
+            let newLocalVersion: CspE2eFs_Version? = try CspE2eFs_Version(
+                rawValue: min(
                     offeredVersion.rawValue,
                     DHSession.supportedVersionWithin(majorVersion: offeredVersion).rawValue
-                ))
+                )
+            )
             guard let newLocalVersion else {
-                throw RejectMessageError
-                    .rejectMessageError(
-                        description: "Unknown maximum commonly supported offered FS version in message: offered=\(offeredVersion), supported=\((try? DHSession.supportedVersionWithin(majorVersion: offeredVersion).rawValue) ?? nil), unsupported-common=\(newLocalVersion)"
-                    )
+                throw RejectMessageError.rejectMessageError(
+                    description: "Unknown maximum commonly supported offered FS version in message: offered=\(offeredVersion), supported=\((try? DHSession.supportedVersionWithin(majorVersion: offeredVersion).rawValue) ?? nil), unsupported-common=\(newLocalVersion)"
+                )
             }
             
             // The applied version is not allowed to be greater than what we support (as it depends
@@ -756,7 +754,7 @@ public class DHSession: CustomStringConvertible, Equatable {
         
         guard let current4DHVersions else {
             DDLogError(
-                "[ForwardSecurity] Expected local/remote 4DH versions to exist, id={\(id)}, state={\(String(describing: try? state))}"
+                "[ForwardSecurity] Expected local/remote 4DH versions to exist, id=\(id), state=\(String(describing: try? state))"
             )
             return nil
         }
@@ -777,7 +775,7 @@ public class DHSession: CustomStringConvertible, Equatable {
         }
         
         guard needsUpdate else {
-            DDLogNotice("[ForwardSecurity] \(#function) Versions don't need update")
+            DDLogVerbose("[ForwardSecurity] \(#function) Versions don't need update")
             return nil
         }
         
@@ -907,6 +905,6 @@ public class DHSession: CustomStringConvertible, Equatable {
     }
     
     public var description: String {
-        "DH session ID \(id) \(myIdentity) <> \(peerIdentity) (\(myRatchet4DH != nil ? "4DH" : "2DH") (4dh-versions=\(current4DHVersions?.description ?? "nil"))"
+        "DH session \(id) with \(peerIdentity) (\(myRatchet4DH != nil ? "4DH" : "2DH") (4dh-versions=\(current4DHVersions?.description ?? "nil"))"
     }
 }

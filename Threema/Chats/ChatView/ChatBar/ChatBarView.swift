@@ -441,6 +441,10 @@ final class ChatBarView: UIView {
         chatTextView.updateColors()
     }
     
+    func updateSendButtonAccessibilityLabel(to text: String) {
+        sendButton.accessibilityLabel = text
+    }
+    
     // MARK: - Animations
     
     private func showSendButton() {
@@ -565,6 +569,14 @@ final class ChatBarView: UIView {
         continueTypingTimer?.invalidate()
         continueTypingTimer = nil
     }
+    
+    public func enablePlusButton() {
+        plusButton.isEnabled = true
+    }
+    
+    public func disablePlusButton() {
+        plusButton.isEnabled = false
+    }
 }
 
 // MARK: - ChatTextViewDelegate
@@ -649,7 +661,7 @@ extension ChatBarView: ChatTextViewDelegate {
         )
         
         DDLogVerbose(
-            "Shouldchange \(isTyping != chatTextView.isEditing) isTyping \(isTyping) chatTextView.isEditing \(chatTextView.isEditing)"
+            "Should change \(isTyping != chatTextView.isEditing) isTyping \(isTyping) chatTextView.isEditing \(chatTextView.isEditing)"
         )
         guard isTyping != chatTextView.isEditing else {
             return

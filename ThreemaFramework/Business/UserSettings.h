@@ -97,7 +97,6 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL contactList2;
 
 @property (nonatomic, readwrite) BOOL safeIntroShown;
-
 @end
 
 @interface UserSettings : NSObject <UserSettingsProtocol>
@@ -141,6 +140,7 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateShareExtension;
 
 @property (nonatomic, readwrite) BOOL workInfoShown;
+@property (nonatomic, readwrite) BOOL desktopInfoBannerShown;
 
 @property (nonatomic, readwrite) BOOL contactList2;
 

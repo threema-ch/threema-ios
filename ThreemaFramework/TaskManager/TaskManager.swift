@@ -133,9 +133,9 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
     @objc public static func isEmpty(queueType: TaskQueueType) -> Bool {
         switch queueType {
         case .incoming:
-            return TaskManager.incomingQueue?.list.isEmpty ?? true
+            TaskManager.incomingQueue?.list.isEmpty ?? true
         case .outgoing:
-            return TaskManager.outgoingQueue?.list.isEmpty ?? true
+            TaskManager.outgoingQueue?.list.isEmpty ?? true
         }
     }
 

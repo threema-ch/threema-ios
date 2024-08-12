@@ -43,4 +43,8 @@ public struct ThreemaIdentity: Equatable, Hashable, CustomStringConvertible, Sen
     public var description: String {
         string
     }
+    
+    public var isGatewayID: Bool {
+        string.hasPrefix("*")
+    }
 }

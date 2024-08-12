@@ -27,17 +27,17 @@ import Foundation
 
     public static func queue(name: String) -> TaskQueueType {
         if name == "incoming" {
-            return .incoming
+            .incoming
         }
         else {
-            return .outgoing
+            .outgoing
         }
     }
 
     public func name() -> String {
         switch self {
-        case .incoming: return "incoming"
-        case .outgoing: return "outgoing"
+        case .incoming: "incoming"
+        case .outgoing: "outgoing"
         }
     }
 }
@@ -310,7 +310,7 @@ final class TaskQueue {
 
             // Encode each task definition
             var i = 0
-            queue.list.forEach { task in
+            for task in queue.list {
                 if task.taskDefinition.isPersistent {
                     try? archiver.encodeEncodable(task.taskDefinition, forKey: "\(task.taskDefinition.className)_\(i)")
                 }

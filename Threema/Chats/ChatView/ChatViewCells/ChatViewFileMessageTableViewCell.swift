@@ -187,43 +187,43 @@ final class ChatViewFileMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     }
 }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewFileMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewFileMessageTableViewCell: ChatViewMessageActions {
     
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
-
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
+        
         guard let message = fileMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
-        var generalMenuItems = [ChatViewMessageActionProvider.MessageAction]()
+        typealias Provider = ChatViewMessageActionsProvider
         
-        // Speak
-        var speakText = message.fileMessageType.localizedDescription
-        speakText += ", " + message.name
-        
-        if let caption = message.caption {
-            speakText += ", " + caption
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
+        }
+            
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
         }
         
-        // Copy
-        let copyHandler = {
-            guard let data = message.blobData else {
-                NotificationPresenterWrapper.shared.present(type: .copyError)
+        // Retry and cancel
+        let retryAndCancelHandler = { [weak self] in
+            guard let self else {
                 return
             }
-            UIPasteboard.general.setData(data, forPasteboardType: message.blobUTTypeIdentifier!)
-            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+            
+            chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID, from: rootView)
         }
         
-        // Share
-        let shareItems = [MessageActivityItem(for: message)]
+        // Download
+        let downloadHandler: Provider.DefaultHandler = {
+            Task {
+                await BlobManager.shared.syncBlobs(for: message.objectID)
+            }
+        }
         
         // Quote
         let quoteHandler = {
@@ -240,94 +240,68 @@ extension ChatViewFileMessageTableViewCell: ChatViewMessageAction {
             chatViewTableViewCellDelegate.showQuoteView(message: message)
         }
         
+        // Edit Message
+        let editHandler: Provider.DefaultHandler = {
+            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
+        }
+        
+        // Copy
+        let copyHandler = {
+            guard let data = message.blobData else {
+                NotificationPresenterWrapper.shared.present(type: .copyError)
+                return
+            }
+            UIPasteboard.general.setData(data, forPasteboardType: message.blobUTTypeIdentifier!)
+            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+        }
+        
+        // Share
+        let shareItems = [MessageActivityItem(for: message)]
+        
+        // Speak
+        var speakText = "\(message.fileMessageType.localizedDescription), \(message.name)"
+        if let caption = message.caption, !caption.isEmpty {
+            speakText += ", " + caption
+        }
+        
         // Details
-        let detailsHandler = {
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
         // Select
-        let selectHandler = {
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
-            
-        // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
-            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
-        }
-        
-        // Edit Message
-        let editHandler = {
-            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
-        }
-
-        let (primaryMenuItems, generalActions) = Provider.defaultActions(
+        return Provider.defaultActions(
             message: message,
-            speakText: speakText,
-            shareItems: shareItems,
             activityViewAnchor: contentView,
             popOverSource: chatBubbleView,
-            copyHandler: copyHandler,
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler,
+            retryAndCancelHandler: retryAndCancelHandler,
+            downloadHandler: downloadHandler,
             quoteHandler: quoteHandler,
+            editHandler: editHandler,
+            copyHandler: copyHandler,
+            shareItems: shareItems,
+            speakText: speakText,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            ackHandler: ackHandler,
-            markStarHandler: markStarHandler,
-            editHandler: editHandler
+            didDelete: didDelete
         )
-
-        generalMenuItems.append(contentsOf: generalActions)
-
-        if message.blobDisplayState == .remote {
-            let downloadAction = Provider.downloadAction {
-                Task {
-                    await BlobManager.shared.syncBlobs(for: message.objectID)
-                }
-            }
-            // Download action is inserted before default action, depending if ack/dec is possible at a different
-            // position
-            if #unavailable(iOS 16), message.isUserAckEnabled {
-                generalMenuItems.insert(downloadAction, at: 2)
-            }
-            else {
-                generalMenuItems.insert(downloadAction, at: 0)
-            }
-        }
-        
-        // Retry
-        if message.showRetryAndCancelButton {
-            let retryHandler = Provider.retryAction { [weak self] in
-                guard let self else {
-                    return
-                }
-                
-                chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID, from: rootView)
-            }
-            
-            // Retry action position analogously to download
-            if #unavailable(iOS 16), message.isUserAckEnabled {
-                generalMenuItems.insert(retryHandler, at: 2)
-            }
-            else {
-                generalMenuItems.insert(retryHandler, at: 0)
-            }
-        }
-        return (primaryMenuItems, generalMenuItems)
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

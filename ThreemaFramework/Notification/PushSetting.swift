@@ -50,19 +50,19 @@ public struct PushSetting: Codable, Sendable {
         public var localizedString: String {
             switch self {
             case .time1Hour:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Hour")
+                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Hour")
             case .time2Hours:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_2Hours")
+                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_2Hours")
             case .time3Hours:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_3Hours")
+                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_3Hours")
             case .time4Hours:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_4Hours")
+                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_4Hours")
             case .time8Hours:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_8Hours")
+                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_8Hours")
             case .time1Day:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Day")
+                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Day")
             case .time1Week:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Week")
+                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Week")
             }
         }
     }

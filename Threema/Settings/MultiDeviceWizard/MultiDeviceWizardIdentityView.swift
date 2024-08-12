@@ -85,10 +85,8 @@ struct MultiDeviceWizardIdentityView: View {
             }
         }
         .padding(.horizontal)
-        
         .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
         .navigationBarBackButtonHidden()
-        
         .onAppear {
             wizardVM.advanceState(.identity)
         }

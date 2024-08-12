@@ -178,7 +178,7 @@ import ThreemaFramework
         nickNameTextField?.resignFirstResponder()
     }
     
-    override internal func updateColors() {
+    override func updateColors() {
         super.updateColors()
         Colors.updateKeyboardAppearance(for: nickNameTextField)
         
@@ -215,13 +215,13 @@ import ThreemaFramework
     func getLabelForSendProfilePicture(sendProfilePicture: SendProfilePicture) -> String {
         switch sendProfilePicture {
         case SendProfilePictureNone:
-            return BundleUtil.localizedString(forKey: "send_profileimage_off")
+            BundleUtil.localizedString(forKey: "send_profileimage_off")
         case SendProfilePictureAll:
-            return BundleUtil.localizedString(forKey: "send_profileimage_on")
+            BundleUtil.localizedString(forKey: "send_profileimage_on")
         case SendProfilePictureContacts:
-            return BundleUtil.localizedString(forKey: "send_profileimage_contacts")
+            BundleUtil.localizedString(forKey: "send_profileimage_contacts")
         default:
-            return ""
+            ""
         }
     }
     

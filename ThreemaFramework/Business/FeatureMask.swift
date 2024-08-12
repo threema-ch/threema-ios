@@ -68,13 +68,13 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
         } onError: { error in
             identityStore.lastSentFeatureMask = 0
             
-            let fullError: Error
-            if let error {
-                fullError = error
-            }
-            else {
-                fullError = FeatureMaskError.unknownError
-            }
+            let fullError: Error =
+                if let error {
+                    error
+                }
+                else {
+                    FeatureMaskError.unknownError
+                }
             
             if let onError {
                 onError(fullError)
@@ -193,7 +193,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
 
         var isSupported = false
         var unsupported = [Contact]()
-        contactsToCheck.forEach { contact in
+        for contact in contactsToCheck {
             if FeatureMask.check(contact: contact, for: mask) {
                 isSupported = true
             }
@@ -208,13 +208,13 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
         contacts.filter { contact in
             // This should only be `nil` if contact is deleted
             if let managedObjectContext = contact.managedObjectContext {
-                return managedObjectContext.performAndWait {
+                managedObjectContext.performAndWait {
                     managedObjectContext.refresh(contact, mergeChanges: true)
                     return (mask & contact.featureMask.intValue) == 0
                 }
             }
             else {
-                return false
+                false
             }
         }
     }

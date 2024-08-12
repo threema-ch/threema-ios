@@ -32,9 +32,9 @@ public enum BlobState: CustomStringConvertible, Equatable {
     public var description: String {
         switch self {
         case let .incoming(incomingBlobState):
-            return "Incoming: \(incomingBlobState)"
+            "Incoming: \(incomingBlobState)"
         case let .outgoing(outgoingBlobState):
-            return "Outgoing: \(outgoingBlobState)"
+            "Outgoing: \(outgoingBlobState)"
         }
     }
 }
@@ -58,17 +58,17 @@ public enum IncomingBlobState: CustomStringConvertible, Equatable {
     public var description: String {
         switch self {
         case let .remote(error: error):
-            return "remote \(String(describing: error))"
+            "remote \(String(describing: error))"
         case .downloading:
-            return "downloading"
+            "downloading"
         case .processing:
-            return "processing"
+            "processing"
         case .processed:
-            return "processed"
+            "processed"
         case let .noData(reason):
-            return "noData \(reason)"
+            "noData \(reason)"
         case let .fatalError(error):
-            return "fatalError \(error)"
+            "fatalError \(error)"
         }
     }
 }
@@ -96,19 +96,19 @@ public enum OutgoingBlobState: CustomStringConvertible, Equatable {
     public var description: String {
         switch self {
         case .pendingDownload:
-            return "pendingDownload"
+            "pendingDownload"
         case .downloading:
-            return "downloading"
+            "downloading"
         case let .pendingUpload(error: error):
-            return "pendingUpload \(String(describing: error))"
+            "pendingUpload \(String(describing: error))"
         case .uploading:
-            return "uploading"
+            "uploading"
         case .remote:
-            return "remote"
+            "remote"
         case let .noData(reason):
-            return "noData \(reason)"
+            "noData \(reason)"
         case let .fatalError(error):
-            return "fatalError \(error)"
+            "fatalError \(error)"
         }
     }
 }

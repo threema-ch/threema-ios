@@ -24,9 +24,9 @@ extension Colors {
     @objc public class var hairLine: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray400.color
+            Asset.SharedColors.gray400.color
         case .dark:
-            return Asset.SharedColors.gray800.color
+            Asset.SharedColors.gray800.color
         }
     }
     
@@ -37,9 +37,9 @@ extension Colors {
     @objc public class var qrCodeTint: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         case .dark:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         }
     }
     
@@ -54,18 +54,18 @@ extension Colors {
     @objc public class var shadowNotification: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         case .dark:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         }
     }
 
     @objc public class var shadowThemeChooser: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         case .dark:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         }
     }
 }
@@ -76,9 +76,9 @@ extension Colors {
     @objc public class var licenseLogoURL: String? {
         switch Colors.theme {
         case .light, .undefined:
-            return MyIdentityStore.shared().licenseLogoLightURL
+            MyIdentityStore.shared().licenseLogoLightURL
         case .dark:
-            return MyIdentityStore.shared().licenseLogoDarkURL
+            MyIdentityStore.shared().licenseLogoDarkURL
         }
     }
 }

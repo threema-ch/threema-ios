@@ -48,7 +48,7 @@ final class ParticipantState {
     // MARK: - Update Functions
     
     func add(pending: PendingRemoteParticipant) {
-        DDLogNotice("[GroupCall] \(#function) Added pending participant \(pending.participantID.id)")
+        DDLogNotice("[GroupCall] \(#function) Added pending participant \(pending.participantID)")
         pendingParticipants.insert(pending)
     }
     
@@ -109,17 +109,17 @@ final class ParticipantState {
         if let index = joinedParticipants.firstIndex(where: { $0.participantID == participantID }) {
             joinedParticipants[index].setRemoteContext(remoteContext)
             DDLogNotice(
-                "[GroupCall] updated transceivers for regular participant \(participantID.id)"
+                "[GroupCall] updated transceivers for regular participant \(participantID)"
             )
         }
         else if let index = pendingParticipants.firstIndex(where: { $0.participantID == participantID }) {
             pendingParticipants[index].setRemoteContext(remoteContext)
             DDLogNotice(
-                "[GroupCall] updated transceivers for pending participant \(participantID.id)"
+                "[GroupCall] updated transceivers for pending participant \(participantID)"
             )
         }
         else {
-            let msg = "[GroupCall] Could not set transceivers for participant \(participantID.id)"
+            let msg = "[GroupCall] Could not set transceivers for participant \(participantID)"
             DDLogError("\(msg)")
             assertionFailure(msg)
         }

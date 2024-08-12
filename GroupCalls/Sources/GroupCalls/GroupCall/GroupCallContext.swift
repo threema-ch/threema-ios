@@ -32,6 +32,9 @@ protocol GroupCallContextProtocol: AnyObject {
     var pendingParticipants: Set<PendingRemoteParticipant> { get }
     var joinedParticipants: Set<JoinedRemoteParticipant> { get }
     
+    /// Are there any pending or joined participants in this call?
+    var hasAnyParticipants: Bool { get }
+    
     var messageStream: AsyncStream<PeerConnectionMessage> { get }
     
     var keyRefreshTask: Task<Void, Error>? { get }
@@ -117,6 +120,7 @@ final class GroupCallContext<
         dependencies: Dependencies,
         groupCallDescription: GroupCallBaseState
     ) throws {
+        // TODO: (IOS-3857) Are these logs still needed?
         DDLogNotice("[GroupCall] \(#function)")
         
         self.connectionContext = connectionContext
@@ -146,7 +150,7 @@ final class GroupCallContext<
         
         await Task.yield()
         guard !Task.isCancelled else {
-            DDLogNotice("[GroupCall] [Rekey] Task was cancelled. Do not proceed with media key update.")
+            DDLogNotice("[GroupCall] [Rekey] Task was cancelled. Do not proceed with media key update")
             keyRefreshTask = nil
             return
         }
@@ -179,7 +183,7 @@ final class GroupCallContext<
         /// Leave 5. Send pending-pcmk to all authenticated participants via a _rekey_ message.
         
         guard let pendingProtocolMediaKeys = participantState.localParticipant.pendingProtocolMediaKeys else {
-            DDLogNotice("[GroupCall] Expected to have pending media keys but we do not have any.")
+            DDLogNotice("[GroupCall] Expected to have pending media keys but we do not have any")
             throw GroupCallError.localProtocolViolation
         }
         
@@ -204,7 +208,7 @@ final class GroupCallContext<
         keyRefreshTask = Task {
             try await Task.sleep(seconds: 2)
             
-            DDLogNotice("[GroupCall] [Rekey] Protocol Step 6.")
+            DDLogNotice("[GroupCall] [Rekey] Protocol Step 6")
             
             // TODO: (IOS-4131) This probably fixes IOS-4131
             // Not-Protocol Step: Send New Media Key to all participants that have been added since we created the new
@@ -216,7 +220,7 @@ final class GroupCallContext<
                 }
             
             for participant in participantsAddedSincePendingKeyWasCreated {
-                DDLogNotice("[GroupCall] [Rekey] Send rekey to \(participant.participantID.id)")
+                DDLogNotice("[GroupCall] [Rekey] Send rekey to \(participant.participantID)")
                 
                 let innerRekeyMessage = try participant.rekeyMessage(with: pendingProtocolMediaKeys)
                 let outerEnvelope = outerEnvelope(for: innerRekeyMessage, to: participant)
@@ -226,7 +230,7 @@ final class GroupCallContext<
             /// **Protocol Step: Join/Leave of Other Participants (Leave 6.1.)**
             /// Leave 6.1. Apply `pending-pcmk` for media encryption. This means that `pending-pcmk` now replaces the
             /// _applied_ PCMK and is no longer _pending_.
-            DDLogNotice("[GroupCall] [Rekey] Protocol Step 6.1.")
+            DDLogNotice("[GroupCall] [Rekey] Protocol Step 6.1")
             let wasStale = try self.participantState.localParticipant.switchCurrentForPendingKeys()
             
             await Task.yield()
@@ -265,7 +269,7 @@ final class GroupCallContext<
 
 extension GroupCallContext {
     func leave() async {
-        DDLogVerbose("[GroupCall] Leave: GroupCallContext")
+        DDLogNotice("[GroupCall] Leave: GroupCallContext")
 
         keyRefreshTask?.cancel()
         keyRefreshTask = nil
@@ -296,18 +300,30 @@ extension GroupCallContext {
         /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 2.)**
         /// Receiving 2. If the `sender` is unknown, discard the message and abort these steps.
         guard let participant = participantState.find(ParticipantID(id: message.sender)) else {
-            DDLogError("Could not find participant for message from  \(message.sender) \(message.debugDescription)")
+            DDLogError(
+                "[GroupCall] Could not find participant for: \(message.sender), for message: \(message.debugDescription)."
+            )
             return .none
         }
         
         let messageResponse: MessageResponseAction
+        // TODO: (IOS-4059) This could be simplified if `handle(message:localParticipant:)` is defined in a common protocol to `PendingRemoteParticipant` and `JoinedRemoteParticipant`
         if let pendingParticipant = participant as? PendingRemoteParticipant {
             
             /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 3.)**
-            messageResponse = try pendingParticipant.handle(
-                message: message,
-                localParticipant: participantState.localParticipant
-            )
+            do {
+                messageResponse = try pendingParticipant.handle(
+                    message: message,
+                    groupID: groupCallBaseState.group.groupIdentity,
+                    localParticipant: participantState.localParticipant
+                )
+            }
+            catch {
+                DDLogError(
+                    "[Group Call] Could not decode message for pending participant with participantID: \(pendingParticipant.participantID.id) and threemaID: \(pendingParticipant.threemaIdentity?.string ?? "nil"). Dropping participant."
+                )
+                return .dropPendingParticipant(pendingParticipant.participantID)
+            }
             
             // Handshake is completed, we promote the participant
             if case let .handshakeCompleted(joinedRemoteParticipant) = messageResponse {
@@ -316,10 +332,18 @@ extension GroupCallContext {
             }
         }
         else if let joinedParticipant = participant as? JoinedRemoteParticipant {
-            messageResponse = try joinedParticipant.handle(
-                message: message,
-                localParticipant: participantState.localParticipant
-            )
+            do {
+                messageResponse = try joinedParticipant.handle(
+                    message: message,
+                    localParticipant: participantState.localParticipant
+                )
+            }
+            catch {
+                DDLogError(
+                    "[Group Call] Could not decode message for joined participant with participantID: \(joinedParticipant.participantID.id) and threemaID: \(joinedParticipant.threemaIdentity.string). Ignoring it."
+                )
+                messageResponse = .none
+            }
         }
         else {
             fatalError()
@@ -421,24 +445,33 @@ extension GroupCallContext {
         remove: [ParticipantID],
         existingParticipants: Bool
     ) async throws {
+        
         for participantID in remove {
             participantState.remove(participantID)
         }
         
-        try await connectionContext.updateCall(call: participantState, remove: Set(remove), add: [])
-        
-        for participant in add {
-            let pendingParticipant = PendingRemoteParticipant(
-                participantID: ParticipantID(id: participant.id),
-                dependencies: dependencies,
-                groupCallMessageCrypto: groupCallBaseState,
-                isExistingParticipant: existingParticipants
-            )
-            
-            participantState.add(pending: pendingParticipant)
+        var added = Set<ParticipantID>()
+        for participantID in add {
+            do {
+                let pendingParticipant = try PendingRemoteParticipant(
+                    participantID: ParticipantID(id: participantID.id),
+                    dependencies: dependencies,
+                    groupCallMessageCrypto: groupCallBaseState,
+                    isExistingParticipant: existingParticipants
+                )
+                
+                participantState.add(pending: pendingParticipant)
+                added.insert(pendingParticipant.participantID)
+            }
+            catch {
+                DDLogError(
+                    "[GroupCalls] Could not create PendingRemoteParticipant for id \(participantID): \(error)."
+                )
+                continue
+            }
         }
         
-        try await connectionContext.updateCall(call: participantState, remove: Set(remove), add: Set(add))
+        try await connectionContext.updateCall(call: participantState, remove: Set(remove), add: added)
     }
 }
 
@@ -453,13 +486,17 @@ extension GroupCallContext {
         participantState.getCurrentParticipants()
     }
     
+    var hasAnyParticipants: Bool {
+        !pendingParticipants.isEmpty || !joinedParticipants.isEmpty
+    }
+    
     var messageStream: AsyncStream<PeerConnectionMessage> {
         connectionContext.messageStream
     }
     
     func participant(with participantID: ParticipantID) -> JoinedRemoteParticipant? {
         guard let participant = joinedParticipants.filter({ $0.participantID == participantID }).first else {
-            DDLogWarn("[GroupCall] Could not find RemoteParticipant with id: \(participantID.id) in participants")
+            DDLogWarn("[GroupCall] Could not find JoinedRemoteParticipant \(participantID) in participants")
             #if DEBUG
                 if pendingParticipants.filter({ $0.participantID == participantID }).first != nil {
                     DDLogError(
@@ -478,7 +515,7 @@ extension GroupCallContext {
     }
 }
 
-// MARK: Media Capture
+// MARK: - Media Capture
 
 extension GroupCallContext {
     func stopVideoCapture() async {

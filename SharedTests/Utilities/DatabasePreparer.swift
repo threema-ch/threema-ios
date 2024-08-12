@@ -392,7 +392,7 @@ class DatabasePreparer {
             let conversation = createConversation()
             conversation.groupID = groupEntity.groupID
             conversation.contact = contactEntity
-            members.forEach { identity in
+            for identity in members {
                 conversation.members.insert(createContact(identity: identity))
             }
 

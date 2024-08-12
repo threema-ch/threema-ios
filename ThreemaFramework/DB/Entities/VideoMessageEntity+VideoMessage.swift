@@ -27,9 +27,9 @@ extension VideoMessageEntity: VideoMessage {
     override public var showRetryAndCancelButton: Bool {
         switch blobDisplayState {
         case .pending, .sendingError, .uploading:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
     

@@ -39,4 +39,8 @@ extension MockGroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPr
     func fetchIDColor(for id: ThreemaEssentials.ThreemaIdentity) -> UIColor {
         UIColor.red
     }
+    
+    func isIdentity(_ identity: ThreemaIdentity, memberOfGroupWith groupID: GroupIdentity) -> Bool {
+        true
+    }
 }

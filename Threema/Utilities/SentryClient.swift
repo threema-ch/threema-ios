@@ -191,8 +191,8 @@ import ThreemaFramework
                 return
             }
             
-            contacts.forEach {
-                idList.insert($0.identity)
+            for contact in contacts {
+                idList.insert(contact.identity)
             }
         }
         

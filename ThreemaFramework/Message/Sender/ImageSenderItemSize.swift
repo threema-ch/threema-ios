@@ -30,15 +30,15 @@ public enum ImageSenderItemSize: String, CaseIterable {
     public var resolution: CGFloat {
         switch self {
         case .small:
-            return 640
+            640
         case .medium:
-            return 1024
+            1024
         case .large:
-            return 1600
+            1600
         case .extraLarge:
-            return 2592
+            2592
         case .original:
-            return 0
+            0
         }
     }
 }

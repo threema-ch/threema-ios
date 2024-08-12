@@ -333,14 +333,13 @@ public class WebAbstractMessage: NSObject {
                 let requestBlob = WebBlobRequest(message: self)
                 let entityManager = EntityManager()
                 
-                var conversation: Conversation?
-                
-                if requestBlob.type == "contact" {
-                    conversation = entityManager.entityFetcher.conversation(forIdentity: requestBlob.id)
-                }
-                else {
-                    conversation = entityManager.entityFetcher.legacyConversation(for: requestBlob.id.hexadecimal)
-                }
+                let conversation: Conversation? =
+                    if requestBlob.type == "contact" {
+                        entityManager.entityFetcher.conversation(forIdentity: requestBlob.id)
+                    }
+                    else {
+                        entityManager.entityFetcher.legacyConversation(for: requestBlob.id.hexadecimal)
+                    }
                 
                 guard let conversation, let baseMessage = entityManager.entityFetcher.message(
                     with: requestBlob.messageID,
@@ -495,14 +494,14 @@ public class WebAbstractMessage: NSObject {
                     }
                     else {
                         // background task to send ack to server
-                        var id: String?
-                        if let groupID = createTextMessageRequest.groupID {
-                            id = groupID.hexEncodedString()
-                        }
-                        else {
-                            id = createTextMessageRequest.id!
-                        }
-                        let backgroundKey = kAppAckBackgroundTask + id!
+                        let id: String =
+                            if let groupID = createTextMessageRequest.groupID {
+                                groupID.hexEncodedString()
+                            }
+                            else {
+                                createTextMessageRequest.id!
+                            }
+                        let backgroundKey = kAppAckBackgroundTask + id
                         
                         BackgroundTaskManager.shared.newBackgroundTask(
                             key: backgroundKey,

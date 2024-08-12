@@ -256,7 +256,7 @@ class WebMessageObject: NSObject {
                     quotedIdentity = contact.identity
                 }
                 
-                let quotedText = quotedMessage.previewText ?? ""
+                let quotedText = quotedMessage.previewText
 
                 quote = [
                     "identity": quotedIdentity,
@@ -592,13 +592,14 @@ struct WebThumbnail {
             self.height = Int(size.height)
             self.width = Int(size.width)
             self.preview = tmpPreview
-            var thumbnailImageData: Data
-            if !onlyThumbnail, let image = imageMessageEntity.image, let imageData = image.data {
-                thumbnailImageData = imageData
-            }
-            else {
-                thumbnailImageData = thumbnailData
-            }
+            let thumbnailImageData: Data =
+                if !onlyThumbnail, let image = imageMessageEntity.image,
+                let imageData = image.data {
+                    imageData
+                }
+                else {
+                    thumbnailData
+                }
             self.image = MediaConverter.getWebThumbnailData(thumbnailImageData)
         }
         else if let origImage = imageMessageEntity.image, let origImageData = origImage.data,

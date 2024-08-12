@@ -105,10 +105,10 @@ final class ChatTextView: CustomResponderTextView {
     
     private var minHeight: CGFloat {
         if traitCollection.preferredContentSizeCategory < .large {
-            return Config.smallerContentSizeConfigurationCornerRadius * 2
+            Config.smallerContentSizeConfigurationCornerRadius * 2
         }
         else {
-            return Config.cornerRadius * 2
+            Config.cornerRadius * 2
         }
     }
     
@@ -621,7 +621,7 @@ extension ChatTextView {
 // MARK: - UITextViewDelegate
 
 extension ChatTextView: UITextViewDelegate {
-    internal func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
+    func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
         chatTextViewDelegate?.canStartEditing() ?? false
     }
     
@@ -641,7 +641,7 @@ extension ChatTextView: UITextViewDelegate {
     ///   - range: Range of change
     ///   - text: New text for this range
     /// - Returns: Must always return true otherwise the text needs to be assigned to the textView manually
-    internal func textView(
+    func textView(
         _ textView: UITextView,
         shouldChangeTextIn range: NSRange,
         replacementText text: String
@@ -672,7 +672,7 @@ extension ChatTextView: UITextViewDelegate {
     /// ChatTextViewPerformanceTest. Tests are not executed automatically. They need to be enabled manually.
     ///
     /// - Parameter textView: Text view that called delegate
-    internal func textViewDidChange(_ textView: UITextView) {
+    func textViewDidChange(_ textView: UITextView) {
         /// Marked text is provisionally inserted text that requires user confirmation. It occurs in multistage text
         /// input, e.g. when entering ¨ and u to get a combined ü We keep track of provisionally inserted text and
         /// combine the marked and shouldChangeTextIn ranges in `func textView(_ textView: UITextView,
@@ -763,7 +763,7 @@ extension ChatTextView: UITextViewDelegate {
         return true
     }
     
-    internal func textViewDidEndEditing(_ textView: UITextView) {
+    func textViewDidEndEditing(_ textView: UITextView) {
         if isEditing {
             isEditing = false
         }

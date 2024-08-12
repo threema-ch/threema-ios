@@ -38,7 +38,7 @@
 #import <QuickLook/QuickLook.h>
 #import "MDMSetup.h"
 
-@interface FileMessagePreview () <ModalNavigationControllerDelegate, QLPreviewControllerDataSource, UIDocumentInteractionControllerDelegate>
+@interface FileMessagePreview () <ModalNavigationControllerDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate, UIDocumentInteractionControllerDelegate>
 
 @property FileMessageEntity *fileMessageEntity;
 @property UIViewController *previewBaseController;
@@ -177,6 +177,7 @@
     
     ThreemaQLPreviewController *previewController = [[ThreemaQLPreviewController alloc] init];
     previewController.dataSource = self;
+    previewController.delegate = self;
     
     if (![ThreemaQLPreviewController canPreviewItem:[self previewController:previewController previewItemAtIndex:0]]) {
         [[NSFileManager defaultManager] removeItemAtURL:_tmpFileUrl error:nil];
@@ -239,6 +240,12 @@
 
 - (id<QLPreviewItem>)previewController:(QLPreviewController *)controller previewItemAtIndex:(NSInteger)index {
     return _tmpFileUrl;
+}
+
+#pragma mark - QLPreviewControllerDelegate
+
+- (QLPreviewItemEditingMode)previewController:(QLPreviewController *)controller editingModeForPreviewItem:(id<QLPreviewItem>)previewItem {
+    return QLPreviewItemEditingModeDisabled;
 }
 
 #pragma mark - UIDocumentInteractionControllerDelegate

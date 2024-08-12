@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+
 extension EntityFetcher {
     
     /// Returns the date of the oldest message in the DB or `.distantPast`.
@@ -223,30 +224,30 @@ extension EntityFetcher {
     
     // MARK: - Predicates
     
-    internal func baseMessageNoPrivatePredicate() -> NSPredicate {
+    func baseMessageNoPrivatePredicate() -> NSPredicate {
         NSPredicate(format: "conversation.category != %d", ConversationCategory.private.rawValue)
     }
     
-    internal func baseMessageDateRangePredicate(from start: Date, to end: Date) -> NSPredicate {
+    func baseMessageDateRangePredicate(from start: Date, to end: Date) -> NSPredicate {
         let startDate = start as NSDate
         let endDate = end as NSDate
         
         return NSPredicate(format: "date > %@ && date < %@", startDate, endDate)
     }
     
-    internal func messageConversationGroupPredicate() -> NSPredicate {
+    func messageConversationGroupPredicate() -> NSPredicate {
         NSPredicate(format: "conversation.groupId != nil")
     }
     
-    internal func messageConversationNonGroupPredicate() -> NSPredicate {
+    func messageConversationNonGroupPredicate() -> NSPredicate {
         NSPredicate(format: "conversation.groupId == nil")
     }
     
-    internal func messageConversationArchivedPredicate() -> NSPredicate {
+    func messageConversationArchivedPredicate() -> NSPredicate {
         NSPredicate(format: "conversation.visibility == %d", ConversationVisibility.archived.rawValue)
     }
     
-    internal func messageMarkerStarredPredicate() -> NSPredicate {
+    func messageMarkerStarredPredicate() -> NSPredicate {
         NSPredicate(format: "messageMarkers.star == 1")
     }
 }

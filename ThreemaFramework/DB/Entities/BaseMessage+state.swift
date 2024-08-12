@@ -45,14 +45,15 @@ extension BaseMessage {
     /// groups
     public var messageState: State {
         if isOwnMessage {
-            return ownMessageState
+            ownMessageState
         }
         else {
-            return otherMessageState
+            otherMessageState
         }
     }
     
-    public var isUserAckEnabled: Bool {
+    /// Is reacting to this message allowed?
+    public var supportsReaction: Bool {
         // single chats can't ack their own messages
         if isOwnMessage,
            !isGroupMessage {
@@ -83,13 +84,56 @@ extension BaseMessage {
         return createdAt < date
     }
 
-    public var isRemoteDeletable: Bool {
+    /// Is editing of this message allowed?
+    public var supportsEditing: Bool {
+        guard ThreemaEnvironment.deleteEditMessage else {
+            return false
+        }
+        
+        return isOwnMessage &&
+            !wasSentMoreThanSixHoursAgo &&
+            messageState != .sending &&
+            messageState != .failed &&
+            FeatureMask.check(message: self, for: .editMessageSupport).isSupported
+    }
+    
+    public var typeSupportsRemoteDeletion: Bool {
         self is AudioMessageEntity ||
             self is FileMessageEntity ||
             self is ImageMessageEntity ||
             self is VideoMessageEntity ||
             self is LocationMessage ||
             self is TextMessage
+    }
+    
+    /// Is remote deletion of this message allowed?
+    public var supportsRemoteDeletion: Bool {
+        guard ThreemaEnvironment.deleteEditMessage else {
+            return false
+        }
+        
+        return isOwnMessage &&
+            typeSupportsRemoteDeletion &&
+            deletedAt == nil &&
+            !wasSentMoreThanSixHoursAgo &&
+            messageState != .sending &&
+            messageState != .failed &&
+            FeatureMask.check(message: self, for: .deleteMessageSupport).isSupported
+    }
+    
+    /// Is there a pending (blob) download for this message?
+    public var hasPendingDownload: Bool {
+        guard let blobDataMessage = self as? BlobData else {
+            return false
+        }
+
+        return blobDataMessage.blobDisplayState == .remote
+    }
+    
+    /// Is this a message in a distribution list?
+    public var isDistributionListMessage: Bool {
+        // TODO: (IOS-4366) Maybe use distribution list messages relationship for this check
+        conversation.distributionList != nil
     }
 
     // MARK: - Private helper
@@ -99,16 +143,16 @@ extension BaseMessage {
             return userAckState
         }
                 
-        if let sendFailed = sendFailed?.boolValue, sendFailed {
+        if let sendFailed, sendFailed.boolValue {
             return .failed
         }
-        else if read.boolValue {
+        else if let read, read.boolValue {
             return .read
         }
-        else if delivered.boolValue {
+        else if let delivered, delivered.boolValue {
             return .delivered
         }
-        else if sent.boolValue {
+        else if let sent, sent.boolValue {
             return .sent
         }
         
@@ -120,7 +164,7 @@ extension BaseMessage {
             return userAckState
         }
         
-        if read.boolValue {
+        if let read, read.boolValue {
             return .read
         }
         
@@ -128,11 +172,11 @@ extension BaseMessage {
     }
     
     private var userAckState: State? {
-        guard userackDate != nil else {
+        guard let userackDate else {
             return nil
         }
         
-        if userack.boolValue {
+        if let userack, userack.boolValue {
             return .userAcknowledged
         }
         else {

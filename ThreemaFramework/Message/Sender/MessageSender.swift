@@ -133,11 +133,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 
                 if let messageConversation = self.entityManager.entityFetcher
                     .getManagedObject(by: conversation.objectID) as? Conversation,
-                    // TODO: (IOS-4366) Distribution list re-add setLastUpdate
-                    let message = self.entityManager.entityCreator.textMessage(
-                        for: messageConversation,
-                        setLastUpdate: true
-                    ) {
+                    let message = self.entityManager.entityCreator.textMessage(for: messageConversation) {
                     
                     var remainingBody: NSString?
                     if let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody) {
@@ -280,14 +276,15 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 throw MessageSenderError.unableToLoadConversation
             }
             
-            let origin: BlobOrigin
-            if localConversation.isGroup(), let group = self.groupManager.getGroup(conversation: localConversation),
-               group.isNoteGroup {
-                origin = .local
-            }
-            else {
-                origin = .public
-            }
+            let origin: BlobOrigin =
+                if localConversation.isGroup(),
+                let group = self.groupManager.getGroup(conversation: localConversation),
+                group.isNoteGroup {
+                    .local
+                }
+                else {
+                    .public
+                }
             
             let fileMessageEntity = try em.entityCreator.createFileMessageEntity(
                 for: item,
@@ -335,34 +332,12 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     ) {
         Task {
             do {
-                let isDistributionList = await self.entityManager.perform { [weak self] in
-                    guard let weakSelf = self else {
-                        return false
-                    }
-                    guard let conversation = weakSelf.entityManager.entityFetcher
-                        .existingObject(with: conversationID) as? Conversation else {
-                        return false
-                    }
-                    return conversation.distributionList != nil
-                }
-                // TODO: (IOS-4366) Improve
-                if isDistributionList {
-                    let dlSender = DistributionListMessageSender()
-                    try await dlSender.sendBlobMessage(
-                        for: item,
-                        in: conversationID,
-                        correlationID: correlationID,
-                        webRequestID: webRequestID
-                    )
-                }
-                else {
-                    try await sendBlobMessage(
-                        for: item,
-                        in: conversationID,
-                        correlationID: correlationID,
-                        webRequestID: webRequestID
-                    )
-                }
+                try await sendBlobMessage(
+                    for: item,
+                    in: conversationID,
+                    correlationID: correlationID,
+                    webRequestID: webRequestID
+                )
                 completion?(nil)
             }
             catch {
@@ -386,11 +361,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
             if let messageConversation = self.entityManager.entityFetcher
                 .getManagedObject(by: conversation.objectID) as? Conversation,
-                // TODO: (IOS-4366) Distribution list re-add setLastUpdate
-                let message = self.entityManager.entityCreator.locationMessage(
-                    for: messageConversation,
-                    setLastUpdate: true
-                ) {
+                let message = self.entityManager.entityCreator.locationMessage(for: messageConversation) {
 
                 message.latitude = NSNumber(floatLiteral: coordinates.latitude)
                 message.longitude = NSNumber(floatLiteral: coordinates.longitude)
@@ -679,22 +650,44 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             else {
                 throw MessageSenderError.unableToLoadMessage
             }
-
+            
             var hasTextChanged = false
-
+            var previousText: String?
+            
             // Save edited text
             if let textMessage = baseMessage as? TextMessage,
                textMessage.text != trimmedText {
-
+                
+                // Save history
+                if let prevText = textMessage.text {
+                    previousText = prevText
+                }
+                
+                // Update message
                 textMessage.text = trimmedText
                 hasTextChanged = true
             }
             else if let fileMessage = baseMessage as? FileMessageEntity,
                     fileMessage.caption != trimmedText {
-
+                
+                // Save history
+                if let previousCaption = fileMessage.caption {
+                    previousText = previousCaption
+                }
+                
+                // Update message
                 fileMessage.caption = trimmedText
                 fileMessage.json = FileMessageEncoder.jsonString(for: fileMessage)
                 hasTextChanged = true
+            }
+            
+            if hasTextChanged, let history = self.entityManager.entityCreator.messageHistoryEntry(for: baseMessage) {
+                history.message = baseMessage
+                history.editDate = baseMessage.lastEditedAt ?? baseMessage.date
+                history.text = previousText
+            }
+            else {
+                DDLogError("[MessageSender] Text did not change or could not create MessageHistoryEntry")
             }
 
             let messageID = baseMessage.id
@@ -769,11 +762,12 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     /// Send read receipt for one to one chat messages
     /// - Parameters:
-    ///   - messages: Send read receipts for this messages
-    ///   - toIdentity: Group of the messages
+    ///   - messages: Messages to send the read receipt for
+    ///   - toIdentity: Receiver of the message
     public func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaIdentity) async {
         let doSendReadReceipt = await entityManager.perform {
-            // Is multi device not activated and not sending read receipt to contact, then nothing is to do
+            // If multi device not activated and if sending read receipt to contact is disabled, then there is nothing
+            // to do
             let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity.string)
             return !(!self.doSendReadReceipt(to: contactEntity) && !self.userSettings.enableMultiDevice)
         }
@@ -789,10 +783,10 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     /// Send read receipt for group messages (only is Multi Device activated)
     /// - Parameters:
-    ///   - messages: Send read receipts for this messages
+    ///   - messages: Messages to send the read receipt for
     ///   - toGroupIdentity: Group of the messages
     public func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: GroupIdentity) async {
-        // Is multi device not activated do sending (reflect only) read receipt to group
+        // Multi device must be activated to do the sending (reflect only) of the read receipt
         guard userSettings.enableMultiDevice else {
             return
         }
@@ -997,13 +991,13 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
 
         if let group {
-            let receiverIdentities: [ThreemaIdentity]
-            switch receivers {
-            case .all:
-                receiverIdentities = group.members.map(\.identity)
-            case let .groupMembers(identities):
-                receiverIdentities = identities
-            }
+            let receiverIdentities: [ThreemaIdentity] =
+                switch receivers {
+                case .all:
+                    group.members.map(\.identity)
+                case let .groupMembers(identities):
+                    identities
+                }
             
             let taskDefinition = TaskDefinitionSendBaseMessage(
                 messageID: messageID,
@@ -1227,11 +1221,14 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     private func updateUserReaction(on message: BaseMessage, with receiptType: ReceiptType) async {
-        guard receiptType != .ack || receiptType != .decline else {
+        guard receiptType == .ack || receiptType == .decline else {
             return
         }
 
         await entityManager.performSave {
+            guard message.deletedAt == nil else {
+                return
+            }
             let ack = receiptType == .ack
 
             message.userack = NSNumber(booleanLiteral: ack)
@@ -1247,7 +1244,15 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         on message: BaseMessage,
         with groupReceiptType: GroupDeliveryReceipt.DeliveryReceiptType
     ) async {
+        guard groupReceiptType == .acknowledged || groupReceiptType == .declined else {
+            return
+        }
+        
         await entityManager.performSave {
+            guard message.deletedAt == nil else {
+                return
+            }
+            
             let groupDeliveryReceipt = GroupDeliveryReceipt(
                 identity: MyIdentityStore.shared().identity,
                 deliveryReceiptType: groupReceiptType,

@@ -80,10 +80,10 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// Override this if you want a non-default color background or no bubble at all.
     var bubbleBackgroundColor: UIColor {
         if let message = messageAndNeighbors.message, message.isOwnMessage {
-            return Colors.chatBubbleSent
+            Colors.chatBubbleSent
         }
         else {
-            return Colors.chatBubbleReceived
+            Colors.chatBubbleReceived
         }
     }
     
@@ -92,10 +92,10 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// Override this if you want a non-default selected background color or no bubble at all.
     var selectedBubbleBackgroundColor: UIColor {
         if let message = messageAndNeighbors.message, message.isOwnMessage {
-            return Colors.chatBubbleSentSelected
+            Colors.chatBubbleSentSelected
         }
         else {
-            return Colors.chatBubbleReceivedSelected
+            Colors.chatBubbleReceivedSelected
         }
     }
     

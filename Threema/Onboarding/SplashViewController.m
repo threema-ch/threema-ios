@@ -257,10 +257,41 @@
     }
 }
 
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    
+    [coordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+        CGRect viewFrame = self.view.safeAreaLayoutGuide.layoutFrame;
+        
+        CGRect privacyTargetRect;
+        
+        if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+            /* iPhone 4s */
+            privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:120.0];
+        } else {
+            privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:170.0];
+        }
+        
+        CGRect animationTargetRect = [RectUtil setPositionOf:_animatedView.frame x:(viewFrame.size.width - _animatedView.frame.size.width)/2 y:privacyTargetRect.origin.y - _animatedView.frame.size.height];
+        
+        CGRect controlsTargetRect;
+        if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+            /* iPhone 4s */
+            controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0];
+        } else {
+            controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height];
+        }
+                
+        _privacyView.frame = privacyTargetRect;
+        _animatedView.frame = animationTargetRect;
+        _controlsView.frame = controlsTargetRect;
+    }];
+}
+
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
 
-    _threemaLogoView.frame = CGRectMake(_threemaLogoView.frame.origin.x, self.view.safeAreaLayoutGuide.layoutFrame.origin.y + 26.0, _threemaLogoView.frame.size.width, _threemaLogoView.frame.size.height);
+    _threemaLogoView.frame = CGRectMake((self.view.safeAreaLayoutGuide.layoutFrame.size.width - _threemaLogoView.frame.size.width)/2, self.view.safeAreaLayoutGuide.layoutFrame.origin.y + 26.0, _threemaLogoView.frame.size.width, _threemaLogoView.frame.size.height);
     
     [self checkLicenseAndThreemaMDM];
 }

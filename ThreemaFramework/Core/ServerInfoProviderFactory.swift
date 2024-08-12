@@ -21,14 +21,13 @@
 import Foundation
 
 @objc public class ServerInfoProviderFactory: NSObject {
-    static let serverInfoProvider: ServerInfoProvider = {
+    static let serverInfoProvider: ServerInfoProvider =
         if LicenseStore.isOnPrem() {
-            return OnPremServerInfoProvider()
+            OnPremServerInfoProvider()
         }
         else {
-            return PublicServerInfoProvider()
+            PublicServerInfoProvider()
         }
-    }()
     
     @objc public static func makeServerInfoProvider() -> ServerInfoProvider {
         ServerInfoProviderFactory.serverInfoProvider

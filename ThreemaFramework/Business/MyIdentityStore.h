@@ -93,7 +93,7 @@
 
 @property (strong, nonatomic, readwrite) NSString *tempSafePassword;
 
-@property (strong, nonatomic, readwrite) NSDictionary *lastWorkUpdateRequest;
+@property (strong, nonatomic, readwrite) NSData *lastWorkUpdateRequestHash;
 @property (strong, nonatomic, readwrite) NSDate *lastWorkUpdateDate;
 
 @property (strong, nonatomic, readwrite) NSString *lastWorkInfoLanguage;

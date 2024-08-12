@@ -56,30 +56,15 @@ final class MessageMetadataBlurBackgroundView: UIVisualEffectView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func updateColors() {
+        if UIAccessibility.isReduceTransparencyEnabled || UIAccessibility.isDarkerSystemColorsEnabled {
+            backgroundColor = Colors.backgroundChatBar
+        }
+    }
+    
     // MARK: - Configure
     
     private func configureView(with rootView: UIView, nonVibrantRootView: UIView?) {
-        // All views have their constraints related to the `contentView`.
-        func pinToContentView(_ view: UIView) {
-            NSLayoutConstraint.activate([
-                view.topAnchor.constraint(
-                    equalTo: contentView.topAnchor,
-                    constant: ChatViewConfiguration.MetadataBackground.topAndBottomInset
-                ),
-                view.leadingAnchor.constraint(
-                    equalTo: contentView.leadingAnchor,
-                    constant: ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
-                ),
-                view.bottomAnchor.constraint(
-                    equalTo: contentView.bottomAnchor,
-                    constant: -ChatViewConfiguration.MetadataBackground.topAndBottomInset
-                ),
-                view.trailingAnchor.constraint(
-                    equalTo: contentView.trailingAnchor,
-                    constant: -ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
-                ),
-            ])
-        }
         
         // Embed content into stack for easy vertical centering
         let rootStack = UIStackView(arrangedSubviews: [rootView])
@@ -117,5 +102,27 @@ final class MessageMetadataBlurBackgroundView: UIVisualEffectView {
         if UIAccessibility.isReduceTransparencyEnabled || UIAccessibility.isDarkerSystemColorsEnabled {
             backgroundColor = Colors.backgroundChatBar
         }
+    }
+    
+    // All views have their constraints related to the `contentView`.
+    private func pinToContentView(_ view: UIView) {
+        NSLayoutConstraint.activate([
+            view.topAnchor.constraint(
+                equalTo: contentView.topAnchor,
+                constant: ChatViewConfiguration.MetadataBackground.topAndBottomInset
+            ),
+            view.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor,
+                constant: ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
+            ),
+            view.bottomAnchor.constraint(
+                equalTo: contentView.bottomAnchor,
+                constant: -ChatViewConfiguration.MetadataBackground.topAndBottomInset
+            ),
+            view.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: -ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
+            ),
+        ])
     }
 }

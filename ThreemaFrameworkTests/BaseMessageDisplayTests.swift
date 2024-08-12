@@ -271,24 +271,24 @@ class BaseMessageDisplayTests: XCTestCase {
         
         baseMessage.delivered = true
         baseMessage.deliveryDate = expectedDeliveryDate
-        XCTAssertEqual(expectedDeliveryDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.read = true
         baseMessage.readDate = expectedReadDate
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.sendFailed = true
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userack = true
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userack = false
         baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
     }
     
     func testOwnGatewayMessageDisplayDate() {
@@ -332,24 +332,24 @@ class BaseMessageDisplayTests: XCTestCase {
         
         baseMessage.delivered = true
         baseMessage.deliveryDate = expectedDeliveryDate
-        XCTAssertEqual(expectedDeliveryDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.read = true
         baseMessage.readDate = expectedReadDate
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.sendFailed = true
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userack = true
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userack = false
         baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
     }
     
     func testOwnGroupMessageDisplayDate() {
@@ -408,11 +408,11 @@ class BaseMessageDisplayTests: XCTestCase {
         XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
 
         baseMessage.userack = false
         baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedDate, baseMessage.displayDate)
     }
     
     func testOtherSingleMessageDisplayDate() {
@@ -461,11 +461,11 @@ class BaseMessageDisplayTests: XCTestCase {
         XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
 
         baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
 
         baseMessage.userack = false
         baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
     }
     
     func testOtherGroupMessageDisplayDate() {
@@ -523,11 +523,11 @@ class BaseMessageDisplayTests: XCTestCase {
         XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
 
         baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
 
         baseMessage.userack = false
         baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
+        XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
     }
     
     // MARK: - Date for state

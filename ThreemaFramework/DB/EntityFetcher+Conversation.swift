@@ -52,7 +52,6 @@ extension EntityFetcher {
             ])
         case .groups:
             intermediaryPredicate = conversationGroupNamePredicate(text: text)
-
         case .archived:
             let allPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [
                 conversationGroupNamePredicate(text: text),
@@ -67,16 +66,16 @@ extension EntityFetcher {
             ])
         }
         
-        let finalPredicate: NSPredicate
-        if UserSettings.shared().hidePrivateChats {
-            finalPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-                intermediaryPredicate,
-                conversationNotPrivatePredicate(),
-            ])
-        }
-        else {
-            finalPredicate = intermediaryPredicate
-        }
+        let finalPredicate: NSPredicate =
+            if UserSettings.shared().hidePrivateChats {
+                NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    intermediaryPredicate,
+                    conversationNotPrivatePredicate(),
+                ])
+            }
+            else {
+                intermediaryPredicate
+            }
         
         var matchingIDs = [(objectID: NSManagedObjectID, date: Date, visibility: ConversationVisibility)]()
         let sortDescriptor = NSSortDescriptor(key: "lastUpdate", ascending: false)
@@ -121,23 +120,23 @@ extension EntityFetcher {
         let sortedIDs = matchingIDs.sorted(by: { a, b in
             if a.visibility == .pinned,
                b.visibility == .default || b.visibility == .archived {
-                return false
+                false
             }
             else if a.visibility == .default,
                     b.visibility == .pinned {
-                return true
+                true
             }
             else if a.visibility == .default,
                     b.visibility == .archived {
-                return false
+                false
             }
             else if a.visibility == .archived,
                     b.visibility == .pinned ||
                     b.visibility == .default {
-                return false
+                false
             }
             else {
-                return a.date > b.date
+                a.date > b.date
             }
         })
         
@@ -147,31 +146,31 @@ extension EntityFetcher {
     
     // MARK: - Predicates
     
-    internal func conversationFirstNamePredicate(text: String) -> NSPredicate {
+    func conversationFirstNamePredicate(text: String) -> NSPredicate {
         NSPredicate(format: "groupId == nil AND contact.firstName contains[c] %@", text)
     }
     
-    internal func conversationLastNamePredicate(text: String) -> NSPredicate {
+    func conversationLastNamePredicate(text: String) -> NSPredicate {
         NSPredicate(format: "groupId == nil AND contact.lastName contains[c] %@", text)
     }
     
-    internal func conversationNickNamePredicate(text: String) -> NSPredicate {
+    func conversationNickNamePredicate(text: String) -> NSPredicate {
         NSPredicate(format: "groupId == nil AND contact.publicNickname contains[c] %@", text)
     }
     
-    internal func conversationIdentityPredicate(text: String) -> NSPredicate {
+    func conversationIdentityPredicate(text: String) -> NSPredicate {
         NSPredicate(format: "groupId == nil AND contact.identity contains[c] %@", text)
     }
     
-    internal func conversationGroupNamePredicate(text: String) -> NSPredicate {
+    func conversationGroupNamePredicate(text: String) -> NSPredicate {
         NSPredicate(format: "groupId != nil AND groupName contains[c] %@", text)
     }
     
-    internal func conversationArchivedPredicate() -> NSPredicate {
+    func conversationArchivedPredicate() -> NSPredicate {
         NSPredicate(format: "visibility == %d", ConversationVisibility.archived.rawValue)
     }
     
-    internal func conversationNotPrivatePredicate() -> NSPredicate {
+    func conversationNotPrivatePredicate() -> NSPredicate {
         NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
     }
 }

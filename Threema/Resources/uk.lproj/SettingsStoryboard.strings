@@ -84,7 +84,7 @@
 "SQX-77-CzT.title" = "Політика конфіденційності";
 
 /* Class = "UILabel"; text = "Add exclusion..."; ObjectID = "Sow-GN-gms"; */
-"Sow-GN-gms.text" = "Додати виняток...";
+"Sow-GN-gms.text" = "Додати виключення...";
 
 /* Class = "UILabel"; text = "Show gallery preview"; ObjectID = "TyO-Dl-3LV"; */
 "TyO-Dl-3LV.text" = "Попередній перегляд галереї";

@@ -41,30 +41,27 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
             sizeDidChange()
         }
     }
-    
+
     /// Distribution list to show
-    @objc public var distributionList: DistributionListEntity? {
+    @objc public var distributionList: DistributionList? {
         didSet {
-            guard let distributionList else {
+            guard let distributionList, let name = distributionList.displayName else {
                 return
             }
             
-            nameLabel.text = distributionList.conversation?.displayName
+            nameLabel.text = name
             topMetadataLabel.text = distributionList.recipientCountString
-            membersListLabel.text = distributionList.recipientList
-            
-            if let conversation = distributionList.conversation {
-                updateAvatar(for: conversation)
-            }
+            membersListLabel.text = distributionList.recipientsSummary
+            updateAvatar()
         }
     }
     
     // MARK: - Subviews
     
-    private lazy var avatarSizeConstraint: NSLayoutConstraint = {
-        // Always use max height as possible
-        avatarImageView.heightAnchor.constraint(lessThanOrEqualToConstant: configuration.maxAvatarSize)
-    }()
+    // Always use max height as possible
+    private lazy var avatarSizeConstraint: NSLayoutConstraint = avatarImageView.heightAnchor.constraint(
+        lessThanOrEqualToConstant: configuration.maxAvatarSize
+    )
     
     private lazy var avatarImageView: UIImageView = {
         let imageView = UIImageView(image: configuration.loadingAvatarImage)
@@ -184,37 +181,42 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
         Colors.setTextColor(Colors.textLight, label: membersListLabel)
     }
     
+    @objc public func updateDistributionList(_ distList: DistributionList?) {
+        guard let distList else {
+            distributionList = nil
+            return
+        }
+        distributionList = distList
+    }
+    
     // MARK: - Updates
     
-    private func updateAvatar(for conversation: Conversation) {
+    private func updateAvatar() {
         avatarSizeConstraint.constant = configuration.maxAvatarSize
         
-        AvatarMaker.shared()
-            .avatar(for: conversation, size: configuration.maxAvatarSize, masked: true) { avatarImage, objectID in
-                guard conversation.objectID == objectID else {
-                    return
-                }
-
-                guard let avatarImage else {
-                    // Show placeholder
-                    self.avatarImageView.image = AvatarMaker.shared().unknownGroupImage()
-                    return
-                }
-
-                DispatchQueue.main.async {
-                    self.avatarImageView.image = avatarImage
-                }
+        guard let profilePictureData = distributionList?.profilePicture,
+              let profilePicture = UIImage(data: profilePictureData) else {
+            Task { @MainActor in
+                avatarImageView.image = AvatarMaker.shared().unknownDistributionListImage()
             }
+            return
+        }
+        
+        let maskedProfilePicture = AvatarMaker.shared()
+            .maskedProfilePicture(profilePicture, size: configuration.maxAvatarSize)
+        
+        Task { @MainActor in
+            self.avatarImageView.image = maskedProfilePicture
+        }
     }
+    
+    // MARK: - Updates
     
     private func sizeDidChange() {
         nameLabel.font = configuration.nameLabelFont
         containerStack.spacing = configuration.horizontalSpacing
         
-        if let conversation = distributionList?.conversation {
-            updateAvatar(for: conversation)
-        }
-        
+        // TODO: (IOS-4366) Re-add avatar
         updateSeparatorInset()
     }
     

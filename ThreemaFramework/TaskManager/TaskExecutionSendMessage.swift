@@ -250,17 +250,17 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                 try self.frameworkInjector.entityManager.performAndWait {
                     let conversation = try self.getConversation(for: task)
 
-                    let newMode: ForwardSecurityMode
-                    if !abstractMessage.flagGroupMessage() {
-                        newMode = abstractMessage.forwardSecurityMode
-                    }
-                    else {
-                        newMode = try self.newOutgoingGroupForwardSecurityMode(
-                            for: abstractMessage,
-                            and: sentMessages,
-                            in: conversation
-                        )
-                    }
+                    let newMode: ForwardSecurityMode =
+                        if !abstractMessage.flagGroupMessage() {
+                            abstractMessage.forwardSecurityMode
+                        }
+                        else {
+                            try self.newOutgoingGroupForwardSecurityMode(
+                                for: abstractMessage,
+                                and: sentMessages,
+                                in: conversation
+                            )
+                        }
                     
                     self.frameworkInjector.entityManager.setForwardSecurityMode(
                         abstractMessage.messageID,
@@ -346,7 +346,8 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                 let envelope = self.frameworkInjector.mediatorMessageProtocol
                     .getEnvelopeForOutgoingMessageUpdate(
                         messageID: messageID,
-                        conversationID: receiver
+                        conversationID: receiver,
+                        deviceID: self.frameworkInjector.multiDeviceManager.thisDevice.deviceID
                     )
 
                 do {

@@ -32,8 +32,8 @@ import WebRTC
         
         public func description() -> String {
             switch self {
-            case .reject: return "reject"
-            case .call: return "accept"
+            case .reject: "reject"
+            case .call: "accept"
             }
         }
     }
@@ -50,12 +50,12 @@ import WebRTC
         /// - Returns: String of the current reject reason
         public func description() -> String {
             switch self {
-            case .unknown: return "unknown"
-            case .busy: return "busy"
-            case .timeout: return "timeout"
-            case .reject: return "reject"
-            case .disabled: return "disabled"
-            case .offHours: return "offHours"
+            case .unknown: "unknown"
+            case .busy: "busy"
+            case .timeout: "timeout"
+            case .reject: "reject"
+            case .disabled: "disabled"
+            case .offHours: "offHours"
             }
         }
     }
@@ -166,13 +166,13 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
         if answer != nil {
             let extensionConfig: VoIPCallSdpPatcher
                 .RtpHeaderExtensionConfig = isVideoAvailable ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
-            json = [
+            json = try [
                 VoIPCallConstants.callIDKey: callID.callID,
                 VoIPCallAnswerMessage.kActionKey: action.rawValue,
                 VoIPCallAnswerMessage
                     .kAnswerKey: [
                         VoIPCallAnswerMessage.kRTCSessionDescriptionTypeKey: stringForType(),
-                        VoIPCallAnswerMessage.kRTCSessionDescriptionSdpKey: try VoIPCallSdpPatcher(extensionConfig)
+                        VoIPCallAnswerMessage.kRTCSessionDescriptionSdpKey: VoIPCallSdpPatcher(extensionConfig)
                             .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: answer!.sdp),
                     ],
                 VoIPCallAnswerMessage.kRejectReasonKey: rejectReason ?? 0,

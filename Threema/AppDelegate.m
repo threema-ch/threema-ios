@@ -653,8 +653,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         // OnPrem target has a macro with DISABLE_SENTRY
 #ifndef DISABLE_SENTRY
         // Start crash report handler
-        SentryClient *sentry = [[SentryClient alloc] init];
-        [sentry start];
+        if (!ProcessInfoHelper.isRunningForScreenshots) {
+            SentryClient *sentry = [[SentryClient alloc] init];
+            [sentry start];
+        }
 #endif
         
         if (ProcessInfoHelper.isRunningForScreenshots) {
@@ -1151,7 +1153,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else {
         // Disconnect from server - from now on we want push notifications for new messages
         [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp];
-        [[WCSessionManager shared] saveSessionsToArchive];
     }
     
     [SettingsBundleHelper resetSafeMode];
@@ -1233,7 +1234,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
     
     if ([[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
-        [[GlobalGroupCallsManagerSingleton shared] handleCallsFromDBWithCompletionHandler:^{
+        [[GlobalGroupCallManagerSingleton shared] loadCallsFromDBWithCompletionHandler:^{
             // Noop
         }];
     }
@@ -1349,7 +1350,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      See also applicationDidEnterBackground:.
      */
     DDLogNotice(@"AppState: applicationWillTerminate");
-    [[WCSessionManager shared] saveSessionsToArchive];
 }
 
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {

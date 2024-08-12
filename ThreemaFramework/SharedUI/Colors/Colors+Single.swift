@@ -44,9 +44,9 @@ extension Colors {
     @objc public class var gray: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray400.color
+            Asset.SharedColors.gray400.color
         case .dark:
-            return Asset.SharedColors.gray500.color
+            Asset.SharedColors.gray500.color
         }
     }
     

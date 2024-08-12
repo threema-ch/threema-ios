@@ -29,7 +29,7 @@ public protocol GroupCallCryptoProtocol: Sendable {
     
     func randomBytes(of length: Int32) -> Data
     
-    func generateKeyPair() -> (publicKey: Data, privateKey: Data)?
+    func generateKeyPair() throws -> (publicKey: Data, privateKey: Data)
     func encryptData(plaintext: Data, withPublicKey: Data, secretKey: Data, nonce: Data) -> Data?
     func decryptData(cipherText: Data, withKey: Data, signKey: Data, nonce: Data) -> Data?
     

@@ -119,16 +119,15 @@ public class AppSetup: NSObject {
             return currentState
         }
         else {
-            let newState: AppSetupState
-            
-            // The second is not true if the app was deleted and identity still in the keychain. However we don't have
-            // a preexisting database at this time.
-            if !hasPreexistingDatabaseFile || !MyIdentityStore.shared().isValidIdentity {
-                newState = .notSetup
-            }
-            else {
-                newState = .complete
-            }
+            let newState: AppSetupState =
+                // The second is not true if the app was deleted and identity still in the keychain. However we don't
+                // have a preexisting database at this time.
+                if !hasPreexistingDatabaseFile || !MyIdentityStore.shared().isValidIdentity {
+                    .notSetup
+                }
+                else {
+                    .complete
+                }
             
             DDLogNotice("Reset app setup state to \(newState)")
             AppGroup.userDefaults().set(newState.rawValue, forKey: Constants.appSetupStateKey)

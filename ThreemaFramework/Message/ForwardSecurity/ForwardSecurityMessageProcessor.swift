@@ -331,7 +331,7 @@ import ThreemaProtocols
     ///   - initT: Init message
     private func processInit(sender: ForwardSecurityContact, initT: ForwardSecurityDataInit) async throws {
         DDLogNotice(
-            "[ForwardSecurity] Received init {sessionID=\(initT.sessionID),versionRange=\(initT.versionRange)} from \(sender.identity)"
+            "[ForwardSecurity] Received init (sessionID=\(initT.sessionID), versionRange=\(initT.versionRange)) from \(sender.identity)"
         )
         
         if try dhSessionStore.exactDHSession(
@@ -363,7 +363,7 @@ import ThreemaProtocols
         
         // Create and send accept in case the contact supports forward security
         guard await hasForwardSecuritySupport(sender) else {
-            DDLogNotice("[ForwardSecurity] Terminate sessions with \(sender.identity) because it is not supported.")
+            DDLogWarn("[ForwardSecurity] Terminate sessions with \(sender.identity) because FS is not supported.")
             
             // We may still have a FS session to report that was terminated
             if existingSessionPreempted {
@@ -386,7 +386,10 @@ import ThreemaProtocols
             // removed any existing FS sessions. But we'll do it here again anyways for good
             // measures and because the remote may be dishonest about its feature capabilities.
             
-            try ForwardSecuritySessionTerminator().terminateAllSessions(with: sender.identity, cause: .disabledByRemote)
+            _ = try ForwardSecuritySessionTerminator().terminateAllSessions(
+                with: sender.identity,
+                cause: .disabledByRemote
+            )
             return
         }
         
@@ -400,7 +403,7 @@ import ThreemaProtocols
             identityStore: identityStore
         )
         try dhSessionStore.storeDHSession(session: session)
-        DDLogNotice("[ForwardSecurity] Responding to new DH session ID \(session.id) request from \(sender.identity)")
+
         notifyListeners { listener in listener.responderSessionEstablished(
             session: session,
             contact: sender,
@@ -436,7 +439,7 @@ import ThreemaProtocols
     ///   - accept: Accept message
     private func processAccept(sender: ForwardSecurityContact, accept: ForwardSecurityDataAccept) throws {
         DDLogNotice(
-            "[ForwardSecurity] Received accept {sessionID=\(accept.sessionID),versionRange=\(accept.version)} from \(sender.identity)"
+            "[ForwardSecurity] Received accept (sessionID=\(accept.sessionID), versionRange=\(accept.version)) from \(sender.identity)"
         )
         
         guard let session = try dhSessionStore.exactDHSession(
@@ -466,7 +469,7 @@ import ThreemaProtocols
         
         try dhSessionStore.storeDHSession(session: session)
         DDLogNotice(
-            "[ForwardSecurity] Established 4DH session ID \(session.id) with \(sender.identity), negotiated version: \(session.current4DHVersions)"
+            "[ForwardSecurity] Established 4DH \(session)"
         )
         notifyListeners { listener in listener.initiatorSessionEstablished(session: session, contact: sender) }
     }
@@ -493,7 +496,9 @@ import ThreemaProtocols
         }
         else {
             // Session not found, probably lost local data or old reject
-            DDLogNotice("No DH session found for rejected session ID \(reject.sessionID) from \(sender.identity)")
+            DDLogNotice(
+                "[ForwardSecurity] No DH session found for rejected session ID \(reject.sessionID) from \(sender.identity)"
+            )
         }
         
         // Refresh feature mask now, in case contact downgraded to a build without PFS
@@ -533,7 +538,7 @@ import ThreemaProtocols
             
             // Session not found, probably lost local data or old message
             DDLogWarn(
-                "[ForwardSecurity] No DH session found for message \(envelopeMessage.messageID.hexString) in session ID \(message.sessionID) from \(sender.identity)"
+                "[ForwardSecurity] No DH session found for message (message-id=\(envelopeMessage.messageID.hexString)) in session with ID \(message.sessionID) from \(sender.identity)"
             )
 
             // Send reject message
@@ -558,8 +563,9 @@ import ThreemaProtocols
             processedVersion = try session.processIncomingMessageVersion(message: message)
         }
         catch let RejectMessageError.rejectMessageError(description: description) {
-            DDLogNotice("[ForwardSecurity] ProcessMessaged failed with error: \(description)")
-            DDLogNotice("[ForwardSecurity] Message rejected by session validator, `Reject` and terminate the session")
+            DDLogError(
+                "[ForwardSecurity] Message rejected by session validator. `Reject` (message-id=\(envelopeMessage.messageID.hexString)) and terminate \(session): \(description)"
+            )
             
             // Message rejected by session validator, `Reject` and terminate the session
             let reject = try ForwardSecurityDataReject(
@@ -614,7 +620,7 @@ import ThreemaProtocols
             // they will think they are in 4DH mode, but we are still in 2DH. `Reject` and terminate the session.
             
             DDLogError(
-                "[ForwardSecurity] Rejecting message in session \(session.description) with \(sender.identity), cause: DH type mismatch (mode={\(mode)})"
+                "[ForwardSecurity] DH type mismatch (mode=\(mode)). Rejecting message (message-id=\(envelopeMessage.messageID.hexString)) in \(session)"
             )
             
             let reject = try ForwardSecurityDataReject(
@@ -678,7 +684,7 @@ import ThreemaProtocols
             nonce: nonce
         ) else {
             DDLogError(
-                "[ForwardSecurity] Rejecting message in session \(session) with \(sender.identity), cause: Message decryption failed (message-id={\(envelopeMessage.messageID.hexString)}"
+                "[ForwardSecurity] Message decryption failed (message-id=\(envelopeMessage.messageID.hexString)). Rejecting message in \(session)"
             )
             
             // Send reject message
@@ -701,7 +707,7 @@ import ThreemaProtocols
         }
         
         DDLogNotice(
-            "[ForwardSecurity] Decapsulated message from {\(sender.identity)} (message-id={\(envelopeMessage.messageID.hexString)}, mode={\(mode)}, session={\(session.description)}, offered-version={\(processedVersion)}, applied-version={\(message.appliedVersion)})"
+            "[ForwardSecurity] Decapsulating message (message-id=\(envelopeMessage.messageID.hexString)), in \(session), offered-version={\(processedVersion)}, applied-version=\(message.appliedVersion)"
         )
         
         // Prepare to commit the updated negotiated version
@@ -743,8 +749,8 @@ import ThreemaProtocols
                 myIdentity: identityStore.identity,
                 peerIdentity: sender.identity
             ), bestSession.id == session.id {
-                DDLogNotice(
-                    "[ForwardSecurity] Best session is the same as used session. Delete other sessions. \(session)"
+                DDLogVerbose(
+                    "[ForwardSecurity] Best session is the same as used session. Delete other sessions if there are any. \(session)"
                 )
                 try dhSessionStore.deleteAllDHSessionsExcept(
                     myIdentity: identityStore.identity,
@@ -801,8 +807,6 @@ import ThreemaProtocols
         for message: AbstractMessage,
         from sender: ForwardSecurityContact
     ) {
-        DDLogNotice("[ForwardSecurity] \(#function): \(message.loggingDescription) with  \(sender.identity)")
-
         do {
             let bestSession = try dhSessionStore.bestDHSession(
                 myIdentity: identityStore.identity,
@@ -811,14 +815,17 @@ import ThreemaProtocols
             
             guard let bestSession else {
                 // If we do not have a session we don't need to do anything
-                DDLogNotice("[ForwardSecurity] \(#function): We do not have a session. Don't warn.")
+                // This is verbose because this function is called for all messages received from a contact with no FS
+                DDLogVerbose(
+                    "[ForwardSecurity] Don't warn for message (message-id=\(message.messageID.hexString)) received without FS as we do not have a session"
+                )
                 return
             }
             
             let minimumVersion = message.minimumRequiredForwardSecurityVersion()
             
             DDLogNotice(
-                "[ForwardSecurity] \(#function): \(minimumVersion != .unspecified && minimumVersion.rawValue <= bestSession.minimumIncomingAppliedVersion.rawValue ? "maybe warn" : "don't warn") Checking message minimum version \(minimumVersion) against session \(bestSession.description) with minimumIncomingAppliedVersion \(bestSession.minimumIncomingAppliedVersion)"
+                "[ForwardSecurity] \(minimumVersion != .unspecified && minimumVersion.rawValue <= bestSession.minimumIncomingAppliedVersion.rawValue ? "Maybe warn" : "Don't warn"). Checking message minimum version \(minimumVersion) against session \(bestSession.description) with minimumIncomingAppliedVersion \(bestSession.minimumIncomingAppliedVersion)"
             )
             
             if minimumVersion != .unspecified,
@@ -844,13 +851,15 @@ import ThreemaProtocols
                         }
                     }
                     else {
-                        DDLogNotice("\(#function): Contact has downgraded to an unsupported version. Don't warn.")
+                        DDLogNotice(
+                            "[ForwardSecurity] Don't warn for message (message-id=\(message.messageID.hexString)) received without FS as contact has downgraded to an unsupported version"
+                        )
                     }
                 }
             }
         }
         catch {
-            DDLogError("Could not get best session: \(error)")
+            DDLogError("[ForwardSecurity] Could not get best session: \(error)")
         }
     }
     
@@ -863,7 +872,7 @@ import ThreemaProtocols
         terminate: ForwardSecurityDataTerminate
     ) async throws {
         DDLogNotice(
-            "Terminating DH session ID \(terminate.sessionID) with \(sender.identity), cause: \(terminate.cause)"
+            "[ForwardSecurity] Terminating DH session ID \(terminate.sessionID) with \(sender.identity), cause: \(terminate.cause)"
         )
         
         // This order is verity particular, because when we update the feature mask in `ContactEntity` the sessions
@@ -878,7 +887,9 @@ import ThreemaProtocols
             sessionID: terminate.sessionID
         ) != nil
         if !sessionExists {
-            DDLogNotice("We do not have a DH session ID \(terminate.sessionID) with \(sender.identity)")
+            DDLogNotice(
+                "[ForwardSecurity] We do not have a DH session ID \(terminate.sessionID) with \(sender.identity)"
+            )
         }
         else {
             try dhSessionStore.deleteDHSession(
@@ -941,7 +952,7 @@ import ThreemaProtocols
         
         try dhSessionStore.storeDHSession(session: newSession)
         
-        DDLogNotice("[ForwardSecurity] Starting new DH session ID \(newSession.id) with \(contact.identity)")
+        DDLogNotice("[ForwardSecurity] Starting new \(newSession)")
         notifyListeners { listener in
             listener.newSessionInitiated(session: newSession, contact: contact)
         }
@@ -984,7 +995,7 @@ import ThreemaProtocols
         )
         
         DDLogNotice(
-            "[ForwardSecurity] \(isSendingSupported ? "Send" : "Don't send") message \(message.loggingDescription) with FS (minimum required version \(minimumRequiredForwardSecurityVersion) in session with version \(session.outgoingAppliedVersion). \(session))"
+            "[ForwardSecurity] \(isSendingSupported ? "Send" : "Don't send") message with FS \(message.loggingDescription) (minRequired=\(minimumRequiredForwardSecurityVersion), applied=\(session.outgoingAppliedVersion), offered=\(session.outgoingOfferedVersion)) in \(session)"
         )
         
         return isSendingSupported
@@ -994,7 +1005,7 @@ import ThreemaProtocols
         _ innerMessage: AbstractMessage,
         in session: DHSession
     ) throws -> ForwardSecurityEnvelopeMessage {
-        DDLogNotice(
+        DDLogVerbose(
             "[ForwardSecurity] Encapsulate message \(innerMessage.loggingDescription) in \(session.description)"
         )
         
@@ -1003,23 +1014,22 @@ import ThreemaProtocols
             KDFRatchet?,
             CspE2eFs_Encapsulated.DHType,
             ForwardSecurityMode
-        ) = {
-            if session.myRatchet4DH == nil {
-                // 2DH mode
-                return (
-                    session.myRatchet2DH,
-                    CspE2eFs_Encapsulated.DHType.twodh,
-                    .twoDH
-                )
-            }
-            else {
-                return (
-                    session.myRatchet4DH,
-                    CspE2eFs_Encapsulated.DHType.fourdh,
-                    .fourDH
-                )
-            }
-        }()
+            // swiftformat:disable:next wrapMultilineConditionalAssignment
+        ) = if session.myRatchet4DH == nil {
+            // 2DH mode
+            (
+                session.myRatchet2DH,
+                CspE2eFs_Encapsulated.DHType.twodh,
+                .twoDH
+            )
+        }
+        else {
+            (
+                session.myRatchet4DH,
+                CspE2eFs_Encapsulated.DHType.fourdh,
+                .fourDH
+            )
+        }
         
         guard let ratchet = ratchetv else {
             throw ForwardSecurityError.noDHModeNegotiated
@@ -1060,7 +1070,7 @@ import ThreemaProtocols
                 groupIdentity = GroupIdentity(id: groupID, creator: .init(groupCreatorIdentity))
             }
             else {
-                DDLogError("Unable to create group identity from abstract group message")
+                DDLogError("[ForwardSecurity] Unable to create group identity from abstract group message")
                 throw ForwardSecurityError.missingGroupIdentity
             }
         }
@@ -1068,8 +1078,8 @@ import ThreemaProtocols
             groupIdentity = nil
         }
         
-        DDLogNotice(
-            "[ForwardSecurity] Create data message \(innerMessage.loggingDescription) in \(session.description) offering \(session.outgoingOfferedVersion)"
+        DDLogDebug(
+            "[ForwardSecurity] Create data message \(innerMessage.loggingDescription) offering \(session.outgoingOfferedVersion) in \(session)"
         )
         
         let dataMessage = ForwardSecurityDataMessage(

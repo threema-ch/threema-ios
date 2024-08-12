@@ -22,6 +22,7 @@ import Foundation
 
 struct Ended: GroupCallState {
     func next() async throws -> GroupCallState? {
-        nil
+        DDLogNotice("[GroupCall] Ended `next()`")
+        return nil
     }
 }

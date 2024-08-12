@@ -214,31 +214,77 @@ extension ChatViewAnimatedImageMessageTableViewCell: MessageTextViewDelegate {
     }
 }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewAnimatedImageMessageTableViewCell: ChatViewMessageAction {
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
-
+extension ChatViewAnimatedImageMessageTableViewCell: ChatViewMessageActions {
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
+        
         guard let message = animatedImageMessageAndNeighbors?.message as? ImageMessage else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
-        var generalMenuItems = [ChatViewMessageActionProvider.MessageAction]()
+        typealias Provider = ChatViewMessageActionsProvider
         
-        // Speak
-        var speakText = message.fileMessageType.localizedDescription
-        if let caption = message.caption {
-            speakText += ", " + caption
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
-        // Share
-        let shareItems = [MessageActivityItem(for: message)]
-
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
+        
+        // Retry and cancel
+        let retryAndCancelHandler = { [weak self] in
+            guard let self else {
+                return
+            }
+            
+            chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID, from: rootView)
+        }
+        
+        // Download
+        let downloadHandler: Provider.DefaultHandler = {
+            Task {
+                await BlobManager.shared.syncBlobs(for: message.objectID)
+            }
+        }
+        
+        // Quote
+        let quoteHandler = {
+            guard let chatViewTableViewCellDelegate = self.chatViewTableViewCellDelegate else {
+                DDLogError("[CV CxtMenu] Could not show quote view because the delegate was nil.")
+                return
+            }
+            
+            guard let message = message as? QuoteMessage else {
+                DDLogError("[CV CxtMenu] Could not show quote view because the message is not a quote message.")
+                return
+            }
+            
+            chatViewTableViewCellDelegate.showQuoteView(message: message)
+        }
+        
+        // Edit
+        let editHandler: Provider.DefaultHandler = {
+            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
+        }
+        
+        // Save
+        let saveHandler = {
+            guard !MDMSetup(setup: false).disableShareMedia() else {
+                DDLogWarn(
+                    "[ChatViewAnimatedImageMessageTableViewCell] Tried to save media, even if MDM disabled it."
+                )
+                return
+            }
+            
+            if let saveMediaItem = message.createSaveMediaItem() {
+                AlbumManager.shared.save(saveMediaItem)
+            }
+        }
+        
         // Copy
         // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
         // itself.
@@ -258,135 +304,54 @@ extension ChatViewAnimatedImageMessageTableViewCell: ChatViewMessageAction {
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
         
-        // Quote
-        let quoteHandler = {
-            guard let chatViewTableViewCellDelegate = self.chatViewTableViewCellDelegate else {
-                DDLogError("[CV CxtMenu] Could not show quote view because the delegate was nil.")
-                return
-            }
-            
-            guard let message = message as? QuoteMessage else {
-                DDLogError("[CV CxtMenu] Could not show quote view because the message is not a quote message.")
-                return
-            }
-            
-            chatViewTableViewCellDelegate.showQuoteView(message: message)
+        // Share
+        let shareItems = [MessageActivityItem(for: message)]
+                
+        // Speak
+        var speakText = message.fileMessageType.localizedDescription
+        if let caption = message.caption, !caption.isEmpty {
+            speakText += ", " + caption
         }
         
         // Details
-        let detailsHandler = {
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
         // Select
-        let selectHandler = {
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
-        
-        // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
-            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
-        }
-            
-        // Edit
-        let editHandler = {
-            self.chatViewTableViewCellDelegate?.editMessage(for: message.objectID)
-        }
-
-        let (primaryMenuItems, generalActions) = Provider.defaultActions(
+        return Provider.defaultActions(
             message: message,
-            speakText: speakText,
-            shareItems: shareItems,
             activityViewAnchor: contentView,
             popOverSource: chatBubbleView,
-            copyHandler: copyHandler,
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler,
+            retryAndCancelHandler: retryAndCancelHandler,
+            downloadHandler: downloadHandler,
             quoteHandler: quoteHandler,
+            editHandler: editHandler,
+            saveHandler: saveHandler,
+            copyHandler: copyHandler,
+            shareItems: shareItems,
+            speakText: speakText,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            ackHandler: ackHandler,
-            markStarHandler: markStarHandler,
-            editHandler: editHandler
+            didDelete: didDelete
         )
-        
-        // Build menu
-        generalMenuItems.append(contentsOf: generalActions)
-        
-        if message.isDataAvailable {
-            let saveAction = Provider.saveAction {
-                guard !MDMSetup(setup: false).disableShareMedia() else {
-                    DDLogWarn(
-                        "[ChatViewAnimatedImageMessageTableViewCell] Tried to save media, even if MDM disabled it."
-                    )
-                    return
-                }
-                
-                if let saveMediaItem = message.createSaveMediaItem() {
-                    AlbumManager.shared.save(saveMediaItem)
-                }
-            }
-            
-            // Save action is inserted before default action, depending if ack/dec is possible at a different position
-            if !MDMSetup(setup: false).disableShareMedia() {
-                if #unavailable(iOS 16), message.isUserAckEnabled {
-                    generalMenuItems.insert(saveAction, at: 2)
-                }
-                else {
-                    generalMenuItems.insert(saveAction, at: 0)
-                }
-            }
-        }
-        else if message.blobDisplayState == .remote {
-            let downloadAction = Provider.downloadAction {
-                Task {
-                    await BlobManager.shared.syncBlobs(for: message.objectID)
-                }
-            }
-            // Download action is inserted before default action, depending if ack/dec is possible at a different
-            // position
-            if #unavailable(iOS 16), message.isUserAckEnabled {
-                generalMenuItems.insert(downloadAction, at: 2)
-            }
-            else {
-                generalMenuItems.insert(downloadAction, at: 0)
-            }
-        }
-        
-        // Retry
-        if message.showRetryAndCancelButton {
-            let retryHandler = Provider.retryAction { [weak self] in
-                guard let self else {
-                    return
-                }
-                
-                chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID, from: rootView)
-            }
-            
-            // Retry action position analogously to download
-            if #unavailable(iOS 16), message.isUserAckEnabled {
-                generalMenuItems.insert(retryHandler, at: 2)
-            }
-            else {
-                generalMenuItems.insert(retryHandler, at: 0)
-            }
-        }
-        
-        return (primaryMenuItems, generalMenuItems)
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

@@ -29,7 +29,7 @@ open class ImagePreviewItem: MediaPreviewItem {
     private var internalImage: Data?
     
     private var internalOriginalAsset: Promise<PreviewType> {
-        Promise<Void>().then(on: self.itemQueue, flags: [.barrier]) { () -> Promise<PreviewType> in
+        Promise<Void>().then(on: itemQueue, flags: [.barrier]) { () -> Promise<PreviewType> in
             if let internalImage = self.internalImage {
                 return Promise { $0.fulfill(internalImage) }
             }

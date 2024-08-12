@@ -127,14 +127,13 @@ public class VoIPCallSender {
                 // We only wait when there is a connection, or if it is being built up. Otherwise the UI freezes and one
                 // cannot escape the situation.
                 let state = ServerConnector.shared().connectionState
-                let wait: Int
-                
-                if state == .connecting || state == .connected || state == .loggedIn {
-                    wait = 5
-                }
-                else {
-                    wait = 10
-                }
+                let wait =
+                    if state == .connecting || state == .connected || state == .loggedIn {
+                        5
+                    }
+                    else {
+                        10
+                    }
                 
                 let result = dispatchGroup?.wait(timeout: .now() + .seconds(wait))
                 

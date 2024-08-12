@@ -50,13 +50,12 @@ class GroupCallCollectionViewDataSource: UICollectionViewDiffableDataSource<
             ) as! GroupCallParticipantCell
             
             Task {
-                if let oldParticipant = cell.participantID, oldParticipant.id != itemIdentifier.id {
+                if let oldParticipant = cell.participant?.participantID, oldParticipant.id != itemIdentifier.id {
                     await viewModel.removeRendererView(for: oldParticipant, rendererView: cell.videoRendererView)
                     cell.resetRendererView()
                 }
                 
                 let fetchedParticipant = viewModel.participant(for: itemIdentifier)
-                cell.participantID = itemIdentifier
                 cell.participant = fetchedParticipant
                 
                 // Workaround for when running screenshots

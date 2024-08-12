@@ -34,30 +34,30 @@ extension NoAccessAlertType {
     fileprivate var localizedTitle: String {
         switch self {
         case .camera:
-            return BundleUtil.localizedString(forKey: "alert_no_access_title_camera")
+            BundleUtil.localizedString(forKey: "alert_no_access_title_camera")
         case .contacts:
-            return BundleUtil.localizedString(forKey: "alert_no_access_title_contacts")
+            BundleUtil.localizedString(forKey: "alert_no_access_title_contacts")
         case .location:
-            return BundleUtil.localizedString(forKey: "alert_no_access_title_location")
+            BundleUtil.localizedString(forKey: "alert_no_access_title_location")
         case .preciseLocation:
-            return BundleUtil.localizedString(forKey: "alert_no_access_title_location_precise")
+            BundleUtil.localizedString(forKey: "alert_no_access_title_location_precise")
         case .microphone:
-            return BundleUtil.localizedString(forKey: "alert_no_access_title_microphone")
+            BundleUtil.localizedString(forKey: "alert_no_access_title_microphone")
         }
     }
     
     fileprivate var localizedMessage: String {
         switch self {
         case .camera:
-            return BundleUtil.localizedString(forKey: "alert_no_access_message_camera")
+            BundleUtil.localizedString(forKey: "alert_no_access_message_camera")
         case .contacts:
-            return BundleUtil.localizedString(forKey: "alert_no_access_message_contacts")
+            BundleUtil.localizedString(forKey: "alert_no_access_message_contacts")
         case .location:
-            return BundleUtil.localizedString(forKey: "alert_no_access_message_location")
+            BundleUtil.localizedString(forKey: "alert_no_access_message_location")
         case .preciseLocation:
-            return BundleUtil.localizedString(forKey: "alert_no_access_message_location_precise")
+            BundleUtil.localizedString(forKey: "alert_no_access_message_location_precise")
         case .microphone:
-            return BundleUtil.localizedString(forKey: "alert_no_access_message_microphone")
+            BundleUtil.localizedString(forKey: "alert_no_access_message_microphone")
         }
     }
 }

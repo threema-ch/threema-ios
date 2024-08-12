@@ -106,7 +106,6 @@
 "threema_id" = "Threema ID";
 "nickname" = "Прізвисько";
 "add_button" = "Додати";
-"chatview_contextmenu_select" = "Вибрати…";
 "learn_more" = "Докладніше…";
 "file_message_image" = "Зображення";
 "file_message_sticker" = "Наліпка";
@@ -115,6 +114,10 @@
 "file_message_voice" = "Голосове повідомлення";
 "file_message_file" = "Файл";
 "chat" = "діалог"; /* noun */
+
+"share_menu" = "Поділитись...";
+"forward_menu" = "Переслати...";
+"chatview_contextmenu_select" = "Вибрати…";
 
 "chat_back_button_accessibility" = "%d непрочитаних";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "Видалити повідомлення у діалозі з цього пристрою?";
 "messages_delete_all_confirm_message" = "Це включає усі медіа та документи.";
 "messages_delete_selected_confirm" = "Видалити вибрані повідомлення із цього пристрою?";
+"message_delete_confirm" = "Видалити це повідомлення?";
 "conversation_delete_confirm" = "Видалити діалог з пристрою?";
 "delete_n" = "Видалити (%d)";
-"message_delete_for_everyone" = "Видалити повідомлення для всіх";
+"message_delete_for_me" = "Видалити з цього пристрою";
+"message_delete_for_everyone" = "Видалити для всіх";
 
 "message_cannot_play_movie" = "Не вдається програти відео.";
 
@@ -473,7 +478,7 @@
 "backup_exclude" = "Експортований ID не буде додано, коли ви створюєте резервну копію телефону через iTunes або iCloud. Збережіть експортований ID вручну, щоб уникнути його втрати.";
 
 /* Contacts */
-"pull_to_sync" = "Потягніть, щоб синхронізувати...";
+"pull_to_sync" = "Потягніть для синхронізації...";
 "bad_identity_backup" = "Дані експортованого ID недійсні або ви ввели хибний пароль. Використовуйте пароль, який ви ввели під час експортування для відновлення свого Threema ID. Перевірте введені дані та повторіть спробу.";
 "pull_to_sync_429_message" = "Вичерпано ліміт дозволених синхронізацій контактів на добу. Продовжте синхронізацію завтра або зверніться до служби підтримки Threema.";
 "pull_to_sync_429_message_work" = "Вичерпано ліміт дозволених синхронізацій контактів на добу. Продовжте синхронізацію завтра або зверніться до свого адміністратора %@.";
@@ -780,7 +785,7 @@
 
 "call_voip_not_supported_title" = "Виклики Threema";
 "call_voip_not_supported_text" = "Пристрій співрозмовника не підтримує виклики Threema";
-"call_contact_not_reachable" = "Неможливо зв'язатись зі співрозмовником...";
+"call_contact_not_reachable" = "Неможливо встановити зв'язок з контактом...";
 
 "call_status_idle" = "Готовий";
 "call_status_wait_ringing" = "Ініціалізація";
@@ -1072,7 +1077,7 @@
 "forgot_password_link_text" = "Забули пароль?";
 
 "restore_option_data_description" = "На цьому пристрої наявні такі дані %@ (діалоги, контакти, групи тощо).";
-"restore_option_data_keep_data" = "Зберегти дані на пристрої";
+"restore_option_data_keep_data" = "Зберігати дані на пристрої";
 "restore_option_data_keep_data_description" = "Відновити лише Threema ID (з Threema Safe або з експортованого ID) та залишити дані на пристрої";
 "restore_option_data_delete_data" = "Видалити дані на пристрої";
 "restore_option_data_delete_data_description" = "Відновити резервну копію Threema Safe (містить ваш ID, контакти та групи) або експортований ID (містить лише Threema ID) після видалення даних на пристрої";
@@ -1105,7 +1110,8 @@
 "settings_list_storage_management_title" = "Керування сховищем";
 "settings_list_passcode_lock_title" = "Блокування за
 допомогою пароля";
-"settings_threema_calls" = "Виклики Threema";
+"settings_threema_calls" = "Виклики";
+"settings_list_threema_desktop_title" = "Threema 2.0 для комп'ютера (Бета)";
 "settings_list_threema_web_title" = "Застосунок / Вебверсія";
 
 "settings_list_network_title" = "Стан мережі";
@@ -1147,13 +1153,16 @@
 "settings_privacy_read_receipts" = "Звіти про прочитання";
 "settings_privacy_typing_indicator" = "Індикатори набору тексту";
 
+"settings_privacy_poi_header" = "Дані місцеперебування";
+"settings_privacy_choose_poi" = "Показувати цікаві місця";
+"settings_privacy_poi_footer" = "Якщо увімкнено, то за умови поширення місцеперебування можна побачити цікаві точки біля вас. З цією метою дані про місцеперебування надсилаються до серверу.";
+
 "settings_privacy_TIRR_reset_all" = "Скидання для всіх контактів";
 "settings_privacy_TIRR_reset_footer" = "Скинути всі контакти до налаштувань за замовчуванням.";
 "settings_privacy_TIRR_reset_alert_title" = "Скинути";
 "settings_privacy_TIRR_reset_alert_message" = "Reset all contacts to the default setting. Action cannot be undone.";
 "settings_privacy_TIRR_reset_alert_action" = "Скинути все";
 
-"settings_privacy_choose_poi" = "Вибрати ОСІ";
 "settings_privacy_hide_private_chats" = "Приховати приватні чати";
 "settings_privacy_hide_private_chats_footer" = "Приховує всі приватні чати в огляді чатів. Вам потрібно встановити пароль, щоб активувати це налаштування.";
 
@@ -1253,7 +1262,7 @@
 "automatic_delete_confirmation_message_immediate_deletion" = "Повідомлення з %d буде негайно видалено, а всі повідомлення, старші за %@, відтепер видалятимуться автоматично. Примітка: відкриті опитування та групи дописів не враховуються.";
 "automatic_delete_on_confirmation_button" = "Увімкнути автоматичне видалення";
 "automatic_delete_off_confirmation_button" = "Вимкнути автоматичне видалення";
-"delete_in_progress" = "Видалення ...";
+"delete_in_progress" = "Видалення...";
 "one_year_title" = "1 рік";
 "one_year" = "1 рік";
 "six_months_title" = "6 місяців";
@@ -1649,23 +1658,31 @@
 "notification_threemaweb_connectionlost_title" = "З'єднання з застосунком на компʼютері втрачено";
 "notification_threemaweb_connectionlost_body" = "Щоб продовжити користуватись застосунком на компʼютері, відкрийте його заново.";
 
+"settings_threema_web_desktop_banner_title" = "Нове: Threema для комп’ютера 2.0 (Бета)";
+"settings_threema_web_desktop_banner_message" = "Торкніться, щоб спробувати наступне покоління застосунку для комп’ютера з підтримкою декількох пристроїв.";
+
 "settings_threema_web_connected" = "Версію для комп’ютера / вебверсію під’єднано";
 "settings_threema_web_connectioninfo" = "Щоб залишатися на зв’язку, ваш пристрій має бути розблоковано, а %@ має працювати у фоновому режимі. Під’єднаний пристрій не блокуватиметься автоматично.";
-"settings_threema_web_linked_device_section_header" = "Кілька пристроїв";
-"settings_threema_web_linked_device_section_footer" = "Прив’язаний пристрій можна використовувати навіть, якщо %@ у фоновому режимі або вимкнено.";
-"settings_threema_web_section_header" = "Безпосередньо прив’язані пристрої";
 "settings_threema_web_multi_device_qr_code_title" = "Неправильний QR-код";
-"settings_threema_web_multi_device_qr_code_message" = "Торкніться «%@», а потім «%@», щоб прив’язати до цього застосунку для ПК.";
+"settings_threema_web_multi_device_qr_code_message" = "Поверніться до “%@” та оберіть “%@” задля прив’язки до цього застосунку на комп'ютері.";
 
 "chat_text_view_placeholder" = "Нове повідомлення";
 "compose_bar_camera_button_accessibility_label" = "Відкрити камеру";
 "compose_bar_image_picker_button_accessibility_label" = "Вибрати зображення";
 "compose_bar_record_button_accessibility_label" = "Записати голосове повідомлення";
 "compose_bar_send_message_button_accessibility_label" = "Надіслати повідомлення";
+"compose_bar_send_edited_message_button_accessibility_label" = "Підтвердити редагування";
 "compose_bar_attachment_button_accessibility_label" = "Додати вкладення";
-"play_record_audio_view_controller_general_error_title" = "Не вдалося записати";
-"play_record_audio_view_controller_general_error_message" = "Голосове повідомлення зараз неможливо записати через невідому помилку";
 "hardware_keyboard_send_on_enter_discoverability_title" = "Надіслати повідомлення";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "Неможливо записати голосове повідомлення.";
+"voice_recorder_error_message" = "Будь ласка, спробуйте ще раз, або зв’яжіться з нашою підтримкою.";
+"voice_recorder_call_state_not_idle" = "Активний виклик";
+"voice_recorder_playback_failure" = "Помилка відтворення";
+"voice_recorder_recording_error" = "Помилка записування";
+"voice_recorder_recording_cancelled" = "Записування скасовано";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "Ви проголосували за таке: %@.";
@@ -1680,7 +1697,6 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "Закрити цитату";
-"chat_bar_edited_message_close_button" = "Скасувати редагування повідомлення";
 
 // ChatDetailView
 "detailView_title" = "Деталі повідомлення";
@@ -1690,6 +1706,9 @@
 "detailView_group_file_size" = "Розмір файлу";
 "detailView_consumed" = "Вперше відтворено";
 "detailView_created_footer" = "Створено: %@";
+"detailView_edit_history_header" = "Редагувати історію";
+"detailView_edit_history_current" = "Поточні";
+"detailView_edit_history_no_caption" = "Без назви";
 
 "message_display_status_none" = "Немає";
 "message_display_status_user_acknowledged" = "Прийнято";
@@ -1834,16 +1853,16 @@
 "accessibility_voice_message_unplayed" = "Ще не відтворювалось.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Прийнято, %@";
-"accessibility_status_declined_plus_time" = "Відхилено, %@";
-"accessibility_status_sending_plus_time" = "Надсилання, %@";
-"accessibility_status_sent_plus_time" = "Надіслано, %@";
-"accessibility_status_delivered_plus_time" = "Доставлено, %@";
-"accessibility_status_read_plus_time" = "Прочитано, %@";
-"accessibility_status_failed_plus_time" = "Не вдалося, %@";
-"accessibility_status_group_acknowledged_plus_time" = "Прийнято %i, %@%@";
-"accessibility_status_group_declined_plus_time" = "Відхилено %i, %@%@";
-"accessibility_status_group_acknowledged_declined_plus_time" = "Прийнято %i, відхилено %i, %@%@";
+"accessibility_status_acknowledged" = "Схвалено";
+"accessibility_status_declined" = "Відхилено";
+"accessibility_status_sending" = "Надсилання";
+"accessibility_status_sent" = "Надіслано";
+"accessibility_status_delivered" = "Доставлено";
+"accessibility_status_read" = "Прочитано";
+"accessibility_status_failed" = "Не вдалось";
+"accessibility_status_group_acknowledged" = "Схвалено %i, %@";
+"accessibility_status_group_declined" = "Відхилено %i, %@";
+"accessibility_status_group_acknowledged_declined" = "Схвалено %i, відхилено %i, %@";
 "accessibility_status_group_acknowledged_my_reaction" = "Я приймаю";
 "accessibility_status_group_declined_my_reaction" = "Я відхиляю";
 

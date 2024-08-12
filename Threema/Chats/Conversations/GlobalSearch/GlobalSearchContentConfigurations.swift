@@ -21,7 +21,7 @@
 import UIKit
 
 /// Generate content configurations for global search
-struct GlobalSearchContentConfigurations {
+enum GlobalSearchContentConfigurations {
     
     // MARK: - Header
     

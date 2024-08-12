@@ -33,9 +33,9 @@ enum OwnMuteState {
     func muteState() -> MuteState {
         switch self {
         case .changing, .muted:
-            return .muted
+            .muted
         case .unmuted:
-            return .unmuted
+            .unmuted
         }
     }
 }

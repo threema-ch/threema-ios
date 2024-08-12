@@ -33,36 +33,27 @@ class ThreemaWebViewController: ThemedTableViewController {
     var selectedIndexPath: IndexPath?
     
     // This should always be in sync with `disableMultiDeviceForVersionLessThan5()`
-    private lazy var sections: [Section] = Section.all
+    private lazy var sections: [Section] = Section.allCases
 
-    fileprivate enum Section {
-        case linkedDevice
+    private var rendezvousServerAvailable = false
+    
+    fileprivate enum Section: CaseIterable {
         case web
         case webSessions
-        
-        static let webOnly: [Section] = [
-            .web,
-            .webSessions,
-        ]
-
-        static let all: [Section] = [
-            .linkedDevice,
-            .web,
-            .webSessions,
-        ]
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Hide MD linking if is rendezvous server missing (means MD config is missing in general)
+        // Hide MD information if is rendezvous server missing (means MD config is missing in general)
         let factory = ServerInfoProviderFactory.makeServerInfoProvider()
         factory.rendezvousServer { rendezvousServerInfo, _ in
-            if rendezvousServerInfo != nil {
-                self.sections = Section.all
-            }
-            else {
-                self.sections = Section.webOnly
+            self.rendezvousServerAvailable = rendezvousServerInfo != nil
+            
+            if self.rendezvousServerAvailable, !UserSettings.shared().desktopInfoBannerShown {
+                Task { @MainActor in
+                    self.addHeaderView()
+                }
             }
         }
 
@@ -81,19 +72,24 @@ class ThreemaWebViewController: ThemedTableViewController {
         ServerInfoProviderFactory.makeServerInfoProvider()
             .webServer(ipv6: UserSettings.shared().enableIPv6) { webServerInfo, _ in
                 if let webServerURL = webServerInfo?.url {
-                    ThreemaWebQRcodeScanner.shared.threemaWebServerURL = webServerURL
+                    ThreemaWebQRCodeScanner.shared.threemaWebServerURL = webServerURL
                 }
                 if let overrideSaltyRtcHost = webServerInfo?.overrideSaltyRtcHost {
-                    ThreemaWebQRcodeScanner.shared.overrideSaltyRtcHost = overrideSaltyRtcHost
+                    ThreemaWebQRCodeScanner.shared.overrideSaltyRtcHost = overrideSaltyRtcHost
                 }
                 if let overrideSaltyRtcPort = webServerInfo?.overrideSaltyRtcPort {
-                    ThreemaWebQRcodeScanner.shared.overrideSaltyRtcPort = overrideSaltyRtcPort
+                    ThreemaWebQRCodeScanner.shared.overrideSaltyRtcPort = overrideSaltyRtcPort
                 }
             }
-        
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "linkedDeviceBetaCell")
     }
     
+    private lazy var headerView: UIView =
+        UIHostingController(rootView: ThreemaWebDesktopInfoBannerView(onTap: {
+            self.showDesktopSettings()
+        }, dismissAction: {
+            self.removeHeaderView()
+        })).view
+   
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -105,12 +101,47 @@ class ThreemaWebViewController: ThemedTableViewController {
         cameraButton.image = UIImage(systemName: "qrcode.viewfinder")!.withTint(.primary)
         cameraButton.accessibilityLabel = BundleUtil.localizedString(forKey: "scan_qr")
         
-        ThreemaWebQRcodeScanner.shared.delegate = self
+        ThreemaWebQRCodeScanner.shared.delegate = self
         
         tableView.reloadData()
     }
     
     // MARK: - Private functions
+    
+    private func addHeaderView() {
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        tableView.beginUpdates()
+
+        tableView.tableHeaderView = headerView
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: tableView.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: tableView.frameLayoutGuide.leadingAnchor),
+            headerView.bottomAnchor.constraint(equalTo: tableView.bottomAnchor),
+            headerView.trailingAnchor.constraint(equalTo: tableView.frameLayoutGuide.trailingAnchor),
+        ])
+        
+        tableView.setNeedsLayout()
+        tableView.layoutIfNeeded()
+        tableView.endUpdates()
+    }
+    
+    private func removeHeaderView() {
+        UserSettings.shared().desktopInfoBannerShown = true
+        
+        tableView.beginUpdates()
+        headerView.removeFromSuperview()
+        tableView.tableHeaderView = nil
+        tableView.setNeedsLayout()
+        tableView.layoutIfNeeded()
+        tableView.endUpdates()
+    }
+    
+    private func showDesktopSettings() {
+        dismiss(animated: true) {
+            NotificationCenter.default.post(name: .showDesktopSettings, object: nil)
+        }
+    }
     
     private func presentActionSheetForSession(_ webClientSession: WebClientSession, indexPath: IndexPath) {
         let alert = UIAlertController(
@@ -251,44 +282,29 @@ class ThreemaWebViewController: ThemedTableViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch sections[section] {
-        case .linkedDevice:
-            return 1
         case .web:
-            return 1
+            1
         case .webSessions:
-            return fetchedResultsController!.fetchedObjects!.count
+            fetchedResultsController!.fetchedObjects!.count
         }
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch sections[section] {
-        case .linkedDevice:
-            return BundleUtil.localizedString(forKey: "settings_threema_web_linked_device_section_header")
-        case .web:
-            return BundleUtil.localizedString(forKey: "settings_threema_web_section_header")
         case .webSessions:
             if !(fetchedResultsController?.fetchedObjects?.isEmpty ?? true) {
-                return BundleUtil.localizedString(forKey: "webClientSession_sessions_header")
+                BundleUtil.localizedString(forKey: "webClientSession_sessions_header")
             }
             else {
-                return nil
+                nil
             }
+        default:
+            nil
         }
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         switch sections[section] {
-        case .linkedDevice:
-            let mdmSetup = MDMSetup(setup: false)!
-            if mdmSetup.disableWeb() {
-                return BundleUtil.localizedString(forKey: "disabled_by_device_policy")
-            }
-            else {
-                return String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "settings_threema_web_linked_device_section_footer"),
-                    ThreemaApp.currentName
-                )
-            }
         case .web:
             let mdmSetup = MDMSetup(setup: false)!
             if mdmSetup.existsMdmKey(MDM_KEY_DISABLE_WEB) {
@@ -304,30 +320,14 @@ class ThreemaWebViewController: ThemedTableViewController {
         case .webSessions:
             return String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "webClientSession_add_footer"),
-                ThreemaWebQRcodeScanner.shared.downloadString,
-                ThreemaWebQRcodeScanner.shared.threemaWebServerURL
+                ThreemaWebQRCodeScanner.shared.downloadString,
+                ThreemaWebQRCodeScanner.shared.threemaWebServerURL
             )
         }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch sections[indexPath.section] {
-        case .linkedDevice:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "linkedDeviceBetaCell", for: indexPath)
-            
-            var contentConfiguration = cell.defaultContentConfiguration()
-            contentConfiguration.text = BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_title")
-            
-            cell.contentConfiguration = contentConfiguration
-            cell.accessoryType = .disclosureIndicator
-            
-            let mdmSetup = MDMSetup(setup: false)!
-            if mdmSetup.disableWeb() {
-                cell.isUserInteractionEnabled = false
-            }
-            
-            return cell
-            
         case .web:
             let cell = tableView.dequeueReusableCell(
                 withIdentifier: "ThreemaWebSettingCell",
@@ -352,24 +352,11 @@ class ThreemaWebViewController: ThemedTableViewController {
         if sections[indexPath.section] == .web, indexPath.row == 0 {
             return nil
         }
-        
         return indexPath
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch sections[indexPath.section] {
-        case .linkedDevice:
-            let mdmSetup = MDMSetup(setup: false)!
-            if mdmSetup.disableWeb() {
-                return
-            }
-            
-            let hostingController = UIHostingController(
-                rootView: LinkedDevicesView().environmentObject(BusinessInjector().settingsStore as! SettingsStore)
-            )
-            hostingController.navigationItem.largeTitleDisplayMode = .never
-            navigationController?.pushViewController(hostingController, animated: true)
-            
         case .web:
             break // Do nothing
             
@@ -410,21 +397,22 @@ extension ThreemaWebViewController {
         }
         else {
             if fetchedResultsController!.fetchedObjects!.isEmpty {
-                ThreemaWebQRcodeScanner.shared.scan()
+                ThreemaWebQRCodeScanner.shared.scan()
             }
         }
     }
 }
 
-// MARK: - ThreemaWebQRcodeScannerDelegate
+// MARK: - ThreemaWebQRCodeScannerDelegate
 
-extension ThreemaWebViewController: ThreemaWebQRcodeScannerDelegate {
+extension ThreemaWebViewController: ThreemaWebQRCodeScannerDelegate {
     func showAlert(result: String?) {
-        DDLogWarn("[Threema Web] Can't read qr code")
+        DDLogWarn("[Threema Web] Can't read QR-Code")
         
         let title: String
         let message: String
-        if sections.contains(.linkedDevice),
+        
+        if rendezvousServerAvailable,
            let result,
            let resultURL = URL(string: result),
            let parsedURL = try? URLParser.parse(url: resultURL),
@@ -432,18 +420,19 @@ extension ThreemaWebViewController: ThreemaWebQRcodeScannerDelegate {
             title = BundleUtil.localizedString(forKey: "settings_threema_web_multi_device_qr_code_title")
             message = String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "settings_threema_web_multi_device_qr_code_message"),
-                BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_title"),
-                BundleUtil.localizedString(forKey: "multi_device_new_linked_devices_add_button")
+                BundleUtil.localizedString(forKey: "settings"),
+                BundleUtil.localizedString(forKey: "settings_list_threema_desktop_title")
             )
         }
         else {
             title = BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_title")
             message = String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_message"),
-                ThreemaWebQRcodeScanner.shared.downloadString,
-                ThreemaWebQRcodeScanner.shared.threemaWebServerURL
+                ThreemaWebQRCodeScanner.shared.downloadString,
+                ThreemaWebQRCodeScanner.shared.threemaWebServerURL
             )
         }
+        
         if let vc = AppDelegate.shared().currentTopViewController() {
             vc.dismiss(animated: true) {
                 UIAlertTemplate.showAlert(owner: self, title: title, message: message)
@@ -452,18 +441,18 @@ extension ThreemaWebViewController: ThreemaWebQRcodeScannerDelegate {
     }
 }
 
-// MARK: - ThreemaWebQRcodeScannerDelegate
+// MARK: - ThreemaWebQRCodeScannerDelegate
 
-protocol ThreemaWebQRcodeScannerDelegate: AnyObject {
+protocol ThreemaWebQRCodeScannerDelegate: AnyObject {
     func showAlert(result: String?)
 }
 
-// MARK: - ThreemaWebQRcodeScanner
+// MARK: - ThreemaWebQRCodeScanner
 
-class ThreemaWebQRcodeScanner: QRScannerViewControllerDelegate {
-    static let shared = ThreemaWebQRcodeScanner()
+class ThreemaWebQRCodeScanner: QRScannerViewControllerDelegate {
+    static let shared = ThreemaWebQRCodeScanner()
     
-    fileprivate weak var delegate: ThreemaWebQRcodeScannerDelegate?
+    fileprivate weak var delegate: ThreemaWebQRCodeScannerDelegate?
     
     fileprivate var overrideSaltyRtcPort: Int?
     fileprivate var overrideSaltyRtcHost: String?
@@ -472,9 +461,9 @@ class ThreemaWebQRcodeScanner: QRScannerViewControllerDelegate {
     fileprivate var downloadString: String {
         switch ThreemaApp.current {
         case .work, .blue, .onPrem:
-            return "https://threema.ch/work/download"
+            "https://threema.ch/work/download"
         default:
-            return "https://threema.ch/download"
+            "https://threema.ch/download"
         }
     }
     

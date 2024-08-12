@@ -465,14 +465,13 @@ class RootNavigationController: UINavigationController {
                 self.evaluatedPolicyDomainState = data
                 
                 Task { @MainActor in
-                    let title: String!
-                    
-                    if LAContext().unlockType() == .faceID {
-                        title = BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_face")
-                    }
-                    else {
-                        title = BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_touch")
-                    }
+                    let title: String! =
+                        if LAContext().unlockType() == .faceID {
+                            BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_face")
+                        }
+                        else {
+                            BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_touch")
+                        }
                     UIAlertTemplate.showAlert(
                         owner: vc,
                         title: title,

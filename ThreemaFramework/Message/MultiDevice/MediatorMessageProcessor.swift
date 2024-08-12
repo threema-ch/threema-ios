@@ -143,6 +143,7 @@ class MediatorMessageProcessor: NSObject {
                     DDLogError("Mediator encryption of challenge failed")
                 }
             }
+            
         case .serverInfo:
             DDLogInfo("Server info")
 
@@ -177,13 +178,17 @@ class MediatorMessageProcessor: NSObject {
         case .deviceInfo:
             DDLogInfo("Device info")
             return message
+            
         case .dropDeviceAck:
             DDLogInfo("Drop device ack")
             return message
+            
         case .lockAck:
             DDLogInfo("Lock ack")
+            
         case .unlockAck:
             DDLogInfo("Unlock ack")
+            
         case .rejected:
             DDLogInfo("Rejected")
             guard let message = MediatorMessageProtocol.decodeTransactionLocked(message) else {
@@ -191,6 +196,7 @@ class MediatorMessageProcessor: NSObject {
                 break
             }
             return mediatorMessageProtocol.decryptByte(data: message.encryptedScope, key: deviceGroupKeys.dgtsk)
+            
         case .ended:
             DDLogInfo("Ended")
             guard let message = MediatorMessageProtocol.decodeTransactionLocked(message) else {
@@ -198,6 +204,7 @@ class MediatorMessageProcessor: NSObject {
                 break
             }
             return mediatorMessageProtocol.decryptByte(data: message.encryptedScope, key: deviceGroupKeys.dgtsk)
+            
         case .reflectAck:
             DDLogInfo("Reflect ack")
             
@@ -210,6 +217,7 @@ class MediatorMessageProcessor: NSObject {
             )
 
             return nil
+            
         case .reflected:
             DDLogInfo("Reflected")
 

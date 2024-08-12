@@ -666,10 +666,10 @@ class SQLDHSessionStoreTests: XCTestCase {
     
     private func makeRandomDHSession(myIdentity: String, peerIdentity: String, fourDh: Bool) -> DHSession {
         if fourDh {
-            return makeRandomDHSession(myIdentity: myIdentity, peerIdentity: peerIdentity, state: .RL44)
+            makeRandomDHSession(myIdentity: myIdentity, peerIdentity: peerIdentity, state: .RL44)
         }
         else {
-            return makeRandomDHSession(myIdentity: myIdentity, peerIdentity: peerIdentity, state: .L20)
+            makeRandomDHSession(myIdentity: myIdentity, peerIdentity: peerIdentity, state: .L20)
         }
     }
 

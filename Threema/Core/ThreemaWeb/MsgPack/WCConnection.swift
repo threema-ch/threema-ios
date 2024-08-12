@@ -26,14 +26,13 @@ enum WCConnectionState: Int {
          disconnecting, disconnected
 }
 
-protocol WCConnectionDelegate: AnyObject {
+protocol WCConnectionDelegate: WCSession {
     func currentWebClientSession() -> WebClientSession?
     func currentWCSession() -> WCSession
     func currentMessageQueue() -> WebMessageQueue
 }
 
-@objc public class WCConnection: NSObject, NSCoding {
-    
+@objc public class WCConnection: NSObject {
     enum WebSocketCode: UInt16 {
         case closing = 1000
     }
@@ -72,58 +71,6 @@ protocol WCConnectionDelegate: AnyObject {
         self.webClientRequestEventQueue = DispatchQueue(label: "ch.threema.webClientRequestEventQueue", attributes: [])
         self.webClientRequestMsgQueue = DispatchQueue(label: "ch.threema.webClientRequestMsgQueue", attributes: [])
         self.webClientSendQueue = DispatchQueue(label: "ch.threema.webClientSendQueue", attributes: [])
-    }
-    
-    // MARK: NSCoding
-
-    public required init?(coder aDecoder: NSCoder) {
-        // super.init(coder:) is optional, see notes below
-        self.context = aDecoder.decodeObject(forKey: "context") as? WebConnectionContext
-        self.delegate = aDecoder.decodeObject(forKey: "delegate") as! WCConnectionDelegate
-        if let status = aDecoder.decodeObject(forKey: "connectionStatus") as? Int {
-            self.connectionStatus = WCConnectionState(rawValue: status)!
-            DDLogVerbose(
-                "[Threema Web] Init from coder -> Set connection state to \(WCConnectionState(rawValue: status)!)"
-            )
-        }
-        else {
-            self.connectionStatus = .disconnected
-            DDLogVerbose("[Threema Web] Init from coder no predefined status -> Set connection state to new")
-        }
-        self.webClientConnectionQueue = DispatchQueue(label: "ch.threema.webClientConnectionQueue", attributes: [])
-        self.webClientRequestEventQueue = DispatchQueue(label: "ch.threema.webClientRequestEventQueue", attributes: [])
-        self.webClientRequestMsgQueue = DispatchQueue(label: "ch.threema.webClientRequestMsgQueue", attributes: [])
-        self.webClientSendQueue = DispatchQueue(label: "ch.threema.webClientSendQueue", attributes: [])
-        
-        self.wca = aDecoder.decodeObject(forKey: "wca") as? String
-        if let free = aDecoder.decodeObject(forKey: "freeDisconnect") as? Bool {
-            self.freeDisconnect = free
-        }
-        else {
-            self.freeDisconnect = true
-        }
-        self.connectionInfoRequest = aDecoder
-            .decodeObject(forKey: "connectionInfoRequest") as? WebUpdateConnectionInfoRequest
-        self.connectionInfoResponse = aDecoder
-            .decodeObject(forKey: "connectionInfoResponse") as? WebUpdateConnectionInfoResponse
-        
-        self.pingInterval = UInt32(aDecoder.decodeInt32(forKey: "pingInterval"))
-    }
-    
-    public func encode(with aCoder: NSCoder) {
-        // super.encodeWithCoder(aCoder) is optional, see notes below
-        aCoder.encode(context, forKey: "context")
-        aCoder.encode(delegate, forKey: "delegate")
-        aCoder.encode(connectionStatus.rawValue, forKey: "connectionStatus")
-        aCoder.encode(wca, forKey: "wca")
-        aCoder.encode(freeDisconnect, forKey: "freeDisconnect")
-        if connectionInfoRequest != nil {
-            aCoder.encode(connectionInfoRequest, forKey: "connectionInfoRequest")
-        }
-        if connectionInfoResponse != nil {
-            aCoder.encode(connectionInfoResponse, forKey: "connectionInfoResponse")
-        }
-        aCoder.encode(Int32(pingInterval), forKey: "pingInterval")
     }
 }
 
@@ -670,7 +617,7 @@ extension WCConnection {
 // MARK: - WebConnectionContextDelegate
 
 extension WCConnection: WebConnectionContextDelegate {
-    internal func currentWCSession() -> WCSession {
+    func currentWCSession() -> WCSession {
         delegate.currentWCSession()
     }
 }

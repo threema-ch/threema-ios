@@ -82,7 +82,12 @@ class WebMessagesResponse: WebAbstractMessage {
             
             var toSaveBaseMessage: BaseMessage?
             for message in messageFetcher.messages(at: Int(index), count: maxMessageCount).reversed() {
-
+                
+                // We ignore messages that were deleted
+                guard message.deletedAt == nil else {
+                    continue
+                }
+                
                 if toSaveBaseMessage == nil {
                     toSaveBaseMessage = message
                 }
@@ -124,7 +129,7 @@ class WebMessagesResponse: WebAbstractMessage {
         )
     }
     
-    internal static func indexForMessageID(messageID: Data, messageFetcher: MessageFetcher, session: WCSession) -> Int {
+    static func indexForMessageID(messageID: Data, messageFetcher: MessageFetcher, session: WCSession) -> Int {
         var index = 0
         var indexCorrect = false
         let lastLoadedMessageIndex = session.lastLoadedMessageIndexes(contains: messageID)

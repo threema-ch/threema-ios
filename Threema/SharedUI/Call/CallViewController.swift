@@ -158,7 +158,7 @@ class CallViewController: UIViewController {
             let currentRoute = AVAudioSession.sharedInstance().currentRoute
             
             for output in currentRoute.outputs {
-                if self.isBeingDismissed {
+                if isBeingDismissed {
                     UIDevice.current.isProximityMonitoringEnabled = false
                 }
                 else {
@@ -184,19 +184,19 @@ class CallViewController: UIViewController {
                             symbolScale: .large,
                             paletteColors: [Colors.black, Colors.black, Colors.white]
                         )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         speakerImage,
                         for: .normal
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         speakerImage,
                         for: .highlighted
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         speakerImage,
                         for: .selected
                     )
-                    self.speakerButton.tag = 1
+                    speakerButton.tag = 1
                 }
                 else if output.portType == AVAudioSession.Port.headphones {
                     let headphonesImage = UIImage(systemName: "headphones.circle.fill")?
@@ -206,19 +206,19 @@ class CallViewController: UIViewController {
                             symbolScale: .large,
                             paletteColors: [Colors.black, Colors.black, Colors.white]
                         )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         headphonesImage,
                         for: .normal
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         headphonesImage,
                         for: .highlighted
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         headphonesImage,
                         for: .selected
                     )
-                    self.speakerButton.tag = 2
+                    speakerButton.tag = 2
                 }
                 else if output.portType == AVAudioSession.Port.bluetoothA2DP || output.portType == AVAudioSession.Port
                     .bluetoothHFP || output.portType == AVAudioSession.Port.bluetoothLE {
@@ -229,20 +229,20 @@ class CallViewController: UIViewController {
                             symbolScale: .large,
                             paletteColors: [Colors.black, Colors.black, Colors.white]
                         )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         bluetoothImage,
                         for: .normal
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         bluetoothImage,
                         for: .highlighted
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         bluetoothImage,
                         for: .selected
                     )
 
-                    self.speakerButton.tag = 3
+                    speakerButton.tag = 3
                 }
                 else {
                     let earpeaceImage = UIImage(systemName: "speaker.wave.2.circle")?
@@ -252,21 +252,21 @@ class CallViewController: UIViewController {
                             symbolScale: .large,
                             paletteColors: [Colors.white, Colors.white, Colors.white]
                         )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         earpeaceImage,
                         for: .normal
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         earpeaceImage,
                         for: .highlighted
                     )
-                    self.speakerButton.setImage(
+                    speakerButton.setImage(
                         earpeaceImage,
                         for: .selected
                     )
-                    self.speakerButton.tag = 0
+                    speakerButton.tag = 0
                 }
-                self.updateAccessibilityLabels()
+                updateAccessibilityLabels()
                 
                 guard let info = n.userInfo,
                       let value = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
@@ -331,13 +331,13 @@ class CallViewController: UIViewController {
         checkAndHandleAvailableBluetoothDevices()
     }
     
-    override internal func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         updateGradientBackground()
     }
     
-    override internal func viewWillDisappear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
                 
         UIDevice.current.isProximityMonitoringEnabled = false
@@ -377,11 +377,11 @@ class CallViewController: UIViewController {
         }
     }
         
-    override internal var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         .all
     }
     
-    override internal var shouldAutorotate: Bool {
+    override var shouldAutorotate: Bool {
         true
     }
     
@@ -529,7 +529,7 @@ extension CallViewController {
     private func setupView() {
         contactLabel.text = contact?.displayName
         
-        backgroundImage.contentMode = contact!.isProfilePictureSet() ? .scaleAspectFill : .scaleAspectFit
+        backgroundImage.contentMode = contact?.isProfilePictureSet() ?? false ? .scaleAspectFill : .scaleAspectFit
         if let contact {
             setBackgroundForContact(contact: contact)
         }
@@ -1414,9 +1414,9 @@ extension CallViewController {
             }
         }
         else {
-            speakerButton.subviews.forEach {
-                if $0 == myVolumeView {
-                    $0.removeFromSuperview()
+            for subview in speakerButton.subviews {
+                if subview == myVolumeView {
+                    subview.removeFromSuperview()
                 }
             }
             myVolumeView = nil

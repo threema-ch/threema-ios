@@ -24,15 +24,15 @@ extension ReceiptType: CustomStringConvertible {
     public var description: String {
         switch self {
         case .received:
-            return "received"
+            "received"
         case .read:
-            return "read"
+            "read"
         case .ack:
-            return "ack"
+            "ack"
         case .decline:
-            return "decline"
+            "decline"
         case .consumed:
-            return "consumed"
+            "consumed"
         }
     }
 }

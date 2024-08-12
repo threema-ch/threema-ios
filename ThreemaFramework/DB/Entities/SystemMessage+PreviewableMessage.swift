@@ -24,29 +24,29 @@ extension SystemMessage: PreviewableMessage {
     public var privatePreviewText: String {
         switch systemMessageType {
         case let .callMessage(type: callType):
-            return callType.localizedMessage
+            callType.localizedMessage
         case let .systemMessage(type: systemType):
-            return systemType.localizedMessage
+            systemType.localizedMessage
         case let .workConsumerInfo(type: workConsumerInfo):
-            return workConsumerInfo.localizedMessage
+            workConsumerInfo.localizedMessage
         }
     }
     
     public var previewSymbolName: String? {
         switch systemMessageType {
         case let .callMessage(type: callType):
-            return callType.symbolName
+            callType.symbolName
         default:
-            return nil
+            nil
         }
     }
         
     public var previewSymbolTintColor: UIColor? {
         switch systemMessageType {
         case let .callMessage(type: callType):
-            return callType.tintColor
+            callType.tintColor
         default:
-            return nil
+            nil
         }
     }
 }

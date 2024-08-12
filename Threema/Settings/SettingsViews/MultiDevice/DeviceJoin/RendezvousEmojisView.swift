@@ -70,7 +70,6 @@ struct RendezvousEmojisView: View {
             }
         }
         .opacity(isHidden ? 0.0 : 1.0)
-        
         .onAppear {
             rendezvousEmojiSets = RendezvousEmojis.emojiSets(for: rendezvousHash)
         }

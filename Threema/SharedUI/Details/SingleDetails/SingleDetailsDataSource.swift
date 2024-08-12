@@ -379,9 +379,9 @@ extension SingleDetailsDataSource {
     func quickActions(in viewController: UIViewController) -> [QuickAction] {
         switch state {
         case .contactDetails(contact: _):
-            return contactQuickActions(in: viewController)
+            contactQuickActions(in: viewController)
         case let .conversationDetails(contact: _, conversation: conversation):
-            return conversationQuickActions(in: viewController, for: conversation)
+            conversationQuickActions(in: viewController, for: conversation)
         }
     }
     

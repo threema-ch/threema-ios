@@ -83,7 +83,10 @@ class WebDeleteMessageRequest: WebAbstractMessage {
                 entityManager.entityDestroyer.deleteObject(object: message)
 
                 if let conversation = self.conversation {
-                    conversation.lastMessage = MessageFetcher(for: conversation, with: entityManager).lastMessage()
+                    conversation.lastMessage = MessageFetcher(
+                        for: conversation,
+                        with: entityManager
+                    ).lastDisplayMessage()
                 }
             }
         }

@@ -190,21 +190,17 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
 
 extension ChatViewLocationMessageTableViewCell: Reusable { }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewLocationMessageTableViewCell: ChatViewMessageActions {
     
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
         
         guard let message = locationMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
+        typealias Provider = ChatViewMessageActionsProvider
 
         // We create a more readable string
         var locationSummary = ""
@@ -221,13 +217,17 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
             )
         }
         
-        let copyHandler = {
-            UIPasteboard.general.string = locationSummary
-            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
-        let shareItems = [locationSummary as Any]
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
         
+        // Quote
         let quoteHandler = {
             guard let chatViewTableViewCellDelegate = self.chatViewTableViewCellDelegate else {
                 return
@@ -235,49 +235,50 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
             chatViewTableViewCellDelegate.showQuoteView(message: message)
         }
         
+        // Copy
+        let copyHandler = {
+            UIPasteboard.general.string = locationSummary
+            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+        }
+        
+        // Share
+        let shareItems = [locationSummary as Any]
+        
         // Details
-        let detailsHandler = {
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
         // Select
-        let selectHandler = {
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
-        }
-        
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
-        // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
-            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
         }
         
         // Build menu
         return Provider.defaultActions(
             message: message,
-            speakText: locationSummary,
-            shareItems: shareItems,
             activityViewAnchor: contentView,
             popOverSource: chatBubbleView,
-            copyHandler: copyHandler,
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler,
             quoteHandler: quoteHandler,
+            copyHandler: copyHandler,
+            shareItems: shareItems,
+            speakText: locationSummary,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            ackHandler: ackHandler,
-            markStarHandler: markStarHandler
+            didDelete: didDelete
         )
     }
     

@@ -28,7 +28,7 @@ class RTLAligningTextView: UITextView {
     override public var text: String! {
         didSet {
             if !text.isEmpty {
-                self.textAlignment = text.textAlignment
+                textAlignment = text.textAlignment
             }
         }
     }

@@ -23,10 +23,12 @@ import Foundation
 import PromiseKit
 
 class TaskExecutionBlobTransaction: TaskExecutionTransaction {
+    typealias BlobUpload = (uploadID: String, blob: Data)
+    typealias BlobUploaded = (uploadID: String, blob: Data, blobID: Data)
 
-    func uploadBlobs(blobs: [Data]) -> Promise<[Data]> {
-        let uploadBlobItems = blobs.compactMap { data in
-            UploadBlobItem(blobUploader: frameworkInjector.blobUploader, blobData: data)
+    func uploadBlobs(blobs: [BlobUpload]) -> Promise<[BlobUploaded]> {
+        let uploadBlobItems = blobs.compactMap { blob in
+            UploadBlobItem(blobUploader: frameworkInjector.blobUploader, uploadID: blob.uploadID, blob: blob.blob)
         }
 
         return when(
@@ -34,23 +36,34 @@ class TaskExecutionBlobTransaction: TaskExecutionTransaction {
                 item.upload()
             }
         )
-        .then { _ -> Promise<[Data]> in
-            Promise { seal in seal.fulfill(uploadBlobItems.compactMap(\.blobID)) }
+        .then { _ -> Promise<[BlobUploaded]> in
+            // Return uploaded blob data with corresponding blob ID
+            var result = [BlobUploaded]()
+
+            for item in uploadBlobItems {
+                if let blobID = item.blobID {
+                    result.append((item.uploadID, item.blob, blobID))
+                }
+            }
+
+            return Promise { seal in seal.fulfill(result) }
         }
     }
 
     private class UploadBlobItem {
         private let blobUploader: BlobUploaderProtocol
-        let blobData: Data
+        let uploadID: String
+        let blob: Data
         var blobID: Data?
 
-        init(blobUploader: BlobUploaderProtocol, blobData: Data) {
+        init(blobUploader: BlobUploaderProtocol, uploadID: String, blob: Data) {
             self.blobUploader = blobUploader
-            self.blobData = blobData
+            self.uploadID = uploadID
+            self.blob = blob
         }
 
         func upload() -> Promise<Void> {
-            blobUploader.upload(data: blobData, origin: .local)
+            blobUploader.upload(data: blob, origin: .local)
                 .then { blobID in
                     self.blobID = blobID
                     return Promise()

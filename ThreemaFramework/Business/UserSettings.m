@@ -119,6 +119,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize safeIntroShown;
 
 @synthesize workInfoShown;
+@synthesize desktopInfoBannerShown;
 
 @synthesize sentryAppDevice;
 
@@ -248,6 +249,7 @@ static UserSettings *instance;
                                         [NSData data], @"SafeConfig",
                                         [NSNumber numberWithBool:NO], @"SafeIntroShown",
                                         [NSNumber numberWithBool:defaultWorkInfoShown], @"WorkInfoShown",
+                                        [NSNumber numberWithBool:NO], @"DesktopInfoBannerShown",
                                         [NSNumber numberWithBool:NO], @"EnableMasterDnd",
                                         [NSArray array], @"MasterDNDWorkingDays",
                                         @"08:00", @"MasterDNDStartTime",
@@ -357,6 +359,7 @@ static UserSettings *instance;
     evaluatedPolicyDomainStateShareExtension = [defaults dataForKey:@"EvaluatedPolicyDomainStateShareExtension"];
     
     workInfoShown = [defaults boolForKey:@"WorkInfoShown"];
+    desktopInfoBannerShown = [defaults boolForKey:@"DesktopInfoBannerShown"];
     
     NSString *tmpSentryAppDevice = [defaults stringForKey:@"SentryAppDevice"];
     if (tmpSentryAppDevice != nil) {
@@ -783,6 +786,12 @@ static UserSettings *instance;
 - (void)setEvaluatedPolicyDomainStateShareExtension:(NSData *)newEvaluatedPolicyDomainState {
     evaluatedPolicyDomainStateShareExtension = newEvaluatedPolicyDomainState;
     [defaults setObject:newEvaluatedPolicyDomainState forKey:@"EvaluatedPolicyDomainStateShareExtension"];
+    [defaults synchronize];
+}
+
+- (void)setDesktopInfoBannerShown:(BOOL)newDesktopInfoBannerShown {
+    desktopInfoBannerShown = newDesktopInfoBannerShown;
+    [defaults setBool:desktopInfoBannerShown forKey:@"DesktopInfoBannerShown"];
     [defaults synchronize];
 }
 

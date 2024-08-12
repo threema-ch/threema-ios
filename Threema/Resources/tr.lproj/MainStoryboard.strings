@@ -96,7 +96,7 @@
 "cNq-Pt-Uma.title" = "Kişi seç";
 
 /* Class = "UILabel"; text = "Include in phone backup"; ObjectID = "d2g-FC-ibo"; */
-"d2g-FC-ibo.text" = "Telefon yedeklemesine dahil et";
+"d2g-FC-ibo.text" = "Telefon Yedeklemesine Dahil Et";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
 "dgK-0J-UrZ.footerTitle" = "#do not translate#Bu veriler, seçtiğiniz şifreyle birlikte kimliğinizi başka bir cihazda geri yüklemek için kullanılabilir. Uygun bir yere kopyalayıp yapıştırabilir, kendinize e-posta ile gönderebilir veya başka bir cihaz kullanarak QR kodunu tarayabilirsiniz. ";

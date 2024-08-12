@@ -383,22 +383,22 @@ final class ChatViewController: ThemedViewController {
         
         // We cannot do a layout pass during scrolling (otherwise scrolling might be stopped when updating content
         // insets). Thus we do one now
-        self.view.layoutIfNeeded()
+        view.layoutIfNeeded()
         
         // If the unread message line is currently visible, we scroll to the very bottom of the view
-        let unreadMessageLineVisible = !self.tableView.visibleCells
+        let unreadMessageLineVisible = !tableView.visibleCells
             .filter { $0 is ChatViewUnreadMessageLineCell }
             .isEmpty
         if unreadMessageLineVisible {
-            self.jumpToBottom()
+            jumpToBottom()
             return
         }
         
-        let snapshot = self.dataSource.snapshot()
+        let snapshot = dataSource.snapshot()
         
-        guard let newestUnreadMessageObjectID = self.unreadMessagesSnapshot.unreadMessagesState?
+        guard let newestUnreadMessageObjectID = unreadMessagesSnapshot.unreadMessagesState?
             .oldestConsecutiveUnreadMessage else {
-            self.jumpToBottom()
+            jumpToBottom()
             return
         }
         
@@ -408,23 +408,23 @@ final class ChatViewController: ThemedViewController {
         for item in itemIdentifiersInScreenOrder {
             if case let ChatViewDataSource.CellType.message(objectID: objectID) = item,
                objectID == newestUnreadMessageObjectID {
-                self.jumpToBottom()
+                jumpToBottom()
                 break
             }
             if case let ChatViewDataSource.CellType.unreadLine(state: state) = item {
                 guard let newestUnreadMessageObjectID = state.oldestConsecutiveUnreadMessage else {
                     
-                    self.jumpToBottom()
+                    jumpToBottom()
                     return
                 }
-                guard let message = self.entityManager.entityFetcher
+                guard let message = entityManager.entityFetcher
                     .existingObject(with: newestUnreadMessageObjectID) as? BaseMessage else {
                     
-                    self.jumpToBottom()
+                    jumpToBottom()
                     return
                 }
                 
-                self.jump(toUnreadMessage: message.id) { _ in
+                jump(toUnreadMessage: message.id) { _ in
                     if self.isAtBottomOfView {
                         self.userIsAtBottomOfTableView = true
                     }
@@ -449,22 +449,18 @@ final class ChatViewController: ThemedViewController {
         constant: ChatViewConfiguration.ChatBar.tableViewChatBarMinSpacing
     )
     
-    private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] = {
-        [
-            scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollToBottomButton.bottomAnchor.constraint(
-                equalTo: chatBarCoordinator.chatBarContainerView.topAnchor,
-                constant: -ChatViewConfiguration.ScrollToBottomButton.distanceToChatBar
-            ),
-        ]
-    }()
+    private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] = [
+        scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        scrollToBottomButton.bottomAnchor.constraint(
+            equalTo: chatBarCoordinator.chatBarContainerView.topAnchor,
+            constant: -ChatViewConfiguration.ScrollToBottomButton.distanceToChatBar
+        ),
+    ]
     
-    private lazy var multiselectScrollToBottomButtonConstraints: [NSLayoutConstraint] = {
-        [
-            scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollToBottomButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-        ]
-    }()
+    private lazy var multiselectScrollToBottomButtonConstraints: [NSLayoutConstraint] = [
+        scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        scrollToBottomButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+    ]
     
     // MARK: Loading messages
     
@@ -548,7 +544,7 @@ final class ChatViewController: ThemedViewController {
     
     private var userIsAtBottomOfTableView = false {
         didSet {
-            self.unreadMessagesSnapshot.userIsAtBottomOfTableView = userIsAtBottomOfTableView
+            unreadMessagesSnapshot.userIsAtBottomOfTableView = userIsAtBottomOfTableView
             DDLogVerbose("userIsAtBottomOfTableView \(userIsAtBottomOfTableView)")
         }
     }
@@ -569,12 +565,12 @@ final class ChatViewController: ThemedViewController {
     
     // MARK: - GroupCalls
     
-    private lazy var groupCallGroupModel: GroupCallsThreemaGroupModel? = {
+    private lazy var groupCallGroupModel: GroupCallThreemaGroupModel? = {
         guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
             return nil
         }
         
-        return GroupCallsThreemaGroupModel(
+        return GroupCallThreemaGroupModel(
             groupIdentity: group.groupIdentity,
             groupName: group.name ?? ""
         )
@@ -814,7 +810,7 @@ final class ChatViewController: ThemedViewController {
         }
         
         Task {
-            if let lastUpdate = await GlobalGroupCallsManagerSingleton.shared
+            if let lastUpdate = await GlobalGroupCallManagerSingleton.shared
                 .globalGroupCallObserver.getCurrentItem(), conversation.isEqualTo(
                     groupIdentity: lastUpdate.groupIdentity, myIdentity: self.businessInjector.myIdentityStore.identity
                 ) {
@@ -822,7 +818,7 @@ final class ChatViewController: ThemedViewController {
             }
         }
         
-        GlobalGroupCallsManagerSingleton.shared
+        GlobalGroupCallManagerSingleton.shared
             .globalGroupCallObserver.publisher.pub
             .filter { [weak self] update in
                 guard let strongSelf = self else {
@@ -928,7 +924,8 @@ final class ChatViewController: ThemedViewController {
     }
     
     @objc func isPlayingAudioMessage() -> Bool {
-        chatViewTableViewVoiceMessageCellDelegate.isMessageCurrentlyPlaying(nil)
+        chatViewTableViewVoiceMessageCellDelegate.isMessageCurrentlyPlaying(nil) || chatBarCoordinator.chatBar
+            .recordingState == .playing
     }
     
     // MARK: - Overrides
@@ -1194,7 +1191,7 @@ extension ChatViewController {
             
             detailsViewController = GroupDetailsViewController(for: group, displayMode: .conversation, delegate: self)
         }
-        else if let distributionList = conversation.distributionList {
+        else if let distributionList = businessInjector.distributionListManager.distributionList(for: conversation) {
             detailsViewController = DistributionListDetailsViewController(
                 for: distributionList,
                 displayMode: .conversation,
@@ -1219,12 +1216,12 @@ extension ChatViewController {
         
         // When running for screenshots we fake a call.
         guard !ProcessInfoHelper.isRunningForScreenshots else {
-            GlobalGroupCallsManagerSingleton.shared.startGroupCallForScreenshots(group: group)
+            GlobalGroupCallManagerSingleton.shared.startGroupCallForScreenshots(group: group)
             return
         }
         
         chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
-        GlobalGroupCallsManagerSingleton.shared.startGroupCall(
+        GlobalGroupCallManagerSingleton.shared.startGroupCall(
             in: group, intent: .createOrJoin
         )
     }
@@ -1660,7 +1657,7 @@ extension ChatViewController {
             self.dataSource.didSelectRow(at: indexPath)
             
             // If scrollPosition is set to `.none` it will not scroll
-            self.tableView.selectRow(at: indexPath, animated: true, scrollPosition: .middle)
+            self.tableView.selectRow(at: indexPath, animated: true, scrollPosition: .top)
             
             self.isJumping = false
             self.dataSource.initialSetupCompleted = true
@@ -1677,7 +1674,7 @@ extension ChatViewController {
     
     private func jump(
         to messageID: Data,
-        at scrollPosition: UITableView.ScrollPosition = .middle,
+        at scrollPosition: UITableView.ScrollPosition = .top,
         animated: Bool = false,
         completion: ((BaseMessage?) -> Void)? = nil,
         onError: (() -> Void)? = nil
@@ -1697,7 +1694,7 @@ extension ChatViewController {
     
     private func jump(
         to message: BaseMessage,
-        at scrollPosition: UITableView.ScrollPosition = .middle,
+        at scrollPosition: UITableView.ScrollPosition = .top,
         animated: Bool,
         completion: ((BaseMessage?) -> Void)?,
         onError: (() -> Void)? = nil
@@ -2006,8 +2003,8 @@ extension ChatViewController: UITableViewDelegate {
             return nil
         }
         
-        // Check if cell conforms to `ChatViewMessageAction`
-        guard let cell = tableView.cellForRow(at: indexPath) as? ChatViewMessageAction else {
+        // Check if cell conforms to `ChatViewMessageActions`
+        guard let cell = tableView.cellForRow(at: indexPath) as? ChatViewMessageActions else {
             return nil
         }
         
@@ -2148,7 +2145,7 @@ extension ChatViewController: ChatViewDataSourceDelegate {
                 return
             }
             
-            guard !self.isUserInteractiveScroll, !self.isDragging else {
+            guard !isUserInteractiveScroll, !isDragging else {
                 // The user is interacting with the chat, don't auto scroll
                 //
                 // In theory the user could have scrolled and stop between the call to
@@ -2158,7 +2155,7 @@ extension ChatViewController: ChatViewDataSourceDelegate {
                 return
             }
             
-            self.scrollToBottom(animated: true, force: true)
+            scrollToBottom(animated: true, force: true)
         }
     }
     
@@ -2922,15 +2919,15 @@ extension ChatViewController {
     private func chatViewDataSourceLoadAround() -> Date? {
         if let globalSearchMessageID = showConversationInformation?.messageObjectID,
            let message = entityManager.entityFetcher.getManagedObject(by: globalSearchMessageID) as? BaseMessage {
-            return message.date
+            message.date
         }
         else if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage,
                 let message = entityManager.entityFetcher
                 .getManagedObject(by: newestUnreadMessage) as? BaseMessage {
-            return message.date
+            message.date
         }
         else {
-            return chatScrollPositionProvider.chatScrollPosition(for: conversation)?.messageDate
+            chatScrollPositionProvider.chatScrollPosition(for: conversation)?.messageDate
         }
     }
 }
@@ -2984,7 +2981,7 @@ extension ChatViewController: GroupCallBannerButtonViewDelegate {
         }
         
         Task {
-            GlobalGroupCallsManagerSingleton.shared.startGroupCall(
+            GlobalGroupCallManagerSingleton.shared.startGroupCall(
                 in: group, intent: .join
             )
         }

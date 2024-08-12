@@ -269,7 +269,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessage(for: deletableContactAndConversation.conversation)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -280,7 +280,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: remainingContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessage(for: remainingContactAndConversation.conversation)!
                 message.sender = remainingContactAndConversation.contact
                 message.text = "Text \(i)"
             }
@@ -348,8 +348,7 @@ class EntityDestroyerTests: XCTestCase {
                         for i in 0..<100 {
                             for member in members {
                                 let message = entityManager.entityCreator.textMessage(
-                                    for: conversation,
-                                    setLastUpdate: true
+                                    for: conversation
                                 )!
                                 message.sender = member
                                 message.text = "Text \(i)"
@@ -366,7 +365,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessage(for: deletableContactAndConversation.conversation)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -376,7 +375,7 @@ class EntityDestroyerTests: XCTestCase {
         
         for i in 0..<100 {
             entityManager.performAndWaitSave {
-                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
+                let message = entityManager.entityCreator.textMessage(for: conversation2)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
                 
@@ -437,10 +436,7 @@ class EntityDestroyerTests: XCTestCase {
                         
                         for i in 0..<10 {
                             for member in members {
-                                let message = entityManager.entityCreator.textMessage(
-                                    for: conversation,
-                                    setLastUpdate: true
-                                )!
+                                let message = entityManager.entityCreator.textMessage(for: conversation)!
                                 message.sender = member
                                 message.text = "Text \(i)"
                                 
@@ -461,7 +457,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<10 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessage(for: deletableContactAndConversation.conversation)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -471,7 +467,7 @@ class EntityDestroyerTests: XCTestCase {
         
         for i in 0..<10 {
             entityManager.performAndWaitSave {
-                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
+                let message = entityManager.entityCreator.textMessage(for: conversation2)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
                 

@@ -50,18 +50,18 @@ extension ViewModelParticipant {
     private func cellAccessibilityVideoString() -> String {
         switch videoMuteState {
         case .muted:
-            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_video_disabled")
+            dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_video_disabled")
         case .unmuted:
-            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_video_enabled")
+            dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_video_enabled")
         }
     }
     
     private func cellAccessibilityAudioString() -> String {
         switch audioMuteState {
         case .muted:
-            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_audio_disabled")
+            dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_audio_disabled")
         case .unmuted:
-            return dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_audio_enabled")
+            dependencies.groupCallBundleUtil.localizedString(for: "group_call_accessibility_audio_enabled")
         }
     }
 }

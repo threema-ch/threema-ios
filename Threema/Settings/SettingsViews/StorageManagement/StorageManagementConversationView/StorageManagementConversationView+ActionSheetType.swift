@@ -28,18 +28,18 @@ extension StorageManagementConversationView {
         var title: String {
             switch self {
             case .messages:
-                return "delete_messages".localized
+                "delete_messages".localized
             case .files:
-                return "delete_media".localized
+                "delete_media".localized
             }
         }
             
         var description: String {
             switch self {
             case .messages:
-                return "delete_messages_older_than".localized
+                "delete_messages_older_than".localized
             case .files:
-                return "delete_media_older_than".localized
+                "delete_media_older_than".localized
             }
         }
     }

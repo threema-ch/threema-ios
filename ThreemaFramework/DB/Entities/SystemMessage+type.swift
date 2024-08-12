@@ -193,9 +193,11 @@ extension SystemMessage {
                 
             case .fsDisabledOutgoing:
                 return BundleUtil.localizedString(forKey: "forward_security_status_disabled_outgoing")
+
             case .fsNotSupportedAnymore:
                 return BundleUtil
                     .localizedString(forKey: "forward_security_contact_has_downgraded_to_an_incompatible_version")
+
             case let .systemMessageGroupCallStartedBy(name: name):
                 if UserSettings.shared().enableThreemaGroupCalls {
                     return String.localizedStringWithFormat(
@@ -206,14 +208,19 @@ extension SystemMessage {
                 else {
                     return BundleUtil.localizedString(forKey: "group_call_started_disabled")
                 }
+
             case .systemMessageGroupCallStarted:
                 return BundleUtil.localizedString(forKey: "group_call_started_by_local_system_message")
+
             case .systemMessageGroupCallEnded:
                 return BundleUtil.localizedString(forKey: "group_call_ended_system_message")
+
             case .systemMessageUnsupportedType:
                 return BundleUtil.localizedString(forKey: "systemMessage_unsupported_type")
+
             case let .fsDebugMessage(message):
                 return "kFsDebugMessage: \(message)"
+
             case .fsIllegalSessionState:
                 return BundleUtil.localizedString(forKey: "forward_security_illegal_session_state")
             }
@@ -258,42 +265,42 @@ extension SystemMessage {
             
             switch self {
             case .endedIncomingSuccessful:
-                return BundleUtil.localizedString(forKey: "call_incoming_ended")
+                BundleUtil.localizedString(forKey: "call_incoming_ended")
                 
             case .endedIncomingUnsuccessful:
-                return BundleUtil.localizedString(forKey: "call_missed")
+                BundleUtil.localizedString(forKey: "call_missed")
                 
             case .endedOutgoingSuccessful:
-                return BundleUtil.localizedString(forKey: "call_outgoing_ended")
+                BundleUtil.localizedString(forKey: "call_outgoing_ended")
                 
             case .endedOutgoingUnsuccessful:
-                return BundleUtil.localizedString(forKey: "call_canceled")
+                BundleUtil.localizedString(forKey: "call_canceled")
                 
             case .missedIncoming,
                  .missedOutgoing,
                  .rejectedTimeoutIncoming,
                  .rejectedUnknownIncoming,
                  .rejectedOffHoursIncoming:
-                return BundleUtil.localizedString(forKey: "call_missed")
+                BundleUtil.localizedString(forKey: "call_missed")
                 
             case .rejectedIncoming,
                  .rejectedOutgoing:
-                return BundleUtil.localizedString(forKey: "call_rejected")
+                BundleUtil.localizedString(forKey: "call_rejected")
                 
             case .rejectedBusyIncoming,
                  .rejectedBusyOutgoing:
-                return BundleUtil.localizedString(forKey: "call_rejected_busy")
+                BundleUtil.localizedString(forKey: "call_rejected_busy")
                 
             case .rejectedTimeoutOutgoing:
-                return BundleUtil.localizedString(forKey: "call_rejected_timeout")
+                BundleUtil.localizedString(forKey: "call_rejected_timeout")
                 
             case .rejectedDisabledIncoming,
                  .rejectedDisabledOutgoing:
-                return BundleUtil.localizedString(forKey: "call_rejected_disabled")
+                BundleUtil.localizedString(forKey: "call_rejected_disabled")
                 
             case .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
-                return BundleUtil.localizedString(forKey: "call_rejected_unknown")
+                BundleUtil.localizedString(forKey: "call_rejected_unknown")
             }
         }
         
@@ -319,7 +326,7 @@ extension SystemMessage {
             switch self {
             // Incoming
             case .endedIncomingSuccessful:
-                return "phone.fill.arrow.down.left"
+                "phone.fill.arrow.down.left"
                 
             case .rejectedIncoming,
                  .endedIncomingUnsuccessful,
@@ -329,12 +336,12 @@ extension SystemMessage {
                  .rejectedDisabledIncoming,
                  .rejectedUnknownIncoming,
                  .rejectedOffHoursIncoming:
-                return "threema.phone.fill.arrow.bend.left"
+                "threema.phone.fill.arrow.bend.left"
                 
             // Outgoing
             case .endedOutgoingSuccessful,
                  .endedOutgoingUnsuccessful:
-                return "phone.fill.arrow.up.right"
+                "phone.fill.arrow.up.right"
 
             case .missedOutgoing,
                  .rejectedOutgoing,
@@ -343,7 +350,7 @@ extension SystemMessage {
                  .rejectedDisabledOutgoing,
                  .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
-                return "threema.phone.fill.arrow.bend.right"
+                "threema.phone.fill.arrow.bend.right"
             }
         }
         
@@ -352,10 +359,10 @@ extension SystemMessage {
             switch self {
             // Incoming
             case .endedIncomingSuccessful:
-                return Colors.green
+                Colors.green
                 
             case .rejectedIncoming:
-                return Colors.orange
+                Colors.orange
                 
             case .endedIncomingUnsuccessful,
                  .missedIncoming,
@@ -364,14 +371,14 @@ extension SystemMessage {
                  .rejectedDisabledIncoming,
                  .rejectedUnknownIncoming,
                  .rejectedOffHoursIncoming:
-                return Colors.red
+                Colors.red
                 
             // Outgoing
             case .endedOutgoingSuccessful:
-                return Colors.green
+                Colors.green
                 
             case .endedOutgoingUnsuccessful:
-                return Colors.red
+                Colors.red
                 
             case .missedOutgoing,
                  .rejectedOutgoing,
@@ -380,7 +387,7 @@ extension SystemMessage {
                  .rejectedDisabledOutgoing,
                  .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
-                return Colors.red
+                Colors.red
             }
         }
     }
@@ -395,27 +402,27 @@ extension SystemMessage {
         public var localizedMessage: String {
             switch self {
             case .work:
-                return BundleUtil.localizedString(forKey: "contact_threema_work_conversation_info")
+                BundleUtil.localizedString(forKey: "contact_threema_work_conversation_info")
             case .consumer:
-                return BundleUtil.localizedString(forKey: "contact_threema_conversation_info")
+                BundleUtil.localizedString(forKey: "contact_threema_conversation_info")
             }
         }
         
         public var symbol: UIImage? {
             switch self {
             case .work:
-                return StyleKit.workIcon
+                StyleKit.workIcon
             case .consumer:
-                return StyleKit.houseIcon
+                StyleKit.houseIcon
             }
         }
         
         public var backgroundColor: UIColor {
             switch self {
             case .work:
-                return Colors.threemaWorkColor
+                Colors.threemaWorkColor
             case .consumer:
-                return Colors.threemaConsumerColor
+                Colors.threemaConsumerColor
             }
         }
     }

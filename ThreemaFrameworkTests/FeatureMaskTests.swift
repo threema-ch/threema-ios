@@ -160,7 +160,7 @@ class FeatureMaskTests: XCTestCase {
 
             let message = dbPreparer.save {
                 var members = [ContactEntity]()
-                test.members.forEach { member in
+                for member in test.members {
                     members.append(
                         dbPreparer.createContact(identity: member.identity, featureMask: member.mask)
                     )
@@ -187,7 +187,7 @@ class FeatureMaskTests: XCTestCase {
 
             XCTAssertEqual(test.isSupported, result.isSupported)
             XCTAssertEqual(test.unsupported.count, result.unsupported.count)
-            test.unsupported.forEach { identity in
+            for identity in test.unsupported {
                 XCTAssertTrue(
                     result.unsupported.map(\.identity.string).contains(identity)
                 )

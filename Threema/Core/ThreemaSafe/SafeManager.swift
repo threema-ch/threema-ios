@@ -51,7 +51,7 @@ import Foundation
                  let .backupFailed(message: message),
                  let .restoreError(message: message),
                  let .restoreFailed(message: message):
-                return localizedDescription + " [\(message)]"
+                localizedDescription + " [\(message)]"
             }
         }
     }

@@ -195,48 +195,50 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
 
 extension ChatViewCallSystemMessageTableViewCell: Reusable { }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageActions {
     
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
-
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
+        
         guard let message = callMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
+        typealias Provider = ChatViewMessageActionsProvider
         
-        let detailAction = Provider.detailsAction {
+        // Details
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
-            
-        let selectHandler = Provider.selectAction {
+        
+        // Select
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        let deleteAction = Provider.deleteAction(
+        // Build menu
+
+        let basicActions = Provider.defaultBasicActions(
             message: message,
+            popOverSource: chatBubbleView,
+            detailsHandler: detailsHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            popOverSource: chatBubbleView
+            didDelete: didDelete
         )
         
-        // Build menu
-        return ([], [detailAction, selectHandler, deleteAction])
+        return [.init(sectionType: .inline, actions: basicActions)]
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

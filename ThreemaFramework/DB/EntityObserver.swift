@@ -169,7 +169,10 @@ final class EntityObserver: NSObject {
     }
 
     private func isEntityTypeAllowed(_ managedObject: NSManagedObject) -> Bool {
-        managedObject is ContactEntity || managedObject is Conversation || managedObject is GroupEntity
+        managedObject is ContactEntity ||
+            managedObject is Conversation ||
+            managedObject is GroupEntity ||
+            managedObject is DistributionListEntity
     }
 
     // MARK: Subscription token

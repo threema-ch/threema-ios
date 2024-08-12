@@ -170,6 +170,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         }
                 
         observeGroup(\.profilePicture) { [weak self] in
+            AvatarMaker.shared().clearCacheForProfilePicture()
             self?.updateHeader(animated: false)
         }
 
@@ -585,20 +586,17 @@ extension Group {
     }
     
     private func avatarImageProvider(completion: @escaping (UIImage?) -> Void) {
-        let entityManager = EntityManager()
-        if let conversationEntity = entityManager.entityFetcher.conversation(
-            for: groupID,
-            creator: groupCreatorIdentity
-        ) {
-            AvatarMaker.shared().avatar(
-                for: conversationEntity,
-                size: DetailsHeaderProfileView.avatarImageSize,
-                masked: true
-            ) { avatarImage, _ in
-                DispatchQueue.main.async {
-                    completion(avatarImage)
-                }
+        guard let profilePictureData = profilePicture, let profilePicture = UIImage(data: profilePictureData) else {
+            Task { @MainActor in
+                completion(AvatarMaker.shared().unknownGroupImage())
             }
+            return
+        }
+        
+        let maskedProfilePicture = AvatarMaker.maskImage(profilePicture)
+        
+        Task { @MainActor in
+            completion(maskedProfilePicture)
         }
     }
 }

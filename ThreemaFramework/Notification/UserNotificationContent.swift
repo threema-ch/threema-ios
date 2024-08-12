@@ -76,7 +76,7 @@ public class UserNotificationContent {
     var userInfo: [String: [String: String]] {
         if isGroupMessage {
             if let groupID, let groupCreator {
-                return [
+                [
                     "threema": [
                         "cmd": cmd,
                         "from": senderID,
@@ -88,7 +88,7 @@ public class UserNotificationContent {
             }
             else {
                 // This can happen if base message was never set
-                return [
+                [
                     "threema": [
                         "cmd": cmd,
                         "from": senderID,
@@ -98,7 +98,7 @@ public class UserNotificationContent {
             }
         }
         else {
-            return ["threema": ["cmd": cmd, "from": senderID, "messageId": messageID]]
+            ["threema": ["cmd": cmd, "from": senderID, "messageId": messageID]]
         }
     }
     

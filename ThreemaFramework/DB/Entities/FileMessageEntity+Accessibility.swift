@@ -67,49 +67,49 @@ extension FileMessageEntity: MessageAccessibility {
     public var customAccessibilityHint: String? {
         switch fileMessageType {
         case .image:
-            return BundleUtil.localizedString(forKey: "accessibility_imageMessage_hint")
+            BundleUtil.localizedString(forKey: "accessibility_imageMessage_hint")
         case .video:
-            return BundleUtil.localizedString(forKey: "accessibility_videoMessage_hint")
+            BundleUtil.localizedString(forKey: "accessibility_videoMessage_hint")
         case .sticker:
-            return nil // No interaction
+            nil // No interaction
         case .animatedSticker:
-            return BundleUtil.localizedString(forKey: "accessibility_animatedStickerMessage_hint")
+            BundleUtil.localizedString(forKey: "accessibility_animatedStickerMessage_hint")
         case .animatedImage:
-            return BundleUtil.localizedString(forKey: "accessibility_animatedImageMessage_hint")
+            BundleUtil.localizedString(forKey: "accessibility_animatedImageMessage_hint")
         case .file:
-            return BundleUtil.localizedString(forKey: "accessibility_fileMessage_hint")
+            BundleUtil.localizedString(forKey: "accessibility_fileMessage_hint")
         case .voice:
-            return nil // Handled on cell
+            nil // Handled on cell
         }
     }
     
     public var customAccessibilityTrait: UIAccessibilityTraits {
         switch fileMessageType {
         case .image, .animatedImage, .animatedSticker:
-            return [.button, .image]
+            [.button, .image]
         case .video, .voice:
-            return [.button, .playsSound, .startsMediaSession]
+            [.button, .playsSound, .startsMediaSession]
         case .file:
-            return [.button, .staticText]
+            [.button, .staticText]
         case .sticker:
-            return .image
+            .image
         }
     }
     
     public var accessibilityMessageTypeDescription: String {
         switch fileMessageType {
         case .image:
-            return BundleUtil.localizedString(forKey: "accessibility_imageMessage_description")
+            BundleUtil.localizedString(forKey: "accessibility_imageMessage_description")
         case .video:
-            return BundleUtil.localizedString(forKey: "accessibility_videoMessage_description")
+            BundleUtil.localizedString(forKey: "accessibility_videoMessage_description")
         case .sticker, .animatedSticker:
-            return BundleUtil.localizedString(forKey: "accessibility_stickerMessage_description")
+            BundleUtil.localizedString(forKey: "accessibility_stickerMessage_description")
         case .animatedImage:
-            return BundleUtil.localizedString(forKey: "accessibility_animatedImageMessage_description")
+            BundleUtil.localizedString(forKey: "accessibility_animatedImageMessage_description")
         case .file:
-            return BundleUtil.localizedString(forKey: "accessibility_fileMessage_description")
+            BundleUtil.localizedString(forKey: "accessibility_fileMessage_description")
         case .voice:
-            return BundleUtil.localizedString(forKey: "accessibility_voiceMessage_description")
+            BundleUtil.localizedString(forKey: "accessibility_voiceMessage_description")
         }
     }
 }

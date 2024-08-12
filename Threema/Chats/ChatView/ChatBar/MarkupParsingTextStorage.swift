@@ -206,14 +206,13 @@ class MarkupParsingTextStorage: NSTextStorage {
         
         if !backingStore.string.isEmpty {
             let textAlignment = backingStore.string.textAlignment
-            let writingDirection: NSWritingDirection
-            
-            switch textAlignment {
-            case .right: writingDirection = .rightToLeft
-            case .left: writingDirection = .leftToRight
-            case .natural, .center, .justified: writingDirection = .natural
-            @unknown default: writingDirection = .natural
-            }
+            let writingDirection: NSWritingDirection =
+                switch textAlignment {
+                case .right: .rightToLeft
+                case .left: .leftToRight
+                case .natural, .center, .justified: .natural
+                @unknown default: .natural
+                }
             
             let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.baseWritingDirection = writingDirection

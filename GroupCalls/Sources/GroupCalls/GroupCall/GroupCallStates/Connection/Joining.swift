@@ -36,26 +36,29 @@ struct Joining: GroupCallState {
     
     func next() async throws -> GroupCallState? {
         // TODO: (IOS-3857) Logging
-        DDLogNotice("[GroupCall] State is Joining \(groupCallActor.callID.bytes.hexEncodedString())")
-        
+        DDLogNotice("[GroupCall] Joining `next()` in \(groupCallActor.callID)")
+
         guard let certificate = RTCCertificate.generate(withParams: [RTCEncryptionKeyType.ECDSA: 2_592_000]) else {
             throw GroupCallError.serializationFailure
         }
         
-        /// **Protocol Step: Group Call Join Steps** 2. Join (or implicitly create) the group call via a
-        /// SfuHttpRequest.Join request. If this does not result in a response within 10s,
-        ///  abort these steps and notify the user.
-        ///  Note: Join Steps 3 & 4 are within the `.join()` below.
+        /// **Protocol Step: Group Call Join Steps**
+        /// 2.  _Join_ (or implicitly create) the group call via a `SfuHttpRequest.Join`
+        ///   request. If this does not result in a response within 10s, abort these
+        ///   steps and notify the user.
+        /// Note: Join Steps 3 & 4 are within the `join(with:)` below.
         let joinResponse = try await groupCallActor.sfuHTTPConnection.join(with: certificate)
-        DDLogNotice("[GroupCall] [JoinSteps] JoinResponse was \(joinResponse).")
+        DDLogNotice("[GroupCall] [JoinSteps] JoinResponse was \(joinResponse)")
 
         switch joinResponse {
         case .notDetermined, .notRunning, .timeout:
+            // TODO: (IOS-4693) Improve this error handling
             return Ending(groupCallActor: groupCallActor)
             
         case .full:
-            await groupCallActor
-                .showGroupCallFullAlert(maxParticipants: groupCallActor.groupCallBaseState.maxParticipants)
+            await groupCallActor.showGroupCallFullAlert(
+                maxParticipants: groupCallActor.groupCallBaseState.maxParticipants
+            )
             return Ending(groupCallActor: groupCallActor)
             
         case let .running(joinResponse):
@@ -64,8 +67,6 @@ struct Joining: GroupCallState {
             }
             
             await groupCallActor.setExactCallStartDate(joinResponse.startedAt)
-            
-            DDLogNotice("[GroupCall] [JoinSteps] Start Connecting")
             
             return try Connecting(groupCallActor: groupCallActor, joinResponse: joinResponse, certificate: certificate)
         }

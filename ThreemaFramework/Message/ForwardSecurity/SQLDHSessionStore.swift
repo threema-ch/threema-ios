@@ -92,8 +92,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         self.keyWrapper = keyWrapper
         self.versionInfo = versionInfo
         
-        DDLogVerbose(
-            "[SQLDHSessionStoreMigration] [ForwardSecurity] Initialized with version \(db.userVersion ?? "unknown")"
+        DDLogDebug(
+            "[ForwardSecurity] Initialized session store with version \(db.userVersion ?? "unknown")"
         )
         
         // Ensure that we are securely deleting entries (no WAL mode / journal mode 'DELETE' and secure_delete on as
@@ -127,7 +127,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     
     func upgradeIfNecessary() throws {
         DDLogNotice(
-            "[SQLDHSessionStoreMigration] \(#function) Start with version \(String(describing: db.userVersion)) and \(versionInfo.dbVersion)"
+            "[ForwardSecurity] Start session store migration with version \(String(describing: db.userVersion)) and \(versionInfo.dbVersion)"
         )
         let currentVersion = db.userVersion ?? 0
         if currentVersion != versionInfo.dbVersion {
@@ -160,37 +160,37 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     }
     
     func onUpgrade(db: Connection, oldVersion: Int32, newVersion: Int32) throws {
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Start")
+        DDLogNotice("[ForwardSecurity] Upgrade migration start")
         if oldVersion < 1, newVersion >= 1 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v1")
+            DDLogNotice("[ForwardSecurity] Migration upgrade to v1")
             SQLDHSessionStore.upgradeToV1(db)
         }
         
         if oldVersion < 2, newVersion >= 2 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v2")
+            DDLogNotice("[ForwardSecurity] Migration upgrade to v2")
             try upgradeToV2(db)
         }
         
         if oldVersion < 3, newVersion >= 3 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v3")
+            DDLogNotice("[ForwardSecurity] Migration upgrade to v3")
             try upgradeToV3(db)
         }
         
         if oldVersion < 4, newVersion >= 4 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v4")
+            DDLogNotice("[ForwardSecurity] Migration upgrade to v4")
             try upgradeToV4(db)
         }
         
         if oldVersion < 5, newVersion >= 5 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Upgrade to v5")
+            DDLogNotice("[ForwardSecurity] Migration upgrade to v5")
             try upgradeToV5(db)
         }
         
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Finished")
+        DDLogNotice("[ForwardSecurity] Upgrade migration finished")
     }
     
     func onDowngrade(db: Connection, oldVersion: Int32, newVersion: Int32) throws {
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Start")
+        DDLogNotice("[ForwardSecurity] Downgrade migration start")
         
         guard oldVersion <= versionInfo.maximumSupportedDowngradeVersion else {
             throw SQLDHSessionStore.downgradeError(
@@ -201,49 +201,49 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         }
         
         if oldVersion > 4, newVersion <= 4 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v5")
+            DDLogNotice("[ForwardSecurity] Migration downgrade from v5")
             try downgradeFromV5(db)
         }
         
         if oldVersion > 3, newVersion <= 3 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v4")
+            DDLogNotice("[ForwardSecurity] Migration downgrade from v4")
             try downgradeFromV4(db)
         }
         
         if oldVersion > 2, newVersion <= 2 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v3")
+            DDLogNotice("[ForwardSecurity] Migration downgrade from v3")
             try downgradeFromV3(db)
         }
         
         if oldVersion > 1, newVersion <= 1 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v2")
+            DDLogNotice("[ForwardSecurity] Migration downgrade from v2")
             try downgradeFromV2(db)
         }
         
         if oldVersion > 0, newVersion <= 0 {
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Downgrade from v1")
+            DDLogNotice("[ForwardSecurity] Migration downgrade from v1")
             SQLDHSessionStore.downgradeFromV1(db)
         }
         
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Finished")
+        DDLogNotice("[ForwardSecurity] Downgrade migration finished")
     }
     
     public func executeNull() throws {
         DDLogNotice(
-            "[SQLDHSessionStoreMigration] \(#function) Start with version \(String(describing: db.userVersion))"
+            "[ForwardSecurity] Migration start with version \(String(describing: db.userVersion))"
         )
         try dbQueue.sync {
             DDLogNotice(
-                "[SQLDHSessionStoreMigration] \(#function) Entered dbQueue with version \(String(describing: db.userVersion))"
+                "[ForwardSecurity] Migration entered dbQueue with version \(String(describing: db.userVersion))"
             )
             try upgradeIfNecessary()
             DDLogNotice(
-                "[SQLDHSessionStoreMigration] \(#function) Exit dbQueue with version \(String(describing: db.userVersion))"
+                "[ForwardSecurity] Migration exit dbQueue with version \(String(describing: db.userVersion))"
             )
         }
         
         DDLogNotice(
-            "[SQLDHSessionStoreMigration] \(#function) Finished with version \(String(describing: db.userVersion))"
+            "[ForwardSecurity] Migration finished with version \(String(describing: db.userVersion))"
         )
     }
     
@@ -295,7 +295,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 newSessionCommitted <- session.newSessionCommitted,
                 lastMessageSent <- session.lastMessageSent
             ))
-            DDLogNotice("[ForwardSecurity] Stored: \(session.description)")
+            DDLogVerbose("[ForwardSecurity] Stored: \(session.description)")
         }
     }
     
@@ -361,7 +361,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 )
             }
         }
-        DDLogNotice("[ForwardSecurity] Updated: \(session.description)")
+        DDLogVerbose("[ForwardSecurity] Updated: \(session.description)")
     }
     
     public func updateNewSessionCommitLastMessageSentDateAndVersions(session: DHSession) throws {
@@ -399,7 +399,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 )
             )
         }
-        DDLogNotice(
+        DDLogVerbose(
             "[ForwardSecurity] Updated new session committed (\(session.newSessionCommitted)) and last message sent (\(String(describing: session.lastMessageSent))) in \(session.description)"
         )
     }
@@ -412,7 +412,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         .delete()
                 )
             DDLogNotice(
-                "[ForwardSecurity] Tried deleting: \(sessionID.description) peer: \(peerIdentity), success: \(numDeleted > 0)"
+                "[ForwardSecurity] Tried deleting: \(sessionID.description) peer: \(peerIdentity), count deleted: \(numDeleted)"
             )
             return numDeleted > 0
         }
@@ -447,7 +447,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
             }
             let numDeleted = try db.run(filter.delete())
             
-            DDLogNotice(
+            DDLogDebug(
                 "[ForwardSecurity] Tried deleting all DH Session with peer: \(peerIdentity) except: \(excludeSessionID), count deleted: \(numDeleted)"
             )
             
@@ -474,17 +474,15 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         /// If the table doesn't exist, an error is thrown https://github.com/stephencelis/SQLite.swift/issues/693
         do {
             if try !(db.scalar(sessionTable.exists)) {
-                DDLogNotice(
-                    "[SQLDHSessionStoreMigration] \(#function) The table exists and has zero rows."
-                )
+                // This is also reached for clients with no FS support as the store is still initialized when an
+                // incoming message is processed
+                DDLogDebug("[ForwardSecurity] DB creation: The table exists and has zero rows.")
             }
         }
         catch {
-            DDLogVerbose("[SQLDHSessionStoreMigration] DB doesn't exist yet.")
             // Ignore errors
             
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) The error is \(error)")
-            DDLogNotice("[SQLDHSessionStoreMigration] \(#function) Set DB version because the table does not yet exist")
+            DDLogNotice("[ForwardSecurity] Set DB version because the table does not yet exist: \(error)")
             db.userVersion = versionInfo.dbVersion
         }
         
@@ -617,7 +615,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         }
         catch KeyWrappingError.decryptionFailed {
             // This is irrecoverable, and we need to delete the session
-            DDLogError("[ForwardSecurity] KeyWrapping Error in \(#function), deleting session.")
+            DDLogError("[ForwardSecurity] KeyWrapping error 'decryption failed' in \(#function). Deleting session.")
             try db
                 .run(
                     filterForSession(
@@ -631,7 +629,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         }
         catch let DHSession.State.StateError.invalidStateError(description) {
             // This is irrecoverable, and we need to delete the session
-            DDLogError("[ForwardSecurity] Invalid state error in \(#function), deleting session. Error: \(description)")
+            DDLogError("[ForwardSecurity] Invalid state error in \(#function). Deleting session. \(description)")
             try errorHandler?.handleDHSessionIllegalStateError(
                 sessionID: DHSessionID(value: row.get(sessionIDColumn)),
                 peerIdentity: row.get(peerIdentityColumn)

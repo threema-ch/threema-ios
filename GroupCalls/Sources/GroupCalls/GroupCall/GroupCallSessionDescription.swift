@@ -259,7 +259,7 @@ extension GroupCallSessionDescription {
     private func createSessionLines(from descriptionInit: RemoteSessionDescriptionInit, bundle: [Mid]) -> [String] {
         let lines = [
             "v=0",
-            "o=- \(state.localParticipantID.id) \(state.version) IN IP4 127.0.0.1",
+            "o=- \(state.localParticipantID) \(state.version) IN IP4 127.0.0.1",
             "s=-",
             "t=0 0",
             "a=group:BUNDLE \(bundle.map { $0 }.joined(separator: " "))",

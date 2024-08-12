@@ -219,7 +219,7 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
             self.recordingStateSubject.send(.recording)
             addRecording { [weak self] result in
                 if case let .failure(error) = result, let self {
-                    self.delegate?.handleError(error)
+                    delegate?.handleError(error)
                 }
                 continuation.resume()
             }
@@ -234,30 +234,37 @@ final class VoiceMessageAudioRecorder: NSObject, VoiceMessageAudioRecorderProtoc
             DDLogInfo("Can't stop recording while not recording")
             return
         }
-
-        // We do this to avoid a crash caused by starting a recording in another App, using the audioSessionManager
-        // Instance does not work here
-        try? AVAudioSession.sharedInstance().setActive(false)
         
-        recorder?.stop()
-        
-        switch await MediaManager.concatenateRecordingsAndSave(
-            combine: recordingSessions,
-            to: tmpRecorderFile
-        ) {
-        case .success:
-            adaptToProximityState()
-            resetIdleAndProximity()
+        do {
+            // We do this to avoid a crash caused by starting a recording in another App, using the audioSessionManager
+            // Instance does not work here
+            recorder?.stop()
+            try AVAudioSession.sharedInstance().setActive(false)
             
-            audioSessionManager.setupAudioSessionForPlayback()
-            await MainActor.run {
-                stopTimer()
+            switch await MediaManager.concatenateRecordingsAndSave(
+                combine: recordingSessions,
+                to: tmpRecorderFile
+            ) {
+            case .success:
+                adaptToProximityState()
+                resetIdleAndProximity()
+                
+                audioSessionManager.setupAudioSessionForPlayback()
+                await MainActor.run {
+                    stopTimer()
+                }
+                recordingStateSubject.send(.stopped)
+                
+            case let .failure(error):
+                delegate?.handleError(error)
+                recordingStateSubject.send(.stopped)
             }
-            recordingStateSubject.send(.stopped)
-            
-        case let .failure(error):
+        }
+        catch let error as LocalizedError {
             delegate?.handleError(error)
-            recordingStateSubject.send(.stopped)
+        }
+        catch {
+            DDLogError("\(error.localizedDescription)")
         }
     }
     

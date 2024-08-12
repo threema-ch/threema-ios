@@ -49,13 +49,13 @@ import ThreemaProtocols
             )
             
         case let .reject(reject):
-            let groupIdentity: GroupIdentity?
-            if reject.hasGroupIdentity {
-                groupIdentity = try? GroupIdentity(commonGroupIdentity: reject.groupIdentity)
-            }
-            else {
-                groupIdentity = nil
-            }
+            let groupIdentity: GroupIdentity? =
+                if reject.hasGroupIdentity {
+                    try? GroupIdentity(commonGroupIdentity: reject.groupIdentity)
+                }
+                else {
+                    nil
+                }
             
             return try ForwardSecurityDataReject(
                 sessionID: sessionID,
@@ -70,13 +70,13 @@ import ThreemaProtocols
             let offeredVersion = CspE2eFs_Version(rawValue: Int(message.offeredVersion)) ??
                 .UNRECOGNIZED(Int(message.offeredVersion))
             
-            let groupIdentity: GroupIdentity?
-            if message.hasGroupIdentity {
-                groupIdentity = try? GroupIdentity(commonGroupIdentity: message.groupIdentity)
-            }
-            else {
-                groupIdentity = nil
-            }
+            let groupIdentity: GroupIdentity? =
+                if message.hasGroupIdentity {
+                    try? GroupIdentity(commonGroupIdentity: message.groupIdentity)
+                }
+                else {
+                    nil
+                }
             
             return ForwardSecurityDataMessage(
                 sessionID: sessionID,

@@ -120,7 +120,7 @@
 
     ContactAcquaintanceLevel acquaintanceLevel = boxedMessage.flags & MESSAGE_FLAG_GROUP ? ContactAcquaintanceLevelGroup : ContactAcquaintanceLevelDirect;
 
-    [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxedMessage.fromIdentity acquaintanceLevel:acquaintanceLevel entityManager:entityManager onCompletion:^(NSData *publicKey) {
+    [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxedMessage.fromIdentity acquaintanceLevel:acquaintanceLevel entityManager:entityManager ignoreBlockUnknown:false onCompletion:^(NSData *publicKey) {
         NSAssert(!([NSThread isMainThread] == YES), @"Should not running in main thread");
 
         [entityManager performBlock:^{
@@ -586,9 +586,11 @@ Process incoming message.
             [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupCallStartMessage class]]) {
             GroupCallStartMessage *newMsg = (GroupCallStartMessage *) amsg;
-            [[GlobalGroupCallsManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation receiveDate:newMsg.date onCompletion:^{
-                DDLogNotice(@"[GroupCall] [DB] Completion handler called");
-                onCompletion();
+            [[GlobalGroupCallManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation.objectID receiveDate:newMsg.date completionHandler:^{
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    DDLogNotice(@"[GroupCall] [DB] Completion handler called");
+                    onCompletion();
+                });
             }];
         } else if ([amsg isKindOfClass:[DeleteGroupMessage class]]) {
             // On error case `onError` will be called and message is `nil`
@@ -774,11 +776,11 @@ Process incoming message.
                     dbmsg.delivered = [NSNumber numberWithBool:YES];
                 dbmsg.readDate = msg.date;
                 dbmsg.read = [NSNumber numberWithBool:YES];
-            } else if (msg.receiptType == ReceiptTypeAck) {
+            } else if (msg.receiptType == ReceiptTypeAck && dbmsg.deletedAt == nil) {
                 DDLogNotice(@"Message ID %@ has been user acknowledged by recipient", [NSString stringWithHexData:receiptMessageId]);
                 dbmsg.userackDate = msg.date;
                 dbmsg.userack = [NSNumber numberWithBool:YES];
-            } else if (msg.receiptType == ReceiptTypeDecline) {
+            } else if (msg.receiptType == ReceiptTypeDecline && dbmsg.deletedAt == nil) {
                 DDLogNotice(@"Message ID %@ has been user declined by recipient", [NSString stringWithHexData:receiptMessageId]);
                 dbmsg.userackDate = msg.date;
                 dbmsg.userack = [NSNumber numberWithBool:NO];

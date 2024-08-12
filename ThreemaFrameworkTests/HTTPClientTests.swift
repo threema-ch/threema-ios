@@ -27,30 +27,28 @@ class HTTPClientTests: XCTestCase {
 
     // MARK: - Properties
 
-    var sslCAHelperMock: SSLCAHelperMock!
+    let sslCAHelperMock = SSLCAHelperMock()
     let sessionManager = URLSessionManager(with: TestSessionProvider())
+
     let expectedDomain = "www.example.com"
-    let dummyAuthToken = "dummyAuthToken"
-    let dummyData = Data("DummyData".utf8)
 
-    var challenge: URLAuthenticationChallenge?
+    let expectedAuthToken = "authToken"
 
-    override func setUp() {
-        sslCAHelperMock = SSLCAHelperMock()
-        challenge = URLAuthenticationChallenge(
-            protectionSpace: URLProtectionSpace(
-                host: expectedDomain,
-                port: 80,
-                protocol: "https",
-                realm: nil,
-                authenticationMethod: NSURLAuthenticationMethodServerTrust
-            ),
-            proposedCredential: nil,
-            previousFailureCount: 0,
-            failureResponse: nil,
-            error: nil,
-            sender: AuthenticationChallengeSenderMock()
-        )
+    let expectedUsername = "testUser"
+    let expectedPassword = "testPassword"
+
+    let expectedData = Data("data".utf8)
+
+    private var ddLoggerMock: DDLoggerMock!
+
+    override func setUpWithError() throws {
+        ddLoggerMock = DDLoggerMock()
+        DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
+        DDLog.add(ddLoggerMock)
+    }
+
+    override func tearDownWithError() throws {
+        DDLog.remove(ddLoggerMock)
     }
 
     // MARK: - Delete
@@ -59,10 +57,10 @@ class HTTPClientTests: XCTestCase {
         // Arrange
         let expectation = expectation(description: "deleteOwnSafeExpectation")
         let url = URL(string: "\(expectedDomain)/deleteOwnSafe")!
+        let (httpClient, challenges) = httpClientAndChallengeForOwnSafeServer()
         URLProtocolMock.mockResponses[url] = (
-            (nil, nil, nil, challenge), { }
+            (nil, nil, nil, challenges), { }
         )
-        let httpClient = HTTPClientForOwnSafeServer()
 
         // Act
         httpClient.delete(url: url) { _, _, _ in
@@ -79,16 +77,22 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertTrue(
+            ddLoggerMock.exists(
+                message: "HttpClient authentication method: NSURLAuthenticationMethodHTTPBasic"
+            )
+        )
     }
 
     func testDeleteForThreemaSafe() throws {
         // Arrange
         let expectation = expectation(description: "deleteThreemaSafeExpectation")
         let url = URL(string: "\(expectedDomain)/deleteThreemaSafe")!
+        let (httpClient, challenge) = httpClientAndChallengeForThreemaSafeServer()
         URLProtocolMock.mockResponses[url] = (
             (nil, nil, nil, challenge), { }
         )
-        let httpClient = HTTPClientForThreemaSafeServer()
 
         // Act
         httpClient.delete(url: url) { _, _, _ in
@@ -105,6 +109,8 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertEqual(ddLoggerMock.logMessages.count, 0)
     }
 
     // MARK: - Download
@@ -113,10 +119,10 @@ class HTTPClientTests: XCTestCase {
         // Arrange
         let expectation = expectation(description: "downloadOwnSafeExpectation")
         let url = URL(string: "\(expectedDomain)/downloadOwnSafe")!
+        let (httpClient, challenge) = httpClientAndChallengeForOwnSafeServer()
         URLProtocolMock.mockResponses[url] = (
             (nil, nil, nil, challenge), { }
         )
-        let httpClient = HTTPClientForOwnSafeServer()
 
         // Act
         httpClient.downloadData(url: url, contentType: .octetStream) { _, _, _ in
@@ -134,16 +140,22 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertTrue(
+            ddLoggerMock.exists(
+                message: "HttpClient authentication method: NSURLAuthenticationMethodHTTPBasic"
+            )
+        )
     }
 
     func testDownloadForThreemaSafe() throws {
         // Arrange
         let expectation = expectation(description: "downloadThreemaSafeExpectation")
         let url = URL(string: "\(expectedDomain)/downloadThreemaSafe")!
+        let (httpClient, challenge) = httpClientAndChallengeForThreemaSafeServer()
         URLProtocolMock.mockResponses[url] = (
             (nil, nil, nil, challenge), { }
         )
-        let httpClient = HTTPClientForThreemaSafeServer()
 
         // Act
         httpClient.downloadData(url: url, contentType: .octetStream) { _, _, _ in
@@ -161,16 +173,18 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertEqual(ddLoggerMock.logMessages.count, 0)
     }
 
     func testDownloadForGeneralHTTPClient() throws {
         // Arrange
         let expectation = expectation(description: "downloadGeneralClientExpectation")
         let url = URL(string: "\(expectedDomain)/downloadGeneralClient")!
+        let (httpClient, challenge) = generalHTTPClientAndChallenge()
         URLProtocolMock.mockResponses[url] = (
             (nil, nil, nil, challenge), { }
         )
-        let httpClient = generalHTTPClient()
 
         // Act
         httpClient.downloadData(url: url, contentType: .octetStream) { _, _, _ in
@@ -191,6 +205,8 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertEqual(ddLoggerMock.logMessages.count, 0)
     }
 
     // MARK: - Upload
@@ -199,13 +215,13 @@ class HTTPClientTests: XCTestCase {
         // Arrange
         let expectation = expectation(description: "uploadOwnSafeExpectation")
         let url = URL(string: "\(expectedDomain)/uploadOwnSafe")!
+        let (httpClient, challenge) = httpClientAndChallengeForOwnSafeServer()
         URLProtocolMock.mockResponses[url] = (
             (nil, nil, nil, challenge), { }
         )
-        let httpClient = HTTPClientForOwnSafeServer()
 
         // Act
-        httpClient.uploadData(url: url, data: dummyData) { _, _, _ in
+        httpClient.uploadData(url: url, data: expectedData) { _, _, _ in
             expectation.fulfill()
         }
 
@@ -223,19 +239,25 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertTrue(
+            ddLoggerMock.exists(
+                message: "HttpClient authentication method: NSURLAuthenticationMethodHTTPBasic"
+            )
+        )
     }
 
     func testUploadForThreemaSafe() throws {
         // Arrange
         let expectation = expectation(description: "uploadThreemaSafeExpectation")
         let url = URL(string: "\(expectedDomain)/uploadThreemaSafe")!
+        let (httpClient, challenge) = httpClientAndChallengeForThreemaSafeServer()
         URLProtocolMock.mockResponses[url] = (
             (nil, nil, nil, challenge), { }
         )
-        let httpClient = HTTPClientForThreemaSafeServer()
 
         // Act
-        httpClient.uploadData(url: url, data: dummyData) { _, _, _ in
+        httpClient.uploadData(url: url, data: expectedData) { _, _, _ in
             expectation.fulfill()
         }
 
@@ -253,6 +275,8 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertEqual(ddLoggerMock.logMessages.count, 0)
     }
 
     func testUploadMultipart() throws {
@@ -261,19 +285,19 @@ class HTTPClientTests: XCTestCase {
         let dummyTaskDescription = "dummyTaskDescription"
         let url = URL(string: "\(expectedDomain)/uploadMultipart")!
         let boundary = "---------------------------Boundary_Line"
-        let contentType = String(format: "multipart/form-data; boundary=%@", boundary)
+        let contentType = "multipart/form-data; boundary=\(boundary)"
 
+        let (httpClient, challenge) = httpClientAndChallengeForThreemaSafeServer()
         URLProtocolMock.mockResponses[url] = (
             (nil, nil, nil, challenge), { }
         )
-        let httpClient = HTTPClientForThreemaSafeServer()
 
         // Act
         let task = httpClient.uploadDataMultipart(
             taskDescription: dummyTaskDescription,
             url: url,
             contentType: contentType,
-            data: dummyData,
+            data: expectedData,
             delegate: httpClient
         ) { _, _, _, _ in
             expectation.fulfill()
@@ -294,6 +318,50 @@ class HTTPClientTests: XCTestCase {
         XCTAssertFalse(sessionManager.sessionStore.isEmpty)
         XCTAssertGreaterThan(sslCAHelperMock.handleCalls.count, 0)
         XCTAssertEqual(sslCAHelperMock.evaluateCalls.count, 0)
+
+        XCTAssertEqual(ddLoggerMock.logMessages.count, 0)
+    }
+
+    // MARK: - URLSessionTaskDelegate Tests
+
+    func testURLSessionTaskDidReceiveChallengeForOwnSafe() async {
+        // Arrange
+        let url = URL(string: "\(expectedDomain)")!
+        let (httpClient, challenges) = httpClientAndChallengeForOwnSafeServer()
+        let session = URLSession(configuration: .default)
+        let task = session.dataTask(with: URLRequest(url: url))
+
+        // Act
+        let (challengeDisposition, credentials) = await httpClient.urlSession(
+            session,
+            task: task,
+            didReceive: challenges.first(where: {
+                $0.protectionSpace.authenticationMethod == NSURLAuthenticationMethodHTTPBasic
+            })!
+        )
+
+        // Assert
+        XCTAssertEqual(challengeDisposition, .useCredential)
+        XCTAssertEqual(credentials?.user, expectedUsername)
+    }
+
+    func testURLSessionTaskDidReceiveChallengeForThreemaSafe() async {
+        // Arrange
+        let url = URL(string: "\(expectedDomain)")!
+        let (httpClient, challenges) = httpClientAndChallengeForThreemaSafeServer()
+        let session = URLSession(configuration: .default)
+        let task = session.dataTask(with: URLRequest(url: url))
+
+        // Act
+        let (challengeDisposition, credentials) = await httpClient.urlSession(
+            session,
+            task: task,
+            didReceive: challenges.first!
+        )
+
+        // Assert
+        XCTAssertEqual(challengeDisposition, .performDefaultHandling)
+        XCTAssertNil(credentials)
     }
 
     // MARK: - Batch Assertion Functions
@@ -307,40 +375,76 @@ class HTTPClientTests: XCTestCase {
 
     private func assertThreemaSafeRequest(request: URLRequest) {
         XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.userAgent.rawValue], "Threema")
-        XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.authorization.rawValue], dummyAuthToken)
+        XCTAssertEqual(request.allHTTPHeaderFields?[HTTPHeaderField.authorization.rawValue], expectedAuthToken)
         XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalAndRemoteCacheData)
         XCTAssertTrue(request.allowsCellularAccess)
     }
 
     // MARK: - Helpers
 
-    private func HTTPClientForOwnSafeServer() -> HTTPClient {
-        HTTPClient(
+    private func httpClientAndChallengeForOwnSafeServer() -> (HTTPClient, [URLAuthenticationChallenge]) {
+        let client = HTTPClient(
             authorization: nil,
-            user: "testUser",
-            password: "testPassword",
+            user: expectedUsername,
+            password: expectedPassword,
             sessionManager: sessionManager,
             sslCAHelper: sslCAHelperMock
         )
+
+        let challenges = [
+            authenticationChallenge(authenticationMethod: NSURLAuthenticationMethodServerTrust),
+            authenticationChallenge(authenticationMethod: NSURLAuthenticationMethodHTTPBasic),
+        ]
+
+        return (client, challenges)
     }
 
-    private func HTTPClientForThreemaSafeServer() -> HTTPClient {
-        HTTPClient(
-            authorization: dummyAuthToken,
+    private func httpClientAndChallengeForThreemaSafeServer() -> (HTTPClient, [URLAuthenticationChallenge]) {
+        let client = HTTPClient(
+            authorization: expectedAuthToken,
             user: nil,
             password: nil,
             sessionManager: sessionManager,
             sslCAHelper: sslCAHelperMock
         )
+
+        let challenges = [
+            authenticationChallenge(authenticationMethod: NSURLAuthenticationMethodServerTrust),
+        ]
+
+        return (client, challenges)
     }
 
-    private func generalHTTPClient() -> HTTPClient {
-        HTTPClient(
+    private func generalHTTPClientAndChallenge() -> (HTTPClient, [URLAuthenticationChallenge]) {
+        let client = HTTPClient(
             authorization: nil,
             user: nil,
             password: nil,
             sessionManager: sessionManager,
             sslCAHelper: sslCAHelperMock
+        )
+
+        let challenges = [
+            authenticationChallenge(authenticationMethod: NSURLAuthenticationMethodServerTrust),
+        ]
+
+        return (client, challenges)
+    }
+
+    private func authenticationChallenge(authenticationMethod: String) -> URLAuthenticationChallenge {
+        URLAuthenticationChallenge(
+            protectionSpace: URLProtectionSpace(
+                host: expectedDomain,
+                port: 80,
+                protocol: "https",
+                realm: nil,
+                authenticationMethod: authenticationMethod
+            ),
+            proposedCredential: nil,
+            previousFailureCount: 0,
+            failureResponse: nil,
+            error: nil,
+            sender: AuthenticationChallengeSenderMock()
         )
     }
 }

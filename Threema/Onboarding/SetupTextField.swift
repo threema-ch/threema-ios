@@ -118,15 +118,15 @@ import UIKit
     
     var threemaID: Bool {
         get {
-            self.isID
+            isID
         }
         set {
-            self.isID = newValue
+            isID = newValue
         }
     }
     
     override var isFirstResponder: Bool {
-        self.textField.isFirstResponder
+        textField.isFirstResponder
     }
     
     // MARK: delegate control events

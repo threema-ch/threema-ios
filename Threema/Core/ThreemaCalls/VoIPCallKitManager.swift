@@ -269,24 +269,24 @@ extension VoIPCallKitManager: CXProviderDelegate {
                         timeout: Int(kAppVoIPBackgroundTaskTime)
                     ) {
                         ServerConnector.shared().connectWait(initiator: .threemaCall)
-                        var userAction: VoIPCallUserAction?
-                        if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
-                            userAction = VoIPCallUserAction(
-                                action: .reject,
-                                contactIdentity: contactIdentity,
-                                callID: currentCallID,
-                                completion: nil
-                            )
-                        }
-                        else {
-                            userAction = VoIPCallUserAction(
-                                action: .end,
-                                contactIdentity: contactIdentity,
-                                callID: currentCallID,
-                                completion: nil
-                            )
-                        }
-                        VoIPCallStateManager.shared.processUserAction(userAction!)
+                        let userAction =
+                            if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
+                                VoIPCallUserAction(
+                                    action: .reject,
+                                    contactIdentity: contactIdentity,
+                                    callID: currentCallID,
+                                    completion: nil
+                                )
+                            }
+                            else {
+                                VoIPCallUserAction(
+                                    action: .end,
+                                    contactIdentity: contactIdentity,
+                                    callID: currentCallID,
+                                    completion: nil
+                                )
+                            }
+                        VoIPCallStateManager.shared.processUserAction(userAction)
                     }
                 }
             }
@@ -346,28 +346,28 @@ extension VoIPCallKitManager: CXProviderDelegate {
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
             ServerConnector.shared().connectWait(initiator: .threemaCall)
-            var userAction: VoIPCallUserAction?
-            if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
-                userAction = VoIPCallUserAction(
-                    action: .reject,
-                    contactIdentity: contactIdentity,
-                    callID: callID,
-                    completion: {
-                        action.fulfill()
-                    }
-                )
-            }
-            else {
-                userAction = VoIPCallUserAction(
-                    action: .end,
-                    contactIdentity: contactIdentity,
-                    callID: callID,
-                    completion: {
-                        action.fulfill()
-                    }
-                )
-            }
-            VoIPCallStateManager.shared.processUserAction(userAction!)
+            let userAction =
+                if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
+                    VoIPCallUserAction(
+                        action: .reject,
+                        contactIdentity: contactIdentity,
+                        callID: callID,
+                        completion: {
+                            action.fulfill()
+                        }
+                    )
+                }
+                else {
+                    VoIPCallUserAction(
+                        action: .end,
+                        contactIdentity: contactIdentity,
+                        callID: callID,
+                        completion: {
+                            action.fulfill()
+                        }
+                    )
+                }
+            VoIPCallStateManager.shared.processUserAction(userAction)
         }
     }
     

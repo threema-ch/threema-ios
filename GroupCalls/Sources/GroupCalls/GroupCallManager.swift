@@ -33,7 +33,7 @@ public protocol GroupCallManagerDatabaseDelegateProtocol: AnyObject, Sendable {
 /// Handles all group calls that we know of.
 /// Periodically checks whether calls are still running.
 ///
-/// In the app this is used through the `GlobalGroupCallsManagerSingleton` class.
+/// In the app this is used through the `GlobalGroupCallManagerSingleton` class.
 public final actor GroupCallManager {
     // MARK: - Nested Types
 
@@ -92,15 +92,11 @@ public final actor GroupCallManager {
         creatorOrigin: GroupCallCreatorOrigin
     ) async {
         // TODO: (IOS-3857) Logging
-        DDLogNotice("[GroupCall] [Message Processor] \(#function)")
         DDLogNotice("[GroupCall] [Message Processor] \(#function) with callID \(proposedGroupCall.hexCallID)")
         
         startPeriodicCheckIfNeeded()
         
-        let groupModel = GroupCallsThreemaGroupModel(
-            groupIdentity: proposedGroupCall.groupRepresentation.groupIdentity,
-            groupName: proposedGroupCall.groupRepresentation.groupName
-        )
+        let groupModel = proposedGroupCall.groupRepresentation
         
         do {
             let newGroupCall = try GroupCallActor(
@@ -134,23 +130,23 @@ public final actor GroupCallManager {
             
             // TODO: (IOS-3857) Logging
             DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] After adding \(newGroupCall.logIdentifier). We have currently \(groupsWithCurrentlyRunningGroupCalls.keys.count) groups with running calls"
+                "[GroupCall] [PeriodicCleanup] After adding \(newGroupCall.callID). We have currently \(groupsWithCurrentlyRunningGroupCalls.keys.count) groups with running calls"
             )
         }
         catch let error as GroupCallSystemMessageAdapterError {
-            DDLogError("[GroupCall] An error occurred when attempting to post a system message \(error)")
+            DDLogError("[GroupCall] An error occurred when attempting to post a system message: \(error)")
         }
         catch {
-            DDLogError("[GroupCall] An error occurred when adding a new group call \(error)")
+            DDLogError("[GroupCall] An error occurred when adding a new group call: \(error)")
         }
     }
     
     /// Creates a new call in a given group or joins it if its already running.
     /// - Parameters
-    ///   - group: `GroupCallsThreemaGroupModel` of desired group
+    ///   - group: `GroupCallThreemaGroupModel` of desired group
     ///   - localIdentity: ThreemaID of the local identity
     public func createOrJoinCall(
-        in group: GroupCallsThreemaGroupModel,
+        in group: GroupCallThreemaGroupModel,
         with intent: GroupCallUserIntent
     ) async throws {
         
@@ -205,7 +201,7 @@ public final actor GroupCallManager {
         currentlyJoiningOrJoinedCall = runningOrCreatedCall
         
         guard let runningOrCreatedCall else {
-            assertionFailure("[GroupCall] This should never happen.")
+            assertionFailure("[GroupCall] This should never happen")
             throw GroupCallError.creationError
         }
         
@@ -224,7 +220,7 @@ public final actor GroupCallManager {
     
     private func addGroupCall(_ call: GroupCallActor) {
         // TODO: (IOS-3857) Logging
-        DDLogNotice("[GroupCall] Add call \(call.logIdentifier)")
+        DDLogNotice("[GroupCall] Add call \(call.callID)")
         if var existingCallsInGroup = groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] {
             existingCallsInGroup.insert(call)
             groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] = existingCallsInGroup
@@ -236,10 +232,10 @@ public final actor GroupCallManager {
     
     private func removeGroupCall(_ call: GroupCallActor) {
         guard var existingCallsInGroup = groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] else {
-            DDLogNotice("[GroupCall] Removing call with \(call.logIdentifier) failed, not found.")
+            DDLogNotice("[GroupCall] Removing call with \(call.callID) failed, not found")
             return
         }
-        DDLogNotice("[GroupCall] Removing call with \(call.logIdentifier)")
+        DDLogNotice("[GroupCall] Removing call with \(call.callID)")
 
         existingCallsInGroup.remove(call)
         if existingCallsInGroup.isEmpty {
@@ -249,12 +245,12 @@ public final actor GroupCallManager {
         groupsWithCurrentlyRunningGroupCalls[call.group.groupIdentity] = existingCallsInGroup
     }
     
-    private func groupCalls(in group: GroupCallsThreemaGroupModel) -> [GroupCallActor] {
+    private func groupCalls(in group: GroupCallThreemaGroupModel) -> [GroupCallActor] {
         Array(groupsWithCurrentlyRunningGroupCalls[group.groupIdentity] ?? [])
     }
     
     private func createCall(
-        in group: GroupCallsThreemaGroupModel,
+        in group: GroupCallThreemaGroupModel,
         token: SFUToken
     ) async throws -> GroupCallActor {
         let gck = dependencies.groupCallCrypto.randomBytes(of: 32)
@@ -273,7 +269,7 @@ public final actor GroupCallManager {
     }
     
     private func showIncomingGroupCallNotification(
-        groupModel: GroupCallsThreemaGroupModel,
+        groupModel: GroupCallThreemaGroupModel,
         senderThreemaID: ThreemaIdentity
     ) {
         Task.detached {
@@ -286,7 +282,7 @@ public final actor GroupCallManager {
 }
 
 extension GroupCallManager {
-    public func getCallID(in groupModel: GroupCallsThreemaGroupModel) -> String? {
+    public func getCallID(in groupModel: GroupCallThreemaGroupModel) -> String? {
         groupsWithCurrentlyRunningGroupCalls[groupModel.groupIdentity]?.first?.callID.bytes.hexEncodedString()
     }
 }
@@ -300,13 +296,11 @@ extension GroupCallManager {
         periodicCallCheckTask = Task { [weak self] in
             while let self {
                 do {
-                    try await self.runPeriodicRefresh()
+                    try await runPeriodicRefresh()
                     try await Task.sleep(seconds: 10)
                 }
                 catch {
-                    DDLogError(
-                        "[GroupCall] [PeriodicCleanup] Cleanup Failed, removing `periodicCallCheckTask`. Error: \(error.localizedDescription)"
-                    )
+                    DDLogError("[GroupCall] [PeriodicCleanup] Cleanup failed. Removing periodicCallCheckTask. \(error)")
                     // We delay to prevent a fast running loop
                     try? await Task.sleep(seconds: 10)
                     await restartPeriodicCallCheckTask()
@@ -329,7 +323,7 @@ extension GroupCallManager {
             return
         }
         
-        DDLogNotice("[GroupCall] [PeriodicCleanup] Refresh started.")
+        DDLogNotice("[GroupCall] [PeriodicCleanup] Refresh started")
         isPeriodicRefreshRunning = true
         
         await withThrowingTaskGroup(of: Void.self) { group in
@@ -341,7 +335,7 @@ extension GroupCallManager {
         }
         
         isPeriodicRefreshRunning = false
-        DDLogNotice("[GroupCall] [PeriodicCleanup] Refresh ended.")
+        DDLogNotice("[GroupCall] [PeriodicCleanup] Refresh ended")
     }
     
     private func refreshRunningGroupCalls(in group: GroupIdentity) async throws {
@@ -359,7 +353,7 @@ extension GroupCallManager {
             return
         }
         DDLogNotice(
-            "[GroupCall] [PeriodicCleanup] Refreshing calls in group with identity \(group.id.hexEncodedString()), number of currently running calls: \(currentCalls.count)."
+            "[GroupCall] [PeriodicCleanup] Refreshing calls in group (\(group)): \(currentCalls.count) currently running calls"
         )
 
         await withThrowingTaskGroup(of: Void.self) { group in
@@ -381,9 +375,7 @@ extension GroupCallManager {
         /// _Group Call Refresh Steps_ of this group. Otherwise, restart or schedule the timer to re-run the _Group
         /// Call Refresh Steps_ of this group in 10s.
         guard let currentCalls = groupsWithCurrentlyRunningGroupCalls[group], !currentCalls.isEmpty else {
-            DDLogNotice(
-                "[GroupCall] [PeriodicCleanup] There are no more calls running in group with identity \(group.id.hexEncodedString())."
-            )
+            DDLogNotice("[GroupCall] [PeriodicCleanup] There are no more calls running in group (\(group))")
             return
         }
         
@@ -397,7 +389,7 @@ extension GroupCallManager {
         }
         
         DDLogNotice(
-            "[GroupCall] [PeriodicCleanup] Refresh completed for calls running in group with identity \(group.id.hexEncodedString()), there are still \(currentCalls.count) calls running."
+            "[GroupCall] [PeriodicCleanup] Refresh completed for calls running in group (\(group)): There are still \(currentCalls.count) calls running"
         )
     }
     
@@ -407,7 +399,7 @@ extension GroupCallManager {
             return
         }
 
-        DDLogNotice("[GroupCall] [PeriodicCleanup] Peeking call: \(groupCall.logIdentifier.prefix(5))")
+        DDLogNotice("[GroupCall] [PeriodicCleanup] Peeking call \(groupCall.callID)")
         do {
             /// **Protocol Step: Periodic Refresh (3.1. - 3.4.)**
             switch try await periodicRefresh(for: groupCall) {
@@ -424,7 +416,7 @@ extension GroupCallManager {
                 catch {
                     if let error = error as? GroupCallSystemMessageAdapterError {
                         DDLogError(
-                            "[GroupCall] An error occurred when attempting to post a system message, error: \(error)"
+                            "[GroupCall] An error occurred when attempting to post a system message: \(error)"
                         )
                     }
                 }
@@ -467,8 +459,9 @@ extension GroupCallManager {
             // The peek might be cancelled due to a new one starting, but we do not want to remove the call in this
             // case.
             if !(error is CancellationError) {
-                assertionFailure("[GroupCall] An error occurred, removing call: \(error)")
-                DDLogError("[GroupCall] An error occurred, removing call: \(error)")
+                let message = "[GroupCall] An error occurred. Removing call. \(error)."
+                assertionFailure(message)
+                DDLogError("\(message)")
                 await remove(groupCall)
             }
             return
@@ -497,7 +490,7 @@ extension GroupCallManager {
         try? await refreshRunningGroupCalls(in: call.group.groupIdentity)
         
         guard let databaseDelegate else {
-            DDLogError("[GroupCalls] [Peek Steps] We do not have a database delegate set")
+            DDLogError("[GroupCall] [Peek Steps] We do not have a database delegate set")
             return
         }
         
@@ -557,7 +550,7 @@ extension GroupCallManager {
     }
     
     @discardableResult
-    internal func getCurrentlyChosenCall(
+    func getCurrentlyChosenCall(
         from currentCalls: Set<GroupCallActor>?
     ) async throws -> GroupCallActor? {
         var currentlyChosenCall: GroupCallActor?
@@ -592,22 +585,22 @@ extension GroupCallManager {
             }
             
             DDLogNotice(
-                "[GroupCall] [Periodic Refresh] [Peek Steps] Previously chosen call \(innerChosenCall.logIdentifier.prefix(5)) has creation timestamp \(currentCreationTimestamp)"
+                "[GroupCall] [Periodic Refresh] [Peek Steps] Previously chosen call \(innerChosenCall.callID) has creation timestamp \(currentCreationTimestamp)"
             )
             DDLogNotice(
-                "[GroupCall] [Periodic Refresh] [Peek Steps] Potential new chosen call \(groupCall.logIdentifier.prefix(5)) has creation timestamp \(newStartCreationTimestamp)"
+                "[GroupCall] [Periodic Refresh] [Peek Steps] Potential new chosen call \(groupCall.callID) has creation timestamp \(newStartCreationTimestamp)"
             )
             
             if currentCreationTimestamp < newStartCreationTimestamp {
                 currentlyChosenCall = groupCall
                 
                 DDLogNotice(
-                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.logIdentifier.prefix(5)) with screation timestamp \(newStartCreationTimestamp)"
+                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.callID) with creation timestamp \(newStartCreationTimestamp)"
                 )
             }
             else {
                 DDLogNotice(
-                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.logIdentifier.prefix(5)) with creation timestamp \(currentCreationTimestamp)"
+                    "[GroupCall] [Periodic Refresh] [Peek Steps] Choose call \(innerChosenCall.callID) with creation timestamp \(currentCreationTimestamp)"
                 )
             }
         }
@@ -636,7 +629,7 @@ extension GroupCallManager {
         var wasJoiningCall = false
         var wasParticipatingInCall = false
         DDLogNotice(
-            "[GroupCall] [Peek Steps] Choosen Call \(String(describing: currentlyChosenCall.logIdentifier.prefix(5)))"
+            "[GroupCall] [Peek Steps] Chosen Call \(currentlyChosenCall.callID)"
         )
         for groupCall in thisGroupGroupCalls.filter({ $0 != currentlyChosenCall }) {
             if await groupCall.isChosenCall {
@@ -653,14 +646,14 @@ extension GroupCallManager {
                 await groupCall.forceLeaveCall()
                 await remove(groupCall)
                 currentlyJoiningOrJoinedCall = nil
-                DDLogNotice("[GroupCall] [Peek Steps] Stopping running call \(groupCall.logIdentifier.prefix(5))")
+                DDLogNotice("[GroupCall] [Peek Steps] Stopping running call \(groupCall.callID)")
                 
             case .joined:
                 wasParticipatingInCall = true
                 await groupCall.forceLeaveCall()
                 await remove(groupCall)
                 currentlyJoiningOrJoinedCall = nil
-                DDLogNotice("[GroupCall] [Peek Steps] Stopping joined call \(groupCall.logIdentifier.prefix(5))")
+                DDLogNotice("[GroupCall] [Peek Steps] Stopping joined call \(groupCall.callID)")
                 
             case .notJoined:
                 continue
@@ -675,7 +668,7 @@ extension GroupCallManager {
         /// the `chosen-call`.
         if wasJoiningCall {
             assert(!wasParticipatingInCall)
-            DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.logIdentifier.prefix(5))")
+            DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.callID)")
             try await currentlyChosenCall.join(intent: .join)
             currentlyJoiningOrJoinedCall = currentlyChosenCall
             let viewController = await GroupCallViewController(
@@ -689,7 +682,7 @@ extension GroupCallManager {
         /// exit the running group call and run the _Group Call Join Steps_ asynchronously with the `intent` to _only
         /// join_ `chosen-call`.
         else if wasParticipatingInCall {
-            DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.logIdentifier.prefix(5))")
+            DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.callID)")
             assert(!wasJoiningCall)
             try await currentlyChosenCall.join(intent: .join)
             currentlyJoiningOrJoinedCall = currentlyChosenCall
@@ -759,7 +752,7 @@ extension GroupCallManager {
         participantThreemaIdentities: [ThreemaIdentity]
     ) async -> GroupCallViewController {
         
-        let localParticipant = await LocalParticipant(
+        let localParticipant = try! await LocalParticipant(
             participantID: ParticipantID(id: 0),
             localContactModel: localContactModel,
             dependencies: dependencies

@@ -29,13 +29,13 @@ public enum GlobalSearchConversationScope: Int {
     public var title: String {
         switch self {
         case .all:
-            return "all".localized
+            "all".localized
         case .oneToOne:
-            return "one_to_one_chat".localized
+            "one_to_one_chat".localized
         case .groups:
-            return "groups".localized
+            "groups".localized
         case .archived:
-            return "archived_title".localized
+            "archived_title".localized
         }
     }
 }

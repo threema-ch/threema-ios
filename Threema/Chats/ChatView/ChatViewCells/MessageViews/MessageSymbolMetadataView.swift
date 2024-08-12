@@ -65,14 +65,21 @@ final class MessageSymbolMetadataView: UIView {
         }
     }
     
+    /// Allows overriding the default text and symbol color to something custom
+    var overrideColor: UIColor? {
+        didSet {
+            updateColors()
+        }
+    }
+    
     // MARK: - Private properties
     
     private lazy var constantScaler = UIFontMetrics(forTextStyle: ChatViewConfiguration.MessageMetadata.textStyle)
     
-    private lazy var symbolXCenterLeadingDistance: CGFloat = {
+    private lazy var symbolXCenterLeadingDistance: CGFloat = constantScaler.scaledValue(
         // Adapt for content size categories
-        constantScaler.scaledValue(for: ChatViewConfiguration.MessageMetadata.defaultSymbolCenterInset)
-    }()
+        for: ChatViewConfiguration.MessageMetadata.defaultSymbolCenterInset
+    )
     
     private lazy var metadataLabelLeadingInset: CGFloat = {
         // The metadata label is as far away from the symbol center as its center is form the trailing end plus the
@@ -151,8 +158,17 @@ final class MessageSymbolMetadataView: UIView {
     // MARK: - Update
     
     func updateColors() {
-        symbolImageView.image = symbolImageView.image?.withTintColor(Colors.textLight)
-        Colors.setTextColor(Colors.textLight, label: metadataLabel)
+        if let overrideColor {
+            symbolImageView.image = symbolImageView.image?.withTintColor(overrideColor, renderingMode: .alwaysOriginal)
+            Colors.setTextColor(overrideColor, label: metadataLabel)
+        }
+        else {
+            symbolImageView.image = symbolImageView.image?.withTintColor(
+                Colors.textLight,
+                renderingMode: .alwaysOriginal
+            )
+            Colors.setTextColor(Colors.textLight, label: metadataLabel)
+        }
     }
     
     // MARK: - Show & hide

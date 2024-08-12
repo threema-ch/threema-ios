@@ -49,7 +49,7 @@ enum ChatViewConfiguration {
         static let membersListFont = UIFont.systemFont(ofSize: 12)
         
         /// Combined leading and trailing offset from the navigation width
-        static let combinedLeadingAndTrailingOffset: CGFloat = 2 * 60
+        static let combinedLeadingAndTrailingOffset: CGFloat = 2 * 62
         /// Top and bottom content insets
         ///
         /// All content is offset by these insets on top and bottom

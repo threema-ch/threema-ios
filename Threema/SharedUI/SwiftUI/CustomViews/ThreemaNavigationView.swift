@@ -119,7 +119,7 @@ struct ThreemaNavigationView<Content: View>: View {
                 navigationController.map { nc in
                     nc.navigationBar
                         .largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: Colors.text]
-                    nc.viewControllers.forEach { vc in
+                    for vc in nc.viewControllers {
                         BrandingUtils.updateTitleLogo(of: vc.navigationItem, in: nc)
                     }
                 }

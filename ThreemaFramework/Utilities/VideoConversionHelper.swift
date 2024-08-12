@@ -102,9 +102,9 @@ import Foundation
     /// Return values must be ordered from highest to lowest
     static var possibleRatesForUserSetting: [MovieRate] {
         switch VideoConversionHelper.videoQualitySetting {
-        case .low: return [movieRateLow]
-        case .high: return [movieRateMedium, movieRateLow]
-        case .original: return [movieRateHigh, movieRateMedium, movieRateLow]
+        case .low: [movieRateLow]
+        case .high: [movieRateMedium, movieRateLow]
+        case .original: [movieRateHigh, movieRateMedium, movieRateLow]
         }
     }
     

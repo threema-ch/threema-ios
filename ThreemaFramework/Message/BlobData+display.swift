@@ -53,23 +53,23 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
     public var description: String {
         switch self {
         case .remote:
-            return "remote"
+            "remote"
         case let .downloading(progress: progress):
-            return "downloading... (\(progress))"
+            "downloading... (\(progress))"
         case .processed:
-            return "processed"
+            "processed"
         case .pending:
-            return "pending"
+            "pending"
         case let .uploading(progress: progress):
-            return "uploading... (\(progress))"
+            "uploading... (\(progress))"
         case .uploaded:
-            return "uploaded"
+            "uploaded"
         case .sendingError:
-            return "sendingError"
+            "sendingError"
         case .dataDeleted:
-            return "dataDeleted"
+            "dataDeleted"
         case .fileNotFound:
-            return "fileNotFound"
+            "fileNotFound"
         }
     }
     
@@ -77,17 +77,17 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
     public var symbolName: String? {
         switch self {
         case .remote:
-            return "arrow.down"
+            "arrow.down"
         case .downloading, .uploading:
-            return "stop.fill"
+            "stop.fill"
         case .processed, .uploaded:
-            return nil
+            nil
         case .pending, .sendingError:
-            return "arrow.clockwise"
+            "arrow.clockwise"
         case .dataDeleted:
-            return "rectangle.slash.fill"
+            "rectangle.slash.fill"
         case .fileNotFound:
-            return "exclamationmark"
+            "exclamationmark"
         }
     }
     
@@ -95,17 +95,17 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
     public var circleFillSymbolName: String? {
         switch self {
         case .remote:
-            return "arrow.down.circle.fill"
+            "arrow.down.circle.fill"
         case .downloading, .uploading:
-            return "stop.circle.fill"
+            "stop.circle.fill"
         case .processed, .uploaded:
-            return nil
+            nil
         case .pending, .sendingError:
-            return "arrow.clockwise.circle.fill"
+            "arrow.clockwise.circle.fill"
         case .dataDeleted:
-            return "rectangle.slash.fill"
+            "rectangle.slash.fill"
         case .fileNotFound:
-            return "exclamationmark.circle.fill"
+            "exclamationmark.circle.fill"
         }
     }
 }
@@ -140,42 +140,42 @@ extension BlobData {
         case .remote:
             switch incomingThumbnailState {
             case .remote, .processed, .noData(.noThumbnail), .fatalError:
-                return .remote
+                .remote
             case .noData(.deleted):
-                return .dataDeleted
+                .dataDeleted
             default:
-                return error("Unknown thumbnail state: \(thumbnailState.description)")
+                error("Unknown thumbnail state: \(thumbnailState.description)")
             }
         case .downloading, .processing:
             switch incomingThumbnailState {
             case .remote, .processed, .noData(.noThumbnail), .fatalError:
-                return .downloading(progress: blobProgress?.floatValue ?? 0)
+                .downloading(progress: blobProgress?.floatValue ?? 0)
             case .noData(.deleted):
-                return .dataDeleted
+                .dataDeleted
             default:
-                return error("Unknown thumbnail state: \(thumbnailState.description)")
+                error("Unknown thumbnail state: \(thumbnailState.description)")
             }
         case .processed:
             switch incomingThumbnailState {
             case .remote, .processed, .noData(.noThumbnail), .fatalError:
-                return .processed
+                .processed
             case .noData(.deleted):
-                return .dataDeleted
+                .dataDeleted
             default:
-                return error("Unknown thumbnail state: \(thumbnailState.description)")
+                error("Unknown thumbnail state: \(thumbnailState.description)")
             }
         case .noData(.deleted):
             switch incomingThumbnailState {
             // TODO: Should remote be "ignored"?
             case .remote, .processed, .noData(.noThumbnail), .noData(.deleted), .fatalError:
-                return .dataDeleted
+                .dataDeleted
             default:
-                return error("Unknown thumbnail state: \(thumbnailState.description)")
+                error("Unknown thumbnail state: \(thumbnailState.description)")
             }
         case .fatalError:
-            return .fileNotFound
+            .fileNotFound
         case .noData(.noThumbnail):
-            return error("No thumbnail state for incoming data state is illegal")
+            error("No thumbnail state for incoming data state is illegal")
         }
     }
     
@@ -216,7 +216,6 @@ extension BlobData {
                     return .sendingError
                 }
                 return .uploaded
-                
             case .uploading:
                 return .uploading(progress: blobProgress?.floatValue ?? 0)
             default:

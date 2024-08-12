@@ -302,7 +302,8 @@ typedef enum : NSUInteger {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView distributionListCellForIndexPath:(NSIndexPath *)indexPath {
     DistributionListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"DistributionListCell"];
-    cell.distributionList = [self.distributionListTableDataSource distributionListAtIndexPath:indexPath];
+    DistributionListEntity *distributionList = [self.distributionListTableDataSource distributionListAtIndexPath:indexPath];
+    [cell updateDistributionList:distributionList];
     return cell;
 }
 

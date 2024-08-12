@@ -31,9 +31,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
     // MARK: - Public / Internal Properties
 
     static let reuseIdentifier = "GroupCallParticipantCell"
-    
-    var participantID: ParticipantID?
-    
+        
     var participant: ViewModelParticipant? {
         didSet {
             updateView()
@@ -120,49 +118,37 @@ class GroupCallParticipantCell: UICollectionViewCell {
     
     // MARK: - Private Properties
         
-    private lazy var blurBackgroundConstrains: [NSLayoutConstraint] = {
-        [
-            blurBackground.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            blurBackground.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            blurBackground.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            blurBackground.topAnchor.constraint(equalTo: participantInfoStackView.topAnchor),
-        ]
-    }()
+    private lazy var blurBackgroundConstrains: [NSLayoutConstraint] = [
+        blurBackground.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+        blurBackground.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+        blurBackground.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+        blurBackground.topAnchor.constraint(equalTo: participantInfoStackView.topAnchor),
+    ]
     
-    private lazy var participantInfoStackViewConstrains: [NSLayoutConstraint] = {
-        [
-            participantInfoStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            participantInfoStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            participantInfoStackView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor),
-        ]
-    }()
+    private lazy var participantInfoStackViewConstrains: [NSLayoutConstraint] = [
+        participantInfoStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+        participantInfoStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+        participantInfoStackView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor),
+    ]
     
-    private lazy var avatarImageViewConstrains: [NSLayoutConstraint] = {
-        [
-            avatarImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            avatarImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-        ]
-    }()
+    private lazy var avatarImageViewConstrains: [NSLayoutConstraint] = [
+        avatarImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+        avatarImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+    ]
     
-    private lazy var avatarImageViewWidthConstraint: [NSLayoutConstraint] = {
-        [
-            avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.6),
-        ]
-    }()
+    private lazy var avatarImageViewWidthConstraint: [NSLayoutConstraint] = [
+        avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.6),
+    ]
     
     // Used when running for screenshots
-    private lazy var avatarImageViewWidthConstraintScreenshots: [NSLayoutConstraint] = {
-        [
-            avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor),
-        ]
-    }()
+    private lazy var avatarImageViewWidthConstraintScreenshots: [NSLayoutConstraint] = [
+        avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor),
+    ]
     
     // Used when running for screenshots
-    private lazy var avatarImageViewHeightConstraintScreenshots: [NSLayoutConstraint] = {
-        [
-            avatarImageView.heightAnchor.constraint(equalTo: contentView.heightAnchor),
-        ]
-    }()
+    private lazy var avatarImageViewHeightConstraintScreenshots: [NSLayoutConstraint] = [
+        avatarImageView.heightAnchor.constraint(equalTo: contentView.heightAnchor),
+    ]
     
     // MARK: - Lifecycle
     

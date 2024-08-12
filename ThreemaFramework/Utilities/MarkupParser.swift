@@ -122,32 +122,32 @@ public class MarkupParser {
         func attributes(font: UIFont) -> [NSAttributedString.Key: Any]? {
             switch self {
             case .asterisk:
-                return [
+                [
                     NSAttributedString.Key.font: UIFont.systemFont(fontSize: font.pointSize, traits: [.traitBold])!,
                     NSAttributedString.Key.tokenType: TokenType.bold,
                 ]
             case .underscore:
-                return [
+                [
                     NSAttributedString.Key.font: UIFont.systemFont(fontSize: font.pointSize, traits: [.traitItalic])!,
                     NSAttributedString.Key.tokenType: TokenType.italic,
                 ]
             case .tilde:
-                return [
+                [
                     NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
                     NSAttributedString.Key.tokenType: TokenType.strikethrough,
                 ]
             case .url:
-                return [
+                [
                     NSAttributedString.Key.foregroundColor: UIColor.primary,
                     NSAttributedString.Key.tokenType: TokenType.url,
                 ]
             case .mention:
-                return [
+                [
                     NSAttributedString.Key.foregroundColor: UIColor.primary,
                     NSAttributedString.Key.tokenType: TokenType.mention,
                 ]
             default:
-                return nil
+                nil
             }
         }
     }

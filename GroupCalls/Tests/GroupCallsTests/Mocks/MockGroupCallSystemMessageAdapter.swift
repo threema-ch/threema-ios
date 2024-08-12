@@ -27,8 +27,8 @@ final class MockGroupCallSystemMessageAdapter: Sendable { }
 
 extension MockGroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
     func post(
-        _ systemMessage: GroupCalls.GroupCallsSystemMessage,
-        in groupModel: GroupCalls.GroupCallsThreemaGroupModel
+        _ systemMessage: GroupCalls.GroupCallSystemMessage,
+        in groupModel: GroupCalls.GroupCallThreemaGroupModel
     ) async throws {
         // Noop
     }

@@ -25,10 +25,10 @@ extension CspE2eFs_VersionRange: CustomStringConvertible {
     public var description: String {
         if let minVersion = CspE2eFs_Version(rawValue: Int(min)),
            let maxVersion = CspE2eFs_Version(rawValue: Int(max)) {
-            return "{min=\(minVersion), max=\(maxVersion)}"
+            "{min=\(minVersion), max=\(maxVersion)}"
         }
         else {
-            return "{min=\(min), max=\(max)}"
+            "{min=\(min), max=\(max)}"
         }
     }
 }

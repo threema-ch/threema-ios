@@ -392,13 +392,13 @@ import ThreemaFramework
 }
 
 class CustomBannerColors: BannerColorsProtocol {
-    internal func color(for style: BannerStyle) -> UIColor {
+    func color(for style: BannerStyle) -> UIColor {
         switch style {
-        case .danger: return Colors.red
-        case .info: return Colors.backgroundNotification
-        case .customView: return Colors.backgroundNotification
-        case .success: return Colors.green
-        case .warning: return Colors.orange
+        case .danger: Colors.red
+        case .info: Colors.backgroundNotification
+        case .customView: Colors.backgroundNotification
+        case .success: Colors.green
+        case .warning: Colors.orange
         }
     }
 }

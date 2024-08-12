@@ -96,10 +96,8 @@ struct MultiDeviceWizardInformationView: View {
             .padding(.vertical)
         }
         .padding(.horizontal)
-        
         .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
         .navigationBarBackButtonHidden()
-        
         .onAppear {
             wizardVM.advanceState(.information)
         }

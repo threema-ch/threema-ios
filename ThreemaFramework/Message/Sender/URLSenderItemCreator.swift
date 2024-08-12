@@ -40,13 +40,13 @@ import Foundation
             item = creator.senderItem(from: url)
         }
         else if UTIConverter.conforms(toImageType: uti) {
-            let creator: ImageURLSenderItemCreator
-            if let maxSize {
-                creator = ImageURLSenderItemCreator(with: maxSize)
-            }
-            else {
-                creator = ImageURLSenderItemCreator()
-            }
+            let creator =
+                if let maxSize {
+                    ImageURLSenderItemCreator(with: maxSize)
+                }
+                else {
+                    ImageURLSenderItemCreator()
+                }
             item = creator.senderItem(from: url)
         }
         else {

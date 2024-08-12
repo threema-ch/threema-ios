@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import CryptoKit
 import Foundation
 
-struct IDColor {
+enum IDColor {
     
     /// Get the ID Color for the passed data
     /// - Parameter data: Data to get ID color for. We assume that is quite small.

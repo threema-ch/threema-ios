@@ -494,7 +494,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     }
     
     /// Individually fetches the contacts with the listed identities from the database or requests them individually
-    /// from the directory server.
+    /// from the directory server. This function will ignore the block unknown setting, because it should add all
+    /// contacts to member list.
     /// Use `fetchContacts` to fetch multiple contacts
     /// - Parameter identities: identities to fetch from the database or directory server
     /// - Returns: The fetched contact or an error
@@ -505,13 +506,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             of: FetchedContactOrError.self,
             returning: [FetchedContactOrError].self
         ) { taskGroup in
-            prefetchedIdentities.forEach { identity in
+            for identity in prefetchedIdentities {
                 taskGroup.addTask {
                     await withCheckedContinuation { continuation in
                         self.contactStore.fetchPublicKey(
                             for: identity,
                             acquaintanceLevel: .group,
                             entityManager: self.entityManager,
+                            ignoreBlockUnknown: true,
                             onCompletion: { _ in
                                 guard self.entityManager.entityFetcher.contact(for: identity) != nil else {
                                     continuation.resume(returning: .localNotFound)
@@ -1100,6 +1102,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             for: creator,
             acquaintanceLevel: .group,
             entityManager: entityManager,
+            ignoreBlockUnknown: false,
             onCompletion: { _ in
                 if self.entityManager.entityFetcher.contact(for: creator) != nil {
                     self.recordSendSyncRequest(GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)))

@@ -56,7 +56,7 @@ final class ChatBarCoordinator {
         return chatBarView
     }()
     
-    internal var isRecording = false
+    var isRecording = false
     
     // MARK: - Private properties
     
@@ -219,30 +219,50 @@ final class ChatBarCoordinator {
         }
     }
 
-    /// Shows the edited message view for message on top of the chat bar. Removes currently existing edited message
-    /// views
+    /// Shows the edited message view for message on top of the chat bar. Removes currently existing edited and
+    /// quote message views
     /// - Parameter message: Message to edit
     func showEditedMessageView(for message: EditedMessage) {
+        // Remove quote view if it was shown
+        if quoteMessage != nil {
+            removeQuoteView()
+        }
+        
+        // Reset edit view if it was shown
         if messageToEdit != nil {
             removeEditedMessageView()
         }
 
+        chatBar
+            .updateSendButtonAccessibilityLabel(
+                to: "compose_bar_send_edited_message_button_accessibility_label"
+                    .localized
+            )
         messageToEdit = message
         let editedView = ChatBarEditedMessageView(editedMessage: message, delegate: self)
         chatBarContainerView.add(editedView)
         chatBarContainerView.becomeFirstResponder()
+        chatBar.disablePlusButton()
     }
 
     /// Removes the currently displayed edit message view
     func removeEditedMessageView() {
+        chatBar.updateSendButtonAccessibilityLabel(to: "compose_bar_send_message_button_accessibility_label".localized)
         messageToEdit = nil
         chatBarContainerView.removeEditedMessageView()
         chatBar.removeCurrentText()
+        chatBar.enablePlusButton()
     }
 
-    /// Shows the quote view for message on top of the chat bar. Removes currently existing quote views
+    /// Shows the quote view for message on top of the chat bar. Removes currently existing quote or edit views
     /// - Parameter message: Message to be quoted
     func showQuoteView(for message: QuoteMessage) {
+        // Remove edit view if it was shown
+        if messageToEdit != nil {
+            removeEditedMessageView()
+        }
+        
+        // Reset quote view if it was shown
         if quoteMessage != nil {
             removeQuoteView()
         }
@@ -573,10 +593,34 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 return
             }
            
-            let unsupportedContacts = FeatureMask.check(
+            var unsupportedContacts = FeatureMask.check(
                 message: messageToEdit,
                 for: .editMessageSupport
             ).unsupported
+            
+            // We filter out certain contacts in groups that will no receive the message anyway
+            if let group = businessInjector.groupManager.getGroup(conversation: messageToEdit.conversation) {
+                var filteredUnsupportedContact = [Contact]()
+                
+                for unsupportedContact in unsupportedContacts {
+                    // If the contact has a gateway ID and is the creator of the group the message is sent in…
+                    if unsupportedContact.hasGatewayID,
+                       unsupportedContact.identity.string == group.groupCreatorIdentity {
+                        // … we only send the message to it, if it is a message storing gateway group.
+                        if group.isMessageStoringGatewayGroup {
+                            filteredUnsupportedContact.append(unsupportedContact)
+                        }
+                        else {
+                            continue
+                        }
+                    }
+                    
+                    // All non gate way ID's are added anyways
+                    filteredUnsupportedContact.append(unsupportedContact)
+                }
+
+                unsupportedContacts = filteredUnsupportedContact
+            }
             
             do {
                 try businessInjector.messageSender.sendEditMessage(
@@ -652,12 +696,12 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             )
             firstFive.append(countString)
             if let totalSummary = listFormatter.string(from: Array(firstFive)) {
-                summary = "\(totalSummary) \("edit_message_requirement".localized)"
+                summary = "\(totalSummary)\n\("edit_message_requirement".localized)"
             }
         }
         else {
             if let shortsSummary = listFormatter.string(from: displayNames) {
-                summary = "\(shortsSummary). \("edit_message_requirement".localized)"
+                summary = "\(shortsSummary)\n\("edit_message_requirement".localized)"
             }
         }
         

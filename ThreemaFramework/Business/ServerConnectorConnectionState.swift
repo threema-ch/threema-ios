@@ -51,23 +51,23 @@ class ServerConnectorConnectionState: NSObject {
     /// - Returns: Connection State
     @objc var connectionState: ConnectionState {
         if !userSettings.enableMultiDevice {
-            return connectionStateChatServer
+            connectionStateChatServer
         }
         else {
             if connectionStateChatServer == .loggedIn && connectionStateMediatorServer == .loggedIn {
-                return .loggedIn
+                .loggedIn
             }
             else if connectionStateChatServer == .connecting || connectionStateMediatorServer == .connecting {
-                return .connecting
+                .connecting
             }
             else if connectionStateChatServer == .connected || connectionStateMediatorServer == .connected {
-                return .connected
+                .connected
             }
             else if connectionStateChatServer == .disconnecting || connectionStateMediatorServer == .disconnecting {
-                return .disconnecting
+                .disconnecting
             }
             else {
-                return .disconnected
+                .disconnected
             }
         }
     }
@@ -102,17 +102,18 @@ class ServerConnectorConnectionState: NSObject {
         if connectionState != .disconnected {
             disconnectCondition.wait(until: Date(timeIntervalSinceNow: TimeInterval(Int(kDisconnectTimeout))))
         }
-        // Note: it's not guaranteed that the state is actually disconnected at this point, but it's good enough for our purposes
+        // Note: it's not guaranteed that the state is actually disconnected at this point, but it's good enough for our
+        // purposes
         disconnectCondition.unlock()
     }
 
     @objc func nameFor(connectionState state: ConnectionState) -> String {
         switch state {
-        case .connected: return "connected"
-        case .connecting: return "connecting"
-        case .disconnected: return "disconnected"
-        case .disconnecting: return "disconnecting"
-        case .loggedIn: return "loggedIn"
+        case .connected: "connected"
+        case .connecting: "connecting"
+        case .disconnected: "disconnected"
+        case .disconnecting: "disconnecting"
+        case .loggedIn: "loggedIn"
         }
     }
 

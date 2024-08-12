@@ -65,25 +65,25 @@ class VoIPCallService: NSObject {
         /// - Returns: String of the current state
         func description() -> String {
             switch self {
-            case .idle: return "IDLE"
-            case .sendOffer: return "SENDOFFER"
-            case .receivedOffer: return "RECEIVEDOFFER"
-            case .outgoingRinging: return "RINGING"
-            case .incomingRinging: return "RINGING"
-            case .sendAnswer: return "SENDANSWER"
-            case .receivedAnswer: return "RECEIVEDANSWER"
-            case .initializing: return "INITIALIZING"
-            case .calling: return "CALLING"
-            case .reconnecting: return "RECONNECTING"
-            case .ended: return "ENDED"
-            case .remoteEnded: return "REMOTEENDED"
-            case .rejected: return "REJECTED"
-            case .rejectedBusy: return "REJECTEDBUSY"
-            case .rejectedTimeout: return "REJECTEDTIMEOUT"
-            case .rejectedDisabled: return "REJECTEDDISABLED"
-            case .rejectedOffHours: return "REJECTEDOFFHOURS"
-            case .rejectedUnknown: return "REJECTEDUNKNOWN"
-            case .microphoneDisabled: return "MICROPHONEDISABLED"
+            case .idle: "IDLE"
+            case .sendOffer: "SENDOFFER"
+            case .receivedOffer: "RECEIVEDOFFER"
+            case .outgoingRinging: "RINGING"
+            case .incomingRinging: "RINGING"
+            case .sendAnswer: "SENDANSWER"
+            case .receivedAnswer: "RECEIVEDANSWER"
+            case .initializing: "INITIALIZING"
+            case .calling: "CALLING"
+            case .reconnecting: "RECONNECTING"
+            case .ended: "ENDED"
+            case .remoteEnded: "REMOTEENDED"
+            case .rejected: "REJECTED"
+            case .rejectedBusy: "REJECTEDBUSY"
+            case .rejectedTimeout: "REJECTEDTIMEOUT"
+            case .rejectedDisabled: "REJECTEDDISABLED"
+            case .rejectedOffHours: "REJECTEDOFFHOURS"
+            case .rejectedUnknown: "REJECTEDUNKNOWN"
+            case .microphoneDisabled: "MICROPHONEDISABLED"
             }
         }
         
@@ -91,25 +91,25 @@ class VoIPCallService: NSObject {
         /// - Returns: Current localized call state string
         func localizedString() -> String {
             switch self {
-            case .idle: return BundleUtil.localizedString(forKey: "call_status_idle")
-            case .sendOffer: return BundleUtil.localizedString(forKey: "call_status_wait_ringing")
-            case .receivedOffer: return BundleUtil.localizedString(forKey: "call_status_wait_ringing")
-            case .outgoingRinging: return BundleUtil.localizedString(forKey: "call_status_ringing")
-            case .incomingRinging: return BundleUtil.localizedString(forKey: "call_status_incom_ringing")
-            case .sendAnswer: return BundleUtil.localizedString(forKey: "call_status_ringing")
-            case .receivedAnswer: return BundleUtil.localizedString(forKey: "call_status_ringing")
-            case .initializing: return BundleUtil.localizedString(forKey: "call_status_initializing")
-            case .calling: return BundleUtil.localizedString(forKey: "call_status_calling")
-            case .reconnecting: return BundleUtil.localizedString(forKey: "call_status_reconnecting")
-            case .ended: return BundleUtil.localizedString(forKey: "call_end")
-            case .remoteEnded: return BundleUtil.localizedString(forKey: "call_end")
-            case .rejected: return BundleUtil.localizedString(forKey: "call_rejected")
-            case .rejectedBusy: return BundleUtil.localizedString(forKey: "call_rejected_busy")
-            case .rejectedTimeout: return BundleUtil.localizedString(forKey: "call_rejected_timeout")
-            case .rejectedDisabled: return BundleUtil.localizedString(forKey: "call_rejected_disabled")
-            case .rejectedOffHours: return BundleUtil.localizedString(forKey: "call_rejected")
-            case .rejectedUnknown: return BundleUtil.localizedString(forKey: "call_rejected")
-            case .microphoneDisabled: return BundleUtil.localizedString(forKey: "call_mic_access")
+            case .idle: BundleUtil.localizedString(forKey: "call_status_idle")
+            case .sendOffer: BundleUtil.localizedString(forKey: "call_status_wait_ringing")
+            case .receivedOffer: BundleUtil.localizedString(forKey: "call_status_wait_ringing")
+            case .outgoingRinging: BundleUtil.localizedString(forKey: "call_status_ringing")
+            case .incomingRinging: BundleUtil.localizedString(forKey: "call_status_incom_ringing")
+            case .sendAnswer: BundleUtil.localizedString(forKey: "call_status_ringing")
+            case .receivedAnswer: BundleUtil.localizedString(forKey: "call_status_ringing")
+            case .initializing: BundleUtil.localizedString(forKey: "call_status_initializing")
+            case .calling: BundleUtil.localizedString(forKey: "call_status_calling")
+            case .reconnecting: BundleUtil.localizedString(forKey: "call_status_reconnecting")
+            case .ended: BundleUtil.localizedString(forKey: "call_end")
+            case .remoteEnded: BundleUtil.localizedString(forKey: "call_end")
+            case .rejected: BundleUtil.localizedString(forKey: "call_rejected")
+            case .rejectedBusy: BundleUtil.localizedString(forKey: "call_rejected_busy")
+            case .rejectedTimeout: BundleUtil.localizedString(forKey: "call_rejected_timeout")
+            case .rejectedDisabled: BundleUtil.localizedString(forKey: "call_rejected_disabled")
+            case .rejectedOffHours: BundleUtil.localizedString(forKey: "call_rejected")
+            case .rejectedUnknown: BundleUtil.localizedString(forKey: "call_rejected")
+            case .microphoneDisabled: BundleUtil.localizedString(forKey: "call_mic_access")
             }
         }
     }
@@ -241,7 +241,7 @@ class VoIPCallService: NSObject {
             guard let self else {
                 return
             }
-            if self.state != .idle {
+            if state != .idle {
                 var isBluetoothAvailable = false
                 if let inputs = AVAudioSession.sharedInstance().availableInputs {
                     for input in inputs {
@@ -268,7 +268,7 @@ class VoIPCallService: NSObject {
                                 self.speakerActive = false
                                 try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
                             }
-                            if self.speakerActive {
+                            if speakerActive {
                                 try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
                             }
                         case .builtInSpeaker:
@@ -276,12 +276,12 @@ class VoIPCallService: NSObject {
                                 self.speakerActive = true
                                 try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
                             }
-                            if !self.speakerActive {
+                            if !speakerActive {
                                 try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
                             }
                         case .headphones:
                             try? AVAudioSession.sharedInstance()
-                                .overrideOutputAudioPort(self.speakerActive ? .speaker : .none)
+                                .overrideOutputAudioPort(speakerActive ? .speaker : .none)
                         case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
                             break
                         default: break
@@ -875,24 +875,24 @@ extension VoIPCallService {
                                 return
                             }
                             
-                            guard offer.callID == self.incomingOffer?.callID else {
+                            guard offer.callID == incomingOffer?.callID else {
                                 DDLogError(
-                                    "Trying to run background task for call with ID \(offer.callID), but current incoming offer call ID is \(self.incomingOffer?.callID ?? VoIPCallID(callID: nil))"
+                                    "Trying to run background task for call with ID \(offer.callID), but current incoming offer call ID is \(incomingOffer?.callID ?? VoIPCallID(callID: nil))"
                                 )
                                 return
                             }
                             
-                            self.businessInjector.serverConnector.connect(initiator: .threemaCall)
+                            businessInjector.serverConnector.connect(initiator: .threemaCall)
 
-                            self.callKitManager?.timeoutCall()
+                            callKitManager?.timeoutCall()
                             let action = VoIPCallUserAction(
                                 action: .rejectTimeout,
                                 contactIdentity: offer.contactIdentity!,
                                 callID: offer.callID,
                                 completion: offer.completion
                             )
-                            self.rejectCall(action: action)
-                            self.invalidateIncomingCallTimeout()
+                            rejectCall(action: action)
+                            invalidateIncomingCallTimeout()
                         }
                     }
                 )
@@ -2346,7 +2346,6 @@ extension VoIPCallService {
                     notificationManager.updateUnreadMessagesCount(baseMessage: systemMessage)
                 }
             }
-            
         case .rejected:
             // add call message
             entityManager.performBlockAndWait {

@@ -143,4 +143,8 @@
     [encoder encodeObject:self.groupId forKey:@"groupId"];
 }
 
++ (BOOL)supportsSecureCoding {
+    return YES;
+}
+
 @end

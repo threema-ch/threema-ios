@@ -31,73 +31,66 @@ class DateFormatterTests_en_US: XCTestCase {
     }
     
     // Expected date strings
-    let expectedShortStyleDateTime_en_US: String = {
+    let expectedShortStyleDateTime_en_US =
         if #available(iOS 17.0, *) {
-            return "2/1/20, 1:14 PM"
+            "2/1/20, 1:14 PM"
         }
         else {
-            return "2/1/20, 1:14 PM"
+            "2/1/20, 1:14 PM"
         }
-    }()
 
-    let expectedShortStyleDateTimeSeconds_en_US: String = {
+    let expectedShortStyleDateTimeSeconds_en_US =
         if #available(iOS 17.0, *) {
-            return "2/1/20, 1:14:15 PM"
+            "2/1/20, 1:14:15 PM"
         }
         else {
-            return "2/1/20, 1:14:15 PM"
+            "2/1/20, 1:14:15 PM"
         }
-    }()
     
-    let expectedMediumStyleDateTime_en_US: String = {
+    let expectedMediumStyleDateTime_en_US =
         if #available(iOS 17.0, *) {
-            return "Feb 1, 2020 at 1:14:15 PM"
+            "Feb 1, 2020 at 1:14:15 PM"
         }
         else {
-            return "Feb 1, 2020 at 1:14:15 PM"
+            "Feb 1, 2020 at 1:14:15 PM"
         }
-    }()
     
-    let expectedMediumStyleDateShortStyleTime_en_US: String = {
+    let expectedMediumStyleDateShortStyleTime_en_US =
         if #available(iOS 17.0, *) {
-            return "Feb 1, 2020 at 1:14 PM"
+            "Feb 1, 2020 at 1:14 PM"
         }
         else {
-            return "Feb 1, 2020 at 1:14 PM"
+            "Feb 1, 2020 at 1:14 PM"
         }
-    }()
     
-    let expectedLongStyleDateTime_en_US_prefix: String = {
+    let expectedLongStyleDateTime_en_US_prefix =
         if #available(iOS 17.0, *) {
-            return "February 1, 2020 at 1:14:15 PM"
+            "February 1, 2020 at 1:14:15 PM"
         }
         else {
-            return "February 1, 2020 at 1:14:15 PM"
+            "February 1, 2020 at 1:14:15 PM"
         }
-    }()
     
-    let expectedShortStyleTimeNoDate_en_US: String = {
+    let expectedShortStyleTimeNoDate_en_US =
         if #available(iOS 17.0, *) {
-            return "1:14 PM"
+            "1:14 PM"
         }
         else {
-            return "1:14 PM"
+            "1:14 PM"
         }
-    }()
     
     let expectedGetShortDate_en_US = "2/1/2020"
     let expectedGetDayMonthAndYear_en_US = "Sat, Feb 01, 2020"
-    let expectedGetFullDateFor_en_US: String = {
+    let expectedGetFullDateFor_en_US =
         if #available(iOS 17.0, *) {
-            return "Sat, Feb 01, 2020 at 1:14 PM"
+            "Sat, Feb 01, 2020 at 1:14 PM"
         }
         else if #available(iOS 16.0, *) {
-            return "Sat, Feb 01, 2020 at 1:14 PM"
+            "Sat, Feb 01, 2020 at 1:14 PM"
         }
         else {
-            return "Sat, Feb 01, 2020, 1:14 PM"
+            "Sat, Feb 01, 2020, 1:14 PM"
         }
-    }()
 
     let expectedGetYearFor_en_US = "2020"
     
@@ -105,78 +98,72 @@ class DateFormatterTests_en_US: XCTestCase {
     let expectedRelativeMediumDateThisYear_en_US = ", Jan 01"
     let expectedRelativeMediumDateLastCalendarYear_en_US = ", Dec 31, "
     let expectedRelativeMediumDateMoreThanAYearAgo_en_US = "Fri, Feb 01, 2019"
-    let expectedRelativeMediumDateAndShortTimeYesterday_en_US: String = {
+    let expectedRelativeMediumDateAndShortTimeYesterday_en_US =
         if #available(iOS 17.4, *) {
-            return "Yesterday at "
+            "Yesterday at "
         }
         else {
-            return "Yesterday, "
+            "Yesterday, "
         }
-    }()
 
     let expectedRelativeMediumDateAndShortTimeThisYear_en_US = ", Jan 01 at 1:14 PM"
     let expectedRelativeMediumDateAndShortTimeLastCalendarYear_start_en_US = ", Dec 31, "
     let expectedRelativeMediumDateAndShortTimeLastCalendarYear_end_en_US = " at 10:23 PM"
     let expectedRelativeMediumDateAndShortTimeMoreThanAYearAgo_en_US = "Fri, Feb 01, 2019 at 1:14 PM"
 
-    let expectedRelativeTimeTodayAndMediumDateOtherwiseToday_en_US: String = {
+    let expectedRelativeTimeTodayAndMediumDateOtherwiseToday_en_US =
         if #available(iOS 17.0, *) {
-            return "1:14 PM"
+            "1:14 PM"
         }
         else {
-            return "1:14 PM"
+            "1:14 PM"
         }
-    }()
 
     let expectedRelativeTimeTodayAndMediumDateOtherwiseYesterday_en_US = "Yesterday"
     
-    let expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US: String = {
+    let expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US =
         if #available(iOS 17.4, *) {
-            return "Tomorrow at 2:03 AM"
+            "Tomorrow at 2:03 AM"
         }
         else if #available(iOS 17.0, *) {
-            return "Tomorrow, 2:03 AM"
+            "Tomorrow, 2:03 AM"
         }
         else {
-            return "Tomorrow at 2:03 AM"
+            "Tomorrow at 2:03 AM"
         }
-    }()
     
-    let expectedRelativeLongStyleDateShortStyleTimeToday_en_US: String = {
+    let expectedRelativeLongStyleDateShortStyleTimeToday_en_US =
         if #available(iOS 17.4, *) {
-            return "Today at 1:14 PM"
+            "Today at 1:14 PM"
         }
         else if #available(iOS 17.0, *) {
-            return "Today, 1:14 PM"
+            "Today, 1:14 PM"
         }
         else {
-            return "Today at 1:14 PM"
+            "Today at 1:14 PM"
         }
-    }()
     
-    let expectedAccessibilityDateTime_en_US: String = {
+    let expectedAccessibilityDateTime_en_US =
         if #available(iOS 17.0, *) {
-            return "February 1, 2020 at 1:14 PM"
+            "February 1, 2020 at 1:14 PM"
         }
         else if #available(iOS 16.0, *) {
-            return "February 1, 2020 at 1:14 PM"
+            "February 1, 2020 at 1:14 PM"
         }
         else {
-            return "February 1, 2020, 1:14 PM"
+            "February 1, 2020, 1:14 PM"
         }
-    }()
 
-    let expectedAccessibilityRelativeDayTime_en_US: String = {
+    let expectedAccessibilityRelativeDayTime_en_US =
         if #available(iOS 17.4, *) {
-            return "February 1, 2020 at 1:14 PM"
+            "February 1, 2020 at 1:14 PM"
         }
         else if #available(iOS 17.0, *) {
-            return "February 1, 2020, 1:14 PM"
+            "February 1, 2020, 1:14 PM"
         }
         else {
-            return "February 1, 2020 at 1:14 PM"
+            "February 1, 2020 at 1:14 PM"
         }
-    }()
     
     // MARK: - Test formats provided by the system
     

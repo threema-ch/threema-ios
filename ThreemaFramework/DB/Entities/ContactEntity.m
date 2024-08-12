@@ -148,48 +148,6 @@ static NSString *fieldHidden = @"hidden";
     [self didChangeValueForKey:@"identity"];
 }
 
-- (void)updateSortInitial {
-    SEL stringSelector;
-    if (self.isGatewayId) {
-        stringSelector = @selector(identity);
-    } else {
-        if ([UserSettings sharedUserSettings].sortOrderFirstName) {
-            if (self.firstName.length > 0) {
-                stringSelector = @selector(firstName);
-            } else if (self.lastName.length > 0) {
-                stringSelector = @selector(lastName);
-            } else if (self.publicNickname.length > 0) {
-                stringSelector = @selector(publicNickname);
-            } else {
-                stringSelector = @selector(identity);
-            }
-        } else {
-            if (self.lastName.length > 0) {
-                stringSelector = @selector(lastName);
-            } else if (self.firstName.length > 0) {
-                stringSelector = @selector(firstName);
-            } else if (self.publicNickname.length > 0) {
-                stringSelector = @selector(publicNickname);
-            } else {
-                stringSelector = @selector(identity);
-            }
-        }
-    }
-    
-    NSInteger idx = [[UILocalizedIndexedCollation currentCollation] sectionForObject:self collationStringSelector:stringSelector];
-    
-    NSString *sortInitial = [[[UILocalizedIndexedCollation currentCollation] sectionTitles] objectAtIndex:idx];
-    NSNumber *sortIndex = [NSNumber numberWithInteger:idx];
-    
-    if ([self.sortInitial isEqualToString:sortInitial] == NO) {
-        self.sortInitial = sortInitial;
-    }
-
-    if ([self.sortIndex isEqualToNumber:sortIndex] == NO) {
-        self.sortIndex = sortIndex;
-    }
-}
-
 - (BOOL)isContactHidden {
     return [self valueForKey:fieldHidden] != nil ? [[self valueForKey:fieldHidden] boolValue] : NO;
 }

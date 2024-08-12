@@ -213,12 +213,12 @@ class NotificationResponse: NSObject {
 
                 if let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
                     Task {
+                        self.updateMessageAsRead(for: baseMessage)
                         await self.businessInjector.messageSender.sendReadReceipt(
                             for: [baseMessage],
                             toGroupIdentity: group.groupIdentity
                         )
                         await self.businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
-                        self.updateMessageAsRead(for: baseMessage)
                         self.finishResponse()
                     }
                 }
@@ -235,9 +235,9 @@ class NotificationResponse: NSObject {
                     return
                 }
                 Task {
+                    self.updateMessageAsRead(for: baseMessage)
                     await self.businessInjector.messageSender.sendReadReceipt(for: [baseMessage], toIdentity: identity)
                     await self.businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
-                    self.updateMessageAsRead(for: baseMessage)
                     self.finishResponse()
                 }
             }
@@ -279,12 +279,13 @@ class NotificationResponse: NSObject {
                 
                 if let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
                     Task {
+                        self.updateMessageAsRead(for: baseMessage)
                         await self.businessInjector.messageSender.sendReadReceipt(
                             for: [baseMessage],
                             toGroupIdentity: group.groupIdentity
                         )
                         await self.businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
-                        self.updateMessageAsRead(for: baseMessage)
+                        
                         self.finishResponse()
                     }
                 }
@@ -302,6 +303,7 @@ class NotificationResponse: NSObject {
                 }
 
                 Task {
+                    self.updateMessageAsRead(for: baseMessage)
                     await self.businessInjector.messageSender.sendReadReceipt(
                         for: [baseMessage],
                         toIdentity: contact.threemaIdentity
@@ -310,7 +312,6 @@ class NotificationResponse: NSObject {
                         for: baseMessage,
                         toIdentity: contact.threemaIdentity
                     )
-                    self.updateMessageAsRead(for: baseMessage)
                     self.finishResponse()
                 }
             }
@@ -347,11 +348,11 @@ class NotificationResponse: NSObject {
                 if !baseMessage.isGroupMessage,
                    let contact = conversation.contact {
                     Task { @MainActor in
+                        self.updateMessageAsRead(for: baseMessage)
                         await self.businessInjector.messageSender.sendReadReceipt(
                             for: [baseMessage],
                             toIdentity: contact.threemaIdentity
                         )
-                        self.updateMessageAsRead(for: baseMessage)
                         self.sendUserText(
                             text: userText,
                             conversation: conversation,
@@ -514,7 +515,7 @@ class NotificationResponse: NSObject {
     /// Update message read.
     /// - Parameter message: Message to set read true
     private func updateMessageAsRead(for message: BaseMessage) {
-        businessInjector.entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
             message.read = NSNumber(booleanLiteral: true)
             message.readDate = Date()
             DDLogVerbose("Message marked as read: \(message.id.hexString)")

@@ -31,7 +31,7 @@ class ZipFileActivityItemProvider: UIActivityItemProvider {
     }
     
     override public var item: Any { // customise the item for the current `activityType`
-        self.url
+        url
     }
     
     override func activityViewController(

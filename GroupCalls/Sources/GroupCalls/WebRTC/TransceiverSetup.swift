@@ -31,7 +31,7 @@ enum TransceiverSetup {
         transceiver.receiver.track?.isEnabled = true
         
         if let error {
-            fatalError(error.localizedDescription)
+            fatalError(error.description)
         }
     }
     
@@ -41,7 +41,7 @@ enum TransceiverSetup {
         transceiver.setDirection(.sendOnly, error: &error)
         
         if let error {
-            fatalError(error.localizedDescription)
+            fatalError(error.description)
         }
         
         TransceiverSetup.setCameraVideoSimulcastEncodingParameters(kind: kind, transceiver: transceiver)

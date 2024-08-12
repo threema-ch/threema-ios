@@ -32,13 +32,13 @@ extension BlobManagerResult {
     fileprivate var objCResult: BlobManagerObjCResult {
         switch self {
         case .uploaded:
-            return .uploaded
+            .uploaded
         case .downloaded:
-            return .downloaded
+            .downloaded
         case .inProgress:
-            return .inProgress
+            .inProgress
         case .failed:
-            return .failed
+            .failed
         }
     }
 }

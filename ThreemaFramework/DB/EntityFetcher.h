@@ -24,6 +24,7 @@
 #import "AbstractMessage.h"
 #import "AbstractGroupMessage.h"
 #import "GroupEntity.h"
+#import "GroupCallEntity.h"
 #import "LastGroupSyncRequest.h"
 #import "WebClientSession.h"
 #import "RequestedConversation.h"
@@ -163,6 +164,9 @@ typedef enum : NSUInteger {
 
 - (nullable Conversation *)conversationForGroupId:(nonnull NSData *)groupId creator:(nonnull NSString *)creator NS_SWIFT_NAME(conversation(for:creator:));
 
+- (nullable Conversation *)conversationForDistributionListID:(nonnull NSNumber *)distributionListId
+    NS_SWIFT_NAME(conversation(for:));
+
 - (Ballot *)ballotForBallotId:(NSData *)ballotId NS_SWIFT_NAME(ballot(for:));
 
 - (BallotChoice *)ballotChoiceForBallotId:(NSData *)ballotId choiceId:(NSNumber *)choiceId NS_SWIFT_NAME(ballotChoice(for:with:));
@@ -181,6 +185,10 @@ typedef enum : NSUInteger {
 - (GroupEntity *)groupEntityForGroupId:(NSData *)groupId groupCreator:(NSString *)groupCreator NS_SWIFT_NAME(groupEntity(for:with:));
 
 - (nullable GroupEntity *)groupEntityForConversation:(nonnull Conversation *)conversation;
+
+- (nullable DistributionListEntity *)distributionListEntityForConversation:(nonnull Conversation *)conversation;
+
+- (nullable DistributionListEntity *) distributionListEntityForDistributionListID:(nonnull NSNumber *)distributionListID;
 
 - (LastGroupSyncRequest *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate;
 
@@ -262,6 +270,6 @@ typedef enum : NSUInteger {
 
 - (NSInteger)countFileMessagesWithNoMIMEType;
 
-- (nonnull NSArray *)allGroupCallEntities;
+- (nonnull NSArray<GroupCallEntity *> *)allGroupCallEntities;
 
 @end

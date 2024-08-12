@@ -104,6 +104,9 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         entityManager,
         GroupPhotoSender()
     )
+    
+    public private(set) lazy var distributionListManager: DistributionListManagerProtocol =
+        DistributionListManager(entityManager: entityManager)
 
     public private(set) lazy var licenseStore = LicenseStore.shared()
 
@@ -180,19 +183,19 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     ) async rethrows
         -> T {
         if entityManager.hasBackgroundChildContext {
-            return try await block(self)
+            try await block(self)
         }
         else {
-            return try await block(BusinessInjector(forBackgroundProcess: true))
+            try await block(BusinessInjector(forBackgroundProcess: true))
         }
     }
 
     public func runInBackgroundAndWait<T>(_ block: (BusinessInjectorProtocol) throws -> T) rethrows -> T {
         if entityManager.hasBackgroundChildContext {
-            return try block(self)
+            try block(self)
         }
         else {
-            return try block(BusinessInjector(forBackgroundProcess: true))
+            try block(BusinessInjector(forBackgroundProcess: true))
         }
     }
 

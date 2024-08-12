@@ -97,7 +97,7 @@ final class ConnectionContext<
         }
         catch let error as NSError {
             DDLogError(
-                "GC: Failed to set the audio session category, mode and override output audio port: \(error.localizedDescription)"
+                "[GroupCall] Failed to set the audio session category, mode and override output audio port: \(error)"
             )
         }
         
@@ -323,7 +323,7 @@ extension ConnectionContext {
     /// Note that the implementation in the android app is much more sophisticated. Instead of replicating
     /// the solution from android we did a teardown similar to the one done for 1:1 calls in our app.
     func teardown() async {
-        DDLogVerbose("[GroupCall] Teardown: ConnectionContext")
+        DDLogNotice("[GroupCall] Teardown: ConnectionContext")
         audioTrack?.isEnabled = false
         videoTrack?.isEnabled = false
         
@@ -336,7 +336,7 @@ extension ConnectionContext {
         }
         catch {
             DDLogError(
-                "[GroupCall] An error occurred when resetting the shared audio session \(error.localizedDescription)"
+                "[GroupCall] An error occurred when resetting the shared audio session: \(error)"
             )
         }
         RTCAudioSession.sharedInstance().unlockForConfiguration()
@@ -366,7 +366,7 @@ extension ConnectionContext {
             DDLogNotice("[GroupCall] Added candidate \(candidate.sdp)")
         }
         catch {
-            DDLogNotice("[GroupCall] Error is \(String(describing: error))")
+            DDLogError("[GroupCall] Error adding IceCandidate: \(error)")
             throw error
         }
     }
@@ -538,13 +538,15 @@ extension ConnectionContext {
             for (kind, mid) in mids {
                 // Mark it as mapped
                 guard let transceiver = await unmapped.removeValue(for: mid) else {
-                    DDLogWarn("We are missing a transceiver for \(mid). But expect it to be available in the future.")
+                    DDLogWarn(
+                        "[GroupCall] We are missing a transceiver for \(mid). But expect it to be available in the future"
+                    )
                     continue
                 }
                 
                 if let existingTransceiver = await transceivers.getLocal(for: kind),
                    !existingTransceiver.isEqual(transceiver) {
-                    fatalError("Local transceiver has changed. This is not allowed.")
+                    fatalError("Local transceiver has changed. This is not allowed")
                 }
                 
                 guard transceiver.direction == .sendOnly else {
@@ -565,7 +567,7 @@ extension ConnectionContext {
     ) async {
         
         // Remap all existing remote participant transceivers
-        DDLogVerbose("[GroupCall] Remapping all existing remote transceivers")
+        DDLogNotice("[GroupCall] Remapping all existing remote transceivers")
         for (participantID, remoteTransceivers) in await transceivers.remote {
             
             // Sanity checks
@@ -587,7 +589,7 @@ extension ConnectionContext {
                 }
                 
                 guard transceiver.direction == .recvOnly else {
-                    fatalError("Remote transceiver must be send only.")
+                    fatalError("Remote transceiver must be send only")
                 }
             }
         }

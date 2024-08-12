@@ -391,24 +391,24 @@ protocol Enqueuable {
 struct Queue<T>: Enqueuable {
     typealias Element = T
     
-    internal var elements = [Element]()
+    var elements = [Element]()
     
-    internal mutating func enqueue(_ element: Element) {
+    mutating func enqueue(_ element: Element) {
         elements.append(element)
     }
     
-    internal func peek() -> Element? {
+    func peek() -> Element? {
         elements.first
     }
     
-    internal mutating func dequeue() -> Element? {
+    mutating func dequeue() -> Element? {
         guard elements.isEmpty == false else {
             return nil
         }
         return elements.removeFirst()
     }
     
-    internal mutating func removeAll() {
+    mutating func removeAll() {
         elements.removeAll()
     }
 }

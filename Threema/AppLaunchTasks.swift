@@ -130,7 +130,7 @@ class AppLaunchTasks: NSObject {
                 guard let effectiveLastMessage = MessageFetcher(
                     for: conversation,
                     with: self.backgroundBusinessInjector.entityManager
-                ).lastMessage() else {
+                ).lastDisplayMessage() else {
                     conversation.lastMessage = nil
                     continue
                 }

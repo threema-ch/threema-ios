@@ -71,4 +71,36 @@ extension ContactEntity {
     public var threemaIdentity: ThreemaIdentity {
         ThreemaIdentity(identity)
     }
+    
+    @objc func updateSortInitial() {
+        if isGatewayID() {
+            sortInitial = .broadcasts
+            sortIndex = NSNumber(value: ThreemaLocalizedIndexedCollation.sectionTitles.count - 1)
+        }
+        else {
+            // find the first keyPath where the length is greater than 0, fallback to identity
+            let str = ([\ContactEntity.firstName, \.lastName].then {
+                UserSettings.shared().sortOrderFirstName ? { }() : $0.reverse()
+            } + [\.publicNickname, \.identity]).first {
+                ((self[keyPath: $0] as? String)?.count ?? 0) > 0
+            }.map {
+                self[keyPath: $0] as? String
+            }
+            
+            guard case let str?? = str else {
+                return
+            }
+            
+            let idx = ThreemaLocalizedIndexedCollation.section(for: str)
+            let sortInitial = ThreemaLocalizedIndexedCollation.sectionTitles[idx]
+            let sortIndex = NSNumber(value: idx)
+            
+            if self.sortInitial != sortInitial {
+                self.sortInitial = sortInitial
+            }
+            if self.sortIndex != sortIndex {
+                self.sortIndex = sortIndex
+            }
+        }
+    }
 }

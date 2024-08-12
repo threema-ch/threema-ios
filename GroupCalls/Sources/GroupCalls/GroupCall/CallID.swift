@@ -47,6 +47,14 @@ struct GroupCallID: Sendable {
     }
 }
 
+// MARK: - CustomStringConvertible
+
+extension GroupCallID: CustomStringConvertible {
+    var description: String {
+        bytes.hexEncodedString()
+    }
+}
+
 // MARK: - Equatable
 
 extension GroupCallID: Equatable { }

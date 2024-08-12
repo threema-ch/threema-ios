@@ -32,7 +32,7 @@ final class TaskExecutionRunForwardSecurityRefreshSteps: TaskExecution, TaskExec
         }
         
         guard !frameworkInjector.userSettings.enableMultiDevice else {
-            DDLogWarn("FS Refresh Steps can only be run if MD is disabled")
+            DDLogWarn("[ForwardSecurity] FS Refresh Steps can only be run if MD is disabled")
             return Promise(error: TaskExecutionError.multiDeviceNotSupported)
         }
         
@@ -80,7 +80,7 @@ final class TaskExecutionRunForwardSecurityRefreshSteps: TaskExecution, TaskExec
         .then { sendMessagePromises in
             // Send all messages
             when(fulfilled: sendMessagePromises).done { _ in
-                DDLogVerbose("Successfully sent all FS Refresh Steps messages")
+                DDLogVerbose("[ForwardSecurity] Successfully sent all FS Refresh Steps messages")
             }
         }
     }

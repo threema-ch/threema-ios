@@ -63,13 +63,13 @@ import Foundation
             let isVideo = UTIConverter.isVideoMimeType(mimeType) || UTIConverter.isMovieMimeType(mimeType)
             let estimatedVideoFileSize = VideoConversionHelper.getEstimatedVideoFileSize(for: url)
             
-            let isValidVideoDuration: Bool
-            if isVideo {
-                isValidVideoDuration = MediaConverter.isVideoDurationValid(at: url)
-            }
-            else {
-                isValidVideoDuration = false
-            }
+            let isValidVideoDuration: Bool =
+                if isVideo {
+                    MediaConverter.isVideoDurationValid(at: url)
+                }
+                else {
+                    false
+                }
             
             guard Double(kMaxFileSize) > fileSize || (isVideo && isValidVideoDuration) else {
                 throw PhotosPickerError.fileTooLargeForSending

@@ -203,18 +203,17 @@ class GlobalSearchDataSource: UITableViewDiffableDataSource<GlobalSearch.Section
             !currentTokens.contains($0)
         }
         
-        let filtered: [GlobalSearchMessageToken]
-        
-        // If no search text is provided we show all remaining
-        if currentSearchText.isEmpty {
-            filtered = nonSelectedTokens
-        }
-        // Otherwise we show only the ones containing the search text in title
-        else {
-            filtered = nonSelectedTokens.filter {
-                $0.title.localizedCaseInsensitiveContains(currentSearchText)
+        let filtered: [GlobalSearchMessageToken] =
+            // If no search text is provided we show all remaining
+            if currentSearchText.isEmpty {
+                nonSelectedTokens
             }
-        }
+            // Otherwise we show only the ones containing the search text in title
+            else {
+                nonSelectedTokens.filter {
+                    $0.title.localizedCaseInsensitiveContains(currentSearchText)
+                }
+            }
         
         // We do not show the section if we have no filtered tokens
         guard !filtered.isEmpty else {

@@ -52,11 +52,11 @@ final class ChatViewMessageDetailsAnimationController: NSObject, UIViewControlle
         let container = transitionContext.containerView
         container.addSubview(toView)
 
-        let initialX: CGFloat
-        switch direction {
-        case .forward: initialX = fromView.bounds.width
-        case .backward: initialX = -fromView.bounds.width
-        }
+        let initialX: CGFloat =
+            switch direction {
+            case .forward: fromView.bounds.width
+            case .backward: -fromView.bounds.width
+            }
         
         toView.frame = CGRect(origin: CGPoint(x: initialX, y: 0), size: toView.bounds.size)
 

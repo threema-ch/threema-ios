@@ -173,6 +173,10 @@ import ThreemaFramework
                 try migrateTo6_0()
                 migratedTo = .v6_0
             }
+            if migratedTo < .v6_2 {
+                try migrateTo6_2()
+                migratedTo = .v6_2
+            }
             
             // Add here a check if migration is necessary for a particular version...
         }
@@ -491,21 +495,21 @@ import ThreemaFramework
 
         noPushIdentities?.filter { item in
             if item.count == 8 {
-                return !(
+                !(
                     pushSettingListIdentities.filter { $0.count == 8 }
                         .compactMap { $0.uppercased() }
                         .contains(item.uppercased())
                 )
             }
             else if let item = BytesUtility.toBytes(hexString: item) {
-                return !(
+                !(
                     pushSettingListIdentities.filter { $0.count > 8 }
                         .compactMap { BytesUtility.toBytes(hexString: $0) }
                         .contains(item)
                 )
             }
             else {
-                return false
+                false
             }
         }.forEach { identity in
             let dic = ["identity": identity, "type": 1] // `PushSettingType.off`
@@ -513,7 +517,7 @@ import ThreemaFramework
         }
 
         if !pushSettingList.isEmpty {
-            pushSettingList.forEach { item in
+            for item in pushSettingList {
                 if let dic = item as? NSDictionary,
                    let identity = dic["identity"] as? String {
 
@@ -542,7 +546,7 @@ import ThreemaFramework
                             self.businessInjector.entityManager.performAndWait {
                                 if let groupEntities = self.businessInjector.entityManager.entityFetcher
                                     .groupEntities(for: groupID) {
-                                    groupEntities.forEach { groupEntity in
+                                    for groupEntity in groupEntities {
                                         if let group = self.businessInjector.groupManager.getGroup(
                                             groupEntity.groupID,
                                             creator: groupEntity.groupCreator ?? myIdentity
@@ -687,5 +691,19 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "6.0 migration")
         DDLogNotice("[AppMigration] App migration to version 6.0 successfully finished")
+    }
+    
+    /// Migrate to version 6.2:
+    /// - Remove lastWorkUpdateRequest in IdentityStore
+    private func migrateTo6_2() throws {
+        DDLogNotice("[AppMigration] App migration to version 6.2 started")
+        os_signpost(.begin, log: osPOILog, name: "6.2 migration")
+
+        /// - Remove lastWorkUpdateRequest in IdentityStore
+        AppGroup.userDefaults().removeObject(forKey: "LastWorkUpdateRequest")
+        AppGroup.userDefaults().synchronize()
+        
+        os_signpost(.end, log: osPOILog, name: "6.2 migration")
+        DDLogNotice("[AppMigration] App migration to version 6.2 successfully finished")
     }
 }

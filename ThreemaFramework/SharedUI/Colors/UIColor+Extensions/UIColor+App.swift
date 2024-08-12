@@ -37,11 +37,11 @@ extension UIColor {
     @objc public static let primary = UIColor { _ in
         switch ThreemaApp.current {
         case .threema, .green:
-            return Asset.TargetColors.Threema.primary.color
+            Asset.TargetColors.Threema.primary.color
         case .work, .blue:
-            return Asset.TargetColors.ThreemaWork.primary.color
+            Asset.TargetColors.ThreemaWork.primary.color
         case .onPrem:
-            return Asset.TargetColors.OnPrem.primary.color
+            Asset.TargetColors.OnPrem.primary.color
         }
     }
 }

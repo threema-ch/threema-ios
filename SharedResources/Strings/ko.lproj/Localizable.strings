@@ -106,7 +106,6 @@
 "threema_id" = "Threema 아이디";
 "nickname" = "닉네임";
 "add_button" = "추가";
-"chatview_contextmenu_select" = "선택";
 "learn_more" = "더 알아보기";
 "file_message_image" = "이미지";
 "file_message_sticker" = "스티커";
@@ -115,6 +114,10 @@
 "file_message_voice" = "음성 메시지";
 "file_message_file" = "파일";
 "chat" = "채팅"; /* noun */
+
+"share_menu" = "공유...";
+"forward_menu" = "전달…";
+"chatview_contextmenu_select" = "선택";
 
 "chat_back_button_accessibility" = "%d개 읽지 않음";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "이 기기에서 이 대화의 모든 메시지를 삭제하시겠습니까?";
 "messages_delete_all_confirm_message" = "여기에는 모든 미디어와 문서가 포함됩니다.";
 "messages_delete_selected_confirm" = "이 기기에서 선택한 메시지를 삭제하시겠습니까?";
+"message_delete_confirm" = "이 메시지를 삭제하시겠습니까?";
 "conversation_delete_confirm" = "이 기기에서 이 대화를 삭제하시겠습니까?";
 "delete_n" = "삭제 (%d)";
-"message_delete_for_everyone" = "모두에 대한 메시지 삭제";
+"message_delete_for_me" = "이 기기에서 삭제";
+"message_delete_for_everyone" = "모두에게서 삭제";
 
 "message_cannot_play_movie" = "동영상을 재생할 수 없습니다.";
 
@@ -473,7 +478,7 @@
 "backup_exclude" = "iTunes 또는 iCloud를 통해 전화를 백업할 때 ID 내보내기가 포함되지 않을 것입니다. ID 내보내기를 수동으로 저장하여 분실을 피하십시오.";
 
 /* Contacts */
-"pull_to_sync" = "동기화를 위해 당기십시오...";
+"pull_to_sync" = "동기화하려면 당기세요...";
 "bad_identity_backup" = "ID 내보내기 데이터가 잘못되었거나 잘못된 암호를 입력했습니다. Threema ID를 복원하려면 내보내기를 생성할 때 선택한 암호를 사용하십시오. 입력을 확인하고 다시 시도하십시오.";
 "pull_to_sync_429_message" = "하루 동안 허용된 연락처 동기화 한도에 도달했습니다. 내일 계속 동기화하거나 Threema 고객 지원에 연락하십시오.";
 "pull_to_sync_429_message_work" = "하루 동안 허용된 연락처 동기화 한도에 도달했습니다. 내일 계속 동기화하거나 %@ 관리자에게 연락하십시오.";
@@ -655,7 +660,7 @@
 "invite_sms_body" = "안녕하세요! 우리는 Threema를 사용하여 안전하고 개인 정보를 준수하는 방식으로 통신합시다! 내 Threema ID: https://threema.id/%@";
 "invite_facebook_text" = "저는 사용자의 개인 정보를 보호하는 안전한 인스턴트 메신저인 Threema를 사용합니다. 내 Threema ID: https://threema.id/%@";
 "invite_twitter_text" = "저는 사용자의 개인 정보를 보호하는 안전한 인스턴트 메신저인 Threema를 사용합니다. 내 Threema ID: https://threema.id/%@";
-"invite_using" = "친구를 초대하려면...";
+"invite_using" = "친구 초대...";
 "sms" = "텍스트 메시지";
 
 /* Notifications Text */
@@ -711,14 +716,14 @@
 "quote_interaction_hint" = "인용된 메시지로 이동";
 
 /* TTOpenInAppActivity */
-"Open in ..." = "...에서 열기";
+"Open in ..." = "열기…";
 
 /* VoiceOver long labels */
 "restore" = "복원";
 
 /* PullToRefresh */
 "pull_to_refresh" = "새로 고치려면 당기세요...";
-"refreshing" = "로딩 중...";
+"refreshing" = "로드 중…";
 
 /* Threema Channel */
 "threema_channel_intro" = "Threema 채널을 연락처에 추가하시겠습니까?";
@@ -727,7 +732,7 @@
 
 /* Push decryption */
 "decryption_push_reply" = "답장";
-"decryption_push_placeholder" = "답장...";
+"decryption_push_placeholder" = "답장…";
 "decryption_push_agree" = "동의";
 "decryption_push_disagree" = "동의하지 않음";
 
@@ -780,15 +785,15 @@
 
 "call_voip_not_supported_title" = "Threema Calls";
 "call_voip_not_supported_text" = "당신의 연락처는 Threema Calls를 지원하지 않습니다.";
-"call_contact_not_reachable" = "연락할 수 없음...";
+"call_contact_not_reachable" = "연락처에 도달할 수 없음…";
 
 "call_status_idle" = "준비됨";
 "call_status_wait_ringing" = "초기화";
 "call_status_ringing" = "벨이 울립니다";
 "call_status_incom_ringing" = "Threema 통화";
-"call_status_initializing" = "연결...";
+"call_status_initializing" = "연결 중...";
 "call_status_calling" = "연결됨";
-"call_status_reconnecting" = "연결...";
+"call_status_reconnecting" = "연결 중...";
 "call_status_unknown" = "알 수 없음";
 "call_status_blocked" = "연락처 차단";
 "call_status_failed_title" = "Threema 통화";
@@ -1104,7 +1109,8 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "settings_list_media_title" = "미디어";
 "settings_list_storage_management_title" = "저장 관리";
 "settings_list_passcode_lock_title" = "암호 잠금";
-"settings_threema_calls" = "Threema Calls";
+"settings_threema_calls" = "통화";
+"settings_list_threema_desktop_title" = "데스크톱용 Threema 2.0 (베타)";
 "settings_list_threema_web_title" = "데스크톱/웹";
 
 "settings_list_network_title" = "네트워크 상태";
@@ -1146,13 +1152,16 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "settings_privacy_read_receipts" = "읽음";
 "settings_privacy_typing_indicator" = "타이핑 인디케이터";
 
+"settings_privacy_poi_header" = "위치 데이터";
+"settings_privacy_choose_poi" = "POI 보기";
+"settings_privacy_poi_footer" = "켜져 있을 경우, 위치를 공유할 때 근처의 관심 지점들이 표시됩니다. 이를 위해 귀하의 위치 정보가 서버로 전송됩니다.";
+
 "settings_privacy_TIRR_reset_all" = "모든 연락처에 대한 재설정";
 "settings_privacy_TIRR_reset_footer" = "모든 연락처를 기본 설정으로 재설정합니다.";
 "settings_privacy_TIRR_reset_alert_title" = "재설정";
 "settings_privacy_TIRR_reset_alert_message" = "모든 연락처를 기본 설정으로 재설정합니다. 이 작업은 되돌릴 수 없습니다.";
 "settings_privacy_TIRR_reset_alert_action" = "모두 재설정";
 
-"settings_privacy_choose_poi" = "POI 선택";
 "settings_privacy_hide_private_chats" = "개인 채팅 숨기기";
 "settings_privacy_hide_private_chats_footer" = "모든 개인 채팅을 채팅 개요에서 숨깁니다. 이 설정을 활성화하려면 패스코드를 설정해야 합니다.";
 
@@ -1204,7 +1213,7 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "settings_notification_type_preview_complete_description" = "연락처의 전체 이름과 프로필 사진을 표시합니다. 상호 작용에 관한 일부 정보는 운영 체제와 공유됩니다.[더 알아보기...](%@)";
 "settings_notification_type_preview_complete_sender_name" = "John Smith";
 
-"settings_notification_type_preview_message_text" = "예제 메시지...";
+"settings_notification_type_preview_message_text" = "예제 메시지…";
 "settings_notification_type_preview_no_button" = "푸시 알림 비활성화";
 
 // Chat Settings
@@ -1648,23 +1657,31 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "notification_threemaweb_connectionlost_title" = "데스크톱 앱 / 웹 클라이언트와의 연결이 끊겼습니다.";
 "notification_threemaweb_connectionlost_body" = "데스크톱 앱 / 웹 클라이언트를 계속 사용하려면 앱을 다시 열어주세요.";
 
+"settings_threema_web_desktop_banner_title" = "신규: 데스크톱용 Threema 2.0 (베타)";
+"settings_threema_web_desktop_banner_message" = "여기를 눌러 다중 기기 지원이 가능한 차세대 데스크톱 앱을 사용해 보세요.";
+
 "settings_threema_web_connected" = "데스크톱/웹이 연결됨";
 "settings_threema_web_connectioninfo" = "장치는 연결을 유지하기 위해 %@이(가) 화면 앞에서 실행 중이어야 합니다. 연결 중일 때, 장치는 자동으로 잠겨지지 않습니다.";
-"settings_threema_web_linked_device_section_header" = "다중 장치";
-"settings_threema_web_linked_device_section_footer" = "연결된 장치는 %@이(가) 백그라운드에 있거나 이 장치가 오프라인 상태일 때에도 사용할 수 있습니다.";
-"settings_threema_web_section_header" = "직접 연결된 장치들";
 "settings_threema_web_multi_device_qr_code_title" = "잘못된 QR 코드";
-"settings_threema_web_multi_device_qr_code_message" = "데스크톱 앱에 연결하려면 \"%@\"을(를) 탭한 다음 \"%@\"을(를) 탭하세요.";
+"settings_threema_web_multi_device_qr_code_message" = "'%@'(으)로 돌아가서 '%@'을(를) 선택하여 이 데스크톱 앱에 연결하세요.";
 
 "chat_text_view_placeholder" = "새 메시지";
 "compose_bar_camera_button_accessibility_label" = "카메라 열기";
 "compose_bar_image_picker_button_accessibility_label" = "이미지 선택기 열기";
 "compose_bar_record_button_accessibility_label" = "음성 메시지 녹음";
 "compose_bar_send_message_button_accessibility_label" = "메시지 전송";
+"compose_bar_send_edited_message_button_accessibility_label" = "편집 확인";
 "compose_bar_attachment_button_accessibility_label" = "첨부 파일 추가";
-"play_record_audio_view_controller_general_error_title" = "녹음 실패";
-"play_record_audio_view_controller_general_error_message" = "알 수 없는 오류로 인해 현재 음성 메시지를 녹음할 수 없습니다.";
 "hardware_keyboard_send_on_enter_discoverability_title" = "메시지 전송";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "음성 메시지가 불가능합니다.";
+"voice_recorder_error_message" = "다시 시도하거나 지원팀에 문의하세요.";
+"voice_recorder_call_state_not_idle" = "활성 통화";
+"voice_recorder_playback_failure" = "재생 오류";
+"voice_recorder_recording_error" = "녹음 오류";
+"voice_recorder_recording_cancelled" = "녹음 취소됨";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "%@에 투표했습니다.";
@@ -1679,7 +1696,6 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 
 // ChatBar
 "chat_bar_quote_close_button" = "인용문 닫기";
-"chat_bar_edited_message_close_button" = "메시지 편집 취소";
 
 // ChatDetailView
 "detailView_title" = "인용문 닫기";
@@ -1689,6 +1705,9 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "detailView_group_file_size" = "파일 크기";
 "detailView_consumed" = "처음 재생됨";
 "detailView_created_footer" = "생성됨: %@";
+"detailView_edit_history_header" = "편집 기록";
+"detailView_edit_history_current" = "현재";
+"detailView_edit_history_no_caption" = "캡션 없음";
 
 "message_display_status_none" = "없음";
 "message_display_status_user_acknowledged" = "동의함";
@@ -1833,16 +1852,16 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "accessibility_voice_message_unplayed" = "아직 재생되지 않음.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "동의, %@";
-"accessibility_status_declined_plus_time" = "동의, %@";
-"accessibility_status_sending_plus_time" = "전송 중, %@";
-"accessibility_status_sent_plus_time" = "전송됨, %@";
-"accessibility_status_delivered_plus_time" = "전달됨, %@";
-"accessibility_status_read_plus_time" = "읽음, %@";
-"accessibility_status_failed_plus_time" = "실패, %@";
-"accessibility_status_group_acknowledged_plus_time" = "%i, %@%@에 의해 동의됨";
-"accessibility_status_group_declined_plus_time" = "%i, %@%@에 의해 거부됨";
-"accessibility_status_group_acknowledged_declined_plus_time" = "%i에 의해 동의됨, %i에 의해 거부됨, %@%@";
+"accessibility_status_acknowledged" = "동의함";
+"accessibility_status_declined" = "거부됨";
+"accessibility_status_sending" = "전송 중";
+"accessibility_status_sent" = "전송됨";
+"accessibility_status_delivered" = "배송됨";
+"accessibility_status_read" = "읽음";
+"accessibility_status_failed" = "실패";
+"accessibility_status_group_acknowledged" = "%i명 동의, %@";
+"accessibility_status_group_declined" = "%i명 거부, %@";
+"accessibility_status_group_acknowledged_declined" = "%i명 동의, %i명 거부, %@";
 "accessibility_status_group_acknowledged_my_reaction" = "동의했습니다";
 "accessibility_status_group_declined_my_reaction" = "거부했습니다";
 
@@ -1951,8 +1970,8 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 // Delete / Edit message
 "edit_message" = "메시지 편집";
 "edit_message_can_not_edit" = "메시지가 6시간 이상 전에 전송되었으므로 더 이상 편집할 수 없습니다.";
-"edit_message_not_sent_to" = "다음 그룹 구성원은 편집 내용을 볼 수 없습니다: %@";
-"delete_message_not_sent_to" = "다음 그룹 구성원에 대해서는 메시지가 삭제되지 않습니다: %@";
+"edit_message_not_sent_to" = "다음 그룹 구성원은 귀하의 수정 사항을 볼 수 없습니다:\n %@";
+"delete_message_not_sent_to" = "다음 그룹 구성원에게는 메시지가 삭제되지 않습니다:\n %@";
 "delete_edit_message_not_sent_to_others" = "%d명";
 "delete_message_requirement" = "메시지를 삭제하려면 최신 Threema 버전을 설치해야 합니다.";
 "edit_message_requirement" = "편집 내용을 보려면 최신 Threema 버전을 설치해야 합니다.";

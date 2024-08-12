@@ -45,6 +45,7 @@
 @dynamic groupDeliveryReceipts;
 @dynamic rejectedBy;
 @dynamic messageMarkers;
+@dynamic historyEntries;
 
 - (nullable NSString*)additionalExportInfo {
     return nil;

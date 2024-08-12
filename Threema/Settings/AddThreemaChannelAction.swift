@@ -21,7 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-struct AddThreemaChannelAction {
+enum AddThreemaChannelAction {
     
     private static let threemaChannelIdentity = "*THREEMA"
     

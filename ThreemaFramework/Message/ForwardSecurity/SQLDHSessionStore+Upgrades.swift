@@ -25,27 +25,27 @@ import ThreemaProtocols
 
 extension SQLDHSessionStore {
     static func upgradeToV1(_ db: Connection) {
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
         
         assert(db.userVersion == 0 || db.userVersion == nil)
         
         defer { assert(db.userVersion == 1) }
         
-        DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 1")
+        DDLogVerbose("[ForwardSecurity] Upgrade from \(String(describing: db.userVersion)) to 1")
         
         db.userVersion = 1
         
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
     }
     
     func upgradeToV2(_ db: Connection) throws {
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
         
         assert(db.userVersion == 1)
         
         defer { assert(db.userVersion == 2) }
         
-        DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 2")
+        DDLogVerbose("[ForwardSecurity] Upgrade from \(String(describing: db.userVersion)) to 2")
         
         do {
             try db.run(sessionTable.addColumn(myCurrentVersion4DHColumn, defaultValue: CspE2eFs_Version.v10.rawValue))
@@ -65,17 +65,17 @@ extension SQLDHSessionStore {
         
         db.userVersion = 2
         
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
     }
     
     func upgradeToV3(_ db: Connection) throws {
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
         
         assert(db.userVersion == 2)
         
         defer { assert(db.userVersion == 3) }
         
-        DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 2")
+        DDLogVerbose("[ForwardSecurity] Upgrade from \(String(describing: db.userVersion)) to 2")
         
         // This is only required if someone updated to a build with a broken migration to v2.
         // In all other cases adding the column will fail and we will ignore the error
@@ -101,17 +101,17 @@ extension SQLDHSessionStore {
         
         db.userVersion = 3
         
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
     }
     
     func upgradeToV4(_ db: Connection) throws {
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
         
         assert(db.userVersion == 3)
         
         defer { assert(db.userVersion == 4) }
         
-        DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 4")
+        DDLogVerbose("[ForwardSecurity] Upgrade from \(String(describing: db.userVersion)) to 4")
         
         // The implementation for Android checks that the column doesn't already exist.
         // We assume that we can execute the upgrade exactly once.
@@ -126,7 +126,7 @@ extension SQLDHSessionStore {
                 code: 1,
                 statement: nil
             ) = error as? SQLite.Result {
-                DDLogNotice("Ignore error \(error)")
+                DDLogNotice("[ForwardSecurity] Ignore error: \(error)")
             }
             else {
                 throw error
@@ -135,17 +135,17 @@ extension SQLDHSessionStore {
         
         db.userVersion = 4
         
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
     }
     
     func upgradeToV5(_ db: Connection) throws {
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
         
         assert(db.userVersion == 4)
         
         defer { assert(db.userVersion == 5) }
         
-        DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 5")
+        DDLogVerbose("[ForwardSecurity] Upgrade from \(String(describing: db.userVersion)) to 5")
         
         // We assume that we can execute the upgrade exactly once.
         
@@ -163,18 +163,18 @@ extension SQLDHSessionStore {
             code: 1,
             statement: nil
         ) {
-            DDLogNotice("Ignore error duplicate column name: newSessionCommitted")
+            DDLogNotice("[ForwardSecurity] Ignore error duplicate column name: newSessionCommitted")
         }
         catch SQLite.Result.error(
             message: "duplicate column name: lastMessageSent",
             code: 1,
             statement: nil
         ) {
-            DDLogNotice("Ignore error duplicate column name: lastMessageSent")
+            DDLogNotice("[ForwardSecurity] Ignore error duplicate column name: lastMessageSent")
         }
         
         db.userVersion = 5
         
-        DDLogNotice("[SQLDHSessionStoreMigration] \(#function) \(String(describing: db.userVersion))")
+        DDLogDebug("[ForwardSecurity] \(#function) \(String(describing: db.userVersion))")
     }
 }

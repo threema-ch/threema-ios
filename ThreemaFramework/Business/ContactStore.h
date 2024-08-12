@@ -44,8 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)fetchPublicKeyForIdentity:(NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError
     NS_SWIFT_NAME(fetchPublicKey(for:acquaintanceLevel:onCompletion:onError:));
 
-- (void)fetchPublicKeyForIdentity:(nullable NSString *)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject onCompletion:(void(^)(NSData * _Nullable publicKey))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
-    NS_SWIFT_NAME(fetchPublicKey(for:acquaintanceLevel:entityManager:onCompletion:onError:));
+- (void)fetchPublicKeyForIdentity:(nullable NSString *)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject ignoreBlockUnknown:(BOOL)ignoreBlockUnknown onCompletion:(void(^)(NSData * _Nullable publicKey))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
+    NS_SWIFT_NAME(fetchPublicKey(for:acquaintanceLevel:entityManager:ignoreBlockUnknown:onCompletion:onError:));
 
 - (void)removeProfilePictureFlagForAllContacts;
 - (void)removeProfilePictureRequest:(NSString *)identity;
@@ -63,7 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateFeatureMasksForIdentities:(nonnull NSArray<NSString *> *)Identities onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
 
-- (void)reflectContact:(nullable ContactEntity *)contact NS_SWIFT_NAME(reflect(_:));
+- (void)reflectContact:(nullable NSString *)identity NS_SWIFT_NAME(reflect(_:));
 
 - (void)reflectDeleteContact:(nullable NSString *)identity;
 

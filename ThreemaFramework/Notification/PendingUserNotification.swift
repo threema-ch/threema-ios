@@ -25,7 +25,8 @@ import Intents
 // Consist of sender identity (`String`) and the ID of the message
 typealias PendingUserNotificationKey = String
 
-public class PendingUserNotification: NSObject, NSCoding {
+public class PendingUserNotification: NSObject, NSSecureCoding {
+    public static var supportsSecureCoding = true
     
     let key: PendingUserNotificationKey
     var contentKey: PendingUserNotificationKey
@@ -37,7 +38,7 @@ public class PendingUserNotification: NSObject, NSCoding {
         }
     }
     
-    internal var baseMessageID: Data?
+    var baseMessageID: Data?
     public internal(set) var stage: UserNotificationStage = .initial
     var fireDate: Date?
     
@@ -91,31 +92,31 @@ public class PendingUserNotification: NSObject, NSCoding {
         // `flagGroupMessage` is deprecated. If it is missing we don't know whether it is a group message or not
         // We thus do not use it for determining whether this is a group message or not
         if let msg = baseMessage {
-            return msg.isGroupMessage
+            msg.isGroupMessage
         }
         else if let msg = abstractMessage {
-            return msg.flagGroupMessage()
+            msg.flagGroupMessage()
         }
         else if let push = threemaPushNotification {
-            return push.command == .newGroupMessage
+            push.command == .newGroupMessage
         }
         else {
-            return nil
+            nil
         }
     }
     
     public var messageID: String? {
         if let id = baseMessage?.id {
-            return id.hexString
+            id.hexString
         }
         else if let id = abstractMessage?.messageID {
-            return id.hexString
+            id.hexString
         }
         else if let id = threemaPushNotification?.messageID {
-            return id
+            id
         }
         else {
-            return nil
+            nil
         }
     }
     

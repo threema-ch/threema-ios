@@ -119,7 +119,7 @@
     } 
     else if( conversation.distributionList != nil) {
         DistributionListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"DistributionListCell"];
-        cell.distributionList = conversation.distributionList;
+        [cell updateDistributionList:[[DistributionList alloc] initWithDistributionListEntity:conversation.distributionList]];
         return cell;
     }
     else {

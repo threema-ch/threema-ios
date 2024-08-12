@@ -89,15 +89,12 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
         messageTextViewSizeApproximationView,
     ])
     
-    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = {
-        [
-            contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
-            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ]
-        
-    }()
+    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = [
+        contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
+        contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+    ]
     
     private lazy var containerView: UIView = {
         let view = UIView()

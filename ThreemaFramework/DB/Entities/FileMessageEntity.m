@@ -383,7 +383,6 @@ static NSString *fieldOrigin = @"origin";
     [self didAccessValueForKey:@"thumbnail"];
 
     if ([underlyingValue willBeDeleted]) {
-        [self setThumbnail:nil];
         return nil;
     }
     return underlyingValue;

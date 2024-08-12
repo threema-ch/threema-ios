@@ -28,7 +28,7 @@ class RTLAligningLabel: UILabel {
                   !text.isEmpty else {
                 return
             }
-            self.textAlignment = text.textAlignment
+            textAlignment = text.textAlignment
         }
     }
     

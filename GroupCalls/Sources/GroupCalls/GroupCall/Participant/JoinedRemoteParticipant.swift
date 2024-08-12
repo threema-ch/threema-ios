@@ -121,8 +121,8 @@ final class JoinedRemoteParticipant: RemoteParticipant, ViewModelParticipant {
 extension JoinedRemoteParticipant {
     
     private func handlePostHandshakeMessage(relayData: Data) throws -> MessageResponseAction {
-        DDLogNotice("[GroupCall] Handle PostHandshakeMessage for JoinedRemoteParticipant with id: \(participantID.id)")
-
+        DDLogNotice("[GroupCall] Handle PostHandshakeMessage for JoinedRemoteParticipant \(participantID)")
+        
         var nextPcckNonce = pcckRemote
         nextPcckNonce.append(nonceCounterRemote.next().littleEndianData)
         
@@ -150,7 +150,7 @@ extension JoinedRemoteParticipant {
                
                 guard let innerState = muteState.state else {
                     DDLogError(
-                        "[GroupCall] Camera state announcement of JoinedRemoteParticipant with id: \(participantID.id) doesn't have state"
+                        "[GroupCall] Camera state announcement of JoinedRemoteParticipant \(participantID) doesn't have a state"
                     )
                     assertionFailure()
                     throw GroupCallError.decryptionFailure
@@ -158,16 +158,16 @@ extension JoinedRemoteParticipant {
                 
                 switch innerState {
                 case .on:
-                    return try .participantToSFU(subscribeVideo(subscribe: true), self, .videoState(.unmuted))
+                    return .participantToSFU(subscribeVideo(), self, .videoState(.unmuted))
                 case .off:
-                    return try .participantToSFU(subscribeVideo(subscribe: false), self, .videoState(.muted))
+                    return .participantToSFU(unsubscribeVideo(), self, .videoState(.muted))
                 }
             
             case let .microphone(muteState):
                 
                 guard let innerState = muteState.state else {
                     DDLogError(
-                        "[GroupCall] Audio state announcement of JoinedRemoteParticipant with id: \(participantID.id) doesn't have state"
+                        "[GroupCall] Audio state announcement of JoinedRemoteParticipant \(participantID) doesn't have a state"
                     )
                     assertionFailure()
                     throw GroupCallError.decryptionFailure
@@ -175,8 +175,7 @@ extension JoinedRemoteParticipant {
                 
                 switch innerState {
                 case .on:
-                    // TODO: (IOS-4111) According to the protocol no subscribe is needed if the microphone changes
-                    return try .participantToSFU(subscribeAudio(), self, .audioState(.unmuted))
+                    return .muteStateChanged(self, .audioState(.unmuted))
                 case .off:
                     return .muteStateChanged(self, .audioState(.muted))
                 }
@@ -195,14 +194,14 @@ extension JoinedRemoteParticipant {
             return .none
         
         case .encryptedAdminEnvelope:
-            DDLogNotice("[GroupCall] Received an encryptedAdminEnvelope, which not yet supported, so ignoring it.")
+            DDLogNotice("[GroupCall] Received an encryptedAdminEnvelope, which is not yet supported, so ignoring it")
             return .none
        
         case let .rekey(mediaKeys):
             return handleRekey(with: mediaKeys)
        
         case .holdState:
-            DDLogNotice("[GroupCall] Received a holdState, which not yet supported, so ignoring it.")
+            DDLogNotice("[GroupCall] Received a holdState, which is not yet supported, so ignoring it")
             return .none
         }
     }
@@ -213,19 +212,20 @@ extension JoinedRemoteParticipant {
 extension JoinedRemoteParticipant {
     
     func audioMuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        // TODO: (IOS-3857) Are these logs in this class still needed?
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         return try audio(.muted)
     }
     
     func audioUnmuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         return try audio(.unmuted)
     }
     
     private func audio(_ mute: MuteState) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
         p2pEnvelope.padding = dependencies.groupCallCrypto.padding()
@@ -244,19 +244,19 @@ extension JoinedRemoteParticipant {
     }
     
     func videoUnmuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         return try video(.unmuted)
     }
     
     func videoMuteMessage() throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         return try video(.muted)
     }
     
     private func video(_ mute: MuteState) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         var p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope()
         p2pEnvelope.padding = dependencies.groupCallCrypto.padding()
@@ -275,7 +275,7 @@ extension JoinedRemoteParticipant {
     }
     
     func rekeyMessage(with protocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         let p2pEnvelope = Groupcall_ParticipantToParticipant.Envelope.with {
             $0.padding = dependencies.groupCallCrypto.padding()
@@ -298,7 +298,7 @@ extension JoinedRemoteParticipant {
     }
     
     private func encrypt(_ data: Data) throws -> Data {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         var nextPcckNonce = pcck
         nextPcckNonce.append(nonceCounter.next().littleEndianData)
@@ -319,8 +319,8 @@ extension JoinedRemoteParticipant {
 // MARK: - Handshake Completed Participant to SFU Messages
 
 extension JoinedRemoteParticipant {
-    private func subscribeAudio() throws -> Groupcall_ParticipantToSfu.Envelope {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+    func subscribeAudio() -> Groupcall_ParticipantToSfu.Envelope {
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         let subMessage = Groupcall_ParticipantToSfu.ParticipantMicrophone.with {
             $0.participantID = participantID.id
@@ -335,28 +335,24 @@ extension JoinedRemoteParticipant {
         return outer
     }
     
-    func subscribeVideo(subscribe: Bool) throws -> Groupcall_ParticipantToSfu.Envelope {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+    func subscribeVideo() -> Groupcall_ParticipantToSfu.Envelope {
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         let resolution = Common_Resolution.with {
             $0.height = GroupCallConfiguration.SubscribeVideo.height
             $0.width = GroupCallConfiguration.SubscribeVideo.width
         }
         
-        var subMessage = Groupcall_ParticipantToSfu.ParticipantCamera()
-        subMessage.participantID = participantID.id
-        
-        if subscribe {
-            let internalSub = Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe.with {
-                $0.desiredResolution = resolution
-                $0.desiredFps = GroupCallConfiguration.SubscribeVideo.fps
-            }
-            subMessage.subscribe = internalSub
-        }
-        else {
-            subMessage.unsubscribe = Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe()
+        let subscribe = Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe.with {
+            $0.desiredResolution = resolution
+            $0.desiredFps = GroupCallConfiguration.SubscribeVideo.fps
         }
         
+        let subMessage = Groupcall_ParticipantToSfu.ParticipantCamera.with {
+            $0.participantID = participantID.id
+            $0.subscribe = subscribe
+        }
+
         let outer = Groupcall_ParticipantToSfu.Envelope.with {
             $0.padding = dependencies.groupCallCrypto.padding()
             $0.requestParticipantCamera = subMessage
@@ -365,8 +361,8 @@ extension JoinedRemoteParticipant {
         return outer
     }
     
-    func unsubscribeVideo() throws -> Groupcall_ParticipantToSfu.Envelope {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+    func unsubscribeVideo() -> Groupcall_ParticipantToSfu.Envelope {
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
                 
         let subMessage = Groupcall_ParticipantToSfu.ParticipantCamera.with {
             $0.participantID = participantID.id
@@ -385,7 +381,7 @@ extension JoinedRemoteParticipant {
 extension JoinedRemoteParticipant {
     
     func setRemoteContext(_ remoteContext: RemoteContext) {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         self.remoteContext = remoteContext
     }
@@ -394,7 +390,7 @@ extension JoinedRemoteParticipant {
         _ mediaKey: Groupcall_ParticipantToParticipant.MediaKey,
         using decryptor: ThreemaGroupCallFrameCryptoDecryptor
     ) throws {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         guard mediaKey.epoch < UInt8.max else {
             throw GroupCallError.localProtocolViolation
@@ -407,12 +403,12 @@ extension JoinedRemoteParticipant {
         let uint8Epoch = UInt8(mediaKey.epoch)
         let uint8RatchetCounter = UInt8(mediaKey.ratchetCounter)
         
-        DDLogNotice("[GroupCall] Added key epoch=\(mediaKey.epoch) ratchedCounter=\(mediaKey.ratchetCounter)")
+        DDLogNotice("[GroupCall] Added key epoch=\(mediaKey.epoch), ratchedCounter=\(mediaKey.ratchetCounter)")
         decryptor.addPcmk(mediaKey.pcmk, epoch: uint8Epoch, ratchetCounter: uint8RatchetCounter)
     }
     
     func add(decryptor: ThreemaGroupCallFrameCryptoDecryptor) throws {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
                 
         guard let audioContext = remoteContext.microphoneAudioContext else {
             fatalError()
@@ -425,22 +421,22 @@ extension JoinedRemoteParticipant {
         decryptor.attach(
             with: audioContext.receiver,
             mediaType: .audio,
-            tag: "\(participantID.id).\(audioContext.mid).opus.receiver"
+            tag: "\(participantID).\(audioContext.mid).opus.receiver"
         )
         decryptor.attach(
             with: videoContext.receiver,
             mediaType: .video,
-            tag: "\(participantID.id).\(videoContext.mid).vp8.receiver"
+            tag: "\(participantID).\(videoContext.mid).vp8.receiver"
         )
         
         for mediaKey in mediaKeys {
-            DDLogNotice("[GroupCall] Added key epoch=\(mediaKey.epoch) ratchetCounter=\(mediaKey.ratchetCounter)")
+            DDLogNotice("[GroupCall] Added key epoch=\(mediaKey.epoch), ratchetCounter=\(mediaKey.ratchetCounter)")
             try add(mediaKey, using: decryptor)
         }
     }
     
     func addUsingGroupCallActor(decryptor: ThreemaGroupCallFrameCryptoDecryptor) throws {
-        DDLogNotice("[GroupCall] Participant \(participantID.id) \(#function)")
+        DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
         try add(decryptor: decryptor)
     }

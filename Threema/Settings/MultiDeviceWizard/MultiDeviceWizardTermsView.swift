@@ -103,7 +103,6 @@ struct MultiDeviceWizardTermsView: View {
                     }
                     .tint(Color(.primary))
                     .padding(.trailing)
-                    
                     .onChange(of: didAcceptTerms) { newValue in
                         if hasPFSEnabledContacts {
                             shouldShowAlert = newValue

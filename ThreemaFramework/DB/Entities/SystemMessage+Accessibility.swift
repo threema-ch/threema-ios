@@ -55,19 +55,19 @@ extension SystemMessage: MessageAccessibility {
     public var customAccessibilityHint: String? {
         switch systemMessageType {
         case .callMessage:
-            return BundleUtil.localizedString(forKey: "accessibility_systemCallMessage_hint")
+            BundleUtil.localizedString(forKey: "accessibility_systemCallMessage_hint")
         case .workConsumerInfo, .systemMessage:
-            return nil
+            nil
         }
     }
     
     public var customAccessibilityTrait: UIAccessibilityTraits {
         switch systemMessageType {
         case .callMessage:
-            return [.button, .staticText]
+            [.button, .staticText]
             
         case .workConsumerInfo, .systemMessage:
-            return [.staticText, .notEnabled]
+            [.staticText, .notEnabled]
         }
     }
     

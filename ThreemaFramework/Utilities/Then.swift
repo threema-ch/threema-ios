@@ -116,3 +116,7 @@ extension CGSize: Then { }
 // MARK: - CGVector + Then
 
 extension CGVector: Then { }
+
+// MARK: - String + Then
+
+extension String: Then { }

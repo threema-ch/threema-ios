@@ -23,13 +23,13 @@ import Foundation
 extension LocationMessage: PreviewableMessage {
     public var privatePreviewText: String {
         if let poiName {
-            return poiName
+            poiName
         }
         else if let poiAddress {
-            return poiAddress
+            poiAddress
         }
         else {
-            return BundleUtil.localizedString(forKey: "location")
+            BundleUtil.localizedString(forKey: "location")
         }
     }
     

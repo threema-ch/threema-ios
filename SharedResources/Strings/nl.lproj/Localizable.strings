@@ -106,7 +106,6 @@
 "threema_id" = "Threema ID";
 "nickname" = "Nickname";
 "add_button" = "Toevoegen";
-"chatview_contextmenu_select" = "Selecteren...";
 "learn_more" = "Meer informatie...";
 "file_message_image" = "Afbeelding";
 "file_message_sticker" = "Sticker";
@@ -115,6 +114,10 @@
 "file_message_voice" = "Spraakbericht";
 "file_message_file" = "Bestand";
 "chat" = "chat"; /* noun */
+
+"share_menu" = "Delen…";
+"forward_menu" = "Doorsturen…";
+"chatview_contextmenu_select" = "Selecteren...";
 
 "chat_back_button_accessibility" = "%d ongelezen";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "Alle berichten in deze chat van dit apparaat verwijderen?";
 "messages_delete_all_confirm_message" = "Dit omvat alle mediabestanden en documenten.";
 "messages_delete_selected_confirm" = "Geselecteerde berichten van dit apparaat verwijderen?";
+"message_delete_confirm" = "Wilt u dit bericht verwijderen?";
 "conversation_delete_confirm" = "Deze chat van dit apparaat verwijderen?";
 "delete_n" = "Verwijderen (%d)";
-"message_delete_for_everyone" = "Bericht verwijderen voor iedereen";
+"message_delete_for_me" = "Verwijderen van dit apparaat";
+"message_delete_for_everyone" = "Verwijderen voor iedereen";
 
 "message_cannot_play_movie" = "Kan film niet afspelen";
 
@@ -478,7 +483,7 @@
 "pull_to_sync_429_message" = "De dagelijkse limiet voor toegestane synchronisaties van contacten is bereikt. Ga morgen verder met synchroniseren, of neem contact op met de klantenondersteuning van Threema.";
 "pull_to_sync_429_message_work" = "De dagelijkse limiet voor toegestane synchronisaties van contacten is bereikt. Ga morgen verder met synchroniseren, of neem contact op met de beheerder van %@.";
 
-"synchronizing" = "Synchroniseren...";
+"synchronizing" = "Synchroniseren…";
 
 "no_contacts_syncon" = "U heeft nog niet voldoende contactpersonen. Synchronisatie is ingeschakeld, maar zo te zien gebruikt niemand in uw adresboek Threema (nodig ze uit!).";
 "no_contacts" = "Geen contactpersonen";
@@ -655,7 +660,7 @@
 "invite_sms_body" = "Hallo! Laten we Threema gebruiken om te communiceren in een beveiligde omgeving die de privacy beschermt! Mijn Threema-ID is: https://threema.id/%@";
 "invite_facebook_text" = "Ik gebruik Threema, de veilige instant messenger-app die de privacy van haar gebruikers beschermt. Mijn Threema-ID: https://threema.id/%@";
 "invite_twitter_text" = "Ik gebruik Threema, een veilige instant messenger-app die de privacy van haar gebruikers beschermt. My Threema-ID: https://threema.id/%@";
-"invite_using" = "Een vriend uitnodigen via...";
+"invite_using" = "Een vriend uitnodigen via…";
 "sms" = "Tekstbericht";
 
 /* Notifications Text */
@@ -711,14 +716,14 @@
 "quote_interaction_hint" = "Gaat naar geciteerd bericht.";
 
 /* TTOpenInAppActivity */
-"Open in ..." = "Openen in...";
+"Open in ..." = "Openen in…";
 
 /* VoiceOver long labels */
 "restore" = "Herstellen";
 
 /* PullToRefresh */
-"pull_to_refresh" = "Vegen om te verversen...";
-"refreshing" = "Laden...";
+"pull_to_refresh" = "Vegen om te vernieuwen...";
+"refreshing" = "Laden…";
 
 /* Threema Channel */
 "threema_channel_intro" = "Wil je Threema Channel aan je contactpersonen toevoegen?";
@@ -786,9 +791,9 @@
 "call_status_wait_ringing" = "Initialiseren";
 "call_status_ringing" = "Bellen";
 "call_status_incom_ringing" = "Threema-Oproep";
-"call_status_initializing" = "Verbinden";
+"call_status_initializing" = "Verbinden…";
 "call_status_calling" = "Verbonden";
-"call_status_reconnecting" = "Verbinden";
+"call_status_reconnecting" = "Verbinden…";
 "call_status_unknown" = "Onbekend";
 "call_status_blocked" = "Geblokkeerde contactpersoon";
 "call_status_failed_title" = "Threema-Oproep";
@@ -1104,7 +1109,8 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "settings_list_media_title" = "Media";
 "settings_list_storage_management_title" = "Opslagbeheer";
 "settings_list_passcode_lock_title" = "Veiligheidscode";
-"settings_threema_calls" = "Threema Oproepen";
+"settings_threema_calls" = "Oproepen";
+"settings_list_threema_desktop_title" = "Threema 2.0 voor Desktop (bèta)";
 "settings_list_threema_web_title" = "Desktop/web";
 
 "settings_list_network_title" = "Netwerkstatus";
@@ -1146,13 +1152,16 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "settings_privacy_read_receipts" = "Ontvangstbevestigingen";
 "settings_privacy_typing_indicator" = "Invoerindicators";
 
+"settings_privacy_poi_header" = "Locatiegegevens";
+"settings_privacy_choose_poi" = "Nuttige plaatsen tonen";
+"settings_privacy_poi_footer" = "Als deze functie ingeschakeld is, worden nuttige plaatsen in uw omgeving weergegeven wanneer u uw locatie deelt. Voor dit doel wordt uw locatie naar de server verzonden.";
+
 "settings_privacy_TIRR_reset_all" = "Voor alle contactpersonen herstellen";
 "settings_privacy_TIRR_reset_footer" = "Standaardinstellingen voor alle contactpersonen herstellen.";
 "settings_privacy_TIRR_reset_alert_title" = "Herstellen";
 "settings_privacy_TIRR_reset_alert_message" = "Standaardinstellingen voor alle contactpersonen herstellen. Dit kan niet ongedaan worden gemaakt.";
 "settings_privacy_TIRR_reset_alert_action" = "Alles herstellen";
 
-"settings_privacy_choose_poi" = "Point of Interest kiezen";
 "settings_privacy_hide_private_chats" = "Privéchats verbergen";
 "settings_privacy_hide_private_chats_footer" = "Dit verbergt alle privéchats in het chatoverzicht. Je moet een beveiligingscode instellen om deze optie te activeren.";
 
@@ -1252,7 +1261,7 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "automatic_delete_confirmation_message_immediate_deletion" = "%d berichten worden onmiddellijk verwijderd en alle berichten ouder dan %@ worden vanaf nu automatisch verwijderd. Let op: open opiniepeilingen en notitiegroepen zijn uitgesloten.";
 "automatic_delete_on_confirmation_button" = "Automatische verwijdering inschakelen";
 "automatic_delete_off_confirmation_button" = "Automatische verwijdering uitschakelen";
-"delete_in_progress" = "Wordt verwijderd...";
+"delete_in_progress" = "Aan het verwijderen…";
 "one_year_title" = "1 jaar";
 "one_year" = "1 jaar";
 "six_months_title" = "6 maanden";
@@ -1648,23 +1657,31 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "notification_threemaweb_connectionlost_title" = "Verbinding met de desktop-app/webclient verbroken";
 "notification_threemaweb_connectionlost_body" = "Heropen de app om de desktop-app/webclient te blijven gebruiken.";
 
+"settings_threema_web_desktop_banner_title" = "Nieuw: Threema 2.0 voor Desktop (bèta)";
+"settings_threema_web_desktop_banner_message" = "Tik hier om de volgende generatie van de desktop-app met ondersteuning voor meerdere apparaten uit te proberen.";
+
 "settings_threema_web_connected" = "Verbonden met desktop/web";
 "settings_threema_web_connectioninfo" = "Je apparaat moet zijn vrijgegeven en %@ moet in de voorgrond actief zijn om verbonden te blijven. Zo lang je verbonden bent, zal je apparaat niet automatisch worden vergrendeld.";
-"settings_threema_web_linked_device_section_header" = "Multi-device";
-"settings_threema_web_linked_device_section_footer" = "Het gekoppelde apparaat kan worden gebruikt, zelfs als %@ in de achtergrond actief is of het apparaat offline is.";
-"settings_threema_web_section_header" = "Rechtstreeks verbonden apparaten";
 "settings_threema_web_multi_device_qr_code_title" = "Verkeerde QR-code";
-"settings_threema_web_multi_device_qr_code_message" = "Tik op \"%@\" en daarna op \"%@\" om dit aan de desktop-app te koppelen.";
+"settings_threema_web_multi_device_qr_code_message" = "Blader terug naar '%@' en selecteer '%@' om deze desktop-app te koppelen.";
 
 "chat_text_view_placeholder" = "Nieuw bericht";
 "compose_bar_camera_button_accessibility_label" = "Camera openen";
 "compose_bar_image_picker_button_accessibility_label" = "Beeldkiezer openen";
 "compose_bar_record_button_accessibility_label" = "Ingesproken bericht opnemen";
 "compose_bar_send_message_button_accessibility_label" = "Bericht versturen";
+"compose_bar_send_edited_message_button_accessibility_label" = "Bewerken bevestigen";
 "compose_bar_attachment_button_accessibility_label" = "Bijlagen toevoegen";
-"play_record_audio_view_controller_general_error_title" = "Niet opgenomen";
-"play_record_audio_view_controller_general_error_message" = "Het ingesproken bericht kan momenteel vanwege een onbekende fout niet worden opgenomen";
 "hardware_keyboard_send_on_enter_discoverability_title" = "Bericht versturen";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "Geen spraakbericht mogelijk.";
+"voice_recorder_error_message" = "Probeer het opnieuw of neem contact op voor ondersteuning.";
+"voice_recorder_call_state_not_idle" = "Actieve oproep";
+"voice_recorder_playback_failure" = "Afspeelfout";
+"voice_recorder_recording_error" = "Opnamefout";
+"voice_recorder_recording_cancelled" = "Opname geannuleerd";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "Je hebt op %@ gestemd.";
@@ -1679,7 +1696,6 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 // ChatBar
 "chat_bar_quote_close_button" = "Citaat afsluiten";
-"chat_bar_edited_message_close_button" = "Bewerken van bericht annuleren";
 
 // ChatDetailView
 "detailView_title" = "Berichtdetails";
@@ -1689,6 +1705,9 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "detailView_group_file_size" = "Bestandsgrootte";
 "detailView_consumed" = "Als eerste afgespeeld";
 "detailView_created_footer" = "Aangemaakt: %@";
+"detailView_edit_history_header" = "Geschiedenis bewerken";
+"detailView_edit_history_current" = "Huidig";
+"detailView_edit_history_no_caption" = "Geen onderschrift";
 
 "message_display_status_none" = "Geen";
 "message_display_status_user_acknowledged" = "Akkoord";
@@ -1833,16 +1852,16 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_voice_message_unplayed" = "Nog niet afgespeeld.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Akkoord, %@";
-"accessibility_status_declined_plus_time" = "Afgewezen, %@";
-"accessibility_status_sending_plus_time" = "Aan het verzenden, %@";
-"accessibility_status_sent_plus_time" = "Verzonden, %@";
-"accessibility_status_delivered_plus_time" = "Afgeleverd, %@";
-"accessibility_status_read_plus_time" = "Gelezen, %@";
-"accessibility_status_failed_plus_time" = "Mislukt, %@";
-"accessibility_status_group_acknowledged_plus_time" = "Overeengekomen door %i, %@%@";
-"accessibility_status_group_declined_plus_time" = "Afgewezen door %i, %@%@";
-"accessibility_status_group_acknowledged_declined_plus_time" = "Overeengekomen door %i, afgewezen door %i, %@%@";
+"accessibility_status_acknowledged" = "Akkoord";
+"accessibility_status_declined" = "Afgewezen";
+"accessibility_status_sending" = "Aan het verzenden";
+"accessibility_status_sent" = "Verzonden";
+"accessibility_status_delivered" = "Geleverd";
+"accessibility_status_read" = "Gelezen";
+"accessibility_status_failed" = "Mislukt";
+"accessibility_status_group_acknowledged" = "Overeengekomen door %i, %@";
+"accessibility_status_group_declined" = "Afgewezen door %i, %@";
+"accessibility_status_group_acknowledged_declined" = "Overeengekomen door %i, afgewezen door %i, %@";
 "accessibility_status_group_acknowledged_my_reaction" = "Ik ben akkoord gegaan";
 "accessibility_status_group_declined_my_reaction" = "Ik heb het afgewezen";
 
@@ -1951,8 +1970,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 // Delete / Edit message
 "edit_message" = "Bericht bewerken";
 "edit_message_can_not_edit" = "Dit bericht is langer dan 6 uur geleden verzonden en kan niet meer worden bewerkt.";
-"edit_message_not_sent_to" = "De volgende groepsleden kunnen uw bewerkingen niet zien: %@";
-"delete_message_not_sent_to" = "Dit bericht wordt niet verwijderd voor de volgende groepsleden: %@";
+"edit_message_not_sent_to" = "De volgende groepsleden zullen uw bewerkingen niet kunnen zien:\n%@";
+"delete_message_not_sent_to" = "Dit bericht wordt niet verwijderd voor de volgende groepsleden:\n%@";
 "delete_edit_message_not_sent_to_others" = "%d anderen";
 "delete_message_requirement" = "De nieuwste versie van Threema moet worden geïnstalleerd om berichten te verwijderen.";
 "edit_message_requirement" = "De nieuwste versie van Threema moet worden geïnstalleerd om bewerkingen te zien.";

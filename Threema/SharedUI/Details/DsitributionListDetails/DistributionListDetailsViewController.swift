@@ -32,7 +32,6 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     private lazy var headerView: DetailsHeaderView = {
         
         var actions = quickActions(in: self)
-        
         if displayStyle == .preview {
             // Don't show quick actions in preview style
             actions = []
@@ -44,12 +43,8 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
                 guard let strongSelf = self else {
                     return
                 }
-                guard let strongSelf = self else {
-                    return
-                }
-                guard let distributionListProfilePictureData = strongSelf.distributionList.conversation?.groupImage?
-                    .data,
-                    let profilePicture = UIImage(data: distributionListProfilePictureData) else {
+                guard let profilePictureData = strongSelf.distributionList.profilePicture,
+                      let profilePicture = UIImage(data: profilePictureData) else {
                     return
                 }
                 
@@ -66,7 +61,7 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
         tableView: tableView
     )
     
-    private let distributionList: DistributionListEntity
+    private let distributionList: DistributionList
     
     // Display style of the chosen mode
     private let displayStyle: DetailsDisplayStyle
@@ -78,7 +73,7 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     // Backwards compatibility
     
     @available(*, deprecated, message: "Only use this for old code to keep it working")
-    @objc var _distributionList: DistributionListEntity {
+    @objc var _distributionList: DistributionList {
         distributionList
     }
     
@@ -86,13 +81,13 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     
     /// Show details of a distribution list
     /// - Parameters:
-    ///   - distributionList: DistributionListEntity to show details for
+    ///   - distributionList: DistributionList to show details for
     ///   - displayMode: Mode the distribution list is shown in
     ///   - displayStyle: Appearance of the distribution list details
     ///   - delegate: Details delegate that is called on certain actions. This should be set when `displayMode` is
     /// `conversation`.
     @objc init(
-        for distributionList: DistributionListEntity,
+        for distributionList: DistributionList,
         displayMode: DistributionListDetailsDisplayMode = .default,
         displayStyle: DetailsDisplayStyle = .default,
         delegate: DetailsDelegate? = nil
@@ -154,36 +149,25 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
             object: nil
         )
 
-        // TODO: (IOS-4366) Add observers
-
-//        observeGroup(\.name) { [weak self] in
-//            self?.navigationBarTitle = self?.distributionList.name
-//            self?.updateHeader(animated: false)
-//        }
-        
-        observeGroup(\.willBeDeleted) {
-            // will be handled in group object
+        observeDistributionList(\.profilePicture) { [weak self] in
+            AvatarMaker.shared().clearCacheForProfilePicture()
+            self?.updateHeader()
         }
-                
-        observeGroup(\.profilePicture) { [weak self] in
+        
+        observeDistributionList(\.displayName) { [weak self] in
+            self?.navigationBarTitle = self?.distributionList.displayName
             self?.updateHeader(animated: false)
+        }
+        
+        observeDistributionList(\.willBeDeleted) {
+            // will be handled in group object
         }
 
         // TODO: Observe each member and explicitly reload the cells that have a changed member
         // otherwise the diffable data source doesn't refresh the cell
-        observeGroup(\.members) { [weak self] in
+        observeDistributionList(\.recipients) { [weak self] in
             self?.dataSource.reload(sections: [.recipients])
         }
-
-//        observeGroup(\.state) { [weak self] in
-//            guard let strongSelf = self else {
-//                return
-//            }
-//            if !strongSelf.distributionList.willBeDeleted {
-//                strongSelf.dataSource.reload(sections: [.members, .creator, .destructiveGroupActions])
-//                strongSelf.updateHeader(animated: false)
-//            }
-//        }
     }
     
     private func removeObservers() {
@@ -196,44 +180,43 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
         observers.removeAll()
     }
 
-    // TODO: (IOS-4366) Add observers
-    /// Helper to add observers to the `group` property
+    /// Helper to add observers to the `distributionList` property
     ///
     /// All observers are store in the `observers` property.
     ///
     /// - Parameters:
-    ///   - keyPath: Key path in `Group` to observe
+    ///   - keyPath: Key path in `DistributionList` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeGroup(
-        _ keyPath: KeyPath<Group, some Any>,
+    private func observeDistributionList(
+        _ keyPath: KeyPath<DistributionList, some Any>,
         changeHandler: @escaping () -> Void
     ) {
-//        let observer = group.observe(keyPath) { [weak self] _, _ in
-//            guard let strongSelf = self else {
-//                return
-//            }
-//
-//            // Check if the observed group is in the process to be deleted
-//            guard !strongSelf.group.willBeDeleted else {
-//                // Invalidate and remove all observers
-//                strongSelf.removeObservers()
-//
-//                // Hide myself
-//                strongSelf.dismiss(animated: true)
-//                strongSelf.navigationController?.popViewController(animated: true)
-//
-//                return
-//            }
-//
-//            // It's important to call change handler on main thread, because Group object can update itself in the
-//            // background
-//            DispatchQueue.main.async {
-//                changeHandler()
-//            }
-//        }
-//
-//        observers.append(observer)
+        let observer = distributionList.observe(keyPath) { [weak self] _, _ in
+            guard let strongSelf = self else {
+                return
+            }
+
+            // Check if the observed group is in the process to be deleted
+            guard !strongSelf.distributionList.willBeDeleted else {
+                // Invalidate and remove all observers
+                strongSelf.removeObservers()
+
+                // Hide myself
+                strongSelf.dismiss(animated: true)
+                strongSelf.navigationController?.popViewController(animated: true)
+
+                return
+            }
+
+            // It's important to call change handler on main thread, because Group object can update itself in the
+            // background
+            DispatchQueue.main.async {
+                changeHandler()
+            }
+        }
+
+        observers.append(observer)
     }
 
     // MARK: - Updates
@@ -276,7 +259,7 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
 
 extension DistributionListDetailsViewController {
     private func configureTableView() {
-        navigationBarTitle = String(distributionList.name)
+        navigationBarTitle = String(distributionList.displayName ?? "")
         
         // If this is not set to `self` the automatic (dis)appearance of the navigation bar doesn't
         // work, because it is applied in the `UIScrollViewDelegate` in our superclass.
@@ -510,28 +493,29 @@ extension DistributionListDetailsViewController {
     }
 }
 
-extension DistributionListEntity {
+extension DistributionList {
     /// Get a content configuration base on this `DistributionList`
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
         DetailsHeaderProfileView.ContentConfiguration(
             avatarImageProvider: avatarImageProvider(completion:),
-            name: String(name),
+            name: String(displayName!),
             isSelfMember: true
         )
     }
     
     private func avatarImageProvider(completion: @escaping (UIImage?) -> Void) {
-        let entityManager = EntityManager()
-        if let conversationEntity = conversation {
-            AvatarMaker.shared().avatar(
-                for: conversation,
-                size: DetailsHeaderProfileView.avatarImageSize,
-                masked: true
-            ) { avatarImage, _ in
-                DispatchQueue.main.async {
-                    completion(avatarImage)
-                }
+        guard let profilePictureData = profilePicture, let profilePicture = UIImage(data: profilePictureData) else {
+            Task { @MainActor in
+                completion(AvatarMaker.shared().unknownDistributionListImage())
             }
+            return
+        }
+        
+        let maskedProfilePicture = AvatarMaker.shared()
+            .maskedProfilePicture(profilePicture, size: ChatViewConfiguration.Profile.maxAvatarSize)
+        
+        Task { @MainActor in
+            completion(maskedProfilePicture)
         }
     }
 }

@@ -256,10 +256,10 @@ class TaskQueueTests: XCTestCase {
             return nil
         }
 
-        let mediatorMessageProtocolMock = MediatorMessageProtocolMock(
+        let mediatorMessageProtocolMock = try MediatorMessageProtocolMock(
             deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
             returnValues: [
-                try MediatorMessageProtocolMock.ReflectData(
+                MediatorMessageProtocolMock.ReflectData(
                     id: expectedReflectID,
                     message: expectedEnvelop.serializedData()
                 ),
@@ -462,7 +462,7 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, test[1] as! Int)
                 XCTAssertEqual(task.retryCount, test[2] as! Int)
 
-                self.ddLoggerMock.logMessages.forEach { m in
+                for m in self.ddLoggerMock.logMessages {
                     print(m.message)
                 }
 
@@ -603,7 +603,7 @@ class TaskQueueTests: XCTestCase {
                 )
             }
             else {
-                test.expectedMessageProcessorErrors.forEach { expectedMessageProcessorError in
+                for expectedMessageProcessorError in test.expectedMessageProcessorErrors {
                     spoolChatServerMessageWithError(
                         expectedMessageProcessorError,
                         test.expectedSendMessage,
@@ -688,11 +688,11 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(serverConnectorMock.completedProcessingMessageCalls.count, expectedAck ? 1 : 0)
             XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, 0)
 
-            self.ddLoggerMock.logMessages.forEach { msg in
+            for msg in self.ddLoggerMock.logMessages {
                 print(msg.message)
             }
 
-            expectedLogMessages.forEach { expectedLogMessage in
+            for expectedLogMessage in expectedLogMessages {
                 if let expectedMessageProcessorError {
                     print(String(
                         format: expectedLogMessage,
@@ -1035,11 +1035,11 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertTrue(serverConnectorMock.reflectMessageCalls.isEmpty, assertTestMessage)
             }
 
-            self.ddLoggerMock.logMessages.forEach { msg in
+            for msg in self.ddLoggerMock.logMessages {
                 print(msg.message)
             }
 
-            expectedLogMessages.forEach { expectedLogMessage in
+            for expectedLogMessage in expectedLogMessages {
                 if let expectedMediatorReflectedProcessorError {
                     print(String(
                         format: expectedLogMessage,

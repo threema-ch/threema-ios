@@ -140,11 +140,11 @@ final class ChatViewSnapshotProvider {
                     return
                 }
                 
-                guard let delegate = self.delegate, delegate.initialSetupCompleted else {
+                guard let delegate, delegate.initialSetupCompleted else {
                     return
                 }
                 
-                self.updateTypingIndicator(add: isTyping)
+                updateTypingIndicator(add: isTyping)
             }
             .store(in: &cancellables)
         
@@ -181,7 +181,7 @@ final class ChatViewSnapshotProvider {
                     return
                 }
                 
-                self.prepareAndPublishSnapshot(messages: messages)
+                prepareAndPublishSnapshot(messages: messages)
             }
             .store(in: &cancellables)
     }
@@ -718,6 +718,7 @@ extension ChatViewSnapshotProvider {
             
         case let (a, b) where a == b:
             rowAnimation = a
+
         default:
             DDLogError(
                 "Animations were both not none (a:\(snapshotA.rowAnimation), b: \(snapshotB.rowAnimation), This must not occur. Will use .fade as fallback."

@@ -45,11 +45,11 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
         let checkDays: (Int) -> Int = { days in
             switch days {
             case 1..<7:
-                return 7
+                7
             case 3650...:
-                return 3650
+                3650
             default:
-                return days
+                days
             }
         }
         
@@ -131,7 +131,7 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
         let convs = (entityManager.entityFetcher.allConversations() as? [Conversation]) ?? []
         return convs.filter {
             // note groups are excluded
-            return !(groupManager.getGroup(conversation: $0)?.isNoteGroup ?? false)
+            !(groupManager.getGroup(conversation: $0)?.isNoteGroup ?? false)
         }
     }
     

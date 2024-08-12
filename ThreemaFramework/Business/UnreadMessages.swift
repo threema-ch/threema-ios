@@ -211,11 +211,7 @@ extension UnreadMessagesProtocolObjc {
         // Unread messages are only incoming messages
         var unreadMessages = [BaseMessage]()
 
-        messages.forEach { baseMessage in
-            guard !baseMessage.isOwnMessage else {
-                return
-            }
-
+        for baseMessage in messages where !baseMessage.isOwnMessage {
             unreadMessages.append(baseMessage)
         }
 

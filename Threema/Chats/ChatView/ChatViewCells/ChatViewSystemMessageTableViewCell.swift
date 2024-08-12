@@ -310,46 +310,50 @@ extension ChatViewSystemMessageTableViewCell {
     }
 }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewSystemMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewSystemMessageTableViewCell: ChatViewMessageActions {
     
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
-
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
+        
         guard let message = systemMessageAndNeighbors.message else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
-        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
+        typealias Provider = ChatViewMessageActionsProvider
         
-        let detailAction = Provider.detailsAction {
+        // Details
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
+        // Select
+        let selectHandler: Provider.DefaultHandler = {
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
+        }
+        
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        let deleteAction = Provider.deleteAction(
+        // Build menu
+        
+        let basicActions = Provider.defaultBasicActions(
             message: message,
+            popOverSource: systemMessageBackgroundView,
+            detailsHandler: detailsHandler,
+            selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            popOverSource: systemMessageBackgroundView
+            didDelete: didDelete
         )
-        
-        menuItems.append(contentsOf: [detailAction, deleteAction])
-        
-        return ([ChatViewMessageActionProvider.MessageAction](), menuItems)
+                
+        return [.init(sectionType: .inline, actions: basicActions)]
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {

@@ -33,7 +33,7 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
         }
 
         if let image = task.profilePicture == .updated ? task.image : nil {
-            var encryptedData: Data!
+            var encryptedData: BlobUpload
 
             do {
                 let encrypted = try encrypt(data: image)
@@ -42,21 +42,24 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
                 profilePictureBlob?.nonce = encrypted.nonce
                 profilePictureBlob?.key = encrypted.key
 
-                encryptedData = encrypted.payload
+                encryptedData = (
+                    "groupProfileImage",
+                    encrypted.payload
+                )
             }
             catch {
                 return Promise<Void> { $0.reject(error) }
             }
 
-            if encryptedData.isEmpty {
+            if encryptedData.blob.isEmpty {
                 return Promise()
             }
 
             return firstly {
                 uploadBlobs(blobs: [encryptedData])
-            }.then { [self] blobIDs -> Promise<Void> in
+            }.then { [self] uploadedBlobs -> Promise<Void> in
                 Promise { seal in
-                    guard let blobID = blobIDs.first else {
+                    guard let blobID = uploadedBlobs.first?.blobID else {
                         seal.reject(TaskExecutionTransactionError.blobIDMissing)
                         return
                     }

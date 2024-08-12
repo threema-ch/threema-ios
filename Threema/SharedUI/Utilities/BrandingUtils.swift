@@ -39,18 +39,18 @@ public class BrandingUtils: NSObject {
         var height: CGFloat {
             switch self {
             case .default:
-                return BrandingUtils.defaultLogoHeight
+                BrandingUtils.defaultLogoHeight
             case .custom:
-                return BrandingUtils.customLogoHeight
+                BrandingUtils.customLogoHeight
             }
         }
         
         var image: UIImage? {
             switch self {
             case let .default(image):
-                return image
+                image
             case let .custom(image):
-                return image
+                image
             }
         }
     }

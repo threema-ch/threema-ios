@@ -1374,7 +1374,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         
         ///***** BEGIN THREEMA MODIFICATION: ignore mute switch *********/
         NSInteger state = [[VoIPCallStateManager shared] currentCallState];
-        if (state == CallStateIdle) {
+        if (state == CallStateIdle && !NavigationBarPromptHandler.isGroupCallActive) {
             _prevAudioCategory = [[AVAudioSession sharedInstance] category];
             [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
         }
@@ -1435,7 +1435,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     [[self pageDisplayedAtIndex:_currentVideoIndex] playButton].hidden = NO;
     _currentVideoIndex = NSUIntegerMax;
     NSInteger state = [[VoIPCallStateManager shared] currentCallState];
-    if (audioFree == true && state == CallStateIdle) {
+    if (audioFree == true && state == CallStateIdle &&
+        !NavigationBarPromptHandler.isGroupCallActive) {
         [[AVAudioSession sharedInstance] setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
     }
 }
@@ -1966,7 +1967,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)playerViewControllerWillBeginDismissalTransition:(AVPlayerViewController *)playerViewController {
     NSInteger state = [[VoIPCallStateManager shared] currentCallState];
-    if (state == CallStateIdle) {
+    if (state == CallStateIdle && !NavigationBarPromptHandler.isGroupCallActive) {
         [[AVAudioSession sharedInstance] setCategory:_prevAudioCategory error:nil];
     }
 }

@@ -144,7 +144,8 @@ open class StyleKit: NSObject {
     
     // MARK: - Images
     
-    // Note: The width and height are in points. i.e. `UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)` creates a context that draws the image in the scale of the current device.
+    // Note: The width and height are in points. i.e. `UIGraphicsBeginImageContextWithOptions(CGSize(width: width,
+    // height: height), false, 0)` creates a context that draws the image in the scale of the current device.
     
     // MARK: Small Generated Images (32 x 8 pt)
     

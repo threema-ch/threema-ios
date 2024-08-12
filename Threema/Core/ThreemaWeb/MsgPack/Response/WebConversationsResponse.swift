@@ -30,9 +30,13 @@ class WebConversationsResponse: WebAbstractMessage {
         let businessInjector = BusinessInjector()
         let allConversations = businessInjector.entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
 
+        // Fetch only chats where lastUpdate is not `nil` to avoid showing chats that only contain system messages
         let unarchivedConversations = allConversations?
-            .filter { $0.conversationVisibility == .default || $0.conversationVisibility == .pinned }
-        let archivedConversations = allConversations?.filter { $0.conversationVisibility == .archived }
+            .filter {
+                ($0.conversationVisibility == .default || $0.conversationVisibility == .pinned) && $0.lastUpdate != nil
+            }
+        let archivedConversations = allConversations?
+            .filter { $0.conversationVisibility == .archived && $0.lastUpdate != nil }
         
         var index = 1
         for conver in unarchivedConversations! {

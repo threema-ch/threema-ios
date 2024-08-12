@@ -26,15 +26,18 @@ public enum NotificationPresenterStyle: Identifiable {
     case none
     case success
     case error
+    case warning
     
     public var id: String {
         switch self {
         case .none:
-            return "threemaNoneStyle"
+            "threemaNoneStyle"
         case .success:
-            return "threemaSucessStyle"
+            "threemaSucessStyle"
         case .error:
-            return "threemaErrorStyle"
+            "threemaErrorStyle"
+        case .warning:
+            "threemaInfoStyle"
         }
     }
     
@@ -55,6 +58,11 @@ public enum NotificationPresenterStyle: Identifiable {
             let image = UIImage(systemName: "exclamationmark.circle.fill")
             view.image = image
             view.tintColor = .systemRed
+            
+        case .warning:
+            let image = UIImage(systemName: "info.circle.fill")
+            view.image = image
+            view.tintColor = .systemOrange
         }
         
         return view
@@ -64,11 +72,13 @@ public enum NotificationPresenterStyle: Identifiable {
     public var hapticType: UINotificationFeedbackGenerator.FeedbackType? {
         switch self {
         case .none:
-            return nil
+            nil
         case .success:
-            return .success
+            .success
         case .error:
-            return .error
+            .error
+        case .warning:
+            .warning
         }
     }
 }
@@ -232,6 +242,10 @@ public struct NotificationPresenterType {
     public static let safePasswordAccepted = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "threema_safe_company_mdm_password_changed_accepted"),
         notificationStyle: .success
+    )
+    public static let noConnection = NotificationPresenterType(
+        notificationText: "cannot_connect_title".localized,
+        notificationStyle: .error
     )
 }
 

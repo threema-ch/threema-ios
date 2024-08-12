@@ -34,11 +34,11 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
     var userSettingsValue: Int {
         switch self {
         case .restrictive:
-            return 0
+            0
         case .balanced:
-            return 1
+            1
         case .complete:
-            return 2
+            2
         }
     }
     
@@ -61,11 +61,11 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
     public var previewTitle: String {
         switch self {
         case .restrictive:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_restrictive_title")
+            BundleUtil.localizedString(forKey: "settings_notification_type_preview_restrictive_title")
         case .balanced:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_balanced_title")
+            BundleUtil.localizedString(forKey: "settings_notification_type_preview_balanced_title")
         case .complete:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_complete_title")
+            BundleUtil.localizedString(forKey: "settings_notification_type_preview_complete_title")
         }
     }
     
@@ -87,11 +87,11 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
     public var previewSenderName: String {
         switch self {
         case .restrictive:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_restrictive_sender_name")
+            BundleUtil.localizedString(forKey: "settings_notification_type_preview_restrictive_sender_name")
         case .balanced:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_balanced_sender_name")
+            BundleUtil.localizedString(forKey: "settings_notification_type_preview_balanced_sender_name")
         case .complete:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_complete_sender_name")
+            BundleUtil.localizedString(forKey: "settings_notification_type_preview_complete_sender_name")
         }
     }
     

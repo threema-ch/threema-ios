@@ -62,25 +62,24 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
         
         let currentBlobDisplayState = voiceMessage.blobDisplayState
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: config.circleFillSymbolSize)
-        let symbolName: String
-        
-        switch currentBlobDisplayState {
-        case .remote, .downloading, .fileNotFound, .dataDeleted:
-            if let fillSymbolName = currentBlobDisplayState.circleFillSymbolName {
-                symbolName = fillSymbolName
-            }
-            else {
-                symbolName = "play.slash.fill"
-            }
+        let symbolName: String =
+            switch currentBlobDisplayState {
+            case .remote, .downloading, .fileNotFound, .dataDeleted:
+                if let fillSymbolName = currentBlobDisplayState.circleFillSymbolName {
+                    fillSymbolName
+                }
+                else {
+                    "play.slash.fill"
+                }
             
-        case .processed, .pending, .uploading, .uploaded, .sendingError:
-            if isPlaying {
-                symbolName = "pause.circle.fill"
+            case .processed, .pending, .uploading, .uploaded, .sendingError:
+                if isPlaying {
+                    "pause.circle.fill"
+                }
+                else {
+                    "play.circle.fill"
+                }
             }
-            else {
-                symbolName = "play.circle.fill"
-            }
-        }
         
         let image = UIImage(
             systemName: symbolName,

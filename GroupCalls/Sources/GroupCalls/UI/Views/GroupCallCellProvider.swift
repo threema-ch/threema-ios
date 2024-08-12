@@ -21,7 +21,7 @@
 import Foundation
 import UIKit
 
-struct GroupCallCellProvider {
+enum GroupCallCellProvider {
     @MainActor static func registerCells(in collectionView: UICollectionView) {
         collectionView.register(
             GroupCallParticipantCell.self,

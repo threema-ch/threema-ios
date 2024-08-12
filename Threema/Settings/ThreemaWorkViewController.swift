@@ -57,13 +57,13 @@ class ThreemaWorkViewController: ThemedViewController {
         let lang = Bundle.main.preferredLocalizations.first ?? "en"
         let version = AppInfo.appVersion.version ?? "-"
         
-        let theme: String
-        switch Colors.theme {
-        case .dark:
-            theme = "dark"
-        case .light, .undefined:
-            theme = "light"
-        }
+        let theme =
+            switch Colors.theme {
+            case .dark:
+                "dark"
+            case .light, .undefined:
+                "light"
+            }
                 
         let urlString = "https://threema.ch/work_info/?lang=\(lang)&version=\(version)&platform=ios&theme=\(theme)"
         let threemaWorkURL = URL(string: urlString)!
@@ -79,6 +79,17 @@ class ThreemaWorkViewController: ThemedViewController {
 extension ThreemaWorkViewController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         MBProgressHUD.hide(for: view, animated: true)
+    }
+    
+    func webView(
+        _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: any Error
+    ) {
+        MBProgressHUD.hide(for: webView, animated: true)
+        if (error as NSError).code == URLError.Code.notConnectedToInternet.rawValue {
+            NotificationPresenterWrapper.shared.present(type: .noConnection)
+        }
     }
     
     func webView(

@@ -84,14 +84,14 @@ struct NotificationReminderView: View {
     // MARK: - Private Functions
 
     private func setReminder() {
-        var settingsURL: URL
-        if #available(iOS 16.0, *) {
-            settingsURL = URL(string: UIApplication.openNotificationSettingsURLString)!
-        }
-        else {
-            // Fallback on earlier versions
-            settingsURL = URL(string: UIApplication.openSettingsURLString)!
-        }
+        let settingsURL =
+            if #available(iOS 16.0, *) {
+                URL(string: UIApplication.openNotificationSettingsURLString)!
+            }
+            else {
+                // Fallback on earlier versions
+                URL(string: UIApplication.openSettingsURLString)!
+            }
         UIApplication.shared.open(settingsURL)
     }
 }

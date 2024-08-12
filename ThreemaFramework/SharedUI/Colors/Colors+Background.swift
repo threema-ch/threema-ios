@@ -36,18 +36,18 @@ extension Colors {
     @objc public class var backgroundToolbar: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
     @objc public class var backgroundHeaderView: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
@@ -66,9 +66,9 @@ extension Colors {
     @objc public class var backgroundButton: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray450.color
+            Asset.SharedColors.gray450.color
         case .dark:
-            return Asset.SharedColors.gray700.color
+            Asset.SharedColors.gray700.color
         }
     }
     
@@ -79,18 +79,18 @@ extension Colors {
     @objc public class var backgroundChevronCircleButton: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray250.color
+            Asset.SharedColors.gray250.color
         case .dark:
-            return Asset.SharedColors.gray800.color
+            Asset.SharedColors.gray800.color
         }
     }
     
     @objc public class var backgroundTintChevronCircleButton: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray550.color
+            Asset.SharedColors.gray550.color
         case .dark:
-            return Asset.SharedColors.gray400.color
+            Asset.SharedColors.gray400.color
         }
     }
     
@@ -105,18 +105,18 @@ extension Colors {
     @objc public class var backgroundTextView: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray200.color
+            Asset.SharedColors.gray200.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
     @objc public class var backgroundQrCode: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.gray900.color
+            Asset.SharedColors.gray900.color
         }
     }
     
@@ -131,36 +131,36 @@ extension Colors {
     @objc public class var backgroundNotification: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.black.color
+            Asset.SharedColors.black.color
         }
     }
     
     @objc public class var backgroundUnreadMessageLine: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.black.color.withAlphaComponent(0.45)
+            Asset.SharedColors.black.color.withAlphaComponent(0.45)
         case .dark:
-            return Asset.SharedColors.gray700.color.withAlphaComponent(0.45)
+            Asset.SharedColors.gray700.color.withAlphaComponent(0.45)
         }
     }
     
     @objc public class var backgroundSegmentedControl: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.gray650.color
+            Asset.SharedColors.gray650.color
         }
     }
 
     public class var backgroundWizardBox: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray500.color
+            Asset.SharedColors.gray500.color
         case .dark:
-            return Asset.SharedColors.gray700.color
+            Asset.SharedColors.gray700.color
         }
     }
 }

@@ -315,13 +315,13 @@ import UIKit
     @objc public func save(url: URL, isVideo: Bool, completionHandler: @escaping ((_ success: Bool) -> Void)) {
         func saveIt(_ validAssets: PHAssetCollection) {
             PHPhotoLibrary.shared().performChanges({
-                var assetChangeRequest: PHAssetChangeRequest?
-                if isVideo == true {
-                    assetChangeRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
-                }
-                else {
-                    assetChangeRequest = PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
-                }
+                let assetChangeRequest: PHAssetChangeRequest? =
+                    if isVideo == true {
+                        PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+                    }
+                    else {
+                        PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
+                    }
                 
                 if let assetPlaceHolder = assetChangeRequest?.placeholderForCreatedAsset {
                     if let albumChangeRequest = PHAssetCollectionChangeRequest(for: validAssets) {

@@ -349,6 +349,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         
         guard let baseMessage = businessInjector.entityManager.entityFetcher
             .existingObject(with: message.objectID) as? BaseMessage,
+            baseMessage.deletedAt == nil,
             let conversation = baseMessage.conversation else {
             return
         }

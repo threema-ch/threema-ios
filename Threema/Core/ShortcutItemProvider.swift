@@ -35,33 +35,33 @@ import Foundation
         var localizedTitle: String {
             switch self {
             case .newMessage:
-                return "application_shortcut_item_new_message"
+                "application_shortcut_item_new_message"
             case .myID:
-                return "application_shortcut_item_my_id"
+                "application_shortcut_item_my_id"
             case .scanQrCode:
-                return "application_shortcut_item_scan_qr_code"
+                "application_shortcut_item_scan_qr_code"
             }
         }
       
         var icon: String {
             switch self {
             case .newMessage:
-                return "square.and.pencil"
+                "square.and.pencil"
             case .myID:
-                return "person.crop.rectangle.fill"
+                "person.crop.rectangle.fill"
             case .scanQrCode:
-                return "qrcode.viewfinder"
+                "qrcode.viewfinder"
             }
         }
         
         var type: String {
             switch self {
             case .newMessage:
-                return "ch.threema.newmessage"
+                "ch.threema.newmessage"
             case .myID:
-                return "ch.threema.myid"
+                "ch.threema.myid"
             case .scanQrCode:
-                return "ch.threema.scanid"
+                "ch.threema.scanid"
             }
         }
         

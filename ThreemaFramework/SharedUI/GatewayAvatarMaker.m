@@ -158,14 +158,8 @@
 
 - (void)updateIdentity:(NSString *)identity {
     [self loadAvatarDataForId:identity onCompletion:^(NSData *data, NSString *expires) {
-        ContactEntity *contact = [self.entityManager.entityFetcher contactForId:identity];
-        
-        [self.entityManager performSyncBlockAndSafe:^{
-            contact.imageData = data;
-        }];
-        
-        [[ContactStore sharedContactStore] reflectContact:contact];
-        
+        [self updateProfileImage:data identity:identity];
+
         if (expires) {
             NSDate *expiresDate = [self parseExpiresString:expires];
             [self updateExpires:expiresDate forIdentity:identity];
@@ -174,18 +168,38 @@
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationIdentityAvatarChanged object:identity];
     } onError:^(NSError *error) {
         if (error.code == 404) {
-            ContactEntity *contact = [self.entityManager.entityFetcher contactForId:identity];
-            
-            [self.entityManager performSyncBlockAndSafe:^{
-                contact.imageData = nil;
-            }];
+            [self updateProfileImage:nil identity:identity];
 
-            [[ContactStore sharedContactStore] reflectContact:contact];
-            
             NSDate *expires = [self expiresIn:AVATAR_CHECK_INTERVAL];
             [self updateExpires:expires forIdentity:identity];
         }
     }];
+}
+
+/**
+ Update and reflect profile image of a contact it has changed.
+
+ @param image: Profile image, is it null profile image will be delete
+ @param identity: Threema ID (Gateway ID) of the contact
+ */
+- (void)updateProfileImage:(nullable NSData *)image identity:(nonnull NSString *)identity {
+    __block BOOL hasChanged = NO;
+
+    [self.entityManager performBlockAndWait:^{
+        ContactEntity *contact = [self.entityManager.entityFetcher contactForId:identity];
+
+        if ((image && [contact.imageData isEqualToData:image] == NO) || (image == nil && contact.imageData)) {
+            [self.entityManager performSyncBlockAndSafe:^{
+                contact.imageData = image;
+            }];
+
+            hasChanged = YES;
+        }
+    }];
+
+    if (hasChanged) {
+        [[ContactStore sharedContactStore] reflectContact:identity];
+    }
 }
 
 - (NSDate *)expiresIn:(NSInteger)seconds {

@@ -66,8 +66,11 @@ final class MessageAnimatedMediaTapView: UIView {
         return progressView
     }()
     
-    private lazy var metadataView = MessageSymbolMetadataView()
-    private lazy var metadataBlurBackgroundContainerView = MessageMetadataBlurBackgroundView(rootView: metadataView)
+    private lazy var metadataView = MessageSymbolMetadataVibrancyView()
+    private lazy var metadataBlurBackgroundContainerView = MessageMetadataBlurBackgroundView(
+        rootView: metadataView.vibrancyAffectedView,
+        nonVibrantRootView: metadataView.vibrancyUnaffectedView
+    )
     
     private lazy var dateAndStateView = MessageDateAndStateVibrancyView()
     private lazy var dateAndStateBlurBackgroundContainerView = MessageMetadataBlurBackgroundView(
@@ -213,8 +216,8 @@ final class MessageAnimatedMediaTapView: UIView {
             ),
         ]
         
-        notRequiredConstraints.forEach {
-            $0.priority = .defaultHigh
+        for notRequiredConstraint in notRequiredConstraints {
+            notRequiredConstraint.priority = .defaultHigh
         }
         
         NSLayoutConstraint.activate(notRequiredConstraints)
@@ -250,6 +253,7 @@ final class MessageAnimatedMediaTapView: UIView {
             else {
                 hideCenterStateBlurView()
             }
+
         case .processed, .pending, .uploading, .uploaded, .sendingError:
             hideCenterStateBlurView()
             
@@ -376,6 +380,8 @@ final class MessageAnimatedMediaTapView: UIView {
     
     func updateColors() {
         progressView.progressTintColor = Colors.thumbnailProgressViewColor
+        metadataBlurBackgroundContainerView.updateColors()
+        dateAndStateBlurBackgroundContainerView.updateColors()
         dateAndStateView.updateColors()
         metadataView.updateColors()
     }

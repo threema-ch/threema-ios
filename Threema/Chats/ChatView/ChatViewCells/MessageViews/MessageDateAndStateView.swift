@@ -34,7 +34,7 @@ final class MessageDateAndStateView: UIView {
                 return
             }
             
-            showStatus = message.messageDisplayState != .none
+            showStatus = message.messageDisplayState != .none && message.deletedAt == nil
             showGroupReactions = message.isGroupMessage && message.messageGroupReactionState != .none
             showMarkers = message.hasMarkers
             
@@ -82,10 +82,10 @@ final class MessageDateAndStateView: UIView {
     }()
     
     /// Distance of symbol center from trailing end
-    private lazy var symbolXCenterTrailingDistance: CGFloat = {
+    private lazy var symbolXCenterTrailingDistance: CGFloat = constantScaler.scaledValue(
         // Adapt for content size categories
-        constantScaler.scaledValue(for: ChatViewConfiguration.MessageMetadata.defaultSymbolCenterInset)
-    }()
+        for: ChatViewConfiguration.MessageMetadata.defaultSymbolCenterInset
+    )
     
     // MARK: Views & constraints
     
@@ -210,13 +210,18 @@ final class MessageDateAndStateView: UIView {
     // MARK: - Updates
     
     func updateColors() {
-        if let dateColor = overrideColor {
-            Colors.setTextColor(dateColor, label: dateLabel)
+        guard let message else {
+            return
+        }
+        
+        if let overrideColor {
+            Colors.setTextColor(overrideColor, label: dateLabel)
         }
         else {
             Colors.setTextColor(Colors.textLight, label: dateLabel)
         }
         
+        updateStatusImageView(for: message)
         groupReactionsView.updateColors()
         markersView.updateColors()
     }
@@ -274,6 +279,13 @@ final class MessageDateAndStateView: UIView {
     }
     
     private func updateStatusImageView(for message: BaseMessage) {
+        
+        guard showStatus else {
+            statusImageView.isHidden = true
+            statusImageView.image = nil
+            return
+        }
+        
         let state = message.messageDisplayState
         guard let symbol = state.symbol(with: Colors.textLight) else {
             statusImageView.isHidden = true
@@ -281,13 +293,13 @@ final class MessageDateAndStateView: UIView {
             return
         }
         
-        let coloredSymbol: UIImage
-        if state != .userAcknowledged, state != .userDeclined, let textColor = overrideColor {
-            coloredSymbol = symbol.withTintColor(textColor, renderingMode: .alwaysOriginal)
-        }
-        else {
-            coloredSymbol = symbol
-        }
+        let coloredSymbol: UIImage =
+            if state != .userAcknowledged, state != .userDeclined, let overrideColor {
+                symbol.withTintColor(overrideColor, renderingMode: .alwaysOriginal)
+            }
+            else {
+                symbol
+            }
         
         statusImageView.image = coloredSymbol
         

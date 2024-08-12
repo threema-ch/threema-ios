@@ -85,7 +85,8 @@ protocol MediatorMessageProtocolProtocol {
         messageID: UInt64,
         receiverIdentity: String,
         createdAt: Date,
-        nonce: Data
+        nonce: Data,
+        deviceID: UInt64
     ) -> D2d_Envelope
 
     func getEnvelopeForOutgoingMessage(
@@ -95,11 +96,12 @@ protocol MediatorMessageProtocolProtocol {
         groupID: UInt64,
         groupCreatorIdentity: String,
         createdAt: Date,
-        nonces: [Data]
+        nonces: [Data],
+        deviceID: UInt64
     ) -> D2d_Envelope
 
     // swiftformat:disable:next all
-    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId) -> D2d_Envelope
+    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId, deviceID: UInt64) -> D2d_Envelope
 
     func getEnvelopeForProfileUpdate(userProfile: Sync_UserProfile) -> D2d_Envelope
 

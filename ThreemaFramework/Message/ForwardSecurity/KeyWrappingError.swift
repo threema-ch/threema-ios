@@ -29,10 +29,10 @@ enum KeyWrappingError: CustomNSError {
     
     var errorUserInfo: [String: Any] {
         if self == .keychainError {
-            return ["ShouldRetry": true]
+            ["ShouldRetry": true]
         }
         else {
-            return [:]
+            [:]
         }
     }
 }

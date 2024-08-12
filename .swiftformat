@@ -6,7 +6,6 @@
 --exclude **/SnapshotHelper.swift
 
 ## Vendored code
---exclude Carthage/**
 --exclude DerivedData/**
 --exclude fastlane/**
 --exclude NaClCrypto/**
@@ -31,7 +30,7 @@
 --self init-only
 --semicolons never
 --stripunusedargs closure-only
---trimwhitespace nonblank-lines
+--trimwhitespace nonblank-lines # Waiting for https://github.com/nicklockwood/SwiftFormat/issues/1664
 --wraparguments before-first 
 --wrapcollections before-first
 --wrapparameters before-first
@@ -43,6 +42,8 @@
 --enable isEmpty
 --enable markTypes
 --enable wrapConditionalBodies
+--enable wrapMultilineConditionalAssignment
 
---disable blankLinesAtStartOfScope # Waiting for https://github.com/nicklockwood/SwiftFormat/pull/806
+--disable blankLinesAtStartOfScope # Waiting for https://github.com/nicklockwood/SwiftFormat/issues/583
+--disable sortTypealiases
 --disable wrapMultilineStatementBraces

@@ -75,16 +75,13 @@ final class LocalParticipant: ViewModelParticipant, Sendable {
         participantID: ParticipantID,
         localContactModel: ContactModel,
         dependencies: Dependencies
-    ) {
+    ) throws {
         self.threemaIdentity = localContactModel.identity
         self.nickname = localContactModel.nickname
         self.participantType = "LocalParticipant"
         self.dependencies = dependencies
-        
-        guard let keys = self.dependencies.groupCallCrypto.generateKeyPair() else {
-            // TODO: (IOS-4124) Improve error handling
-            fatalError("Unable to generate key pair")
-        }
+
+        let keys = try self.dependencies.groupCallCrypto.generateKeyPair()
         self.keyPair = KeyPair(publicKey: keys.publicKey, privateKey: keys.privateKey)
         
         self.pcck = self.dependencies.groupCallCrypto.randomBytes(of: 16)

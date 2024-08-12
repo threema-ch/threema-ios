@@ -195,7 +195,7 @@ class SafeActivatedViewController: ThemedTableViewController {
         backupTimer = nil
     }
     
-    override internal func updateColors() {
+    override func updateColors() {
         super.updateColors()
         let explainImage = explainButton.imageView?.image!.withTint(.primary)
         explainButton.setImage(explainImage, for: .normal)
@@ -223,9 +223,9 @@ class SafeActivatedViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         switch indexPath.section {
         case 2:
-            return indexPath.row == 2 && mdmSetup.isSafeBackupPasswordPreset() ? 0.0 : UITableView.automaticDimension
+            indexPath.row == 2 && mdmSetup.isSafeBackupPasswordPreset() ? 0.0 : UITableView.automaticDimension
         default:
-            return UITableView.automaticDimension
+            UITableView.automaticDimension
         }
     }
 

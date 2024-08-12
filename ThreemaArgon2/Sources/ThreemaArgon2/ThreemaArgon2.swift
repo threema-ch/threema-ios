@@ -91,35 +91,35 @@ public enum ThreemaArgon2 {
         var argon2Error: Argon2_ErrorCodes {
             switch self {
             case .passwordTooShort:
-                return ARGON2_PWD_TOO_SHORT
+                ARGON2_PWD_TOO_SHORT
             case .passwordTooLong:
-                return ARGON2_PWD_TOO_LONG
+                ARGON2_PWD_TOO_LONG
             case .saltTooShort:
-                return ARGON2_SALT_TOO_SHORT
+                ARGON2_SALT_TOO_SHORT
             case .saltTooLong:
-                return ARGON2_SALT_TOO_LONG
+                ARGON2_SALT_TOO_LONG
             case .iterationsTooFew:
-                return ARGON2_TIME_TOO_SMALL
+                ARGON2_TIME_TOO_SMALL
             case .iterationsTooMany:
-                return ARGON2_TIME_TOO_LARGE
+                ARGON2_TIME_TOO_LARGE
             case .memoryTooLittle:
-                return ARGON2_MEMORY_TOO_LITTLE
+                ARGON2_MEMORY_TOO_LITTLE
             case .memoryTooMuch:
-                return ARGON2_MEMORY_TOO_MUCH
+                ARGON2_MEMORY_TOO_MUCH
             case .lanesTooFew:
-                return ARGON2_LANES_TOO_FEW
+                ARGON2_LANES_TOO_FEW
             case .lanesTooMany:
-                return ARGON2_LANES_TOO_MANY
+                ARGON2_LANES_TOO_MANY
             case .threadsTooFew:
-                return ARGON2_THREADS_TOO_FEW
+                ARGON2_THREADS_TOO_FEW
             case .threadsTooMany:
-                return ARGON2_THREADS_TOO_MANY
+                ARGON2_THREADS_TOO_MANY
             case .encodingFailed:
-                return ARGON2_ENCODING_FAIL
+                ARGON2_ENCODING_FAIL
             case .decodingFailed:
-                return ARGON2_DECODING_FAIL
+                ARGON2_DECODING_FAIL
             case let .other(rawArgon2Error: rawArgon2Error):
-                return Argon2_ErrorCodes(rawArgon2Error)
+                Argon2_ErrorCodes(rawArgon2Error)
             }
         }
         

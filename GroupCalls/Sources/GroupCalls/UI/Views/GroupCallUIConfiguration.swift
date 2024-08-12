@@ -21,7 +21,7 @@
 import Foundation
 import UIKit
 
-internal enum GroupCallUIConfiguration {
+enum GroupCallUIConfiguration {
 
     enum NavigationBar {
         static let dismissButtonSymbolConfiguration = UIImage.SymbolConfiguration(

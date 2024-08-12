@@ -321,7 +321,9 @@ public func pack(
             let expectedSize = max(1, n)
             
             // pad ...
-            while bytes.count < expectedSize { bytes.append(0x00) }
+            while bytes.count < expectedSize {
+                bytes.append(0x00)
+            }
             
             // ... or trunk
             if bytes.count > expectedSize {

@@ -21,7 +21,7 @@
 import Foundation
 @testable import GroupCalls
 
-final class MockHTTPHelper: GroupCallsSFUTokenFetchAdapterProtocol {
+final class MockHTTPHelper: GroupCallSFUTokenFetchAdapterProtocol {
     fileprivate var sfuToken: GroupCalls.SFUToken
     
     convenience init() {

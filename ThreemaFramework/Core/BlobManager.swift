@@ -849,6 +849,7 @@ public actor BlobManager: BlobManagerProtocol {
             
         case .noData:
             throw BlobManagerError.noData
+
         default:
             DDLogNotice("[BlobManager] Blob does not need any action, state is \(state.description).")
             return .inProgress

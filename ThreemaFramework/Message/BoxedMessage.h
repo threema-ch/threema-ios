@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import "LoggingDescriptionProtocol.h"
 
-@interface BoxedMessage : NSObject <NSCoding, LoggingDescriptionProtocol>
+@interface BoxedMessage : NSObject <LoggingDescriptionProtocol>
 
 @property (nonatomic, strong) NSString *fromIdentity;
 @property (nonatomic, strong) NSString *toIdentity;

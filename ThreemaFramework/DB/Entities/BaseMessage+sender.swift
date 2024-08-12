@@ -25,28 +25,28 @@ extension BaseMessage {
     /// Readable name of the sender
     @objc public var localizedSenderName: String {
         if isOwnMessage {
-            return BundleUtil.localizedString(forKey: "me")
+            BundleUtil.localizedString(forKey: "me")
         }
         else {
             if let sender {
-                return sender.displayName
+                sender.displayName
             }
             else {
-                return conversation?.contact?.displayName ?? ""
+                conversation?.contact?.displayName ?? ""
             }
         }
     }
     
     public var senderIDColor: UIColor {
         if isOwnMessage {
-            return MyIdentityStore.shared().idColor
+            MyIdentityStore.shared().idColor
         }
         else {
             if let sender {
-                return sender.idColor
+                sender.idColor
             }
             else {
-                return conversation?.contact?.idColor ?? .primary
+                conversation?.contact?.idColor ?? .primary
             }
         }
     }

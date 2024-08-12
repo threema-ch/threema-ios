@@ -37,7 +37,10 @@ import ThreemaFramework
     override private init() {
         self.businessInjector = BusinessInjector()
         super.init()
-        loadSessionsFromArchive()
+        
+        // Remove legacy files
+        try? FileManager.default.removeItem(at: allSessionsURL())
+        try? FileManager.default.removeItem(at: runningSessionsURL())
     }
     
     public class func isWebHostAllowed(scannedHostName: String, whiteList: String) -> Bool {
@@ -131,7 +134,23 @@ extension WCSessionManager {
 
         if NavigationBarPromptHandler.isCallActiveInBackground || VoIPCallStateManager.shared
             .currentCallState() == .idle, !NavigationBarPromptHandler.isGroupCallActive {
+            
             DispatchQueue.main.async {
+                if let mainTabBar = AppDelegate.getMainTabBarController(),
+                   let viewControllers = mainTabBar.viewControllers {
+                    if viewControllers.count <= kChatTabBarIndex {
+                        UIApplication.shared.isIdleTimerDisabled = false
+                        return
+                    }
+                    let chatNavVc = viewControllers[Int(kChatTabBarIndex)] as! UINavigationController
+                    if let curChatVc = chatNavVc.topViewController as? ChatViewController {
+                        if !curChatVc.isRecording(),
+                           !curChatVc.isPlayingAudioMessage() {
+                            UIApplication.shared.isIdleTimerDisabled = false
+                        }
+                        return
+                    }
+                }
                 UIApplication.shared.isIdleTimerDisabled = false
             }
         }
@@ -151,51 +170,6 @@ extension WCSessionManager {
 // MARK: Public functions
 
 extension WCSessionManager {
-    @objc public func saveSessionsToArchive() {
-        let allSessionsURL = allSessionsURL()
-        let runningSessionsURL = runningSessionsURL()
-        
-        try? FileManager.default.removeItem(at: allSessionsURL)
-        if let allSessionsToBeArchived = try? NSKeyedArchiver.archivedData(
-            withRootObject: sessions,
-            requiringSecureCoding: false
-        ) {
-            try? allSessionsToBeArchived.write(to: allSessionsURL)
-        }
-        
-        try? FileManager.default.removeItem(at: runningSessionsURL)
-        if let runningSessionsToBeArchived = try? NSKeyedArchiver.archivedData(
-            withRootObject: running,
-            requiringSecureCoding: false
-        ) {
-            try? runningSessionsToBeArchived.write(to: runningSessionsURL)
-        }
-    }
-    
-    private func loadSessionsFromArchive() {
-        let allSessionsURL = allSessionsURL()
-        let runningSessionsURL = runningSessionsURL()
-        
-        if FileManager.default.fileExists(atPath: allSessionsURL.path),
-           let archivedAllSessionsData = try? Data(contentsOf: allSessionsURL),
-           let allSessions = (
-               try? NSKeyedUnarchiver
-                   .unarchiveTopLevelObjectWithData(archivedAllSessionsData)
-           ) as? [Data: WCSession] {
-            sessions = allSessions
-            try? FileManager.default.removeItem(at: allSessionsURL)
-        }
-        
-        if FileManager.default.fileExists(atPath: runningSessionsURL.path),
-           let archivedRunningSessionsData = try? Data(contentsOf: runningSessionsURL),
-           let runningSessions = (
-               try? NSKeyedUnarchiver
-                   .unarchiveTopLevelObjectWithData(archivedRunningSessionsData)
-           ) as? [Data] {
-            running = runningSessions
-            try? FileManager.default.removeItem(at: runningSessionsURL)
-        }
-    }
     
     /// Connect a old or new session. Search for correct session or create a new one
     @objc public func connect(authToken: Data?, wca: String?, publicKeyHash: String) {
@@ -453,7 +427,6 @@ extension WCSessionManager {
                 session.stop(close: false, forget: false, sendDisconnect: false, reason: .pause)
             }
         }
-        saveSessionsToArchive()
     }
     
     @objc public func updateConversationPushSetting(conversation: Conversation) {
@@ -1017,8 +990,11 @@ extension WCSessionManager {
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
+            
+            // Show only chats where lastUpdate is not `nil` to avoid showing chats that only contain system messages
             guard let currentConversation = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? Conversation else {
+                .getManagedObject(by: conversation.objectID) as? Conversation,
+                currentConversation.lastUpdate != nil else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -1052,24 +1028,24 @@ extension WCSessionManager {
             
             DDLogNotice("New message added on main context \(currentMessage.id.hexString)")
             
-            var id: String
-            if conversation.isGroup(),
-               let groupID = conversation.groupID {
-                id = groupID.hexEncodedString()
-            }
-            else {
-                if let sender = currentMessage.sender {
-                    id = sender.identity
+            let id: String =
+                if conversation.isGroup(),
+                let groupID = conversation.groupID {
+                    groupID.hexEncodedString()
                 }
                 else {
-                    if let contact = conversation.contact {
-                        id = contact.identity
+                    if let sender = currentMessage.sender {
+                        sender.identity
                     }
                     else {
-                        id = MyIdentityStore.shared().identity
+                        if let contact = conversation.contact {
+                            contact.identity
+                        }
+                        else {
+                            MyIdentityStore.shared().identity
+                        }
                     }
                 }
-            }
             
             switch currentMessage {
             case is TextMessage:
@@ -1309,33 +1285,33 @@ extension WCSessionManager {
     }
     
     @objc func profilePictureChanged(_ notification: Notification) {
-        var profileUpdate: WebProfileUpdate?
-        if let profileDict = MyIdentityStore.shared().profilePicture as? [AnyHashable: Any] {
-            if let pictureData = profileDict["ProfilePicture"] {
-                profileUpdate = WebProfileUpdate(
-                    nicknameChanged: false,
-                    newNickname: nil,
-                    newAvatar: pictureData as? Data,
-                    deleteAvatar: false
-                )
+        let profileUpdate: WebProfileUpdate? =
+            if let profileDict = MyIdentityStore.shared().profilePicture as? [AnyHashable: Any] {
+                if let pictureData = profileDict["ProfilePicture"] {
+                    WebProfileUpdate(
+                        nicknameChanged: false,
+                        newNickname: nil,
+                        newAvatar: pictureData as? Data,
+                        deleteAvatar: false
+                    )
+                }
+                else {
+                    WebProfileUpdate(
+                        nicknameChanged: false,
+                        newNickname: nil,
+                        newAvatar: nil,
+                        deleteAvatar: true
+                    )
+                }
             }
             else {
-                profileUpdate = WebProfileUpdate(
+                WebProfileUpdate(
                     nicknameChanged: false,
                     newNickname: nil,
                     newAvatar: nil,
                     deleteAvatar: true
                 )
             }
-        }
-        else {
-            profileUpdate = WebProfileUpdate(
-                nicknameChanged: false,
-                newNickname: nil,
-                newAvatar: nil,
-                deleteAvatar: true
-            )
-        }
         DDLogVerbose("[Threema Web] MessagePack -> Send update/profile")
         sendMessagePackToAllActiveSessions(messagePack: profileUpdate!.messagePack(), blackListed: false)
     }

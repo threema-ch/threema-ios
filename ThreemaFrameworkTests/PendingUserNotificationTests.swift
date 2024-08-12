@@ -35,7 +35,7 @@ class PendingUserNotificationTests: XCTestCase {
         let pendingUserNotification = PendingUserNotification(key: expectedKey)
         pendingUserNotification.abstractMessage = boxTextMessage
 
-        let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+        let archiver = NSKeyedArchiver(requiringSecureCoding: true)
         archiver.encode(pendingUserNotification, forKey: "key")
         archiver.finishEncoding()
 

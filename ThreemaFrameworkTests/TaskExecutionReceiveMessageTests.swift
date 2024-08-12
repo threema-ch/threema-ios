@@ -366,7 +366,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
                 )
         )
 
-        ddLoggerMock.logMessages.forEach { m in
+        for m in ddLoggerMock.logMessages {
             print(m.message)
         }
     }

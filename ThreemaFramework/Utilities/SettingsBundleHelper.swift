@@ -28,9 +28,9 @@ public final class SettingsBundleHelper: NSObject {
         var string: String {
             switch self {
             case .safeMode:
-                return "safe_mode_switch"
+                "safe_mode_switch"
             case .disableSentry:
-                return "sentry_switch"
+                "sentry_switch"
             }
         }
     }

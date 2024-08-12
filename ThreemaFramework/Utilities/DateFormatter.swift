@@ -509,16 +509,16 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized relative date and time
     public static func relativeMediumDateAndShortTime(for date: Date) -> String {
         if isDateInTodayOrYesterday(date) {
-            return relativeLongStyleDateShortStyleTime(date)
+            relativeLongStyleDateShortStyleTime(date)
         }
         else if isDateInLastSixDays(date) {
-            return weekdayAndTime(date)
+            weekdayAndTime(date)
         }
         else if isDateInThisCalendarYear(date) {
-            return mediumWeekdayDayMonthAndShortTime(date)
+            mediumWeekdayDayMonthAndShortTime(date)
         }
         else {
-            return mediumWeekdayDayMonthLongYearAndShortTime(date)
+            mediumWeekdayDayMonthLongYearAndShortTime(date)
         }
     }
     
@@ -530,10 +530,10 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized relative time or date
     public static func relativeTimeTodayAndMediumDateOtherwise(for date: Date) -> String {
         if isDateInToday(date) {
-            return shortStyleTimeNoDate(date)
+            shortStyleTimeNoDate(date)
         }
         else {
-            return relativeMediumDate(for: date)
+            relativeMediumDate(for: date)
         }
     }
     

@@ -24,18 +24,18 @@ extension Colors {
     public class var pillBackground: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.white.color
+            Asset.SharedColors.white.color
         case .dark:
-            return Asset.SharedColors.gray900.color
+            Asset.SharedColors.gray900.color
         }
     }
     
     public class var pillShadow: UIColor {
         switch theme {
         case .light, .undefined:
-            return Colors.black.withAlphaComponent(0.3)
+            Colors.black.withAlphaComponent(0.3)
         case .dark:
-            return .clear
+            .clear
         }
     }
     

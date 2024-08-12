@@ -353,16 +353,16 @@ import PromiseKit
     
     private func loadImageItem(imageItem: UIImage, seal: Resolver<Any>) {
         let isSticker = ImageURLSenderItemCreator.isPNGSticker(image: imageItem, uti: UTType.png.identifier)
-        let imageData: Data?
-        if isSticker {
-            imageData = MediaConverter.pngRepresentation(for: imageItem)
-        }
-        else {
-            imageData = MediaConverter.jpegRepresentation(
-                for: imageItem,
-                withQuality: ImageURLSenderItemCreator().imageCompressionQuality()
-            )
-        }
+        let imageData: Data? =
+            if isSticker {
+                MediaConverter.pngRepresentation(for: imageItem)
+            }
+            else {
+                MediaConverter.jpegRepresentation(
+                    for: imageItem,
+                    withQuality: ImageURLSenderItemCreator().imageCompressionQuality()
+                )
+            }
         guard let dataItem = imageData else {
             let errorDescription = "Could not create jpeg representation of image item"
             DDLogError(errorDescription)
@@ -400,18 +400,20 @@ import PromiseKit
         if typeIdentifiers.count >= 1 {
             return typeIdentifiers.lastObject as! String
         }
-        return kUTTypeFileURL as String
+        return UTType.fileURL.identifier
     }
     
     @objc public static func getSecondUTIType(_ itemProvider: NSItemProvider) -> String? {
         let typeIdentifiers = NSMutableArray(array: itemProvider.registeredTypeIdentifiers)
         
-        if itemProvider.hasItemConformingToTypeIdentifier(kUTTypeFileURL as String) {
-            typeIdentifiers.remove(kUTTypeFileURL as String)
+        if itemProvider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+            typeIdentifiers.remove(UTType.fileURL.identifier)
         }
         if typeIdentifiers.count >= 1 {
-            return typeIdentifiers.firstObject as? String
+            return (typeIdentifiers.first(where: { element in
+                (element as? String)?.contains("public.") ?? false
+            }) as? String) ?? typeIdentifiers.firstObject as? String
         }
-        return kUTTypeFileURL as String
+        return UTType.fileURL.identifier
     }
 }

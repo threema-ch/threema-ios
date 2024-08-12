@@ -59,7 +59,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// For group conversations this is `nil` if I am the creator 
 @property (nonatomic, retain, nullable) ContactEntity *contact;
 @property (nonatomic, retain, nullable) ImageData *groupImage;
+
+/// Last display message
+///
+/// This is shown in Chats and should always be the same as `MessageFetcher.lastDisplayMessage()`
 @property (nonatomic, retain, nullable) BaseMessage *lastMessage;
+
 @property (nonatomic, retain) NSSet<ContactEntity *> *members;
 @property (nonatomic, retain, nullable) NSSet *tags;
 @property (nonatomic, retain, nullable) DistributionListEntity *distributionList;

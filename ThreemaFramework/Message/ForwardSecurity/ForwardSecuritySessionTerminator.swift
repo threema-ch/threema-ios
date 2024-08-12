@@ -52,7 +52,9 @@ public class ForwardSecuritySessionTerminator {
     /// - Returns: `true` if there existed any sessions that were terminated
     public func terminateAllSessions(with identity: String, cause: CspE2eFs_Terminate.Cause) throws -> Bool {
         guard let myIdentity = businessInjector.myIdentityStore.identity else {
-            DDLogError("Unable to terminate all sessions with \(identity), because no my identity exists")
+            DDLogError(
+                "[ForwardSecurity] Unable to terminate all sessions with \(identity), because no my identity exists"
+            )
             return false
         }
         
@@ -62,7 +64,7 @@ public class ForwardSecuritySessionTerminator {
             }
             
             if contact.forwardSecurityState.intValue == 1 {
-                DDLogVerbose("Reset Forward Security State for Contact \(identity)")
+                DDLogVerbose("[ForwardSecurity] Reset FS state for contact \(identity)")
             }
             contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
             
@@ -78,7 +80,7 @@ public class ForwardSecuritySessionTerminator {
                 
                 self.businessInjector.messageSender.sendMessage(abstractMessage: message, isPersistent: true)
                 
-                DDLogNotice("Terminate FS session with id \(session.id.description)")
+                DDLogNotice("[ForwardSecurity] Terminate FS session with id \(session.id.description)")
                 
                 try self.store.deleteDHSession(
                     myIdentity: self.businessInjector.myIdentityStore.identity,
@@ -109,7 +111,7 @@ public class ForwardSecuritySessionTerminator {
             }
             
             if contact.forwardSecurityState.intValue == 1 {
-                DDLogVerbose("Reset Forward Security State for Contact \(identity)")
+                DDLogVerbose("[ForwardSecurity] Reset FS state for contact \(identity)")
             }
             
             contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
@@ -119,7 +121,7 @@ public class ForwardSecuritySessionTerminator {
             myIdentity: businessInjector.myIdentityStore.identity,
             peerIdentity: contact.identity
         ) {
-            DDLogVerbose("Delete FS session with id \(session.id.description)")
+            DDLogVerbose("[ForwardSecurity] Delete FS session with id \(session.id.description)")
             
             try store.deleteDHSession(
                 myIdentity: businessInjector.myIdentityStore.identity,

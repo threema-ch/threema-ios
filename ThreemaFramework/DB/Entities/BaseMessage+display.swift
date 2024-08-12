@@ -95,9 +95,9 @@ extension BaseMessage {
         private func resolvedSymbolName(for symbolName: String, variant: SymbolVariant) -> String {
             switch variant {
             case .default:
-                return symbolName
+                symbolName
             case .fill:
-                return symbolName.appending(".fill")
+                symbolName.appending(".fill")
             }
         }
         
@@ -181,26 +181,26 @@ extension BaseMessage {
         public func localizedLabel(for message: BaseMessage) -> String {
             switch self {
             case .none:
-                return BundleUtil.localizedString(forKey: "message_display_status_none")
+                BundleUtil.localizedString(forKey: "message_display_status_none")
             case .userAcknowledged:
-                return BundleUtil.localizedString(forKey: "message_display_status_user_acknowledged")
+                BundleUtil.localizedString(forKey: "message_display_status_user_acknowledged")
             case .userDeclined:
-                return BundleUtil.localizedString(forKey: "message_display_status_user_declined")
+                BundleUtil.localizedString(forKey: "message_display_status_user_declined")
             case .sending:
-                return BundleUtil.localizedString(forKey: "message_display_status_sending")
+                BundleUtil.localizedString(forKey: "message_display_status_sending")
             case .sent:
-                return BundleUtil.localizedString(forKey: "message_display_status_sent")
+                BundleUtil.localizedString(forKey: "message_display_status_sent")
             case .delivered:
                 if message.isOwnMessage {
-                    return BundleUtil.localizedString(forKey: "message_display_status_delivered")
+                    BundleUtil.localizedString(forKey: "message_display_status_delivered")
                 }
                 else {
-                    return BundleUtil.localizedString(forKey: "message_display_status_delivered_incoming")
+                    BundleUtil.localizedString(forKey: "message_display_status_delivered_incoming")
                 }
             case .read:
-                return BundleUtil.localizedString(forKey: "message_display_status_read")
+                BundleUtil.localizedString(forKey: "message_display_status_read")
             case .failed:
-                return BundleUtil.localizedString(forKey: "message_display_status_failed")
+                BundleUtil.localizedString(forKey: "message_display_status_failed")
             }
         }
         
@@ -208,21 +208,21 @@ extension BaseMessage {
         public var accessibilityLabel: String {
             switch self {
             case .none:
-                return ""
+                ""
             case .userAcknowledged:
-                return BundleUtil.localizedString(forKey: "accessibility_status_acknowledged_plus_time")
+                BundleUtil.localizedString(forKey: "accessibility_status_acknowledged")
             case .userDeclined:
-                return BundleUtil.localizedString(forKey: "accessibility_status_declined_plus_time")
+                BundleUtil.localizedString(forKey: "accessibility_status_declined")
             case .sending:
-                return BundleUtil.localizedString(forKey: "accessibility_status_sending_plus_time")
+                BundleUtil.localizedString(forKey: "accessibility_status_sending")
             case .sent:
-                return BundleUtil.localizedString(forKey: "accessibility_status_sent_plus_time")
+                BundleUtil.localizedString(forKey: "accessibility_status_sent")
             case .delivered:
-                return BundleUtil.localizedString(forKey: "accessibility_status_delivered_plus_time")
+                BundleUtil.localizedString(forKey: "accessibility_status_delivered")
             case .read:
-                return BundleUtil.localizedString(forKey: "accessibility_status_read_plus_time")
+                BundleUtil.localizedString(forKey: "accessibility_status_read")
             case .failed:
-                return BundleUtil.localizedString(forKey: "accessibility_status_failed_plus_time")
+                BundleUtil.localizedString(forKey: "accessibility_status_failed")
             }
         }
     }
@@ -277,44 +277,48 @@ extension BaseMessage {
     private var displayStateForSingleMessage: DisplayState {
         switch messageState {
         case .sending:
-            return .sending
+            .sending
+            
         case .sent:
-            return .sent
+            .sent
+            
         case .delivered:
-            return .delivered
+            .delivered
+            
         case .failed:
-            return .failed
+            .failed
             
         case .received:
-            return .none
+            .none
             
         case .read:
             if isOwnMessage {
-                return .read
+                .read
             }
             else {
-                return .none
+                .none
             }
 
         case .userAcknowledged:
-            return .userAcknowledged
+            .userAcknowledged
+            
         case .userDeclined:
-            return .userDeclined
+            .userDeclined
         }
     }
     
     private var displayStateForGatewayOrGroupMessage: DisplayState {
         switch messageState {
         case .sending:
-            return .sending
+            .sending
         case .sent, .delivered, .received, .read:
-            return .none
+            .none
         case .failed:
-            return .failed
+            .failed
         case .userAcknowledged:
-            return .userAcknowledged
+            .userAcknowledged
         case .userDeclined:
-            return .userDeclined
+            .userDeclined
         }
     }
     
@@ -329,59 +333,28 @@ extension BaseMessage {
         if willBeDeleted {
             guard let date else {
                 DDLogError("No display date. Will deleted is true and date nil")
-                return Date()
+                return .now
             }
             
             return date
         }
-
-        if let userackDate {
-            return userackDate
-        }
+        
+        if isOwnMessage {
+            guard let date else {
+                DDLogError("No display date. Date nil")
+                return .now
+            }
             
-        if isGroupMessage {
-            if isOwnMessage {
-                guard let date else {
-                    DDLogError("No display date. Date nil")
-                    return .now
-                }
-                
-                return date
-            }
-            else {
-                guard let remoteSentDate else {
-                    DDLogError("No display date. Remote sent date nil")
-                    return .now
-                }
-                
-                return remoteSentDate
-            }
+            return date
         }
         else {
-            return displayDateForSingleMessage
-        }
-    }
-    
-    private var displayDateForSingleMessage: Date {
-        // Date is independent of fail state!
-        if isOwnMessage {
-            if read.boolValue, let readDate {
-                return readDate
+            guard let remoteSentDate else {
+                DDLogError("No display date. Remote sent date nil")
+                return .now
             }
-            else if delivered.boolValue, let deliveryDate {
-                return deliveryDate
-            }
-            // Sent and everything else
-            else if let date {
-                return date
-            }
-        }
-        else if let remoteSentDate {
+            
             return remoteSentDate
         }
-        
-        DDLogError("Unable to get date for displayDateForSingleMessage")
-        return .now
     }
     
     // MARK: - Date for state

@@ -35,7 +35,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
     private var handshakeState: HandShakeState {
         didSet {
             DDLogNotice(
-                "[GroupCall] Participant \(participantID.id) handshake state changed from \(oldValue) to \(handshakeState)"
+                "[GroupCall] Participant \(participantID) handshake state changed from \(oldValue) to \(handshakeState)"
             )
         }
     }
@@ -71,15 +71,13 @@ final class PendingRemoteParticipant: RemoteParticipant {
         dependencies: Dependencies,
         groupCallMessageCrypto: GroupCallMessageCryptoProtocol,
         isExistingParticipant: Bool
-    ) {
+    ) throws {
         self.participantID = participantID
         self.dependencies = dependencies
         self.groupCallMessageCrypto = groupCallMessageCrypto
         
-        guard let keys = self.dependencies.groupCallCrypto.generateKeyPair() else {
-            // TODO: (IOS-4124) Improve error handling
-            fatalError("Unable to generate key pair")
-        }
+        let keys = try self.dependencies.groupCallCrypto.generateKeyPair()
+            
         self.keyPair = KeyPair(publicKey: keys.publicKey, privateKey: keys.privateKey)
         self.pcck = self.dependencies.groupCallCrypto.randomBytes(of: ProtocolDefines.pcckLength)
         
@@ -91,15 +89,16 @@ final class PendingRemoteParticipant: RemoteParticipant {
     // MARK: - Internal functions
     
     func setRemoteContext(_ remoteContext: RemoteContext) {
-        DDLogNotice("[GroupCall] set RemoteContext for PendingRemoteParticipant with id: \(participantID.id)")
+        DDLogNotice("[GroupCall] set RemoteContext for PendingRemoteParticipant \(participantID)")
         self.remoteContext = remoteContext
     }
 
     func handle(
         message: ThreemaProtocols.Groupcall_ParticipantToParticipant.OuterEnvelope,
+        groupID: GroupIdentity,
         localParticipant: LocalParticipant
     ) throws -> MessageResponseAction {
-        DDLogNotice("[GroupCall] Handle message for PendingRemoteParticipant with id: \(participantID.id)")
+        DDLogNotice("[GroupCall] Handle message for PendingRemoteParticipant \(participantID)")
         
         /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 3.)**
         /// 3. Decrypt `encrypted_data` according to the current _handshake state_ and handle the inner envelope:
@@ -113,7 +112,17 @@ final class PendingRemoteParticipant: RemoteParticipant {
             /// **Protocol Step: Initial handshake message. (Receiving regular 2.)**
             /// 2. If the group call is scoped to a (Threema) group and `identity` is not part of the associated group
             /// (including the user itself), log a warning and abort these steps.
-            // TODO: (IOS-4139) Implement step above
+            // Note: `threemaIdentity` must not be nil at this point
+            guard let pendingParticipantThreemaIdentity = threemaIdentity,
+                  dependencies.groupCallParticipantInfoFetcher.isIdentity(
+                      pendingParticipantThreemaIdentity,
+                      memberOfGroupWith: groupID
+                  ) else {
+                DDLogWarn(
+                    "[Group Calls] Received group call envelope from identity \(threemaIdentity?.string ?? "nil") that is not a member of the group the call is running in"
+                )
+                return .none
+            }
             
             /// **Protocol Step: Initial handshake message. (Receiving regular 3.)**
             /// 3. If the sender is a newly joined participant and therefore the _handshake state_ was set to
@@ -143,14 +152,24 @@ final class PendingRemoteParticipant: RemoteParticipant {
             /// **Protocol Step: Initial handshake message. (Receiving regular 2.)**
             /// 2. If the group call is scoped to a (Threema) group and `identity` is not part of the associated group
             /// (including the user itself), log a warning and abort these steps.
-            // TODO: (IOS-4139) Implement step above
+            // Note: `threemaIdentity` must not be nil at this point
+            guard let pendingParticipantThreemaIdentity = threemaIdentity,
+                  dependencies.groupCallParticipantInfoFetcher.isIdentity(
+                      pendingParticipantThreemaIdentity,
+                      memberOfGroupWith: groupID
+                  ) else {
+                DDLogWarn(
+                    "[Group Calls] Received group call envelope from identity that is not a member of the group the call is running in"
+                )
+                return .none
+            }
             
             /// **Protocol Step: Initial handshake message. (Receiving regular 4.1)**
             /// 4. If the participant's _handshake state_ is `await-ep-hello`:
             ///    1. If the `pck` reflects the local PCK.public or the `pcck` reflects
             ///       the local PCCK, log a warning and abort these steps.
             guard pckRemote != keyPair.publicKey, pcckRemote != pcck else {
-                DDLogWarn("[GroupCall] Received PCK or PCCK match local ones")
+                DDLogWarn("[GroupCall] Received PCK or PCCK that match local ones")
                 throw GroupCallError.badMessage
             }
             
@@ -176,8 +195,8 @@ final class PendingRemoteParticipant: RemoteParticipant {
             /// 4. Set the participant's _handshake state_ to `done`.
             handshakeState = .done
             
-            DDLogNotice("[GroupCall] Promote PendingRemoteParticipant with ID: \(participantID.id)")
-            let joinedParticipant = promote()
+            DDLogNotice("[GroupCall] Promote PendingRemoteParticipant \(participantID)")
+            let joinedParticipant = try promote()
             return .handshakeCompleted(joinedParticipant)
             
         case .done:
@@ -186,9 +205,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
     }
     
     func handshakeHelloMessage(for localIdentity: ThreemaIdentity, localNickname: String) throws -> Data {
-        DDLogNotice(
-            "[GroupCall] Create HandshakeHelloMessage for PendingRemoteParticipant with id: \(participantID.id)"
-        )
+        DDLogNotice("[GroupCall] Create HandshakeHelloMessage for PendingRemoteParticipant \(participantID)")
 
         let helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello.with {
             $0.identity = localIdentity.string
@@ -220,11 +237,25 @@ final class PendingRemoteParticipant: RemoteParticipant {
     // MARK: - Private functions
     
     private func handshakeAuthMessage(with mediaKeys: [Groupcall_ParticipantToParticipant.MediaKey]) throws -> Data {
-        DDLogNotice("[GroupCall] Create HandshakeAuthMessage for PendingRemoteParticipant with id: \(participantID.id)")
+        DDLogNotice(
+            "[GroupCall] Create HandshakeAuthMessage for PendingRemoteParticipant with id \(participantID)"
+        )
 
+        guard let pckRemote else {
+            DDLogError("[GroupCall] Create HandshakeAuthMessage for PendingRemoteParticipant \(participantID)")
+            throw GroupCallError.badParticipantState
+        }
+        
+        guard let pcckRemote else {
+            DDLogError(
+                "[GroupCall] pcckRemote must not be nil at this point. Identity: \(threemaIdentity?.string ?? "nil")."
+            )
+            throw GroupCallError.badParticipantState
+        }
+        
         let handshakeAuth = Groupcall_ParticipantToParticipant.Handshake.Auth.with {
-            $0.pck = pckRemote!
-            $0.pcck = pcckRemote!
+            $0.pck = pckRemote
+            $0.pcck = pcckRemote
             $0.mediaKeys = mediaKeys
         }
         
@@ -252,12 +283,10 @@ final class PendingRemoteParticipant: RemoteParticipant {
         
         let innerNonce = dependencies.groupCallCrypto.randomBytes(of: groupCallMessageCrypto.symmetricNonceLength)
         
-        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.string) else {
-            // TODO: (IOS-4124) We need should throw here or attempt to fetch the contact.
-            // This should be handled by the app, a new contact can join a group call iff it has previously joined the
-            // group
-            // i.e. the public key should already be known. Thus we can probably safely abort here.
-            fatalError()
+        guard let identity = threemaIdentity?.string,
+              let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: identity) else {
+            DDLogError("[GroupCall] Could not get shared secret for identity: \(threemaIdentity?.string ?? "nil").")
+            throw GroupCallError.badParticipantState
         }
         
         guard let innerData = try? groupCallMessageCrypto.symmetricEncryptByGCNHAK(
@@ -287,7 +316,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         
         guard let outerData = dependencies.groupCallCrypto.encryptData(
             plaintext: completeInnerData,
-            withPublicKey: pckRemote!,
+            withPublicKey: pckRemote,
             secretKey: keyPair.privateKey,
             nonce: nextPcckNonce
         ) else {
@@ -298,9 +327,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
     }
     
     private func handleHandshakeHello(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
-        DDLogNotice(
-            "[GroupCall] Handle HandshakeHelloMessage for PendingRemoteParticipant with id: \(participantID.id)"
-        )
+        DDLogNotice("[GroupCall] Handle HandshakeHelloMessage for PendingRemoteParticipant \(participantID)")
 
         let data = message.encryptedData
         
@@ -334,17 +361,31 @@ final class PendingRemoteParticipant: RemoteParticipant {
     }
     
     private func handleAuth(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
-        DDLogNotice("[GroupCall] Handle HandshakeAuthMessage for PendingRemoteParticipant with id: \(participantID.id)")
+        DDLogNotice("[GroupCall] Handle HandshakeAuthMessage for PendingRemoteParticipant \(participantID)")
 
         let data = message.encryptedData
         
-        var nextPcckNonce = pcckRemote!
+        guard let pcckRemote else {
+            DDLogError(
+                "[GroupCall] pcckRemote must not be nil at this point. Identity: \(threemaIdentity?.string ?? "nil")."
+            )
+            throw GroupCallError.badParticipantState
+        }
+        
+        var nextPcckNonce = pcckRemote
         nextPcckNonce.append(nonceCounterRemote.next().littleEndianData)
+        
+        guard let pckRemote else {
+            DDLogError(
+                "[GroupCall] pckRemote must not be nil at this point. Identity: \(threemaIdentity?.string ?? "nil")."
+            )
+            throw GroupCallError.badParticipantState
+        }
         
         guard let innerData = dependencies.groupCallCrypto.decryptData(
             cipherText: data,
             withKey: keyPair.privateKey,
-            signKey: pckRemote!,
+            signKey: pckRemote,
             nonce: nextPcckNonce
         ) else {
             throw GroupCallError.decryptionFailure
@@ -353,9 +394,10 @@ final class PendingRemoteParticipant: RemoteParticipant {
         let innerNonce = innerData[0..<groupCallMessageCrypto.symmetricNonceLength]
         let ciphertext = innerData.advanced(by: Int(groupCallMessageCrypto.symmetricNonceLength))
         
-        guard let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: threemaIdentity!.string) else {
-            // TODO: (IOS-4124) We need should throw here or attempt to fetch the contact.
-            fatalError()
+        guard let identity = threemaIdentity?.string,
+              let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: identity) else {
+            DDLogError("[GroupCall] Could not get shared secret for identity: \(threemaIdentity?.string ?? "nil").")
+            throw GroupCallError.badParticipantState
         }
         
         guard let decrypted = try? groupCallMessageCrypto.symmetricDecryptByGCNHAK(
@@ -388,7 +430,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         /// 3. If the repeated `pcck` does not equal the local `PCCK` used towards this participant, log a warning and
         /// abort these steps.
         guard authMessage.pck == keyPair.publicKey, authMessage.pcck == pcck else {
-            DDLogWarn("Received PCK or PCCK don't match local ones")
+            DDLogWarn("[GroupCall] Received PCK or PCCK don't match local ones")
             throw GroupCallError.badMessage
         }
         
@@ -397,20 +439,28 @@ final class PendingRemoteParticipant: RemoteParticipant {
     
     // MARK: - Helper functions
     
-    private func promote() -> JoinedRemoteParticipant {
-        JoinedRemoteParticipant(
+    private func promote() throws -> JoinedRemoteParticipant {
+        
+        guard let threemaIdentity, let nickname, let remoteContext, let pckRemote, let pcckRemote, let mediaKeys else {
+            DDLogError(
+                "[GroupCall] Could not promote participant with id:\(participantID.id) because one of the following is nil: identity=\(threemaIdentity?.string ?? "nil"), nickname=\(nickname ?? "nil"), remoteContext=\(remoteContext == nil ? "nil" : "not nil"),  pckRemote=\(pckRemote == nil ? "nil" : "not nil"), pcckRemote=\(pcckRemote == nil ? "nil" : "not nil"), mediaKeys=\(mediaKeys == nil ? "nil" : "not nil")."
+            )
+            throw GroupCallError.badParticipantState
+        }
+        
+        return JoinedRemoteParticipant(
             participantID: participantID,
             dependencies: dependencies,
-            threemaIdentity: threemaIdentity!,
-            nickname: nickname!,
+            threemaIdentity: threemaIdentity,
+            nickname: nickname,
             keyPair: keyPair,
             pcck: pcck,
-            remoteContext: remoteContext!,
-            pckRemote: pckRemote!,
-            pcckRemote: pcckRemote!,
+            remoteContext: remoteContext,
+            pckRemote: pckRemote,
+            pcckRemote: pcckRemote,
             nonceCounter: nonceCounter,
             nonceCounterRemote: nonceCounterRemote,
-            mediaKeys: mediaKeys!
+            mediaKeys: mediaKeys
         )
     }
 }

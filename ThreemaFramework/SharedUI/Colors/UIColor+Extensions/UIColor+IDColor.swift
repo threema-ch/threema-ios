@@ -131,38 +131,37 @@ extension UIColor {
         static func forByte(_ byte: UInt8) -> UIColor {
             switch byte {
             case 0x00...0x0F:
-                return deepOrange
+                deepOrange
             case 0x10...0x1F:
-                return orange
+                orange
             case 0x20...0x2F:
-                return amber
+                amber
             case 0x30...0x3F:
-                return yellow
+                yellow
             case 0x40...0x4F:
-                return olive
+                olive
             case 0x50...0x5F:
-                return lightGreen
+                lightGreen
             case 0x60...0x6F:
-                return green
+                green
             case 0x70...0x7F:
-                return teal
+                teal
             case 0x80...0x8F:
-                return cyan
+                cyan
             case 0x90...0x9F:
-                return lightBlue
+                lightBlue
             case 0xA0...0xAF:
-                return blue
+                blue
             case 0xB0...0xBF:
-                return indigo
+                indigo
             case 0xC0...0xCF:
-                return deepPurple
+                deepPurple
             case 0xD0...0xDF:
-                return purple
+                purple
             case 0xE0...0xEF:
-                return pink
+                pink
             case 0xF0...0xFF:
-                return red
-            
+                red
             default:
                 fatalError("This is out of range for 8 bits and should never be reached")
             }

@@ -65,7 +65,7 @@ class CustomGroupDetailImageCell: DKAssetGroupDetailBaseCell {
                 ))
         }
         
-        internal lazy var checkImageView: UIImageView = {
+        lazy var checkImageView: UIImageView = {
             let imageView = UIImageView(
                 image: CustomGroupDetailImageCell.DKImageCheckView
                     .stretchImgFromMiddle(StyleKit.checkedBackground)
@@ -73,7 +73,7 @@ class CustomGroupDetailImageCell: DKAssetGroupDetailBaseCell {
             return imageView
         }()
         
-        internal lazy var checkLabel: UILabel = {
+        lazy var checkLabel: UILabel = {
             let label = UILabel()
             label.textAlignment = .right
             
@@ -102,7 +102,7 @@ class CustomGroupDetailImageCell: DKAssetGroupDetailBaseCell {
     
     override var thumbnailImage: UIImage? {
         didSet {
-            self.thumbnailImageView.image = self.thumbnailImage
+            thumbnailImageView.image = thumbnailImage
         }
     }
 
@@ -120,7 +120,7 @@ class CustomGroupDetailImageCell: DKAssetGroupDetailBaseCell {
         return thumbnailImageView
     }()
     
-    internal let checkView = DKImageCheckView()
+    let checkView = DKImageCheckView()
     
     override var isSelected: Bool {
         didSet {

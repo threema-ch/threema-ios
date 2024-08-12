@@ -203,17 +203,16 @@ class HeaderView: UIView {
     }
     
     public func updateTitleLabel(mediaPreviewItems: [MediaPreviewItem]) {
-        var tmpTitle: String?
-        
-        if mediaPreviewItems.count > 1 {
-            tmpTitle = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "multiple_media_items"),
-                mediaPreviewItems.count
-            )
-        }
-        else {
-            tmpTitle = BundleUtil.localizedString(forKey: "media_item")
-        }
+        let tmpTitle: String? =
+            if mediaPreviewItems.count > 1 {
+                String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "multiple_media_items"),
+                    mediaPreviewItems.count
+                )
+            }
+            else {
+                BundleUtil.localizedString(forKey: "media_item")
+            }
         
         guard let title = tmpTitle else {
             DDLogError("Title was nil when it should not have been.")

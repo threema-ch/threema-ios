@@ -26,9 +26,9 @@ extension BlobData {
     public var isDataAvailable: Bool {
         switch blobDisplayState {
         case .processed, .pending, .uploading, .uploaded, .sendingError:
-            return true
+            true
         case .remote, .downloading, .fileNotFound, .dataDeleted:
-            return false
+            false
         }
     }
 }

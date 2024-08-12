@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+
 public protocol GroupCallSessionHelperProtocol {
     func setHasActiveGroupCall(to isActive: Bool, groupName: String?)
 }

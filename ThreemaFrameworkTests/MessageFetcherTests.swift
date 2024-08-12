@@ -219,9 +219,11 @@ class MessageFetcherTests: XCTestCase {
         
         XCTAssertEqual(rejectedMessages.count, rejectedTextMessages.count)
     }
+    
+    // MARK: Last display message
 
-    func testLastMessageIsTextMessage() throws {
-        let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessage)
+    func testLastDisplayMessageIsTextMessage() throws {
+        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? TextMessage)
 
         XCTAssertEqual(
             "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
@@ -229,13 +231,13 @@ class MessageFetcherTests: XCTestCase {
         )
     }
 
-    func testLastMessageIsSystemMessageFsDebugMessage() throws {
+    func testLastDisplayMessageIsSystemMessageFsDebugMessage() throws {
         databasePreparer.save {
             databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
             databasePreparer.createSystemMessage(conversation: conversation, type: kFsDebugMessage)
         }
 
-        let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessage)
+        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? TextMessage)
 
         XCTAssertEqual(
             "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
@@ -243,14 +245,47 @@ class MessageFetcherTests: XCTestCase {
         )
     }
 
-    func testLastMessageCheckIsSystemMessageGroupCreatorLeft() throws {
+    func testLastDisplayMessageCheckIsSystemMessageGroupCreatorLeft() throws {
         databasePreparer.save {
             databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
             databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageGroupCreatorLeft)
         }
 
-        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessage)
+        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? SystemMessage)
 
+        XCTAssertEqual(kSystemMessageGroupCreatorLeft, result.type.intValue)
+    }
+    
+    // MARK: Last message
+    
+    func testLastMessageIsTextMessage() throws {
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessage)
+    
+        XCTAssertEqual(
+            "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
+            result.text
+        )
+    }
+    
+    func testLastMessageIsSystemMessageFsDebugMessage() throws {
+        databasePreparer.save {
+            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
+            databasePreparer.createSystemMessage(conversation: conversation, type: kFsDebugMessage)
+        }
+    
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessage)
+    
+        XCTAssertEqual(kFsDebugMessage, result.type.intValue)
+    }
+    
+    func testLastMessageCheckIsSystemMessageGroupCreatorLeft() throws {
+        databasePreparer.save {
+            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
+            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageGroupCreatorLeft)
+        }
+    
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessage)
+    
         XCTAssertEqual(kSystemMessageGroupCreatorLeft, result.type.intValue)
     }
 }

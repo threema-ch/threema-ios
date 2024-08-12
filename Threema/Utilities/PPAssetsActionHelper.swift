@@ -94,15 +94,15 @@ public class PPAssetsActionHelper: NSObject {
         case Inches_5_5 = 736
     }
     
-    internal func isPhone() -> Bool {
+    func isPhone() -> Bool {
         UIDevice.current.userInterfaceIdiom == .phone
     }
     
-    internal func isSizeOrLarger(height: Heights) -> Bool {
+    func isSizeOrLarger(height: Heights) -> Bool {
         UIScreen.main.bounds.size.height >= height.rawValue
     }
     
-    internal func IS_4_7_INCHES_OR_LARGER() -> Bool {
+    func IS_4_7_INCHES_OR_LARGER() -> Bool {
         isPhone() && isSizeOrLarger(height: .Inches_4_7)
     }
     

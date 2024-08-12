@@ -35,11 +35,11 @@ class DeviceGroupDerivedKey: NSObject {
 
         func derive(dgk: Data) throws -> Data {
             switch self {
-            case .dgpk: return try derive(dgk: dgk, salt: "p")
-            case .dgrk: return try derive(dgk: dgk, salt: "r")
-            case .dgdik: return try derive(dgk: dgk, salt: "di")
-            case .dgsddk: return try derive(dgk: dgk, salt: "sdd")
-            case .dgtsk: return try derive(dgk: dgk, salt: "ts")
+            case .dgpk: try derive(dgk: dgk, salt: "p")
+            case .dgrk: try derive(dgk: dgk, salt: "r")
+            case .dgdik: try derive(dgk: dgk, salt: "di")
+            case .dgsddk: try derive(dgk: dgk, salt: "sdd")
+            case .dgtsk: try derive(dgk: dgk, salt: "ts")
             }
         }
 

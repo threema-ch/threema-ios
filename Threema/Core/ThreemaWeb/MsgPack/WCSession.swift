@@ -21,11 +21,11 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public class WCSession: NSObject, NSCoding {
+@objc public class WCSession: NSObject {
     
-    internal var privateKey: Data?
-    internal var webClientSession: WebClientSession?
-    internal var messageQueue: WebMessageQueue
+    var privateKey: Data?
+    var webClientSession: WebClientSession?
+    var messageQueue: WebMessageQueue
     
     private var connection: WCConnection?
     
@@ -49,37 +49,6 @@ import Foundation
         self.messageQueue = WebMessageQueue()
         super.init()
         messageQueue.delegate = self
-    }
-    
-    // MARK: NSCoding
-
-    public required init?(coder aDecoder: NSCoder) {
-        // super.init(coder:) is optional, see notes below
-        self.privateKey = aDecoder.decodeObject(forKey: "privateKey") as? Data
-        self.connection = aDecoder.decodeObject(forKey: "connection") as? WCConnection
-        let entityManager = EntityManager()
-        if privateKey != nil {
-            self.webClientSession = entityManager.entityFetcher.webClientSession(forPrivateKey: privateKey!)
-        }
-        else {
-            self.webClientSession = entityManager.entityFetcher.activeWebClientSession()
-        }
-        self.messageQueue = aDecoder.decodeObject(forKey: "messageQueue") as! WebMessageQueue
-        self.requestedConversations = aDecoder.decodeObject(forKey: "requestedConversations") as! [String]
-        self.requestedThumbnails = aDecoder.decodeObject(forKey: "requestedThumbnails") as! [Data]
-        self.lastLoadedMessageIndexes = aDecoder.decodeObject(forKey: "lastLoadedMessageIndexes") as! [Data: Int]
-        self.requestedConversations = aDecoder.decodeObject(forKey: "requestedConversations") as! [String]
-        self.webClientProcessQueue = DispatchQueue(label: "ch.threema.webClientProcessQueue", attributes: [])
-    }
-    
-    public func encode(with aCoder: NSCoder) {
-        // super.encodeWithCoder(aCoder) is optional, see notes below
-        aCoder.encode(privateKey, forKey: "privateKey")
-        aCoder.encode(connection, forKey: "connection")
-        aCoder.encode(messageQueue, forKey: "messageQueue")
-        aCoder.encode(requestedConversations, forKey: "requestedConversations")
-        aCoder.encode(requestedThumbnails, forKey: "requestedThumbnails")
-        aCoder.encode(lastLoadedMessageIndexes, forKey: "lastLoadedMessageIndexes")
     }
 }
 
@@ -127,43 +96,43 @@ extension WCSession {
         connection?.close(close: close, forget: forget, sendDisconnect: sendDisconnect, reason: reason)
     }
     
-    internal func setWCConnectionStateToReady() {
+    func setWCConnectionStateToReady() {
         connection?.setWCConnectionStateToReady()
     }
     
-    internal func setWCConnectionStateToConnectionInfoReceived() {
+    func setWCConnectionStateToConnectionInfoReceived() {
         connection?.setWCConnectionStateToConnectionInfoReceived()
     }
     
-    internal func connectionContext() -> WebConnectionContext? {
+    func connectionContext() -> WebConnectionContext? {
         connection?.context
     }
     
-    internal func connectionInfoResponse() -> WebUpdateConnectionInfoResponse? {
+    func connectionInfoResponse() -> WebUpdateConnectionInfoResponse? {
         connection?.connectionInfoResponse
     }
     
-    internal func sendChunk(chunk: [UInt8], msgpack: Data?, connectionInfo: Bool) {
+    func sendChunk(chunk: [UInt8], msgpack: Data?, connectionInfo: Bool) {
         connection?.sendChunk(chunk: chunk, msgpack: msgpack, connectionInfo: connectionInfo)
     }
     
-    internal func connectionWca() -> String? {
+    func connectionWca() -> String? {
         connection?.wca
     }
     
-    internal func setWcaForConnection(wca: String) {
+    func setWcaForConnection(wca: String) {
         connection?.wca = wca
     }
     
-    internal func addRequestCreateMessage(requestID: String, abstractMessage: WebAbstractMessage) {
+    func addRequestCreateMessage(requestID: String, abstractMessage: WebAbstractMessage) {
         requestCreateMessagesFromWeb[requestID] = abstractMessage
     }
     
-    internal func removeRequestCreateMessage(requestID: String) {
+    func removeRequestCreateMessage(requestID: String) {
         requestCreateMessagesFromWeb.removeValue(forKey: requestID)
     }
     
-    internal func requestMessage(for requestID: String) -> WebAbstractMessage? {
+    func requestMessage(for requestID: String) -> WebAbstractMessage? {
         requestCreateMessagesFromWeb[requestID]
     }
 }
@@ -237,15 +206,15 @@ extension WCSession: MessageCompleteDelegate {
 // MARK: - WCConnectionDelegate
 
 extension WCSession: WCConnectionDelegate {
-    internal func currentWebClientSession() -> WebClientSession? {
+    func currentWebClientSession() -> WebClientSession? {
         webClientSession
     }
     
-    internal func currentWCSession() -> WCSession {
+    func currentWCSession() -> WCSession {
         self
     }
     
-    internal func currentMessageQueue() -> WebMessageQueue {
+    func currentMessageQueue() -> WebMessageQueue {
         messageQueue
     }
 }
@@ -253,11 +222,11 @@ extension WCSession: WCConnectionDelegate {
 // MARK: - WebMessageQueueDelegate
 
 extension WCSession: WebMessageQueueDelegate {
-    internal func sendMessageToWeb(blacklisted: Bool, msgpack: Data, _ connectionInfo: Bool = false) {
+    func sendMessageToWeb(blacklisted: Bool, msgpack: Data, _ connectionInfo: Bool = false) {
         connection?.sendMessageToWeb(blacklisted: blacklisted, msgpack: msgpack, connectionInfo)
     }
     
-    internal func connectionStatus() -> WCConnectionState? {
+    func connectionStatus() -> WCConnectionState? {
         connection?.connectionStatus
     }
 }

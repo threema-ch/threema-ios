@@ -25,10 +25,10 @@ import Foundation
 extension BallotMessage: QuoteMessageProvider {
     public var quoteMessage: QuoteMessage? {
         if isSummaryMessage() {
-            return self
+            self
         }
         else {
-            return nil
+            nil
         }
     }
 }

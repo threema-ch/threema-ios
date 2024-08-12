@@ -99,11 +99,11 @@ class GroupCallAudioOutputButton: UIButton {
                 return
             }
             guard let config = button.configuration else {
-                self.configuration = nil
+                configuration = nil
                 return
             }
             
-            self.configuration = self.updateConfig(config: config)
+            configuration = updateConfig(config: config)
         }
     }
     

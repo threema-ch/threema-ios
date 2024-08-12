@@ -48,9 +48,9 @@ enum RecordingState {
     var isStopped: Bool {
         switch self {
         case .paused, .playing, .recordingStopping, .stopped:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
     

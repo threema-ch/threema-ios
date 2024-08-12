@@ -38,4 +38,10 @@ public protocol GroupCallParticipantInfoFetcherProtocol {
     /// - Parameter id: ThreemaIdentity
     /// - Returns: ID Color or primary color
     func fetchIDColor(for id: ThreemaIdentity) -> UIColor
+    
+    /// Checks if a given `ThreemaIdentity` belongs to a member of a group
+    /// - Parameters:
+    ///   - identity: ThreemaIdentity to check
+    ///   - groupID: GroupIdentity of group to check
+    func isIdentity(_ identity: ThreemaIdentity, memberOfGroupWith groupID: GroupIdentity) -> Bool
 }

@@ -60,29 +60,29 @@ extension CombineXRelayState {
     
     var isWaiting: Bool {
         switch self {
-        case .waiting: return true
-        default: return false
+        case .waiting: true
+        default: false
         }
     }
     
     var isRelaying: Bool {
         switch self {
-        case .relaying: return true
-        default: return false
+        case .relaying: true
+        default: false
         }
     }
     
     var isCompleted: Bool {
         switch self {
-        case .completed: return true
-        default: return false
+        case .completed: true
+        default: false
         }
     }
     
     var subscription: Subscription? {
         switch self {
-        case let .relaying(s): return s
-        default: return nil
+        case let .relaying(s): s
+        default: nil
         }
     }
 }

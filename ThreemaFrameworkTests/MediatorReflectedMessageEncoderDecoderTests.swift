@@ -212,7 +212,8 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
             messageID: abstractMessage.messageID.littleEndian(),
             receiverIdentity: abstractMessage.toIdentity,
             createdAt: abstractMessage.date,
-            nonce: abstractMessage.nonce
+            nonce: abstractMessage.nonce,
+            deviceID: MockData.deviceID.paddedLittleEndian()
         )
     }
 }

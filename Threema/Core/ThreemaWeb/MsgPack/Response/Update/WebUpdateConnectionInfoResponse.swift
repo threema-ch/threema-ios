@@ -20,8 +20,7 @@
 
 import Foundation
 
-class WebUpdateConnectionInfoResponse: WebAbstractMessage, NSCoding {
-    
+class WebUpdateConnectionInfoResponse: WebAbstractMessage {
     var id: Data
     var resume: WebConnection?
     
@@ -47,42 +46,5 @@ class WebUpdateConnectionInfoResponse: WebAbstractMessage, NSCoding {
             args: nil,
             data: tmpData
         )
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        self.id = aDecoder.decodeObject(forKey: "id") as! Data
-        self.resume = aDecoder.decodeObject(forKey: "resume") as? WebConnection
-        
-        super.init(
-            messageType: "update",
-            messageSubType: "connectionInfo",
-            requestID: nil,
-            ack: nil,
-            args: nil,
-            data: aDecoder.decodeObject(forKey: "data")
-        )
-    }
-    
-    func encode(with aCoder: NSCoder) {
-        aCoder.encode(id, forKey: "id")
-        if resume != nil {
-            aCoder.encode(resume, forKey: "resume")
-        }
-        aCoder.encode(messageType, forKey: "messageType")
-        if messageSubType != nil {
-            aCoder.encode(messageSubType, forKey: "messageSubType")
-        }
-        if requestID != nil {
-            aCoder.encode(requestID, forKey: "requestId")
-        }
-        if ack != nil {
-            aCoder.encode(ack, forKey: "ack")
-        }
-        if args != nil {
-            aCoder.encode(args, forKey: "args")
-        }
-        if data != nil {
-            aCoder.encode(data, forKey: "data")
-        }
     }
 }

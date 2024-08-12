@@ -20,6 +20,7 @@
 
 import AVFoundation
 import Foundation
+
 enum CameraPosition {
     case front
     case back
@@ -27,9 +28,9 @@ enum CameraPosition {
     var avDevicePosition: AVCaptureDevice.Position {
         switch self {
         case .front:
-            return .front
+            .front
         case .back:
-            return .back
+            .back
         }
     }
 }

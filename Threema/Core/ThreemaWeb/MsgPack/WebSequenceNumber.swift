@@ -20,8 +20,7 @@
 
 import Foundation
 
-class WebSequenceNumber: NSObject, NSCoding {
-    
+class WebSequenceNumber: NSObject {
     private var minValue: UInt64
     private var maxValue: UInt64
     private var _value: UInt64
@@ -54,19 +53,5 @@ class WebSequenceNumber: NSObject, NSCoding {
         let tmpValue = _value
         value = tmpValue + by
         return value
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        // super.init(coder:) is optional, see notes below
-        self.minValue = UInt64(aDecoder.decodeInt64(forKey: "minValue"))
-        self.maxValue = UInt64(aDecoder.decodeInt64(forKey: "maxValue"))
-        self._value = UInt64(aDecoder.decodeInt64(forKey: "_value"))
-    }
-    
-    func encode(with aCoder: NSCoder) {
-        // super.encodeWithCoder(aCoder) is optional, see notes below
-        aCoder.encode(Int64(minValue), forKey: "minValue")
-        aCoder.encode(Int64(maxValue), forKey: "maxValue")
-        aCoder.encode(Int64(_value), forKey: "_value")
     }
 }

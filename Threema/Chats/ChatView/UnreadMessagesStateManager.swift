@@ -211,13 +211,13 @@ final class UnreadMessagesStateManager {
 
                 let newState: UnreadMessagesState
 
-                let numberOfMessagesMarkedAsRead: Int
-                if shouldMarkAsRead {
-                    numberOfMessagesMarkedAsRead = markAsReadAndWait(unreadMessageObjectIDs)
-                }
-                else {
-                    numberOfMessagesMarkedAsRead = 0
-                }
+                let numberOfMessagesMarkedAsRead: Int =
+                    if shouldMarkAsRead {
+                        markAsReadAndWait(unreadMessageObjectIDs)
+                    }
+                    else {
+                        0
+                    }
 
                 if willStayAtBottomOfView,
                    let unreadMessagesState,

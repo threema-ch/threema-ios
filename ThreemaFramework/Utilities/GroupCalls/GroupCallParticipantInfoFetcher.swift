@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import ThreemaEssentials
@@ -38,6 +39,7 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
         let entityManager = businessInjector.entityManager
         let avatar: UIImage?
         
+        // swiftformat:disable:next conditionalAssignment
         if let localIdentity = identityStore.identity, localIdentity == id.string,
            let profilePictureDict = identityStore.profilePicture,
            let imageData = profilePictureDict["ProfilePicture"] as? Data, let image = UIImage(data: imageData) {
@@ -55,13 +57,13 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
                     return nil
                 }
                 
-                let localAvatar: UIImage?
-                if ProcessInfoHelper.isRunningForScreenshots {
-                    localAvatar = AvatarMaker.shared().avatar(for: contact, size: 200, masked: false, scaled: true)
-                }
-                else {
-                    localAvatar = AvatarMaker.shared().avatar(for: contact, size: 40, masked: true)
-                }
+                let localAvatar: UIImage? =
+                    if ProcessInfoHelper.isRunningForScreenshots {
+                        AvatarMaker.shared().avatar(for: contact, size: 200, masked: false, scaled: true)
+                    }
+                    else {
+                        AvatarMaker.shared().avatar(for: contact, size: 40, masked: true)
+                    }
                 
                 if AvatarMaker.shared().isDefaultAvatar(for: contact) {
                     return localAvatar?.withTintColor(.white)
@@ -77,20 +79,19 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
     public func fetchDisplayName(for id: ThreemaIdentity) -> String {
         let identityStore = businessInjector.myIdentityStore
         let entityManager = businessInjector.entityManager
-        let displayName: String
-        
-        if let localIdentity = identityStore.identity, localIdentity == id.string {
-            displayName = "me".localized
-        }
-        else {
-            displayName = entityManager.performAndWait {
-                guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
-                    return id.string
-                }
-                
-                return contact.displayName
+        let displayName: String =
+            if let localIdentity = identityStore.identity, localIdentity == id.string {
+                "me".localized
             }
-        }
+            else {
+                entityManager.performAndWait {
+                    guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
+                        return id.string
+                    }
+                
+                    return contact.displayName
+                }
+            }
         
         return displayName
     }
@@ -98,21 +99,31 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
     public func fetchIDColor(for id: ThreemaIdentity) -> UIColor {
         let identityStore = businessInjector.myIdentityStore
         let entityManager = businessInjector.entityManager
-        let idColor: UIColor
-
-        if let localIdentity = identityStore.identity, localIdentity == id.string {
-            idColor = IDColor.forData(Data(id.string.utf8))
-        }
-        else {
-            idColor = entityManager.performAndWait {
-                guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
-                    return .primary
-                }
-                
-                return contact.idColor
+        let idColor: UIColor =
+            if let localIdentity = identityStore.identity, localIdentity == id.string {
+                IDColor.forData(Data(id.string.utf8))
             }
-        }
+            else {
+                entityManager.performAndWait {
+                    guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
+                        return .primary
+                    }
+                
+                    return contact.idColor
+                }
+            }
         
         return idColor
+    }
+    
+    public func isIdentity(_ identity: ThreemaIdentity, memberOfGroupWith groupID: GroupIdentity) -> Bool {
+        let groupManager = businessInjector.groupManager
+        
+        guard let group = groupManager.group(for: groupID) else {
+            DDLogError("[GroupCall] Did not find group to check if participant is member in.")
+            return false
+        }
+        
+        return group.isMember(identity: identity.string)
     }
 }

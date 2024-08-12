@@ -45,6 +45,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
     var entityManager: EntityManager
 
     var groupManager: GroupManagerProtocol
+    
+    var distributionListManager: DistributionListManagerProtocol
 
     var licenseStore: LicenseStore
 
@@ -72,6 +74,7 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         conversationStore: ConversationStoreProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
         groupManager: GroupManagerProtocol = GroupManagerMock(),
+        distributionListManager: DistributionListManagerProtocol = DistributionListManagerMock(),
         licenseStore: LicenseStore = LicenseStore.shared(),
         messageSender: MessageSenderProtocol = MessageSenderMock(),
         multiDeviceManager: MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
@@ -88,6 +91,7 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         self.conversationStore = conversationStore
         self.entityManager = entityManager
         self.groupManager = groupManager
+        self.distributionListManager = distributionListManager
         self.licenseStore = licenseStore
         self.messageSender = messageSender
         self.multiDeviceManager = multiDeviceManager

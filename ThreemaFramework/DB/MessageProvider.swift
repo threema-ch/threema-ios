@@ -147,15 +147,15 @@ public final class MessageProvider: NSObject {
         entityManager: EntityManager = EntityManager(),
         backgroundEntityManager: EntityManager = EntityManager(withChildContextForBackgroundProcess: true)
     ) {
-        let context: TMAManagedObjectContext
-        if MessageProvider.configuration.backgroundFetching {
-            context = DatabaseContext.directBackgroundContext(
-                withPersistentCoordinator: DatabaseManager.db().persistentStoreCoordinator
-            )
-        }
-        else {
-            context = DatabaseContext(persistentCoordinator: DatabaseManager.db().persistentStoreCoordinator).main
-        }
+        let context: TMAManagedObjectContext =
+            if MessageProvider.configuration.backgroundFetching {
+                DatabaseContext.directBackgroundContext(
+                    withPersistentCoordinator: DatabaseManager.db().persistentStoreCoordinator
+                )
+            }
+            else {
+                DatabaseContext(persistentCoordinator: DatabaseManager.db().persistentStoreCoordinator).main
+            }
         
         self.init(
             for: conversation,
@@ -504,22 +504,22 @@ public final class MessageProvider: NSObject {
             )
             
             // If all messages at the top are loaded we don't need to set any threshold to load more at the top
-            let topRefetchLimit: Int
-            if topLoadedLimit <= 0 {
-                topRefetchLimit = 0
-            }
-            else {
-                topRefetchLimit = topLoadedLimit + refetchThreshold
-            }
+            let topRefetchLimit: Int =
+                if topLoadedLimit <= 0 {
+                    0
+                }
+                else {
+                    topLoadedLimit + refetchThreshold
+                }
             
             // If all messages at the bottom are loaded we don't need to set any threshold to load more at the bottom
-            let bottomRefetchLimit: Int
-            if self.numberOfMessages <= bottomLoadedLimit {
-                bottomRefetchLimit = bottomLoadedLimit
-            }
-            else {
-                bottomRefetchLimit = bottomLoadedLimit - refetchThreshold
-            }
+            let bottomRefetchLimit: Int =
+                if self.numberOfMessages <= bottomLoadedLimit {
+                    bottomLoadedLimit
+                }
+                else {
+                    bottomLoadedLimit - refetchThreshold
+                }
             
             let shouldRefetchTop = firstMessageAfterDateOffset < topRefetchLimit
             let shouldRefetchBottom = firstMessageAfterDateOffset > bottomRefetchLimit

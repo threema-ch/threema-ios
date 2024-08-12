@@ -114,7 +114,7 @@ class GroupTests: XCTestCase {
             let imageData = entityManager.entityCreator.imageData()
             imageData?.data = Data([0])
 
-            let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)
+            let message = entityManager.entityCreator.textMessage(for: conversation)
             message?.text = "123"
             message?.date = dateNow
 
@@ -405,10 +405,10 @@ class GroupTests: XCTestCase {
         
         let expectedOrder = [
             "MEMBER03", // Emi l (Creator)
-            "ECHOECHO", // Me
             "MEMBER01", // Em il
             "MEMBER04", // Em ily
             "MEMBER02", // Emi ly
+            "ECHOECHO", // Me
         ]
         
         // Run

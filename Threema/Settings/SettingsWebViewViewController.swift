@@ -54,13 +54,13 @@ class SettingsWebViewViewController: UIViewController, WKNavigationDelegate {
         let lang = Bundle.main.preferredLocalizations.first ?? "en"
         let version = AppInfo.appVersion.version ?? "-"
         
-        var theme: String
-        switch Colors.theme {
-        case .dark:
-            theme = "dark"
-        case .light, .undefined:
-            theme = "light"
-        }
+        var theme =
+            switch Colors.theme {
+            case .dark:
+                "dark"
+            case .light, .undefined:
+                "light"
+            }
         
         if navigationController?.viewControllers.count == 1 {
             let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(donePressed))
@@ -116,6 +116,17 @@ class SettingsWebViewViewController: UIViewController, WKNavigationDelegate {
             message: BundleUtil.localizedString(forKey: "cannot_connect_message")
         ) { _ in
             self.navigationController?.dismiss(animated: true, completion: nil)
+        }
+    }
+    
+    func webView(
+        _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: any Error
+    ) {
+        MBProgressHUD.hide(for: webView, animated: true)
+        if (error as NSError).code == URLError.Code.notConnectedToInternet.rawValue {
+            NotificationPresenterWrapper.shared.present(type: .noConnection)
         }
     }
     

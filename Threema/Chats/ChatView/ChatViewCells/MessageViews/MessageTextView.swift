@@ -47,13 +47,13 @@ final class MessageTextView: RTLAligningTextView {
         var currentSearchText: String?
         
         func renderState(for newText: String, highlighting searchText: String?) -> RenderState {
-            let currentSearchTextRenderState: SearchTextRenderState
-            if let searchText {
-                currentSearchTextRenderState = (searchText == currentSearchText) ? .textUnchanged : .textChanged
-            }
-            else {
-                currentSearchTextRenderState = .empty
-            }
+            let currentSearchTextRenderState: SearchTextRenderState =
+                if let searchText {
+                    (searchText == currentSearchText) ? .textUnchanged : .textChanged
+                }
+                else {
+                    .empty
+                }
             
             guard currentText == newText else {
                 DDLogVerbose("Text Changed")

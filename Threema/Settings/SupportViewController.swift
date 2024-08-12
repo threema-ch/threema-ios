@@ -137,6 +137,17 @@ extension SupportViewController: WKNavigationDelegate {
     
     func webView(
         _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: any Error
+    ) {
+        MBProgressHUD.hide(for: webView, animated: true)
+        if (error as NSError).code == URLError.Code.notConnectedToInternet.rawValue {
+            NotificationPresenterWrapper.shared.present(type: .noConnection)
+        }
+    }
+        
+    func webView(
+        _ webView: WKWebView,
         decidePolicyFor navigationAction: WKNavigationAction,
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {

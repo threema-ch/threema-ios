@@ -182,7 +182,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
                 return
             }
             
-            guard self.isPlaying else {
+            guard isPlaying else {
                 return
             }
             
@@ -284,14 +284,12 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         return view
     }()
 
-    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = {
-        [
-            contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
-            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            contentStackViewNoCaptionBottomConstraint,
-            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ]
-    }()
+    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = [
+        contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
+        contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        contentStackViewNoCaptionBottomConstraint,
+        contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+    ]
     
     // These are only shown if there is a caption...
     private lazy var captionTextLabel = MessageTextView(messageTextViewDelegate: self)
@@ -301,13 +299,11 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         captionDateAndStateView,
     ])
     
-    private lazy var captionStackViewConstraints: [NSLayoutConstraint] = {
-        [
-            captionStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            captionStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            captionStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ]
-    }()
+    private lazy var captionStackViewConstraints: [NSLayoutConstraint] = [
+        captionStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        captionStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+        captionStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+    ]
     
     private lazy var contentStackViewCaptionBottomConstraint = contentStack.bottomAnchor.constraint(
         equalTo: captionStack.topAnchor, constant: -ChatViewConfiguration.Content.defaultTopBottomInset
@@ -722,39 +718,42 @@ extension ChatViewVoiceMessageTableViewCell {
     }
 }
 
-// MARK: - ChatViewMessageAction
+// MARK: - ChatViewMessageActions
 
-extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
+extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
     
-    func messageActions()
-        -> (
-            primaryActions: [ChatViewMessageActionProvider.MessageAction],
-            generalActions: [ChatViewMessageActionProvider.MessageAction]
-        )? {
-
+    func messageActionsSections() -> [ChatViewMessageActionsProvider.MessageActionsSection]? {
+        
         guard let message = voiceMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewMessageActionProvider
+        typealias Provider = ChatViewMessageActionsProvider
+    
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
+        }
             
-        // Speak
-        let speakText = message.fileMessageType.localizedDescription
+        // MessageMarkers
+        let markStarHandler = { (message: BaseMessage) in
+            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
+        }
         
-        // Share
-        let shareItems = [MessageActivityItem(for: message)]
-
-        // Copy
-        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
-        // itself.
-        let copyHandler = {
-            guard let data = message.blobData, let uti = message.blobUTTypeIdentifier else {
-                NotificationPresenterWrapper.shared.present(type: .copyError)
+        // Retry and cancel
+        let retryAndCancelHandler = { [weak self] in
+            guard let self else {
                 return
             }
             
-            UIPasteboard.general.setData(data, forPasteboardType: uti)
-            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+            chatViewTableViewCellDelegate?.retryOrCancelSendingMessage(withID: message.objectID, from: containerView)
+        }
+        
+        // Download
+        let downloadHandler: Provider.DefaultHandler = {
+            Task {
+                await BlobManager.shared.syncBlobs(for: message.objectID)
+            }
         }
         
         // Quote
@@ -772,50 +771,61 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
             chatViewTableViewCellDelegate.showQuoteView(message: message)
         }
         
+        // Copy
+        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
+        // itself.
+        let copyHandler = {
+            guard let data = message.blobData, let uti = message.blobUTTypeIdentifier else {
+                NotificationPresenterWrapper.shared.present(type: .copyError)
+                return
+            }
+            
+            UIPasteboard.general.setData(data, forPasteboardType: uti)
+            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+        }
+        
+        // Share
+        let shareItems = [MessageActivityItem(for: message)]
+        
+        // Speak
+        let speakText = message.fileMessageType.localizedDescription
+        
         // Details
-        let detailsHandler = {
+        let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
         }
         
         // Select
-        let selectHandler = {
+        let selectHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
         // Delete
-        let willDelete = {
+        
+        let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
         
-        let didDelete = {
+        let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
-            
-        // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
-            self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
-        }
-        
-        // Build menu
         return Provider.defaultActions(
             message: message,
-            speakText: speakText,
-            shareItems: shareItems,
-            activityViewAnchor: contentView,
+            activityViewAnchor: containerView,
             popOverSource: chatBubbleView,
-            copyHandler: copyHandler,
+            ackHandler: ackHandler,
+            markStarHandler: markStarHandler,
+            retryAndCancelHandler: retryAndCancelHandler,
+            downloadHandler: downloadHandler,
             quoteHandler: quoteHandler,
+            copyHandler: copyHandler,
+            shareItems: shareItems,
+            speakText: speakText,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            ackHandler: ackHandler,
-            markStarHandler: markStarHandler
+            didDelete: didDelete
         )
     }
     

@@ -82,7 +82,7 @@ protocol MediatorReflectedProcessorProtocol {
     ///   - reflectedAt: Date of reflected message given Mediator Server
     ///   - receivedAfterInitialQueueSend: True indicates the message was received before mediator server message queue
     ///                        is dry (abstract message will be marked with this flag, to control in app notification)
-    ///   - maxBytesToDecrypt: When e.g. downloaded blob within Notification Extention, then only limited memory
+    ///   - maxBytesToDecrypt: When e.g. downloaded blob within Notification Extension, then only limited memory
     ///                        available to decrypt data
     ///   - timeoutDownloadThumbnail: Timeout for downloading blob (0 = infinity)
     func process(
@@ -134,7 +134,6 @@ protocol MediatorReflectedProcessorProtocol {
                         return Promise()
                     }
             }
-
         case let .incomingMessage(incomingMessage):
             return Promise<AbstractMessage> { seal in
                 guard try !frameworkInjector.nonceGuard.isProcessed(d2dIncomingMessage: incomingMessage) else {

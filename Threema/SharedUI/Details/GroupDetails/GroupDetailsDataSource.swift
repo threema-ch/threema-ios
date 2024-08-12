@@ -330,9 +330,9 @@ extension GroupDetailsDataSource {
     func quickActions(in viewController: UIViewController) -> [QuickAction] {
         switch displayMode {
         case .default:
-            return defaultQuickActions(in: viewController)
+            defaultQuickActions(in: viewController)
         case .conversation:
-            return conversationQuickActions(in: viewController)
+            conversationQuickActions(in: viewController)
         }
     }
     
@@ -454,7 +454,7 @@ extension GroupDetailsDataSource {
             title: BundleUtil.localizedString(forKey: "group_call_title"),
             accessibilityIdentifier: "GroupDetailsDataSourceGroupCallQuickActionButton"
         ) { _ in
-            GlobalGroupCallsManagerSingleton.shared.startGroupCall(
+            GlobalGroupCallManagerSingleton.shared.startGroupCall(
                 in: self.group,
                 intent: .createOrJoin
             )

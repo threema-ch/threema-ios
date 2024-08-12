@@ -130,11 +130,7 @@ struct PrivacySettingsView: View {
                         accessoryText: typingIndicators.localizedDescription
                     )
                 }
-                    
-                Toggle(isOn: $settingsVM.choosePOI) {
-                    Text("settings_privacy_choose_poi".localized)
-                }
-                
+                                    
                 Toggle(isOn: $intermediaryHidePrivate) {
                     Text("settings_privacy_hide_private_chats".localized)
                 }
@@ -143,10 +139,20 @@ struct PrivacySettingsView: View {
                 }
                 .disabled(!KKPasscodeLock.shared().isPasscodeRequired())
             }
+            
+            // MARK: POI
+
+            Section(
+                header: Text("settings_privacy_poi_header".localized),
+                footer: Text("settings_privacy_poi_footer".localized)
+            ) {
+                Toggle(isOn: $settingsVM.choosePOI) {
+                    Text("settings_privacy_choose_poi".localized)
+                }
+            }
         }
         .listStyle(.insetGrouped)
         .disabled(settingsVM.isSyncing)
-        
         .onAppear {
             observeSendReadReceipt = settingsVM.$sendReadReceipts.sink { newValue in
                 readReceipts = newValue ? .doSend : .dontSend
@@ -235,18 +241,18 @@ private enum SettingValueOption: CaseIterable {
     var localizedDescription: String {
         switch self {
         case .doSend:
-            return "send".localized
+            "send".localized
         case .dontSend:
-            return "dont_send".localized
+            "dont_send".localized
         }
     }
     
     var boolValue: Bool {
         switch self {
         case .doSend:
-            return true
+            true
         case .dontSend:
-            return false
+            false
         }
     }
 }
@@ -258,9 +264,9 @@ private enum SettingType {
     var navigationTitle: String {
         switch self {
         case .readReceipt:
-            return "settings_privacy_read_receipts".localized
+            "settings_privacy_read_receipts".localized
         case .typingIndicator:
-            return "settings_privacy_typing_indicator".localized
+            "settings_privacy_typing_indicator".localized
         }
     }
 }

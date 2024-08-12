@@ -37,7 +37,7 @@ public class MessageFetcher: NSObject {
     }
     
     /// Get a fresh fetched request for the messages of the conversation
-    internal var messagesFetchRequest: NSFetchRequest<BaseMessage> {
+    var messagesFetchRequest: NSFetchRequest<BaseMessage> {
         let fetchRequest = NSFetchRequest<BaseMessage>(entityName: entityName)
         
         fetchRequest.predicate = conversationPredicate
@@ -146,8 +146,7 @@ public class MessageFetcher: NSObject {
             SystemMessage.excludeSystemMessageTypes
         )
         let fetchRequestExcludes = NSFetchRequest<NSFetchRequestResult>(entityName: systemEntityName)
-        fetchRequestExcludes
-            .predicate =
+        fetchRequestExcludes.predicate =
             NSCompoundPredicate(andPredicateWithSubpredicates: [conversationPredicate, excludePredicateExcludes])
         fetchRequestExcludes.sortDescriptors = sortDescriptors(ascending: false)
         return fetchRequestExcludes
@@ -336,12 +335,25 @@ public class MessageFetcher: NSObject {
         return result
     }
 
-    /// Most recent message
-    @objc public func lastMessage() -> BaseMessage? {
+    /// Most recent display message
+    ///
+    /// This is the message that should show up in Chats. Some messages are filtered. Thus this might not be the actual
+    /// last message in the conversation (use `lastMessage()` for that).
+    /// - Returns: Last display message if there is any
+    @objc public func lastDisplayMessage() -> BaseMessage? {
         lastMessageExcludesFetchRequest.fetchLimit = 10
         let excludedMessages = entityManager.entityFetcher.execute(lastMessageExcludesFetchRequest)
 
         let fetchRequest = lastMessagesFetchRequest(exclude: excludedMessages)
+        fetchRequest.fetchLimit = 1
+
+        return entityManager.entityFetcher.execute(fetchRequest)?.first as? BaseMessage
+    }
+    
+    /// Last message of the conversation
+    /// - Returns: Last message of the conversation if there is any
+    func lastMessage() -> BaseMessage? {
+        let fetchRequest = lastMessagesFetchRequest(exclude: nil)
         fetchRequest.fetchLimit = 1
 
         return entityManager.entityFetcher.execute(fetchRequest)?.first as? BaseMessage

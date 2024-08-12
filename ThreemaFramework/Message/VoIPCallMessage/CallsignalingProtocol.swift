@@ -57,21 +57,21 @@ public enum CallsignalingProtocol {
         public func qualityProfile() -> ThreemaVideoCallQualityProfile {
             switch self {
             case .max:
-                return ThreemaVideoCallQualityProfile(
+                ThreemaVideoCallQualityProfile(
                     bitrate: 4000,
                     maxResolution: CGSize(width: 1920, height: 1080),
                     maxFps: 25,
                     profile: .max
                 )
             case .high:
-                return ThreemaVideoCallQualityProfile(
+                ThreemaVideoCallQualityProfile(
                     bitrate: 2000,
                     maxResolution: CGSize(width: 1280, height: 720),
                     maxFps: 25,
                     profile: .high
                 )
             case .low:
-                return ThreemaVideoCallQualityProfile(
+                ThreemaVideoCallQualityProfile(
                     bitrate: 400,
                     maxResolution: CGSize(width: 960, height: 540),
                     maxFps: 20,
@@ -83,11 +83,11 @@ public enum CallsignalingProtocol {
         public func debug() -> String {
             switch self {
             case .max:
-                return "MAX"
+                "MAX"
             case .high:
-                return "HIGH"
+                "HIGH"
             case .low:
-                return "LOW"
+                "LOW"
             }
         }
     }
@@ -193,26 +193,26 @@ extension CallsignalingProtocol {
     public static func threemaVideoCallQualitySettingTitle(for setting: ThreemaVideoCallQualitySetting) -> String {
         switch setting {
         case ThreemaVideoCallQualitySettingAuto:
-            return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto")
+            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto")
         case ThreemaVideoCallQualitySettingMaximumQuality:
-            return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_max")
+            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_max")
         case ThreemaVideoCallQualitySettingLowDataConsumption:
-            return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_low")
+            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_low")
         default:
-            return "Unknown"
+            "Unknown"
         }
     }
     
     public static func threemaVideoCallQualitySettingSubtitle(for setting: ThreemaVideoCallQualitySetting) -> String {
         switch setting {
         case ThreemaVideoCallQualitySettingAuto:
-            return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto_description")
+            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto_description")
         case ThreemaVideoCallQualitySettingMaximumQuality:
-            return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_max_description")
+            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_max_description")
         case ThreemaVideoCallQualitySettingLowDataConsumption:
-            return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_low_description")
+            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_low_description")
         default:
-            return "Unknown"
+            "Unknown"
         }
     }
     

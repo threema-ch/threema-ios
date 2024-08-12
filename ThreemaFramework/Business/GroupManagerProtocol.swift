@@ -51,7 +51,7 @@ public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
     func sync(group: Group, to identities: Set<String>?, withoutCreateMessage: Bool) async throws
 }
 
-// Define "default" arguments for certains protocol methods
+// Define "default" arguments for certain protocol methods
 extension GroupManagerProtocol {
     public func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date) async throws {
         try await setName(
@@ -91,13 +91,13 @@ extension GroupManagerProtocol {
     }
     
     public func leave(groupWith groupIdentity: GroupIdentity, inform receivers: GroupManagerProtocolReceivers) {
-        let members: [String]?
-        switch receivers {
-        case .all:
-            members = nil
-        case let .members(list):
-            members = list.map(\.string)
-        }
+        let members: [String]? =
+            switch receivers {
+            case .all:
+                nil
+            case let .members(list):
+                list.map(\.string)
+            }
         
         leave(groupIdentity: groupIdentity, toMembers: members)
     }

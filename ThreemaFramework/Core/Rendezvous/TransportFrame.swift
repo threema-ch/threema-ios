@@ -24,7 +24,7 @@ import Foundation
 ///
 /// This adds or removes the leading 4 bytes that define the size of the rest of the data in little endian. If the size
 /// is removed it is also validated.
-struct TransportFrame {
+enum TransportFrame {
     typealias Frame = Data
     typealias Chunk = Data
     

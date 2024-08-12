@@ -63,9 +63,9 @@ import Foundation
             ImageMessageEntity.self,
             VideoMessageEntity.self,
         ]
-        mediaMessageTypes.forEach {
+        for mediaMessageType in mediaMessageTypes {
             if let count = deleteMediasOf(
-                messageType: $0,
+                messageType: mediaMessageType,
                 olderThan: olderThan,
                 conversation: conversation
             ) {
@@ -240,7 +240,7 @@ import Foundation
     /// Delete content of given message, message metadata remains.
     /// - Parameter message: Message to its content
     func deleteMessageContent(of message: BaseMessage) throws {
-        guard message.isRemoteDeletable else {
+        guard message.typeSupportsRemoteDeletion else {
             return
         }
 
@@ -282,6 +282,12 @@ import Foundation
             deleteThumbnail(for: message)
 
             message.duration = 0
+        }
+        
+        if let historyEntries = message.historyEntries {
+            for history in historyEntries {
+                deleteObject(object: history)
+            }
         }
     }
 
@@ -482,9 +488,8 @@ import Foundation
                 shouldUpdateConversationContent = true
             }
         }
-        else if let distributionList = object as? DistributionListEntity,
-                let conversation = distributionList.conversation {
-            deleteObject(object: conversation)
+        else if let distributionList = object as? DistributionListEntity {
+            deleteObject(object: distributionList.conversation)
         }
                 
         let deleteFilenames = getExternalFilenames(ofMessages: [object], includeThumbnail: true)
@@ -724,18 +729,18 @@ import Foundation
                     fetchMessages: NSFetchRequest<NSManagedObject>,
                     relationship: String,
                     blobIDField: String
-                )?
-                switch message {
+                    // swiftformat:disable:next wrapMultilineConditionalAssignment
+                )? = switch message {
                 case is AudioMessageEntity:
-                    mediaMetaInfo = try? getMediaMetaInfo(messageType: AudioMessageEntity.self)
+                    try? getMediaMetaInfo(messageType: AudioMessageEntity.self)
                 case is FileMessageEntity:
-                    mediaMetaInfo = try? getMediaMetaInfo(messageType: FileMessageEntity.self)
+                    try? getMediaMetaInfo(messageType: FileMessageEntity.self)
                 case is ImageMessageEntity:
-                    mediaMetaInfo = try? getMediaMetaInfo(messageType: ImageMessageEntity.self)
+                    try? getMediaMetaInfo(messageType: ImageMessageEntity.self)
                 case is VideoMessageEntity:
-                    mediaMetaInfo = try? getMediaMetaInfo(messageType: VideoMessageEntity.self)
+                    try? getMediaMetaInfo(messageType: VideoMessageEntity.self)
                 default:
-                    mediaMetaInfo = nil
+                    nil
                 }
 
                 if let relationship = mediaMetaInfo?.relationship,

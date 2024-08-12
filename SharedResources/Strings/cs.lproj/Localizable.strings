@@ -106,7 +106,6 @@
 "threema_id" = "Threema ID";
 "nickname" = "Přezdívka";
 "add_button" = "Přidat";
-"chatview_contextmenu_select" = "Vybrat…";
 "learn_more" = "Zjistěte více…";
 "file_message_image" = "Obrázek";
 "file_message_sticker" = "Nálepka";
@@ -115,6 +114,10 @@
 "file_message_voice" = "Hlasová zpráva";
 "file_message_file" = "Soubor";
 "chat" = "chat"; /* noun */
+
+"share_menu" = "Sdílet…";
+"forward_menu" = "Přeposlat…";
+"chatview_contextmenu_select" = "Vybrat…";
 
 "chat_back_button_accessibility" = "%d nepřečteno";
 
@@ -295,9 +298,11 @@
 "messages_delete_all_confirm_title" = "Smazat všechny zprávy v tomto chatu z tohoto zařízení?";
 "messages_delete_all_confirm_message" = "Toto zahrnuje všechna média a dokumenty.";
 "messages_delete_selected_confirm" = "Smazat vybrané zprávy z tohoto zařízení?";
+"message_delete_confirm" = "Odstranit tuto zprávu?";
 "conversation_delete_confirm" = "Smazat tento chat z tohoto zařízení?";
 "delete_n" = "Smazat (%d)";
-"message_delete_for_everyone" = "Smazat zprávu pro všechny";
+"message_delete_for_me" = "Odstranit z tohoto zařízení";
+"message_delete_for_everyone" = "Smazat u všech";
 
 "message_cannot_play_movie" = "Video nelze přehrát.";
 
@@ -473,12 +478,12 @@
 "backup_exclude" = "Když zazálohujete svůj telefon přes iTunes nebo iCloud, nebude součástí těchto dat export ID. Nechcete-li o své ID přijít, uložte si export ID ručně.";
 
 /* Contacts */
-"pull_to_sync" = "Potažením dolů provedete synchronizaci...";
+"pull_to_sync" = "Potažením dolů provedete synchronizaci…";
 "bad_identity_backup" = "Data exportu ID jsou neplatná nebo jste zadali špatné heslo. Chcete-li obnovit své Threema ID, použijte heslo zvolené při vytváření exportu. Zkontrolujte, zda jste vše zadali správně, a zkuste to znovu.";
 "pull_to_sync_429_message" = "Bylo dosaženo povoleného limitu synchronizací kontaktů za den. Pokračujte v synchronizaci zítra nebo se obraťte na zákaznickou podporu Threema.";
 "pull_to_sync_429_message_work" = "Bylo dosaženo povoleného limitu synchronizací kontaktů za den. Pokračujte v synchronizaci zítra nebo se obraťte na svého správce %@.";
 
-"synchronizing" = "Synchronizace...";
+"synchronizing" = "Synchronizace…";
 
 "no_contacts_syncon" = "Zatím nemáte žádné kontakty. Synchronizace je zapnutá, ale nikdo z vašeho adresáře zřejmě službu Threema nepoužívá (pozvěte je!).";
 "no_contacts" = "Žádné kontakty";
@@ -655,7 +660,7 @@
 "invite_sms_body" = "Ahoj! Pojďme používat aplikaci Threema, ať můžeme komunikovat bezpečným způsobem, který myslí na soukromí! Moje Threema ID: https://threema.id/%@";
 "invite_facebook_text" = "Používám aplikaci Threema – bezpečný komunikátor, který chrání soukromí svých uživatelů. Moje Threema ID: https://threema.id/%@";
 "invite_twitter_text" = "Používám aplikaci Threema – bezpečný komunikátor, který chrání soukromí svých uživatelů. Moje Threema ID: https://threema.id/%@";
-"invite_using" = "Pozvat přítele přes...";
+"invite_using" = "Pozvat přítele pomocí…";
 "sms" = "Textová zpráva";
 
 /* Notifications Text */
@@ -711,14 +716,14 @@
 "quote_interaction_hint" = "Přeskočí na citovanou zprávu";
 
 /* TTOpenInAppActivity */
-"Open in ..." = "Otevřít v...";
+"Open in ..." = "Otevřít v…";
 
 /* VoiceOver long labels */
 "restore" = "Obnovit";
 
 /* PullToRefresh */
-"pull_to_refresh" = "Potažením dolů obnovíte...";
-"refreshing" = "Načítání...";
+"pull_to_refresh" = "Potažením dolů obnovíte…";
+"refreshing" = "Načítání…";
 
 /* Threema Channel */
 "threema_channel_intro" = "Přidat kanál Threema do kontaktů?";
@@ -727,7 +732,7 @@
 
 /* Push decryption */
 "decryption_push_reply" = "Odpovědět";
-"decryption_push_placeholder" = "Odpovědět...";
+"decryption_push_placeholder" = "Odpovědět…";
 "decryption_push_agree" = "Souhlasit";
 "decryption_push_disagree" = "Nesouhlasit";
 
@@ -780,15 +785,15 @@
 
 "call_voip_not_supported_title" = "Hovor Threema";
 "call_voip_not_supported_text" = "Váš kontakt nepodporuje hovory Threema";
-"call_contact_not_reachable" = "S kontaktem se nelze spojit.";
+"call_contact_not_reachable" = "S kontaktem se nelze spojit…";
 
 "call_status_idle" = "Připraveno";
 "call_status_wait_ringing" = "Inicializovat";
 "call_status_ringing" = "Vyzvánění";
 "call_status_incom_ringing" = "Hovor Threema";
-"call_status_initializing" = "Připojování...";
+"call_status_initializing" = "Připojování…";
 "call_status_calling" = "Připojeno";
-"call_status_reconnecting" = "Připojování...";
+"call_status_reconnecting" = "Připojování…";
 "call_status_unknown" = "Není známo";
 "call_status_blocked" = "Blokovaný kontakt";
 "call_status_failed_title" = "Hovor Threema";
@@ -1103,7 +1108,8 @@
 "settings_list_media_title" = "Média";
 "settings_list_storage_management_title" = "Správa úložiště";
 "settings_list_passcode_lock_title" = "Zamykání přístupovým kódem";
-"settings_threema_calls" = "Hovory Threema";
+"settings_threema_calls" = "Hovory";
+"settings_list_threema_desktop_title" = "Threema 2.0 for Desktop (Beta)";
 "settings_list_threema_web_title" = "Desktop/web";
 
 "settings_list_network_title" = "Stav sítě";
@@ -1145,13 +1151,16 @@
 "settings_privacy_read_receipts" = "Potvrzení o přečtení";
 "settings_privacy_typing_indicator" = "Ukazatele psaní";
 
+"settings_privacy_poi_header" = "Data polohy";
+"settings_privacy_choose_poi" = "Zobrazit body zájmu";
+"settings_privacy_poi_footer" = "Pokud je možnost povolena, a budete sdílet polohu, budou zobrazeny body zájmu ve vašem okolí. Pro tento účel bude vaše poloha odeslána na server.";
+
 "settings_privacy_TIRR_reset_all" = "Resetovat pro všechny kontakty";
 "settings_privacy_TIRR_reset_footer" = "Resetovat všechny kontakty do výchozího nastavení.";
 "settings_privacy_TIRR_reset_alert_title" = "Resetovat";
 "settings_privacy_TIRR_reset_alert_message" = "Resetovat všechny kontakty do výchozího nastavení. Akci nelze vzít zpět.";
 "settings_privacy_TIRR_reset_alert_action" = "Resetovat vše";
 
-"settings_privacy_choose_poi" = "Vybrat body zájmu";
 "settings_privacy_hide_private_chats" = "Skrýt soukromé chaty";
 "settings_privacy_hide_private_chats_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
 
@@ -1203,7 +1212,7 @@
 "settings_notification_type_preview_complete_description" = "Zobrazuje celé jméno kontaktu a profilový obrázek. Některé informace související s interakcí jsou sdíleny s operačním systémem. [Zjistěte více…](%@)";
 "settings_notification_type_preview_complete_sender_name" = "Jan Novák";
 
-"settings_notification_type_preview_message_text" = "Ukázka zprávy...";
+"settings_notification_type_preview_message_text" = "Ukázka zprávy…";
 "settings_notification_type_preview_no_button" = "Deaktivovat nabízená oznámení";
 
 // Chat Settings
@@ -1647,23 +1656,31 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "notification_threemaweb_connectionlost_title" = "Připojení k desktopové aplikaci / webovému klientovi bylo ztraceno";
 "notification_threemaweb_connectionlost_body" = "Chcete-li pokračovat v používání desktopové aplikace / webového klienta, znovu aplikaci otevřete.";
 
+"settings_threema_web_desktop_banner_title" = "Novinka: Threema 2.0 for Desktop (Beta)";
+"settings_threema_web_desktop_banner_message" = "Klepněte zde, jestliže chcete vyzkoušet novou generaci desktopové aplikace s podporou více zařízení.";
+
 "settings_threema_web_connected" = "Připojení desktopu/webu";
 "settings_threema_web_connectioninfo" = "Abyste mohli zůstat připojeni, musí být vaše zařízení odemčené a v popředí musí být spuštěna aplikace %@. Během připojení se zařízení automaticky nezamkne.";
-"settings_threema_web_linked_device_section_header" = "Více zařízení";
-"settings_threema_web_linked_device_section_footer" = "Propojené zařízení lze použít, i když je na pozadí %@ nebo je toto zařízení offline.";
-"settings_threema_web_section_header" = "Zařízení propojená přímo";
 "settings_threema_web_multi_device_qr_code_title" = "Chybný QR kód";
-"settings_threema_web_multi_device_qr_code_message" = "Pro připojení se k této desktopové aplikaci klikněte na „%@“ a poté na „%@“.";
+"settings_threema_web_multi_device_qr_code_message" = "Přejděte zpět do „%@“ a vyberte „%@“ pro připojení se k této desktopové aplikaci.";
 
 "chat_text_view_placeholder" = "Nová zpráva";
 "compose_bar_camera_button_accessibility_label" = "Otevřít kameru";
 "compose_bar_image_picker_button_accessibility_label" = "Otevřít výběr obrázku";
 "compose_bar_record_button_accessibility_label" = "Nahrát hlasovou zprávu";
 "compose_bar_send_message_button_accessibility_label" = "Poslat zprávu";
+"compose_bar_send_edited_message_button_accessibility_label" = "Potvrdit úpravy";
 "compose_bar_attachment_button_accessibility_label" = "Přidat přílohy";
-"play_record_audio_view_controller_general_error_title" = "Nahrávání se nezdařilo";
-"play_record_audio_view_controller_general_error_message" = "Kvůli neznámé chybě nelze v tuto chvíli nahrát hlasovou zprávu";
 "hardware_keyboard_send_on_enter_discoverability_title" = "Poslat zprávu";
+
+// Voice Recorder
+
+"voice_recorder_call_state_not_idle_message" = "Hlasová zpráva není k dispozici.";
+"voice_recorder_error_message" = "Zkuste to znovu nebo se obraťte na naši podporu.";
+"voice_recorder_call_state_not_idle" = "Aktivní hovor";
+"voice_recorder_playback_failure" = "Chyba přehrávání";
+"voice_recorder_recording_error" = "Chyba nahrávání";
+"voice_recorder_recording_cancelled" = "Nahrávání bylo zrušeno";
 
 // New Ballot Message Cell
 "ballot_message_local_votes" = "Hlasovali jste pro %@.";
@@ -1678,7 +1695,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 // ChatBar
 "chat_bar_quote_close_button" = "Uzavřít citaci";
-"chat_bar_edited_message_close_button" = "Zrušit úpravu zprávy";
 
 // ChatDetailView
 "detailView_title" = "Podrobnosti zprávy";
@@ -1688,6 +1704,9 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "detailView_group_file_size" = "Velikost souboru";
 "detailView_consumed" = "První hrané";
 "detailView_created_footer" = "Vytvořeno: %@";
+"detailView_edit_history_header" = "Upravit historii";
+"detailView_edit_history_current" = "Aktuální";
+"detailView_edit_history_no_caption" = "Bez popisku";
 
 "message_display_status_none" = "Nic";
 "message_display_status_user_acknowledged" = "Souhlas";
@@ -1832,16 +1851,16 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_voice_message_unplayed" = "Dosud nehrané.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Souhlas, %@";
-"accessibility_status_declined_plus_time" = "Odmítnuto, %@";
-"accessibility_status_sending_plus_time" = "Odesílání, %@";
-"accessibility_status_sent_plus_time" = "Odesláno, %@";
-"accessibility_status_delivered_plus_time" = "Doručeno, %@";
-"accessibility_status_read_plus_time" = "Přečteno, %@";
-"accessibility_status_failed_plus_time" = "Neúspěch, %@";
-"accessibility_status_group_acknowledged_plus_time" = "Souhlas od %i, %@%@";
-"accessibility_status_group_declined_plus_time" = "Zamítnutí od %i, %@%@";
-"accessibility_status_group_acknowledged_declined_plus_time" = "Souhlas od %i, zamítnutí od %i, %@%@";
+"accessibility_status_acknowledged" = "Odsouhlaseno";
+"accessibility_status_declined" = "Zamítnuto";
+"accessibility_status_sending" = "Odesílání";
+"accessibility_status_sent" = "Odesláno";
+"accessibility_status_delivered" = "Doručeno";
+"accessibility_status_read" = "Přečteno";
+"accessibility_status_failed" = "Selhalo";
+"accessibility_status_group_acknowledged" = "Odsouhlaseno %i, %@";
+"accessibility_status_group_declined" = "Zamítnuto %i, %@";
+"accessibility_status_group_acknowledged_declined" = "Odsouhlaseno %i, zamítnuto %i, %@";
 "accessibility_status_group_acknowledged_my_reaction" = "Souhlasím";
 "accessibility_status_group_declined_my_reaction" = "Nesouhlasím";
 

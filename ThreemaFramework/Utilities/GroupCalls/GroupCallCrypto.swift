@@ -75,7 +75,7 @@ struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
             
             var publicKey: Data?
             
-            businessInjector.entityManager.performBlockAndWait {
+            businessInjector.entityManager.performAndWait {
                 publicKey = contact.publicKey
             }
             
@@ -100,15 +100,8 @@ struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
     
     // MARK: - Key Generation
     
-    func generateKeyPair() -> (publicKey: Data, privateKey: Data)? {
-        do {
-            let keyPair = try NaClCrypto.shared().generateNewKeyPair()
-            
-            return (keyPair.publicKey, keyPair.privateKey)
-        }
-        catch {
-            DDLogError("Unable to generate key pair: \(error)")
-            return nil
-        }
+    func generateKeyPair() throws -> (publicKey: Data, privateKey: Data) {
+        let keyPair = try NaClCrypto.shared().generateNewKeyPair()
+        return (keyPair.publicKey, keyPair.privateKey)
     }
 }

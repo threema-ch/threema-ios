@@ -100,12 +100,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 
-- (DistributionListEntity *)distributionListAtIndexPath:(NSIndexPath *)indexPath {
+- (DistributionList *)distributionListAtIndexPath:(NSIndexPath *)indexPath {
+    DistributionListEntity *entity;
     if (_filteredDistributionLists) {
-        return [_filteredDistributionLists objectAtIndex:indexPath.row];
+        entity = [_filteredDistributionLists objectAtIndex:indexPath.row];
     } else {
-        return [self.fetchedResultsController objectAtIndexPath:indexPath];
+        entity = [self.fetchedResultsController objectAtIndexPath:indexPath];
     }
+    
+    return [[DistributionList alloc] initWithDistributionListEntity:entity];
 }
 
 - (NSIndexPath *)indexPathForObject:(id)object {
@@ -198,7 +201,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
     } else {
         [_selectedDistributionLists enumerateObjectsUsingBlock:^(DistributionListEntity *tmpDistributionList, BOOL * _Nonnull stop) {
-            if ([distributionList.distributionListId isEqualToNumber:tmpDistributionList.distributionListId]) {
+            if ([distributionList.distributionListIDObjC isEqualToNumber:tmpDistributionList.distributionListIDObjC]) {
                 [_selectedDistributionLists removeObject:tmpDistributionList];
                 *stop = YES;
             }
@@ -211,7 +214,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     DistributionListEntity *dl = [self distributionListAtIndexPath:indexPath];
     
     DistributionListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"DistributionListCell"];
-    cell.distributionList = dl;
+    [cell updateDistributionList:dl];
     
     return cell;
 }

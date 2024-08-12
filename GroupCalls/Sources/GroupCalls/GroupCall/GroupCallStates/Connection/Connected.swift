@@ -45,8 +45,9 @@ struct Connected: GroupCallState {
     // MARK: - Private Properties
     
     private let groupCallActor: GroupCallActor
-    private var groupCallContext: GroupCallContextProtocol
+    private let groupCallContext: GroupCallContextProtocol
     private let participantIDs: [UInt32]
+    private let emptyCallTimeout: EmptyCallTimeout
     
     // MARK: - Lifecycle
     
@@ -56,28 +57,25 @@ struct Connected: GroupCallState {
         participantIDs: [UInt32]
     ) {
         // TODO: (IOS-3857) Logging
-        DDLogNotice("[GroupCall] Init Connected \(groupCallActor.callID.bytes.hexEncodedString())")
+        DDLogNotice("[GroupCall] Init Connected \(groupCallActor.callID)")
         self.groupCallActor = groupCallActor
         self.groupCallContext = groupCallContext
         self.participantIDs = participantIDs
+        self.emptyCallTimeout = EmptyCallTimeout(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
     }
     
     func next() async throws -> GroupCallState? {
+        DDLogNotice("[GroupCall] Connected `next()` in \(groupCallActor.callID)")
         
         /// **Protocol Step: Group Call Join Steps**
-        /// 7.3 Add the call to the list of group calls that are currently considered running.
-        await groupCallActor.addSelfToCurrentlyRunningCalls()
+        /// 8. The group call is now considered established and should asynchronously
+        ///   invoke the SFU to Participant and Participant to Participant flows.
+        /// Note: This is done via the state change in the `GroupCallActor`.
         
-        /// 7.4 Asynchronously run the Group Call Refresh Steps
-        await groupCallActor.startRefreshSteps()
-        
-        /// **Protocol Step: Group Call Join Steps** 8. The group call is now considered established and should
-        /// asynchronously invoke the SFU to Participant and Participant to Participant flows. Note: This is done via
-        /// the state change in the `GroupCallActor`.
-        DDLogNotice("[GroupCall] State is Connected \(groupCallActor.callID.bytes.hexEncodedString())")
         if Task.isCancelled {
             // Teardown
             await groupCallContext.leave()
+            // TODO: (IOS-4124) Should we return here?
         }
         
         // We need to update the group call state, if we're alone in the call, or if we expect to be the lowest ID
@@ -86,6 +84,20 @@ struct Connected: GroupCallState {
         if participantIDs.isEmpty, participantIDs.filter({ $0 < groupCallContext.myParticipantID().id }).isEmpty {
             try groupCallContext.startStateUpdateTaskIfNecessary()
         }
+        
+        // Start timeout as there might be no existing participants in this call. It will be canceled if there is a
+        // successful handshake with any participant
+        emptyCallTimeout.start()
+        
+        // Add all initial participants
+        try await groupCallContext.updateParticipants(
+            add: participantIDs.map { ParticipantID(id: $0) },
+            remove: [],
+            existingParticipants: true
+        )
+        
+        // Start the handshakes if there are any participants
+        try sendInitialHandshakeHellos(to: groupCallContext.pendingParticipants)
         
         // Main process loop: All events are handled here
         processLoop: for await newValue in merge(
@@ -109,7 +121,7 @@ struct Connected: GroupCallState {
                     
                     switch result {
                     case .success:
-                        DDLogNotice("[GroupCall] Action \(uiAction) Processed")
+                        DDLogNotice("[GroupCall] Action \(uiAction) processed")
                     
                     case .ended:
                         break processLoop
@@ -121,21 +133,13 @@ struct Connected: GroupCallState {
                 DDLogError("[GroupCall] An error occurred \(error)")
                 throw error
             }
-            
-            DDLogNotice("[GroupCall] [DEBUG] End Process \(newValue.self)")
         }
         
-        return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
-    }
-    
-    func connectedConfirmed() async throws {
-        let ownAudioMuteState = await groupCallActor.viewModel.ownAudioMuteState
-        let ownVideoMuteState = await groupCallActor.viewModel.ownVideoMuteState
+        /// **Leave Call** 4. Stop sending video as soon as the leave starts...
+        await groupCallContext.stopAudioCapture()
+        await groupCallContext.stopVideoCapture()
         
-        try await groupCallContext.mapLocalTransceivers(
-            ownAudioMuteState: ownAudioMuteState,
-            ownVideoMuteState: ownVideoMuteState
-        )
+        return Ending(groupCallActor: groupCallActor, groupCallContext: groupCallContext)
     }
 }
 
@@ -162,11 +166,11 @@ extension Connected {
                 }
                 
                 DDLogError(
-                    "[GroupCall] An error occurred when sending initial handshake hello to participant with id \(pendingRemoteParticipant.participantID.id) \(error)"
+                    "[GroupCall] An error occurred when sending initial handshake hello to participant \(pendingRemoteParticipant.participantID): \(error)"
                 )
             }
             
-            DDLogNotice("[GroupCall] Sent participant handshake hello to \(pendingRemoteParticipant.participantID.id)")
+            DDLogNotice("[GroupCall] Sent participant handshake hello to \(pendingRemoteParticipant.participantID)")
         }
     }
 }
@@ -180,35 +184,17 @@ extension Connected {
             break
         
         // MARK: Local Participant
-
-        case .connectedConfirmed:
-            try await connectedConfirmed()
-            
-            try await groupCallContext.updateParticipants(
-                add: participantIDs.map { ParticipantID(id: $0) },
-                remove: [],
-                existingParticipants: true
-            )
-            
-            // TODO: (IOS-4685) This is currently called after some other Group Call Join Steps to work correctly
-            /// **Protocol Step: Group Call Join Steps** 6. If the hello.participants contains less than 4 items, set
-            /// the initial capture state of the microphone to on. We only do this if the microphone access was granted.
-            
-            if participantIDs.count < 4, AVAudioSession.sharedInstance().recordPermission == .granted {
-                await groupCallActor.toggleOwnAudio(false)
-            }
-            
-            try sendInitialHandshakeHellos(to: groupCallContext.pendingParticipants)
-            
-            return .success
         
         case .leave:
+            /// **Leave Call** 3. We start the ending of the call
             return .ended
             
         // Local video
         case .muteVideo:
+            await groupCallContext.stopVideoCapture()
+            groupCallActor.uiContinuation.yield(.videoMuteChange(.muted))
+            
             for participant in groupCallContext.joinedParticipants {
-                
                 let videoMuteMessage = try participant.videoMuteMessage()
                 let videoUnmuteEnvelope = groupCallContext.outerEnvelope(for: videoMuteMessage, to: participant)
                 
@@ -219,11 +205,11 @@ extension Connected {
                 let serialized = try outer.ownSerializedData()
                 groupCallContext.send(serialized)
             }
-            
-            await groupCallContext.stopVideoCapture()
-            groupCallActor.uiContinuation.yield(.videoMuteChange(.muted))
 
         case let .unmuteVideo(position):
+            try await groupCallContext.startVideoCapture(position: position)
+            groupCallActor.uiContinuation.yield(.videoMuteChange(.unmuted))
+            
             for participant in groupCallContext.joinedParticipants {
                 let videoUnmuteMessage = try participant.videoUnmuteMessage()
                 let videoUnmuteEnvelope = groupCallContext.outerEnvelope(for: videoUnmuteMessage, to: participant)
@@ -235,8 +221,6 @@ extension Connected {
                 let serialized = try outer.ownSerializedData()
                 groupCallContext.send(serialized)
             }
-            try await groupCallContext.startVideoCapture(position: position)
-            groupCallActor.uiContinuation.yield(.videoMuteChange(.unmuted))
         
         case let .switchCamera(position):
             try await groupCallContext.startVideoCapture(position: position)
@@ -244,6 +228,9 @@ extension Connected {
             
         // Local audio
         case .muteAudio:
+            await groupCallContext.stopAudioCapture()
+            groupCallActor.uiContinuation.yield(.audioMuteChange(.muted))
+            
             for participant in groupCallContext.joinedParticipants {
                 let audioUnmuteMessage = try participant.audioMuteMessage()
                 let audioMuteEnvelope = groupCallContext.outerEnvelope(for: audioUnmuteMessage, to: participant)
@@ -255,10 +242,11 @@ extension Connected {
                 let serialized = try outer.ownSerializedData()
                 groupCallContext.send(serialized)
             }
-            await groupCallContext.stopAudioCapture()
-            groupCallActor.uiContinuation.yield(.audioMuteChange(.muted))
 
         case .unmuteAudio:
+            await groupCallContext.startAudioCapture()
+            groupCallActor.uiContinuation.yield(.audioMuteChange(.unmuted))
+            
             for participant in groupCallContext.joinedParticipants {
                 let audioUnmuteMessage = try participant.audioUnmuteMessage()
                 let audioMuteEnvelope = groupCallContext.outerEnvelope(for: audioUnmuteMessage, to: participant)
@@ -270,8 +258,6 @@ extension Connected {
                 let serialized = try outer.ownSerializedData()
                 groupCallContext.send(serialized)
             }
-            await groupCallContext.startAudioCapture()
-            groupCallActor.uiContinuation.yield(.audioMuteChange(.unmuted))
         
         // MARK: Remote Participant
 
@@ -282,14 +268,14 @@ extension Connected {
                 DDLogError("Could not find participant with id \(participantID)")
                 return .success
             }
-            let answer = try remoteParticipant.subscribeVideo(subscribe: true)
+            let answer = remoteParticipant.subscribeVideo()
             try groupCallContext.send(answer)
         
         case let .unsubscribeVideo(participantID):
             DDLogNotice("Unsubscribe Video for \(participantID)")
 
             guard let remoteParticipant = groupCallContext.joinedParticipants
-                .first(where: { $0.participantID.id == participantID.id }) else {
+                .first(where: { $0.participantID == participantID }) else {
                 DDLogError("Could not find participant with id \(participantID)")
                 return .success
             }
@@ -318,11 +304,6 @@ extension Connected {
         case let .some(content):
             switch content {
             case let .relay(relay):
-                guard groupCallContext.verifyReceiver(for: relay) else {
-                    // TODO: (IOS-4124) What do we need to do here
-                    throw GroupCallError.badMessage
-                }
-                
                 DDLogNotice("[GroupCall] Message received from \(relay.sender)")
                 
                 switch try await groupCallContext.handle(relay) {
@@ -330,13 +311,13 @@ extension Connected {
                     try serializeAndSend(data, to: participant)
                     
                 case let .participantToSFU(envelope, participant, participantStateChange):
-                    try groupCallContext.send(envelope)
                     groupCallActor.uiContinuation
                         .yield(.participantStateChange(participant.participantID, participantStateChange))
+                    try groupCallContext.send(envelope)
                     
                 case let .muteStateChanged(participant, participantStateChange):
                     DDLogNotice(
-                        "[GroupCall] Participant \(participant.participantID.id) State changed to \(participantStateChange)"
+                        "[GroupCall] Participant \(participant.participantID) State changed to \(participantStateChange)"
                     )
                     groupCallActor.uiContinuation
                         .yield(.participantStateChange(participant.participantID, participantStateChange))
@@ -344,6 +325,10 @@ extension Connected {
                 case let .handshakeCompleted(participant):
                     try await handshakeCompleted(with: participant)
                     try groupCallContext.startStateUpdateTaskIfNecessary()
+                    
+                    if !groupCallContext.joinedParticipants.isEmpty {
+                        emptyCallTimeout.cancel()
+                    }
                     
                 case let .sendAuth(participant, data):
                     try serializeAndSend(data, to: participant)
@@ -354,10 +339,17 @@ extension Connected {
                     
                 case let .rekeyReceived(participant, mediaKeys):
                     try groupCallContext.rekeyReceived(from: participant, with: mediaKeys)
+                
+                case let .dropPendingParticipant(participantID):
+                    try await groupCallContext.updateParticipants(
+                        add: [],
+                        remove: [ParticipantID(id: participantID.id)],
+                        existingParticipants: false
+                    )
                     
                 case .none:
                     // No action necessary
-                    DDLogNotice("No action necessary")
+                    DDLogNotice("[GroupCall] No action necessary")
                 }
                 
             case .hello:
@@ -398,6 +390,10 @@ extension Connected {
                 try await groupCallContext.replaceAndApplyNewMediaKeys()
                 
                 try groupCallContext.startStateUpdateTaskIfNecessary()
+                
+                if !groupCallContext.hasAnyParticipants {
+                    emptyCallTimeout.start()
+                }
             }
         }
     }
@@ -408,6 +404,12 @@ extension Connected {
 extension Connected {
 
     private func handshakeCompleted(with participant: JoinedRemoteParticipant) async throws {
+        
+        /// **Protocol Step: Post-Handshake**
+        /// 1. Subscribe to the other participant's microphone feed (i.e. send a `ParticipantMicrophone` message to the
+        /// SFU).
+        try groupCallContext.send(participant.subscribeAudio())
+        
         // Add to view
         await groupCallActor.add(participant)
 
@@ -451,7 +453,7 @@ extension Connected {
 extension Connected {
     func getRemoteContext(for participantID: ParticipantID) async -> RemoteContext? {
         guard let remoteContext = await groupCallContext.participant(with: participantID)?.getRemoteContext() else {
-            DDLogWarn("[GroupCall] Remote context for participant \(participantID.id) was nil")
+            DDLogWarn("[GroupCall] Remote context for participant \(participantID) was nil")
             return nil
         }
         

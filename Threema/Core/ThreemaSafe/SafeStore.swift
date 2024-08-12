@@ -447,13 +447,13 @@ import ThreemaFramework
                 }
                 
                 let id = group.groupID.hexString
-                let creator: String
-                if group.isOwnGroup {
-                    creator = MyIdentityStore.shared().identity
-                }
-                else {
-                    creator = group.groupCreatorIdentity
-                }
+                let creator: String =
+                    if group.isOwnGroup {
+                        MyIdentityStore.shared().identity
+                    }
+                    else {
+                        group.groupCreatorIdentity
+                    }
                 
                 let name = group.name ?? ""
                 let members = Array(group.allMemberIdentities)
@@ -614,7 +614,7 @@ import ThreemaFramework
                     if let links = safeBackupData.user?.links,
                        !links.isEmpty {
                         
-                        links.forEach { link in
+                        for link in links {
                             if link.type == "mobile" {
                                 if var linkMobile = link.value {
                                     if !linkMobile.starts(with: "+") {
@@ -739,7 +739,7 @@ import ThreemaFramework
         if let bContacts = safeBackupData.contacts {
     
             var fetchIdentities = [String]()
-            bContacts.forEach { bContact in
+            for bContact in bContacts {
                 if let identity = bContact.identity {
                     fetchIdentities.append(identity)
                 }

@@ -58,26 +58,24 @@ class DateFormatterTests_de_DE: XCTestCase {
     let expectedRelativeLongStyleDateShortStyleTimeTomorrow_de_DE = "Morgen, 02:03"
     let expectedRelativeLongStyleDateShortStyleTimeToday_de_DE = "Heute, 13:14"
     
-    let expectedAccessibilityDateTime_de_DE: String = {
+    let expectedAccessibilityDateTime_de_DE =
         if #available(iOS 16.0, *) {
-            return "1. Februar 2020 um 13:14"
+            "1. Februar 2020 um 13:14"
         }
         else {
-            return "1. Februar 2020, 13:14"
+            "1. Februar 2020, 13:14"
         }
-    }()
     
-    let expectedAccessibilityRelativeDayTime_de_DE: String = {
+    let expectedAccessibilityRelativeDayTime_de_DE =
         if #available(iOS 17.4, *) {
-            return "1. Februar 2020 um 13:14"
+            "1. Februar 2020 um 13:14"
         }
         else if #available(iOS 17.0, *) {
-            return "1. Februar 2020, 13:14"
+            "1. Februar 2020, 13:14"
         }
         else {
-            return "1. Februar 2020 um 13:14"
+            "1. Februar 2020 um 13:14"
         }
-    }()
     
     // MARK: - Test formats provided by the system
     

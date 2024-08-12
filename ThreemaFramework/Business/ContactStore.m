@@ -61,6 +61,8 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     dispatch_queue_t syncQueue;
     id<UserSettingsProtocol> userSettings;
     EntityManager *entityManager;
+    // Workaround to prevent too many active synchornizations at the same time (IOS-4791)
+    BOOL addressBookChangeSynchronizationActive;
 }
 
 + (ContactStore*)sharedContactStore {
@@ -97,6 +99,8 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         /* update display/sort order prefs to match system */
         BOOL sortOrder = [[CNContactsUserDefaults sharedDefaults] sortOrder] == CNContactSortOrderGivenName;
         [userSettings setSortOrderFirstName:sortOrder];
+        
+        addressBookChangeSynchronizationActive = false;
     }
     return self;
 }
@@ -111,12 +115,21 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
 - (void)addressBookChangeDetected:(NSNotification *)notification {
     DDLogNotice(@"Address book change detected");
+    
+    if (addressBookChangeSynchronizationActive) {
+        DDLogNotice(@"Skip address book change synchronization, because one is already running...");
+        return;
+    }
+    
+    addressBookChangeSynchronizationActive = true;
     [self synchronizeAddressBookForceFullSync:NO onCompletion:^(BOOL addressBookAccessGranted) {
         [self updateAllContacts];
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationAddressbookSyncronized object:self userInfo:nil];
+        addressBookChangeSynchronizationActive = false;
     } onError:^(NSError *error) {
         [self updateAllContacts];
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationAddressbookSyncronized object:self userInfo:nil];
+        addressBookChangeSynchronizationActive = false;
     }];
 }
 
@@ -907,7 +920,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 #pragma mark - Fetch contact
 
 - (void)fetchPublicKeyForIdentity:(NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
-    [self fetchPublicKeyForIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:entityManager onCompletion:onCompletion onError:onError];
+    [self fetchPublicKeyForIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:entityManager ignoreBlockUnknown:false onCompletion:onCompletion onError:onError];
 }
 
 /**
@@ -919,7 +932,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
  @param onCompletion: Executed on background thread
  @param onError: Executed on arbitrary thread
  */
-- (void)fetchPublicKeyForIdentity:(NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject*)entityManagerObject onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)fetchPublicKeyForIdentity:(NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject*)entityManagerObject ignoreBlockUnknown:(BOOL)ignoreBlockUnknown onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
 
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject should be type of EntityManager");
     EntityManager *em = (EntityManager *)entityManagerObject;
@@ -932,10 +945,10 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         } else {
             
             if ([LicenseStore requiresLicenseKey]) {
-                [self fetchWorkPublicKeyForIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:em onCompletion:onCompletion onError:onError];
+                [self fetchWorkPublicKeyForIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:em ignoreBlockUnknown:ignoreBlockUnknown onCompletion:onCompletion onError:onError];
             } else {
                 // Block message if user is not in our subscription
-                if (userSettings.blockUnknown) {
+                if (userSettings.blockUnknown && ignoreBlockUnknown == false) {
                     DDLogVerbose(@"Block unknown contacts is on - discarding message");
                     onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:ThreemaProtocolErrorBlockUnknownContact]);
                 } else {
@@ -954,7 +967,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 /// @param entityManagerObject Must be type of `EntityManager`, is needed to run DB on main or background context
 /// @param onCompletion Executed on background thread
 /// @param onError Executed on arbitrary thread
-- (void)fetchWorkPublicKeyForIdentity:(nonnull NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(nonnull NSObject*)entityManagerObject onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)fetchWorkPublicKeyForIdentity:(nonnull NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(nonnull NSObject*)entityManagerObject ignoreBlockUnknown:(BOOL)ignoreBlockUnknown onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
     EntityManager *em = (EntityManager *)entityManagerObject;
     
     [self fetchWorkIdentities:@[identity] onCompletion:^(NSArray *foundIdentities) {
@@ -1007,7 +1020,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             }
             
             // Block message if user is not in our subscription
-            if (userSettings.blockUnknown) {
+            if (userSettings.blockUnknown && ignoreBlockUnknown == false) {
                 DDLogVerbose(@"Block unknown contacts is on and contact not found in work list - discarding message");
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:ThreemaProtocolErrorBlockUnknownContact]);
@@ -1296,14 +1309,14 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
      and phone numbers and send to the server. */
     if (!userSettings.syncContacts) {
         DDLogInfo(@"Contact sync is disabled");
-        [self processStatusUpdateOnlyWithIgnoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
+        [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
         return;
     }
 
     CNContactStore *cnAddressBook = [CNContactStore new];
     if (cnAddressBook == nil) {
         DDLogInfo(@"Address book not found");
-        [self processStatusUpdateOnlyWithIgnoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
+        [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
         return;
     }
 
@@ -1313,7 +1326,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 [self synchronizeAddressBookForceFullSync:forceFullSync onCompletion:onCompletion onError:onError];
             } else {
                 DDLogInfo(@"Address book access has NOT been granted: %@", error);
-                [self processStatusUpdateOnlyWithIgnoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
+                [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
             }
         }];
         return;
@@ -1374,15 +1387,27 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 /**
  Process status request/update to all contacts.
 
+ @param fullServerSync: If true do MD sync of all contacts
  @param ignoreMinimumInterval: True contact status request/update will be called anyway
  @param onCompletion: Completion handler
  @param onError: Error handler
  */
-- (void)processStatusUpdateOnlyWithIgnoreMinimumInterval:(BOOL)ignoreMinimumInterval onCompletion:(void(^)(BOOL addressBookAccessGranted))onCompletion onError:(void(^)(NSError * _Nonnull))onError {
+- (void)processStatusUpdateOnlyWithFullServerSync:(BOOL)fullServerSync ignoreMinimumInterval:(BOOL)ignoreMinimumInterval onCompletion:(void(^)(BOOL addressBookAccessGranted))onCompletion onError:(void(^)(NSError * _Nonnull))onError {
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^{
         MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
         [self updateStatusForAllContactsIgnoreInterval:ignoreMinimumInterval contactSyncer:mediatorSyncableContacts onCompletion:^{
+            if (fullServerSync && mediatorSyncableContacts) {
+                // Sync all contacts when server full sync was called
+                EntityManager *backgroundEntityManager = [[EntityManager alloc] initWithChildContextForBackgroundProcess:YES];
+                [backgroundEntityManager performBlockAndWait:^{
+                    NSArray *allContacts = [backgroundEntityManager.entityFetcher allContacts];
+                    for (ContactEntity *contact in allContacts) {
+                        [mediatorSyncableContacts updateAllWithIdentity:contact.identity added:NO];
+                    }
+                }];
+            }
+
             [mediatorSyncableContacts syncObjcWithCompletionHandler:^(NSError * _Nullable error) {
                 if (error == nil) {
                     if (onCompletion != nil) {
@@ -1406,7 +1431,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
  Process address book contacts and status request/update to all contacts.
 
  @param contacts: Address book contacts to add or update as Threema contact
- @param fullServerSync: True sync all address book contacts otherwise just the new ones
+ @param fullServerSync: True sync all address book contacts otherwise just the new ones (If true do MD sync of all contacts)
  @param ignoreMinimumInterval: True contact status request/update will be called anyway
  @param onCompletion: Completion handler
  @param onError: Error handler
@@ -1825,9 +1850,14 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 
                 NSString *identityString = [identities objectAtIndex:i];
                 ContactEntity *contact = [entityManager.entityFetcher contactForId: identityString];
-                if (![contact.state isEqualToNumber:state]) {
-                    contact.state = state;
-                    [mediatorSyncableContacts updateStateWithIdentity:contact.identity value:contact.state];
+                if ([ProcessInfoHelper isRunningForScreenshots]) {
+                    // do not update active/inactive state for screenshots
+                }
+                else {
+                    if (![contact.state isEqualToNumber:state]) {
+                        contact.state = state;
+                        [mediatorSyncableContacts updateStateWithIdentity:contact.identity value:contact.state];
+                    }
                 }
                 
                 if ([type isEqualToNumber:@1]) {
@@ -2136,9 +2166,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
 #pragma mark - Multi Device Sync
 
-- (void)reflectContact:(ContactEntity *)contact {
+- (void)reflectContact:(NSString *)identity {
     MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-    [mediatorSyncableContacts updateAllWithIdentity:contact.identity added:NO];
+    [mediatorSyncableContacts updateAllWithIdentity:identity added:NO];
     [mediatorSyncableContacts syncAsync];
 }
 

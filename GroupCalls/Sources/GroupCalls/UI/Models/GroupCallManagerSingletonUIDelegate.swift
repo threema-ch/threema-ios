@@ -23,7 +23,7 @@ import Foundation
 import UIKit
 
 /// Protocol used to show alerts and view controllers from the GroupCalls package in the Threema-App via the
-/// `GlobalGroupCallsManagerSingleton`
+/// `GlobalGroupCallManagerSingleton`
 public protocol GroupCallManagerSingletonUIDelegate: AnyObject {
     /// Tries to present the given `GroupCallViewController`
     /// - Parameter viewController: `GroupCallViewController` to be shown

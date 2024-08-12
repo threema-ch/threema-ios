@@ -29,11 +29,11 @@ public class ThreemaEnvironment: NSObject {
         public var shortDescription: String {
             switch self {
             case .appStore:
-                return ""
+                ""
             case .testFlight:
-                return "-T"
+                "-T"
             case .xcode:
-                return "-X"
+                "-X"
             }
         }
         
@@ -99,6 +99,9 @@ public class ThreemaEnvironment: NSObject {
     #endif
     
     static var fsDebugStatusMessages: Bool {
+        if ProcessInfoHelper.isRunningForScreenshots {
+            return false
+        }
         #if DEBUG
             return true
         #else
@@ -112,6 +115,9 @@ public class ThreemaEnvironment: NSObject {
     // MARK: Distribution list
     
     @objc static var distributionListsActive: Bool {
+        if ProcessInfoHelper.isRunningForScreenshots {
+            return false
+        }
         #if DEBUG
             return true
         #else
@@ -122,15 +128,11 @@ public class ThreemaEnvironment: NSObject {
     // MARK: Delete & edit messages
     
     @objc public static var deleteEditMessage: Bool {
-        #if DEBUG
-            true
-        #else
-            if ThreemaApp.current == .green || ThreemaApp.current == .blue {
-                return true
-            }
-
+        if ProcessInfoHelper.isRunningForScreenshots {
             return false
-        #endif
+        }
+ 
+        return true
     }
 
     // MARK: CallKit

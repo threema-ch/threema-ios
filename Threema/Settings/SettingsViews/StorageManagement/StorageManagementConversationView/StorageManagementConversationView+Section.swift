@@ -31,33 +31,33 @@ extension StorageManagementConversationView {
         var localizedTitle: String {
             switch self {
             case .messages:
-                return "messages".localized
+                "messages".localized
             case .files:
-                return "files".localized
+                "files".localized
             case .messageRetention:
-                return "automatic_delete".localized
+                "automatic_delete".localized
             }
         }
         
         var localizedDescription: String {
             switch self {
             case .messages:
-                return "delete_messages_explain".localized
+                "delete_messages_explain".localized
             case .files:
-                return "delete_explain".localized
+                "delete_explain".localized
             case .messageRetention:
-                return "automatic_delete_explain".localized
+                "automatic_delete_explain".localized
             }
         }
         
         var symbol: String {
             switch self {
             case .messages:
-                return "envelope"
+                "envelope"
             case .files:
-                return "doc"
+                "doc"
             case .messageRetention:
-                return "xmark.bin"
+                "xmark.bin"
             }
         }
     }

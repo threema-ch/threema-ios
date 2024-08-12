@@ -161,6 +161,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             switch section {
             case .activeDND:
                 return strongSelf.offHoursDescription
+                
             case .notifyWhenMentionedSetting:
                 if strongSelf.pushSetting.mentioned {
                     return BundleUtil.localizedString(forKey: "doNotDisturb_mention_footer_on")
@@ -168,6 +169,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
                 else {
                     return BundleUtil.localizedString(forKey: "doNotDisturb_mention_footer_off")
                 }
+                
             case .notificationPlaySoundSetting:
                 return BundleUtil.localizedString(forKey: "doNotDisturb_notification_sound_footer")
                 

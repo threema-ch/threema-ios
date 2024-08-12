@@ -32,7 +32,7 @@ struct SettingsView: View {
             ThreemaTableView {
                 FeedbackDevSection()
                 GeneralSection()
-                CallWebSection()
+                DesktopSection()
                 ConnectionSection()
                 #if !THREEMA_WORK && !THREEMA_ONPREM
                     if !LicenseStore.requiresLicenseKey() {
@@ -55,6 +55,9 @@ struct SettingsView: View {
         .environmentObject(settingsStore)
         .onReceive(\.showNotificationSettings) { _ in
             settingsViewModel.navigator.navigate(NotificationSettingsView())
+        }
+        .onReceive(\.showDesktopSettings) { _ in
+            settingsViewModel.navigator.navigate(LinkedDevicesView())
         }
     }
 }

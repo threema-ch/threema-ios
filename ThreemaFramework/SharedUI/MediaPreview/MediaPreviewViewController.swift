@@ -149,6 +149,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         for item in mediaData {
             item.freeMemory()
         }
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: kMediaPreviewPauseVideo), object: nil)
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -554,6 +555,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         guard let indexPath = getCurrentlyVisibleItem() else {
             return
         }
+        
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: kMediaPreviewPauseVideo), object: nil)
         
         mediaData[indexPath.item].removeItem()
         

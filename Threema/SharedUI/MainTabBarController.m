@@ -579,7 +579,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
         }
         
-        if (_distributionListDetailViewController._distributionList.conversation == deletedConversation) {
+        // TODO: (IOS-4366) Re-add if logic
+        if (false) {
             _distributionListDetailViewController = nil;
             if (self.selectedIndex == kContactsTabBarIndex) {
                 [self switchContact];

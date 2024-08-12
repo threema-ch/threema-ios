@@ -81,22 +81,22 @@ class MediatorSyncableContacts: NSObject {
                 guard let contact = anyContact as? ContactEntity else {
                     continue
                 }
-                
+
                 var newDeltaSyncContact = DeltaSyncContact()
                 self.loadAndUpdateAll(contact, delta: &newDeltaSyncContact, added: true, withoutProfileImage: false)
-                
+
                 // Load the pictures if they are available as they need to be directly sent during device join
-                
+
                 if newDeltaSyncContact.profilePicture == .updated,
                    let imageData = contact.imageData {
                     newDeltaSyncContact.image = imageData
                 }
-                
+
                 if newDeltaSyncContact.contactProfilePicture == .updated,
                    let imageData = contact.contactImage?.data {
                     newDeltaSyncContact.contactImage = imageData
                 }
-                
+
                 allDeltaContacts.append(newDeltaSyncContact)
             }
         }
@@ -152,8 +152,21 @@ class MediatorSyncableContacts: NSObject {
         delta.syncContact.update(identityType: workIdentities.contains(contactEntity.identity) ? .work : .regular)
 
         if !withoutProfileImage {
-            delta.profilePicture = contactEntity.imageData != nil ? .updated : .removed
-            delta.contactProfilePicture = contactEntity.contactImage?.data != nil ? .updated : .removed
+            if let imageData = contactEntity.imageData {
+                delta.profilePicture = .updated
+                delta.image = imageData
+            }
+            else {
+                delta.profilePicture = .removed
+            }
+
+            if let contactImageData = contactEntity.contactImage?.data {
+                delta.contactProfilePicture = .updated
+                delta.contactImage = contactImageData
+            }
+            else {
+                delta.contactProfilePicture = .removed
+            }
         }
 
         if let conversation = entityManager.entityFetcher.conversation(for: contactEntity) {

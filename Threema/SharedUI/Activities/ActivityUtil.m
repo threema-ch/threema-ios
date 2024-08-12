@@ -27,20 +27,9 @@
 
 
 + (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withView:(UIView *)view andBarButtonItem:(UIBarButtonItem *)barButtonItem {
-    
-    TTOpenInAppActivity *openInAppActivity = [[TTOpenInAppActivity alloc] initWithView:view andBarButtonItem:barButtonItem];
-    
-    return [self activityViewControllerForMessage:message withTTOpenInAppActivity:openInAppActivity];
-}
-
-+ (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withTTOpenInAppActivity:(TTOpenInAppActivity *)openInAppActivity {
     MessageActivityItem *item = [MessageActivityItem activityItemFor: message];
     
-    NSMutableArray *applicationActivities = [NSMutableArray arrayWithObject:openInAppActivity];
-    [applicationActivities addObject:openInAppActivity];
-    
-    UIActivityViewController *activityViewController = [[UIActivityViewController alloc] initWithActivityItems:@[item] applicationActivities:applicationActivities];
-    openInAppActivity.superViewController = activityViewController;
+    UIActivityViewController *activityViewController = [[UIActivityViewController alloc] initWithActivityItems:@[item] applicationActivities:nil];
     activityViewController.completionWithItemsHandler = ^(NSString *activityType, BOOL completed, NSArray *returnedItems, NSError *activityError) {
         
         NSURL *tmpFileUrl = [item getURL];
@@ -50,7 +39,6 @@
     };
     
     return activityViewController;
-
 }
 
 + (UIActivityViewController *)activityViewControllerWithActivityItems:(NSArray *)activityItems applicationActivities:(NSArray *)applicationActivities {

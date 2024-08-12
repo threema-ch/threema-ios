@@ -23,6 +23,7 @@ import ThreemaProtocols
 
 enum MessageResponseAction {
     case none
+    case dropPendingParticipant(ParticipantID)
     
     case epHelloAndAuth(PendingRemoteParticipant, (Data, Data))
     case sendAuth(PendingRemoteParticipant, Data)

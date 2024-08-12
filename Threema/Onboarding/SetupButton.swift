@@ -42,11 +42,11 @@ import UIKit
     
     var deactivated: Bool {
         set {
-            self.isEnabled = !newValue
+            isEnabled = !newValue
             setup()
         }
         get {
-            self.isEnabled
+            isEnabled
         }
     }
 

@@ -34,14 +34,13 @@ import Foundation
         from: BoxVoIPCallHangupMessage,
         contactIdentity: String
     ) -> VoIPCallHangupMessage? {
-        let msg: VoIPCallHangupMessage?
-        
-        if let jsonData = from.jsonData {
-            msg = decode(jsonData)
-        }
-        else {
-            msg = VoIPCallHangupMessage(callID: VoIPCallID(callID: nil), completion: nil)
-        }
+        let msg: VoIPCallHangupMessage? =
+            if let jsonData = from.jsonData {
+                decode(jsonData)
+            }
+            else {
+                VoIPCallHangupMessage(callID: VoIPCallID(callID: nil), completion: nil)
+            }
         msg?.contactIdentity = contactIdentity
         msg?.date = from.date
         
@@ -57,14 +56,13 @@ import Foundation
         from: BoxVoIPCallRingingMessage,
         contactIdentity: String
     ) -> VoIPCallRingingMessage? {
-        let msg: VoIPCallRingingMessage?
-        
-        if let jsonData = from.jsonData {
-            msg = decode(jsonData)
-        }
-        else {
-            msg = VoIPCallRingingMessage(callID: VoIPCallID(callID: nil), completion: nil)
-        }
+        let msg: VoIPCallRingingMessage? =
+            if let jsonData = from.jsonData {
+                decode(jsonData)
+            }
+            else {
+                VoIPCallRingingMessage(callID: VoIPCallID(callID: nil), completion: nil)
+            }
         msg?.contactIdentity = contactIdentity
         
         return msg

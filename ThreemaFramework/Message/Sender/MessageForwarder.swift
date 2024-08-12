@@ -46,11 +46,6 @@ public final class MessageForwarder {
         additionalText: String?
     ) {
         
-        if let distributionList = conversation.distributionList {
-            forwardToDistributionList(message, to: distributionList, additionalText: additionalText)
-            return
-        }
-        
         switch message {
         case let textMessage as TextMessage:
             businessInjector.messageSender.sendTextMessage(
@@ -179,127 +174,6 @@ public final class MessageForwarder {
                     DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
                 }
             }
-            
-        default:
-            DDLogError("[MessageForwarder] Unsupported message type received.")
-        }
-    }
-    
-    private func forwardToDistributionList(
-        _ message: BaseMessage,
-        to distributionList: DistributionListEntity,
-        additionalText: String?
-    ) {
-        
-        guard let distributionListConversation = distributionList.conversation else {
-            return
-        }
-        // Forward to all recipients
-        for recipient in distributionListConversation.members {
-            guard let recipientConversation = recipient.conversations?.first as? Conversation else {
-                continue
-            }
-            forward(message, to: recipientConversation, sendAsFile: false, additionalText: additionalText)
-        }
-        
-        let dlSender = DistributionListMessageSender(businessInjector: businessInjector)
-        // Then save it to the distribution list itself
-        switch message {
-        case let textMessage as TextMessage:
-            dlSender.safeTextMessage(text: textMessage.text, to: distributionListConversation)
-            
-        case let locationMessage as LocationMessage:
-            let coordinates = CLLocationCoordinate2DMake(
-                locationMessage.latitude.doubleValue,
-                locationMessage.longitude.doubleValue
-            )
-            let accuracy = locationMessage.accuracy.doubleValue
-            
-            dlSender.safeLocationMessage(
-                coordinates: coordinates,
-                accuracy: accuracy,
-                poiName: locationMessage.poiName,
-                poiAddress: locationMessage.poiAddress,
-                to: distributionListConversation
-            )
-            
-        case let fileMessage as FileMessageEntity:
-            let renderType = fileMessage.type
-            
-            guard let item = URLSenderItem(
-                data: fileMessage.data?.data,
-                fileName: fileMessage.fileName,
-                type: fileMessage.blobUTTypeIdentifier,
-                renderType: renderType,
-                sendAsFile: true
-            ) else {
-                DDLogError("[MessageForwarder] Could not create URLSenderItem.")
-                return
-            }
-            
-            if let caption = additionalText {
-                item.caption = caption
-            }
-            
-            dlSender.safeBlobMessage(for: item, to: distributionListConversation)
-            
-        case let audioMessage as AudioMessageEntity:
-            let type = kUTTypeAudio as String
-            
-            guard let audio = audioMessage.audio,
-                  let data = audio.data,
-                  let item = URLSenderItem(
-                      data: data,
-                      fileName: audio.getFilename(),
-                      type: type,
-                      renderType: 1,
-                      sendAsFile: true
-                  ) else {
-                DDLogError("[MessageForwarder] Could not create URLSenderItem.")
-                return
-            }
-            
-            dlSender.safeBlobMessage(for: item, to: distributionListConversation)
-      
-        case let imageMessage as ImageMessageEntity:
-            guard let image = imageMessage.image,
-                  let data = image.data,
-                  let item = URLSenderItem(
-                      data: data,
-                      fileName: image.getFilename(),
-                      type: imageMessage.blobUTTypeIdentifier,
-                      renderType: 1,
-                      sendAsFile: true
-                  ) else {
-                DDLogError("[MessageForwarder] Could not create URLSenderItem.")
-                return
-            }
-            
-            if let caption = additionalText {
-                item.caption = caption
-            }
-            
-            dlSender.safeBlobMessage(for: item, to: distributionListConversation)
-            
-        case let videoMessage as VideoMessageEntity:
-            guard let video = videoMessage.video,
-                  let data = video.data,
-                  let item = URLSenderItem(
-                      data: data,
-                      fileName: video.getFilename(),
-                      type: videoMessage.blobUTTypeIdentifier,
-                      renderType: 1,
-                      sendAsFile: true
-                  ) else {
-                DDLogError("[MessageForwarder] Could not create URLSenderItem.")
-                return
-            }
-            
-            if let caption = additionalText {
-                item.caption = caption
-            }
-            
-            dlSender.safeBlobMessage(for: item, to: distributionListConversation)
             
         default:
             DDLogError("[MessageForwarder] Unsupported message type received.")

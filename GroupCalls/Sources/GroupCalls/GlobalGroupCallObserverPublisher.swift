@@ -26,5 +26,5 @@ import ThreemaProtocols
 public final class GlobalGroupCallObserverPublisher: @unchecked Sendable {
     public lazy var groupCallListChangePublisher = source.share()
     
-    let source = PassthroughSubject<GroupCallsThreemaGroupModel, Never>()
+    let source = PassthroughSubject<GroupCallThreemaGroupModel, Never>()
 }

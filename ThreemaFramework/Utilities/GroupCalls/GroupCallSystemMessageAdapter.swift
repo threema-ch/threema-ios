@@ -39,7 +39,7 @@ final class GroupCallSystemMessageAdapter<BusinessInjectorImpl: BusinessInjector
 // MARK: - GroupCallSystemMessageAdapterProtocol
 
 extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
-    func post(_ systemMessage: GroupCallsSystemMessage, in groupModel: GroupCallsThreemaGroupModel) async throws {
+    func post(_ systemMessage: GroupCallSystemMessage, in groupModel: GroupCallThreemaGroupModel) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             self.businessInjector.entityManager.performAsyncBlockAndSafe {
                 guard let conversation = self.businessInjector.entityManager.entityFetcher.conversation(

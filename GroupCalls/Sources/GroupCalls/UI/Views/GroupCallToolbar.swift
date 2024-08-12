@@ -36,6 +36,7 @@ class GroupCallToolbar: UIView {
         let action = UIAction { [weak self] _ in
             self?.didTapToggleVideoButton()
         }
+        configuration.activityIndicatorColorTransformer = .grayscale
         
         let button = UIButton(configuration: configuration, primaryAction: action)
         
@@ -63,7 +64,7 @@ class GroupCallToolbar: UIView {
             
             var config = button.configuration
             
-            switch self.viewModel.ownVideoMuteState {
+            switch viewModel.ownVideoMuteState {
             case .changing:
                 button.accessibilityLabel = nil
                 config?.showsActivityIndicator = true
@@ -120,7 +121,7 @@ class GroupCallToolbar: UIView {
             guard let self else {
                 return
             }
-            button.isHidden = self.viewModel.ownVideoMuteState == .muted
+            button.isHidden = viewModel.ownVideoMuteState == .muted
             button.tintColor = toolbarButtonConfig.smallerButtonTint
             button.backgroundColor = toolbarButtonConfig.smallerButtonBackground
         }
@@ -153,7 +154,7 @@ class GroupCallToolbar: UIView {
         )
         
         let action = UIAction { [weak self] _ in
-            self?.viewModel.leaveCall()
+            self?.viewModel.leaveCallButtonTapped()
         }
         
         let button = UIButton(configuration: configuration, primaryAction: action)
@@ -198,6 +199,7 @@ class GroupCallToolbar: UIView {
             systemName: "mic.slash",
             withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
         )
+        configuration.activityIndicatorColorTransformer = .grayscale
         
         let action = UIAction { [weak self] _ in
             self?.didTapToggleAudioButton()
@@ -228,7 +230,7 @@ class GroupCallToolbar: UIView {
             
             var config = button.configuration
             
-            switch self.viewModel.ownAudioMuteState {
+            switch viewModel.ownAudioMuteState {
             case .changing:
                 button.accessibilityLabel = nil
                 config?.showsActivityIndicator = true

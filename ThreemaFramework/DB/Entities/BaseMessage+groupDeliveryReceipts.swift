@@ -76,6 +76,13 @@ extension BaseMessage {
     }
     
     @objc public func add(groupDeliveryReceipt: GroupDeliveryReceipt) {
+       
+        // Do not save acks/decs for deleted messages
+        if groupDeliveryReceipt.deliveryReceiptType() == .acknowledged || groupDeliveryReceipt
+            .deliveryReceiptType() == .declined, deletedAt != nil {
+            return
+        }
+            
         if groupDeliveryReceipts == nil {
             groupDeliveryReceipts = [GroupDeliveryReceipt]()
         }

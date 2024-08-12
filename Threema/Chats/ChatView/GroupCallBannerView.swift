@@ -151,16 +151,16 @@ final class GroupCallBannerView: UIView {
             }
             else {
                 // Only show participants if there are more than 0 reported
-                let localizedParticipantsText: String
-                if update.numberOfParticipants > 0 {
-                    localizedParticipantsText = String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "group_call_participants_title"),
-                        String(update.numberOfParticipants)
-                    )
-                }
-                else {
-                    localizedParticipantsText = BundleUtil.localizedString(forKey: "group_call_title")
-                }
+                let localizedParticipantsText: String =
+                    if update.numberOfParticipants > 0 {
+                        String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "group_call_participants_title"),
+                            String(update.numberOfParticipants)
+                        )
+                    }
+                    else {
+                        BundleUtil.localizedString(forKey: "group_call_title")
+                    }
 
                 participantsLabel.text = localizedParticipantsText
 

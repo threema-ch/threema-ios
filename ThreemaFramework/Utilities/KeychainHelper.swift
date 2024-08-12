@@ -32,11 +32,11 @@ public final class KeychainHelper {
         var label: String {
             switch self {
             case .deviceGroupKey:
-                return "Threema Device Group Key 1"
+                "Threema Device Group Key 1"
             case .threemaSafeKey:
-                return "Threema Safe Key"
+                "Threema Safe Key"
             case .threemaSafeServer:
-                return "Threema Safe Server"
+                "Threema Safe Server"
             }
         }
 
@@ -47,9 +47,9 @@ public final class KeychainHelper {
         func account(for identity: ThreemaIdentity) -> String {
             switch self {
             case .deviceGroupKey:
-                return "\(identity.string)-dgk"
+                "\(identity.string)-dgk"
             case .threemaSafeKey, .threemaSafeServer:
-                return "\(identity.string)-safe"
+                "\(identity.string)-safe"
             }
         }
     }

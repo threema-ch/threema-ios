@@ -43,13 +43,13 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
                 guard let strongSelf = self else {
                     return
                 }
-                var avatarImageData: Data?
-                if UserSettings.shared().showProfilePictures {
-                    avatarImageData = strongSelf.contact.contactImage?.data
-                }
-                else {
-                    avatarImageData = strongSelf.contact.imageData
-                }
+                let avatarImageData: Data? =
+                    if UserSettings.shared().showProfilePictures {
+                        strongSelf.contact.contactImage?.data
+                    }
+                    else {
+                        strongSelf.contact.imageData
+                    }
                 
                 guard let avatarData = avatarImageData,
                       let avatarImage = UIImage(data: avatarData) else {

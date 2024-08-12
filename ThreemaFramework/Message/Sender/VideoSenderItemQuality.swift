@@ -26,17 +26,17 @@ public enum VideoSenderItemQuality: String, CaseIterable {
     public var maxDurationInMinutes: Int64 {
         switch self {
         case .low:
-            return VideoConversionHelper.getMaxdurationInMinutes(
+            VideoConversionHelper.getMaxdurationInMinutes(
                 videoBitrate: Int64(kVideoBitrateLow),
                 audioBitrate: Int64(kAudioBitrateLow)
             )
         case .high:
-            return VideoConversionHelper.getMaxdurationInMinutes(
+            VideoConversionHelper.getMaxdurationInMinutes(
                 videoBitrate: Int64(kVideoBitrateHigh),
                 audioBitrate: Int64(kAudioBitrateHigh)
             )
         case .original:
-            return 0
+            0
         }
     }
 }

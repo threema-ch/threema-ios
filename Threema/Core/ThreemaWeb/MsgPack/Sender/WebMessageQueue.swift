@@ -26,30 +26,15 @@ protocol WebMessageQueueDelegate: AnyObject {
     func connectionStatus() -> WCConnectionState?
 }
 
-class WebMessageQueue: NSObject, NSCoding {
-    
+class WebMessageQueue: NSObject {
     weak var delegate: WebMessageQueueDelegate?
+    /// `Any` must only be `Data` or `Bool`
     var queue: [[String: Any]]
     var dispatchQueue: DispatchQueue
     
     override public init() {
         self.queue = [[String: Any]]()
         self.dispatchQueue = DispatchQueue(label: "ch.threema.webClientResponseQueue", attributes: [])
-    }
-    
-    // MARK: NSCoding
-
-    public required init?(coder aDecoder: NSCoder) {
-        // super.init(coder:) is optional, see notes below
-        self.delegate = aDecoder.decodeObject(forKey: "delegate") as? WebMessageQueueDelegate
-        self.queue = aDecoder.decodeObject(forKey: "queue") as! [[String: Any]]
-        self.dispatchQueue = DispatchQueue(label: "ch.threema.webClientResponseQueue", attributes: [])
-    }
-    
-    public func encode(with aCoder: NSCoder) {
-        // super.encodeWithCoder(aCoder) is optional, see notes below
-        aCoder.encode(delegate, forKey: "delegate")
-        aCoder.encode(queue, forKey: "queue")
     }
 }
 

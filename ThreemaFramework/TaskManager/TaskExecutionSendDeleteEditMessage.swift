@@ -176,7 +176,9 @@ final class TaskExecutionSendDeleteEditMessage: TaskExecution, TaskExecutionProt
                                     DDLogError("Delete message content failed: \(error)")
                                 }
 
-                                message.conversation.updateLastMessage(with: self.frameworkInjector.entityManager)
+                                message.conversation.updateLastDisplayMessage(
+                                    with: self.frameworkInjector.entityManager
+                                )
                             }
                         }
                         else if task.editMessage != nil {

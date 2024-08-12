@@ -184,6 +184,10 @@ public class Contact: NSObject {
     // bad naming because of the history...
     private(set) var isWorkContact: Bool
 
+    public var hasGatewayID: Bool {
+        identity.isGatewayID
+    }
+    
     private(set) var isForwardSecurityAvailable: Bool
     
     private var workAdjustedVerificationLevel: Int {
@@ -203,34 +207,34 @@ public class Contact: NSObject {
 
     var verificationLevelImageSmall: UIImage {
         switch workAdjustedVerificationLevel {
-        case 0: return StyleKit.verificationSmall0
-        case 1: return StyleKit.verificationSmall1
-        case 2: return StyleKit.verificationSmall2
-        case 3: return StyleKit.verificationSmall3
-        case 4: return StyleKit.verificationSmall4
-        default: return StyleKit.verificationSmall0
+        case 0: StyleKit.verificationSmall0
+        case 1: StyleKit.verificationSmall1
+        case 2: StyleKit.verificationSmall2
+        case 3: StyleKit.verificationSmall3
+        case 4: StyleKit.verificationSmall4
+        default: StyleKit.verificationSmall0
         }
     }
 
     var verificationLevelImage: UIImage {
         switch workAdjustedVerificationLevel {
-        case 0: return StyleKit.verification0
-        case 1: return StyleKit.verification1
-        case 2: return StyleKit.verification2
-        case 3: return StyleKit.verification3
-        case 4: return StyleKit.verification4
-        default: return StyleKit.verification0
+        case 0: StyleKit.verification0
+        case 1: StyleKit.verification1
+        case 2: StyleKit.verification2
+        case 3: StyleKit.verification3
+        case 4: StyleKit.verification4
+        default: StyleKit.verification0
         }
     }
 
     var verificationLevelImageBig: UIImage {
         switch workAdjustedVerificationLevel {
-        case 0: return StyleKit.verificationBig0
-        case 1: return StyleKit.verificationBig1
-        case 2: return StyleKit.verificationBig2
-        case 3: return StyleKit.verificationBig3
-        case 4: return StyleKit.verificationBig4
-        default: return StyleKit.verificationBig0
+        case 0: StyleKit.verificationBig0
+        case 1: StyleKit.verificationBig1
+        case 2: StyleKit.verificationBig2
+        case 3: StyleKit.verificationBig3
+        case 4: StyleKit.verificationBig4
+        default: StyleKit.verificationBig0
         }
     }
 
@@ -238,17 +242,17 @@ public class Contact: NSObject {
     var verificationLevelAccessibilityLabel: String {
         switch workAdjustedVerificationLevel {
         case 0:
-            return Contact.workAdjustedVerificationLevelString0
+            Contact.workAdjustedVerificationLevelString0
         case 1:
-            return Contact.workAdjustedVerificationLevelString1
+            Contact.workAdjustedVerificationLevelString1
         case 2:
-            return Contact.workAdjustedVerificationLevelString2
+            Contact.workAdjustedVerificationLevelString2
         case 3:
-            return Contact.workAdjustedVerificationLevelString3
+            Contact.workAdjustedVerificationLevelString3
         case 4:
-            return Contact.workAdjustedVerificationLevelString4
+            Contact.workAdjustedVerificationLevelString4
         default:
-            return Contact.workAdjustedVerificationLevelString0
+            Contact.workAdjustedVerificationLevelString0
         }
     }
     

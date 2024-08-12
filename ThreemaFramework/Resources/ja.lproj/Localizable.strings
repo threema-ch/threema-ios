@@ -84,7 +84,7 @@
 "mediapreview_options" = "オプション";
 
 "testflight_feedback_title" = "ベータ版のフィードバックを私たちに送ってください！";
-"testflight_feedback_description" = "バグや不具合が発生しましたら、ぜひお知らせください。こちらをタップしてベータ版チャットを開いてください。";
+"testflight_feedback_description" = "バグや不具合が発生したら、お知らせください。こちらをタップしてベータ版トークを開いてください。";
 
 "notification.threemaweb.connect.title" = "デスクトップ／ウェブ";
 "notification.threemaweb.connect.body" = "ここをタップすると、デスクトップアプリ／ウェブクライアントとの接続が再確立されます。";

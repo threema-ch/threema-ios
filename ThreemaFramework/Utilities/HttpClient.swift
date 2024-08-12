@@ -55,7 +55,6 @@ public class HTTPClient: NSObject {
 
     fileprivate var user: String?
     fileprivate var password: String?
-    private let authenticationMethod: String?
     private let authorization: String?
     private let urlSessionManager: URLSessionManager
     fileprivate let sslCAHelper: SSLCAHelperProtocol
@@ -76,10 +75,6 @@ public class HTTPClient: NSObject {
         if let user, let password {
             self.user = user
             self.password = password
-            self.authenticationMethod = NSURLAuthenticationMethodHTTPBasic
-        }
-        else {
-            self.authenticationMethod = NSURLAuthenticationMethodDefault
         }
         self.authorization = authorization
         self.urlSessionManager = sessionManager
@@ -339,9 +334,9 @@ extension HTTPClient: URLSessionTaskDelegate {
     }
 }
 
-// MARK: - GroupCallsHTTPClientAdapterProtocol
+// MARK: - GroupCallHTTPClientAdapterProtocol
 
-extension HTTPClient: GroupCallsHTTPClientAdapterProtocol {
+extension HTTPClient: GroupCallHTTPClientAdapterProtocol {
     public func sendPeek(authorization: String, url: URL, body: Data) async throws -> (Data, URLResponse) {
         var request = urlRequest(for: url, httpMethod: .post, authorization: authorization)
         request.httpBody = body

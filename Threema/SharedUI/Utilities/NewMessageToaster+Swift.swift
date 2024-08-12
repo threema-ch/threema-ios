@@ -21,10 +21,19 @@
 import Foundation
 
 extension NewMessageToaster {
-    @objc internal func accessibilityText(for message: BaseMessage) -> String? {
+    @objc func accessibilityText(for message: BaseMessage) -> String? {
         guard let previewableMessage = message as? PreviewableMessage else {
             return nil
         }
-        return BundleUtil.localizedString(forKey: "new_message_accessibility") + previewableMessage.previewText
+        var accessibilityText = BundleUtil.localizedString(forKey: "new_message_accessibility")
+        
+        if message.isGroupMessage,
+           let sender = message.accessibilityMessageSender {
+            accessibilityText += "\(BundleUtil.localizedString(forKey: "from")) "
+            accessibilityText += "\(sender). "
+        }
+        
+        accessibilityText += previewableMessage.previewText
+        return accessibilityText
     }
 }

@@ -41,10 +41,10 @@ extension BlobData {
     /// - Outgoing: `noData(deleted)` & `fatalError`
     public var thumbnailState: BlobState {
         if !blobIsOutgoing {
-            return .incoming(incomingThumbnailState)
+            .incoming(incomingThumbnailState)
         }
         else {
-            return .outgoing(outgoingThumbnailState)
+            .outgoing(outgoingThumbnailState)
         }
     }
     
@@ -130,10 +130,10 @@ extension BlobData {
     /// - Outgoing: `noData(.noThumbnail)`, `fatalError`
     public var dataState: BlobState {
         if !blobIsOutgoing {
-            return .incoming(incomingDataState)
+            .incoming(incomingDataState)
         }
         else {
-            return .outgoing(outgoingDataState)
+            .outgoing(outgoingDataState)
         }
     }
     

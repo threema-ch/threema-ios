@@ -29,85 +29,78 @@ protocol ContactListDataSourceDelegate: AnyObject {
 }
 
 extension ContactListDataSource {
-    typealias ContactListSnapshot = NSDiffableDataSourceSnapshot<Section, Row>
-    
-    enum Section: Hashable {
-        case main
-    }
-    
-    enum Row: Hashable {
-        case contact(contactID: ContactID)
-    }
+    typealias Section = Hashable
+    typealias Row = Hashable
 }
 
 class ContactListDataSource<
-    ContactID: ContactObjectID,
-    ContactProvider: ContactListDataSourceContactProviderProtocol<ContactID>
->: UITableViewDiffableDataSource<String, NSManagedObjectID> {
+    CellType: ContactListCellProviderProtocol.ContactListCellType,
+    BusinessEntity: NSObject,
+    Provider: ContactListDataSourceProviderProtocol<NSManagedObjectID, BusinessEntity>,
+    CellProvider: ContactListCellProviderProtocol<CellType, BusinessEntity>
+>: UITableViewDiffableDataSource<String, Provider.ID> {
     
-    private weak var contactProvider: ContactProvider?
-    private weak var delegate: ContactListDataSourceDelegate?
-    private var subscriptions = Set<AnyCancellable>()
-    private let snapshotProviderQueue = DispatchQueue(
-        label: "ch.threema.contactSnapshotProviderQueue",
-        qos: .userInteractive,
-        attributes: [],
-        autoreleaseFrequency: .inherit,
-        target: nil
-    )
-    
-    init(
-        in tableView: UITableView,
-        contactProvider: ContactProvider,
-        delegate: ContactListDataSourceDelegate
-    ) {
-        ContactListCellProvider.registerCells(in: tableView)
-        self.contactProvider = contactProvider
-        self.delegate = delegate
-        
-        super.init(tableView: tableView) { tableView, indexPath, itemIdentifier in
-//            switch itemIdentifier {
-//            case let .contact(contactID):
-            ContactListCellProvider.dequeueContactCell(
-                for: indexPath,
-                and: contactProvider.contact(for: itemIdentifier as! ContactID),
-                in: tableView
-            )
-//            }
+    private var snapshotSubscription: Cancellable?
+    private var sectionTitles: [String] { ThreemaLocalizedIndexedCollation.sectionIndexTitles }
+    private var contentProvider: (CellProvider, Provider) -> ContactListDataSource
+        .CellProvider = { cellProvider, provider in
+            { tableView, indexPath, itemIdentifier in
+                cellProvider.dequeueCell(
+                    for: indexPath,
+                    and: provider.entity(for: itemIdentifier),
+                    in: tableView
+                )
+            }
         }
     
-        createSnapshot(for: contactProvider.contacts() as! [NSManagedObjectID])
-        contactProvider.currentSnapshot
-//            .receive(on: snapshotProviderQueue)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] snapshot in
-                guard let self else {
-                    return
-                }
-                // .map { Row.contact(contactID: $0 as! ContactID)}
-                apply(snapshot)
+    private var tableIndexTitles: [String] {
+        (snapshot().sectionIdentifiers + [.broadcasts]).compactMap { str in
+            guard let i = Int(str), i >= 0, i < sectionTitles.count else {
+                return str
             }
-            .store(in: &subscriptions)
+            return sectionTitles[i]
+        }
+    }
+    
+    private let sectionIndexEnabled: Bool
+    
+    init(
+        provider: Provider,
+        cellProvider: CellProvider,
+        in tableView: UITableView,
+        sectionIndexEnabled: Bool = true
+    ) {
+        self.sectionIndexEnabled = sectionIndexEnabled
+        cellProvider.registerCells(in: tableView)
+        super.init(
+            tableView: tableView,
+            cellProvider: contentProvider(cellProvider, provider)
+        )
+        subscribe(to: provider)
+    }
+    
+    private func subscribe(to provider: Provider) {
+        snapshotSubscription = provider.currentSnapshot.sink { [weak self] snapshot in
+            guard let self else {
+                return
+            }
+            apply(snapshot)
+        }
     }
     
     deinit {
-        subscriptions.removeAll()
+        snapshotSubscription?.cancel()
     }
     
-    func createSnapshot(for ids: [NSManagedObjectID], animated: Bool = true) {
-//        var snapshot = ContactListSnapshot()
-        var snapshot = NSDiffableDataSourceSnapshot<String, NSManagedObjectID>()
-//        snapshot.appendSections([.main])
-        snapshot.appendSections([""])
-        
-        defer {
-            apply(snapshot, animatingDifferences: animated)
-        }
-        
-        snapshot.appendItems(
-            //            ids.map { Row.contact(contactID: $0 as! ContactID)},
-            ids,
-            toSection: ""
-        )
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        sectionIndexEnabled ? tableIndexTitles[section] : nil
+    }
+
+    override func sectionIndexTitles(for tableView: UITableView) -> [String]? {
+        sectionIndexEnabled ? sectionTitles : nil
+    }
+    
+    override func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {
+        tableIndexTitles.firstIndex(of: title) ?? 0
     }
 }

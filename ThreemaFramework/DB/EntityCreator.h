@@ -65,6 +65,7 @@
 #import "GroupCallEntity.h"
 
 @class DistributionListEntity;
+@class MessageHistoryEntryEntity;
 
 @interface EntityCreator : NSObject
 
@@ -99,7 +100,7 @@
 
 - (FileData *)fileData;
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate;
+- (TextMessage *)textMessageForConversation:(Conversation *)conversation;
 
 - (ImageMessageEntity *)imageMessageEntityForConversation:(Conversation *)conversation;
 
@@ -109,7 +110,7 @@
 
 - (AudioMessageEntity *)audioMessageEntityForConversation:(Conversation *)conversation;
 
-- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)lastUpdate;
+- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation;
 
 - (SystemMessage *)systemMessageForConversation:(Conversation *)conversation;
 
@@ -136,6 +137,8 @@
 - (Tag *)tagWithName:(NSString *)name;
 
 - (MessageMarkers *)messageMarkers;
+
+- (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessage *)message NS_SWIFT_NAME(messageHistoryEntry(for:));;
 
 - (WebClientSession *)webClientSession;
 

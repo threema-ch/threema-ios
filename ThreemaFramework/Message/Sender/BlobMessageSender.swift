@@ -76,13 +76,13 @@ final class BlobMessageSender {
         }
 
         if let group {
-            let receiverIdentities: [ThreemaIdentity]
-            switch receivers {
-            case .all:
-                receiverIdentities = group.members.map(\.identity)
-            case let .groupMembers(identities):
-                receiverIdentities = identities
-            }
+            let receiverIdentities: [ThreemaIdentity] =
+                switch receivers {
+                case .all:
+                    group.members.map(\.identity)
+                case let .groupMembers(identities):
+                    identities
+                }
             
             let taskDefinition = TaskDefinitionSendBaseMessage(
                 messageID: messageID,

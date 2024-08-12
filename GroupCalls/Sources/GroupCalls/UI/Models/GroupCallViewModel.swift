@@ -24,6 +24,10 @@ import ThreemaEssentials
 import UIKit
 import WebRTC
 
+/// View model for a group call
+///
+/// - Warning: This model lives from the the first join of a group call until the call ends or the app is terminated
+///            (i.e. if you join, leave and join again (without terminating the app) the same model is used). (IOS-4073)
 public final class GroupCallViewModel: Sendable {
     
     typealias DataSource = GroupCallCollectionViewDataSource
@@ -47,15 +51,23 @@ public final class GroupCallViewModel: Sendable {
                 return
             }
             
-            switch ownAudioMuteState {
-            case .changing:
-                break
-            case .muted:
-                groupCallActor?.dependencies.notificationPresenterWrapper
-                    .presentGroupCallNotification(type: .audioMuted)
-            case .unmuted:
-                groupCallActor?.dependencies.notificationPresenterWrapper
-                    .presentGroupCallNotification(type: .audioUnmuted)
+            // TODO: (IOS-4073) This workaround should be removed as the view model should only live as long as we've joined the call
+            // Workaround that no notification is shown when the state is reset during leaving a call
+            Task(priority: .userInitiated) {
+                guard await (groupCallActor?.joinState() ?? .notJoined) != .notJoined else {
+                    return
+                }
+                
+                switch ownAudioMuteState {
+                case .changing:
+                    break
+                case .muted:
+                    groupCallActor?.dependencies.notificationPresenterWrapper
+                        .presentGroupCallNotification(type: .audioMuted)
+                case .unmuted:
+                    groupCallActor?.dependencies.notificationPresenterWrapper
+                        .presentGroupCallNotification(type: .audioUnmuted)
+                }
             }
         }
     }
@@ -72,15 +84,23 @@ public final class GroupCallViewModel: Sendable {
                 return
             }
             
-            switch ownVideoMuteState {
-            case .changing:
-                break
-            case .muted:
-                groupCallActor?.dependencies.notificationPresenterWrapper
-                    .presentGroupCallNotification(type: .videoMuted)
-            case .unmuted:
-                groupCallActor?.dependencies.notificationPresenterWrapper
-                    .presentGroupCallNotification(type: .videoUnmuted)
+            // TODO: (IOS-4073) This workaround should be removed as the view model should only live as long as we've joined the call
+            // Workaround that no notification is shown when the state is reset during leaving a call
+            Task(priority: .userInitiated) {
+                guard await (groupCallActor?.joinState() ?? .notJoined) != .notJoined else {
+                    return
+                }
+                
+                switch ownVideoMuteState {
+                case .changing:
+                    break
+                case .muted:
+                    groupCallActor?.dependencies.notificationPresenterWrapper
+                        .presentGroupCallNotification(type: .videoMuted)
+                case .unmuted:
+                    groupCallActor?.dependencies.notificationPresenterWrapper
+                        .presentGroupCallNotification(type: .videoUnmuted)
+                }
             }
         }
     }
@@ -119,7 +139,7 @@ public final class GroupCallViewModel: Sendable {
     ) {
         guard dependencies.isRunningForScreenshots else {
             fatalError(
-                "[GroupCalls] Tried to initialize GroupCallViewModel for screenshots even though we are not running for screenshots."
+                "[GroupCall] Tried to initialize GroupCallViewModel for screenshots even though we are not running for screenshots"
             )
         }
         
@@ -151,7 +171,7 @@ public final class GroupCallViewModel: Sendable {
     
     func updateForScreenshots() {
         guard isRunningForScreenshots else {
-            assertionFailure("This should only be called during screenshots.")
+            assertionFailure("This should only be called during screenshots")
             return
         }
         
@@ -172,19 +192,22 @@ public final class GroupCallViewModel: Sendable {
     
     // MARK: - ToolBar button actions
     
-    func leaveCall() {
-        // When running for screenshots we simply dismiss the view.
-        guard !isRunningForScreenshots else {
-            Task {
-                await viewDelegate?.dismissGroupCallView(animated: false)
-            }
-            return
-        }
-        
+    func leaveCallButtonTapped() {
         /// **Leave Call** 1. The user tapped the leave button, we begin leaving the call
         DDLogNotice("[GroupCall] User tapped leave call button")
         
         Task(priority: .userInitiated) {
+            guard !isRunningForScreenshots else {
+                // Just dismiss the view
+                await viewDelegate?.dismissGroupCallView(animated: true)
+                return
+            }
+            
+            // In our tests no dismiss was need here as the call to `leaveCall()` from `Ending` was happening enough
+            // fast. If there is an observable delay from when the button is tapped and the view disappears we might
+            // consider calling dismiss here or even directly `leaveCall()` for a first time. (It will still be needed
+            // in `Ending`.)
+            
             /// 1.1 Pass on info to `GroupCallActor
             await groupCallActor?.beginLeaveCall()
         }
@@ -227,12 +250,12 @@ public final class GroupCallViewModel: Sendable {
     private func subscribeToEvents() {
         // TODO: (IOS-4047) Is `detached` what we want here?
         Task.detached { [weak self] in
-            guard let self, let groupCallActor = self.groupCallActor else {
+            guard let self, let groupCallActor else {
                 return
             }
             
             for await item in groupCallActor.uiQueue {
-                await self.handle(item)
+                await handle(item)
             }
         }
     }
@@ -240,7 +263,7 @@ public final class GroupCallViewModel: Sendable {
     private func handle(_ event: GroupCallUIEvent) async {
         switch event {
         case let .error(err):
-            DDLogError("[GroupCall] [GroupCallUI] An error occurred \(err)")
+            DDLogError("[GroupCall] [GroupCallUI] An error occurred: \(err)")
             
         case .connecting:
             DDLogNotice("[GroupCall] [GroupCallUI] Start connecting")
@@ -254,7 +277,6 @@ public final class GroupCallViewModel: Sendable {
             DDLogNotice("[GroupCall] [GroupCallUI] Start connected")
             await updateNavigationBar(for: .connected)
             startPeriodicUIUpdatesIfNeeded()
-            await groupCallActor?.connectedConfirmed()
             
         case let .remove(participantID):
             DDLogNotice("[GroupCall] [GroupCallUI] Remove participant \(participantID)")
@@ -263,12 +285,12 @@ public final class GroupCallViewModel: Sendable {
                 viewDelegate?.updateCollectionViewLayout()
             }
         
-        case let .participantStateChange(participant, change):
-            DDLogNotice("[GroupCall] Reconfigure participant \(participant.id)")
+        case let .participantStateChange(participantID, change):
+            DDLogNotice("[GroupCall] Reconfigure participant \(participantID)")
             
-            await handleMuteStateChange(for: participant, change: change)
+            await handleMuteStateChange(for: participantID, change: change)
             
-            await publishSnapshot(reconfigure: [participant])
+            await publishSnapshot(reconfigure: [participantID])
             
         case let .add(viewModelParticipant):
             if let localParticipant = viewModelParticipant as? LocalParticipant {
@@ -324,6 +346,7 @@ public final class GroupCallViewModel: Sendable {
     }
     
     private func add(_ participant: ViewModelParticipant) async {
+        // TODO: (IOS-3857) Are these logs still needed?
         DDLogNotice("[ViewModel] \(#function)")
         participantsList.append(participant)
         
@@ -442,14 +465,13 @@ public final class GroupCallViewModel: Sendable {
             return
         }
         
-        var track: RTCVideoTrack?
-        
-        if participant.participantID == localParticipant?.participantID {
-            track = await groupCallActor?.localContext()
-        }
-        else {
-            track = await groupCallActor?.remoteContext(for: participantID)?.cameraVideoContext?.track
-        }
+        let track: RTCVideoTrack? =
+            if participant.participantID == localParticipant?.participantID {
+                await groupCallActor?.localContext()
+            }
+            else {
+                await groupCallActor?.remoteContext(for: participantID)?.cameraVideoContext?.track
+            }
         
         guard let track else {
             DDLogNotice("[GroupCall] [Renderer] Could not get track")
@@ -535,19 +557,23 @@ extension GroupCallViewModel {
     }
     
     public func leaveCall() async {
-        DDLogVerbose("[GroupCall] Leave: GroupCallViewModel")
+        DDLogNotice("[GroupCall] Leave: GroupCallViewModel")
 
         /// 1.1 Remove all participants and publish the last snapshot, this is needed when the users wants to rejoin the
         /// call
         participantsList.removeAll()
         await publishSnapshot()
-
-        /// 1.2 Mute local participant
-        await groupCallActor?.toggleOwnVideo(true)
-        await groupCallActor?.toggleOwnAudio(true)
-
-        /// 1.3 Dismiss the view
+        
+        /// 1.2 Dismiss the view
         await viewDelegate?.dismissGroupCallView(animated: true)
+        
+        /// 1.3 Reset audio & video state
+        // TODO: (IOS-4073) This state should always be reset to the appropriate values when a call is joined
+        // We dispatch the mutes through the `uiQueue` and after the initiated dismiss of the call view to reduce the
+        // change of a race condition of a later unmute action
+        groupCallActor?.uiContinuation.yield(.audioMuteChange(.muted))
+        groupCallActor?.uiContinuation.yield(.videoMuteChange(.muted))
+        // The WebRTC tracks will be removed in `Ending`
         
         /// 1.4 Reset refresh Task
         periodicUIRefreshTask?.cancel()
@@ -555,7 +581,7 @@ extension GroupCallViewModel {
     }
     
     public func teardown() async {
-        DDLogVerbose("[GroupCall]] Teardown: GroupCallViewModel")
+        DDLogNotice("[GroupCall]] Teardown: GroupCallViewModel")
         
         // Participants
         // TODO: (IOS-4047) TaskGroup? Do we even need to unsubscribe?

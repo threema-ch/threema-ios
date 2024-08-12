@@ -121,13 +121,21 @@ extension SettingsView {
                 .onAppear {
                     isPasswordRequired = KKPasscodeLock.shared().isPasscodeRequired()
                 }
+                
+                ItemSection {
+                    (
+                        view: CallSettingsView(),
+                        title: "settings_threema_calls",
+                        symbol: .bundleImage("threema.phone.fill")
+                    )
+                }
             }
         }
     }
     
-    // MARK: - CallWebSection
+    // MARK: - DesktopSection
     
-    struct CallWebSection: View {
+    struct DesktopSection: View {
         
         private let mdm = MDMSetup(setup: false)
         private var disableWeb: Bool {
@@ -137,16 +145,16 @@ extension SettingsView {
         var body: some View {
             Section {
                 ItemSection {
-                    (
-                        view: CallSettingsView(),
-                        title: "settings_threema_calls",
-                        symbol: .bundleImage("threema.phone.fill")
-                    )
                     if !disableWeb {
+                        (
+                            view: LinkedDevicesView(),
+                            title: "settings_list_threema_desktop_title",
+                            symbol: .systemImage("desktopcomputer")
+                        )
                         (
                             view: threemaWeb,
                             title: "settings_list_threema_web_title",
-                            symbol: .systemImage("desktopcomputer")
+                            symbol: .systemImage("menubar.dock.rectangle")
                         )
                     }
                 }
@@ -159,7 +167,7 @@ extension SettingsView {
                     view.toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             Button(action: {
-                                ThreemaWebQRcodeScanner.shared.scan()
+                                ThreemaWebQRCodeScanner.shared.scan()
                             }, label: {
                                 Image(systemName: "qrcode.viewfinder")
                             })

@@ -50,7 +50,6 @@ struct DeleteRevokeView: View {
                 .edgesIgnoringSafeArea(.all)
         )
         .edgesIgnoringSafeArea(.all)
-
         .onAppear {
             UIScrollView.appearance().isScrollEnabled = false
         }

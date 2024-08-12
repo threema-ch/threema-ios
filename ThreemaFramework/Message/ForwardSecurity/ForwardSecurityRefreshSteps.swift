@@ -58,7 +58,9 @@ struct ForwardSecurityRefreshSteps {
         defer { DDLogNotice("[ForwardSecurity] Exit FS Refresh Steps") }
                 
         guard !backgroundBusinessInjector.settingsStore.isMultiDeviceRegistered else {
-            DDLogError("It is illegal to run the FS Refresh Steps (before FS 2.0) when MD is registered")
+            DDLogError(
+                "[ForwardSecurity] It is illegal to run the FS Refresh Steps (before FS 2.0) when MD is registered"
+            )
             return
         }
         

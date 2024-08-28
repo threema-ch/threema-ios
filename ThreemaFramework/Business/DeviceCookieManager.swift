@@ -94,11 +94,6 @@ import Security
     /// Notify that a device cookie change indication has been received. A user alert will be generated.
     /// - Returns: true if the indication should be cleared, false if not
     @objc static func changeIndicationReceived() -> Bool {
-        if UserSettings.shared().enableMultiDevice {
-            // Does not make sense in MD setup at the moment
-            return true
-        }
-        
         if DeviceCookieManager.skipNextIndication {
             DDLogNotice("Skipping change indication because new cookie has been generated")
             DeviceCookieManager.skipNextIndication = false

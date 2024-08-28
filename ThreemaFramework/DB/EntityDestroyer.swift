@@ -266,21 +266,39 @@ import Foundation
         }
         else if let message = message as? FileMessageEntity {
             deleteThumbnail(for: message)
-
-            message.thumbnail = nil
-            message.mimeType = ""
-            message.fileName = ""
+            
+            message.blobID = nil
+            message.blobThumbnailID = nil
             message.caption = ""
+            message.encryptionKey = nil
+            message.fileName = ""
+            message.fileSize = nil
             message.json = ""
+            message.mimeType = ""
+            message.origin = nil
+            message.progress = nil
+            message.type = nil
+            message.consumed = nil
+            message.thumbnail = nil
         }
         else if let message = message as? ImageMessageEntity {
             deleteThumbnail(for: message)
 
+            message.encryptionKey = nil
+            message.imageBlobID = nil
+            message.imageSize = nil
+            message.progress = 0
+            message.imageBlobID = nil
             message.thumbnail = nil
         }
         else if let message = message as? VideoMessageEntity {
             deleteThumbnail(for: message)
-
+            
+            message.duration = 0
+            message.encryptionKey = nil
+            message.progress = 0
+            message.videoBlobID = nil
+            message.videoSize = nil
             message.duration = 0
         }
         

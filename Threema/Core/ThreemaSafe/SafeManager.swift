@@ -1016,13 +1016,27 @@ import Foundation
                 catch let SafeStore.SafeError.restoreFailed(message) {
                     completionHandler(SafeError.restoreFailed(message: message))
                     
-                    if let decryptedData {
-                        // Save decrypted backup data into application documents folder, for analyzing failures
-                        _ = FileUtility.shared.write(
-                            fileURL: FileUtility.shared.appDocumentsDirectory?
-                                .appendingPathComponent("safe-backup.json"),
-                            text: String(bytes: decryptedData, encoding: .utf8)!
-                        )
+                    if let decryptedData,
+                       let json = try? JSONSerialization.jsonObject(
+                           with: Data(decryptedData),
+                           options: .mutableContainers
+                       ),
+                       var json = json as? [String: Any],
+                       var user = json["user"] as? [String: Any] {
+                        // Remove sensitive data
+                        if user.removeValue(forKey: "privatekey") != nil {
+                            json["user"] = user
+
+                            if let dataWithoutPrimaryKey = try? JSONSerialization.data(withJSONObject: json),
+                               let dataWithoutPrimaryKeyString = String(bytes: dataWithoutPrimaryKey, encoding: .utf8) {
+                                // Save decrypted backup data into application documents folder, for analyzing failures
+                                _ = FileUtility.shared.write(
+                                    fileURL: FileUtility.shared.appDocumentsDirectory?
+                                        .appendingPathComponent("safe-backup.json"),
+                                    text: dataWithoutPrimaryKeyString
+                                )
+                            }
+                        }
                     }
                 }
                 catch {

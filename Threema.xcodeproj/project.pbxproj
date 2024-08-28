@@ -3407,6 +3407,11 @@
 		7E43778F2B5FBB2E002310BA /* FileMessageEntity+EditedMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E43778E2B5FBB2E002310BA /* FileMessageEntity+EditedMessage.swift */; };
 		7E44717B29A600E900B35F50 /* ConversationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E44717A29A600E900B35F50 /* ConversationStoreTests.swift */; };
 		7E4626512AF14562005776BA /* ContactEntity+update.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4626502AF14562005776BA /* ContactEntity+update.swift */; };
+		7E4657502C6F527E000C0726 /* AppFilesMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E46574F2C6F527E000C0726 /* AppFilesMigration.swift */; };
+		7E4657552C6F7972000C0726 /* AppFilesMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E46574F2C6F527E000C0726 /* AppFilesMigration.swift */; };
+		7E4657562C6F7973000C0726 /* AppFilesMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E46574F2C6F527E000C0726 /* AppFilesMigration.swift */; };
+		7E4657572C6F7974000C0726 /* AppFilesMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E46574F2C6F527E000C0726 /* AppFilesMigration.swift */; };
+		7E4657582C6F7975000C0726 /* AppFilesMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E46574F2C6F527E000C0726 /* AppFilesMigration.swift */; };
 		7E4861642822665800A20814 /* test_sandbox_ids.txt in Resources */ = {isa = PBXBuildFile; fileRef = 7E4861622822665800A20814 /* test_sandbox_ids.txt */; };
 		7E48DEAB283515C4005C5C91 /* ThreemaKDFTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E48DEAA283515C3005C5C91 /* ThreemaKDFTests.swift */; };
 		7E4BA7EC2BC04397005635D1 /* DeletedMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4BA7EB2BC04397005635D1 /* DeletedMessageView.swift */; };
@@ -7427,6 +7432,7 @@
 		7E43778E2B5FBB2E002310BA /* FileMessageEntity+EditedMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileMessageEntity+EditedMessage.swift"; sourceTree = "<group>"; };
 		7E44717A29A600E900B35F50 /* ConversationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationStoreTests.swift; sourceTree = "<group>"; };
 		7E4626502AF14562005776BA /* ContactEntity+update.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContactEntity+update.swift"; sourceTree = "<group>"; };
+		7E46574F2C6F527E000C0726 /* AppFilesMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFilesMigration.swift; sourceTree = "<group>"; };
 		7E4861622822665800A20814 /* test_sandbox_ids.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test_sandbox_ids.txt; sourceTree = "<group>"; };
 		7E48DEAA283515C3005C5C91 /* ThreemaKDFTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThreemaKDFTests.swift; sourceTree = "<group>"; };
 		7E4BA7EB2BC04397005635D1 /* DeletedMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeletedMessageView.swift; sourceTree = "<group>"; };
@@ -11900,6 +11906,7 @@
 				4DD01F7C14C1CCA900EF7690 /* AppDelegate.m */,
 				24434D5429801434001E6F86 /* AppDelegate+Swift.swift */,
 				2414069F2B4C018500B2FD76 /* AppDelegate+Observation.swift */,
+				7E46574F2C6F527E000C0726 /* AppFilesMigration.swift */,
 				7EF34E832875822D00DCF512 /* AppMigration.swift */,
 				7E9278DB2A83B98900AC4871 /* AppLaunchTasks.swift */,
 				CEB044EC1EB9DB3400B06571 /* Threema-Bridging-Header.h */,
@@ -16331,6 +16338,7 @@
 				CE7E4F3B23E2C313009977A5 /* GrowingNotificationBanner.swift in Sources */,
 				94138A8F2ADFFA6D00FF8787 /* StorageManagementConversation+OlderThanOption.swift in Sources */,
 				E10CA9A927FE5CE900E179BA /* ChatViewFileMessageTableViewCell.swift in Sources */,
+				7E4657552C6F7972000C0726 /* AppFilesMigration.swift in Sources */,
 				2D5B8FB321BF8E9700788B2E /* salsa20.c in Sources */,
 				94DAE9542B02650000332E20 /* ProfileView+MainTabViewRepresentable.swift in Sources */,
 				CE8A2B551EB38270004973D5 /* DKAssetGroupCellItemProtocol.swift in Sources */,
@@ -17725,6 +17733,7 @@
 				2D5A1EB524C9B5DF00F87DD0 /* NotificationBannerUtilities.swift in Sources */,
 				2D5A1EB624C9B5DF00F87DD0 /* PPLiveCameraCell.swift in Sources */,
 				946C5F5A2BD64B12008D057D /* ContactListNavigationViewController.swift in Sources */,
+				7E4657582C6F7975000C0726 /* AppFilesMigration.swift in Sources */,
 				24D03C432C3D4F3700EEA384 /* ThreemaWebDesktopInfoBannerView.swift in Sources */,
 				2D5A1EB824C9B5DF00F87DD0 /* (null) in Sources */,
 				24CDCD2B2B6132830015703A /* (null) in Sources */,
@@ -18081,6 +18090,7 @@
 				2DEDB22A24C9903400FC9099 /* MWPhoto.m in Sources */,
 				2DEDB22B24C9903400FC9099 /* DKAssetGroupDetailVideoCell.swift in Sources */,
 				E11E2B032653F79A004AFD0B /* GroupDetailsViewController.swift in Sources */,
+				7E4657572C6F7974000C0726 /* AppFilesMigration.swift in Sources */,
 				94AD6C0B2C2D807900079BAD /* ContactListTableViewContainerViewController.swift in Sources */,
 				2443565B2B55547000BE22DD /* RevokeView.swift in Sources */,
 				2DEDB22D24C9903400FC9099 /* SafeSetupPasswordViewController.swift in Sources */,
@@ -18485,6 +18495,7 @@
 				2D47FFB02608FC7800561629 /* ImageMessageLoader.m in Sources */,
 				E171B24F2822CAF700FC56FE /* GrayCircleView.swift in Sources */,
 				4D08888C255C0CD4002F3129 /* GrowingNotificationBanner.swift in Sources */,
+				7E4657562C6F7973000C0726 /* AppFilesMigration.swift in Sources */,
 				4D088890255C0CD4002F3129 /* salsa20.c in Sources */,
 				4A813EE72892837300D2AD78 /* AudioSessionInputOutputAdapter.swift in Sources */,
 				4D088892255C0CD4002F3129 /* DKAssetGroupCellItemProtocol.swift in Sources */,
@@ -19192,6 +19203,7 @@
 				8D48D1A9275F3495006A9342 /* POICell.swift in Sources */,
 				CED48F67272031F600DDB49C /* MultiDeviceCell.swift in Sources */,
 				E10CA9A827FE5CE900E179BA /* ChatViewFileMessageTableViewCell.swift in Sources */,
+				7E4657502C6F527E000C0726 /* AppFilesMigration.swift in Sources */,
 				CE7E4F3A23E2C313009977A5 /* GrowingNotificationBanner.swift in Sources */,
 				4A813EE52892837300D2AD78 /* AudioSessionInputOutputAdapter.swift in Sources */,
 				CE8A2B541EB38270004973D5 /* DKAssetGroupCellItemProtocol.swift in Sources */,

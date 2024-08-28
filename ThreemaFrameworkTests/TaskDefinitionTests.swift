@@ -60,7 +60,7 @@ class TaskDefinitionTests: XCTestCase {
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinition.self, from: data)
 
-        XCTAssertFalse(result.isPersistent)
+        XCTAssertTrue(result.isPersistent)
         XCTAssertFalse(result.retry)
         XCTAssertEqual(result.retryCount, 1)
         XCTAssertEqual(result.state, .executing)

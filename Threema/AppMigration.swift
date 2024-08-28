@@ -123,7 +123,11 @@ import ThreemaFramework
             DDLogNotice("[AppMigration] No migration needed")
             return
         }
-        
+
+        // Do app files migration before files might be used by business services
+        let appFilesMigration = AppFilesMigration(migratedTo: migratedTo)
+        try appFilesMigration.run()
+
         do {
             if migratedTo < .v4_8 {
                 try migrateTo4_8()
@@ -177,7 +181,11 @@ import ThreemaFramework
                 try migrateTo6_2()
                 migratedTo = .v6_2
             }
-            
+            if migratedTo < .v6_2_1 {
+                // Only a files migration is run
+                migratedTo = .v6_2_1
+            }
+
             // Add here a check if migration is necessary for a particular version...
         }
         catch {

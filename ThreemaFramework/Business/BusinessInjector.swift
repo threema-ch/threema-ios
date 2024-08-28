@@ -26,7 +26,10 @@ import Foundation
 /// Otherwise inconsistencies might occur in the database.
 public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
-    private let taskManager: TaskManagerProtocol
+    // This must be initialized lazy, because `BusinessInjector` is used in `AppMigration` and
+    // the migration of files (see `AppFileMigration.run()`) must be completed before the `TaskManager`
+    // is initialized!
+    private lazy var taskManager: TaskManagerProtocol = TaskManager(backgroundEntityManager: backgroundEntityManager)
     // Will be used for none public services, that must be running in the background anyway
     private let backgroundEntityManager: EntityManager
 
@@ -40,8 +43,6 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         else {
             self.backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
         }
-
-        self.taskManager = TaskManager(backgroundEntityManager: backgroundEntityManager)
     }
 
     /// Create `BusinessInjector` for main thread or background (Core Data child context) thread.

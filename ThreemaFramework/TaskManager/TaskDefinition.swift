@@ -24,13 +24,12 @@ import Foundation
 class TaskDefinition: NSObject, Codable, TaskDefinitionProtocol {
     var className: String { String(describing: type(of: self)) }
 
-    var isPersistent: Bool
+    var isPersistent = true
     var state: TaskExecutionState
     var retry: Bool
     var retryCount: Int
     
     private enum CodingKeys: String, CodingKey {
-        case isPersistent
         case state
         case retry
         case retryCount

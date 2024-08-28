@@ -600,7 +600,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     }];
 
     if (added) {
-        [mediatorSyncableContacts updateAllWithIdentity:contactIdentity added:added];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            [mediatorSyncableContacts updateAllWithIdentity:contactIdentity added:added];
+        });
     }
 
     return contactIdentity;

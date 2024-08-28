@@ -222,8 +222,12 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 return cell
             }
         },
-        headerProvider: { _, section in
-            switch section {
+        headerProvider: { [weak self] _, section in
+            guard let self else {
+                return nil
+            }
+            
+            return switch section {
             case let .groupAcknowledgements(count):
                 String.localizedStringWithFormat(
                     BundleUtil.localizedString(forKey: "detailView_group_acknowledged"),
@@ -235,7 +239,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                     count
                 )
             case .editHistory:
-                if let entries = self.message?.historyEntries, !entries.isEmpty {
+                if let entries = message?.historyEntries, !entries.isEmpty {
                     "detailView_edit_history_header".localized
                 }
                 else {
@@ -279,6 +283,11 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         configureTableView()
         configureDataSource()
         addObservers()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        removeObservers()
     }
     
     // MARK: - Configuration
@@ -501,7 +510,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             snapshot.appendItems(historyRows, toSection: .editHistory)
         }
         
-        if message is FileMessage {
+        if message.deletedAt == nil, message is FileMessage {
             snapshot.appendSections([.fileMetadata])
             snapshot.appendItems([.fileSize])
         }

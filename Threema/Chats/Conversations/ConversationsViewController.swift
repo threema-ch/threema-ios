@@ -991,16 +991,20 @@ extension ConversationsViewController {
         var newPredicate: NSPredicate
         let archivedPredicate = NSPredicate(format: "visibility != %d", ConversationVisibility.archived.rawValue)
         let privatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
+        let lastUpdateNotNil = NSPredicate(format: "lastUpdate != nil")
         
         if UserSettings.shared().hidePrivateChats {
-            
             newPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
                 archivedPredicate,
+                lastUpdateNotNil,
                 privatePredicate,
             ])
         }
         else {
-            newPredicate = archivedPredicate
+            newPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                archivedPredicate,
+                lastUpdateNotNil,
+            ])
         }
         
         if fetchedResultsController.fetchRequest.predicate != newPredicate {

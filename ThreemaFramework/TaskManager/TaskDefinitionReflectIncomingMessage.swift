@@ -84,6 +84,8 @@ final class TaskDefinitionReflectIncomingMessage: TaskDefinition, TaskDefinition
 
         let superDecoder = try container.superDecoder()
         try super.init(from: superDecoder)
+
+        self.isPersistent = false
     }
 
     override func encode(to encoder: Encoder) throws {

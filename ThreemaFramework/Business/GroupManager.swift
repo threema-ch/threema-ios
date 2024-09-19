@@ -1017,6 +1017,39 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             }
         }
     }
+       
+    /// Send empty member list to the receivers, if I'm the group creator
+    ///
+    /// - Parameters:
+    ///   - groupID: Group Identity
+    ///   - identities: Identities to send empty member list to
+    public func sendEmptyMemberList(
+        groupIdentity: GroupIdentity,
+        to identities: Set<ThreemaIdentity>
+    ) {
+        guard let group = getGroup(groupIdentity.id, creator: groupIdentity.creator.string),
+              group.isSelfCreator else {
+            let errorMessage =
+                "Could not send empty member list because the group does not exist or I am not the creator of the group (id: \(groupIdentity.id.hexString), creator: \(groupIdentity.creator.string))"
+            assertionFailure(errorMessage)
+            DDLogError(errorMessage)
+            return
+        }
+        
+        taskManager.add(
+            taskDefinition: TaskDefinitionSendGroupCreateMessage(
+                groupID: groupIdentity.id,
+                groupCreatorIdentity: groupIdentity.creator.string,
+                groupName: nil,
+                allGroupMembers: nil,
+                isNoteGroup: nil,
+                to: Array(identities.map(\.string)),
+                removed: nil,
+                members: Set<String>(),
+                sendContactProfilePicture: false
+            )
+        )
+    }
     
     // MARK: - Sync
     

@@ -57,6 +57,13 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
 
     private(set) var dissolveCalls = [DissolveCall]()
     
+    struct EmptyMemberListCall {
+        let groupID: Data
+        let receivers: Set<ThreemaIdentity>?
+    }
+
+    private(set) var emptyMemberListCalls = [EmptyMemberListCall]()
+    
     // MARK: - Protocol implementation
 
     func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) async throws {
@@ -175,6 +182,10 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
 
     func dissolve(groupID: Data, to identities: Set<String>?) {
         dissolveCalls.append(DissolveCall(groupID: groupID, receivers: identities))
+    }
+
+    func sendEmptyMemberList(groupIdentity: GroupIdentity, to identities: Set<ThreemaIdentity>) {
+        emptyMemberListCalls.append(EmptyMemberListCall(groupID: groupIdentity.id, receivers: identities))
     }
 
     func setNameObjc(

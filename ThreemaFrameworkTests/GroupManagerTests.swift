@@ -1669,6 +1669,66 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(4, group.allMemberIdentities.count)
         XCTAssertEqual(0, taskManagerMock.addedTasks.count)
     }
+    
+    // Test to send empty member list to not member contact
+    func testSendEmptyMemberListToContact() async throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+        let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
+        let notMembers: Set<ThreemaIdentity> = [ThreemaIdentity("NOMEMBER")]
+
+        for member in expectedMembers {
+            guard member != myIdentityStoreMock.identity else {
+                continue
+            }
+            databasePreparer.createContact(identity: member)
+        }
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
+            groupPhotoSenderMock
+        )
+        
+        guard let grp = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
+        groupManager.sendEmptyMemberList(groupIdentity: grp.groupIdentity, to: notMembers)
+
+        let group = try XCTUnwrap(
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+        )
+        
+        guard let sendGroupCreateMessage = taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage
+        else {
+            XCTFail("Missing SendGroupCreateMessageTask")
+            return
+        }
+
+        XCTAssertFalse(group.didLeave)
+        XCTAssertFalse(group.didForcedLeave)
+        XCTAssertEqual(3, group.allMemberIdentities.count)
+        
+        XCTAssertEqual(0, sendGroupCreateMessage.members.count)
+        XCTAssertEqual(1, sendGroupCreateMessage.toMembers.count)
+        XCTAssertEqual(notMembers.first?.string, sendGroupCreateMessage.toMembers.first)
+    }
 
     // Test with blocked contact
     func testSyncAllMembers() async throws {

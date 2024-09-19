@@ -24,6 +24,8 @@ import ThreemaEssentials
 
 /// Implementation of "Common Group Receive Steps" according to the protocol specification
 ///
+/// - Important: There is a similar implementation in `GroupMessageProcessor `. These should be merged in the future
+///
 /// All inline comments are directly from the protocol
 struct CommonGroupReceiveSteps {
         
@@ -67,6 +69,11 @@ struct CommonGroupReceiveSteps {
             //        discard the message and abort these steps.
 
             if group.isSelfCreator {
+                // In the past, you could leave the groups as an admin, but according to
+                // protocol this should no longer be possible.
+                // Therefore, the groups are always dissolved when the admin is no longer
+                // Therefore, groups are always dissolved when the admin is no longer
+                // part of the group. This will dissolve unmanaged groups.
                 groupManager.dissolve(groupID: groupIdentity.id, to: Set([sender.string]))
             }
             else {
@@ -84,7 +91,10 @@ struct CommonGroupReceiveSteps {
             //    2. Discard the message and abort these steps.
             
             if group.isSelfCreator {
-                groupManager.dissolve(groupID: groupIdentity.id, to: Set([sender.string]))
+                groupManager.sendEmptyMemberList(
+                    groupIdentity: groupIdentity,
+                    to: Set([ThreemaIdentity(sender.string)])
+                )
             }
             
             return .discardMessage

@@ -23,6 +23,9 @@
 #import "Conversation.h"
 #import "UserSettings.h"
 
+/// Handling of group messages
+///
+/// - Important: There is a similar implementation in `CommonGroupReceiveSteps`. These should be merged in the future
 @interface GroupMessageProcessor : NSObject
 
 /**

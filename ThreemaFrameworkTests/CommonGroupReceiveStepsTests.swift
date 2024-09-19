@@ -450,11 +450,12 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 
         XCTAssertEqual(actualResult, expectedResult)
         
-        // One dissolve message should be sent to the sender
-        XCTAssertEqual(groupManagerMock.dissolveCalls.count, 1)
-        let firstDissolveCall = try XCTUnwrap(groupManagerMock.dissolveCalls.first)
-        XCTAssertEqual(firstDissolveCall.groupID, groupID)
-        XCTAssertEqual(firstDissolveCall.receivers, Set([sender.string]))
+        // One empty member list message should be sent to the sender
+        XCTAssertEqual(groupManagerMock.dissolveCalls.count, 0)
+        XCTAssertEqual(groupManagerMock.emptyMemberListCalls.count, 1)
+        let firstEmptyMemberListCall = try XCTUnwrap(groupManagerMock.emptyMemberListCalls.first)
+        XCTAssertEqual(firstEmptyMemberListCall.groupID, groupID)
+        XCTAssertEqual(firstEmptyMemberListCall.receivers, Set([ThreemaIdentity(sender.string)]))
     }
     
     func testSenderNoMemberWithOtherCreator() throws {

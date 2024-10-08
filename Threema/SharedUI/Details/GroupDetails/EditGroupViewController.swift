@@ -63,7 +63,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     
     private let group: Group
     
-    private var avatarImageData: Data?
+    private var profilePictureImageData: Data?
     private var groupName: String?
     // TODO: Store members or at least member changes?
     
@@ -71,42 +71,34 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     
     // MARK: Subview
     
-    private lazy var editAvatarView: EditAvatarView = {
-        let initialAvatarImage = AvatarMaker.shared().avatar(
-            for: group.conversation,
-            size: EditAvatarView.avatarImageSize,
-            masked: true
-        )
-        
-        let isDefaultImage = (avatarImageData == nil)
-        
-        let imageUpdated: EditAvatarView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
+    private lazy var editProfilePictureView: EditProfilePictureView = {
+        let imageUpdated: EditProfilePictureView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
             guard let strongSelf = self else {
                 return (nil, true)
             }
-            
+                
             // Store new image data
-            strongSelf.avatarImageData = newImageData
-            
-            // Return default group avatar if no data is available or readable
+            strongSelf.profilePictureImageData = newImageData
+                
+            // Return default group profile picture if no data is available or readable
             guard let newImageData,
-                  let newImage = UIImage(data: newImageData) else {
-                
-                let newAvatarImage = AvatarMaker.shared().unknownGroupImage()
-                
-                return (newAvatarImage, true)
+                  let newProfilePicture = UIImage(data: newImageData) else {
+                    
+                let newProfilePicture = strongSelf.group.generatedProfilePicture()
+                    
+                return (newProfilePicture, true)
             }
-            
-            // Return new avatar image
-            let newAvatarImage = AvatarMaker.maskImage(newImage)
-            return (newAvatarImage, false)
+                
+            // Return new group profile
+            return (newProfilePicture, false)
         }
-        
-        return EditAvatarView(
+            
+        return EditProfilePictureView(
             in: self,
-            avatarImage: initialAvatarImage,
-            isDefaultImage: isDefaultImage,
+            profilePicture: group.profilePicture,
+            isDefaultImage: !group.usesNonGeneratedProfilePicture,
             isEditable: true,
+            conversationType: .group,
             imageUpdated: imageUpdated
         )
     }()
@@ -120,7 +112,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
         
         self.group = group
         
-        self.avatarImageData = group.profilePicture
+        self.profilePictureImageData = group.old_ProfilePicture
         self.groupName = group.name
         
         super.init()
@@ -143,7 +135,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        updateEditAvatarFrameHeight()
+        updateEditProfilePictureFrameHeight()
     }
     
     // MARK: - Configuration
@@ -175,7 +167,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     }
     
     private func configureTableView() {
-        tableView.tableHeaderView = editAvatarView
+        tableView.tableHeaderView = editProfilePictureView
         tableView.delegate = self
         
         tableView.keyboardDismissMode = .onDrag
@@ -234,17 +226,17 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
         navigationItem.rightBarButtonItem?.isEnabled = true
     }
     
-    private func updateEditAvatarFrameHeight() {
-        let editAvatarViewHeight = editAvatarView.systemLayoutSizeFitting(view.bounds.size).height
+    private func updateEditProfilePictureFrameHeight() {
+        let editProfilePictureViewHeight = editProfilePictureView.systemLayoutSizeFitting(view.bounds.size).height
         
-        let updateFrameHeight = { self.editAvatarView.frame.size.height = editAvatarViewHeight }
+        let updateFrameHeight = { self.editProfilePictureView.frame.size.height = editProfilePictureViewHeight }
         
         // Only update if height was 0 before or did change
         // Only animate if previous height was non-zero, otherwise we get unsatisfiable constraints
-        if editAvatarView.frame.height == 0 {
+        if editProfilePictureView.frame.height == 0 {
             updateFrameHeight()
         }
-        else if editAvatarViewHeight != editAvatarView.frame.height {
+        else if editProfilePictureViewHeight != editProfilePictureView.frame.height {
             // Use table view update to animate height change
             // https://stackoverflow.com/a/32228700/286611
             tableView.performBatchUpdates(updateFrameHeight)
@@ -264,14 +256,14 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     
     @objc private func saveButtonTapped() {
         saveGroupName()
-        saveAvatarImage()
+        saveProfilePicture()
         dismiss(animated: true)
     }
     
     // MARK: - Notifications
     
     @objc private func contentSizeCategoryDidChange() {
-        updateEditAvatarFrameHeight()
+        updateEditProfilePictureFrameHeight()
     }
     
     @objc private func keyboardWasShown(notification: Notification) {
@@ -299,8 +291,8 @@ extension EditGroupViewController {
         group.name != groupName
     }
     
-    private var avatarImageDidChange: Bool {
-        group.profilePicture != avatarImageData
+    private var profilePictureDidChange: Bool {
+        group.old_ProfilePicture != profilePictureImageData
     }
     
     private func saveGroupName() {
@@ -318,22 +310,22 @@ extension EditGroupViewController {
         }
     }
     
-    private func saveAvatarImage() {
-        guard avatarImageDidChange else {
+    private func saveProfilePicture() {
+        guard profilePictureDidChange else {
             return
         }
         
         Task { @MainActor in
             do {
-                if let avatarImageData {
+                if let profilePictureImageData {
                     try await groupManager.setPhoto(
                         group: group,
-                        imageData: avatarImageData,
+                        imageData: profilePictureImageData,
                         sentDate: Date()
                     )
                 }
                 else {
-                    // A `nil` avatar image means it's been deleted
+                    // A `nil` profile picture means it's been deleted
                     try await groupManager.deletePhoto(
                         groupID: group.groupID,
                         creator: group.groupCreatorIdentity,

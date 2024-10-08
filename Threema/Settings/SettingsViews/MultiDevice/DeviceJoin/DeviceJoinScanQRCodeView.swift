@@ -116,7 +116,7 @@ struct DeviceJoinScanQRCodeView: View {
                                 TextField("Join URL", text: $debugDeviceJoinURLString)
                             
                                 Button {
-                                    connect(to: debugDeviceJoinURLString)
+                                    process(inputString: debugDeviceJoinURLString)
                                 } label: {
                                     Text("Connect")
                                 }
@@ -219,34 +219,7 @@ struct DeviceJoinScanQRCodeView: View {
         case let .success(success):
             successfulScanned = true
             
-            // Verify URL
-            guard let urlSafeBase64 = verify(qrCodeString: success.string) else {
-                DDLogError("Invalid QR Code")
-                
-                retryErrorTitle = "multi_device_join_unknown_qr_code_title".localized
-                retryErrorMessage = String.localizedStringWithFormat(
-                    "multi_device_join_unknown_qr_code_message".localized,
-                    DeviceJoinManager.downloadURL
-                )
-                showRetryError = true
-                
-                return
-            }
-            
-            // Only show connecting state if verification was successful
-            do {
-                try withAnimation {
-                    try deviceJoinManager.advance(to: .establishRendezvousConnection)
-                }
-                
-                connect(to: urlSafeBase64)
-            }
-            catch {
-                DDLogError("Success scan error: \(error)")
-                
-                fatalErrorTitle = "multi_device_join_unrecoverable_error_title".localized
-                showFatalError = true
-            }
+            process(inputString: success.string)
             
         case .failure(.permissionDenied):
             DDLogError("No camera access when scanning QR Code")
@@ -256,7 +229,7 @@ struct DeviceJoinScanQRCodeView: View {
             fatalErrorTitle = "multi_device_join_fatal_scanning_qr_code_error_title".localized
             showFatalError = true
             
-            DDLogError(fatalErrorTitle)
+            DDLogError("Failed to scan QR Code")
         }
     }
     
@@ -283,9 +256,40 @@ struct DeviceJoinScanQRCodeView: View {
             showFatalError = true
         }
     }
+    
+    private func process(inputString: String) {
+        // Verify URL
+        guard let urlSafeBase64 = verify(inputString: inputString) else {
+            DDLogError("Invalid QR Code")
+            
+            retryErrorTitle = "multi_device_join_unknown_qr_code_title".localized
+            retryErrorMessage = String.localizedStringWithFormat(
+                "multi_device_join_unknown_qr_code_message".localized,
+                DeviceJoinManager.downloadURL
+            )
+            showRetryError = true
+            
+            return
+        }
+        
+        // Only show connecting state if verification was successful
+        do {
+            try withAnimation {
+                try deviceJoinManager.advance(to: .establishRendezvousConnection)
+            }
+            
+            connect(to: urlSafeBase64)
+        }
+        catch {
+            DDLogError("Success scan error: \(error)")
+            
+            fatalErrorTitle = "multi_device_join_unrecoverable_error_title".localized
+            showFatalError = true
+        }
+    }
    
-    private func verify(qrCodeString: String) -> String? {
-        guard let url = URL(string: qrCodeString) else {
+    private func verify(inputString: String) -> String? {
+        guard let url = URL(string: inputString) else {
             return nil
         }
         

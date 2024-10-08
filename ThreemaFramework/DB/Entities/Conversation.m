@@ -46,7 +46,6 @@ static NSString *fieldVisibility = @"visibility";
 @dynamic groupImage;
 @dynamic lastMessage;
 @dynamic members;
-@dynamic tags;
 @dynamic distributionList;
 
 - (void)setTyping:(NSNumber *)typing {

@@ -20,7 +20,7 @@
 
 import Foundation
 
-protocol VoiceMessageAudioRecorderDelegate: AnyObject {
+protocol VoiceMessageAudioRecorderDelegate: AnyObject, Sendable {
 
     func playerDidFinish()
     
@@ -28,19 +28,18 @@ protocol VoiceMessageAudioRecorderDelegate: AnyObject {
     ///
     /// - Parameters:
     ///   - error: The error that occurred.
-    func handleError<Error: LocalizedError>(_ error: Error)
+    func handleError(_ error: Error)
     
     /// Notifies the delegate that the recording progress has been updated.
     ///
     /// - Parameters:
-    ///   - recorder: The `VoiceMessageAudioRecorder` instance that is recording the audio.
+    ///   - lastAveragePower: The last average power of the current recording..
     ///   - progress: The current record progress as a `Double` representing the percentage of completion.
-    func didUpdateRecordProgress(with recorder: VoiceMessageAudioRecorder, _ progress: Double)
+    @MainActor func didUpdateRecordProgress(lastAveragePower: Float, _ progress: Double)
     
     /// Notifies the delegate that the playback progress has been updated.
     ///
     /// - Parameters:
-    ///   - recorder: The `VoiceMessageAudioRecorder` instance that is recording the audio.
-    ///   - progress: The current record progress as a `Double` representing the percentage of completion.
-    func didUpdatePlayProgress(with recorder: VoiceMessageAudioRecorder, _ progress: Double)
+    ///   - duration: The current record duration as a `Double` representing the timestamp of the current playback.
+    @MainActor func didUpdatePlayProgress(duration: Double)
 }

@@ -58,7 +58,7 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
         // no-op
     }
 
-    func taskQueueEmpty(_ queueTypeName: String) {
+    func taskQueueEmpty() {
         // no-op
     }
 

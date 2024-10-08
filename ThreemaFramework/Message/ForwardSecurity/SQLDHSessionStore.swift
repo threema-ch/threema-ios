@@ -52,24 +52,24 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     
     // See `DHSession` for documentation of these columns
     
-    let myIdentityColumn = Expression<String>("myIdentity")
-    let peerIdentityColumn = Expression<String>("peerIdentity")
-    let sessionIDColumn = Expression<Data>("sessionId")
-    let myCurrentChainKey2DHColumn = Expression<Data?>("myCurrentChainKey_2dh")
-    let myCounter2DHColumn = Expression<Int64?>("myCounter_2dh")
-    let myCurrentChainKey4DHColumn = Expression<Data?>("myCurrentChainKey_4dh")
-    let myCounter4DHColumn = Expression<Int64?>("myCounter_4dh")
-    let peerCurrentChainKey2DHColumn = Expression<Data?>("peerCurrentChainKey_2dh")
-    let peerCounter2DHColumn = Expression<Int64?>("peerCounter_2dh")
-    let peerCurrentChainKey4DHColumn = Expression<Data?>("peerCurrentChainKey_4dh")
-    let peerCounter4DHColumn = Expression<Int64?>("peerCounter_4dh")
-    let myEphemeralPrivateKeyColumn = Expression<Data?>("myEphemeralPrivateKey")
-    let myEphemeralPublicKeyColumn = Expression<Data>("myEphemeralPublicKey")
+    let myIdentityColumn = SQLite.Expression<String>("myIdentity")
+    let peerIdentityColumn = SQLite.Expression<String>("peerIdentity")
+    let sessionIDColumn = SQLite.Expression<Data>("sessionId")
+    let myCurrentChainKey2DHColumn = SQLite.Expression<Data?>("myCurrentChainKey_2dh")
+    let myCounter2DHColumn = SQLite.Expression<Int64?>("myCounter_2dh")
+    let myCurrentChainKey4DHColumn = SQLite.Expression<Data?>("myCurrentChainKey_4dh")
+    let myCounter4DHColumn = SQLite.Expression<Int64?>("myCounter_4dh")
+    let peerCurrentChainKey2DHColumn = SQLite.Expression<Data?>("peerCurrentChainKey_2dh")
+    let peerCounter2DHColumn = SQLite.Expression<Int64?>("peerCounter_2dh")
+    let peerCurrentChainKey4DHColumn = SQLite.Expression<Data?>("peerCurrentChainKey_4dh")
+    let peerCounter4DHColumn = SQLite.Expression<Int64?>("peerCounter_4dh")
+    let myEphemeralPrivateKeyColumn = SQLite.Expression<Data?>("myEphemeralPrivateKey")
+    let myEphemeralPublicKeyColumn = SQLite.Expression<Data>("myEphemeralPublicKey")
     // Note: Should be named `myCurrentVersion_4dh` but it's too late now
-    let myCurrentVersion4DHColumn = Expression<Int?>("negotiatedVersion")
-    let peerCurrentVersion4DHColumn = Expression<Int?>("peerCurrentVersion_4dh")
-    let newSessionCommitted = Expression<Bool>("newSessionCommitted")
-    let lastMessageSent = Expression<Date?>("lastMessageSent")
+    let myCurrentVersion4DHColumn = SQLite.Expression<Int?>("negotiatedVersion")
+    let peerCurrentVersion4DHColumn = SQLite.Expression<Int?>("peerCurrentVersion_4dh")
+    let newSessionCommitted = SQLite.Expression<Bool>("newSessionCommitted")
+    let lastMessageSent = SQLite.Expression<Date?>("lastMessageSent")
     
     fileprivate let versionInfo: SQLDHSessionStoreVersionInfo
     
@@ -260,8 +260,9 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                          
     public func bestDHSession(myIdentity: String, peerIdentity: String) throws -> DHSession? {
         try dbQueue.sync {
-            let orderExpression =
-                Expression<String>(literal: "iif(myCurrentChainKey_4dh is not null, 1, 0) desc, sessionId asc")
+            let orderExpression = SQLite.Expression<String>(
+                literal: "iif(myCurrentChainKey_4dh is not null, 1, 0) desc, sessionId asc"
+            )
             guard let row = try db
                 .pluck(
                     filterForSession(myIdentity: myIdentity, peerIdentity: peerIdentity, sessionID: nil)
@@ -651,8 +652,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     
     private func ratchetFromRow(
         row: Row,
-        keyColumn: Expression<Data?>,
-        counterColumn: Expression<Int64?>
+        keyColumn: SQLite.Expression<Data?>,
+        counterColumn: SQLite.Expression<Int64?>
     ) throws -> KDFRatchet? {
         guard let key = try row.get(keyColumn), let counter = try row.get(counterColumn) else {
             return nil

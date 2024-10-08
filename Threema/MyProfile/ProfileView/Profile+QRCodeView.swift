@@ -27,9 +27,10 @@ extension ProfileView {
         
         @EnvironmentObject var model: ProfileViewModel
         @AccessibilityFocusState(for: .voiceOver) private var isCloseFocused: Bool
-        
+
         let dismiss: () -> Void
         @State private var scale: CGFloat = 0
+        @State private var orientation = UIDeviceOrientation.unknown
         
         var body: some View {
             ZStack {
@@ -58,6 +59,7 @@ extension ProfileView {
                     
                     withAnimation(.spring.speed(2)) {
                         scale = 1
+                        orientation = UIDevice.current.orientation
                     }
                 }
                 .accessibilityLabel("profile_big_qr_code_cover_view".localized)
@@ -83,8 +85,20 @@ extension ProfileView {
                 .ultraThinMaterial
             )
             .onTapGesture(perform: onDismiss)
-            .onRotate { _ in
-                onDismiss()
+            .onRotate { newOrientation in
+                if scale > 0, orientation != UIDeviceOrientation.unknown {
+                    if !newOrientation.isFlat,
+                       newOrientation.isLandscape != orientation.isLandscape ||
+                       newOrientation.isPortrait != orientation.isPortrait {
+                        orientation = newOrientation
+                        onDismiss()
+                    }
+                }
+                else {
+                    if !newOrientation.isFlat {
+                        orientation = newOrientation
+                    }
+                }
             }
         }
         

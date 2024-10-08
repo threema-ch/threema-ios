@@ -73,7 +73,7 @@ import ThreemaFramework
     private lazy var provider = GroupListProvider()
     
     private lazy var dataSource: ContactListDataSource = .init(
-        provider: GroupListProvider(),
+        provider: provider,
         cellProvider: GroupListCellProvider(),
         in: tableView,
         sectionIndexEnabled: false
@@ -90,5 +90,29 @@ import ThreemaFramework
             return
         }
         show(GroupDetailsViewController(for: group, displayStyle: .default), sender: self)
+    }
+}
+
+@objc class DistributionListViewController: ThemedTableViewController {
+    private lazy var provider = DistributionListProvider()
+
+    private lazy var dataSource: ContactListDataSource = .init(
+        provider: provider,
+        cellProvider: DistributionListCellProvider(),
+        in: tableView,
+        sectionIndexEnabled: false
+    )
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tableView.delegate = self
+        tableView.dataSource = dataSource
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let id = dataSource.itemIdentifier(for: indexPath), let distributionList = provider.entity(for: id) else {
+            return
+        }
+        show(DistributionListDetailsViewController(for: distributionList, displayStyle: .default), sender: self)
     }
 }

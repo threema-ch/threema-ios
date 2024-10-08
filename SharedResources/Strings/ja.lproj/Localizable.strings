@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "テキストはクリップボードにコピーされました";
 "webrtc_diagnostics.done" = "終了しました。通話接続に問題がある場合は、この結果をThreemaサポートに送信してください。";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "選択";
 "mwphotobrowser_select_all" = "すべて選択";
@@ -90,7 +87,7 @@
 "locating" = "位置情報を選択…";
 "unknown_location" = "未知の位置情報";
 "open" = "開く";
-"call" = "通話"; /* Short version for "Start Threema Call" */
+"call" = "音声通話"; /* Short version for "Start Threema Call" */
 "Info" = "情報";
 "error_abort" = "重大なエラー";
 "qr_code" = "QRコード";
@@ -338,7 +335,7 @@
 "record_audio" = "音声メッセージ";
 "record_continue" = "音声録音を続ける";
 "scan_qr" = "QRコードをスキャンする";
-"share_file" = "データを送信";
+"share_file" = "ファイルか連絡先を共有";
 "add_item_caption" = "キャプションの追加";
 "add_items_caption" = "Bildunterschrift hinzufügen";
 "send_item_immediately_photo" = "写真の送信";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "職場の連絡先";
 "threema_type_icon_private_accessibility_label" = "プライベートの連絡先";
 
-"delete_contact_group_exists_title" = "連絡先を削除できません";
-"delete_contact_group_exists_message_single" = "%@さんはまだグループの参加者です。グループから連絡先を削除するか、グループを削除してください。";
-"delete_contact_group_exists_message_multiple" = "%@さんはグループ\"%d\"の参加者です。グループから連絡先を削除するか、グループを削除してください。";
-"delete_contact_group_exists_show_contact_button" = "連絡先を表示";
 "delete_contact_existing_conversation_title" = "%@ を削除しますか？";
+"delete_contact_existing_conversation_is_group_member_title" = "「%@」との個別チャットは削除されますが、グループのメンバーとしては残ります。「%@」を削除しますか？";
 "delete_contact_existing_conversation_button" = "連絡先とトーク履歴を削除";
+"delete_contact_is_group_member_title" = "\"%@\"はグループのメンバーのままです。\"%@\"を削除しますか？";
 "delete_contact_confirmation_with_exclusion_message" = "%@さんを削除し、連絡先を同期から除外しますか？";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "「%@」はグループのメンバーのままです。「%@」を削除し、同期から除外しますか？";
 "delete_contact_button" = "連絡先を削除";
 "delete_contact_confirmation_with_exclusion_button" = "連絡先の削除および除外";
 "exclude_deleted_id_title" = "%@さんのThreema IDを同期から除外しますか？";
@@ -544,6 +540,10 @@
 "setup_title_text" = "%@ は初めてですか？";
 "restore_id_export" = "エクスポートされたIDを復元";
 "id_exists" = "この端末で以前使用していたThreema ID（%@）が残っています。このIDを復元しますか？";
+
+"contact_support" = "サポートに連絡";
+"contact_support_mail_subject" = "この購入のために作成されたIDが多すぎます";
+"contact_support_mail_message" = "%@チームの皆様、\n\n新しいThreema IDの生成が失敗し、このエラーコードが返されました:\n%@\n\nよろしくお願いいたします。";
 
 "welcome" = "%@ へようこそ";
 "move_your_finger" = "あなたの指を画面上で縦横無尽に動かしてください";
@@ -712,6 +712,8 @@
 "current_position" = "ポジション";
 "in_reply_to" = "に返信";
 "draft" = "下書き";
+"draft_type_quote" = "引用";
+"draft_type_edit" = "編集";
 "new_message_accessibility" = "新規メッセージ: ";
 "quote_interaction_hint" = "引用されたメッセージへ飛ぶ";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Threemaチャンネルを連絡先に追加しますか？";
 "threema_channel_info" = "ThreemaチャンネルはThreemaについてのすべてのニュースを配信します";
 "threema_channel_failed" = "Threemaチャンネルを追加できません。";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Threema Workチャンネルを連絡先に追加しますか？";
+"threema_work_channel_info" = "Threema WorkチャンネルはThreema Workについてのすべてのニュースを配信します。";
+"threema_work_channel_failed" = "Threema Workチャンネルを追加できません。";
+
 
 /* Push decryption */
 "decryption_push_reply" = "返信";
@@ -766,7 +774,7 @@
 "call_camera_switch_to_front_button" = "フロントカメラに切り替え";
 "call_camera_switch_to_back_button" = "背面カメラへの切り替え";
 
-"call_rejected" = "通話が拒否されました";
+"call_rejected" = "音声通話が拒否されました";
 "call_rejected_busy" = "取り込み中";
 "call_rejected_timeout" = "通話相手がいません";
 "call_rejected_disabled" = "受信者によって無効化された通話";
@@ -779,7 +787,7 @@
 "call_back" = "折り返し電話";
 "call_accept" = "受け入れ";
 "call_reject" = "拒否";
-"call_hide_call" = "通話を隠す";
+"call_hide_call" = "音声通話を隠す";
 "call_no_wifi" = "モバイル回線経由での通話。詳しく...";
 "call_mic_access" = "マイクの使用が許可されていません";
 
@@ -823,7 +831,7 @@
 
 "group_call_error_generic_title" = "エラーが発生しました";
 "group_call_error_generic_message" = "この問題が解決しない場合は、カスタマーサポートまでご連絡ください。";
-"group_call_error_already_in_call_title" = "他が通話中です";
+"group_call_error_already_in_call_title" = "通話中";
 "group_call_error_already_in_call_message" = "一度に参加できる通話は1つだけです。";
 "group_call_error_ended_in_meantime_title" = "グループ通話が終了しました";
 "group_call_error_ended_in_meantime_message" = "その間、あなたか参加しようとした通話は終了しました";
@@ -1074,7 +1082,7 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "restore_option_id" = "IDだけを復元する";
 "restore_option_id_keep_data" = "エクスポートされたThreema IDを復元し、この端末に保存されているデータ（トーク・連絡先・グループなど）を維持することができます。";
 "backup_faq_link_text" = "%@のバックアップについて詳しく知る";
-"forgot_password_link_text" = "パスワードを忘れた場合";
+"restore_option_help_link_text" = "ヘルプ";
 
 "restore_option_data_description" = "この端末では、%@のデータ（トーク・連絡先・グループなど）が存在します。";
 "restore_option_data_keep_data" = "ローカルデータの保持";
@@ -1109,8 +1117,8 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "settings_list_media_title" = "写真と動画";
 "settings_list_storage_management_title" = "ストレージ管理";
 "settings_list_passcode_lock_title" = "パスコードロック";
-"settings_threema_calls" = "通話";
-"settings_list_threema_desktop_title" = "デスクトップ版 Threema 2.0（ベータ）";
+"settings_threema_calls" = "音声通話";
+"settings_list_threema_desktop_title" = "デスクトップ版 Threema 2.0（ベータ版）";
 "settings_list_threema_web_title" = "デスクトップ／ウェブ";
 
 "settings_list_network_title" = "通信状態";
@@ -1119,6 +1127,7 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 
 "settings_list_invite_a_friend_title" = "友だちに紹介";
 "settings_list_threema_channel_title" = "Threemaチャンネル";
+"settings_list_threema_work_channel_title" = "Threema Workチャンネル";
 
 "settings_list_rate" = "%@を評価する";
 
@@ -1253,7 +1262,7 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "delete_messages_confirm" = " %@より古いメッセージをすべて永久に削除しますか？";
 "delete_messages_confirm_all" = "すべてのメッセージを永久に削除しますか？";
 "delete_messages_explain" = "テキストや音声メッセージ・メディア・ファイル・投票など、あらゆる種類のメッセージが削除されます。";
-"automatic_delete_explain" = "ディスクスペースを解放するためにメッセージとメディアの自動削除を使用してください。開かれている投票とノートグループは自動削除の対象外です。";
+"automatic_delete_explain" = "メッセージとメディアの自動削除を使用してディスクスペースを解放してください。開かれている投票、スター付きメッセージ、およびノートグループの内容は自動削除の対象外です。";
 "automatic_delete_on_confirmation_title" = "自動削除をオンにしますか？";
 "automatic_delete_off_confirmation_title" = "自動削除をオフにしますか？";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1307,7 +1316,7 @@ Threema Safeを利用すると、万が一端末にアクセスできなくな�
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_off" = "可能であれば直接接続し、検証されていない連絡先への電話はOnPremサーバーを介してのみ中継してください。これにより、IPアドレスが公開される可能性があります。";
 "settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "全ての通話をOnPremサーバーに中継し、IPアドレスを保護します。これは通話品質に影響を与える可能性があります。";
 "settings_threema_voip_include_call_in_recents_footer_off" = "通話はロック画面に表示されますが、電話アプリの通話リストには表示されません。";
-"settings_threema_voip_include_call_in_recents_footer_on" = "通話はロック画面に表示され、電話アプリの通話リストに表示されます。iCloud Driveが有効な場合、電話アプリの通話リストはAppleのサーバーを介して同期されます。";
+"settings_threema_voip_include_call_in_recents_footer_on" = "音声通話はロック画面に表示され、電話アプリの通話リストに表示されます。iCloud Driveが有効な場合、電話アプリの通話リストはAppleのサーバーを介して同期されます。";
 "settings_threema_voip_no_callkit_in_china_footer" = "Appleの制限により、端末の地域設定が中国になっている場合、Threema通話は利用できません。";
 "settings_threema_calls_group_calls_header" = "グループ通話";
 "settings_threema_calls_enable_group_calls" = "Threemaグループ通話を有効にする";
@@ -1480,6 +1489,16 @@ iTunesのバックアップを作成してから行ってください。";
 "could_not_add_all_items_memory_constrained_title" = "アプリを使用してください";
 "could_not_add_all_items_memory_constrained_message" = "技術的な制約により、1つまたは複数のファイルを処理できませんでした。これらのファイルをアプリケーションから直接送信してください。";
 "image_preview_cell_cannot_preview" = "プレビューを表示できません。";
+
+// Profile Synchronization
+"sync_error_title" = "プロファイル同期に失敗しました";
+"sync_error_general_message" = "インターネット接続を確認して、もう一度やり直してください。";
+"sync_error_same_transaction_error" = "プロフィールは既に別のデバイスで同期されています。同期が完了するまでお待ちください。このデバイスでの変更は破棄されます。";
+
+"syncing_profile" = "同期中...";
+
+"incoming_profile_sync_title" = "プロフィールは同期されました";
+"incoming_profile_sync_message" = "別のデバイスからのプロファイル変更が適用されました";
 
 // Share Extension
 "finished_sending_title" = "送信が完了しました";
@@ -1740,6 +1759,7 @@ iTunesのバックアップを作成してから行ってください。";
 "notification_deleted_messages_count" = "%d件のメッセージを削除しました";
 
 "notification_cannot_play_video" = "動画を再生できません";
+"notification_recording_too_long" = "録音が最大長を超えました";
 
 "notification_call_failed_connected" = "接続切れ";
 "notification_call_failed_not_connected" = "接続の確立に失敗しました";

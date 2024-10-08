@@ -29,8 +29,8 @@ struct ContactListCellProvider: ContactListCellProviderProtocol {
         in tableView: UITableView
     ) -> ContactCell? {
         guard let contact else {
-            DDLogError("Unable to load contact. Show close to zero cell instead")
-            return nil
+            DDLogError("Unable to load contact")
+            return tableView.dequeueCell(for: indexPath) as ContactCell
         }
 
         return (tableView.dequeueCell(for: indexPath) as ContactCell).then {
@@ -46,7 +46,7 @@ struct GroupListCellProvider: ContactListCellProviderProtocol {
         in tableView: UITableView
     ) -> GroupCell? {
         guard let group else {
-            DDLogError("Unable to load group. Show close to zero cell instead")
+            DDLogError("Unable to load group")
             return tableView.dequeueCell(for: indexPath) as GroupCell
         }
 
@@ -56,19 +56,19 @@ struct GroupListCellProvider: ContactListCellProviderProtocol {
     }
 }
 
-// struct DistributionListCellProvider: ContactListCellProviderProtocol {
-//    func dequeueCell(
-//        for indexPath: IndexPath,
-//        and distributionList: DistributionListObject?,
-//        in tableView: UITableView
-//    ) -> DistributionListCell? {
-//        guard let distributionList else {
-//            DDLogError("Unable to load distributionList. Show close to zero cell instead")
-//            return nil
-//        }
-//
-//        return (tableView.dequeueCell(for: indexPath) as DistributionListCell).then {
-//            $0.distributionList2 = distributionList
-//        }
-//    }
-// }
+struct DistributionListCellProvider: ContactListCellProviderProtocol {
+    func dequeueCell(
+        for indexPath: IndexPath,
+        and distributionList: DistributionList?,
+        in tableView: UITableView
+    ) -> DistributionListCell? {
+        guard let distributionList else {
+            DDLogError("Unable to load distributionList")
+            return tableView.dequeueCell(for: indexPath) as DistributionListCell
+        }
+
+        return (tableView.dequeueCell(for: indexPath) as DistributionListCell).then {
+            $0.distributionList = distributionList
+        }
+    }
+}

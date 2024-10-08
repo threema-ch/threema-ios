@@ -52,29 +52,21 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
             nameLabel.text = name
             topMetadataLabel.text = distributionList.recipientCountString
             membersListLabel.text = distributionList.recipientsSummary
-            updateAvatar()
+            
+            profilePictureView.info = .distributionList(distributionList)
         }
     }
     
     // MARK: - Subviews
+
+    private var profilePictureSizeConstraint: NSLayoutConstraint!
     
-    // Always use max height as possible
-    private lazy var avatarSizeConstraint: NSLayoutConstraint = avatarImageView.heightAnchor.constraint(
-        lessThanOrEqualToConstant: configuration.maxAvatarSize
-    )
-    
-    private lazy var avatarImageView: UIImageView = {
-        let imageView = UIImageView(image: configuration.loadingAvatarImage)
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let imageView = ProfilePictureImageView()
         
-        imageView.contentMode = .scaleAspectFit
-        
-        // Always use max height as possible and set the width with aspect ratio 1:1
-        avatarSizeConstraint = imageView.heightAnchor.constraint(lessThanOrEqualToConstant: configuration.maxAvatarSize)
-        avatarSizeConstraint.isActive = true
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        
-        imageView.accessibilityIgnoresInvertColors = true
+        profilePictureSizeConstraint = imageView.heightAnchor
+            .constraint(lessThanOrEqualToConstant: configuration.maxProfilePictureSize)
+        profilePictureSizeConstraint.isActive = true
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             imageView.isHidden = true
@@ -146,7 +138,7 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     }()
     
     private lazy var containerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [avatarImageView, textStack])
+        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack])
         
         stackView.axis = .horizontal
         stackView.distribution = .fill
@@ -166,7 +158,6 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
         containerStack.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            avatarSizeConstraint,
             containerStack.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
             containerStack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             containerStack.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
@@ -191,32 +182,14 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     
     // MARK: - Updates
     
-    private func updateAvatar() {
-        avatarSizeConstraint.constant = configuration.maxAvatarSize
-        
-        guard let profilePictureData = distributionList?.profilePicture,
-              let profilePicture = UIImage(data: profilePictureData) else {
-            Task { @MainActor in
-                avatarImageView.image = AvatarMaker.shared().unknownDistributionListImage()
-            }
-            return
-        }
-        
-        let maskedProfilePicture = AvatarMaker.shared()
-            .maskedProfilePicture(profilePicture, size: configuration.maxAvatarSize)
-        
-        Task { @MainActor in
-            self.avatarImageView.image = maskedProfilePicture
-        }
-    }
-    
-    // MARK: - Updates
-    
     private func sizeDidChange() {
         nameLabel.font = configuration.nameLabelFont
         containerStack.spacing = configuration.horizontalSpacing
         
-        // TODO: (IOS-4366) Re-add avatar
+        // Note: We don't reload the profile picture here. So if the `content` is assigned before the `size`
+        // we might have a blurry profile picture.
+        profilePictureSizeConstraint.constant = configuration.maxProfilePictureSize
+        
         updateSeparatorInset()
     }
     
@@ -226,8 +199,7 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
             return
         }
         
-        // Note: This will be off when the avatar is smaller than `maxAvatarSize`.
-        let leftSeparatorInset = configuration.maxAvatarSize + configuration.horizontalSpacing
+        let leftSeparatorInset = configuration.maxProfilePictureSize + configuration.horizontalSpacing
         separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)
     }
     

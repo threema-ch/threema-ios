@@ -27,25 +27,23 @@ struct DeviceJoinPFSInfoView: View {
     @Environment(\.openURL) private var openURL
     
     @State private var showScanQRCodeView = false
-    
-    private let faqURL = "https://threema.ch/faq/md_limit"
-    
+        
     var body: some View {
         VStack {
             ScrollView {
                 DeviceJoinHeaderView(
-                    title: "multi_device_new_linked_devices_title".localized,
+                    title: "settings_list_threema_desktop_title".localized,
                     description: String.localizedStringWithFormat(
                         "multi_device_join_perfect_forward_secrecy_info".localized,
-                        faqURL
+                        ThreemaURLProvider.multiDeviceLimit.absoluteString
                     )
                 )
                 .padding([.horizontal, .top], 24)
                 .accessibilityAction(named: Text(String.localizedStringWithFormat(
                     "accessibility_action_open_link".localized,
-                    faqURL
+                    ThreemaURLProvider.multiDeviceLimit.absoluteString
                 ))) {
-                    openURL(URL(string: faqURL)!)
+                    openURL(ThreemaURLProvider.multiDeviceLimit)
                 }
             }
             

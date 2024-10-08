@@ -138,9 +138,7 @@ class ThreemaWebViewController: ThemedTableViewController {
     }
     
     private func showDesktopSettings() {
-        dismiss(animated: true) {
-            NotificationCenter.default.post(name: .showDesktopSettings, object: nil)
-        }
+        NotificationCenter.default.post(name: .showDesktopSettings, object: nil)
     }
     
     private func presentActionSheetForSession(_ webClientSession: WebClientSession, indexPath: IndexPath) {
@@ -461,9 +459,9 @@ class ThreemaWebQRCodeScanner: QRScannerViewControllerDelegate {
     fileprivate var downloadString: String {
         switch ThreemaApp.current {
         case .work, .blue, .onPrem:
-            "https://threema.ch/work/download"
+            ThreemaURLProvider.workDownload.absoluteString
         default:
-            "https://threema.ch/download"
+            ThreemaURLProvider.consumerDownload.absoluteString
         }
     }
     

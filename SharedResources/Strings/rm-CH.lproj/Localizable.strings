@@ -5,6 +5,8 @@
  Copyright (c) 2012 Threema GmbH. All rights reserved.
  */
 "scan_document" = "Scannar il document";
+"no_contacts_loading" = "Ils contacts vegnan per il mument chargiads giu dal server. Cura che quest process è terminà, vegnan ils contacts visualisads.";
+
 // Contact List
 "contactList_add_contact" = "Nov contact";
 "contactList_add_group" = "Nova gruppa";
@@ -35,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Il text è vegnì copià en l'archiv provisoric";
 "webrtc_diagnostics.done" = "Finì. Sche ti has problems cun la creaziun d'ina colliaziun da telefon, trametta quest output al support da Threema.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/de/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Selecziun";
 "mwphotobrowser_select_all" = "Tuts";
@@ -56,8 +55,8 @@
 "cannot_connect_message" = "P.pl. controllar tia colliaziun d’internet.";
 
 // JKLockScreenViewController
-"delete_identity_passcode_title" = "Activà la bloccada da code";
-"delete_identity_passcode_message" = "Deactivescha p.pl. la bloccada da code avant che stizzas tia ID.";
+"delete_identity_passcode_title" = "Activà la bloccada cun code";
+"delete_identity_passcode_message" = "Deactivescha p.pl. la bloccada cun code avant che ti stizzas tia ID.";
 
 /* JKLockScreenViewController */
 "cancel" = "Interrumper";
@@ -510,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Contact da Work";
 "threema_type_icon_private_accessibility_label" = "Contact privat";
 
-"delete_contact_group_exists_title" = "Il contact è en il chat da gruppa";
-"delete_contact_group_exists_message_single" = "«%@» è commember d'ina gruppa. Allontanescha l'emprim il contact da la gruppa u stizza la gruppa.";
-"delete_contact_group_exists_message_multiple" = "«%@» è commember da %d gruppas. Allontanescha l'emprim il contact da las gruppas u stizza las gruppas.";
-"delete_contact_group_exists_show_contact_button" = "Mussar il contact";
 "delete_contact_existing_conversation_title" = "Stizzar «%@»?";
+"delete_contact_existing_conversation_is_group_member_title" = "«%@» resta commember da la gruppa e ses messadis restan vinavant vesaivels. Sulettamain il chat singul vegn stizzà. Propi stizzar «%@»?";
 "delete_contact_existing_conversation_button" = "Stizzar il contact + cronologia dals messadis";
+"delete_contact_is_group_member_title" = "«%@» resta commember da la gruppa e ses messadis restan vinavant vesaivels. Propi stizzar «%@»?";
 "delete_contact_confirmation_with_exclusion_message" = "Stizzar «%@»  ed exluder da la sincronisaziun?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "«%@» resta commember da la gruppa e ses messadis restan vinavant vesaivels. Stizzar «%@» ed excluder da la sincronisaziun?";
 "delete_contact_button" = "Stizzar il contact";
 "delete_contact_confirmation_with_exclusion_button" = "Stizzar + excluder il contact";
 "exclude_deleted_id_title" = "Vuls ti excluder da la sincronisaziun l’ID dal contact che ti has gist stizzà?";
@@ -542,6 +540,10 @@
 "setup_title_text" = "Nov tar %@?";
 "restore_id_export" = "Restaurar l'ID exportada";
 "id_exists" = "L'ID da Threema (%@) ch'è vegnida duvrada avant sin quest apparat è anc avant maun. Vuls ti restaurar questa ID?";
+
+"contact_support" = "Contactar il support";
+"contact_support_mail_subject" = "Creà memia bleras IDs per questa cumpra";
+"contact_support_mail_message" = "Prezià team da %@\n\nI na reussescha betg da generar ina nova ID. Jau survegn il suandant code d'errur:\n%@\n\nCordials salids";
 
 "welcome" = "Bainvegni tar %@";
 "move_your_finger" = "Muventa tes det en il champ.";
@@ -712,6 +714,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "current_position" = "Posiziun";
 "in_reply_to" = "sco resposta a";
 "draft" = "Sboz";
+"draft_type_quote" = "Citat";
+"draft_type_edit" = "Elavurar";
 "new_message_accessibility" = "Nov messadi: ";
 "quote_interaction_hint" = "Siglia tar il messadi cità";
 
@@ -729,6 +733,12 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "threema_channel_intro" = "Vuls ti agiuntar Threema Channel a tes contacts?";
 "threema_channel_info" = "Threema Channel proveda Vus cun novitads davart Threema.";
 "threema_channel_failed" = "Deplorablamain betg stà pussaivel d'agiuntar Threema Channel.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Vuls ti agiuntar Threema Work Channel a tes contacts?";
+"threema_work_channel_info" = "Threema Work Channel proveda tai cun novitads davart Threema Work.";
+"threema_work_channel_failed" = "Deplorablamain betg stà pussaivel d'agiuntar Threema Work Channel.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Respunder";
@@ -803,11 +813,46 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 
 // Group Calls
 "group_call_title" = "Telefonat da gruppa";
+/* Group Calls */
+"group_call_join_button_title" = "Sa participar";
 "group_call_open_button_title" = "Avrir";
 "group_call_participants_title" = "Participant: %@";
 
 /* Group Calls */
 "group_call_started_by_contact_system_message" = "%@ ha cumenzà in telefonat da gruppa";
+"group_call_started_by_local_system_message" = "Ti has cumenzà in telefonat da gruppa";
+"group_call_ended_system_message" = "Il telefonat da gruppa è ì a fin";
+"group_call_started_disabled" = "Cumenzà in telefonat da gruppa. Activescha ils telefonats da gruppa en las configuraziuns per pudair ta participar.";
+
+"group_call_notification_body_preview" = "%@ ha cumenzà in telefonat da gruppa";
+"group_call_notification_body" = "Cumenzà in telefonat da gruppa";
+
+"group_call_navbar_state_connecting" = "Colliar ...";
+"group_call_navbar_state_joining" = "Sa participar ...";
+"group_call_navbar_state_connected" = "Collià";
+
+"group_call_error_generic_title" = "Igl ha dà in'errur";
+"group_call_error_generic_message" = "P.pl. contactar il support, sch'il problem persista.";
+"group_call_error_already_in_call_title" = "In auter telefonat è activ";
+"group_call_error_already_in_call_message" = "Ins po sa participar a max. in telefonat.";
+"group_call_error_ended_in_meantime_title" = "Il telefonat da gruppa è ì a fin";
+"group_call_error_ended_in_meantime_message" = "En il fratemp è il telefonat, al qual ti has vulì sa participar, ì a fin.";
+
+"group_call_alert_full_title" = "Cuntanschì il dumber da participants maximal";
+"group_call_alert_full_message_count" = "Cuntanschì il dumber da participants maximal da %d per il telefonat da gruppa.";
+"group_call_alert_full_message" = "Cuntanschì il dumber da participants maximal per il telefonat da gruppa.";
+
+"group_call_accessibility_hide_view" = "Zuppentar il telefonat da gruppa";
+"group_call_accessibility_enable_camera" = "Activar la camera";
+"group_call_accessibility_disable_camera" = "Deactivar la camera";
+"group_call_accessibility_audio_output" = "Midar l'emissiun da l'audio";
+"group_call_accessibility_enable_microphone" = "Activar il microfon";
+"group_call_accessibility_disable_microphone" = "Deactivar il microfon";
+"group_call_accessibility_audio_enabled" = "Activà il microfon";
+"group_call_accessibility_audio_disabled" = "Deactivà il microfon";
+"group_call_accessibility_video_enabled" = "Activà la camera";
+"group_call_accessibility_video_disabled" = "Deactivà la camera";
+
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protegia tia sfera privata uschè consequentamain sco nagin auter messenger. En nossa decleraziun davart la protecziun da datas chattas ti ulteriuras infurmaziuns.";
 "privacy_policy_about_work" = "%@ protegia tia sfera privata uschè consequentamain sco nagin auter messenger. En nossa decleraziun davart la protecziun da datas chattas ti ulteriuras infurmaziuns.";
@@ -831,6 +876,16 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "archived_chats" = "Chats archivads";
 
 "archived_title" = "Archivà";
+"conversations_global_search_placeholder" = "Tschertgar";
+"one_to_one_chat" = "Chats singuls";
+"conversations_global_search_section_header_tokens" = "Tips da messadis";
+"conversations_global_search_token_text" = "Messadis scrits";
+"conversations_global_search_token_captions" = "Suttascripziuns da medias";
+"conversations_global_search_token_polls" = "Enquistas";
+"conversations_global_search_token_locations" = "Lieus";
+// This should be as short as possible, as alternative when translating use "Marked".
+"conversations_global_search_token_starred" = "Marcà";
+
 "select_all" = "Selecziunar tuts";
 "deselect_all" = "Selecziunar nagut";
 "no_archived_chats" = "Nagins chats archivads";
@@ -840,6 +895,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "privateChat_code_alert_confirm" = "Endrizzar ussa";
 "privateChat_set_alert_title" = "Vuls ti marcar quest chat sco privat?";
 "privateChat_set_alert_message" = "Ti pos determinar la visibilitad da chats privats en las configuraziuns da la sfera privata.";
+"privateChat_setup_alert_message" = "Tes backup da Threema Safe cuntegneva chats privats. Per pudair avrir quels, stos ti endrizzar ina bloccada cun code.";
+
 "group_leave_sheet_title" = "Bandunar «%@»";
 "group_leave_sheet_message" = "Sche ti bandunas sulettamain la gruppa, na pos ti betg pli participar a la conversaziun. La cronologia dals messadis d'enfin qua resta dentant mantegnida.";
 
@@ -857,6 +914,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "group_delete_sheet_title" = "Stizzar «%@»?";
 "group_delete_sheet_message" = "Vuls ti propi stizzar questa gruppa e ses cuntegns?";
 "group_delete_button" = "Stizzar la gruppa + la cronologia dals messadis";
+
+"distribution_list_delete_sheet_title" = "Stizzar la glista da distribuziun?";
 
 "selected_count" = "Selecziunà %d";
 "all_selected" = "Selecziunà tuts";
@@ -892,6 +951,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "doNotDisturb_mention" = "Avisar, sche menziunà";
 "doNotDisturb_mention_footer_off" = "Ti na survegns era nagins avis, sche ti vegns menziunà.";
 "doNotDisturb_mention_footer_on" = "Ti survegns in avis, sche ti vegns menziunà.";
+
+"doNotDisturb_notification_sound_footer" = "Il tun d'avis resuna mo, sche ti has activà «Reproducir il tun» e deactivà «Betg disturbar».";
 
 "notification_sound_header" = "Tun da l'avis";
 "notification_sound_title" = "Reproducir il tun";
@@ -962,6 +1023,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "safe_upload_failed" = "L’upload n’è betg reussì";
 "safe_upload_size_exceeded" = "Surpassà la grondezza dal backup";
 "safe_change_password" = "Midar il pled-clav";
+"safe_change_password_disabled" = "Il pled-clav vegn gestiunà da l'admin";
+"safe_learn_more" = "Ulteriuras infos";
 "safe_backup_now" = "Memorisar ussa";
 "safe_deactivate" = "Deactivar Threema Safe";
 "safe_deactivate_explain" = "Tes backups da Threema Safe existents vegnan stizzads irrevocablamain dal server. Vuls cuntinuar?";
@@ -1003,6 +1066,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "safe_test_server_invalid_url" = "P.pl. endatar in'adressa HTTPS valaivla.";
 "safe_restore_error" = "Igl ha dà sin sbagl cun restaurar il backup da Threema Safe. P.pl. empruvar anc ina giada.";
 "safe_activation_failed" = "I n'è betg stà pussaivel d'activar Threema Safe seunter avair restaurà il backup.";
+"safe_activation_app_migration_failed_error_message" = "Pervia d’ina errur da la banca da datas n’èsi betg stà pussaivel da restabilir il backup da Threema Safe. P.pl. empruvar anc ina giada.";
+
 "password_bad" = "Pled-clav debel";
 "password_bad_explain" = "Il pled-clav per Threema Safe che ti has tschernì e fitg debel ed attatgaders al pon spert eruir. P.pl. tscherna in pled-clav segir. Tip: duvrar in pled cumponì cun pliras noziuns.";
 "password_bad_guidelines" = "Il pled-clav endatà na correspunda betg a las directivas.";
@@ -1018,7 +1083,7 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "restore_option_id" = "Mo restaurar tia ID";
 "restore_option_id_keep_data" = "Restaurar tia ID dal backup da l’ID e mantegnair las datas (chats, contacts, gruppas, etc.) sin quest apparat";
 "backup_faq_link_text" = "Leger dapli davart backups en %@.";
-"forgot_password_link_text" = "Emblidà il pled-clav?";
+"restore_option_help_link_text" = "Agid";
 
 "restore_option_data_description" = "Sin quest apparat èn avant maun datas da %@ (chats, contacts, gruppas, etc.).";
 "restore_option_data_keep_data" = "Mantegnair datas localas";
@@ -1026,6 +1091,11 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "restore_option_data_delete_data" = "Stizzar las datas localas";
 "restore_option_data_delete_data_description" = "Restaurar in backup da Threema Safe (ID, contacts e gruppas) u in backup da l’ID (ID da Threema) suenter che las datas localas èn stizzadas";
 "restore_option_data_delete_data_explain" = "Per restaurar in backup da Threema Safe cumplet, stos ti installar da nov %@: p.pl. stizzar l’app e la telechargiar danovamain da l’App Store.";
+
+"threema_safe_company_mdm_password_changed_title" = "Definì in pled-clav administrà per Threema Safe";
+"threema_safe_company_mdm_password_changed_message" = "Vuls di remplazzar il pled-clav actual cun il nov pled-clav administrà? En cas da dubi contactescha tes administratur.";
+"threema_safe_company_mdm_password_changed_accept" = "Acceptar";
+"threema_safe_company_mdm_password_changed_accepted" = "Definì in pled-clav administrà";
 
 // Company Directory
 "companydirectory_description" = "Tschertgar contacts interns";
@@ -1039,10 +1109,72 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "url_warning_title" = "Avertiment da phishing";
 "url_warning_body" = "La pagina-web che ti vuls avrir è dubiusa:\n\nNum dal host inditgà: %@\nNum dal host effectiv: %@\n\nQuai pudess esser in’emprova da manar tai sin ina pagina-web falsifitgada.\n\nVuls ti tuttina cuntinuar?";
 
+// Settings
+"settings_navbar_title" = "Configuraziuns";
+"settings_list_privacy_title" = "Sfera privata";
+"settings_list_appearance_title" = "Cumparsa";
+"settings_list_notifications_title" = "Avis";
+"settings_list_chat_title" = "Chat";
+"settings_list_media_title" = "Medias";
+"settings_list_storage_management_title" = "Management da l'arcun";
+"settings_list_passcode_lock_title" = "Bloccada cun code";
 "settings_threema_calls" = "Telefonats da Threema";
+"settings_list_threema_desktop_title" = "Threema 2.0 per il desktop (Beta)";
+"settings_list_threema_web_title" = "Desktop/web";
+
+"settings_list_network_title" = "Status da la rait";
+"settings_list_version_title" = "Versiun";
+"settings_list_settings_license_username_title" = "Num d'utilisader da licenza";
+
+"settings_list_invite_a_friend_title" = "Envidar amis";
+"settings_list_threema_channel_title" = "Threema Channel";
+"settings_list_threema_work_channel_title" = "Threema Work Channel";
+
+"settings_list_rate" = "Valitar %@";
+
+"settings_list_support_title" = "Support";
+"settings_list_privacy_policy_title" = "Decleraziun davart la protecziun da datas";
+"settings_list_license_title" = "Licenza";
 "settings_advanced" = "Extendì";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "La soluziun da communicaziun segira per interpresas";
 "settings_feedback" = "Feedback Beta";
+"settings_list_tos_title" = "Cundiziuns d'utilisaziun";
+
+"settings_md_sync_alert_title" = "Betg reussì da sincronisar";
+
+// Privacy Settings
+"settings_privacy_contacts_header" = "Contacts";
+"settings_privacy_sync_contacts" = "Sincronisar ils contacts";
+"settings_privacy_exclusion_list" = "Glista d'exclusiun";
+"settings_privacy_exclusion_list_alert_title" = "L'ID è memia curta";
+"settings_privacy_exclusion_list_alert_message" = "P.pl. endatar in'ID cun exact 8 bustabs.";
+"settings_privacy_block_unknown" = "Bloccar persunas nunenconuschentas";
+"settings_privacy_block_unknown_footer_on"= "Mo persunas sin tia glista da contacts pon tramettar messadis a tai.";
+"settings_privacy_block_unknown_foooter_off" = "Mintgin po trametter messadis a tai. Novs contacts vegnan agiuntads automaticamain suenter l'emprim messadi.";
+
+"settings_privacy_os_header" = "Integraziun iOS";
+"settings_privacy_os_donate" = "Parter interacziuns";
+"settings_privacy_os_reset" = "Redefinir interacziuns";
+"settings_privacy_os_footer" = "Sche questa configuraziun è activada, vegnan proponids contacts da Threema cura che vegnan partids cuntegns en iOS. Qua tras vegnan dadas vinavant infurmaziuns davart interacziuns al sistem operativ.";
+
+"settings_privacy_chat_header" = "Chat";
+"settings_privacy_read_receipts" = "Conferma da lectura";
+"settings_privacy_typing_indicator" = "Mussar che jau scriv";
+
+"settings_privacy_poi_header" = "Datas localas";
+"settings_privacy_choose_poi" = "Tscherner POIs";
+"settings_privacy_poi_footer" = "Sche questa configuraziun è activada, vegnan mussads en cas che ti partas tia posiziun lieus publics («Points of Interest») en tia vischinanza. Tia posiziun vegn transmessa al server.";
+
+"settings_privacy_TIRR_reset_all" = "Redefinir tut ils contacts";
+"settings_privacy_TIRR_reset_footer" = "Redefinescha ils parameters da standard per tut ils contacts.";
+"settings_privacy_TIRR_reset_alert_title" = "Redefinir";
+"settings_privacy_TIRR_reset_alert_message" = "Per tut ils contacts vegnan redefinids ils parameters da standard. Quest pass na pon ins betg revocar.";
+"settings_privacy_TIRR_reset_alert_action" = "Redefinir tuts";
+
+"settings_privacy_hide_private_chats" = "Zuppentar chats privats";
+"settings_privacy_hide_private_chats_footer" = "Tut ils chats privats vegnan zuppentads en la survista dals chats. Per activar questa configuraziun sto esser activada la bloccada cun in code.";
+
 // Appearance Settings
 "settings_appearance_theme_section" = "Stil dal design";
 "settings_appearance_light_theme" = "Cler";
@@ -1050,6 +1182,10 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "settings_appearance_system_theme" = "Sistem";
 "settings_appearance_theme_selected" = "Stil dal design %@ activ";
 "settings_appearance_theme_active" = "Activ";
+"settings_appearance_hide_app_icon" = "Icona da l'app";
+"settings_appicon_default_header" = "Icona da standard";
+"settings_appicon_legacy_header" = "Iconas da Threema";
+"settings_appicon_special_header" = "Iconas spezialas";
 "settings_appearance_hide_stale_contacts" = "Zuppentar IDs inactivas";
 "settings_appearance_show_profile_pictures" = "Mussar maletgs da profil";
 "settings_appearance_display_order" = "Successiun";
@@ -1072,6 +1208,14 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "settings_notifications_masterDnd_endTime" = "Fin da la lavur";
 "settings_notification_iOS_settings" = "Configuraziuns dal sistem";
 
+"settings_notification_type_preview_title" = "Avis da push";
+"settings_notification_type_preview_description" = "Definescha tge infurmaziuns che duain cuntegnair ils messadis da push per messadis da Threema entrants.";
+
+"settings_notification_type_preview_restrictive_title" = "Mussar il surnum";
+"settings_notification_type_preview_restrictive_description" = "Mussa mo il surnum dal contact.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Hans";
+
+"settings_notification_type_preview_balanced_title" = "Mussar il num";
 // Storage Management Settings
 "storage_management" = "Management da l’arcun";
 "storage_total" = "Capacitad da memorisar interna";

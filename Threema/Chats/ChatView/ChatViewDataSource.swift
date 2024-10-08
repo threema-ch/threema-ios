@@ -789,7 +789,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
                 else {
                     continue
                 }
-                self.entityManager.entityDestroyer.deleteObject(object: message)
+                self.entityManager.entityDestroyer.delete(baseMessage: message)
                 deletedCount += 1
             }
             self.showDeletedNotification(count: deletedCount)

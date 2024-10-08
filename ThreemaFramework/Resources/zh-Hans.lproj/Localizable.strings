@@ -56,7 +56,8 @@
 "error_other_connection_for_same_identity_message" = "服务器检测到相同的 Threema ID 在两个或更多的设备上同时连接。\n\n如果您同时在多个设备上使用 Threema，而没有选择 “连接新设备” ，就会出现错误 (https://three.ma/md)。新的消息只会发送到最新登录的设备上。\n\n如果您要切换到新设备，请先在旧设备上卸载或禁用 %@，然后重启新设备。";
 
 "error_rogue_device_title" = "检测到来自另一台设备的连接";
-"error_rogue_device_message" = "服务器检测到有人试图从另一台设备登录现有的 Threema ID。\n\n如果您之前没有在其他设备上登录您的 Threema ID，或者使用旧版本的应用程序，请联系支持人员并发送日志文件。";
+"error_rogue_device_message" = "我们的服务器检测到有人试图从另一台设备登录现有的 Threema ID。您最近有没有在其他设备上登录您的 Threema ID？\n\n如果有，就可以忽略此消息。\n如果没有，您的私钥可能已经泄露。在创建新ID之前，请点击 “更多信息” 以了解如何保护您的设备和数据。";
+"error_rogue_device_more_info_button" = "更多信息";
 
 "video_too_long_title" = "视频太长";
 "video_too_long_message" = "此视频太长，无法发送。最大允许长度为%.0f分钟。";

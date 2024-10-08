@@ -27,12 +27,18 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
         // no-op
     }
 
-    init(blacklist: [Any]? = nil, enableIPv6: Bool = false, enableMultiDevice: Bool = false) {
+    init(
+        blacklist: [Any]? = nil,
+        enableIPv6: Bool = false,
+        enableMultiDevice: Bool = false,
+        blockUnknown: Bool = false
+    ) {
         if let blacklist {
             self.blacklist = NSOrderedSet(array: blacklist)
         }
         self.enableIPv6 = enableIPv6
         self.enableMultiDevice = enableMultiDevice
+        self.blockUnknown = blockUnknown
     }
 
     var appMigratedToVersion = 0

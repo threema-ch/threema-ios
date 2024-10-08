@@ -23,17 +23,12 @@ import Foundation
 class MentionsTableViewCell: ThemedCodeTableViewCell {
     // MARK: Subviews
     
-    public lazy var iconImageView: UIImageView = {
-        let imageView = UIImageView()
-        
-        imageView.contentMode = .scaleAspectFill
-        
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.heightAnchor.constraint(lessThanOrEqualToConstant: 35).isActive = true
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-                
-        return imageView
+    public lazy var profilePictureView: ProfilePictureImageView = {
+        let profilePictureView = ProfilePictureImageView()
+        profilePictureView.translatesAutoresizingMaskIntoConstraints = false
+        profilePictureView.heightAnchor.constraint(lessThanOrEqualToConstant: 35).isActive = true
+        profilePictureView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        return profilePictureView
     }()
     
     public lazy var nameLabel: UILabel = {
@@ -48,7 +43,7 @@ class MentionsTableViewCell: ThemedCodeTableViewCell {
     }()
     
     private lazy var leftContainerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [iconImageView, nameLabel])
+        let stackView = UIStackView(arrangedSubviews: [profilePictureView, nameLabel])
         
         stackView.axis = .horizontal
         stackView.spacing = 10
@@ -94,8 +89,6 @@ class MentionsTableViewCell: ThemedCodeTableViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        
-        iconImageView.image = nil
         nameLabel.text = ""
     }
     

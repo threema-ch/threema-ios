@@ -36,13 +36,13 @@ struct SettingsView: View {
                 ConnectionSection()
                 #if !THREEMA_WORK && !THREEMA_ONPREM
                     if !LicenseStore.requiresLicenseKey() {
-                        ThreemaWorkSection()
-                        InviteSection()
+                        ThreemaWorkAdvertisingSection()
+                        InviteConsumerSection()
                     }
                 #endif
                 
                 #if THREEMA_WORK || THREEMA_ONPREM
-                    RateSection()
+                    RateBusinessSection()
                 #endif
                 
                 AboutSection()
@@ -54,10 +54,20 @@ struct SettingsView: View {
         .environmentObject(settingsViewModel.navigator)
         .environmentObject(settingsStore)
         .onReceive(\.showNotificationSettings) { _ in
-            settingsViewModel.navigator.navigate(NotificationSettingsView())
+            settingsViewModel.navigator.navigate(
+                NotificationSettingsView()
+                    .environmentObject(settingsViewModel)
+                    .environmentObject(settingsViewModel.navigator)
+                    .environmentObject(settingsStore)
+            )
         }
         .onReceive(\.showDesktopSettings) { _ in
-            settingsViewModel.navigator.navigate(LinkedDevicesView())
+            settingsViewModel.navigator.navigate(
+                LinkedDevicesView()
+                    .environmentObject(settingsViewModel)
+                    .environmentObject(settingsViewModel.navigator)
+                    .environmentObject(settingsStore)
+            )
         }
     }
 }

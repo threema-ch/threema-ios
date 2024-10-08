@@ -24,8 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CallEntity : TMAManagedObject
 
+// Attributes
 @property (nonatomic, retain) NSNumber *callID;
 @property (nonatomic, retain) NSDate *date;
+
+// Relationship
 @property (nonatomic, retain) ContactEntity *contact;
 
 @end

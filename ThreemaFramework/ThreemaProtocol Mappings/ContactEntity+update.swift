@@ -40,7 +40,7 @@ extension ContactEntity {
         }
 
         if syncContact.hasAcquaintanceLevel {
-            isContactHidden = syncContact.acquaintanceLevel == .group
+            isContactHidden = syncContact.acquaintanceLevel == .groupOrDeleted
         }
 
         if syncContact.hasContactDefinedProfilePicture {

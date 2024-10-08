@@ -75,7 +75,7 @@ actor MediatorSyncableGroup {
             mentioned: pushSetting.mentioned
         )
 
-        update(identity: identity, profilePicture: group.profilePicture)
+        update(identity: identity, profilePicture: group.old_ProfilePicture)
         update(identity: identity, state: group.state)
     }
 

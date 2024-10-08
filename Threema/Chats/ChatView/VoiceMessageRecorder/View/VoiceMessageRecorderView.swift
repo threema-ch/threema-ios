@@ -32,7 +32,6 @@ struct VoiceMessageRecorderView: View {
     @ObservedObject var model: Model
     @Environment(\.sizeCategory) var sizeCategory
     @State var renderer = LinearWaveformRenderer()
-    @State var debug = false
     
     private weak var delegate: VoiceMessageRecorderViewDelegate?
     @AccessibilityFocusState(for: .voiceOver) private var isStopFocused: Bool
@@ -70,6 +69,7 @@ struct VoiceMessageRecorderView: View {
             Spacer(minLength: leftInset)
             Group {
                 waveform
+                    .horizontalFadeOut(fadeLength: 30)
                 durationView
             }.applyIf(sizeCategory.isAccessibilityCategory) { _ in
                 HStack {
@@ -79,28 +79,17 @@ struct VoiceMessageRecorderView: View {
             }
             Spacer(minLength: minBarHeight)
         }
+        .animation(.easeIn.speed(2.0), value: leftInset)
         .foregroundColor(.gray)
         .overlay(alignment: .trailing) {
             if model.recordingState.isRecording {
-                
-                if case .recordingStarting = model.recordingState {
-                    stopButton
-                        .disabled(true)
-                }
-                else {
-                    stopButton
-                        .disabled(false)
-                }
+                stopButton
+                    .disabled(model.recordingState == .recordingStarting)
             }
+
             if model.recordingState.isStopped {
-                if case .recordingStopping = model.recordingState {
-                    addButton
-                        .disabled(true)
-                }
-                else {
-                    addButton
-                        .disabled(false)
-                }
+                addButton
+                    .disabled(model.recordingState == .recordingStopping)
             }
         }
         .overlay(alignment: .leading) {
@@ -128,11 +117,13 @@ struct VoiceMessageRecorderView: View {
             shouldDrawSilencePadding: model.shouldDrawSilence
         )
         .opacity(shouldShowFullWaveform ? 0.0 : 1.0)
+        .animation(.easeInOut, value: shouldShowFullWaveform)
         .foregroundColor(.clear)
         .overlay {
             if shouldShowFullWaveform {
                 ProgressViewWaveform()
                     .environmentObject(model)
+                    .animation(.easeInOut, value: shouldShowFullWaveform)
             }
         }
         .background {
@@ -175,6 +166,7 @@ struct VoiceMessageRecorderView: View {
             }
         }))
         model.recordingState = .none
+        model.willDismissView()
         delegate?.willDismissRecorder()
     }
     
@@ -204,7 +196,8 @@ extension VoiceMessageRecorderView {
     private var playPauseButton: some View {
         buildButton(
             model.recordingState == .paused || model
-                .recordingState == .stopped ? "play.circle.fill" : "pause.circle.fill",
+                .recordingState == .stopped || model
+                .recordingState == .recordingStopping ? "play.circle.fill" : "pause.circle.fill",
             .gray,
             .gray.opacity(0.2),
             {
@@ -214,7 +207,7 @@ extension VoiceMessageRecorderView {
         )
         .accessibilityLabel((
             model.recordingState == .paused || model
-                .recordingState == .stopped ? "play" : "pause"
+                .recordingState == .stopped || model.recordingState == .recordingStopping ? "play" : "pause"
         ).localized)
     }
     

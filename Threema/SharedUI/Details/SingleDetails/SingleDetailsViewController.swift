@@ -38,25 +38,13 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         }
 
         return DetailsHeaderView(
-            with: contact.contentConfiguration,
-            avatarImageTapped: { [weak self] in
-                guard let strongSelf = self else {
-                    return
-                }
-                let avatarImageData: Data? =
-                    if UserSettings.shared().showProfilePictures {
-                        strongSelf.contact.contactImage?.data
-                    }
-                    else {
-                        strongSelf.contact.imageData
-                    }
-                
-                guard let avatarData = avatarImageData,
-                      let avatarImage = UIImage(data: avatarData) else {
+            with: contactEntity.contentConfiguration,
+            profilePictureTapped: { [weak self] in
+                guard let self else {
                     return
                 }
                 
-                strongSelf.presentFullscreen(image: avatarImage)
+                presentFullscreen(image: contact.profilePicture)
             },
             quickActions: quickActions,
             mediaAndPollsQuickActions: mediaStarredAndPollActions()
@@ -70,13 +58,14 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         linkedContactManager: linkedContactManager
     )
     
-    private let contact: ContactEntity
-    private lazy var linkedContactManager = LinkedContactManager(for: contact)
-    private lazy var publicKeyView = PublicKeyView(for: contact)
+    private let contactEntity: ContactEntity
+    private let contact: Contact
+    private lazy var linkedContactManager = LinkedContactManager(for: contactEntity)
+    private lazy var publicKeyView = PublicKeyView(for: contactEntity)
     
     private let displayStyle: DetailsDisplayStyle
     
-    private lazy var entityManager = EntityManager()
+    private var entityManager: EntityManager
     
     private var observers = [NSKeyValueObservation]()
     
@@ -84,7 +73,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     
     @available(*, deprecated, message: "Only use this for old code to keep it working")
     @objc var _contact: ContactEntity {
-        contact
+        contactEntity
     }
     
     // MARK: - Lifecycle
@@ -102,12 +91,13 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ) {
         precondition(!conversation.isGroup(), "This is not intended for groups")
         
-        guard let contact = conversation.contact else {
+        guard let contactEntity = conversation.contact else {
             fatalError("No linked contact for this conversations. This only supports single contacts conversations.")
         }
-        
-        self.state = .conversationDetails(contact: contact, conversation: conversation)
-        self.contact = contact
+        self.entityManager = EntityManager()
+        self.state = .conversationDetails(contact: contactEntity, conversation: conversation)
+        self.contactEntity = contactEntity
+        self.contact = Contact(contactEntity: contactEntity)
         
         self.delegate = delegate
         self.displayStyle = displayStyle
@@ -123,24 +113,25 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///     - contact: Contact to show details for
     ///     - displayStyle: Appearance of the details
     @objc
-    @available(*, deprecated, message: "Use init(for: Contact)")
     init(
-        for contact: ContactEntity,
-        displayStyle: DetailsDisplayStyle = .default
-    ) {
-        self.state = .contactDetails(contact: contact)
-        self.contact = contact
-        self.displayStyle = displayStyle
-        
-        super.init()
-    }
-
-    convenience init(
         for contact: Contact,
         displayStyle: DetailsDisplayStyle = .default
     ) {
-        let em = EntityManager()
-        self.init(for: em.entityFetcher.contact(for: contact.identity.string), displayStyle: displayStyle)
+        
+        let entityManager = EntityManager()
+        self.entityManager = entityManager
+        self.contactEntity = entityManager.performAndWait {
+            guard let contactEntity = entityManager.entityFetcher.contact(for: contact.identity.string) else {
+                fatalError()
+            }
+            return contactEntity
+        }
+        
+        self.state = .contactDetails(contact: contactEntity)
+        self.contact = Contact(contactEntity: contactEntity)
+        self.displayStyle = displayStyle
+        
+        super.init()
     }
 
     override func viewDidLoad() {
@@ -216,13 +207,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(showProfilePictureDidChange),
-            name: Notification.Name(kNotificationShowProfilePictureChanged),
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(navigationBarColorShouldChange),
             name: Notification.Name(kNotificationNavigationBarColorShouldChange),
             object: nil
@@ -242,14 +226,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         ) { [weak self] _ in
             self?.dataSource.refresh(sections: [.privacySettings])
             self?.dataSource.reload(sections: [.privacySettings])
-        }
-
-        observeContact(\.imageData) { [weak self] in
-            self?.updateHeader(animated: false)
-        }
-        
-        observeContact(\.contactImage) { [weak self] in
-            self?.updateHeader(animated: false)
         }
         
         observeContact(\.verificationLevel) { [weak self] in
@@ -276,6 +252,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
 
         // Is needed when willBeDeleted changed, to close this view
         observeContact(\.willBeDeleted) { }
+        observeContact(\.isHidden) { }
     }
 
     private func removeObservers() {
@@ -288,11 +265,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         observers.removeAll()
 
         NotificationCenter.default.removeObserver(self, name: UIContentSizeCategory.didChangeNotification, object: nil)
-        NotificationCenter.default.removeObserver(
-            self,
-            name: Notification.Name(kNotificationShowProfilePictureChanged),
-            object: nil
-        )
+        
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(kNotificationNavigationBarColorShouldChange),
@@ -318,24 +291,24 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///   - keyPath: Key path in `Contact` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeContact(_ keyPath: KeyPath<ContactEntity, some Any>, changeHandler: @escaping () -> Void) {
+    private func observeContact(_ keyPath: KeyPath<Contact, some Any>, changeHandler: @escaping () -> Void) {
 
         let observer = contact.observe(keyPath) { [weak self] _, _ in
-            guard let strongSelf = self else {
+            guard let self else {
                 return
             }
             
             // Check if the observed contact is in the process to be deleted
-            guard !strongSelf.contact.willBeDeleted else {
+            guard !contact.willBeDeleted, !contact.isHidden else {
                 // Invalidate and remove all observers
-                strongSelf.removeObservers()
+                removeObservers()
 
                 // Hide myself
-                if strongSelf.isPresentedInModalAndRootView {
-                    strongSelf.dismiss(animated: true)
+                if isPresentedInModalAndRootView {
+                    dismiss(animated: true)
                 }
                 else {
-                    strongSelf.navigationController?.popViewController(animated: true)
+                    navigationController?.popViewController(animated: true)
                 }
                 
                 return
@@ -357,7 +330,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     }
     
     private func updateHeader(animated: Bool = true) {
-        headerView.profileContentConfiguration = contact.contentConfiguration
+        headerView.profileContentConfiguration = contactEntity.contentConfiguration
         updateHeaderLayout(animated: animated)
     }
     
@@ -387,10 +360,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         }
     }
     
-    @objc private func showProfilePictureDidChange() {
-        updateHeader()
-    }
-    
     @objc private func navigationBarColorShouldChange() {
         if NavigationBarPromptHandler.shouldShowPrompt() {
             navigationBarTitleAppearanceOffset = 158
@@ -403,7 +372,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     @objc private func refreshDoNotDisturb(_ notification: Notification) {
         DispatchQueue.main.async {
             guard let pushSetting = notification.object as? PushSetting,
-                  pushSetting.identity == self.contact.threemaIdentity else {
+                  pushSetting.identity == self.contact.identity else {
                 return
             }
 
@@ -417,7 +386,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
 
 extension SingleDetailsViewController {
     private func configureTableView() {
-        navigationBarTitle = contact.displayName
+        navigationBarTitle = contactEntity.displayName
         
         // If this is not set to `self` the automatic (dis)appearance of the navigation bar doesn't
         // work, because it is applied in the `UIScrollViewDelegate` in our superclass.
@@ -470,7 +439,7 @@ extension SingleDetailsViewController {
     
     private func configureHeaderView() {
         // Initial header configuration
-        headerView.profileContentConfiguration = contact.contentConfiguration
+        headerView.profileContentConfiguration = contactEntity.contentConfiguration
         
         tableView.tableHeaderView = headerView
         
@@ -672,7 +641,7 @@ extension SingleDetailsViewController: UITableViewDelegate {
         case .publicKey:
             publicKeyView.show()
             
-        case .value(label: _, value: contact.identity):
+        case .value(label: _, value: contact.identity.string):
             dataSource.showDebugInfoTapCounter += 1
             
         case .linkedContact:
@@ -716,41 +685,14 @@ extension SingleDetailsViewController: UITableViewDelegate {
 
 // MARK: - Peak & pop actions support
 
-// Used for iOS 12 support
-extension SingleDetailsViewController {
-    override var previewActionItems: [UIPreviewActionItem] {
-        guard let presentingViewController else {
-            return []
-        }
-        
-        // In theory the view controller where the peak interaction starts is what we
-        // want there, but it also works with the presenting VC which is the
-        // `MainTabBarController`.
-        return quickActions(in: presentingViewController).map(\.asUIPreviewAction)
-    }
-}
-
 extension ContactEntity {
     /// Get a content configuration base on this `Contact`
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
         DetailsHeaderProfileView.ContentConfiguration(
-            avatarImageProvider: avatarImageProvider(completion:),
-            hideThreemaTypeIcon: !showOtherThreemaTypeIcon,
+            profilePictureInfo: .contact(Contact(contactEntity: self)),
             name: displayName,
             verificationLevelImage: verificationLevelImage(),
             verificationLevelAccessibilityLabel: verificationLevelAccessibilityLabel()
         )
-    }
-    
-    private func avatarImageProvider(completion: @escaping (UIImage?) -> Void) {
-        AvatarMaker.shared().avatar(
-            for: self,
-            size: DetailsHeaderProfileView.avatarImageSize,
-            masked: true
-        ) { avatarImage, _ in
-            DispatchQueue.main.async {
-                completion(avatarImage)
-            }
-        }
     }
 }

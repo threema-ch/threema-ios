@@ -62,8 +62,6 @@ protocol MediatorMessageProtocolProtocol {
 
     func getEnvelopeForContactSync(contact: Sync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope
 
-    func getEnvelopeForContactSyncDelete(identity: String) -> D2d_Envelope
-
     func getEnvelopeForGroupSync(group: Sync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope
 
     func getEnvelopeForIncomingMessage(

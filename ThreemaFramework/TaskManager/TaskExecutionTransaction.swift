@@ -30,7 +30,6 @@ public enum TaskExecutionTransactionError: Error {
     case badResponse
     case preconditionFailed
     case localTransactionAlreadyInProgress
-    case shouldSkip
     case blobDataEncryptionFailed
     case blobIDDecodeFailed
     case blobIDMismatch
@@ -70,25 +69,36 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
             guard try self.checkPreconditions() else {
                 throw TaskExecutionTransactionError.preconditionFailed
             }
-            guard try !(self.shouldSkip()) else {
-                throw TaskExecutionTransactionError.shouldSkip
+            guard try !(self.shouldDrop()) else {
+                DDLogNotice("\(self.taskDefinition) should be dropped")
+                task.isDropped = true
+                throw TaskExecutionError.taskDropped
             }
+            
+            try task.checkDropping()
 
             return self.prepare()
         }
         .then { _ -> Promise<Void> in
-            try self.beginTransaction(scope: (task as! TaskDefinitionTransactionProtocol).scope)
+            try task.checkDropping()
+            return try self.beginTransaction(scope: (task as! TaskDefinitionTransactionProtocol).scope)
         }
         .then { _ -> Promise<Void> in
             guard try self.checkPreconditions() else {
                 throw TaskExecutionTransactionError.preconditionFailed
             }
+            
+            try task.checkDropping()
 
             let reflectResult = try self.reflectTransactionMessages()
+            
+            try task.checkDropping()
+            
             return when(fulfilled: reflectResult).asVoid()
         }
         .then { _ -> Promise<Void> in
-            try self.commitTransaction()
+            try task.checkDropping()
+            return try self.commitTransaction()
         }
         .then { _ -> Promise<Void> in
             self.writeLocal()
@@ -104,11 +114,13 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
         Promise()
     }
 
+    // TODO: (IOS-4835) Check if this can/should be combined with `shouldDrop()`
     func checkPreconditions() throws -> Bool {
         true
     }
 
-    func shouldSkip() throws -> Bool {
+    // TODO: (IOS-4835) Check if this can/should be combined with `checkPreconditions()`
+    func shouldDrop() throws -> Bool {
         false
     }
 

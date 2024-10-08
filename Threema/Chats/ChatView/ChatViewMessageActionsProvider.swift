@@ -503,7 +503,7 @@ enum ChatViewMessageActionsProvider {
                     willDelete()
                     
                     businessInjector.entityManager.performAndWaitSave {
-                        businessInjector.entityManager.entityDestroyer.deleteObject(object: message)
+                        businessInjector.entityManager.entityDestroyer.delete(baseMessage: message)
                         message.conversation.updateLastDisplayMessage(with: businessInjector.entityManager)
                     }
                     

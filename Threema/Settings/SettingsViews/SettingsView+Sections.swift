@@ -240,7 +240,7 @@ extension SettingsView {
     
         // MARK: - ThreemaWorkSection
     
-        struct ThreemaWorkSection: View {
+        struct ThreemaWorkAdvertisingSection: View {
             private let appURL = URL(string: "threemawork://app")
         
             private var canOpenThreemaWork: Bool {
@@ -282,7 +282,7 @@ extension SettingsView {
     
         // MARK: - InviteSection
     
-        struct InviteSection: View {
+        struct InviteConsumerSection: View {
             var body: some View {
                 Section {
                     if let link = ThreemaApp.rateLink {
@@ -362,9 +362,9 @@ extension SettingsView {
         }
     }
     
-    // MARK: - RateSection
+    // MARK: - RateBusinessSection
     
-    struct RateSection: View {
+    struct RateBusinessSection: View {
         var body: some View {
             Section {
                 if let link = ThreemaApp.rateLink {
@@ -375,6 +375,15 @@ extension SettingsView {
                         },
                         title: String.localizedStringWithFormat("settings_list_rate".localized, ThreemaApp.appName),
                         image: .systemImage("star.fill")
+                    )
+                }
+                if !LicenseStore.isOnPrem() {
+                    SectionItem(
+                        action: {
+                            topViewController.map { AddThreemaWorkChannelAction.run(in: $0) }
+                        },
+                        title: "settings_list_threema_work_channel_title".localized,
+                        image: .systemImage("antenna.radiowaves.left.and.right")
                     )
                 }
             }

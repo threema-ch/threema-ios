@@ -854,15 +854,6 @@ public struct D2d_ContactSync {
     set {action = .update(newValue)}
   }
 
-  /// Delete a Threema contact
-  public var delete: D2d_ContactSync.Delete {
-    get {
-      if case .delete(let v)? = action {return v}
-      return D2d_ContactSync.Delete()
-    }
-    set {action = .delete(newValue)}
-  }
-
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
@@ -871,8 +862,6 @@ public struct D2d_ContactSync {
     case create(D2d_ContactSync.Create)
     /// Update a Threema contact
     case update(D2d_ContactSync.Update)
-    /// Delete a Threema contact
-    case delete(D2d_ContactSync.Delete)
 
   #if !swift(>=4.1)
     public static func ==(lhs: D2d_ContactSync.OneOf_Action, rhs: D2d_ContactSync.OneOf_Action) -> Bool {
@@ -886,10 +875,6 @@ public struct D2d_ContactSync {
       }()
       case (.update, .update): return {
         guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.delete, .delete): return {
-        guard case .delete(let l) = lhs, case .delete(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       default: return false
@@ -940,19 +925,6 @@ public struct D2d_ContactSync {
     public init() {}
 
     fileprivate var _contact: Sync_Contact? = nil
-  }
-
-  /// Delete a Threema contact.
-  public struct Delete {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
-
-    public var deleteIdentity: String = String()
-
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    public init() {}
   }
 
   public init() {}
@@ -1052,25 +1024,83 @@ public struct D2d_GroupSync {
   }
 
   /// Update a group.
+  ///
+  /// When receiving this variant:
+  ///
+  /// 1. Let `current` be a snapshot of the current group state.
+  /// 2. Persist the update to the group.
+  /// 3. Let `member-changes` be an empty list.
+  /// 4. For each `identity`, `state-change` pair of `member_state_changes`:
+  ///    1. If `state-change` is `ADDED` and `identity` does not exist in
+  ///       `current.members`, add the tuple `identity`, `state-change` to
+  ///       `member-changes`.
+  ///    2. If `state-change` is `KICKED` or `LEFT` and `identity` does exist in
+  ///       `current.members`, add the tuple `identity`, `state-change` to
+  ///       `member-changes`.
+  /// 5. Group `member-changes` by their associated `state-change` and add
+  ///    appropriate status messages to the associated conversation.
   public struct Update {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
     public var group: Sync_Group {
-      get {return _group ?? Sync_Group()}
-      set {_group = newValue}
+      get {return _storage._group ?? Sync_Group()}
+      set {_uniqueStorage()._group = newValue}
     }
     /// Returns true if `group` has been explicitly set.
-    public var hasGroup: Bool {return self._group != nil}
+    public var hasGroup: Bool {return _storage._group != nil}
     /// Clears the value of `group`. Subsequent reads from it will return its default value.
-    public mutating func clearGroup() {self._group = nil}
+    public mutating func clearGroup() {_uniqueStorage()._group = nil}
+
+    /// A map of the member identity string to the member state change.
+    public var memberStateChanges: Dictionary<String,D2d_GroupSync.Update.MemberStateChange> {
+      get {return _storage._memberStateChanges}
+      set {_uniqueStorage()._memberStateChanges = newValue}
+    }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
+    public enum MemberStateChange: SwiftProtobuf.Enum {
+      public typealias RawValue = Int
+
+      /// The member has been added
+      case added // = 0
+
+      /// The member has been kicked from the group.
+      case kicked // = 1
+
+      /// The member left the group.
+      case left // = 2
+      case UNRECOGNIZED(Int)
+
+      public init() {
+        self = .added
+      }
+
+      public init?(rawValue: Int) {
+        switch rawValue {
+        case 0: self = .added
+        case 1: self = .kicked
+        case 2: self = .left
+        default: self = .UNRECOGNIZED(rawValue)
+        }
+      }
+
+      public var rawValue: Int {
+        switch self {
+        case .added: return 0
+        case .kicked: return 1
+        case .left: return 2
+        case .UNRECOGNIZED(let i): return i
+        }
+      }
+
+    }
+
     public init() {}
 
-    fileprivate var _group: Sync_Group? = nil
+    fileprivate var _storage = _StorageClass.defaultInstance
   }
 
   /// Delete a group.
@@ -1098,6 +1128,19 @@ public struct D2d_GroupSync {
 
   public init() {}
 }
+
+#if swift(>=4.2)
+
+extension D2d_GroupSync.Update.MemberStateChange: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  public static let allCases: [D2d_GroupSync.Update.MemberStateChange] = [
+    .added,
+    .kicked,
+    .left,
+  ]
+}
+
+#endif  // swift(>=4.2)
 
 /// Distribution list synchronisation message.
 public struct D2d_DistributionListSync {
@@ -1386,11 +1429,11 @@ extension D2d_ContactSync: @unchecked Sendable {}
 extension D2d_ContactSync.OneOf_Action: @unchecked Sendable {}
 extension D2d_ContactSync.Create: @unchecked Sendable {}
 extension D2d_ContactSync.Update: @unchecked Sendable {}
-extension D2d_ContactSync.Delete: @unchecked Sendable {}
 extension D2d_GroupSync: @unchecked Sendable {}
 extension D2d_GroupSync.OneOf_Action: @unchecked Sendable {}
 extension D2d_GroupSync.Create: @unchecked Sendable {}
 extension D2d_GroupSync.Update: @unchecked Sendable {}
+extension D2d_GroupSync.Update.MemberStateChange: @unchecked Sendable {}
 extension D2d_GroupSync.Delete: @unchecked Sendable {}
 extension D2d_DistributionListSync: @unchecked Sendable {}
 extension D2d_DistributionListSync.OneOf_Action: @unchecked Sendable {}
@@ -2355,7 +2398,6 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "create"),
     2: .same(proto: "update"),
-    3: .same(proto: "delete"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2390,19 +2432,6 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
           self.action = .update(v)
         }
       }()
-      case 3: try {
-        var v: D2d_ContactSync.Delete?
-        var hadOneofValue = false
-        if let current = self.action {
-          hadOneofValue = true
-          if case .delete(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.action = .delete(v)
-        }
-      }()
       default: break
       }
     }
@@ -2421,10 +2450,6 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     case .update?: try {
       guard case .update(let v)? = self.action else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }()
-    case .delete?: try {
-      guard case .delete(let v)? = self.action else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
     }
@@ -2505,38 +2530,6 @@ extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
   public static func ==(lhs: D2d_ContactSync.Update, rhs: D2d_ContactSync.Update) -> Bool {
     if lhs._contact != rhs._contact {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension D2d_ContactSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Delete"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "delete_identity"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.deleteIdentity) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.deleteIdentity.isEmpty {
-      try visitor.visitSingularStringField(value: self.deleteIdentity, fieldNumber: 1)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: D2d_ContactSync.Delete, rhs: D2d_ContactSync.Delete) -> Bool {
-    if lhs.deleteIdentity != rhs.deleteIdentity {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2670,36 +2663,84 @@ extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "group"),
+    2: .standard(proto: "member_state_changes"),
   ]
 
+  fileprivate class _StorageClass {
+    var _group: Sync_Group? = nil
+    var _memberStateChanges: Dictionary<String,D2d_GroupSync.Update.MemberStateChange> = [:]
+
+    static let defaultInstance = _StorageClass()
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _group = source._group
+      _memberStateChanges = source._memberStateChanges
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._group) }()
-      default: break
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._group) }()
+        case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufEnumMap<SwiftProtobuf.ProtobufString,D2d_GroupSync.Update.MemberStateChange>.self, value: &_storage._memberStateChanges) }()
+        default: break
+        }
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._group {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._group {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      } }()
+      if !_storage._memberStateChanges.isEmpty {
+        try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufEnumMap<SwiftProtobuf.ProtobufString,D2d_GroupSync.Update.MemberStateChange>.self, value: _storage._memberStateChanges, fieldNumber: 2)
+      }
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: D2d_GroupSync.Update, rhs: D2d_GroupSync.Update) -> Bool {
-    if lhs._group != rhs._group {return false}
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._group != rhs_storage._group {return false}
+        if _storage._memberStateChanges != rhs_storage._memberStateChanges {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
+}
+
+extension D2d_GroupSync.Update.MemberStateChange: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "ADDED"),
+    1: .same(proto: "KICKED"),
+    2: .same(proto: "LEFT"),
+  ]
 }
 
 extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {

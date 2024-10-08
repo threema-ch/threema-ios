@@ -100,21 +100,17 @@ class DeleteContactAction: NSObject {
         of viewController: UIViewController,
         completion: CompletionHandler? = nil
     ) {
-        // Is contact in any existing group?
-        let groups = businessInjector.entityManager.entityFetcher.groupConversations(for: contact)
-        if let groupsCount = groups?.count, groupsCount > 0 {
-            showExistingGroupsAlert(for: groupsCount, in: viewController, completion: completion)
-            return
-        }
-        
-        // Does contact have an existing chat conversation?
-        if let conversations = contact.conversations,
-           !conversations.isEmpty {
+        let isGroupMember = businessInjector.entityManager.entityFetcher.groupConversations(for: contact) != nil
+
+        // Does contact have an existing 1:1 chat conversation?
+        if let conversations = contact.conversations as? Set<Conversation>,
+           !conversations.filter({ !$0.isGroup() }).isEmpty {
             // Existing conversation. Can it also be deleted?
             showDeleteWithConversationSheet(
                 in: view,
                 of: viewController,
                 with: contact.displayName,
+                isGroupMember: isGroupMember,
                 completion: completion
             )
         }
@@ -122,11 +118,16 @@ class DeleteContactAction: NSObject {
             // No existing conversation
             if contactCouldBeExcluded {
                 // Delete contact only or also exclude?
-                showDeleteWithExclusionSheet(in: view, of: viewController, completion: completion)
+                showDeleteWithExclusionSheet(
+                    in: view,
+                    of: viewController,
+                    isGroupMember: isGroupMember,
+                    completion: completion
+                )
             }
             else {
                 // Delete contact?
-                showDeleteSheet(in: view, of: viewController, completion: completion)
+                showDeleteSheet(in: view, of: viewController, isGroupMember: isGroupMember, completion: completion)
             }
         }
     }
@@ -136,59 +137,11 @@ class DeleteContactAction: NSObject {
 
 extension DeleteContactAction {
     
-    private func showExistingGroupsAlert(
-        for groupsCount: Int,
-        in viewController: UIViewController,
-        completion: CompletionHandler?
-    ) {
-        let localizedTitle = BundleUtil.localizedString(forKey: "delete_contact_group_exists_title")
-        
-        var localizedMessage = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "delete_contact_group_exists_message_single"),
-            contact.displayName
-        )
-        
-        if groupsCount > 1 {
-            localizedMessage = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "delete_contact_group_exists_message_multiple"),
-                contact.displayName,
-                groupsCount
-            )
-        }
-        
-        if viewController is SingleDetailsViewController {
-            // We already are in the contact details
-            UIAlertTemplate.showAlert(
-                owner: viewController,
-                title: localizedTitle,
-                message: localizedMessage,
-                actionOk: { _ in completion?(false) }
-            )
-        }
-        else {
-            // Allow to show contact details
-            UIAlertTemplate.showAlert(
-                owner: viewController,
-                title: localizedTitle,
-                message: localizedMessage,
-                titleOk: BundleUtil.localizedString(forKey: "delete_contact_group_exists_show_contact_button"),
-                actionOk: { _ in
-                    NotificationCenter.default.post(
-                        name: Notification.Name(kNotificationShowContact),
-                        object: nil,
-                        userInfo: [kKeyContact: self.contact]
-                    )
-                    completion?(false)
-                },
-                actionCancel: { _ in completion?(false) }
-            )
-        }
-    }
-    
     private func showDeleteWithConversationSheet(
         in view: UIView,
         of viewController: UIViewController,
         with contactName: String,
+        isGroupMember: Bool,
         completion: CompletionHandler?
     ) {
         let deleteAlertAction = UIAlertAction(
@@ -198,10 +151,21 @@ extension DeleteContactAction {
             self.deleteContact(exclude: nil, completion: completion)
         }
         
-        let sheetTitle = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_title"),
-            contactName
-        )
+        let sheetTitle =
+            if isGroupMember {
+                String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_is_group_member_title"),
+                    contactName,
+                    contactName
+                )
+            }
+            else {
+                String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_title"),
+                    contactName
+                )
+            }
+
         UIAlertTemplate.showSheet(
             owner: viewController,
             popOverSource: view,
@@ -214,13 +178,27 @@ extension DeleteContactAction {
     private func showDeleteWithExclusionSheet(
         in view: UIView,
         of viewController: UIViewController,
+        isGroupMember: Bool,
         completion: CompletionHandler?
     ) {
-        let localizedMessage = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "delete_contact_confirmation_with_exclusion_message"),
-            contact.displayName
-        )
-        
+        let localizedMessage =
+            if isGroupMember {
+                String.localizedStringWithFormat(
+                    BundleUtil
+                        .localizedString(
+                            forKey: "delete_contact_is_group_member_title_confirmation_with_exclusion_message"
+                        ),
+                    contact.displayName,
+                    contact.displayName
+                )
+            }
+            else {
+                String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "delete_contact_confirmation_with_exclusion_message"),
+                    contact.displayName
+                )
+            }
+
         let deleteWithoutExclusionAction = UIAlertAction(
             title: BundleUtil.localizedString(forKey: "delete_contact_button"),
             style: .destructive
@@ -248,8 +226,21 @@ extension DeleteContactAction {
     private func showDeleteSheet(
         in view: UIView,
         of viewController: UIViewController,
+        isGroupMember: Bool,
         completion: CompletionHandler?
     ) {
+        let localizedMessage: String? =
+            if isGroupMember {
+                String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "delete_contact_is_group_member_title"),
+                    contact.displayName,
+                    contact.displayName
+                )
+            }
+            else {
+                nil
+            }
+
         let deleteAction = UIAlertAction(
             title: BundleUtil.localizedString(forKey: "delete_contact_button"),
             style: .destructive
@@ -260,6 +251,7 @@ extension DeleteContactAction {
         UIAlertTemplate.showSheet(
             owner: viewController,
             popOverSource: view,
+            title: localizedMessage,
             actions: [deleteAction],
             cancelAction: { _ in completion?(false) }
         )
@@ -308,8 +300,8 @@ extension DeleteContactAction {
             tempContactCouldBeExcluded = self.contactCouldBeExcluded
             tempContactIdentity = self.contact.identity
             tempContactDisplayName = self.contact.displayName
-            
-            self.businessInjector.entityManager.entityDestroyer.deleteObject(object: self.contact)
+
+            self.businessInjector.entityManager.entityDestroyer.deleteOneToOneConversation(for: self.contact)
 
             if let tempContactIdentity {
                 Task {
@@ -356,8 +348,11 @@ extension DeleteContactAction {
             userInfo: [kKeyContact: contact]
         )
         
-        ContactStore.shared().reflectDeleteContact(contactIdentity)
-        
+        ContactStore.shared().markContactAsDeleted(
+            identity: contactIdentity,
+            entityManagerObject: businessInjector.entityManager
+        )
+
         // Handle any potential exclusion
         if let exclude {
             if exclude {

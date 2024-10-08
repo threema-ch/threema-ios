@@ -24,10 +24,10 @@ import UIKit
 
 public protocol GroupCallParticipantInfoFetcherProtocol {
     
-    /// Fetches the avatar image of a contact for the given ThreemaIdentity
+    /// Fetches the profile picture image of a contact for the given ThreemaIdentity
     /// - Parameter id: ThreemaIdentity
-    /// - Returns: Avatar image if it exists
-    func fetchAvatar(for id: ThreemaIdentity) -> UIImage?
+    /// - Returns: Profile picture or default placeholder image
+    func fetchProfilePicture(for id: ThreemaIdentity) -> UIImage
     
     /// Fetches the display name of a contact for the given ThreemaIdentity
     /// - Parameter id: ThreemaIdentity

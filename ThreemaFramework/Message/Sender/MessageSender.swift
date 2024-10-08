@@ -101,13 +101,26 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         sendProfilePicture: Bool = true,
         requestID: String? = nil
     ) async -> [TextMessage] {
+        
+        // We handle messages sent to a distribution list separately
+        if let distributionList = await (
+            entityManager.perform {
+                self.entityManager.entityFetcher.distributionListEntity(for: conversation)
+            }
+        ) {
+            return await sendDistributionListTextMessage(text: text, to: distributionList)
+        }
+
         let trimmedText = ThreemaUtility.trimCharacters(in: text)
         let textsToSend = ThreemaUtility.trimMessageText(text: trimmedText)
+        
         let textMessages = await createTextMessages(
             texts: textsToSend,
             conversation: conversation,
-            requestID: requestID
+            requestID: requestID,
+            setConversationLastUpdate: true
         )
+        
         let tasks = await createTasks(
             textMessages: textMessages,
             conversation: conversation,
@@ -121,19 +134,79 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         return textMessages
     }
     
+    private func sendDistributionListTextMessage(
+        text: String,
+        to distributionList: DistributionListEntity,
+        sendProfilePicture: Bool = true,
+        requestID: String? = nil
+    ) async -> [TextMessage] {
+        
+        // Add message to distribution list conversation
+        let trimmedText = ThreemaUtility.trimCharacters(in: text)
+        let textsToSend = ThreemaUtility.trimMessageText(text: trimmedText)
+        
+        let conversation = await entityManager.perform {
+            self.entityManager.entityFetcher.conversation(forDistributionList: distributionList)
+        }
+        guard let conversation else {
+            return []
+        }
+        
+        // TODO: (IOS-4366) How should we display (state, etc.) these messages in the distribution list conversation?
+        let distributionListMessages = await createTextMessages(
+            texts: textsToSend,
+            conversation: conversation,
+            requestID: nil,
+            setConversationLastUpdate: true
+        )
+                
+        // Send message to all receiving conversations, this is mostly the same code as above for single conversations.
+        var distributedMessages = [TextMessage]()
+        
+        for receivingConversation in receivingConversations(for: distributionList) {
+            
+            let textMessages = await createTextMessages(
+                texts: textsToSend,
+                conversation: receivingConversation,
+                requestID: requestID,
+                setConversationLastUpdate: false,
+                distributionListMessages: distributionListMessages
+            )
+            
+            let tasks = await createTasks(
+                textMessages: textMessages,
+                conversation: receivingConversation,
+                sendProfilePicture: sendProfilePicture
+            )
+            
+            await executeSendTextMessageTasks(tasks)
+            
+            donateInteractionForOutgoingMessage(in: conversation)
+            
+            distributedMessages.append(contentsOf: textMessages)
+        }
+        
+        return distributedMessages
+    }
+    
     private func createTextMessages(
         texts: [String],
         conversation: Conversation,
-        requestID: String?
+        requestID: String?,
+        setConversationLastUpdate: Bool,
+        distributionListMessages: [TextMessage]? = nil
     ) async -> [TextMessage] {
         var textMessages = [TextMessage]()
         
-        for text in texts {
+        for (index, text) in texts.enumerated() {
             let textMessage: TextMessage? = await entityManager.performSave {
                 
                 if let messageConversation = self.entityManager.entityFetcher
                     .getManagedObject(by: conversation.objectID) as? Conversation,
-                    let message = self.entityManager.entityCreator.textMessage(for: messageConversation) {
+                    let message = self.entityManager.entityCreator.textMessage(
+                        for: messageConversation,
+                        setLastUpdate: setConversationLastUpdate
+                    ) {
                     
                     var remainingBody: NSString?
                     if let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody) {
@@ -146,6 +219,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     
                     if let requestID {
                         message.webRequestID = requestID
+                    }
+                    
+                    // Distribution list handling
+                    if let distributionListMessages, index <= distributionListMessages.count {
+                        message.distributionListMessage = distributionListMessages[index]
                     }
                     
                     return message
@@ -504,7 +582,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
                 message: abstractMessage,
-                isPersistent: isPersistent
+                type: isPersistent ? .persistent : .volatile
             )
         ) { _, _ in
             completion?()
@@ -844,7 +922,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
                 message: typingIndicatorMessage,
-                isPersistent: false
+                type: .dropOnDisconnect
             )
         )
     }
@@ -1265,5 +1343,21 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 message.conversation.lastMessage = message
             }
         }
+    }
+    
+    private func receivingConversations(for distributionList: DistributionListEntity) -> [Conversation] {
+        var conversations = [Conversation]()
+        entityManager.performAndWait {
+            let recipients = distributionList.conversation.members
+            for recipient in recipients {
+                if let conversation = self.entityManager.conversation(
+                    for: recipient.identity,
+                    createIfNotExisting: true
+                ) {
+                    conversations.append(conversation)
+                }
+            }
+        }
+        return conversations
     }
 }

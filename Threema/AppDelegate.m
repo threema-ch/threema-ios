@@ -1138,9 +1138,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             key = kAppWCBackgroundTask;
             timeout = kAppWCBackgroundTaskTime;
         }
-        else if ([Old_FileMessageSender hasScheduledUploads] == YES || [manager hasActiveSyncs] || ![TaskManager isEmptyWithQueueType:TaskQueueTypeOutgoing]) {
+        else if ([Old_FileMessageSender hasScheduledUploads] == YES || [manager hasActiveSyncs] || ![TaskManager isEmpty]) {
 
-            // Queue has outgoing messages or is syncing files
+            // Queue is not empty
             key = kAppClosedByUserBackgroundTask;
             timeout = kAppSendingBackgroundTaskTime;
         }

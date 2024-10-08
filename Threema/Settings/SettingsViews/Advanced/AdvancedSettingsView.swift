@@ -253,10 +253,7 @@ struct AdvancedSettingsView: View {
                         }
                         
                         NotificationManager().updateUnreadMessagesCount()
-                        NotificationBannerHelper.newSuccessToast(
-                            title: "settings_advanced_successfully_reset_unread_count_label".localized,
-                            body: "ok".localized
-                        )
+                        NotificationPresenterWrapper.shared.present(type: .resetUnreadCountSuccess)
 
                         let delay = DispatchTime.now() + DispatchTimeInterval.seconds(3)
                         DispatchQueue.main.asyncAfter(deadline: delay) {

@@ -21,7 +21,7 @@
 class TermsOfServiceViewController: SettingsWebViewViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        url = "https://threema.ch/tos"
+        url = ThreemaURLProvider.termsOfService.absoluteString
         
         title = BundleUtil.localizedString(forKey: "settings_list_tos_title")
     }

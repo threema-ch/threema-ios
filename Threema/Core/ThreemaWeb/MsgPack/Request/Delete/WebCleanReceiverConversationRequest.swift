@@ -47,7 +47,7 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
             if identity != nil {
                 if let conversation = entityManager.entityFetcher.conversation(forIdentity: identity) {
                     entityManager.performSyncBlockAndSafe {
-                        entityManager.entityDestroyer.deleteObject(object: conversation)
+                        entityManager.entityDestroyer.delete(conversation: conversation)
                     }
                 }
             }
@@ -64,8 +64,8 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
                             imageWidth = groupImage.width
                         }
                         
-                        entityManager.entityDestroyer.deleteObject(object: conversation)
-                        
+                        entityManager.entityDestroyer.delete(conversation: conversation)
+
                         let tmpConversation = entityManager.entityCreator.conversation()
                         tmpConversation?.contact = conversation.contact
                         tmpConversation?.members = conversation.members

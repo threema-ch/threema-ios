@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaFramework
 import UIKit
 
 class RestoreSafePasswordViewController: IDCreationPageViewController {
@@ -57,7 +58,7 @@ class RestoreSafePasswordViewController: IDCreationPageViewController {
         ]
         
         let faqLabelText = NSAttributedString(
-            string: BundleUtil.localizedString(forKey: "forgot_password_link_text"),
+            string: BundleUtil.localizedString(forKey: "restore_option_help_link_text"),
             attributes: linkAttributes
         )
         forgotPasswordTappableLabel.attributedText = faqLabelText
@@ -105,12 +106,7 @@ extension RestoreSafePasswordViewController: ZSWTappableLabelTapDelegate {
         tappedAt idx: Int,
         withAttributes attributes: [NSAttributedString.Key: Any] = [:]
     ) {
-        let urlString = "https://threema.ch/faq/safepw"
-        guard let url = URL(string: urlString) else {
-            DDLogError("Could not create url from string \(urlString)")
-            return
-        }
-        
+        let url = ThreemaURLProvider.resetSafePassword
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }

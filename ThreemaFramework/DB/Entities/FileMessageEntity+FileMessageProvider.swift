@@ -51,11 +51,10 @@ extension FileMessageEntity: FileMessageProvider {
 extension FileMessageEntity: CommonFileMessageMetadata {
     public var dataBlobFileSize: Measurement<UnitInformationStorage> {
         if let fileSize = fileSize?.doubleValue {
-            return .init(value: fileSize, unit: .bytes)
+            .init(value: fileSize, unit: .bytes)
         }
         else {
-            assertionFailure("No file size available")
-            return .init(value: 0, unit: .bytes)
+            .init(value: 0, unit: .bytes)
         }
     }
 }

@@ -45,7 +45,7 @@ final class TaskDefinitionSendGroupLeaveMessage: TaskDefinitionSendMessage {
     }
     
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     var fromMember: String!

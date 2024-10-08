@@ -28,9 +28,9 @@ public class DistributionList: NSObject {
 
     public let distributionListID: Int
     
-    @objc public private(set) dynamic var profilePicture: Data?
     @objc public private(set) dynamic var displayName: String?
     @objc public private(set) dynamic var recipients = Set<Contact>()
+    @objc public private(set) dynamic lazy var profilePicture: UIImage = resolveProfilePicture()
 
     public var recipientsSummary: String {
         guard !recipients.isEmpty else {
@@ -63,22 +63,38 @@ public class DistributionList: NSObject {
     // Tokens for entity subscriptions, will be removed when is deallocated
     private var subscriptionTokens = [EntityObserver.SubscriptionToken]()
     
+    private var distributionListImageData: Data? {
+        didSet {
+            updateProfilePicture()
+        }
+    }
+    
+    private let idColor: UIColor
+    
     // MARK: - Lifecycle
     
     @objc public init(distributionListEntity: DistributionListEntity) {
        
         self.distributionListID = Int(distributionListEntity.distributionListID)
-        self.profilePicture = distributionListEntity.conversation.groupImage?.data
         self.displayName = distributionListEntity.name
         self.recipients = Set(distributionListEntity.conversation.members.map {
             Contact(contactEntity: $0)
         })
+        self.idColor = IDColor.forData(distributionListEntity.distributionListID.littleEndianData)
 
         super.init()
         
-        // Update tracking
+        // Subscribe distribution list entity for DB updates or deletion
         subscribeForDistributionListEntityChanges(distributionListEntity: distributionListEntity)
+        
+        // Subscribe conversation entity for DB updates or deletion
         subscribeForConversationChanges(conversation: distributionListEntity.conversation)
+    }
+    
+    // MARK: - Public functions
+
+    public func generatedProfilePicture() -> UIImage {
+        ProfilePictureGenerator.generateImage(for: .distributionList, color: idColor)
     }
     
     // MARK: - Private functions
@@ -137,14 +153,14 @@ public class DistributionList: NSObject {
             switch reason {
             case .updated:
                 
-                if profilePicture != conversation.groupImage?.data {
-                    profilePicture = conversation.groupImage?.data
+                if distributionListImageData != conversation.groupImage?.data {
+                    distributionListImageData = conversation.groupImage?.data
                 }
                 if displayName != conversation.displayName {
                     displayName = conversation.displayName
                 }
                 
-                // Check has recipients composition changed
+                // Check if recipients composition changed
                 let newRecipients = Set(conversation.members.map { Contact(contactEntity: $0) })
                 
                 if !recipients.contactsEqual(to: newRecipients) {
@@ -156,5 +172,17 @@ public class DistributionList: NSObject {
             }
         }
         subscriptionTokens.append(token)
+    }
+    
+    private func updateProfilePicture() {
+        profilePicture = resolveProfilePicture()
+    }
+    
+    private func resolveProfilePicture() -> UIImage {
+        if let distributionListImageData, let image = UIImage(data: distributionListImageData) {
+            return image
+        }
+        
+        return ProfilePictureGenerator.generateImage(for: .distributionList, color: idColor)
     }
 }

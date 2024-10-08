@@ -47,7 +47,7 @@ final class TaskDefinitionUpdateContactSync: TaskDefinition, TaskDefinitionTrans
     }
 
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     var scope: D2d_TransactionScope.Scope {
@@ -62,7 +62,7 @@ final class TaskDefinitionUpdateContactSync: TaskDefinition, TaskDefinitionTrans
     
     init(deltaSyncContacts: [DeltaSyncContact]) {
         self.deltaSyncContacts = deltaSyncContacts
-        super.init(isPersistent: true)
+        super.init(type: .persistent)
     }
     
     required init(from decoder: Decoder) throws {

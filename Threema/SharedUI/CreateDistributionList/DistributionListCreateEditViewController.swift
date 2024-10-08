@@ -70,55 +70,51 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         }
     }
     
-    private var avatarImageData: Data?
+    private var profilePictureData: Data?
     private var distributionListName = ""
     
     // MARK: - Views
     
-    private lazy var editAvatarView: EditAvatarView = {
+    private lazy var editProfilePictureView: EditProfilePictureView = {
         
-        let initialAvatarImage: UIImage?
-
-        if let distributionList, let profilePictureData = distributionList.profilePicture,
-           let image = UIImage(data: profilePictureData) {
-            initialAvatarImage = AvatarMaker.shared().maskedProfilePicture(image, size: 200)
-            avatarImageData = profilePictureData
-        }
-        else {
-            initialAvatarImage = AvatarMaker.shared().unknownDistributionListImage()
-        }
+        let initialProfilePicture: UIImage? = distributionList?.profilePicture
+        let isDefaultImage = (profilePictureData == nil)
         
-        let isDefaultImage = (avatarImageData == nil)
-        
-        let imageUpdated: EditAvatarView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
+        let imageUpdated: EditProfilePictureView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
             guard let strongSelf = self else {
                 return (nil, true)
             }
             
             // Store new image data
-            strongSelf.avatarImageData = newImageData
+            strongSelf.profilePictureData = newImageData
             
-            // Return default group avatar if no data is available or readable
+            // Return default group profile picture if no data is available or readable
             guard let newImageData,
-                  let newImage = UIImage(data: newImageData) else {
-                
-                let newAvatarImage = AvatarMaker.shared().unknownDistributionListImage()
+                  let newProfilePicture = UIImage(data: newImageData) else {
+                let newProfilePicture: UIImage =
+                    if let distributionList = strongSelf.distributionList {
+                    
+                        distributionList.generatedProfilePicture()
+                    }
+                    else {
+                        ProfilePictureGenerator.unknownDistributionListImage
+                    }
                 
                 strongSelf.updateSaveButtonState()
-                return (newAvatarImage, true)
+                return (newProfilePicture, true)
             }
             
-            // Return new avatar image
-            let newAvatarImage = AvatarMaker.maskImage(newImage)
+            // Return new profile picture
             strongSelf.updateSaveButtonState()
-            return (newAvatarImage, false)
+            return (newProfilePicture, false)
         }
         
-        return EditAvatarView(
+        return EditProfilePictureView(
             in: self,
-            avatarImage: initialAvatarImage,
+            profilePicture: initialProfilePicture,
             isDefaultImage: isDefaultImage,
             isEditable: true,
+            conversationType: .distributionList,
             imageUpdated: imageUpdated
         )
     }()
@@ -179,7 +175,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        updateEditAvatarFrameHeight()
+        updateEditProfilePictureFrameHeight()
     }
     
     // MARK: - Configuration
@@ -203,7 +199,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     }
     
     private func configureTableView() {
-        tableView.tableHeaderView = editAvatarView
+        tableView.tableHeaderView = editProfilePictureView
         tableView.delegate = self
         
         tableView.keyboardDismissMode = .onDrag
@@ -270,7 +266,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     private func updateSaveButtonState() {
         // Deactivate save button as long as name is empty, recipients is empty, or nothing changed
         guard !distributionListName.isEmpty, !recipients.isEmpty,
-              nameDidChange || avatarImageDidChange || recipientsDidChange else {
+              nameDidChange || profilePictureDidChange || recipientsDidChange else {
             saveButton.isEnabled = false
             return
         }
@@ -278,17 +274,17 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         saveButton.isEnabled = true
     }
     
-    private func updateEditAvatarFrameHeight() {
-        let editAvatarViewHeight = editAvatarView.systemLayoutSizeFitting(view.bounds.size).height
+    private func updateEditProfilePictureFrameHeight() {
+        let editProfilePictureViewHeight = editProfilePictureView.systemLayoutSizeFitting(view.bounds.size).height
         
-        let updateFrameHeight = { self.editAvatarView.frame.size.height = editAvatarViewHeight }
+        let updateFrameHeight = { self.editProfilePictureView.frame.size.height = editProfilePictureViewHeight }
         
         // Only update if height was 0 before or did change
         // Only animate if previous height was non-zero, otherwise we get unsatisfiable constraints
-        if editAvatarView.frame.height == 0 {
+        if editProfilePictureView.frame.height == 0 {
             updateFrameHeight()
         }
-        else if editAvatarViewHeight != editAvatarView.frame.height {
+        else if editProfilePictureViewHeight != editProfilePictureView.frame.height {
             // Use table view update to animate height change
             // https://stackoverflow.com/a/32228700/286611
             tableView.performBatchUpdates(updateFrameHeight)
@@ -320,7 +316,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
                 
             distributionListManager.setName(of: distributionList, to: distributionListName)
             distributionListManager.setRecipients(of: distributionList, to: recipients)
-            distributionListManager.setProfilePicture(of: distributionList, to: avatarImageData)
+            distributionListManager.setProfilePicture(of: distributionList, to: profilePictureData)
             dismiss(animated: true)
         }
         else {
@@ -339,7 +335,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
                 try distributionListManager.createDistributionList(
                     conversation: conversation,
                     name: distributionListName,
-                    imageData: avatarImageData,
+                    imageData: profilePictureData,
                     recipients: recipients
                 )
                     
@@ -423,7 +419,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     // MARK: - Notifications
     
     @objc private func contentSizeCategoryDidChange() {
-        updateEditAvatarFrameHeight()
+        updateEditProfilePictureFrameHeight()
     }
     
     @objc private func keyboardWasShown(notification: Notification) {
@@ -455,8 +451,9 @@ extension DistributionListCreateEditViewController {
         distributionList?.recipients != recipients
     }
     
-    private var avatarImageDidChange: Bool {
-        if let distributionList, distributionList.profilePicture == avatarImageData {
+    private var profilePictureDidChange: Bool {
+        // TODO: (IOS-4366) Fix check
+        if let distributionList, true {
             return false
         }
         return true

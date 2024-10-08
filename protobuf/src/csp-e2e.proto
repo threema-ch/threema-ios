@@ -11,8 +11,6 @@ package csp_e2e;
 option java_package = "ch.threema.protobuf.csp.e2e";
 option java_multiple_files = true;
 
-import "common.proto";
-
 // Metadata sent within a CSP payload `message-with-metadata-box` struct.
 message MessageMetadata {
   // Padding that is ignored by the receiver.
@@ -85,39 +83,96 @@ message MessageMetadata {
 // - When rejected: N/A (ignored)
 // - Send to Threema Gateway ID group creator: If capture is enabled
 //
-// When creating this message as a 1:1 message:
+// The following steps must be invoked when the user wants to edit a 1:1
+// message:
 //
-// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, prevent
-//    creation and abort these steps.
-// 2. Run the _Commit Edit Message Create Steps_.
+// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, disallow
+//    editing and abort these steps.
+// 2. Run the _Common Edit Message Enter Steps_.
+// 3. Allow the user to edit the referred message.
 //
-// When creating this message as a group message:
+// The following steps must be invoked when the user wants to edit a group
+// message:
 //
-// 1. If the content of the message would not change, prevent creation and abort
-//    these steps.
-// 2. If the sender or all of the receivers do not have `EDIT_MESSAGE_SUPPORT`,
-//    prevent creation and abort these steps.
-// 3. Run the _Common Edit Message Create Steps_.
-// 4. If any of the receivers do not have `EDIT_MESSAGE_SUPPORT`, notify the
+// 1. If the group is marked as _left_, disallow editing and abort these steps.
+// 2. If the sender or all of the group members do not have
+//    `EDIT_MESSAGE_SUPPORT`, disallow editing and abort these steps.
+// 3. Run the _Common Edit Message Enter Steps_.
+// 4. If any of the group members do not have `EDIT_MESSAGE_SUPPORT`, notify the
 //    user that the affected contacts will not receive the edited content.
-// 5. Omit all receivers that do not have `EDIT_MESSAGE_SUPPORT`.
+// 5. Allow the user to edit the referred message.
 //
-// The following steps are defined as the _Common Edit Message Create Steps_:
+// The following steps are defined as the _Common Edit Message Enter Steps_:
 //
 // 1. Let `message` be the referred message.
-// 2. If the referred message has been sent (`sent-at`) more than 6 hours ago,
-//    prevent creation and abort these steps.¹
-// 3. Let `created-at` be the current timestamp to be applied to the edit
-//    message.
-// 4. Edit `message` as defined by the associated _Edit applies to_ property and
+// 2. If the user is not the original sender of `message`, disallow editing and
+//    abort these steps.
+// 3. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+//    editing and abort these steps.¹
+//
+// The following steps must be invoked when the user wants to submit an edited
+// 1:1 message.
+//
+// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, discard
+//    the edited message and abort these steps.
+// 2. Run the _Common Edit Message Submit Preflight Steps_.
+// 3. Let `edit-message-id` be a random message ID.
+// 4. Let `edited-at` be the current timestamp.
+// 5. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+//    the following properties:
+//    - `id` set to `edit-message-id`,
+//    - `created-at` set to `edited-at`,
+//    - `receivers` set to the receiver,
+//    - to construct an `EditMessage` message
+// 6. Edit `message` as defined by the associated _Edit applies to_ property and
 //    add an indicator to `message`, informing the user that the message has
-//    been edited by the user at `created-at`.
+//    been edited by the user at `edited-at`.
+//
+// The following steps must be invoked when the user wants to submit an edited
+// group message.
+//
+// 1. If the group is marked as _left_, discard the edited message and abort
+//    these steps.
+// 2. If the sender or all of the group members do not have
+//    `EDIT_MESSAGE_SUPPORT`, discard the edited message and abort these steps.
+// 3. Run the _Common Edit Message Submit Preflight Steps_.
+// 4. Let `edit-message-id` be a random message ID.
+// 5. Let `edited-at` be the current timestamp.
+// 6. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+//    the following properties:
+//    - `id` set to `edit-message-id`,
+//    - `created-at` set to `edited-at`,
+//    - `receivers` set to all group members that have `EDIT_MESSAGE_SUPPORT`,
+//    - to construct an `EditMessage` message (wrapped by
+//      [`group-member-container`](ref:e2e.group-member-container))
+// 7. Edit `message` as defined by the associated _Edit applies to_ property and
+//    add an indicator to `message`, informing the user that the message has
+//    been edited by the user at `edited-at`.
+//
+// The following steps are defined as the _Common Edit Message Submit Preflight
+// Steps_:
+//
+// 1. Lookup the message with `message_id` originally sent by the sender within
+//    the associated conversation and let `message` be the result.
+// 2. If `message` is no longer defined, discard the edited message and abort
+//    these steps.
+// 3. If the content of `message` is identical to the edited message, discard
+//    the edited message and abort these steps.
+//
+// When reflected from another device as an incoming or outgoing 1:1 message:
+//
+// 1. Run the _Common Edit Message Receive Steps_.
 //
 // When receiving this message as a 1:1 message:
 //
 // 1. Run the _Common Edit Message Receive Steps_.
 //
-// When receiving this message as a group message:
+// When reflected from another device as an incoming or outgoing group message:
+//
+// 1. Run the _Common Edit Message Receive Steps_.
+//
+// When receiving this message as a group message (wrapped by
+// [`group-member-container`](ref:e2e.group-member-container)):
 //
 // 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
 //    has been discarded, abort these steps.
@@ -128,7 +183,7 @@ message MessageMetadata {
 // 1. Lookup the message with `message_id` originally sent by the sender within
 //    the associated conversation and let `message` be the result.
 // 2. If `message` is not defined or the sender is not the original sender of
-//    `message`, discard the message and abort these steps.
+//    `message`, discard the message and abort these steps.²
 // 3. If `message` is not editable (see the associated _Edit applies to_
 //    property), discard the message and abort these steps.
 // 4. Edit `message` as defined by the associated _Edit applies to_ property and
@@ -138,6 +193,13 @@ message MessageMetadata {
 // ¹: For simplicity, the time constraint is applied on the sender side only.
 // The receiver will always accept a request to edit a message. This is deemed
 // acceptable considering this is not a security feature.
+//
+// ²: Implementations do not track the group member setup at the time a message
+// was received. Therefore, an edited message is always sent to the **current**
+// group member setup, including any group members that weren't part of the
+// group when the message was sent. However, any ordinary client will discard
+// `EditMessage` for unknown messages. This leak is not great but considered
+// acceptable for now.
 message EditMessage {
   // Unique ID of the referred message to be edited.
   fixed64 message_id = 1;
@@ -195,36 +257,67 @@ message EditMessage {
 // - When rejected: N/A (ignored)
 // - Send to Threema Gateway ID group creator: If capture is enabled
 //
-// When creating this message as a 1:1 message:
+// The following steps must be invoked when the user wants to delete a 1:1
+// message:
 //
 // 1. If the sender or the receiver do not have `DELETE_MESSAGE_SUPPORT`,
-//    prevent creation and abort these steps.
-// 2. Run the _Commit Delete Message Create Steps_.
+//    disallow removal and abort these steps.
+// 2. Run the _Common Delete Message Preflight Steps_.
+// 3. Let `delete-message-id` be a random message ID.
+// 4. Let `deleted-at` be the current timestamp.
+// 5. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+//    the following properties:
+//    - `id` set to `delete-message-id`,
+//    - `created-at` set to `deleted-at`,
+//    - `receivers` set to the receiver,
+//    - to construct a `DeleteMessage` message
+// 6. Replace `message` with a message informing the user that the message of
+//    the user has been removed at `deleted-at`.²
 //
-// When creating this message as a group message:
+// The following steps must be invoked when the user wants to delete a group
+// message.
 //
-// 1. If the sender or all of the receivers do not have
-//    `DELETE_MESSAGE_SUPPORT`, prevent creation and abort these steps.
-// 2. Run the _Commit Delete Message Create Steps_.
-// 3. If any of the receivers do not have `DELETE_MESSAGE_SUPPORT`, notify the
-//    user that the affected contacts will continue to see the message.
-// 4. Omit all receivers that do not have `DELETE_MESSAGE_SUPPORT`.
+// 1. If the group is marked as _left_, disallow removal and abort these steps.
+// 2. If the sender or all of the group members do not have
+//    `DELETE_MESSAGE_SUPPORT`, disallow removal and abort these steps.
+// 3. Run the _Common Delete Message Preflight Steps_.
+// 4. If any of the group members do not have `DELETE_MESSAGE_SUPPORT`, notify
+//    the user that the affected contacts will continue to see the message.
+// 5. Let `delete-message-id` be a random message ID.
+// 6. Let `deleted-at` be the current timestamp.
+// 7. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+//    the following properties:
+//    - `id` set to `delete-message-id`,
+//    - `created-at` set to `deleted-at`,
+//    - `receivers` set to all group members that have `DELETE_MESSAGE_SUPPORT`,
+//    - to construct an `DeleteMessage` message (wrapped by
+//      [`group-member-container`](ref:e2e.group-member-container))
+// 8. Replace `message` with a message informing the user that the message of
+//    the user has been removed at `deleted-at`.²
 //
-// The following steps are defined as the _Common Delete Message Create Steps_:
+// The following steps are defined as the _Common Delete Message Preflight
+// Steps_:
 //
 // 1. Let `message` be the referred message.
-// 2. If the referred message has been sent (`sent-at`) more than 6 hours ago,
-//    prevent creation and abort these steps.¹
-// 3. Let `created-at` be the current timestamp to be applied to the delete
-//    message.
-// 4. Replace `message` with a message informing the user that the message of
-//    the user has been removed at `created-at`.²
+// 2. If the user is not the original sender of `message`, disallow removal and
+//    abort these steps.
+// 3. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+//    removal and abort these steps.¹
+//
+// When reflected from another device as an incoming or outgoing 1:1 message:
+//
+// 1. Run the _Common Delete Message Receive Steps_.
 //
 // When receiving this message as a 1:1 message:
 //
 // 1. Run the _Common Delete Message Receive Steps_.
 //
-// When receiving this message as a group message:
+// When reflected from another device as an incoming or outgoing group message:
+//
+// 1. Run the _Common Delete Message Receive Steps_.
+//
+// When receiving this message as a group message (wrapped by
+// [`group-member-container`](ref:e2e.group-member-container)):
 //
 // 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
 //    has been discarded, abort these steps.
@@ -239,7 +332,7 @@ message EditMessage {
 // 3. If `message` is not deletable (see the associated _Deletable by_
 //    property), discard the message and abort these steps.
 // 4. Replace `message` with a message informing the user that the message of
-//    the sender has been removed at `created-at`.²
+//    the sender has been removed at the `message`'s `created-at`.²
 //
 // ¹: For simplicity, the time constraint is applied on the sender side only.
 // The receiver will always accept a request to delete a message. This is deemed
@@ -280,33 +373,30 @@ message DeleteMessage {
 // received, re-sending a `GroupCallStart` if still ongoing, implicitly
 // triggered by FS `Reject` receive steps.
 //
-// When creating this message to start a call within the group:
+// When reflected from another device as an incoming or outgoing message:
 //
-// 1. If the sender or all of the receivers do not have `GROUP_CALL_SUPPORT`,
-//    prevent creation and abort these steps.
-// 2. Generate a random GCK and set `gck` appropriately.
-// 3. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
-//    Server API.
-//
-// When sending this message:
-//
-// 1. Omit all receivers that do not have `GROUP_CALL_SUPPORT`.
+// 1. Run the _Common Group Call Start Receive Steps_.
 //
 // When receiving this message:
 //
 // 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
 //    has been discarded, abort these steps.
-// 2. If the hostname of `sfu_base_url` does not use the scheme `https` or does
+// 2. Run the _Common Group Call Start Receive Steps_.
+//
+// The following steps are defined as the _Common Group Call Start Receive
+// Steps_:
+//
+// 1. If the hostname of `sfu_base_url` does not use the scheme `https` or does
 //    not end with one of the set of [_Allowed SFU Hostname
 //    Suffixes_](ref:group-calls#obtain-sfu-information), log a warning, discard
 //    the message and abort these steps.
-// 3. Let `running` be the list of group calls that are currently considered
+// 2. Let `running` be the list of group calls that are currently considered
 //    running within the group.
-// 4. If another call with the same GCK exists in `running`, log a warning,
+// 3. If another call with the same GCK exists in `running`, log a warning,
 //    discard the message and abort these steps.
-// 5. Add the received call to the list of group calls that are currently
+// 4. Add the received call to the list of group calls that are currently
 //    considered running (even if `protocol_version` is unsupported¹).
-// 6. Start a task to run the _Group Call Refresh Steps_.²
+// 5. Start a task to run the _Group Call Refresh Steps_.²
 //
 // ¹: Adding unsupported `protocol_version`s allows the user to join an ongoing
 //  call after an app update where support for `protocol_version` has been
@@ -329,132 +419,4 @@ message GroupCallStart {
 
   // The base URL of the SFU, used to join or peek the call.
   string sfu_base_url = 3;
-}
-
-// Request joining a group.
-//
-// This message is sent to the administrator of a group. The required
-// information is provided by a `GroupInvite` URL payload.
-//
-// **Properties**:
-// - Kind: 1:1
-// - Flags:
-//   - `0x01`: Send push notification.
-// - User profile distribution: Yes
-// - Exempt from blocking: Yes
-// - Implicit _direct_ contact creation: Yes
-// - Protect against replay: Yes
-// - Reflect:
-//   - Incoming: Yes
-//   - Outgoing: Yes
-//   - _Sent_ update: No
-// - Delivery receipts:
-//   - Automatic: No
-//   - Manual: No
-// - When rejected: N/A (ignored)
-// - Edit applies to: N/A
-// - Deletable by: User only
-// - Send to Threema Gateway ID group creator: N/A
-//
-// When receiving this message:
-//
-// 1. Look up the corresponding group invitation by the token.
-// 2. If the group invitation could not be found, discard the message and abort
-//    these steps.
-// 3. If the sender is already part of the group, send an accept response and
-//    then respond as if the sender had sent a `group-sync-request` (i.e. send a
-//    `group-setup`, `group-name`, etc.). Finally, abort these steps.
-// 4. If the group name does not match the name in the originally sent group
-//    invitation, discard the message and abort these steps.
-// 5. If the group invitation has expired, send the respective response and
-//    abort these steps.
-// 6. If the group invitation requires the admin to accept the request, show
-//    this information in the user interface and pause these steps until the
-//    user manually confirmed of rejected the request. Note that the date of the
-//    decision is allowed to extend beyond the expiration date of the group
-//    invitation. Continue with the following sub-steps once the user made a
-//    decision on the request:
-//     1. If the user manually rejected the request, send the respective
-//        response and abort these steps.
-// 7. If the group is full, send the respective response and abort these steps.
-// 8. Send an accept response.
-// 9. Add the sender of the group invitation request to the group and follow the
-//    group protocol from there.
-message GroupJoinRequest {
-  // The group invite token, 16 bytes
-  bytes token = 1;
-
-  // The group name from the group invite URL
-  string group_name = 2;
-
-  // A message for the group administrator, e.g. for identification purposes
-  //
-  // The message helps the administrator to decide whether or not to accept a
-  // join request.
-  //
-  // Should be requested by the user interface for invitations that require
-  // manual confirmation by the administrator. Should not be requested in case
-  // the invitation will be automatically accepted.
-  string message = 3;
-}
-
-// Response sent by the admin of a group towards a sender of a valid group join
-// request.
-//
-// **Properties**:
-// - Kind: 1:1
-// - Flags: None
-// - User profile distribution: Yes
-// - Exempt from blocking: Yes
-// - Implicit _direct_ contact creation: Yes
-// - Protect against replay: Yes
-// - Reflect:
-//   - Incoming: Yes
-//   - Outgoing: Yes
-//   - _Sent_ update: No
-// - Delivery receipts:
-//   - Automatic: No
-//   - Manual: No
-// - When rejected: N/A (ignored)
-// - Edit applies to: N/A
-// - Deletable by: N/A
-// - Send to Threema Gateway ID group creator: N/A
-//
-// When receiving this message:
-//
-// 1. Look up the corresponding group join request by the token and the
-//    sender's Threema ID as the administrator's Threema ID.
-// 2. If the group join request could not be found, discard the message and
-//    abort these steps.
-// 3. Mark the group join request as accepted or (automatically) rejected by
-//    the given response type.
-// 4. If the group join request has been accepted, remember the group id in
-//    order to be able to map an incoming `group-setup` to the group.
-message GroupJoinResponse {
-  // The group invite token, 16 bytes
-  bytes token = 1;
-
-  // Response of the admin
-  message Response {
-    // Accept a group invite request
-    message Accept {
-      // Group ID (little-endian) as chosen by the group creator
-      //
-      // Note: Combined with the Threema ID of the administrator, this forms the
-      // `GroupIdentity`.
-      fixed64 group_id = 1;
-    }
-
-    oneof response {
-      // Accept a group invite request
-      Accept accept = 1;
-      // Token of a group invitation expired
-      common.Unit expired = 2;
-      // Group invitation cannot be accepted due to the group being full
-      common.Unit group_full = 3;
-      // The administrator explicitly rejects the invitation request
-      common.Unit reject = 4;
-    }
-  }
-  Response response = 2;
 }

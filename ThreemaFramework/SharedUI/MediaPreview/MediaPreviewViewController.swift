@@ -333,8 +333,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         headerView.rotate(landscape: landscape, newWidth: titleViewSize.width)
 
         guard let veryLeftItem = navigationItem.leftBarButtonItems?.first else {
-            let message = "Could not get cancel or back item"
-            DDLogError(message)
+            DDLogError("Could not get cancel or back item")
             return
         }
         
@@ -601,11 +600,12 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             return
         }
         
+        updateTextForIndex(indexPath: indexPath, animated: true)
+        
         guard mediaData.count >= currentItem.count else {
             return
         }
         
-        updateTextForIndex(indexPath: indexPath, animated: true)
         largeCollectionViewContainerView.currentImage = mediaData[min(indexPath.item, mediaData.count - 1)]
         
         DispatchQueue.main.async {
@@ -703,36 +703,10 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         if mediaData.count - 1 < indexPath.item || mediaData.isEmpty {
             return
         }
-        DispatchQueue.main.async {
-            let index = indexPath.item
-            let textColor = Colors.text
-            let tintColor: UIColor = .primary
-            
-            if !animated {
-                self.textField.text = self.mediaData[index].caption
-            }
-            else {
-                self.textField.text = self.mediaData[index].caption
-                let fadeOut = UIViewPropertyAnimator(duration: 0.2, curve: .easeOut, animations: { [weak self] in
-                    self?.textField.textColor = self?.textField.backgroundColor
-                    self?.textField.tintColor = .clear
-                    self?.textField.text = ""
-                })
-                
-                let fadeIn = UIViewPropertyAnimator(duration: 0.2, curve: .easeOut, animations: { [weak self] in
-                    self?.textField.textColor = textColor
-                    self?.textField.tintColor = tintColor
-                    let index = indexPath.item
-                    self?.textField.text = self?.mediaData[index].caption
-                })
-                
-                fadeOut.addCompletion { _ in
-                    fadeIn.startAnimation()
-                }
-                fadeOut.startAnimation()
-            }
-            self.updateTextAlignment()
-        }
+        
+        textField.text = mediaData[indexPath.item].caption
+        updateTextAlignment()
+        
         updateSymbols(indexPath: indexPath, animated: animated)
     }
     

@@ -24,8 +24,23 @@ import PromiseKit
 import ThreemaEssentials
 
 public protocol MultiDeviceManagerProtocol {
+    /// Maximum number of linked devices allowed including this device. This is only set if we are logged into the
+    /// mediator
+    var maximumNumberOfDeviceSlots: Int? { get }
+    
     var thisDevice: DeviceInfo { get }
+    
+    /// Get sorted list of other linked/paired devices
+    /// - Returns: List of other linked/paired devices
+    /// - Throws: `MultiDeviceManagerError.multiDeviceNotActivated`, `MessageReceiverError`
+    func sortedOtherDevices() async throws -> [DeviceInfo]
+    
     func otherDevices() -> Promise<[DeviceInfo]>
+    
+    /// Drop other linked/paired device.
+    /// - Parameter device: Linked/paired device that will dropped
+    func drop(device: DeviceInfo) async throws
+    
     func drop(device: DeviceInfo) -> Promise<Void>
     func disableMultiDevice(runForwardSecurityRefreshSteps: Bool) async throws
 }
@@ -46,6 +61,10 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
     private let userSettings: UserSettingsProtocol
     private let entityManager: EntityManager
 
+    public var maximumNumberOfDeviceSlots: Int? {
+        serverConnector.maximumNumberOfDeviceSlots?.intValue
+    }
+    
     required init(
         serverConnector: ServerConnectorProtocol,
         contactStore: ContactStoreProtocol,
@@ -80,8 +99,32 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         )
     }
 
+    public func sortedOtherDevices() async throws -> [DeviceInfo] {
+        try await withCheckedThrowingContinuation { continuation in
+            otherDevices()
+                .done { devices in
+                    // Sort devices by label, if label is the same sort by ID
+                    // (so the ordering is consistent across refreshes)
+                    let sortedDevices = devices.sorted {
+                        if $0.label != $1.label {
+                            $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending
+                        }
+                        else {
+                            $0.deviceID < $1.deviceID
+                        }
+                    }
+                    
+                    continuation.resume(returning: sortedDevices)
+                }
+                .catch { error in
+                    continuation.resume(throwing: error)
+                }
+        }
+    }
+    
     /// Get other linked/paired devices.
     /// - Returns: List of other linked/paired devices
+    @available(*, deprecated, renamed: "sortedOtherDevices", message: "Only used for old code")
     public func otherDevices() -> Promise<[DeviceInfo]> {
         guard let deviceGroupKeys = serverConnector.deviceGroupKeys, let deviceID = serverConnector.deviceID else {
             return Promise { seal in seal.fulfill([DeviceInfo]()) }
@@ -94,9 +137,22 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         )
         return messageReceiver.requestDevicesInfo(thisDeviceID: deviceID)
     }
+    
+    public func drop(device: DeviceInfo) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            drop(device: device)
+                .done {
+                    continuation.resume()
+                }
+                .catch { error in
+                    continuation.resume(throwing: error)
+                }
+        }
+    }
 
     /// Drop other linked/paired device.
     /// - Parameter device: Linked/paired device that will dropped
+    @available(*, deprecated, message: "Only used for old code. Use async version otherwise")
     public func drop(device: DeviceInfo) -> Promise<Void> {
         guard let deviceGroupKeys = serverConnector.deviceGroupKeys else {
             return Promise()

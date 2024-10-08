@@ -26,22 +26,30 @@ enum TaskExecutionState: String, Codable {
     case interrupted
 }
 
+enum TaskType {
+    /// Task is persisted on disk and reloaded on relaunch
+    case persistent
+    /// Task lives on until the app is terminated (i.e. it will be kept on backgrounding)
+    case volatile
+    /// Task is dropped on next chat/mediator server disconnect
+    case dropOnDisconnect
+}
+
 protocol TaskDefinitionProtocol {
     /// Class name for serialize and deserialize task.
     var className: String { get }
 
-    /// Define that task will be serialized and deserialized.
-    var isPersistent: Bool { get set }
+    var type: TaskType { get }
 
     var state: TaskExecutionState { get set }
 
-    /// Retry task execution on failer
+    /// Retry task execution on failure
     var retry: Bool { get }
 
     /// Retry count of task execution
     var retryCount: Int { get set }
 
-    /// Create task excution handler for task definition.
+    /// Create task execution handler for task definition.
     /// - Parameters:
     ///     - frameworkInjector: Framework business injector (necessary for unit testing)
     ///     - taskContext: Context where the task is created

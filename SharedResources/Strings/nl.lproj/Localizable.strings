@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Naar klembord gekopieerd";
 "webrtc_diagnostics.done" = "Klaar. Als je problemen hebt bij het opzetten van je oproepverbinding, stuur deze uitvoer dan naar de ondersteuning van Threema.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Selecteren";
 "mwphotobrowser_select_all" = "Alles selecteren";
@@ -338,7 +335,7 @@
 "record_audio" = "Audio opnemen";
 "record_continue" = "Doorgaan met geluidsopname";
 "scan_qr" = "QR-code scannen";
-"share_file" = "Bestand delen";
+"share_file" = "Bestand of contactpersoon delen";
 "add_item_caption" = "Onderschrift toevoegen";
 "add_items_caption" = "Onderschrift toevoegen";
 "send_item_immediately_photo" = "Foto versturen";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Zakelijke contactpersoon";
 "threema_type_icon_private_accessibility_label" = "Privécontactpersoon";
 
-"delete_contact_group_exists_title" = "Contactpersoon zit nog in een groepschat";
-"delete_contact_group_exists_message_single" = "\"%@\" is nog steeds lid van een groep. Verwijder de contactpersoon uit de groep of verwijder de groep.";
-"delete_contact_group_exists_message_multiple" = "\"%@\" is nog steeds lid van %d groepen. Verwijder de contactpersoon uit de groepen of verwijder de groepen.";
-"delete_contact_group_exists_show_contact_button" = "Contactpersoon weergeven";
 "delete_contact_existing_conversation_title" = "\"%@\" verwijderen?";
+"delete_contact_existing_conversation_is_group_member_title" = "Het individuele gesprek met '%@' zal worden verwijderd, maar deze persoon blijft lid van groepen. Wilt u '%@' verwijderen?";
 "delete_contact_existing_conversation_button" = "Contactpersoon + Chatgeschiedenis verwijderen";
+"delete_contact_is_group_member_title" = "'%@' blijft lid van groepen. Wilt u '%@' verwijderen?";
 "delete_contact_confirmation_with_exclusion_message" = "\"%@\" verwijderen en uitsluiten van contactsynchronisatie?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "'%@' blijft lid van groepen. Wilt u '%@' verwijderen en uitsluiten van synchronisatie?";
 "delete_contact_button" = "Contactpersoon verwijderen";
 "delete_contact_confirmation_with_exclusion_button" = "Contactpersoon verwijderen + uitsluiten";
 "exclude_deleted_id_title" = "Threema ID van \"%@\" uitsluiten van synchronisatie?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "Nieuw bij %@?";
 "restore_id_export" = "Geëxporteerd ID herstellen";
 "id_exists" = "De Threema ID dat eerder op dit apparaat (%@) is gebruikt, is nog aanwezig. Wilt u deze ID herstellen?";
+
+"contact_support" = "Neem contact op voor ondersteuning";
+"contact_support_mail_subject" = "Er zijn te veel ID's aangemaakt voor deze aankoop";
+"contact_support_mail_message" = "Beste %@-team,\n\nHet genereren van een nieuwe Threema ID mislukt en levert deze foutcode op:\n%@\n\nMet vriendelijke groet,";
 
 "welcome" = "Welkom bij %@";
 "move_your_finger" = "Beweeg je vinger over het scherm.";
@@ -712,6 +712,8 @@
 "current_position" = "positie";
 "in_reply_to" = "in antwoord op";
 "draft" = "Ontwerp";
+"draft_type_quote" = "Citeren";
+"draft_type_edit" = "Bewerken";
 "new_message_accessibility" = "Nieuw bericht: ";
 "quote_interaction_hint" = "Gaat naar geciteerd bericht.";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Wil je Threema Channel aan je contactpersonen toevoegen?";
 "threema_channel_info" = "Threema Channel levert nieuws over alles wat met Threema te maken heeft.";
 "threema_channel_failed" = "Threema Channel niet toegevoegd.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Wilt u het Threema Work-kanaal aan uw contactpersonen toevoegen?";
+"threema_work_channel_info" = "Het Threema Work-kanaal levert nieuws over alles wat met Threema Work te maken heeft.";
+"threema_work_channel_failed" = "Het Threema Work-kanaal kon niet worden toegevoegd.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Antwoorden";
@@ -1074,7 +1082,7 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "restore_option_id" = "Alleen uw ID herstellen";
 "restore_option_id_keep_data" = "Herstel uw geëxporteerde Threema ID en behoud de gegevens (chatgesprekken, groepen, enz) die al op dit apparaat zijn opgeslagen";
 "backup_faq_link_text" = "Meer informatie over back-ups in %@";
-"forgot_password_link_text" = "Ben je je wachtwoord vergeten?";
+"restore_option_help_link_text" = "Help";
 
 "restore_option_data_description" = "%@-gegevens (chatgesprekken, contactpersonen, groepen, enz.) zijn op dit apparaat aanwezig.";
 "restore_option_data_keep_data" = "Lokale gegevens bewaren";
@@ -1110,7 +1118,7 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "settings_list_storage_management_title" = "Opslagbeheer";
 "settings_list_passcode_lock_title" = "Veiligheidscode";
 "settings_threema_calls" = "Oproepen";
-"settings_list_threema_desktop_title" = "Threema 2.0 voor Desktop (bèta)";
+"settings_list_threema_desktop_title" = "Threema 2.0 voor desktop (bèta)";
 "settings_list_threema_web_title" = "Desktop/web";
 
 "settings_list_network_title" = "Netwerkstatus";
@@ -1119,6 +1127,7 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 
 "settings_list_invite_a_friend_title" = "Een vriend uitnodigen";
 "settings_list_threema_channel_title" = "Threema-kanaal";
+"settings_list_threema_work_channel_title" = "Threema Work-kanaal";
 
 "settings_list_rate" = "%@ beoordelen";
 
@@ -1253,7 +1262,7 @@ Wanneer u Threema Safe gebruikt, kun u uw Threema-ID, contactpersonen en groepen
 "delete_messages_confirm" = "Wil je permanent alle berichten verwijderen die ouder zijn dan %@?";
 "delete_messages_confirm_all" = "Wil je permanent alle berichten verwijderen?";
 "delete_messages_explain" = "Dit omvat alle berichtsoorten (tekst- en spraakberichten, media, bestanden, polls, enz. worden verwijderd).";
-"automatic_delete_explain" = "Gebruik automatische verwijdering van berichten en media om ruimte vrij te maken op de schijf. Open opiniepeilingen en notitiegroepen zijn uitgesloten van automatische verwijdering.";
+"automatic_delete_explain" = "Gebruik de automatische verwijdering van berichten en media om ruimte vrij te maken op de schijf. Lopende opiniepeilingen, gemarkeerde berichten en de inhoud van notitiegroepen zijn uitgesloten van automatische verwijdering.";
 "automatic_delete_on_confirmation_title" = "Automatische verwijdering inschakelen?";
 "automatic_delete_off_confirmation_title" = "Automatische verwijdering uitschakelen?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1480,6 +1489,16 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "could_not_add_all_items_memory_constrained_title" = "Gelieve de app te gebruiken";
 "could_not_add_all_items_memory_constrained_message" = "Omwille van technische redenen kunnen bestanden boven een bepaalde grootte alleen in de app worden verzonden.";
 "image_preview_cell_cannot_preview" = "Kan voorbeeld niet weergeven.";
+
+// Profile Synchronization
+"sync_error_title" = "Profielsynchronisatie is mislukt";
+"sync_error_general_message" = "Controleer uw internetverbinding en probeer het opnieuw.";
+"sync_error_same_transaction_error" = "Het profiel wordt al gesynchroniseerd op een ander apparaat. Wacht tot de synchronisatie is voltooid. Wijzigingen op dit apparaat zullen worden genegeerd.";
+
+"syncing_profile" = "Aan het synchroniseren…";
+
+"incoming_profile_sync_title" = "Profiel is gesynchroniseerd";
+"incoming_profile_sync_message" = "Profielwijzigingen van een ander apparaat zijn toegepast";
 
 // Share Extension
 "finished_sending_title" = "Verstuurd";
@@ -1740,6 +1759,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "notification_deleted_messages_count" = "%d berichten verwijderd";
 
 "notification_cannot_play_video" = "Niet mogelijk om video af te spelen";
+"notification_recording_too_long" = "Opname heeft de maximale lengte overschreden";
 
 "notification_call_failed_connected" = "Verbinding verbroken";
 "notification_call_failed_not_connected" = "Geen verbinding tot stand gebracht";

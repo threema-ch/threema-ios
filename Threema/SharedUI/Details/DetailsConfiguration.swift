@@ -24,8 +24,8 @@ import Foundation
 ///
 /// Normally you don't create your own implementation but use the default implementation
 protocol DetailsConfiguration {
-    /// Size of the big avatar
-    var avatarSize: CGFloat { get }
+    /// Size of the big profile picture
+    var profilePictureSize: CGFloat { get }
     
     /// Font for contact or group name. Based on current dynamic type setting.
     var nameFont: UIFont { get }
@@ -33,7 +33,7 @@ protocol DetailsConfiguration {
 
 // Default implementation
 extension DetailsConfiguration {
-    var avatarSize: CGFloat { 120 }
+    var profilePictureSize: CGFloat { 120 }
     
     var nameFont: UIFont {
         let title2Font = UIFont.preferredFont(forTextStyle: .title2)

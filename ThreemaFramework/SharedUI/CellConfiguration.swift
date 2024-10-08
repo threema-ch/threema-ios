@@ -31,9 +31,7 @@ public struct CellConfiguration {
     private let size: Size
     
     // MARK: Configuration & helpers
-    
-    public let loadingAvatarImage = UIImage(resource: .unknown)
-    
+        
     public var nameLabelFont: UIFont {
         switch size {
         case .small:
@@ -45,15 +43,15 @@ public struct CellConfiguration {
         }
     }
     
-    private let maxSmallAvatarSize: CGFloat = 40
-    private let maxMediumAvatarSize: CGFloat = 48
+    private let maxSmallProfilePictureSize: CGFloat = 40
+    private let maxMediumProfilePictureSize: CGFloat = 48
 
-    public var maxAvatarSize: CGFloat {
+    public var maxProfilePictureSize: CGFloat {
         if size == .medium {
-            return maxMediumAvatarSize
+            return maxMediumProfilePictureSize
         }
         
-        return maxSmallAvatarSize
+        return maxSmallProfilePictureSize
     }
     
     public let verticalSpacing: CGFloat = 4

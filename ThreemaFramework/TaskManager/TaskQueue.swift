@@ -21,30 +21,21 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public enum TaskQueueType: Int {
-    case incoming
-    case outgoing
-
-    public static func queue(name: String) -> TaskQueueType {
-        if name == "incoming" {
-            .incoming
-        }
-        else {
-            .outgoing
-        }
-    }
-
-    public func name() -> String {
-        switch self {
-        case .incoming: "incoming"
-        case .outgoing: "outgoing"
-        }
-    }
-}
-
+/// Queue to run tasks on
+///
+/// - Note: This should be internal to the task management system. `TaskManager` should provide the public interface.
+///
+/// # How does dropping work?
+///
+/// Gather around and let me explain... Tasks have 3 types: persistent, volatile & drop on disconnect (`TaskType`). If
+/// the connection is lost all drop on disconnect tasks are marked as dropped (`TaskDefinition.isDropped`) and removed
+/// form the queue, if they are not executing. Because we cannot actually stop executing tasks such task are just marked
+/// as dropped (`TaskQueue.interrupt()`). We expect executing tasks to cooperatively check for dropping and throw a
+/// `TaskExecutionError.taskDropped` if the task is marked as dropped (`TaskDefinition.checkDropping()` can be used for
+/// that). If a task successfully completes we accept that and do nothing special. If a task fails with an error and is
+/// not marked as done we will check for a dropping and handle it as such instead of a failure that might lead to a
+/// retry.
 final class TaskQueue {
-    let queueType: TaskQueueType
-    let supportedTypes: [TaskDefinition.Type]
     static let retriesOfFailedTasks = 1
 
     private var spoolingDelay = false
@@ -55,13 +46,12 @@ final class TaskQueue {
 
     class QueueItem {
         let taskDefinition: TaskDefinition
-        
+        let completionHandler: TaskCompletionHandler?
+
         init(taskDefinition: TaskDefinition, completionHandler: TaskCompletionHandler?) {
             self.taskDefinition = taskDefinition
             self.completionHandler = completionHandler
         }
-        
-        let completionHandler: TaskCompletionHandler?
     }
 
     private var queue = Queue<QueueItem>()
@@ -69,10 +59,6 @@ final class TaskQueue {
     private let taskScheduleQueue = DispatchQueue(label: "ch.threema.TaskQueue.taskScheduleQueue")
     private let spoolingDelayQueue = DispatchQueue(label: "ch.threema.TaskQueue.spoolingDelayQueue")
 
-    enum TaskQueueError: Error {
-        case notSupportedType
-    }
-    
     /// For testing reason
     var list: [QueueItem] {
         queue.list
@@ -86,38 +72,66 @@ final class TaskQueue {
 
     /// Task queue to handle tasks for processing incoming or outgoing messages.
     /// - Parameters:
-    ///     - queueType: Set type for incoming or outgoing queue
-    ///     - supportedTypes: Supported TaskDefinition types to this queue
     ///     - frameworkInjectorResolver: Resolver to get new `BusinessInjector` for background process
-    required init(
-        queueType: TaskQueueType,
-        supportedTypes: [TaskDefinition.Type],
-        frameworkInjectorResolver: FrameworkInjectorResolverProtocol
-    ) {
-        self.queueType = queueType
-        self.supportedTypes = supportedTypes
+    required init(frameworkInjectorResolver: FrameworkInjectorResolverProtocol) {
         self.frameworkInjectorResolver = frameworkInjectorResolver
     }
 
     func enqueue(task: TaskDefinition, completionHandler: TaskCompletionHandler?) throws {
-        guard supportedTypes.contains(where: { $0 === type(of: task) }) else {
-            throw TaskQueueError.notSupportedType
-        }
-        
         taskQueueQueue.sync {
             queue.enqueue(QueueItem(taskDefinition: task, completionHandler: completionHandler))
-            if task.isPersistent {
+            if task.type == .persistent {
                 save()
             }
         }
     }
 
     func interrupt() {
+        var droppedItems = [TaskQueue.QueueItem]()
+        
         taskQueueQueue.sync {
+            
+            var interruptedTask: TaskDefinition?
+            
             if let item = queue.peek(), item.taskDefinition.state == .executing {
                 item.taskDefinition.state = .interrupted
+                interruptedTask = item.taskDefinition
+                
+                // A running (drop on disconnect) task is just marked as such because we cannot really stop it from
+                // executing. It should cooperatively check if it was dropped and stop execution with a droppedTask
+                // error. We also won't call the completion handler as this will be done in the drop handler or
+                // done handler if it completes anyway.
+                // This prevents that a new task is run on reconnect and this one is still running.
+                // TODO: (IOS-4854) Unfortunately this doesn't seem to work correctly in all cases. See TODO below.
+                // Compared to desktop we don't have an error on the connection if we reconnect, because the connection
+                // & connection state are a singleton. This makes races after a fast reconnect way more likely if we
+                // would remove the task immediately from the queue.
+                if item.taskDefinition.type == .dropOnDisconnect {
+                    DDLogNotice("\(item.taskDefinition) interrupted and marked as dropped")
+                    item.taskDefinition.isDropped = true
+                }
             }
+
+            // Remove all tasks with `TaskType.dropOnDisconnect` that are not the interrupted task from above
+            // If we would filter all `interrupted` or "dropped" tasks we might not drop some tasks that weren't just
+            // interrupted/dropped above and thus still `executing`
+            // TODO: (IOS-4854) In some cases `$0.taskDefinition !== interruptedTask` doesn't seem to match the top task. Maybe we should add unique identifiers to tasks.
+            droppedItems = queue.removeAll(where: {
+                $0.taskDefinition.type == .dropOnDisconnect && $0.taskDefinition !== interruptedTask
+            })
+            
+            // This is probably not needed, but just to be save we immediately mark them as dropped
+            for droppedItem in droppedItems {
+                droppedItem.taskDefinition.isDropped = true
+            }
+            
             save()
+        }
+        
+        // Inform completion handler of dropped tasks
+        for droppedItem in droppedItems {
+            DDLogNotice("\(droppedItem.taskDefinition) dropped on disconnect")
+            droppedItem.completionHandler?(droppedItem.taskDefinition, TaskExecutionError.taskDropped)
         }
     }
     
@@ -130,7 +144,7 @@ final class TaskQueue {
 
     func removeCurrent() {
         taskQueueQueue.sync {
-            if let item = queue.dequeue(), item.taskDefinition.isPersistent {
+            if let item = queue.dequeue(), item.taskDefinition.type == .persistent {
                 save()
 
                 DDLogWarn("\(item.taskDefinition) flushed")
@@ -175,27 +189,125 @@ final class TaskQueue {
             return
         }
         
-        var queueItem: QueueItem?
-        taskQueueQueue.sync {
-            queueItem = queue.peek()
+        var item: QueueItem?
+        let shouldExecute = taskQueueQueue.sync {
+            item = queue.peek()
+            
+            guard let item else {
+                DDLogNotice("Task queue is empty")
+                return false
+            }
+            
+            guard item.taskDefinition.state == .pending || item.taskDefinition.state == .interrupted else {
+                DDLogNotice("\(item.taskDefinition) is still running")
+                return false
+            }
+            
+            guard !item.taskDefinition.isDropped else {
+                DDLogNotice("\(item.taskDefinition) state '\(item.taskDefinition.state)' was dropped. Don't execute")
+                // For now we assume that only a drop on disconnect task can be dropped and if one is marked as
+                // "dropped" & "interrupted" at the same time (but still in the queue) it is still executing. Thus it
+                // will either complete or fail with an error where the the dropping handling happens.
+                assert(item.taskDefinition.type == .dropOnDisconnect)
+                if item.taskDefinition.state != .interrupted {
+                    DDLogError(
+                        "This should never happen as dropped tasks are immediately removed from the queue if the are not interrupted"
+                    )
+                    assertionFailure()
+                }
+                return false
+            }
+            
+            DDLogNotice("\(item.taskDefinition) state '\(item.taskDefinition.state)' execute")
+            
+            // Update to state should always happen on the `taskQueueQueue` otherwise we can have a race
+            item.taskDefinition.state = .executing
+            
+            return true
+        }
+        
+        guard shouldExecute else {
+            return
         }
         
         taskScheduleQueue.async {
-            guard let item = queueItem else {
-                DDLogNotice("Task queue (\(self.queueType.name())) is empty")
+            guard let item else {
+                DDLogNotice("Task queue is empty")
                 return
             }
             
-            if item.taskDefinition.state == .pending || item.taskDefinition.state == .interrupted {
-                DDLogNotice("\(item.taskDefinition) state '\(item.taskDefinition.state)' execute")
-                
-                item.taskDefinition.state = .executing
-                
-                let injector = self.frameworkInjectorResolver.backgroundFrameworkInjector
-
-                item.taskDefinition.create(frameworkInjector: injector).execute()
-                    .done {
+            let injector = self.frameworkInjectorResolver.backgroundFrameworkInjector
+            
+            item.taskDefinition.create(frameworkInjector: injector).execute()
+                .done {
+                    if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+                        if let reflectMessageError = self.frameworkInjector.serverConnector.reflectMessage(
+                            self.frameworkInjector.mediatorMessageProtocol.encodeReflectedAck(reflectID: task.reflectID)
+                        ) as? NSError {
+                            
+                            guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
+                                self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
+                                return
+                            }
+                            
+                            DDLogError(
+                                "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
+                            )
+                        }
+                    }
+                    
+                    self.done(item: item)
+                }
+                .catch(on: .global()) { error in
+                    switch error {
+                        
+                    case MessageProcessorError.unknownMessageType(session: _):
+                        self.handleReceivingError(error, for: item)
+                        
+                    case let nsError as NSError where nsError.code == ThreemaProtocolError.badMessage.rawValue ||
+                        nsError.code == ThreemaProtocolError.blockUnknownContact.rawValue ||
+                        nsError.code == ThreemaProtocolError.messageAlreadyProcessed.rawValue ||
+                        nsError.code == ThreemaProtocolError.messageBlobDecryptionFailed.rawValue ||
+                        nsError.code == ThreemaProtocolError.messageNonceReuse.rawValue ||
+                        nsError.code == ThreemaProtocolError.messageSenderMismatch.rawValue ||
+                        nsError.code == ThreemaProtocolError.messageToDeleteNotFound.rawValue ||
+                        nsError.code == ThreemaProtocolError.messageToEditNotFound.rawValue ||
+                        nsError.code == ThreemaProtocolError.unknownMessageType.rawValue:
+                        
+                        self.handleReceivingError(error, for: item)
+                        
+                    case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage:
+                        DDLogWarn("\(item.taskDefinition) \(error)")
+                        self.done(item: item)
+                        
+                    case TaskExecutionError.conversationNotFound(for: _):
+                        DDLogError("\(item.taskDefinition) failed: \(error)")
+                        self.done(item: item)
+                        
+                    case TaskExecutionError.createAbstractMessageFailed:
+                        DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
+                        self.done(item: item)
+                        
+                    case TaskExecutionError.messageReceiverBlockedOrUnknown:
+                        DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
+                        self.done(item: item)
+                        
+                    case TaskExecutionError.invalidContact(message: _),
+                         TaskExecutionError.multiDeviceNotSupported,
+                         TaskExecutionError.multiDeviceNotRegistered: // You need to relink anyway
+                        DDLogWarn("\(item.taskDefinition) \(error)")
+                        self.done(item: item)
+                        
+                    case TaskExecutionError.taskDropped:
+                        DDLogNotice("\(item.taskDefinition) reported dropped error")
+                        self.dropped(item: item)
+                        
+                    default:
                         if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+                            DDLogNotice("\(item.taskDefinition) discard reflected message: \(error)")
+                            
+                            try? self.frameworkInjector.nonceGuard.processed(reflectedEnvelope: task.reflectedEnvelope)
+                            
                             if let reflectMessageError = self.frameworkInjector.serverConnector
                                 .reflectMessage(
                                     self.frameworkInjector.mediatorMessageProtocol
@@ -211,88 +323,14 @@ final class TaskQueue {
                                     "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
                                 )
                             }
+                            
+                            self.done(item: item)
                         }
-
-                        self.done(item: item)
-                    }
-                    .catch(on: .global()) { error in
-                        switch error {
-                            
-                        case MessageProcessorError.unknownMessageType(session: _):
-                            self.handleReceivingError(error, for: item)
-                            
-                        case let nsError as NSError where nsError.code == ThreemaProtocolError.badMessage.rawValue ||
-                            nsError.code == ThreemaProtocolError.blockUnknownContact.rawValue ||
-                            nsError.code == ThreemaProtocolError.messageAlreadyProcessed.rawValue ||
-                            nsError.code == ThreemaProtocolError.messageBlobDecryptionFailed.rawValue ||
-                            nsError.code == ThreemaProtocolError.messageNonceReuse.rawValue ||
-                            nsError.code == ThreemaProtocolError.messageSenderMismatch.rawValue ||
-                            nsError.code == ThreemaProtocolError.messageToDeleteNotFound.rawValue ||
-                            nsError.code == ThreemaProtocolError.messageToEditNotFound.rawValue ||
-                            nsError.code == ThreemaProtocolError.unknownMessageType.rawValue:
-                            
-                            self.handleReceivingError(error, for: item)
-                            
-                        case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage:
-                            DDLogWarn("\(item.taskDefinition) \(error)")
-                            self.done(item: item)
-                            
-                        case TaskExecutionError.conversationNotFound(for: _):
-                            DDLogError("\(item.taskDefinition) failed: \(error)")
-                            self.done(item: item)
-                            
-                        case TaskExecutionError.createAbstractMessageFailed:
-                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
-                            self.done(item: item)
-                            
-                        case TaskExecutionError.messageReceiverBlockedOrUnknown:
-                            DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
-                            self.done(item: item)
-                            
-                        case TaskExecutionTransactionError.shouldSkip:
-                            DDLogNotice("\(item.taskDefinition) skipped: \(error)")
-                            self.done(item: item)
-                            
-                        case TaskExecutionError.invalidContact(message: _),
-                             TaskExecutionError.multiDeviceNotSupported,
-                             TaskExecutionError.multiDeviceNotRegistered: // You need to relink anyway
-                            DDLogWarn("\(item.taskDefinition) \(error)")
-                            self.done(item: item)
-                        
-                        default:
-                            if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                                DDLogNotice("\(item.taskDefinition) discard reflected message: \(error)")
-                                
-                                try? self.frameworkInjector.nonceGuard
-                                    .processed(reflectedEnvelope: task.reflectedEnvelope)
-                                
-                                if let reflectMessageError = self.frameworkInjector.serverConnector
-                                    .reflectMessage(
-                                        self.frameworkInjector.mediatorMessageProtocol
-                                            .encodeReflectedAck(reflectID: task.reflectID)
-                                    ) as? NSError {
-
-                                    guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
-                                        self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
-                                        return
-                                    }
-                                    
-                                    DDLogError(
-                                        "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
-                                    )
-                                }
-                                
-                                self.done(item: item)
-                            }
-                            else {
-                                self.failed(item: item, error: error, enableSpoolingDelay: false)
-                            }
+                        else {
+                            self.failed(item: item, error: error, enableSpoolingDelay: false)
                         }
                     }
-            }
-            else {
-                DDLogNotice("Task queue (\(self.queueType.name())) task is still running")
-            }
+                }
         }
     }
             
@@ -308,10 +346,11 @@ final class TaskQueue {
             let types: [String] = queue.list.map(\.taskDefinition.className)
             try archiver.encodeEncodable(types, forKey: "types")
 
-            // Encode each task definition
+            // Encode each task definition if they should be persisted and are not dropped
+            // (for now no persistent dropped tasks should exist)
             var i = 0
             for task in queue.list {
-                if task.taskDefinition.isPersistent {
+                if task.taskDefinition.type == .persistent, !task.taskDefinition.isDropped {
                     try? archiver.encodeEncodable(task.taskDefinition, forKey: "\(task.taskDefinition.className)_\(i)")
                 }
 
@@ -410,11 +449,6 @@ final class TaskQueue {
                                 TaskDefinitionUpdateContactSync.self,
                                 forKey: "\(className)_\(i)"
                             )
-                        case String(describing: type(of: TaskDefinitionDeleteContactSync.self)):
-                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
-                                TaskDefinitionDeleteContactSync.self,
-                                forKey: "\(className)_\(i)"
-                            )
                         case String(describing: type(of: TaskDefinitionSendDeleteEditMessage.self)):
                             taskDefinition = try unarchiver.decodeTopLevelDecodable(
                                 TaskDefinitionSendDeleteEditMessage.self,
@@ -444,10 +478,10 @@ final class TaskQueue {
 
     func queuePath() -> URL? {
         let path = FileUtility.shared.appDataDirectory
-        return path?.appendingPathComponent("\(queueType.name())Queue", isDirectory: false)
+        return path?.appendingPathComponent("taskQueue", isDirectory: false)
     }
 
-    // MARK: Private functions
+    // MARK: - Private functions
     
     /// Handle receiving error
     ///
@@ -502,41 +536,101 @@ final class TaskQueue {
         }
 
         taskQueueQueue.sync {
-            DDLogNotice("\(item.taskDefinition) done")
+            // Most of the time a task that is marked dropped should not successfully complete. However this can happen
+            // in the following cases if a task is marked as dropped during execution:
+            // 1. The task never checks if it is dropped. Dropping is a cooperative action during execution
+            // 2. The task already run so close to completion that dropping doesn't make sense anymore
+            // 3. The task completed with an error, but the error handling leads to the task being marked as done
+            DDLogNotice("\(item.taskDefinition) done\(item.taskDefinition.isDropped ? " (marked dropped)" : "")")
 
             guard item === queue.peek() else {
-                DDLogError("\(item.taskDefinition) wrong spooling order")
+                DDLogError(
+                    "\(item.taskDefinition) not in front of task queue but \(queue.peek()?.taskDefinition ?? "none")"
+                )
                 return
             }
 
             if item.taskDefinition.state != .pending {
-                DDLogVerbose("\(item.taskDefinition) dequeue")
+                DDLogVerbose("\(item.taskDefinition) removed from queue")
                 _ = queue.dequeue()
-                if item.taskDefinition.isPersistent {
+                if item.taskDefinition.type == .persistent {
                     save()
                 }
             }
 
             if queue.list.isEmpty {
-                self.frameworkInjector.serverConnector.taskQueueEmpty(queueType.name())
+                self.frameworkInjector.serverConnector.taskQueueEmpty()
             }
         }
 
         item.completionHandler?(item.taskDefinition, nil)
         spool()
     }
-
-    /// Processing queue item is failed, retry or dequeue it.
+    
+    /// Processing of queue item that was dropped
+    ///
+    /// - Note: Only dropping of drop on disconnect tasks is supported
+    ///
+    /// - Parameter item: Dropped queue item
+    private func dropped(item: QueueItem) {
+        assert(
+            item.taskDefinition.type == .dropOnDisconnect,
+            "Dropping is only supported for dropped on disconnect tasks"
+        )
+        
+        if !item.taskDefinition.isDropped {
+            DDLogError("\(item.taskDefinition) dropped but not marked as such. This should only happen in tests")
+        }
+        
+        spoolingDelayQueue.sync {
+            spoolingDelay = false
+            spoolingDelayAttempts = 0
+        }
+        
+        taskQueueQueue.sync {
+            DDLogNotice("\(item.taskDefinition) dropped")
+            
+            guard item === queue.peek() else {
+                DDLogError(
+                    "\(item.taskDefinition) not in front of task queue but \(queue.peek()?.taskDefinition ?? "none")"
+                )
+                return
+            }
+            
+            DDLogVerbose("\(item.taskDefinition) removed from queue")
+            _ = queue.dequeue()
+            if item.taskDefinition.type == .persistent {
+                save()
+            }
+            
+            if queue.list.isEmpty {
+                self.frameworkInjector.serverConnector.taskQueueEmpty()
+            }
+        }
+        
+        item.completionHandler?(item.taskDefinition, TaskExecutionError.taskDropped)
+        spool()
+    }
+    
+    /// Processing queue item is failed. Drop, retry or dequeue it
     /// - Parameter item: Queue item
     /// - Parameter error: Task failed with error
     private func failed(item: QueueItem, error: Error, enableSpoolingDelay: Bool) {
+        guard !item.taskDefinition.isDropped else {
+            DDLogNotice("\(item.taskDefinition) failed and marked as dropped")
+            dropped(item: item)
+            return
+        }
+        
         var retry = false
 
         taskQueueQueue.sync {
             DDLogError("\(item.taskDefinition) failed \(error)")
 
             guard item === queue.peek() else {
-                DDLogError("\(item.taskDefinition) wrong spooling order")
+                DDLogError(
+                    "\(item.taskDefinition) not in front of task queue but \(queue.peek()?.taskDefinition ?? "none")"
+                )
                 return
             }
 
@@ -563,27 +657,35 @@ final class TaskQueue {
                     }
                     retry = true
                 }
-                else if queueType == .incoming, !spoolingDelay {
+                else if item.taskDefinition is TaskDefinitionReceiveMessage ||
+                    item.taskDefinition is TaskDefinitionReceiveReflectedMessage,
+                    !spoolingDelay {
+
                     // Remove/chancel task processing of failed incoming message, try again with next server connection!
-                    DDLogVerbose("\(item.taskDefinition) dequeue")
+                    DDLogVerbose("\(item.taskDefinition) removed from queue")
                     _ = queue.dequeue()
                 }
 
-                if item.taskDefinition.isPersistent {
+                if item.taskDefinition.type == .persistent {
                     save()
                 }
             }
 
             if queue.list.isEmpty {
-                self.frameworkInjector.serverConnector.taskQueueEmpty(queueType.name())
+                self.frameworkInjector.serverConnector.taskQueueEmpty()
             }
         }
 
         if !retry, !spoolingDelay {
+            DDLogWarn(
+                "\(item.taskDefinition) This should never be reached expect for tests, because these task are not removed they will block the queue"
+            )
             item.completionHandler?(item.taskDefinition, error)
         }
 
-        if queueType == .incoming || retry {
+        if item.taskDefinition is TaskDefinitionReceiveMessage ||
+            item.taskDefinition is TaskDefinitionReceiveReflectedMessage ||
+            retry {
             spool()
         }
     }

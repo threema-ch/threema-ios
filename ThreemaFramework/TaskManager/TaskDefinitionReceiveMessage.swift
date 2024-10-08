@@ -37,11 +37,11 @@ import Foundation
     }
     
     override var description: String {
-        "<\(type(of: self)) \(message?.loggingDescription ?? "unknown message")>"
+        "<\(Swift.type(of: self)) \(message?.loggingDescription ?? "unknown message")>"
     }
     
-    @objc private init(message: BoxedMessage, isPersistent: Bool) {
-        super.init(isPersistent: isPersistent)
+    @objc private init(message: BoxedMessage) {
+        super.init(type: .dropOnDisconnect)
         self.retry = false
         self.message = message
     }
@@ -52,7 +52,7 @@ import Foundation
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) {
-        self.init(message: message, isPersistent: false)
+        self.init(message: message)
         self.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
         self.maxBytesToDecrypt = Int32(maxBytesToDecrypt)
         self.timeoutDownloadThumbnail = Int32(timeoutDownloadThumbnail)

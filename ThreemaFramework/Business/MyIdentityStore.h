@@ -39,6 +39,9 @@
 @property (strong, nonatomic, readwrite) NSString *csi;
 @property (strong, nonatomic, readwrite) NSString *category;
 
+@property (strong, nonatomic, readonly) UIImage *resolvedProfilePicture;
+@property (strong, nonatomic, readonly) UIImage *resolvedGroupCallProfilePicture;
+
 - (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)publicKey;
 - (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey;
 - (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey;

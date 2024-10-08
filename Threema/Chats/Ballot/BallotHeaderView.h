@@ -31,7 +31,7 @@
 @property (weak, nonatomic) IBOutlet UIView *accessoryView;
 @property (weak, nonatomic) IBOutlet UIView *hairLineView;
 
-@property (weak, nonatomic) IBOutlet UIImageView *imageView;
+@property (weak, nonatomic) IBOutlet ProfilePictureImageView *profilePictureView;
 @property (weak, nonatomic) IBOutlet UILabel *createdByNameLabel;
 @property (weak, nonatomic) IBOutlet UILabel *dateLabel;
 

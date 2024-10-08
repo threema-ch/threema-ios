@@ -31,7 +31,9 @@ struct ProgressViewWaveform: View {
     var body: some View {
         waveformView
             .onChange(of: model.duration) { duration in
-                progress = duration / model.voiceMessageManager.tmpAudioDuration
+                Task(priority: .userInitiated) {
+                    progress = await duration / (model.voiceMessageManager.tmpAudioDuration)
+                }
             }
     }
     

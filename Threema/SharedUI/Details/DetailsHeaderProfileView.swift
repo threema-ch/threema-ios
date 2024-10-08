@@ -32,11 +32,9 @@ extension DetailsHeaderProfileView {
         
         let defaultSpacing: CGFloat = 8
         
-        let customSpacingAfterAvatar: CGFloat = 10
+        let customSpacingAfterProfilePicture: CGFloat = 10
 
         let verificationLevelHeight: CGFloat = 12
-        
-        let defaultAvatarImage = BundleUtil.imageNamed("Unknown")
     }
 }
 
@@ -44,11 +42,8 @@ final class DetailsHeaderProfileView: UIStackView {
     
     /// Entity agnostic header configuration
     struct ContentConfiguration {
-        /// Provides current avatar that should be shown
-        /// This happens in the provided completion closure to allow background loading
-        let avatarImageProvider: (@escaping (UIImage?) -> Void) -> Void
-        /// Show work or other icon next to avatar?
-        let hideThreemaTypeIcon: Bool
+        /// Info for profile picture view
+        let profilePictureInfo: ProfilePictureImageView.Info
         /// Name shown
         let name: String
         /// Provide image for verification level if any
@@ -60,15 +55,13 @@ final class DetailsHeaderProfileView: UIStackView {
         let isSelfMember: Bool
         
         init(
-            avatarImageProvider: @escaping (@escaping (UIImage?) -> Void) -> Void,
-            hideThreemaTypeIcon: Bool = true,
+            profilePictureInfo: ProfilePictureImageView.Info,
             name: String,
             verificationLevelImage: UIImage? = nil,
             verificationLevelAccessibilityLabel: String? = nil,
             isSelfMember: Bool = true
         ) {
-            self.avatarImageProvider = avatarImageProvider
-            self.hideThreemaTypeIcon = hideThreemaTypeIcon
+            self.profilePictureInfo = profilePictureInfo
             self.name = name
             self.verificationLevelImage = verificationLevelImage
             self.verificationLevelAccessibilityLabel = verificationLevelAccessibilityLabel
@@ -80,10 +73,6 @@ final class DetailsHeaderProfileView: UIStackView {
         didSet {
             updateContent()
         }
-    }
-    
-    static var avatarImageSize: CGFloat {
-        configuration.avatarSize
     }
 
     // MARK: - Private properties
@@ -99,55 +88,26 @@ final class DetailsHeaderProfileView: UIStackView {
 
     // MARK: Gesture recognizer
     
-    private let avatarImageTappedHandler: () -> Void
-    private lazy var tappedAvatarImageGestureRecognizer = UITapGestureRecognizer(
+    private let profilePictureTappedHandler: () -> Void
+    private lazy var tappedProfilePictureGestureRecognizer = UITapGestureRecognizer(
         target: self,
-        action: #selector(avatarImageTapped)
+        action: #selector(profilePictureTapped)
     )
     
     // MARK: Subviews
+    
+    /// Profile picture of contact or group
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let imageView = ProfilePictureImageView(typeIconConfiguration: .small)
 
-    private let avatarContainer: UIView = {
-        let view = UIView()
-        
-        view.backgroundColor = .clear
-        
-        view.isAccessibilityElement = false
-        
-        return view
-    }()
-    
-    /// Avatar of contact or group
-    private lazy var avatarImageView: UIImageView = {
-        let imageView = UIImageView(image: DetailsHeaderProfileView.configuration.defaultAvatarImage)
-        
-        imageView.contentMode = .scaleAspectFit // oder fill wie bisher?
-        // Aspect ratio: 1:1
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        // Fixed avatar size
-        imageView.heightAnchor.constraint(equalToConstant: DetailsHeaderProfileView.configuration.avatarSize)
+        imageView.heightAnchor.constraint(equalToConstant: DetailsHeaderProfileView.configuration.profilePictureSize)
             .isActive = true
-        
+       
         // Configure full screen image gesture recognizer
-        imageView.addGestureRecognizer(tappedAvatarImageGestureRecognizer)
+        imageView.addGestureRecognizer(tappedProfilePictureGestureRecognizer)
         imageView.isUserInteractionEnabled = true
-        
-        imageView.accessibilityIgnoresInvertColors = true
-        
-        return imageView
-    }()
-    
-    /// Threema work or private icon next to avatar
-    private lazy var threemaTypeIcon: UIImageView = {
-        let imageView = UIImageView()
-        
-        imageView.image = ThreemaUtility.otherThreemaTypeIcon
-        imageView.isHidden = true
-        // Aspect ratio: 1:1
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-                
-        imageView.accessibilityLabel = ThreemaUtility.otherThreemaTypeAccessibilityLabel
-        imageView.accessibilityIgnoresInvertColors = true
+        imageView.backgroundColor = .clear
+        imageView.isAccessibilityElement = false
         
         return imageView
     }()
@@ -182,9 +142,9 @@ final class DetailsHeaderProfileView: UIStackView {
 
     // MARK: - Initialization
     
-    init(with contentConfiguration: ContentConfiguration, avatarImageTapped: @escaping () -> Void) {
+    init(with contentConfiguration: ContentConfiguration, profilePictureTapped: @escaping () -> Void) {
         self.contentConfiguration = contentConfiguration
-        self.avatarImageTappedHandler = avatarImageTapped
+        self.profilePictureTappedHandler = profilePictureTapped
         
         super.init(frame: .zero)
         
@@ -210,15 +170,13 @@ final class DetailsHeaderProfileView: UIStackView {
         // Configure name label font
         updateNameLabelFont()
         
-        // Configure avatar container layout
-        avatarContainer.addSubview(avatarImageView)
-        
-        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
+        // Configure profile picture layout
+        profilePictureView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            avatarImageView.topAnchor.constraint(equalTo: avatarContainer.topAnchor),
-            avatarImageView.leadingAnchor.constraint(equalTo: avatarContainer.leadingAnchor),
-            avatarImageView.bottomAnchor.constraint(equalTo: avatarContainer.bottomAnchor),
-            avatarImageView.trailingAnchor.constraint(equalTo: avatarContainer.trailingAnchor),
+            profilePictureView.topAnchor.constraint(equalTo: profilePictureView.topAnchor),
+            profilePictureView.leadingAnchor.constraint(equalTo: profilePictureView.leadingAnchor),
+            profilePictureView.bottomAnchor.constraint(equalTo: profilePictureView.bottomAnchor),
+            profilePictureView.trailingAnchor.constraint(equalTo: profilePictureView.trailingAnchor),
         ])
         
         // Configure self (stack)
@@ -231,27 +189,18 @@ final class DetailsHeaderProfileView: UIStackView {
         }
         
         // Add default subviews
-        addArrangedSubview(avatarContainer)
+        addArrangedSubview(profilePictureView)
         addArrangedSubview(nameLabel)
         
         // This needs to be set after the view is added as arranged subview
         // https://sarunw.com/posts/custom-uistackview-spacing/#caveat
-        setCustomSpacing(DetailsHeaderProfileView.configuration.customSpacingAfterAvatar, after: avatarImageView)
+        setCustomSpacing(
+            DetailsHeaderProfileView.configuration.customSpacingAfterProfilePicture,
+            after: profilePictureView
+        )
         
         // Add verification level image to stack
         addArrangedSubview(verificationLevelImageView)
-        
-        // Configure Threema type icon layout (this might not be shown)
-        avatarContainer.addSubview(threemaTypeIcon)
-        
-        threemaTypeIcon.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            // 1/4 of the avatar image size
-            threemaTypeIcon.widthAnchor.constraint(equalTo: avatarImageView.widthAnchor, multiplier: 0.25),
-            
-            threemaTypeIcon.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
-            threemaTypeIcon.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor),
-        ])
         
         isAccessibilityElement = true
         shouldGroupAccessibilityChildren = true
@@ -270,17 +219,8 @@ final class DetailsHeaderProfileView: UIStackView {
     // MARK: - Update functions
     
     private func updateContent() {
-        contentConfiguration.avatarImageProvider { avatarImage in
-            if let avatarImage {
-                self.avatarImageView.image = avatarImage
-            }
-            else {
-                self.avatarImageView.image = DetailsHeaderProfileView.configuration.defaultAvatarImage
-            }
-        }
-        
-        threemaTypeIcon.isHidden = contentConfiguration.hideThreemaTypeIcon
-        
+        profilePictureView.info = contentConfiguration.profilePictureInfo
+       
         if contentConfiguration.isSelfMember {
             nameLabel.attributedText = nil
             nameLabel.text = contentConfiguration.name
@@ -314,8 +254,8 @@ final class DetailsHeaderProfileView: UIStackView {
         
     // MARK: - Action
     
-    @objc private func avatarImageTapped() {
-        avatarImageTappedHandler()
+    @objc private func profilePictureTapped() {
+        profilePictureTappedHandler()
     }
     
     func showThreemaTypeTip() {
@@ -328,7 +268,7 @@ final class DetailsHeaderProfileView: UIStackView {
             return
         }
         
-        guard !UserSettings.shared().workInfoShown,!contentConfiguration.hideThreemaTypeIcon else {
+        guard !UserSettings.shared().workInfoShown, !profilePictureView.typeIconImageView.isHidden else {
             return
         }
         
@@ -341,16 +281,17 @@ final class DetailsHeaderProfileView: UIStackView {
             tipObservationTask = tipObservationTask ?? Task(priority: .userInitiated) { @MainActor in
                 for await shouldDisplay in typeTip.shouldDisplayUpdates {
                     if shouldDisplay {
-                        
                         addSubview(threemaTypeTipView)
                         
                         NSLayoutConstraint.activate([
-                            threemaTypeTipView.topAnchor.constraint(equalTo: threemaTypeIcon.bottomAnchor),
+                            threemaTypeTipView.topAnchor
+                                .constraint(equalTo: profilePictureView.typeIconImageView.bottomAnchor),
                             threemaTypeTipView.leadingAnchor
                                 .constraint(greaterThanOrEqualTo: safeAreaLayoutGuide.leadingAnchor),
                             threemaTypeTipView.trailingAnchor
                                 .constraint(lessThanOrEqualTo: safeAreaLayoutGuide.trailingAnchor),
-                            threemaTypeTipView.centerXAnchor.constraint(equalTo: threemaTypeIcon.centerXAnchor),
+                            threemaTypeTipView.centerXAnchor
+                                .constraint(equalTo: profilePictureView.typeIconImageView.centerXAnchor),
                         ])
                     }
                     else {
@@ -372,18 +313,12 @@ final class DetailsHeaderProfileView: UIStackView {
     
     override var accessibilityValue: String? {
         get {
-            var threemaTypeIconAccessibilityLabel = ""
-            if !threemaTypeIcon.isHidden {
-                threemaTypeIconAccessibilityLabel = ThreemaUtility.otherThreemaTypeAccessibilityLabel
+            var accessibilityValueString = ""
+            if !profilePictureView.typeIconImageView.isHidden {
+                accessibilityValueString = ThreemaUtility.otherThreemaTypeAccessibilityLabel + ". "
             }
             
-            return [
-                threemaTypeIconAccessibilityLabel,
-                verificationLevelImageView.accessibilityLabel,
-            ]
-            .compactMap { $0 }
-            .filter { !$0.isEmpty }
-            .joined(separator: ". ")
+            return accessibilityValueString + (verificationLevelImageView.accessibilityLabel ?? "")
         }
         
         set { }

@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Text isch id Zwüscheablag kopiert worde";
 "webrtc_diagnostics.done" = "Fertig. Wenn Sie Problem mitem Aruef-Verbindigsufbau händ, schicked Sie bitte de Output an Threema-Support.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/de/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Uswahl";
 "mwphotobrowser_select_all" = "All";
@@ -338,7 +335,7 @@
 "record_audio" = "Tonufnahm";
 "record_continue" = "Tonufnahm wiiterufneh";
 "scan_qr" = "QR-Code scanne";
-"share_file" = "Datei schicke";
+"share_file" = "Datei oder Kontakt schicke";
 "add_item_caption" = "Bildunterschrift ergänze";
 "add_items_caption" = "Bildunterschrifte ergänze";
 "send_item_immediately_photo" = "Foti verschicke";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Work-Kontakt";
 "threema_type_icon_private_accessibility_label" = "Private Kontakt";
 
-"delete_contact_group_exists_title" = "Kontakt cha nöd glöscht werde";
-"delete_contact_group_exists_message_single" = "«%@» isch Mitglied vonere Gruppe. Entferned Sie de Kontakt zerscht usde Gruppe, oder lösched Sie d’Gruppe.";
-"delete_contact_group_exists_message_multiple" = "«%@» isch Mitglied vo %d Gruppe. Entferned Sie de Kontakt zerscht usde Gruppe, oder lösched Sie d’Gruppe.";
-"delete_contact_group_exists_show_contact_button" = "Kontakt aazeige";
 "delete_contact_existing_conversation_title" = "«%@» lösche?";
+"delete_contact_existing_conversation_is_group_member_title" = "De Einzelchat mit «%@» wird glöscht, de Kontakt bliibt aber als Gruppemitglied erhalte. «%@» lösche?";
 "delete_contact_existing_conversation_button" = "Kontakt + Nachrichteverlauf lösche";
+"delete_contact_is_group_member_title" = "«%@» bliibt als Gruppemitglied erhalte. «%@» lösche?";
 "delete_contact_confirmation_with_exclusion_message" = "«%@» lösche und vode Synchronisation usschlüsse?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "«%@» bliibt als Gruppemitglied erhalte. «%@» lösche und vode Synchronisation uusschlüsse?";
 "delete_contact_button" = "Kontakt lösche";
 "delete_contact_confirmation_with_exclusion_button" = "Kontakt lösche + usschlüsse";
 "exclude_deleted_id_title" = "D’Threema-ID vo «%@» vode Synchronisation usschlüsse?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "Neu bi %@?";
 "restore_id_export" = "Exportierti ID wiederherstelle";
 "id_exists" = "Di vorher uf dem Grät gnutzti Threema-ID (%@) isch no ume. Wänd Sie die ID wiederherstelle?";
+
+"contact_support" = "Support kontaktiere";
+"contact_support_mail_subject" = "Zvil IDs für de Chauf erstellt";
+"contact_support_mail_message" = "Liebs %@-Team\n\nS’Generiere vonere neue ID gaht nöd. Ich chum de folgendi Fehlercode über:\n%@\n\nLiebi Grüess";
 
 "welcome" = "Willkomme bi %@";
 "move_your_finger" = "Beweged Sie Ihre Finger im Feld, zum e neui Threema-ID z’generiere.";
@@ -712,6 +712,8 @@
 "current_position" = "Position";
 "in_reply_to" = "als Antwort uf";
 "draft" = "Entwurf";
+"draft_type_quote" = "Zitat";
+"draft_type_edit" = "Bearbeite";
 "new_message_accessibility" = "Neui Nachricht:";
 "quote_interaction_hint" = "Springt zude zitierte Nachricht";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Wänd Sie de Threema Channel zu Ihrne Kontäkt dezue tue?";
 "threema_channel_info" = "De Threema Channel versorgt Sie mit Neuigkeite zu Threema.";
 "threema_channel_failed" = "De Threema Channel hät leider nöd chöne dezue taa werde.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Wänd Sie de Threema Work Channel zu Ihrne Kontäkt dezuetue?";
+"threema_work_channel_info" = "De Threema Work Channel versorgt Sie mit Neuigkeite zu Threema Work.";
+"threema_work_channel_failed" = "De Threema Work Channel hät nöd chöne dezuetah werde.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Antworte";
@@ -1073,7 +1081,7 @@
 "restore_option_id" = "Nur Ihri ID wiederherstelle";
 "restore_option_id_keep_data" = "Ihri exportiert Threema-ID wiederherstelle, und d’Date (Chats, Kontäkt, Gruppe etc.) uf dem Grät bhalte";
 "backup_faq_link_text" = "Meh über Backups in %@ erfahre";
-"forgot_password_link_text" = "Passwort vergässe?";
+"restore_option_help_link_text" = "Hilfe";
 
 "restore_option_data_description" = "Uf dem Grät sind %@-Date (Chats, Kontäkt, Gruppe etc.) vorhande.";
 "restore_option_data_keep_data" = "Lokali Date bhalte";
@@ -1118,6 +1126,7 @@
 
 "settings_list_invite_a_friend_title" = "Fründe iilade";
 "settings_list_threema_channel_title" = "Threema Channel";
+"settings_list_threema_work_channel_title" = "Threema Work Channel";
 
 "settings_list_rate" = "%@ bewerte";
 
@@ -1252,7 +1261,7 @@
 "delete_messages_confirm" = "Wänd Sie all Nachrichte, wo älter als %@ sind, unwiederbringlich lösche?";
 "delete_messages_confirm_all" = "Wänd Sie all Nachrichte unwiederbringlich lösche?";
 "delete_messages_explain" = "Nachrichte aller Art werded glöscht: Text- und Sprachnachrichte, Medie, Dateie, Umfrage etc.";
-"automatic_delete_explain" = "Legged Sie fest, ob und nach welem Ziitruum Nachrichte und Medie glöscht werde sölled, zum Speicherplatz freizgeh. Offeni Umfrage und Notizgruppe sind vo dere Option usgnoh.";
+"automatic_delete_explain" = "Legged Sie fest, nach welem Ziitruum Nachrichte und Medie glöscht werde sölled, zum Speicherplatz freizgeh. Offeni Umfrage, Stärndli-Nachrichte und Inhalt vo Notizgruppe sind vo dere Option usgnoh.";
 "automatic_delete_on_confirmation_title" = "Automatischs Lösche iischalte?";
 "automatic_delete_off_confirmation_title" = "Automatischs Lösche usschalte?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1479,6 +1488,16 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 "could_not_add_all_items_memory_constrained_title" = "Bitte d’App bruuche";
 "could_not_add_all_items_memory_constrained_message" = "Us technische Gründ isch de Versand vo Dateie abere bestimmte Grössi nur über d’App möglich.";
 "image_preview_cell_cannot_preview" = "D’Vorschau cha nöd azeigt werde.";
+
+// Profile Synchronization
+"sync_error_title" = "Synchronisierig vom Profil fehlgschlage";
+"sync_error_general_message" = "Bitte überprüefed Sie Ihri Internetverbindig und versueched Sie’s nomal.";
+"sync_error_same_transaction_error" = "Es lauft scho e Synchronisierig ufeme andere Grät. Bitte warted Sie, bis die abgschlosse isch. D’Änderige uf dem Grät werded verworfe.";
+
+"syncing_profile" = "Synchronisiere …";
+
+"incoming_profile_sync_title" = "Profil isch synchronisiert";
+"incoming_profile_sync_message" = "D’Änderige vomene andere Grät sind übernoh worde";
 
 // Share Extension
 "finished_sending_title" = "Versand abgschlosse";
@@ -1739,6 +1758,7 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 "notification_deleted_messages_count" = "%d Nachrichte glöscht";
 
 "notification_cannot_play_video" = "Video cha nöd abgspilt werde";
+"notification_recording_too_long" = "D’Sprachufnahm hät di maximal Längi erreicht";
 
 "notification_call_failed_connected" = "Verbindig verlore";
 "notification_call_failed_not_connected" = "Verbindig herstelle fehlgschlage";

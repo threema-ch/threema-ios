@@ -22,7 +22,7 @@ import Foundation
 @testable import ThreemaFramework
 
 class TaskManagerMock: NSObject, TaskManagerProtocol {
-    
+
     typealias TaskAddedCallback = () -> Void
     
     var addedTasks = [TaskDefinitionProtocol]() {
@@ -40,27 +40,41 @@ class TaskManagerMock: NSObject, TaskManagerProtocol {
     
     // MARK: Mocks
     
-    func add(taskDefinition: TaskDefinitionProtocol) {
+    func add(taskDefinition: TaskDefinitionProtocol) -> CancelableTask? {
         addedTasks.append(taskDefinition)
+        return nil
     }
 
-    func add(taskDefinition: TaskDefinitionProtocol, completionHandler: @escaping TaskCompletionHandler) {
+    func add(
+        taskDefinition: TaskDefinitionProtocol,
+        completionHandler: @escaping TaskCompletionHandler
+    ) -> CancelableTask? {
         addedTasks.append(taskDefinition)
         completionHandler(taskDefinition, nil)
+        return nil
     }
     
     func add(taskDefinitionTuples: [(
         taskDefinition: TaskDefinitionProtocol,
         completionHandler: TaskCompletionHandler
-    )]) {
+    )]) -> [CancelableTask?] {
+        var cancelableTasks = [CancelableTask?]()
+        
         for tuple in taskDefinitionTuples {
-            add(taskDefinition: tuple.taskDefinition, completionHandler: tuple.completionHandler)
+            let cancelableTask = add(taskDefinition: tuple.taskDefinition, completionHandler: tuple.completionHandler)
+            cancelableTasks.append(cancelableTask)
         }
+        
+        return cancelableTasks
     }
     
-    static func flush(queueType: TaskQueueType) { }
+    static func removeAllTasks() {
+        // no-op
+    }
 
-    static func isEmpty(queueType: TaskQueueType) -> Bool {
+    static func removeCurrentTask() { }
+
+    static func isEmpty() -> Bool {
         false
     }
     

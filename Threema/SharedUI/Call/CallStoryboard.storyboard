@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="AQ2-Ik-2Xo">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="AQ2-Ik-2Xo">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -19,10 +19,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" insetsLayoutMarginsFromSafeArea="NO" image="contact_3.jpg" translatesAutoresizingMaskIntoConstraints="NO" id="nxq-af-Dzx">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            </imageView>
                             <view opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="zah-8U-vLZ">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                                 <subviews>
@@ -338,21 +334,16 @@
                         <viewLayoutGuide key="safeArea" id="AQ4-UU-Ihb"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="nxq-af-Dzx" firstAttribute="leading" secondItem="b0c-Yu-std" secondAttribute="leading" id="07P-Hr-6RA"/>
-                            <constraint firstAttribute="trailing" secondItem="nxq-af-Dzx" secondAttribute="trailing" id="6BN-A2-rX9"/>
-                            <constraint firstItem="nxq-af-Dzx" firstAttribute="top" secondItem="b0c-Yu-std" secondAttribute="top" id="84s-Jk-8U5"/>
                             <constraint firstItem="zah-8U-vLZ" firstAttribute="trailing" secondItem="b0c-Yu-std" secondAttribute="trailing" id="HNy-Ys-iUU"/>
                             <constraint firstItem="zah-8U-vLZ" firstAttribute="top" secondItem="b0c-Yu-std" secondAttribute="top" id="J6M-mZ-b9a"/>
                             <constraint firstAttribute="bottom" secondItem="zah-8U-vLZ" secondAttribute="bottom" id="K1V-Lf-ZKa"/>
                             <constraint firstAttribute="leading" secondItem="zah-8U-vLZ" secondAttribute="leading" id="epL-aR-k1T"/>
-                            <constraint firstAttribute="bottom" secondItem="nxq-af-Dzx" secondAttribute="bottom" id="lLQ-Ih-CFk"/>
                         </constraints>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
                     <navigationItem key="navigationItem" id="w2G-Bv-XYv"/>
                     <connections>
                         <outlet property="acceptButton" destination="w7z-PM-OGJ" id="v3b-DR-ULP"/>
-                        <outlet property="backgroundImage" destination="nxq-af-Dzx" id="zV1-0s-tUN"/>
                         <outlet property="callInfoGradientView" destination="9qt-9z-Jej" id="rV4-Bt-fFY"/>
                         <outlet property="callInfoStackView" destination="hdG-rd-kVi" id="3vg-AN-y9w"/>
                         <outlet property="callInfoStackViewTopConstraint" destination="MyU-3e-pCa" id="o9B-vV-jGJ"/>
@@ -392,7 +383,6 @@
     </scenes>
     <resources>
         <image name="chevron.left" catalog="system" width="97" height="128"/>
-        <image name="contact_3.jpg" width="101.23734283447266" height="101.23734283447266"/>
         <image name="mic.slash.circle" catalog="system" width="128" height="123"/>
         <image name="mic.slash.circle.fill" catalog="system" width="128" height="123"/>
         <image name="phone.circle.fill" catalog="system" width="128" height="123"/>

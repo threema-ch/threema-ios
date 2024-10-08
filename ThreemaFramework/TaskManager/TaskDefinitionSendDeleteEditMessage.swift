@@ -48,7 +48,7 @@ import ThreemaProtocols
     }
     
     override var description: String {
-        "<\(type(of: self)) \(deleteMessage?.loggingDescription ?? editMessage?.loggingDescription ?? "-")>"
+        "<\(Swift.type(of: self)) \(deleteMessage?.loggingDescription ?? editMessage?.loggingDescription ?? "-")>"
     }
 
     let deleteMessage: CspE2e_DeleteMessage?

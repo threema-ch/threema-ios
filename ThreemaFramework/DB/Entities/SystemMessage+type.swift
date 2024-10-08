@@ -67,7 +67,7 @@ extension SystemMessage {
         case groupSelfAdded
         case groupSelfRemoved
         case groupSelfLeft
-        case groupAvatarChanged
+        case groupProfilePictureChanged
         case groupNoteGroupStarted
         case groupNoteGroupEnded
         case groupCreatorLeft
@@ -118,7 +118,7 @@ extension SystemMessage {
             case .groupSelfLeft:
                 return BundleUtil.localizedString(forKey: "group_member_self_left")
             
-            case .groupAvatarChanged:
+            case .groupProfilePictureChanged:
                 return BundleUtil.localizedString(forKey: "system_message_group_avatar_changed")
 
             case .groupNoteGroupStarted:
@@ -537,7 +537,7 @@ extension SystemMessage {
             let voteInfo = try? JSONDecoder().decode(VoteInfo.self, from: arg)
             return .systemMessage(type: .vote(info: voteInfo))
         case 32:
-            return .systemMessage(type: .groupAvatarChanged)
+            return .systemMessage(type: .groupProfilePictureChanged)
         case 33:
             return .systemMessage(type: .systemMessageGroupCallStartedBy(name: argAsUTF8String()))
         case 34:

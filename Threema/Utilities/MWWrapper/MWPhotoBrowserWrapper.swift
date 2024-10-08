@@ -360,7 +360,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         entityManager.performSyncBlockAndSafe {
             for mediaEntity in mediaEntitiesToDelete {
                 mediaEntity.conversation = nil
-                self.entityManager.entityDestroyer.deleteObject(object: mediaEntity)
+                self.entityManager.entityDestroyer.delete(baseMessage: mediaEntity)
             }
             completion()
         }

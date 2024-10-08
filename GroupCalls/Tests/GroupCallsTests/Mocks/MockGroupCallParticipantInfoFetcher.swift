@@ -28,8 +28,8 @@ final class MockGroupCallParticipantInfoFetcher { }
 // MARK: - GroupCallParticipantInfoFetcherProtocol
 
 extension MockGroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol {
-    func fetchAvatar(for id: ThreemaEssentials.ThreemaIdentity) -> UIImage? {
-        UIImage(systemName: "person.fill")
+    func fetchProfilePicture(for id: ThreemaEssentials.ThreemaIdentity) -> UIImage {
+        UIImage(systemName: "person.fill")!
     }
     
     func fetchDisplayName(for id: ThreemaEssentials.ThreemaIdentity) -> String {

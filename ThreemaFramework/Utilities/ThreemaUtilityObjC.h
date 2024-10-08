@@ -44,10 +44,6 @@ __deprecated_msg("Use ThreemaUtility instead")
 
 + (NSData*)truncatedUTF8String:(NSString*)str maxLength:(NSUInteger)maxLength;
 
-+ (BOOL)hideThreemaTypeIconForContact:(ContactEntity *)contact __deprecated_msg("Use ContactEntity.showOtherThreemaTypeIcon instead");
-
-+ (UIImage *)threemaTypeIcon __deprecated_msg("Use ThreemaUtility.otherThreemaTypeIcon or OtherThreemaTypeImageView instead");
-
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo;
 
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo onCompletion:(void(^)(void))onCompletion;

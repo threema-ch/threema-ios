@@ -64,9 +64,9 @@ struct MultiDeviceWizardInformationView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityAction(named: Text(String.localizedStringWithFormat(
                         BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
-                        "https://threema.ch/en/faq/threema_safe_webdav"
+                        ThreemaURLProvider.safeWebdav.absoluteString
                     ))) {
-                        openURL(URL(string: "https://threema.ch/en/faq/threema_safe_webdav")!)
+                        openURL(ThreemaURLProvider.safeWebdav)
                     }
                 }
             }

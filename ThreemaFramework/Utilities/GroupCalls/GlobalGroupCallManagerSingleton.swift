@@ -641,7 +641,7 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerDatabaseDelegateProto
         currentBusinessInjector.entityManager.performAndWaitSave {
             for groupCallEntity in groupCallEntities {
                 self.currentBusinessInjector.entityManager.entityDestroyer
-                    .deleteObject(object: groupCallEntity)
+                    .delete(groupCallEntity: groupCallEntity)
             }
             DDLogNotice("[GroupCall] [DB] Deleted \(groupCallEntities.count)")
         }
@@ -699,7 +699,6 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
                     conversationManagedObjectID: conversation.objectID,
                     title: BundleUtil.localizedString(forKey: "private_message_label"),
                     body: " ",
-                    contactImage: AvatarMaker.shared().unknownGroupImage()!,
                     identifier: groupModel.groupIdentity.id.hexString
                 )
                 return
@@ -716,15 +715,13 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
                 contact.displayName
             )
             let conversationObjectID = conversation.objectID
-            AvatarMaker.shared().avatar(for: conversation, size: 56.0, masked: true) { conversationImage, _ in
-                uiDelegate.newBannerForStartGroupCall(
-                    conversationManagedObjectID: conversationObjectID,
-                    title: title ?? "",
-                    body: body,
-                    contactImage: conversationImage ?? AvatarMaker.shared().unknownGroupImage()!,
-                    identifier: groupModel.groupIdentity.id.hexString
-                )
-            }
+            
+            uiDelegate.newBannerForStartGroupCall(
+                conversationManagedObjectID: conversationObjectID,
+                title: title ?? "",
+                body: body,
+                identifier: groupModel.groupIdentity.id.hexString
+            )
         }
     }
     

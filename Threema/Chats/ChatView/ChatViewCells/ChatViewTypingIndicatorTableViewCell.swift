@@ -59,7 +59,7 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
         constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
     )
     
-    private lazy var otherMessageNoAvatarConstraints: [NSLayoutConstraint] = [
+    private lazy var otherMessageNoProfilePictureConstraints: [NSLayoutConstraint] = [
         chatBubbleBackgroundView.leadingAnchor.constraint(
             equalTo: contentView.leadingAnchor,
             constant: Config.leadingInsetConstant
@@ -118,7 +118,7 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
         
         isUserInteractionEnabled = false
                 
-        // This removes the shadow cut-off of context menus and makes the avatars not cut-off by next cells
+        // This removes the shadow cut-off of context menus and makes the profile picture not cut-off by next cells
         clipsToBounds = false
         backgroundColor = .clear
         contentView.clipsToBounds = false
@@ -151,7 +151,7 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
             chatBubbleBackgroundView.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor),
         ])
         
-        NSLayoutConstraint.activate(otherMessageNoAvatarConstraints)
+        NSLayoutConstraint.activate(otherMessageNoProfilePictureConstraints)
         
         messageTextViewSizeApproximationView.text = "3MA"
         messageTextViewSizeApproximationView.alpha = 0.0

@@ -46,6 +46,8 @@
 @dynamic rejectedBy;
 @dynamic messageMarkers;
 @dynamic historyEntries;
+@dynamic distributionListMessage;
+@dynamic distributedMessages;
 
 - (nullable NSString*)additionalExportInfo {
     return nil;

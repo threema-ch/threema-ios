@@ -24,7 +24,6 @@
 #import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ErrorHandler.h"
-#import "Old_PickerContactCell.h"
 #import "UserSettings.h"
 
 #ifdef DEBUG
@@ -357,8 +356,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 {
     ContactEntity *contact = [self workContactAtIndexPath:indexPath];
     
-    Old_PickerContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Old_PickerContactCell"];
-    cell.contact = contact;
+    ContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
+    cell._contact = contact;
     
     return cell;
 }

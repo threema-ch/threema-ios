@@ -26,7 +26,7 @@
 
 typedef NS_CLOSED_ENUM(NSInteger, ContactAcquaintanceLevel) {
     ContactAcquaintanceLevelDirect = 0,     // Contact is added manually or by sync with address book or by work directory or has a 1:1 conversation
-    ContactAcquaintanceLevelGroup = 1       // Contact is only member of a group conversation -> contact is marked as hidden
+    ContactAcquaintanceLevelGroupOrDeleted = 1       // Contact is only member of a group conversation or deleted -> contact is marked as hidden
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -55,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateContactWithIdentity:(NSString * _Nonnull)identity avatar:(NSData * _Nullable)avatar firstName:(NSString * _Nullable)firstName lastName:(NSString * _Nullable)lastName;
 
-- (void)deleteContactWithIdentity:(nonnull NSString *)identity entityManagerObject:(nonnull NSObject *)entityManagerObject NS_SWIFT_NAME(deleteContact(identity:entityManagerObject:));
+- (void)markContactAsDeletedWithIdentity:(nonnull NSString *)identity entityManagerObject:(nonnull NSObject *)entityManagerObject NS_SWIFT_NAME(markContactAsDeleted(identity:entityManagerObject:));
 
 /* synchronize contacts from address book with server */
 - (void)synchronizeAddressBookForceFullSync:(BOOL)forceFullSync ignoreMinimumInterval:(BOOL)ignoreMinimumInterval onCompletion:(nullable void(^)(BOOL addressBookAccessGranted))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
@@ -64,8 +64,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateFeatureMasksForIdentities:(nonnull NSArray<NSString *> *)Identities onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
 
 - (void)reflectContact:(nullable NSString *)identity NS_SWIFT_NAME(reflect(_:));
-
-- (void)reflectDeleteContact:(nullable NSString *)identity;
 
 - (void)updateProfilePicture:(nullable NSString *)identity imageData:(NSData *)imageData shouldReflect:(BOOL)shouldReflect blobID:(nullable NSData *)blobID encryptionKey:(nullable NSData *)encryptionKey didFailWithError:(NSError * _Nullable * _Nullable)error;
 - (void)deleteProfilePicture:(nullable NSString *)identity shouldReflect:(BOOL)shouldReflect;
@@ -79,7 +77,6 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - onError: Called when something failed
 - (void)updateStatusForAllContactsIgnoreInterval:(BOOL)ignoreInterval onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * _Nonnull error))onError;
 
-- (void)updateAllContactsToCNContact;
 - (void)updateAllContacts;
 
 /// Reset all custom read receipts. If multi-device is enabled this is also reflected

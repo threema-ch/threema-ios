@@ -21,9 +21,9 @@
 import AVFoundation
 
 @dynamicMemberLookup
-protocol AudioSessionManagerProtocol: AnyObject {
+protocol AudioSessionManagerProtocol: AnyObject, Sendable {
     var session: AVAudioSession { get }
-    var prevAudioSessionCategory: AVAudioSession.Category? { get set }
+    var prevAudioSessionCategory: AVAudioSession.Category? { get }
     
     @discardableResult
     func setupAudioSession(isEarpiece: Bool) -> Result<Void, AudioSessionError>
@@ -34,6 +34,8 @@ protocol AudioSessionManagerProtocol: AnyObject {
     
     func resetAudioSession()
     
+    func adaptToProximityState(isPlaying: Bool)
+
     func requestRecordPermission() async -> Bool
     
     subscript<T>(dynamicMember keyPath: KeyPath<AVAudioSession, T>) -> T { get }

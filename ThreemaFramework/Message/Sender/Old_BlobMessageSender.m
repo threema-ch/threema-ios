@@ -199,7 +199,7 @@ static dispatch_queue_t backgroundQueue;
         Conversation *conversation = _message.conversation;
         conversation.lastMessage = nil;
         
-        [[entityManager entityDestroyer] deleteObjectWithObject:_message];
+        [[entityManager entityDestroyer] deleteWithBaseMessage:_message];
         MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:entityManager];
         conversation.lastMessage = [messageFetcher lastDisplayMessage];
     }];

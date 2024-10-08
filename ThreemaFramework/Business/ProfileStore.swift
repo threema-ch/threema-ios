@@ -206,24 +206,22 @@ import ThreemaProtocols
         myIdentityStore.linkEmailPending = profile.isLinkEmailPending
         myIdentityStore.linkMobileNoPending = profile.isLinkMobileNoPending
         
-        // TODO: Decouple AvatarMaker
-        AvatarMaker.shared().clearCacheForProfilePicture()
-        var profilePicture = myIdentityStore.profilePicture
-        
-        let avatar = profile.profileImage
-        if avatar == nil {
+        let profileImage = profile.profileImage
+        if profileImage == nil {
             if myIdentityStore.profilePicture != nil {
                 myIdentityStore.profilePicture = nil
                 contactStore.removeProfilePictureFlagForAllContacts()
             }
         }
         else {
+            var profilePicture = myIdentityStore.profilePicture
+
             if profilePicture == nil {
                 profilePicture = [:]
             }
             
-            if avatar != profilePicture!["ProfilePicture"] as? Data {
-                profilePicture?.setValue(avatar, forKey: "ProfilePicture")
+            if profileImage != profilePicture!["ProfilePicture"] as? Data {
+                profilePicture?.setValue(profileImage, forKey: "ProfilePicture")
                 profilePicture?.removeObject(forKey: "LastUpload")
                 myIdentityStore.profilePicture = profilePicture
                 contactStore.removeProfilePictureFlagForAllContacts()
@@ -250,15 +248,11 @@ import ThreemaProtocols
             switch syncUserProfile.profilePicture.image {
             case .removed:
                 if myIdentityStore.profilePicture != nil {
-                    AvatarMaker.shared().clearCacheForProfilePicture()
-
                     myIdentityStore.profilePicture = nil
                     contactStore.removeProfilePictureFlagForAllContacts()
                 }
             case .updated:
                 if let image = profileImage {
-                    AvatarMaker.shared().clearCacheForProfilePicture()
-
                     var profilePicture = myIdentityStore.profilePicture
                     if profilePicture == nil {
                         profilePicture = [:]

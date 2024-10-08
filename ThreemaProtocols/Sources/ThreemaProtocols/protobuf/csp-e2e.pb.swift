@@ -115,39 +115,96 @@ public struct CspE2e_MessageMetadata {
 /// - When rejected: N/A (ignored)
 /// - Send to Threema Gateway ID group creator: If capture is enabled
 ///
-/// When creating this message as a 1:1 message:
+/// The following steps must be invoked when the user wants to edit a 1:1
+/// message:
 ///
-/// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, prevent
-///    creation and abort these steps.
-/// 2. Run the _Commit Edit Message Create Steps_.
+/// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, disallow
+///    editing and abort these steps.
+/// 2. Run the _Common Edit Message Enter Steps_.
+/// 3. Allow the user to edit the referred message.
 ///
-/// When creating this message as a group message:
+/// The following steps must be invoked when the user wants to edit a group
+/// message:
 ///
-/// 1. If the content of the message would not change, prevent creation and abort
-///    these steps.
-/// 2. If the sender or all of the receivers do not have `EDIT_MESSAGE_SUPPORT`,
-///    prevent creation and abort these steps.
-/// 3. Run the _Common Edit Message Create Steps_.
-/// 4. If any of the receivers do not have `EDIT_MESSAGE_SUPPORT`, notify the
+/// 1. If the group is marked as _left_, disallow editing and abort these steps.
+/// 2. If the sender or all of the group members do not have
+///    `EDIT_MESSAGE_SUPPORT`, disallow editing and abort these steps.
+/// 3. Run the _Common Edit Message Enter Steps_.
+/// 4. If any of the group members do not have `EDIT_MESSAGE_SUPPORT`, notify the
 ///    user that the affected contacts will not receive the edited content.
-/// 5. Omit all receivers that do not have `EDIT_MESSAGE_SUPPORT`.
+/// 5. Allow the user to edit the referred message.
 ///
-/// The following steps are defined as the _Common Edit Message Create Steps_:
+/// The following steps are defined as the _Common Edit Message Enter Steps_:
 ///
 /// 1. Let `message` be the referred message.
-/// 2. If the referred message has been sent (`sent-at`) more than 6 hours ago,
-///    prevent creation and abort these steps.¹
-/// 3. Let `created-at` be the current timestamp to be applied to the edit
-///    message.
-/// 4. Edit `message` as defined by the associated _Edit applies to_ property and
+/// 2. If the user is not the original sender of `message`, disallow editing and
+///    abort these steps.
+/// 3. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+///    editing and abort these steps.¹
+///
+/// The following steps must be invoked when the user wants to submit an edited
+/// 1:1 message.
+///
+/// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, discard
+///    the edited message and abort these steps.
+/// 2. Run the _Common Edit Message Submit Preflight Steps_.
+/// 3. Let `edit-message-id` be a random message ID.
+/// 4. Let `edited-at` be the current timestamp.
+/// 5. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+///    the following properties:
+///    - `id` set to `edit-message-id`,
+///    - `created-at` set to `edited-at`,
+///    - `receivers` set to the receiver,
+///    - to construct an `EditMessage` message
+/// 6. Edit `message` as defined by the associated _Edit applies to_ property and
 ///    add an indicator to `message`, informing the user that the message has
-///    been edited by the user at `created-at`.
+///    been edited by the user at `edited-at`.
+///
+/// The following steps must be invoked when the user wants to submit an edited
+/// group message.
+///
+/// 1. If the group is marked as _left_, discard the edited message and abort
+///    these steps.
+/// 2. If the sender or all of the group members do not have
+///    `EDIT_MESSAGE_SUPPORT`, discard the edited message and abort these steps.
+/// 3. Run the _Common Edit Message Submit Preflight Steps_.
+/// 4. Let `edit-message-id` be a random message ID.
+/// 5. Let `edited-at` be the current timestamp.
+/// 6. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+///    the following properties:
+///    - `id` set to `edit-message-id`,
+///    - `created-at` set to `edited-at`,
+///    - `receivers` set to all group members that have `EDIT_MESSAGE_SUPPORT`,
+///    - to construct an `EditMessage` message (wrapped by
+///      [`group-member-container`](ref:e2e.group-member-container))
+/// 7. Edit `message` as defined by the associated _Edit applies to_ property and
+///    add an indicator to `message`, informing the user that the message has
+///    been edited by the user at `edited-at`.
+///
+/// The following steps are defined as the _Common Edit Message Submit Preflight
+/// Steps_:
+///
+/// 1. Lookup the message with `message_id` originally sent by the sender within
+///    the associated conversation and let `message` be the result.
+/// 2. If `message` is no longer defined, discard the edited message and abort
+///    these steps.
+/// 3. If the content of `message` is identical to the edited message, discard
+///    the edited message and abort these steps.
+///
+/// When reflected from another device as an incoming or outgoing 1:1 message:
+///
+/// 1. Run the _Common Edit Message Receive Steps_.
 ///
 /// When receiving this message as a 1:1 message:
 ///
 /// 1. Run the _Common Edit Message Receive Steps_.
 ///
-/// When receiving this message as a group message:
+/// When reflected from another device as an incoming or outgoing group message:
+///
+/// 1. Run the _Common Edit Message Receive Steps_.
+///
+/// When receiving this message as a group message (wrapped by
+/// [`group-member-container`](ref:e2e.group-member-container)):
 ///
 /// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
 ///    has been discarded, abort these steps.
@@ -158,7 +215,7 @@ public struct CspE2e_MessageMetadata {
 /// 1. Lookup the message with `message_id` originally sent by the sender within
 ///    the associated conversation and let `message` be the result.
 /// 2. If `message` is not defined or the sender is not the original sender of
-///    `message`, discard the message and abort these steps.
+///    `message`, discard the message and abort these steps.²
 /// 3. If `message` is not editable (see the associated _Edit applies to_
 ///    property), discard the message and abort these steps.
 /// 4. Edit `message` as defined by the associated _Edit applies to_ property and
@@ -168,6 +225,13 @@ public struct CspE2e_MessageMetadata {
 /// ¹: For simplicity, the time constraint is applied on the sender side only.
 /// The receiver will always accept a request to edit a message. This is deemed
 /// acceptable considering this is not a security feature.
+///
+/// ²: Implementations do not track the group member setup at the time a message
+/// was received. Therefore, an edited message is always sent to the **current**
+/// group member setup, including any group members that weren't part of the
+/// group when the message was sent. However, any ordinary client will discard
+/// `EditMessage` for unknown messages. This leak is not great but considered
+/// acceptable for now.
 public struct CspE2e_EditMessage {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -233,36 +297,67 @@ public struct CspE2e_EditMessage {
 /// - When rejected: N/A (ignored)
 /// - Send to Threema Gateway ID group creator: If capture is enabled
 ///
-/// When creating this message as a 1:1 message:
+/// The following steps must be invoked when the user wants to delete a 1:1
+/// message:
 ///
 /// 1. If the sender or the receiver do not have `DELETE_MESSAGE_SUPPORT`,
-///    prevent creation and abort these steps.
-/// 2. Run the _Commit Delete Message Create Steps_.
+///    disallow removal and abort these steps.
+/// 2. Run the _Common Delete Message Preflight Steps_.
+/// 3. Let `delete-message-id` be a random message ID.
+/// 4. Let `deleted-at` be the current timestamp.
+/// 5. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+///    the following properties:
+///    - `id` set to `delete-message-id`,
+///    - `created-at` set to `deleted-at`,
+///    - `receivers` set to the receiver,
+///    - to construct a `DeleteMessage` message
+/// 6. Replace `message` with a message informing the user that the message of
+///    the user has been removed at `deleted-at`.²
 ///
-/// When creating this message as a group message:
+/// The following steps must be invoked when the user wants to delete a group
+/// message.
 ///
-/// 1. If the sender or all of the receivers do not have
-///    `DELETE_MESSAGE_SUPPORT`, prevent creation and abort these steps.
-/// 2. Run the _Commit Delete Message Create Steps_.
-/// 3. If any of the receivers do not have `DELETE_MESSAGE_SUPPORT`, notify the
-///    user that the affected contacts will continue to see the message.
-/// 4. Omit all receivers that do not have `DELETE_MESSAGE_SUPPORT`.
+/// 1. If the group is marked as _left_, disallow removal and abort these steps.
+/// 2. If the sender or all of the group members do not have
+///    `DELETE_MESSAGE_SUPPORT`, disallow removal and abort these steps.
+/// 3. Run the _Common Delete Message Preflight Steps_.
+/// 4. If any of the group members do not have `DELETE_MESSAGE_SUPPORT`, notify
+///    the user that the affected contacts will continue to see the message.
+/// 5. Let `delete-message-id` be a random message ID.
+/// 6. Let `deleted-at` be the current timestamp.
+/// 7. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
+///    the following properties:
+///    - `id` set to `delete-message-id`,
+///    - `created-at` set to `deleted-at`,
+///    - `receivers` set to all group members that have `DELETE_MESSAGE_SUPPORT`,
+///    - to construct an `DeleteMessage` message (wrapped by
+///      [`group-member-container`](ref:e2e.group-member-container))
+/// 8. Replace `message` with a message informing the user that the message of
+///    the user has been removed at `deleted-at`.²
 ///
-/// The following steps are defined as the _Common Delete Message Create Steps_:
+/// The following steps are defined as the _Common Delete Message Preflight
+/// Steps_:
 ///
 /// 1. Let `message` be the referred message.
-/// 2. If the referred message has been sent (`sent-at`) more than 6 hours ago,
-///    prevent creation and abort these steps.¹
-/// 3. Let `created-at` be the current timestamp to be applied to the delete
-///    message.
-/// 4. Replace `message` with a message informing the user that the message of
-///    the user has been removed at `created-at`.²
+/// 2. If the user is not the original sender of `message`, disallow removal and
+///    abort these steps.
+/// 3. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+///    removal and abort these steps.¹
+///
+/// When reflected from another device as an incoming or outgoing 1:1 message:
+///
+/// 1. Run the _Common Delete Message Receive Steps_.
 ///
 /// When receiving this message as a 1:1 message:
 ///
 /// 1. Run the _Common Delete Message Receive Steps_.
 ///
-/// When receiving this message as a group message:
+/// When reflected from another device as an incoming or outgoing group message:
+///
+/// 1. Run the _Common Delete Message Receive Steps_.
+///
+/// When receiving this message as a group message (wrapped by
+/// [`group-member-container`](ref:e2e.group-member-container)):
 ///
 /// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
 ///    has been discarded, abort these steps.
@@ -277,7 +372,7 @@ public struct CspE2e_EditMessage {
 /// 3. If `message` is not deletable (see the associated _Deletable by_
 ///    property), discard the message and abort these steps.
 /// 4. Replace `message` with a message informing the user that the message of
-///    the sender has been removed at `created-at`.²
+///    the sender has been removed at the `message`'s `created-at`.²
 ///
 /// ¹: For simplicity, the time constraint is applied on the sender side only.
 /// The receiver will always accept a request to delete a message. This is deemed
@@ -326,33 +421,30 @@ public struct CspE2e_DeleteMessage {
 /// received, re-sending a `GroupCallStart` if still ongoing, implicitly
 /// triggered by FS `Reject` receive steps.
 ///
-/// When creating this message to start a call within the group:
+/// When reflected from another device as an incoming or outgoing message:
 ///
-/// 1. If the sender or all of the receivers do not have `GROUP_CALL_SUPPORT`,
-///    prevent creation and abort these steps.
-/// 2. Generate a random GCK and set `gck` appropriately.
-/// 3. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
-///    Server API.
-///
-/// When sending this message:
-///
-/// 1. Omit all receivers that do not have `GROUP_CALL_SUPPORT`.
+/// 1. Run the _Common Group Call Start Receive Steps_.
 ///
 /// When receiving this message:
 ///
 /// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
 ///    has been discarded, abort these steps.
-/// 2. If the hostname of `sfu_base_url` does not use the scheme `https` or does
+/// 2. Run the _Common Group Call Start Receive Steps_.
+///
+/// The following steps are defined as the _Common Group Call Start Receive
+/// Steps_:
+///
+/// 1. If the hostname of `sfu_base_url` does not use the scheme `https` or does
 ///    not end with one of the set of [_Allowed SFU Hostname
 ///    Suffixes_](ref:group-calls#obtain-sfu-information), log a warning, discard
 ///    the message and abort these steps.
-/// 3. Let `running` be the list of group calls that are currently considered
+/// 2. Let `running` be the list of group calls that are currently considered
 ///    running within the group.
-/// 4. If another call with the same GCK exists in `running`, log a warning,
+/// 3. If another call with the same GCK exists in `running`, log a warning,
 ///    discard the message and abort these steps.
-/// 5. Add the received call to the list of group calls that are currently
+/// 4. Add the received call to the list of group calls that are currently
 ///    considered running (even if `protocol_version` is unsupported¹).
-/// 6. Start a task to run the _Group Call Refresh Steps_.²
+/// 5. Start a task to run the _Group Call Refresh Steps_.²
 ///
 /// ¹: Adding unsupported `protocol_version`s allows the user to join an ongoing
 ///  call after an app update where support for `protocol_version` has been
@@ -385,251 +477,11 @@ public struct CspE2e_GroupCallStart {
   public init() {}
 }
 
-/// Request joining a group.
-///
-/// This message is sent to the administrator of a group. The required
-/// information is provided by a `GroupInvite` URL payload.
-///
-/// **Properties**:
-/// - Kind: 1:1
-/// - Flags:
-///   - `0x01`: Send push notification.
-/// - User profile distribution: Yes
-/// - Exempt from blocking: Yes
-/// - Implicit _direct_ contact creation: Yes
-/// - Protect against replay: Yes
-/// - Reflect:
-///   - Incoming: Yes
-///   - Outgoing: Yes
-///   - _Sent_ update: No
-/// - Delivery receipts:
-///   - Automatic: No
-///   - Manual: No
-/// - When rejected: N/A (ignored)
-/// - Edit applies to: N/A
-/// - Deletable by: User only
-/// - Send to Threema Gateway ID group creator: N/A
-///
-/// When receiving this message:
-///
-/// 1. Look up the corresponding group invitation by the token.
-/// 2. If the group invitation could not be found, discard the message and abort
-///    these steps.
-/// 3. If the sender is already part of the group, send an accept response and
-///    then respond as if the sender had sent a `group-sync-request` (i.e. send a
-///    `group-setup`, `group-name`, etc.). Finally, abort these steps.
-/// 4. If the group name does not match the name in the originally sent group
-///    invitation, discard the message and abort these steps.
-/// 5. If the group invitation has expired, send the respective response and
-///    abort these steps.
-/// 6. If the group invitation requires the admin to accept the request, show
-///    this information in the user interface and pause these steps until the
-///    user manually confirmed of rejected the request. Note that the date of the
-///    decision is allowed to extend beyond the expiration date of the group
-///    invitation. Continue with the following sub-steps once the user made a
-///    decision on the request:
-///     1. If the user manually rejected the request, send the respective
-///        response and abort these steps.
-/// 7. If the group is full, send the respective response and abort these steps.
-/// 8. Send an accept response.
-/// 9. Add the sender of the group invitation request to the group and follow the
-///    group protocol from there.
-public struct CspE2e_GroupJoinRequest {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  /// The group invite token, 16 bytes
-  public var token: Data = Data()
-
-  /// The group name from the group invite URL
-  public var groupName: String = String()
-
-  /// A message for the group administrator, e.g. for identification purposes
-  ///
-  /// The message helps the administrator to decide whether or not to accept a
-  /// join request.
-  ///
-  /// Should be requested by the user interface for invitations that require
-  /// manual confirmation by the administrator. Should not be requested in case
-  /// the invitation will be automatically accepted.
-  public var message: String = String()
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-}
-
-/// Response sent by the admin of a group towards a sender of a valid group join
-/// request.
-///
-/// **Properties**:
-/// - Kind: 1:1
-/// - Flags: None
-/// - User profile distribution: Yes
-/// - Exempt from blocking: Yes
-/// - Implicit _direct_ contact creation: Yes
-/// - Protect against replay: Yes
-/// - Reflect:
-///   - Incoming: Yes
-///   - Outgoing: Yes
-///   - _Sent_ update: No
-/// - Delivery receipts:
-///   - Automatic: No
-///   - Manual: No
-/// - When rejected: N/A (ignored)
-/// - Edit applies to: N/A
-/// - Deletable by: N/A
-/// - Send to Threema Gateway ID group creator: N/A
-///
-/// When receiving this message:
-///
-/// 1. Look up the corresponding group join request by the token and the
-///    sender's Threema ID as the administrator's Threema ID.
-/// 2. If the group join request could not be found, discard the message and
-///    abort these steps.
-/// 3. Mark the group join request as accepted or (automatically) rejected by
-///    the given response type.
-/// 4. If the group join request has been accepted, remember the group id in
-///    order to be able to map an incoming `group-setup` to the group.
-public struct CspE2e_GroupJoinResponse {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  /// The group invite token, 16 bytes
-  public var token: Data = Data()
-
-  public var response: CspE2e_GroupJoinResponse.Response {
-    get {return _response ?? CspE2e_GroupJoinResponse.Response()}
-    set {_response = newValue}
-  }
-  /// Returns true if `response` has been explicitly set.
-  public var hasResponse: Bool {return self._response != nil}
-  /// Clears the value of `response`. Subsequent reads from it will return its default value.
-  public mutating func clearResponse() {self._response = nil}
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  /// Response of the admin
-  public struct Response {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
-
-    public var response: CspE2e_GroupJoinResponse.Response.OneOf_Response? = nil
-
-    /// Accept a group invite request
-    public var accept: CspE2e_GroupJoinResponse.Response.Accept {
-      get {
-        if case .accept(let v)? = response {return v}
-        return CspE2e_GroupJoinResponse.Response.Accept()
-      }
-      set {response = .accept(newValue)}
-    }
-
-    /// Token of a group invitation expired
-    public var expired: Common_Unit {
-      get {
-        if case .expired(let v)? = response {return v}
-        return Common_Unit()
-      }
-      set {response = .expired(newValue)}
-    }
-
-    /// Group invitation cannot be accepted due to the group being full
-    public var groupFull: Common_Unit {
-      get {
-        if case .groupFull(let v)? = response {return v}
-        return Common_Unit()
-      }
-      set {response = .groupFull(newValue)}
-    }
-
-    /// The administrator explicitly rejects the invitation request
-    public var reject: Common_Unit {
-      get {
-        if case .reject(let v)? = response {return v}
-        return Common_Unit()
-      }
-      set {response = .reject(newValue)}
-    }
-
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    public enum OneOf_Response: Equatable {
-      /// Accept a group invite request
-      case accept(CspE2e_GroupJoinResponse.Response.Accept)
-      /// Token of a group invitation expired
-      case expired(Common_Unit)
-      /// Group invitation cannot be accepted due to the group being full
-      case groupFull(Common_Unit)
-      /// The administrator explicitly rejects the invitation request
-      case reject(Common_Unit)
-
-    #if !swift(>=4.1)
-      public static func ==(lhs: CspE2e_GroupJoinResponse.Response.OneOf_Response, rhs: CspE2e_GroupJoinResponse.Response.OneOf_Response) -> Bool {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch (lhs, rhs) {
-        case (.accept, .accept): return {
-          guard case .accept(let l) = lhs, case .accept(let r) = rhs else { preconditionFailure() }
-          return l == r
-        }()
-        case (.expired, .expired): return {
-          guard case .expired(let l) = lhs, case .expired(let r) = rhs else { preconditionFailure() }
-          return l == r
-        }()
-        case (.groupFull, .groupFull): return {
-          guard case .groupFull(let l) = lhs, case .groupFull(let r) = rhs else { preconditionFailure() }
-          return l == r
-        }()
-        case (.reject, .reject): return {
-          guard case .reject(let l) = lhs, case .reject(let r) = rhs else { preconditionFailure() }
-          return l == r
-        }()
-        default: return false
-        }
-      }
-    #endif
-    }
-
-    /// Accept a group invite request
-    public struct Accept {
-      // SwiftProtobuf.Message conformance is added in an extension below. See the
-      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-      // methods supported on all messages.
-
-      /// Group ID (little-endian) as chosen by the group creator
-      ///
-      /// Note: Combined with the Threema ID of the administrator, this forms the
-      /// `GroupIdentity`.
-      public var groupID: UInt64 = 0
-
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-      public init() {}
-    }
-
-    public init() {}
-  }
-
-  public init() {}
-
-  fileprivate var _response: CspE2e_GroupJoinResponse.Response? = nil
-}
-
 #if swift(>=5.5) && canImport(_Concurrency)
 extension CspE2e_MessageMetadata: @unchecked Sendable {}
 extension CspE2e_EditMessage: @unchecked Sendable {}
 extension CspE2e_DeleteMessage: @unchecked Sendable {}
 extension CspE2e_GroupCallStart: @unchecked Sendable {}
-extension CspE2e_GroupJoinRequest: @unchecked Sendable {}
-extension CspE2e_GroupJoinResponse: @unchecked Sendable {}
-extension CspE2e_GroupJoinResponse.Response: @unchecked Sendable {}
-extension CspE2e_GroupJoinResponse.Response.OneOf_Response: @unchecked Sendable {}
-extension CspE2e_GroupJoinResponse.Response.Accept: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -799,230 +651,6 @@ extension CspE2e_GroupCallStart: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     if lhs.protocolVersion != rhs.protocolVersion {return false}
     if lhs.gck != rhs.gck {return false}
     if lhs.sfuBaseURL != rhs.sfuBaseURL {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension CspE2e_GroupJoinRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GroupJoinRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "token"),
-    2: .standard(proto: "group_name"),
-    3: .same(proto: "message"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.token) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.groupName) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.message) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.token.isEmpty {
-      try visitor.visitSingularBytesField(value: self.token, fieldNumber: 1)
-    }
-    if !self.groupName.isEmpty {
-      try visitor.visitSingularStringField(value: self.groupName, fieldNumber: 2)
-    }
-    if !self.message.isEmpty {
-      try visitor.visitSingularStringField(value: self.message, fieldNumber: 3)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: CspE2e_GroupJoinRequest, rhs: CspE2e_GroupJoinRequest) -> Bool {
-    if lhs.token != rhs.token {return false}
-    if lhs.groupName != rhs.groupName {return false}
-    if lhs.message != rhs.message {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension CspE2e_GroupJoinResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GroupJoinResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "token"),
-    2: .same(proto: "response"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.token) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._response) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if !self.token.isEmpty {
-      try visitor.visitSingularBytesField(value: self.token, fieldNumber: 1)
-    }
-    try { if let v = self._response {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: CspE2e_GroupJoinResponse, rhs: CspE2e_GroupJoinResponse) -> Bool {
-    if lhs.token != rhs.token {return false}
-    if lhs._response != rhs._response {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension CspE2e_GroupJoinResponse.Response: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = CspE2e_GroupJoinResponse.protoMessageName + ".Response"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "accept"),
-    2: .same(proto: "expired"),
-    3: .standard(proto: "group_full"),
-    4: .same(proto: "reject"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try {
-        var v: CspE2e_GroupJoinResponse.Response.Accept?
-        var hadOneofValue = false
-        if let current = self.response {
-          hadOneofValue = true
-          if case .accept(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .accept(v)
-        }
-      }()
-      case 2: try {
-        var v: Common_Unit?
-        var hadOneofValue = false
-        if let current = self.response {
-          hadOneofValue = true
-          if case .expired(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .expired(v)
-        }
-      }()
-      case 3: try {
-        var v: Common_Unit?
-        var hadOneofValue = false
-        if let current = self.response {
-          hadOneofValue = true
-          if case .groupFull(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .groupFull(v)
-        }
-      }()
-      case 4: try {
-        var v: Common_Unit?
-        var hadOneofValue = false
-        if let current = self.response {
-          hadOneofValue = true
-          if case .reject(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .reject(v)
-        }
-      }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.response {
-    case .accept?: try {
-      guard case .accept(let v)? = self.response else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }()
-    case .expired?: try {
-      guard case .expired(let v)? = self.response else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }()
-    case .groupFull?: try {
-      guard case .groupFull(let v)? = self.response else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }()
-    case .reject?: try {
-      guard case .reject(let v)? = self.response else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }()
-    case nil: break
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: CspE2e_GroupJoinResponse.Response, rhs: CspE2e_GroupJoinResponse.Response) -> Bool {
-    if lhs.response != rhs.response {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension CspE2e_GroupJoinResponse.Response.Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = CspE2e_GroupJoinResponse.Response.protoMessageName + ".Accept"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "group_id"),
-  ]
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularFixed64Field(value: &self.groupID) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.groupID != 0 {
-      try visitor.visitSingularFixed64Field(value: self.groupID, fieldNumber: 1)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: CspE2e_GroupJoinResponse.Response.Accept, rhs: CspE2e_GroupJoinResponse.Response.Accept) -> Bool {
-    if lhs.groupID != rhs.groupID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Copiato negli appunti";
 "webrtc_diagnostics.done" = "Fatto. In caso di problemi con l’impostazione di una connessione per le chiamate, invia questo risultato all’assistenza di Threema.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Seleziona";
 "mwphotobrowser_select_all" = "Seleziona tutto";
@@ -338,7 +335,7 @@
 "record_audio" = "Registrazione audio";
 "record_continue" = "Continua registrazione audio";
 "scan_qr" = "Scansiona codice QR";
-"share_file" = "Condividi file";
+"share_file" = "Invia file o contatto";
 "add_item_caption" = "Aggiungi didascalia";
 "add_items_caption" = "Aggiungi didascalie";
 "send_item_immediately_photo" = "Invia immagine";
@@ -478,12 +475,12 @@
 "backup_exclude" = "L’ID esportato non sarà incluso durante il backup del telefono tramite iTunes o iCloud. Salva manualmente l’ID esportato per evitare di perderlo.";
 
 /* Contacts */
-"pull_to_sync" = "Scorri giù";
+"pull_to_sync" = "Scorri giù per sincronizzare";
 "bad_identity_backup" = "I dati relativi all’ID esportato non sono validi oppure è stata inserita una password errata. Per ripristinare il Threema ID, utilizza la password scelta durante la creazione dell’esportazione. Controlla i dati inseriti e riprova.";
 "pull_to_sync_429_message" = "È stato raggiunto il limite di sincronizzazioni di contatti consentite al giorno. Continua la sincronizzazione domani oppure contatta il servizio assistenza di Threema.";
 "pull_to_sync_429_message_work" = "È stato raggiunto il limite di sincronizzazioni di contatti consentite al giorno. Continua la sincronizzazione domani oppure contatta l'amministratore %@.";
 
-"synchronizing" = "Sincronizzare...";
+"synchronizing" = "Sincronizza...";
 
 "no_contacts_syncon" = "La rubrica è ancora vuota. La sincronizzazione è stata avviata, ma a quanto pare nessuno dei tuoi contatti ha installato Threema (invitali!).";
 "no_contacts" = "Nessun contatto";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Contatto di lavoro";
 "threema_type_icon_private_accessibility_label" = "Contatto privato";
 
-"delete_contact_group_exists_title" = "Contatto presente nella chat di gruppo";
-"delete_contact_group_exists_message_single" = "\"%@\" fa ancora parte di un gruppo. Elimina il contatto dal gruppo oppure cancella il gruppo.";
-"delete_contact_group_exists_message_multiple" = "\"%@\" fa ancora parte di %d gruppi. Elimina il contatto dai gruppi oppure cancella i gruppi.";
-"delete_contact_group_exists_show_contact_button" = "Mostra contatto";
 "delete_contact_existing_conversation_title" = "Cancella «%@»?";
+"delete_contact_existing_conversation_is_group_member_title" = "La chat singola con «%@» sarà cancellata, il contatto rimane tuttavia membro del gruppo. Vuoi cancellare «%@»?";
 "delete_contact_existing_conversation_button" = "Cancella contatto + cronologia della chat";
+"delete_contact_is_group_member_title" = "«%@» rimane membro del gruppo. Vuoi cancellare «%@»?";
 "delete_contact_confirmation_with_exclusion_message" = "Cancellare \"%@\" ed escludere il contatto dalla sincronizzazione?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "«%@» rimane membro del gruppo. Vuoi cancellare «%@» e escluderlo dalla sincronizzazione?";
 "delete_contact_button" = "Cancella contatto";
 "delete_contact_confirmation_with_exclusion_button" = "Cancella + escludi contatto";
 "exclude_deleted_id_title" = "Escludere Threema ID di \"%@\" dalla sincronizzazione?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "Sei nuovo/a su %@?";
 "restore_id_export" = "Ripristina ID esportato";
 "id_exists" = "Il Threema ID utilizzato precedentemente su questo dispositivo (%@) è ancora presente. Vorresti ripristinare questo ID?";
+
+"contact_support" = "Contatta assistenza";
+"contact_support_mail_subject" = "Sono stati creati troppi ID per questo acquisto";
+"contact_support_mail_message" = "Caro team %@\n\nNon riesco a creare un nuovo ID. Ricevo il seguente codice di errore:\n%@\n\nCordiali saluti";
 
 "welcome" = "Ti diamo il benvenuto su %@";
 "move_your_finger" = "Muovi il dito sullo schermo.";
@@ -712,6 +712,8 @@
 "current_position" = "posizione";
 "in_reply_to" = "in risposta a";
 "draft" = "Bozza";
+"draft_type_quote" = "Citazione";
+"draft_type_edit" = "Modifica";
 "new_message_accessibility" = "Nuovo messaggio: ";
 "quote_interaction_hint" = "Passa al messaggio citato";
 
@@ -722,13 +724,19 @@
 "restore" = "Ripristina";
 
 /* PullToRefresh */
-"pull_to_refresh" = "Scorri giù";
+"pull_to_refresh" = "Scorri giù per aggiornare";
 "refreshing" = "Aggiornamento in corso...";
 
 /* Threema Channel */
 "threema_channel_intro" = "Vuoi aggiungere Threema Channel ai tuoi contatti?";
 "threema_channel_info" = "Threema Channel ti aggiorna sulle novità di Threema.";
 "threema_channel_failed" = "Threema Channel non è potuto essere aggiunto.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Vuoi aggiungere il Threema Work Channel ai tuoi contatti?";
+"threema_work_channel_info" = "Il Threema Work Channel ti aggiorna sulle novità di Threema Work.";
+"threema_work_channel_failed" = "Il Threema Work Channel non è potuto essere aggiunto.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Rispondi";
@@ -785,15 +793,15 @@
 
 "call_voip_not_supported_title" = "Chiamata Threema";
 "call_voip_not_supported_text" = "Questo contatto non è ancora in grado di ricevere chiamate Threema.";
-"call_contact_not_reachable" = "Impossibile raggiungere il contatto.";
+"call_contact_not_reachable" = "Il contatto al momento non è disponibile.";
 
 "call_status_idle" = "Pronto";
 "call_status_wait_ringing" = "Inizializza";
 "call_status_ringing" = "Squilla";
 "call_status_incom_ringing" = "Chiamata Threema";
-"call_status_initializing" = "Connessione";
+"call_status_initializing" = "Connessione in corso";
 "call_status_calling" = "Connesso";
-"call_status_reconnecting" = "Connessione";
+"call_status_reconnecting" = "Connessione in corso";
 "call_status_unknown" = "Sconosciuto";
 "call_status_blocked" = "Contatto bloccato";
 "call_status_failed_title" = "Chiamata Threema";
@@ -1073,7 +1081,7 @@
 "restore_option_id" = "Ripristina solo il tuo ID";
 "restore_option_id_keep_data" = "Ripristina il Threema ID esportato e memorizza i dati (chat, contatti, gruppi, ecc...) su questo dispositivo";
 "backup_faq_link_text" = "Ulteriori informazioni sui backup in %@";
-"forgot_password_link_text" = "Hai dimenticato la password?";
+"restore_option_help_link_text" = "Assistenza";
 
 "restore_option_data_description" = "In questo dispositivo sono presenti dati %@ (chat, contatti, gruppi, ecc...).";
 "restore_option_data_keep_data" = "Mantieni i dati locali";
@@ -1118,6 +1126,7 @@
 
 "settings_list_invite_a_friend_title" = "Invita amici";
 "settings_list_threema_channel_title" = "Threema Channel";
+"settings_list_threema_work_channel_title" = "Threema Work Channel";
 
 "settings_list_rate" = "Valuta %@";
 
@@ -1252,7 +1261,7 @@
 "delete_messages_confirm" = "Vuoi eliminare tutti i messaggi più vecchi di %@ in modo definitivo?";
 "delete_messages_confirm_all" = "Vuoi eliminare tutti i messaggi in modo definitivo?";
 "delete_messages_explain" = "Sono inclusi tutti i tipi di messaggio (messaggi di testo e vocale, multimediale, file, sondaggi, ecc...).";
-"automatic_delete_explain" = "Per liberare la memoria stabilisci se e dopo quale periodo di tempo i messaggi e i media devono essere eliminati. I sondaggi aperti e i gruppi di note sono esclusi da questa opzione.";
+"automatic_delete_explain" = "Per liberare la memoria stabilisci dopo quale periodo di tempo i messaggi e i media devono essere cancellati. I sondaggi aperti, i messaggi contrassegnati con asterisco e i contenuti di gruppi di note sono esclusi da questa opzione.";
 "automatic_delete_on_confirmation_title" = "Vuoi attivare la cancellazione automatica?";
 "automatic_delete_off_confirmation_title" = "Vuoi disattivare la cancellazione automatica?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1480,6 +1489,16 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "could_not_add_all_items_memory_constrained_message" = "A causa di restrizioni tecniche i file oltre una data dimensione possono solo essere inviati all'interno dell'app.";
 "image_preview_cell_cannot_preview" = "Impossibile visualizzare l'anteprima.";
 
+// Profile Synchronization
+"sync_error_title" = "Sincronizzazione del profilo non riuscita";
+"sync_error_general_message" = "Controlla la connessione a Internet e riprova.";
+"sync_error_same_transaction_error" = "La sincronizzazione è già in corso su un altro dispositivo. Attendi il completamento della sincronizzazione. Le modifiche apportate a questo dispositivo verranno eliminate.";
+
+"syncing_profile" = "Sincronizza...";
+
+"incoming_profile_sync_title" = "Sincronizzazione profilo effettuata";
+"incoming_profile_sync_message" = "Le modifiche di un altro dispositivo sono state integrate";
+
 // Share Extension
 "finished_sending_title" = "Invio concluso";
 "preview_button_accessibility_title" = "Visualizza anteprima documento";
@@ -1662,7 +1681,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "settings_threema_web_connected" = "Desktop/Web collegato";
 "settings_threema_web_connectioninfo" = "Per mantenere il collegamento, il tuo dispositivo deve essere sbloccato e %@ posto in primo piano. In caso di collegamento attivo, il dispositivo non viene bloccato automaticamente.";
 "settings_threema_web_multi_device_qr_code_title" = "Codice QR errato";
-"settings_threema_web_multi_device_qr_code_message" = "Tocca \"%@\" e poi \"%@\" per collegare a questa app per desktop:";
+"settings_threema_web_multi_device_qr_code_message" = "Tocca \"%@\" e poi \"%@\" per collegare a questa app per desktop.";
 
 "chat_text_view_placeholder" = "Nuovo messaggio";
 "compose_bar_camera_button_accessibility_label" = "Apri fotocamera";
@@ -1739,6 +1758,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "notification_deleted_messages_count" = "%d messaggi eliminati";
 
 "notification_cannot_play_video" = "Impossibile riprodurre il video";
+"notification_recording_too_long" = "La registrazione ha raggiunto la lunghezza massima";
 
 "notification_call_failed_connected" = "Connessione persa";
 "notification_call_failed_not_connected" = "Impossibile stabilire la connessione";

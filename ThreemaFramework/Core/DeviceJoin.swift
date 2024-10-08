@@ -707,6 +707,6 @@ extension Group {
             syncGroup.conversationVisibility = visibility
         }
         
-        return (syncGroup, profilePicture)
+        return (syncGroup, old_ProfilePicture)
     }
 }

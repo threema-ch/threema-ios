@@ -36,7 +36,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     }
     
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
     
     var isGroupMessage: Bool {
@@ -70,12 +70,12 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     }
 
     init(sendContactProfilePicture: Bool) {
-        super.init(isPersistent: true)
+        super.init(type: .persistent)
         self.sendContactProfilePicture = sendContactProfilePicture
     }
     
     init(group: Group, groupReceivers: [ThreemaIdentity]?, sendContactProfilePicture: Bool) {
-        super.init(isPersistent: true)
+        super.init(type: .persistent)
         self.groupID = group.groupID
         self.groupCreatorIdentity = group.groupCreatorIdentity
         self.groupName = group.name
@@ -92,7 +92,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
     }
 
     init(receiverIdentity: String?, group: Group?, sendContactProfilePicture: Bool) {
-        super.init(isPersistent: true)
+        super.init(type: .persistent)
         self.receiverIdentity = receiverIdentity
         self.groupID = group?.groupID
         self.groupCreatorIdentity = group?.groupCreatorIdentity
@@ -113,7 +113,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         isNoteGroup: Bool?,
         sendContactProfilePicture: Bool
     ) {
-        super.init(isPersistent: true)
+        super.init(type: .persistent)
         self.receiverIdentity = receiverIdentity
         self.groupID = groupID
         self.groupCreatorIdentity = groupCreatorIdentity

@@ -24,7 +24,7 @@ class ContactListTableViewContainerViewController: ContainerViewController {
     
     private let contacts = ContactListViewController()
     private let groups = GroupListViewController()
-    private let distributionList = ThemedTableViewController()
+    private let distributionList = DistributionListViewController()
     
     #if THREEMA_WORK || THREEMA_ONPREM
         private let work = WorkContactListViewController()

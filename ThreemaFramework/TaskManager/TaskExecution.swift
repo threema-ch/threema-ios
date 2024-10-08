@@ -45,6 +45,16 @@ enum TaskExecutionError: Error {
     case ownContact(message: String)
     case multiDeviceNotSupported
     case nonceGenerationFailed
+    case taskDropped
+}
+
+extension TaskDefinition {
+    /// Check if task is dropped and throws `TaskExecutionError.taskDropped` if this is the case
+    func checkDropping() throws {
+        if isDropped {
+            throw TaskExecutionError.taskDropped
+        }
+    }
 }
 
 class TaskExecution: NSObject {

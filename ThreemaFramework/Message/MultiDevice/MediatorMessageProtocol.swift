@@ -448,16 +448,6 @@ enum MediatorMessageProtocolError: Error {
         return envelope
     }
     
-    func getEnvelopeForContactSyncDelete(identity: String) -> D2d_Envelope {
-        var sContactSync = D2d_ContactSync()
-        sContactSync.delete.deleteIdentity = identity
-
-        var envelope = D2d_Envelope()
-        envelope.contactSync = sContactSync
-
-        return envelope
-    }
-
     /// Create Envelope for group sync.
     /// - Parameters:
     ///    - group: Group to sync
@@ -837,7 +827,7 @@ enum MediatorMessageProtocolError: Error {
         case .groupDeleteMessage:
             return MSGTYPE_GROUP_DELETE
         // Not supported types
-        case .groupJoinRequest, .groupJoinResponse, .forwardSecurityEnvelope:
+        case .forwardSecurityEnvelope:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
         case .invalidType:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)

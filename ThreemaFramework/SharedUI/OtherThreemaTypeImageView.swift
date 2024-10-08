@@ -24,7 +24,7 @@ import UIKit
 ///
 /// Use in combination with `Contact.showOtherThreemaTypeIcon`.
 ///
-/// If you overlay it on the avatar it should appear at the leading bottom and be 35 % of the avatar size.
+/// If you overlay it on the profile picture it should appear at the leading bottom and be 35 % of its size.
 public class OtherThreemaTypeImageView: UIImageView {
     
     public init() {

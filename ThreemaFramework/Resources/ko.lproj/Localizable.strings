@@ -56,7 +56,8 @@
 "error_other_connection_for_same_identity_message" = "서버는 동일한 Threema ID를 가진 서로 다른 장치들로부터 두 개 이상의 연결을 감지했습니다.\n\n\여러 장치에서 동시에 Threema를 사용하면서 연결하지 않을 경우 이런 일이 발생할 수 있습니다 (https://three.ma/md). 새 메시지는 서버에 마지막으로 연결된 장치로만 전송됩니다.\n\n새 장치로 전환하고 있다면, 이전 장치에서 %@를 제거하거나 비활성화한 후 새 장치를 재부팅하세요.";
 
 "error_rogue_device_title" = "다른 장치로부터의 연결이 감지되었습니다";
-"error_rogue_device_message" = "서버에서는 동일한 Threema ID를 가진 다른 장치로부터의 연결을 감지했습니다.\n\n중간에 다른 장치에서 Threema ID를 사용하지 않았거나 오래된 앱 버전을 사용하지 않았다면 가능하다면 로그 파일을 포함하여 지원팀에 문의하세요.";
+"error_rogue_device_message" = "동일한 Threema ID를 가진 다른 기기로부터의 연결이 감지되었습니다. 최근에 다른 기기에서 Threema ID를 사용한 적이 있습니까?\n\n사용한 적이 있다면 이 메시지를 무시해도 됩니다.\n사용한 적이 없다면 귀하의 개인 키가 도용되었을 수 있습니다. 새 ID를 생성하기 전에 기기와 데이터를 보호하는 방법을 알아보려면 '자세한 정보'를 탭하세요.";
+"error_rogue_device_more_info_button" = "더 많은 정보";
 
 "video_too_long_title" = "비디오가 너무 길어요";
 "video_too_long_message" = "비디오가 너무 길어서 보낼 수 없습니다. 허용되는 최대 길이는 %.0f 분입니다.";

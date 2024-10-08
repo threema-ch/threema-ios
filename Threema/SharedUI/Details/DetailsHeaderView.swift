@@ -51,7 +51,7 @@ final class DetailsHeaderView: UIStackView {
     
     // MARK: - Private properties
     
-    private let avatarImageTapped: () -> Void
+    private let profilePictureTapped: () -> Void
     
     private let quickActions: [QuickAction]
     private let mediaAndPollsQuickActions: [QuickAction]
@@ -62,7 +62,7 @@ final class DetailsHeaderView: UIStackView {
     
     private lazy var detailsHeaderProfileView = DetailsHeaderProfileView(
         with: profileContentConfiguration,
-        avatarImageTapped: avatarImageTapped
+        profilePictureTapped: profilePictureTapped
     )
     
     private lazy var quickActionsView = QuickActionsView(quickActions: quickActions)
@@ -76,13 +76,13 @@ final class DetailsHeaderView: UIStackView {
     
     init(
         with contentConfiguration: DetailsHeaderProfileView.ContentConfiguration,
-        avatarImageTapped: @escaping () -> Void,
+        profilePictureTapped: @escaping () -> Void,
         quickActions: [QuickAction] = [],
         mediaAndPollsQuickActions: [QuickAction] = [],
         configuration: Configuration = Configuration()
     ) {
         self.profileContentConfiguration = contentConfiguration
-        self.avatarImageTapped = avatarImageTapped
+        self.profilePictureTapped = profilePictureTapped
         self.quickActions = quickActions
         self.mediaAndPollsQuickActions = mediaAndPollsQuickActions
         self.configuration = configuration

@@ -553,6 +553,61 @@ class MessageSenderTests: XCTestCase {
 
         XCTAssertTrue(message.sendFailed?.boolValue ?? false)
     }
+    
+    func testSendTextMessageToDistributionList() async throws {
+        // Setup
+        
+        let recipients = ["MEMBER01", "MEMBER02", "MEMBER03"]
+
+        // Setup initial group in DB
+
+        let conversation = dbPreparer.save {
+            let recipients = recipients.map { identityString in
+                dbPreparer.createContact(
+                    publicKey: MockData.generatePublicKey(),
+                    identity: identityString,
+                    verificationLevel: 0
+                )
+            }
+            
+            // We create one conversation for the recipients, the rest should be auto created.
+            dbPreparer.createConversation(contactEntity: recipients.first!)
+            
+            let distributionList = dbPreparer.createDistributionListEntity(id: 0)
+            let conversation = dbPreparer.createConversation(
+                typing: false,
+                unreadMessageCount: 0,
+                visibility: .default
+            ) { conversation in
+                conversation.distributionList = distributionList
+                conversation.addMembers(Set(recipients))
+            }
+            
+            return conversation
+        }
+
+        let userSettingMock = UserSettingsMock()
+        
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettingMock,
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: entityManager,
+            blobManger: BlobManagerMock(),
+            blobMessageSender: blobMessageSender
+        )
+
+        // Run
+        
+        await messageSender.sendTextMessage(containing: "Test", in: conversation)
+        
+        // Validate
+        
+        XCTAssertEqual(taskManagerMock.addedTasks.count, 3)
+        let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
+    }
 
     func testSendDeliveryReceipt() throws {
         let testMessages: [AbstractMessage] = [

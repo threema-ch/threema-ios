@@ -20,7 +20,7 @@
 
 import Foundation
 
-public enum Platform: Int {
+public enum Platform: Int, Sendable {
     case unspecified = 0
     case android = 1
     case ios = 2
@@ -50,15 +50,22 @@ public enum Platform: Int {
     
     public var systemSymbolName: String {
         switch self {
-        case .ios, .android:
+        case .ios:
             "iphone"
+        case .android:
+            if #available(iOS 17.0, *) {
+                "smartphone"
+            }
+            else {
+                "iphone"
+            }
         case .desktop, .web, .unspecified:
             "desktopcomputer"
         }
     }
 }
 
-public struct DeviceInfo {
+public struct DeviceInfo: Sendable {
     public let deviceID: UInt64
     public let label: String
     public let lastLoginAt: Date

@@ -129,7 +129,7 @@ public final class ThreemaUtility: NSObject {
     /// Icon to show if `Contact.showOtherThreemaIcon` is `true`
     ///
     /// If you need a view for it use `OtherThreemaTypeImageView`
-    public static var otherThreemaTypeIcon: UIImage {
+    @objc public static var otherThreemaTypeIcon: UIImage {
         if isWorkFlavor {
             StyleKit.houseIcon
         }

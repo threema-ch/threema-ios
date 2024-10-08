@@ -122,9 +122,33 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 return Promise { $0.fulfill(nil) }
             }
 
+            guard !processedMsg.noDeliveryReceiptFlagSet() else {
+                return Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
+            }
+
+            guard let messageID = processedMsg.messageID else {
+                return Promise(error: TaskExecutionError.processIncomingMessageFailed(
+                    message: "Missing message ID for \(processedMsg.loggingDescription)"
+                ))
+            }
+
             // Send and delivery receipt
-            return self.frameworkInjector.messageSender.sendDeliveryReceipt(for: processedMsg)
-                .then { _ -> Promise<AbstractMessageAndFSMessageInfo?> in
+            // Notice: This message will be (reflected) sent immediately, before the next task will be executed!
+            let task = TaskDefinitionSendDeliveryReceiptsMessage(
+                fromIdentity: self.frameworkInjector.myIdentityStore.identity,
+                toIdentity: processedMsg.fromIdentity,
+                receiptType: .received,
+                receiptMessageIDs: [messageID],
+                receiptReadDates: [Date](),
+                excludeFromSending: [Data]()
+            )
+            return task.create(frameworkInjector: self.frameworkInjector, taskContext: TaskContext(
+                logReflectMessageToMediator: .reflectOutgoingMessageToMediator,
+                logReceiveMessageAckFromMediator: .receiveOutgoingMessageAckFromMediator,
+                logSendMessageToChat: .sendOutgoingMessageToChat,
+                logReceiveMessageAckFromChat: .receiveOutgoingMessageAckFromChat
+            )).execute()
+                .then {
                     Promise { $0.fulfill(abstractMessageAndFSMessageInfo) }
                 }
         }
@@ -133,8 +157,11 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                let processedMsg = abstractMessageAndFSMessageInfo?.message,
                processedMsg.flagIsVoIP() == true,
                let fromIdentity = processedMsg.fromIdentity,
-               !self.frameworkInjector.userSettings.blacklist.contains(fromIdentity) {
+               !self.frameworkInjector.userSettings.blacklist.contains(fromIdentity),
+               self.frameworkInjector.userSettings.enableThreemaCall,
+               self.frameworkInjector.pushSettingManager.canMasterDndSendPush() {
                 // Do not ack message if it's a VoIP message in the notification extension
+                // But only if threema call is enabled and master dnd can receive messages
             }
             else {
                 // Ack message

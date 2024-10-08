@@ -48,7 +48,6 @@
 #import "EnterLicenseViewController.h"
 #import "MDMSetup.h"
 #import "ContactStore.h"
-#import "GatewayAvatarMaker.h"
 #import "Threema-Swift.h"
 #import "WorkDataFetcher.h"
 #import <StoreKit/StoreKit.h>
@@ -59,7 +58,7 @@
   static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
-@interface SplashViewController () <FLAnimatedImageViewDelegate, RandomSeedViewControllerDelegate, CompletedIDDelegate, RestoreOptionDataViewControllerDelegate, RestoreOptionBackupViewControllerDelegate, RestoreSafeViewControllerDelegate, RestoreIdentityViewControllerDelegate, IntroQuestionDelegate, EnterLicenseDelegate, ZSWTappableLabelTapDelegate>
+@interface SplashViewController () <FLAnimatedImageViewDelegate, RandomSeedViewControllerDelegate, CompletedIDDelegate, RestoreOptionDataViewControllerDelegate, RestoreOptionBackupViewControllerDelegate, RestoreSafeViewControllerDelegate, RestoreIdentityViewControllerDelegate, IntroQuestionDelegate, EnterLicenseDelegate, ZSWTappableLabelTapDelegate, MFMailComposeViewControllerDelegate>
 
 @property FLAnimatedImageView *animatedView;
 @property RandomSeedViewController *randomSeedViewController;
@@ -400,8 +399,7 @@
             NSString *message = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"];
             NSString *linkButton = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_reset_button"];
             [UIAlertTemplate showAlertWithOwner:self title:title message:message titleOk:linkButton actionOk:^(UIAlertAction * _Nonnull action) {
-                NSURL *url = [NSURL URLWithString:@"https://threema.ch/faq/md_reset"];
-                [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+                [[UIApplication sharedApplication] openURL:[ThreemaURLProviderObjc getURL:ThreemaURLProviderTypeMultiDeviceReset] options:@{} completionHandler:nil];
             }];
         }
     }];
@@ -518,6 +516,29 @@
 
 - (void)showApplicaitonUI {
     [[AppDelegate sharedAppDelegate] completedIDSetup];
+}
+
+- (void)contactSupport:(NSString *)errorCode {
+    MFMailComposeViewController *mailController = [[MFMailComposeViewController alloc] init];
+    mailController.mailComposeDelegate = self;
+    
+    switch ([ThreemaAppObjc current]) {
+        case ThreemaAppThreema:
+        case ThreemaAppGreen:
+            [mailController setToRecipients:@[@"support@threema.ch"]];
+            break;
+        case ThreemaAppWork:
+        case ThreemaAppOnPrem:
+        case ThreemaAppBlue:
+            [mailController setToRecipients:@[@"support-work@threema.ch"]];
+            break;
+    }
+        
+    [mailController setSubject:[BundleUtil localizedStringForKey:@"contact_support_mail_subject"]];
+    NSString *message = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"contact_support_mail_message"], [ThreemaAppObjc appName], errorCode];
+    [mailController setMessageBody:message isHTML:NO];
+    
+    [self presentViewController:mailController animated:YES completion:nil];
 }
 
 #pragma mark - IntroQuestionView
@@ -740,6 +761,12 @@
         switch (ThreemaAppObjc.current) {
             case ThreemaAppThreema:
             case ThreemaAppGreen:
+                if([MFMailComposeViewController canSendMail]) {
+                    [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
+                        [self cancelPressed];
+                        [self contactSupport:error.localizedDescription];
+                    }]];
+                }
                 break;
             case ThreemaAppWork:
             case ThreemaAppOnPrem:
@@ -748,6 +775,12 @@
                     [self cancelPressed];
                     [self presentLicenseViewController];
                 }]];
+                if([MFMailComposeViewController canSendMail]) {
+                    [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
+                        [self cancelPressed];
+                        [self contactSupport:error.localizedDescription];
+                    }]];
+                }
                 break;
         }
         [[[AppDelegate sharedAppDelegate] currentTopViewController] presentViewController:errAlert animated:YES completion:nil];
@@ -1072,6 +1105,13 @@
     UIViewController *vc = [[PrivacyPolicyViewController alloc]init];
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:vc];
     [self presentViewController:nc animated:YES completion:nil];
+}
+
+
+#pragma mark - MFMailComposeViewControllerDelegate
+
+- (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(nullable NSError *)error {
+    [controller dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

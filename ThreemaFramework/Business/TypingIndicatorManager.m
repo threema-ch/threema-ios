@@ -19,10 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "TypingIndicatorManager.h"
-#import "Conversation.h"
-#import "EntityFetcher.h"
-#import "AppDelegate.h"
-#import "Threema-Swift.h"
+#import "ThreemaFramework/ThreemaFramework-swift.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;

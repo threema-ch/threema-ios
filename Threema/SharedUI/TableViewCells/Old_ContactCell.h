@@ -27,9 +27,7 @@
 
 @property (weak, nonatomic) ContactEntity *contact;
 
-@property (weak, nonatomic) IBOutlet UIImageView *contactImage;
 @property (weak, nonatomic) IBOutlet ContactNameLabel *nameLabel;
-@property (weak, nonatomic) IBOutlet UILabel *nicknameLabel;
 @property (weak, nonatomic) IBOutlet UILabel *identityLabel;
 @property (weak, nonatomic) IBOutlet UIImageView *verificationLevel;
 @property (weak, nonatomic) IBOutlet UIImageView *checkmarkView;

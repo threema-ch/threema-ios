@@ -39,16 +39,12 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
         
         return DetailsHeaderView(
             with: distributionList.contentConfiguration,
-            avatarImageTapped: { [weak self] in
-                guard let strongSelf = self else {
-                    return
-                }
-                guard let profilePictureData = strongSelf.distributionList.profilePicture,
-                      let profilePicture = UIImage(data: profilePictureData) else {
+            profilePictureTapped: { [weak self] in
+                guard let self else {
                     return
                 }
                 
-                strongSelf.presentFullscreen(image: profilePicture)
+                presentFullscreen(image: distributionList.profilePicture)
             },
             quickActions: actions
         )
@@ -150,7 +146,6 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
         )
 
         observeDistributionList(\.profilePicture) { [weak self] in
-            AvatarMaker.shared().clearCacheForProfilePicture()
             self?.updateHeader()
         }
         
@@ -477,45 +472,13 @@ extension DistributionListDetailsViewController: UITableViewDelegate {
     }
 }
 
-// MARK: - Peak & pop actions support
-
-// Used for iOS 12 support
-extension DistributionListDetailsViewController {
-    override var previewActionItems: [UIPreviewActionItem] {
-        guard let presentingViewController else {
-            return []
-        }
-        
-        // In theory the view controller where the peak interaction starts is what we
-        // want there, but it also works with the presenting VC which is the
-        // `MainTabBarController`.
-        return quickActions(in: presentingViewController).map(\.asUIPreviewAction)
-    }
-}
-
 extension DistributionList {
     /// Get a content configuration base on this `DistributionList`
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
         DetailsHeaderProfileView.ContentConfiguration(
-            avatarImageProvider: avatarImageProvider(completion:),
+            profilePictureInfo: .distributionList(self),
             name: String(displayName!),
             isSelfMember: true
         )
-    }
-    
-    private func avatarImageProvider(completion: @escaping (UIImage?) -> Void) {
-        guard let profilePictureData = profilePicture, let profilePicture = UIImage(data: profilePictureData) else {
-            Task { @MainActor in
-                completion(AvatarMaker.shared().unknownDistributionListImage())
-            }
-            return
-        }
-        
-        let maskedProfilePicture = AvatarMaker.shared()
-            .maskedProfilePicture(profilePicture, size: ChatViewConfiguration.Profile.maxAvatarSize)
-        
-        Task { @MainActor in
-            completion(maskedProfilePicture)
-        }
     }
 }

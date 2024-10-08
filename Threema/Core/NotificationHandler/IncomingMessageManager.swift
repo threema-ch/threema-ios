@@ -403,23 +403,18 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
 
-    public func taskQueueEmpty(_ queueTypeName: String) {
-        let queueType = TaskQueueType.queue(name: queueTypeName)
-        if queueType == .incoming {
-            if completionHandler != nil {
-                DispatchQueue.global().async {
-                    // Call completionHandler just once, will be set again for new push
-                    self.completionHandler?()
-                    self.completionHandler = nil
-                }
+    public func taskQueueEmpty() {
+        if completionHandler != nil {
+            DispatchQueue.global().async {
+                // Call completionHandler just once, will be set again for new push
+                self.completionHandler?()
+                self.completionHandler = nil
             }
         }
-        else if queueType == .outgoing {
-            // Gives a little time to process delivery receipts
-            // Cancel possible background task for sending message when the is in background
-            DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(5)) {
-                BackgroundTaskManager.shared.cancelBackgroundTask(key: kAppClosedByUserBackgroundTask)
-            }
+
+        // Cancel possible background task for sending message, gives a little time to process delivery receipts
+        DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(5)) {
+            BackgroundTaskManager.shared.cancelBackgroundTask(key: kAppClosedByUserBackgroundTask)
         }
     }
 

@@ -37,18 +37,24 @@ extension StorageManagementView {
         
         // MARK: - Public Functions
         
-        /// Provides an avatar image for a given conversation.
-        /// - Parameter conversation: The `Conversation` object for which to provide the avatar.
-        /// - Returns: An optional `UIImage` representing the avatar, or `nil` if not available.
-        func avatarImageProvider(_ conversation: Conversation) async -> UIImage? {
-            await withCheckedContinuation { continuation in
-                AvatarMaker.shared().avatar(
-                    for: conversation,
-                    size: 40,
-                    masked: true
-                ) { avatarImage, _ in
-                    continuation.resume(returning: avatarImage)
+        /// Provides a profile picture image for a given conversation.
+        /// - Parameter conversation: The `Conversation` object for which to provide the profile picture.
+        /// - Returns: An optional `UIImage` representing the profile picture, or `nil` if not available.
+        func profilePictureProvider(_ conversation: Conversation) async -> UIImage {
+            let entityManager = businessInjector.entityManager
+            
+            return await entityManager.perform {
+                if conversation.isGroup(),
+                   let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
+                    return group.profilePicture ?? ProfilePictureGenerator.unknownGroupImage
                 }
+                else if let contact = conversation.contact,
+                        let contactEntity = entityManager.entityFetcher.contact(for: contact.identity) {
+                    let businessContact = Contact(contactEntity: contactEntity)
+                    return businessContact.profilePicture
+                }
+                
+                return ProfilePictureGenerator.unknownContactImage
             }
         }
         

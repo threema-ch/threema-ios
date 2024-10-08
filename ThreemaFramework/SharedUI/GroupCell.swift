@@ -20,7 +20,7 @@
 
 import UIKit
 
-/// Show a group in a list
+/// Shows a group in a list
 ///
 /// Whenever there is a list of groups use this cell for a consistent appearance
 public final class GroupCell: ThemedCodeTableViewCell {
@@ -66,38 +66,21 @@ public final class GroupCell: ThemedCodeTableViewCell {
             
             topMetadataLabel.text = group.membersTitleSummary
             membersListLabel.text = group.membersList
-
-            let entityManager = EntityManager()
-            entityManager.performAndWait {
-                if let conversation = entityManager.entityFetcher.conversation(
-                    for: group.groupID,
-                    creator: group.groupCreatorIdentity
-                ) {
-                    self.updateAvatar(for: conversation)
-                }
-            }
+            
+            profilePictureView.info = .group(group)
         }
     }
     
     // MARK: - Subviews
     
-    // Always use max height as possible
-    private lazy var avatarSizeConstraint: NSLayoutConstraint = avatarImageView.heightAnchor.constraint(
-        lessThanOrEqualToConstant: configuration.maxAvatarSize
-    )
+    private var profilePictureSizeConstraint: NSLayoutConstraint!
     
-    private lazy var avatarImageView: UIImageView = {
-        let imageView = UIImageView(image: configuration.loadingAvatarImage)
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let imageView = ProfilePictureImageView()
         
-        imageView.contentMode = .scaleAspectFit
-        
-        // Always use max height as possible and set the width with aspect ratio 1:1
-        avatarSizeConstraint = imageView.heightAnchor.constraint(lessThanOrEqualToConstant: configuration.maxAvatarSize)
-        avatarSizeConstraint.isActive = true
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        
-        imageView.accessibilityIgnoresInvertColors = true
+        profilePictureSizeConstraint = imageView.heightAnchor
+            .constraint(lessThanOrEqualToConstant: configuration.maxProfilePictureSize)
+        profilePictureSizeConstraint.isActive = true
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             imageView.isHidden = true
@@ -172,7 +155,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
     }()
     
     private lazy var containerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [avatarImageView, textStack])
+        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack])
         
         stackView.axis = .horizontal
         stackView.distribution = .fill
@@ -192,7 +175,6 @@ public final class GroupCell: ThemedCodeTableViewCell {
         containerStack.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            avatarSizeConstraint,
             containerStack.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
             containerStack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             containerStack.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
@@ -209,34 +191,13 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     // MARK: - Updates
     
-    private func updateAvatar(for conversation: Conversation) {
-        avatarSizeConstraint.constant = configuration.maxAvatarSize
-        
-        AvatarMaker.shared()
-            .avatar(for: conversation, size: configuration.maxAvatarSize, masked: true) { avatarImage, objectID in
-                guard conversation.objectID == objectID else {
-                    return
-                }
-
-                guard let avatarImage else {
-                    // Show placeholder
-                    self.avatarImageView.image = AvatarMaker.shared().unknownGroupImage()
-                    return
-                }
-
-                DispatchQueue.main.async {
-                    self.avatarImageView.image = avatarImage
-                }
-            }
-    }
-    
     private func sizeDidChange() {
         nameLabel.font = configuration.nameLabelFont
         containerStack.spacing = configuration.horizontalSpacing
         
-        if let group {
-            updateAvatar(for: group.conversation)
-        }
+        // Note: We don't reload the profile picture here. So if the `content` is assigned before the `size`
+        // we might have a blurry profile picture.
+        profilePictureSizeConstraint.constant = configuration.maxProfilePictureSize
         
         updateSeparatorInset()
     }
@@ -247,8 +208,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
             return
         }
         
-        // Note: This will be off when the avatar is smaller than `maxAvatarSize`.
-        let leftSeparatorInset = configuration.maxAvatarSize + configuration.horizontalSpacing
+        let leftSeparatorInset = configuration.maxProfilePictureSize + configuration.horizontalSpacing
         separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)
     }
     

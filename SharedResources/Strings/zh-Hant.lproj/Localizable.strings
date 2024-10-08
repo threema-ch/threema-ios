@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "已複製至剪貼簿";
 "webrtc_diagnostics.done" = "大功告成。如果您在建立通話連線時遇到問題，請將錯誤日誌傳送至 Threema 支援。";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "選擇";
 "mwphotobrowser_select_all" = "選擇所有";
@@ -338,7 +335,7 @@
 "record_audio" = "錄製音訊";
 "record_continue" = "繼續錄音";
 "scan_qr" = "掃描QR碼";
-"share_file" = "分享檔案";
+"share_file" = "分享檔案或聯絡人";
 "add_item_caption" = "新增描述";
 "add_items_caption" = "新增描述";
 "send_item_immediately_photo" = "傳送照片";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "工作聯絡人";
 "threema_type_icon_private_accessibility_label" = "私密聯絡人";
 
-"delete_contact_group_exists_title" = "無法刪除聯絡人";
-"delete_contact_group_exists_message_single" = "[%@] 仍然是此群組的成員。請從此群組中移除聯絡人，或刪除群組。";
-"delete_contact_group_exists_message_multiple" = "[%@] 仍然是 %d 群組的成員。請從群組中移除聯絡人，或刪除群組。";
-"delete_contact_group_exists_show_contact_button" = "顯示聯絡人";
 "delete_contact_existing_conversation_title" = "刪除「%@」？";
+"delete_contact_existing_conversation_is_group_member_title" = "與「%@」的個人對話記錄將被刪除，但對方仍然是群組成員。是否刪除「%@」？";
 "delete_contact_existing_conversation_button" = "刪除聯絡人和對話記錄";
+"delete_contact_is_group_member_title" = "「%@」仍然是群組成員。是否刪除「%@」？";
 "delete_contact_confirmation_with_exclusion_message" = "要刪除 [%@] 並剔出聯絡人同步名單嗎？";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "「%@」仍然是群組成員。是否刪除「%@」並從同步中排除聯絡人？";
 "delete_contact_button" = "刪除聯絡人";
 "delete_contact_confirmation_with_exclusion_button" = "刪除和排除聯絡人";
 "exclude_deleted_id_title" = "要將 Threema ID [%@] 剔出同步範圍外嗎？";
@@ -544,6 +540,10 @@
 "setup_title_text" = "第一次使用 %@？";
 "restore_id_export" = "還原已匯出的ID";
 "id_exists" = "此裝置上以前使用的 Threema ID (%@) 仍然在線。您想還原這個ID嗎？";
+
+"contact_support" = "聯絡支援人員";
+"contact_support_mail_subject" = "此次購買建立的ID過多";
+"contact_support_mail_message" = "致 %@ 團隊：\n\n產生新的 Threema ID 失敗，並傳回此錯誤碼：\n%@\n\n此致";
 
 "welcome" = "歡迎使用 %@";
 "move_your_finger" = "在螢幕上移動手指，以生成新的 Threema ID。";
@@ -636,7 +636,7 @@
 "Cancel" = "取消";
 "enter_license_checking" = "正在檢查憑證";
 "confirm" = "確認";
-"enter_license_info" = "如果您是私人使用者，請點擊這裡下載 Threema。";
+"enter_license_info" = "如果您是個人使用者，請點擊這裡下載 Threema。";
 "enter_license_info_link" = "點擊這裡";
 "enter_license_server_placeholder" = "伺服器";
 
@@ -712,6 +712,8 @@
 "current_position" = "位置";
 "in_reply_to" = "回覆";
 "draft" = "草稿";
+"draft_type_quote" = "引用";
+"draft_type_edit" = "編輯";
 "new_message_accessibility" = "新訊息： ";
 "quote_interaction_hint" = "跳至引用的訊息";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "將 Threema Channel 新增至您的聯絡人嗎？";
 "threema_channel_info" = "Threema Channel 為您提供關於 Threema 的所有新聞。";
 "threema_channel_failed" = "無法新增 Threema Channel";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "將 Threema Work 頻道新增至您的聯絡人嗎？";
+"threema_work_channel_info" = "Threema Work 頻道為您提供關於 Threema Work 的所有資訊。";
+"threema_work_channel_failed" = "無法新增 Threema Work 頻道";
+
 
 /* Push decryption */
 "decryption_push_reply" = "回覆";
@@ -1074,7 +1082,7 @@
 "restore_option_id" = "僅還原您的ID";
 "restore_option_id_keep_data" = "還原已匯出的Threema ID，並將資料（對話，聯絡人，群組等）儲存在此裝置上";
 "backup_faq_link_text" = "了解更多關於 %@ 備份的資訊。";
-"forgot_password_link_text" = "忘記密碼？";
+"restore_option_help_link_text" = "說明";
 
 "restore_option_data_description" = "%@ 的資料（對話，聯絡人，群組等）仍存在此裝置上。";
 "restore_option_data_keep_data" = "保留本地資料";
@@ -1110,7 +1118,7 @@
 "settings_list_storage_management_title" = "儲存管理";
 "settings_list_passcode_lock_title" = "密碼鎖";
 "settings_threema_calls" = "通話";
-"settings_list_threema_desktop_title" = "Threema 2.0 電腦版（測試版）";
+"settings_list_threema_desktop_title" = "Threema 2.0 桌面版（測試版）";
 "settings_list_threema_web_title" = "桌面版/網頁版";
 
 "settings_list_network_title" = "網路狀態";
@@ -1119,6 +1127,7 @@
 
 "settings_list_invite_a_friend_title" = "邀請好友";
 "settings_list_threema_channel_title" = "Threema Channel";
+"settings_list_threema_work_channel_title" = "Threema Work 頻道";
 
 "settings_list_rate" = "對 %@ 評分";
 
@@ -1253,7 +1262,7 @@
 "delete_messages_confirm" = "您要永久刪除所有早於%@的訊息嗎？";
 "delete_messages_confirm_all" = "您要永久刪除所有訊息嗎？";
 "delete_messages_explain" = "任何類型的訊息都將被刪除：文字和語音訊息、媒體、檔案、投票等。";
-"automatic_delete_explain" = "使用自動刪除訊息和多媒體功能可以釋放磁碟空間。公開投票和私人收藏在備忘錄「一人群組」內的訊息不會自動刪除。";
+"automatic_delete_explain" = "使用自動刪除訊息和多媒體功能可以釋放磁碟空間。公開投票、已加星號的訊息和私人收藏在備忘錄「一人群組」內的訊息不會自動刪除。";
 "automatic_delete_on_confirmation_title" = "開啟自動刪除？";
 "automatic_delete_off_confirmation_title" = "關閉自動刪除？";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1481,6 +1490,16 @@
 "could_not_add_all_items_memory_constrained_message" = "由於技術限制，超過一定大小的檔案只能在此應用程式內傳送，而不是透過分享功能傳送。";
 "image_preview_cell_cannot_preview" = "無法顯示預覽。";
 
+// Profile Synchronization
+"sync_error_title" = "同步設定檔失敗";
+"sync_error_general_message" = "請檢查您的網路連線並再試一次。";
+"sync_error_same_transaction_error" = "設定檔已在另一台裝置上同步。請等待同步完成。此裝置上的變更將被捨棄。";
+
+"syncing_profile" = "正在同步…";
+
+"incoming_profile_sync_title" = "設定檔已同步";
+"incoming_profile_sync_message" = "已套用其他裝置的設定檔變更";
+
 // Share Extension
 "finished_sending_title" = "傳送完成";
 "preview_button_accessibility_title" = "顯示文件預覽";
@@ -1657,7 +1676,7 @@
 "notification_threemaweb_connectionlost_title" = "與桌面版應用程式 / 網頁版用戶端失去連線";
 "notification_threemaweb_connectionlost_body" = "如要繼續使用桌面版應用程式 / 網頁版用戶端，請重新啟動應用程式。";
 
-"settings_threema_web_desktop_banner_title" = "最新消息：推出 Threema 電腦版 2.0（測試版）";
+"settings_threema_web_desktop_banner_title" = "最新消息：推出 Threema 2.0 桌面版（測試版）";
 "settings_threema_web_desktop_banner_message" = "按一下這裡試用支援多裝置登入的新一代電腦版應用程式。";
 
 "settings_threema_web_connected" = "已連線至桌面版/網頁版";
@@ -1740,6 +1759,7 @@
 "notification_deleted_messages_count" = "%d則訊息已刪除";
 
 "notification_cannot_play_video" = "無法播放影片";
+"notification_recording_too_long" = "錄音超過最大長度";
 
 "notification_call_failed_connected" = "連線中斷";
 "notification_call_failed_not_connected" = "建立連線失敗";

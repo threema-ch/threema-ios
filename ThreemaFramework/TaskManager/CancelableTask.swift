@@ -18,25 +18,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import CocoaLumberjackSwift
-import CoreData
-import CoreLocation
-import Foundation
-import PromiseKit
-import ThreemaEssentials
-
-/// Handles sending messages of various types to distribution list recipients
-public class DistributionListMessageSender {
+/// Proxy type to cancel a task
+///
+/// Use this if you want to cancel a task. Canceling is cooperative and thus a task might not stop immediately and even
+/// run to completion.
+protocol CancelableTask {
+    /// Is this task canceled?
+    var isCanceled: Bool { get }
     
-    private let businessInjector: BusinessInjectorProtocol
-    private let entityManager: EntityManager
-    
-    public init(businessInjector: BusinessInjectorProtocol) {
-        self.businessInjector = businessInjector
-        self.entityManager = businessInjector.entityManager
-    }
-    
-    public convenience init() {
-        self.init(businessInjector: BusinessInjector())
-    }
+    /// Cancel this task
+    func cancel()
 }

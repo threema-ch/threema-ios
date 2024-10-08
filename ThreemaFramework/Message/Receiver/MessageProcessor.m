@@ -118,7 +118,7 @@
 
     [messageProcessorDelegate beforeDecode];
 
-    ContactAcquaintanceLevel acquaintanceLevel = boxedMessage.flags & MESSAGE_FLAG_GROUP ? ContactAcquaintanceLevelGroup : ContactAcquaintanceLevelDirect;
+    ContactAcquaintanceLevel acquaintanceLevel = boxedMessage.flags & MESSAGE_FLAG_GROUP ? ContactAcquaintanceLevelGroupOrDeleted : ContactAcquaintanceLevelDirect;
 
     [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxedMessage.fromIdentity acquaintanceLevel:acquaintanceLevel entityManager:entityManager ignoreBlockUnknown:false onCompletion:^(NSData *publicKey) {
         NSAssert(!([NSThread isMainThread] == YES), @"Should not running in main thread");

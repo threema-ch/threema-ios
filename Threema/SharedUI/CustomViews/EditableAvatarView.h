@@ -29,7 +29,7 @@
 @interface EditableAvatarView : UIView
 
 @property UILabel *pickImageLabel;
-@property UIImageView *imageView;
+@property ProfilePictureImageView *profilePictureView;
 @property (weak, nonatomic) UIViewController *presentingViewController;
 @property NSData *imageData;
 @property (nonatomic) BOOL canDeleteImage;

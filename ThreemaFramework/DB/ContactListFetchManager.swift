@@ -22,6 +22,7 @@ import Foundation
 
 public protocol ContactListFetchManager {
     var contactsResultController: NSFetchedResultsController<NSFetchRequestResult> { get }
+    var workContactsResultController: NSFetchedResultsController<NSFetchRequestResult> { get }
     var groupsResultController: NSFetchedResultsController<NSFetchRequestResult> { get }
     var distributionListsResultController: NSFetchedResultsController<NSFetchRequestResult> { get }
 }

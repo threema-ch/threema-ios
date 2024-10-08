@@ -54,6 +54,10 @@ class DatabasePreparer {
         }
     }
 
+    func delete(object: NSManagedObject) {
+        objCnx.delete(object)
+    }
+
     @discardableResult func createBallot(
         conversation: Conversation,
         ballotID: Data = MockData.generateBallotID()
@@ -148,6 +152,12 @@ class DatabasePreparer {
         return groupEntity
     }
     
+    @discardableResult func createDistributionListEntity(id: Int64) -> DistributionListEntity {
+        let distributionListEntity = createEntity(objectType: DistributionListEntity.self)
+        distributionListEntity.distributionListID = id
+        return distributionListEntity
+    }
+    
     @discardableResult func createImageData(data: Data, height: Int, width: Int) -> ImageData {
         let imageData = createEntity(objectType: ImageData.self)
         imageData.data = data
@@ -228,7 +238,6 @@ class DatabasePreparer {
         accuracy: Double,
         latitude: Double,
         longitude: Double,
-        reverseGeocodingResult: String,
         poiAddress: String? = nil,
         poiName: String?,
         id: Data = MockData.generateMessageID(),
@@ -240,7 +249,6 @@ class DatabasePreparer {
         locationMessage.accuracy = NSNumber(value: accuracy)
         locationMessage.latitude = NSNumber(value: latitude)
         locationMessage.longitude = NSNumber(value: longitude)
-        locationMessage.reverseGeocodingResult = reverseGeocodingResult
         locationMessage.poiAddress = poiAddress
         locationMessage.poiName = poiName
         locationMessage.id = id
@@ -451,8 +459,11 @@ class DatabasePreparer {
         else if objectType is FileMessageEntity.Type {
             entityName = "FileMessage"
         }
+        else if objectType is DistributionListEntity.Type {
+            entityName = "DistributionList"
+        }
         else {
-            fatalError("objects type not defined")
+            fatalError("Object type not defined")
         }
         
         return NSEntityDescription.insertNewObject(forEntityName: entityName, into: objCnx) as! T

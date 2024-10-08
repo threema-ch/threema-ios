@@ -320,6 +320,75 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(pushSetting?.identity, expectedSenderID)
         XCTAssertEqual(pushSetting?.type, .on)
     }
+    
+    func testUserNotificationContentBlockUnknownWithTrustedContact() throws {
+        let trustedContact: TrustedContacts = .threemaPush
+        let expectedMessageID = "94c605d0e3150619"
+        let expectedSenderID = ThreemaIdentity(trustedContact.identity!)
+        let expectedFromName = "*3MAPUSH"
+        let expectedTitle: String? = "*3MAPUSH"
+        let expectedBody = "Message"
+        let expectedAttachmentName: String? = nil
+        let expectedAttachmentURL: URL? = nil
+        let expectedCmd = "newmsg"
+        let expectedCategoryIdentifier = "SINGLE"
+        let expectedIsGroupMessage = false
+        let expectedGroupID: String? = nil
+
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.blockUnknown = true
+        
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .restrictive
+        settingsStoreMock.pushShowPreview = true
+
+        let entityManager = EntityManager(databaseContext: databaseCnx)
+        let contactStoreMock = ContactStoreMock(callOnCompletion: false)
+        
+        let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID.string)\(expectedMessageID)")
+        pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
+            "from": expectedSenderID.string,
+            "messageId": expectedMessageID,
+            "voip": false,
+            "cmd": expectedCmd,
+        ])
+        
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            entityManager,
+            TaskManagerMock(),
+            false
+        )
+
+        let userNotificationManager = UserNotificationManager(
+            settingsStoreMock,
+            userSettingsMock,
+            MyIdentityStoreMock(),
+            pushSettingManager,
+            contactStoreMock,
+            GroupManagerMock(),
+            entityManager,
+            false
+        )
+        let result = userNotificationManager.userNotificationContent(pendingUserNotification)
+
+        XCTAssertEqual(result?.messageID, expectedMessageID)
+        XCTAssertEqual(result?.senderID, expectedSenderID.string)
+        XCTAssertEqual(result?.fromName, expectedFromName)
+        XCTAssertEqual(result?.title, expectedTitle)
+        XCTAssertEqual(result?.body, expectedBody)
+        XCTAssertEqual(result?.attachmentName, expectedAttachmentName)
+        XCTAssertEqual(result?.attachmentURL, expectedAttachmentURL)
+        XCTAssertEqual(result?.cmd, expectedCmd)
+        XCTAssertEqual(result?.categoryIdentifier, expectedCategoryIdentifier)
+        XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
+        XCTAssertEqual(result?.groupID, expectedGroupID)
+        
+        var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+        XCTAssertEqual(pushSetting?.identity, expectedSenderID)
+        XCTAssertEqual(pushSetting?.type, .on)
+    }
 
     func testUserNotificationContentBaseMessageFlags() throws {
         let testsFlags: [Int: Bool] = [

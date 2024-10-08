@@ -114,7 +114,7 @@ public class ThreemaEnvironment: NSObject {
     
     // MARK: Distribution list
     
-    @objc static var distributionListsActive: Bool {
+    @objc public static var distributionListsActive: Bool {
         if ProcessInfoHelper.isRunningForScreenshots {
             return false
         }
@@ -134,7 +134,29 @@ public class ThreemaEnvironment: NSObject {
  
         return true
     }
-
+    
+    // MARK: Multi-device
+    
+    public static var allowMultipleLinkedDevices: Bool {
+        guard !ProcessInfoHelper.isRunningForScreenshots else {
+            return false
+        }
+        
+        guard ThreemaEnvironment.env() != .xcode else {
+            let businessInjector = BusinessInjector()
+            return businessInjector.userSettings.allowSeveralLinkedDevices
+        }
+        
+        // Don't enable it for any public version
+        switch ThreemaApp.current {
+        case .threema, .work, .onPrem:
+            return false
+        case .green, .blue:
+            let businessInjector = BusinessInjector()
+            return businessInjector.userSettings.allowSeveralLinkedDevices
+        }
+    }
+    
     // MARK: CallKit
     
     @objc public static func supportsCallKit() -> Bool {

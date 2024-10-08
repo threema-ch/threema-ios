@@ -46,7 +46,7 @@ final class TaskDefinitionMdmParameterSync: TaskDefinition, TaskDefinitionTransa
     }
 
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     var scope: D2d_TransactionScope.Scope {
@@ -58,7 +58,7 @@ final class TaskDefinitionMdmParameterSync: TaskDefinition, TaskDefinitionTransa
     init(mdmParameters: Sync_MdmParameters) {
         self.mdmParameters = mdmParameters
 
-        super.init(isPersistent: false)
+        super.init(type: .volatile)
     }
 
     required init(from decoder: Decoder) throws {

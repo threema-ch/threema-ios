@@ -195,12 +195,6 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
   /// [`contact-request-profile-picture`](ref:e2e.contact-request-profile-picture)
   case contactRequestProfilePicture // = 26
 
-  /// `csp-e2e.GroupJoinRequest`
-  case groupJoinRequest // = 77
-
-  /// `csp-e2e.GroupJoinResponse`
-  case groupJoinResponse // = 78
-
   /// [`group-setup`](ref:e2e.group-setup) wrapped by
   /// [`group-creator-container`](ref:e2e.group-creator-container)
   case groupSetup // = 74
@@ -307,8 +301,6 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
     case 74: self = .groupSetup
     case 75: self = .groupName
     case 76: self = .groupLeave
-    case 77: self = .groupJoinRequest
-    case 78: self = .groupJoinResponse
     case 79: self = .groupCallStart
     case 80: self = .groupSetProfilePicture
     case 81: self = .groupSyncRequest
@@ -357,8 +349,6 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
     case .groupSetup: return 74
     case .groupName: return 75
     case .groupLeave: return 76
-    case .groupJoinRequest: return 77
-    case .groupJoinResponse: return 78
     case .groupCallStart: return 79
     case .groupSetProfilePicture: return 80
     case .groupSyncRequest: return 81
@@ -413,8 +403,6 @@ extension Common_CspE2eMessageType: CaseIterable {
     .contactSetProfilePicture,
     .contactDeleteProfilePicture,
     .contactRequestProfilePicture,
-    .groupJoinRequest,
-    .groupJoinResponse,
     .groupSetup,
     .groupName,
     .groupLeave,
@@ -740,8 +728,6 @@ extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
     74: .same(proto: "GROUP_SETUP"),
     75: .same(proto: "GROUP_NAME"),
     76: .same(proto: "GROUP_LEAVE"),
-    77: .same(proto: "GROUP_JOIN_REQUEST"),
-    78: .same(proto: "GROUP_JOIN_RESPONSE"),
     79: .same(proto: "GROUP_CALL_START"),
     80: .same(proto: "GROUP_SET_PROFILE_PICTURE"),
     81: .same(proto: "GROUP_SYNC_REQUEST"),

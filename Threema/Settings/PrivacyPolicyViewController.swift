@@ -21,7 +21,7 @@
 class PrivacyPolicyViewController: SettingsWebViewViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        url = "https://threema.ch/privacy_policy/"
+        url = ThreemaURLProvider.privacyPolicy.absoluteString
         
         title = BundleUtil.localizedString(forKey: "settings_list_privacy_policy_title")
     }

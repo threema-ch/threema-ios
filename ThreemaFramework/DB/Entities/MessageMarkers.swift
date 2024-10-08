@@ -24,7 +24,7 @@ import Foundation
 
 @objc public class MessageMarkers: NSManagedObject, Identifiable {
     
-    // Properties
+    // Attributes
     @NSManaged @objc(star) public var star: NSNumber
     
     // Relationships

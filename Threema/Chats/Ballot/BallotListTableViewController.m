@@ -174,9 +174,9 @@
         [_entityManager performSyncBlockAndSafe:^{
             Ballot *ballot = [self ballotForIndexPath:indexPath];
             for (BaseMessage *message in ballot.message) {
-                [[_entityManager entityDestroyer] deleteObjectWithObject:message];
+                [[_entityManager entityDestroyer] deleteWithBaseMessage:message];
             }
-            [[_entityManager entityDestroyer] deleteObjectWithObject:ballot];
+            [[_entityManager entityDestroyer] deleteWithBallot:ballot];
         }];
         
         [_conversation updateLastDisplayMessageWith:_entityManager];

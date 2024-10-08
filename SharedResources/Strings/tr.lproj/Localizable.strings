@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Panoya kopyalandı";
 "webrtc_diagnostics.done" = "Tamamlandı. Arama yapmakla ilgili sorunlar yaşıyorsanız, lütfen bu günlüğü Threema desteğine gönderin.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Seç";
 "mwphotobrowser_select_all" = "Hepsini seç";
@@ -338,7 +335,7 @@
 "record_audio" = "Ses kaydet";
 "record_continue" = "Ses Kaydına Devam Et";
 "scan_qr" = "Kare kodu tara";
-"share_file" = "Dosya paylaş";
+"share_file" = "Dosya veya Kişiyi Paylaş";
 "add_item_caption" = "Altyazı ekle";
 "add_items_caption" = "Altyazı ekle";
 "send_item_immediately_photo" = "Resim gönder";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Work kişisi";
 "threema_type_icon_private_accessibility_label" = "Özel kişi";
 
-"delete_contact_group_exists_title" = "Kişi silinemiyor";
-"delete_contact_group_exists_message_single" = "“%@“ hala bir grubun üyesi. Kişiyi gruptan çıkarın veya grubu silin.";
-"delete_contact_group_exists_message_multiple" = "“%@“ hala %d grubun üyesi. Kişiyi gruplardan çıkarın veya grupları silin.";
-"delete_contact_group_exists_show_contact_button" = "Kişiyi göster";
 "delete_contact_existing_conversation_title" = "%@ silinsin mi?";
+"delete_contact_existing_conversation_is_group_member_title" = "\"%@\" içeren bireysel sohbet silinecek, ancak grupların bir üyesi olarak kalacaktır. \"%@\" silinsin mi?";
 "delete_contact_existing_conversation_button" = "Kişiyi + sohbet geçmişini sil";
+"delete_contact_is_group_member_title" = "\"%@\" grupların bir üyesi olarak kalacaktır. \"%@\" silinsin mi?";
 "delete_contact_confirmation_with_exclusion_message" = "“%@“ silinsin ve kişi eşitlemeden çıkarılsın mı?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "\"%@\" grupların bir üyesi olarak kalacaktır. \"%@\" silinsin ve senkronizasyondan çıkarılsın mı?";
 "delete_contact_button" = "Kişiyi sil";
 "delete_contact_confirmation_with_exclusion_button" = "Sil + kişiyi hariç tut";
 "exclude_deleted_id_title" = "“%@“ Threema kimliği eşitlemeden çıkarılsın mı?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "%@ için yeni misiniz?";
 "restore_id_export" = "Dışa aktarılan kimliği geri yükle";
 "id_exists" = "Bu cihazda daha önce kullanılan Threema kimliği (%@) hala mevcut. Bu kimliği geri yüklemek ister misiniz?";
+
+"contact_support" = "Destek Ekibiyle İletişime Geç";
+"contact_support_mail_subject" = "Bu satın alma işlemi için çok fazla kimlik oluşturuldu";
+"contact_support_mail_message" = "Sevgili %@ ekibi,\n\nYeni bir Threema kimliği oluşturmak başarısız oluyor ve bu hata kodunu veriyor:\n%@\n\nSaygılarımla,";
 
 "welcome" = "%@ hoşgeldiniz";
 "move_your_finger" = "Yeni bir Threema kimliği oluşturmak için parmağınızı ekranda hareket ettirin.";
@@ -712,6 +712,8 @@
 "current_position" = "durum";
 "in_reply_to" = "cevap olarak";
 "draft" = "Taslak";
+"draft_type_quote" = "Alıntıla";
+"draft_type_edit" = "Düzenle";
 "new_message_accessibility" = "Yeni mesaj:";
 "quote_interaction_hint" = "Alıntılanan mesaja geçer";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Threema kanalı kişilerinize eklensin mi?";
 "threema_channel_info" = "Threema kanalı size uygulama hakkında güncel haberleri ve bilgileri sağlar.";
 "threema_channel_failed" = "Threema kanalı eklenemiyor.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Threema Work Kanalı kişilerinize eklensin mi?";
+"threema_work_channel_info" = "Threema Work Kanalı, Threema Work ile ilgili her konuda size bilgi sağlar.";
+"threema_work_channel_failed" = "Threema Work Kanalı eklenemedi.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Cevap ver";
@@ -1074,7 +1082,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "restore_option_id" = "Yalnızca kimliğinizi geri yükleyin";
 "restore_option_id_keep_data" = "Dışa aktarılan Threema kimliğinizi geri yükleyin ve bu cihazda depolanan verileri (sohbetler, kişiler, gruplar vb.) saklayın";
 "backup_faq_link_text" = "%@ için yedekler hakkında daha fazla bilgi edinin";
-"forgot_password_link_text" = "Şifrenizi mi unuttunuz?";
+"restore_option_help_link_text" = "Yardım";
 
 "restore_option_data_description" = "Bu cihazda %@ verileri (sohbetler, kişiler, gruplar vb.) var.";
 "restore_option_data_keep_data" = "Yerel Verileri Sakla";
@@ -1119,6 +1127,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 
 "settings_list_invite_a_friend_title" = "Arkadaşını davet et";
 "settings_list_threema_channel_title" = "Threema Kanalı";
+"settings_list_threema_work_channel_title" = "Threema Work Kanalı";
 
 "settings_list_rate" = "Oran %@";
 
@@ -1253,7 +1262,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "delete_messages_confirm" = "%@ eski tüm mesajları kalıcı olarak silmek istiyor musunuz?";
 "delete_messages_confirm_all" = "Tüm mesajları kalıcı olarak silmek istiyor musunuz?";
 "delete_messages_explain" = "Her türlü mesaj silinecektir: metin ve sesli mesajlar, medya, dosyalar, anketler, vb.";
-"automatic_delete_explain" = "Disk alanını boşaltmak için mesajların ve medyanın otomatik olarak silinmesini kullanın. Açık anketler ve not grupları otomatik silme işleminin dışında tutulur.";
+"automatic_delete_explain" = "Disk alanını boşaltmak için mesajların ve medyanın otomatik olarak silinmesini kullan. Açık anketler, yıldızlı mesajlar ve not gruplarının içeriği otomatik silme işleminin dışında tutulur.";
 "automatic_delete_on_confirmation_title" = "Otomatik silme açılsın mı?";
 "automatic_delete_off_confirmation_title" = "Otomatik silme kapatılsın mı?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1480,6 +1489,16 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "could_not_add_all_items_memory_constrained_title" = "Lütfen uygulamayı kullanın";
 "could_not_add_all_items_memory_constrained_message" = "Teknik nedenlerle, belirli bir boyutun üzerindeki dosyalar yalnızca uygulamadan gönderilebilir.";
 "image_preview_cell_cannot_preview" = "Önizleme görüntülenemiyor.";
+
+// Profile Synchronization
+"sync_error_title" = "Profil Senkronizasyonu Başarısız";
+"sync_error_general_message" = "Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.";
+"sync_error_same_transaction_error" = "Profil zaten başka bir cihazda senkronize ediliyor. Lütfen senkronizasyon tamamlanana kadar bekleyin. Bu cihazdaki değişiklikler göz ardı edilecektir.";
+
+"syncing_profile" = "Eşitleniyor...";
+
+"incoming_profile_sync_title" = "Profil Eşitlendi";
+"incoming_profile_sync_message" = "Başka bir cihazdan profil değişiklikleri uygulandı";
 
 // Share Extension
 "finished_sending_title" = "Gönderme tamamlandı";
@@ -1740,6 +1759,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "notification_deleted_messages_count" = "%d Mesaj Silindi";
 
 "notification_cannot_play_video" = "Video Oynatılamıyor";
+"notification_recording_too_long" = "Kayıt Maksimum Uzunluğu Aştı";
 
 "notification_call_failed_connected" = "Bağlantı Koptu";
 "notification_call_failed_not_connected" = "Bağlantı Kurulamadı";

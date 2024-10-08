@@ -30,8 +30,9 @@
 #import "SlaveScrollView.h"
 #import "ScrollViewContent.h"
 #import "PopoverView.h"
-#import "AvatarMaker.h"
 #import "BundleUtil.h"
+#import "UserSettings.h"
+#import "ThreemaFramework.h"
 
 #define DEGREES_TO_RADIANS(x) (M_PI * (x) / 180.0)
 
@@ -280,7 +281,7 @@
     _notVotedView.editable = false;
     
     // Only show non-voters if there are any and DisplayMode is not Summary
-    if(([_ballot.nonVoters count] != 0 || !_ballot.localIdentityDidVote) && _ballot.ballotDisplayMode != BallotDisplayModeSummary)  {
+    if (([_ballot.nonVoters count] != 0 || !_ballot.localIdentityDidVote) && _ballot.ballotDisplayMode != BallotDisplayModeSummary) {
      [self addSubview:_notVotedView];
     }
     
@@ -353,17 +354,32 @@
             [contactView addSubview: contactLabel];
         }
         
-        UIImage *avatar = _participantAvatars[i];
-        UIImageView *contactAvatar = [[UIImageView alloc] initWithImage:avatar];
+        ProfilePictureImageView *profilePictureView = [ProfilePictureImageView new];
         CGRect avatarRect = CGRectMake(i*GRID_WIDTH, yOffsetAvatar, CONTACT_AVATAR_SIZE, CONTACT_AVATAR_SIZE);
         avatarRect = CGRectInset(avatarRect, CONTACT_AVATAR_PADDING, CONTACT_AVATAR_PADDING);
-        contactAvatar.frame = avatarRect;
-        contactAvatar.tag = i;
-        [contactView addSubview: contactAvatar];
-
+        profilePictureView.frame = avatarRect;
+        profilePictureView.tag = i;
+        [contactView addSubview: profilePictureView];
+        
         UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-        [contactAvatar addGestureRecognizer:tapGesture];
-        contactAvatar.userInteractionEnabled = YES;
+        [profilePictureView addGestureRecognizer:tapGesture];
+        profilePictureView.userInteractionEnabled = YES;
+        
+        NSString *identity = _participantIds[i];
+        BusinessInjector *businessInjector = [BusinessInjector new];
+        EntityManager *entityManager = businessInjector.entityManager;
+        MyIdentityStore *identityStore = businessInjector.myIdentityStore;
+        
+        [entityManager performBlockAndWait:^{
+            if ([identity isEqualToString:identityStore.identity]) {
+                [profilePictureView setMe];
+            }
+            else {
+                ContactEntity *contactEntity = [[entityManager entityFetcher] contactForId:identity];
+                Contact *contact = [[Contact alloc] initWithContactEntity:contactEntity];
+                [profilePictureView setContactWithContact:contact];
+            }
+        }];
     }
     
     return contactView;
@@ -553,26 +569,16 @@
 - (void)updateParticipants {
     _participantIds = [NSMutableArray array];
     _participantNames = [NSMutableArray array];
-    _participantAvatars = [NSMutableArray array];
 
     if (_ballot.localIdentityDidVote) {
         NSString *myIdentity = [MyIdentityStore sharedMyIdentityStore].identity;
         [_participantIds addObject:myIdentity];
         [_participantNames addObject:[BundleUtil localizedStringForKey:@"me"]];
-        
-        NSMutableDictionary *profilePicture = [[MyIdentityStore sharedMyIdentityStore] profilePicture];
-        UIImage *image = [UIImage imageWithData:profilePicture[@"ProfilePicture"]];
-        if (image) {
-            [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] maskedProfilePicture:image size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING]];
-        } else {
-            [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContactEntity:nil size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
-        }
     }
         
     for (ContactEntity *contact in _ballot.voters) {
         [_participantIds addObject:contact.identity];
         [_participantNames addObject:contact.displayName];
-        [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContactEntity:contact size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
     }
 }
 
@@ -657,29 +663,14 @@
             
             CGPoint point = [self convertPoint:label.bounds.origin fromView:label];
             _popoverView = [PopoverView showPopoverAtPoint:point inView:self withTitle:nil withText:label.text delegate:self];
-        } else if ([sender.view isKindOfClass:[UIImageView class]]) {
-            UIImageView *avatarView = (UIImageView *)sender.view;
-            
-            NSInteger index = [self indexForAvatarImage:avatarView.image];
-            if (index >= 0) {
-                CGPoint point = [self convertPoint:avatarView.bounds.origin fromView:avatarView];
-                point.x += avatarView.bounds.size.width/2.0;
-                NSString *name = [_participantNames objectAtIndex:avatarView.tag];
-                _popoverView = [PopoverView showPopoverAtPoint:point inView:self withTitle:nil withText:name delegate:self];
-            }
+        } else if ([sender.view isKindOfClass:[ProfilePictureImageView class]]) {
+            ProfilePictureImageView *avatarView = (ProfilePictureImageView *)sender.view;
+            CGPoint point = [self convertPoint:avatarView.bounds.origin fromView:avatarView];
+            point.x += avatarView.bounds.size.width/2.0;
+            NSString *name = [_participantNames objectAtIndex:avatarView.tag];
+            _popoverView = [PopoverView showPopoverAtPoint:point inView:self withTitle:nil withText:name delegate:self];
         }
     }
-}
-
-- (NSInteger)indexForAvatarImage:(UIImage *)image {
-    for (NSInteger i=0; i<[_participantAvatars count]; i++) {
-        UIImage *avatar = [_participantAvatars objectAtIndex:i];
-        if (image == avatar) {
-            return i;
-        }
-    }
-    
-    return -1;
 }
 
 #pragma mark - Popover delegate

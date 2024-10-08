@@ -18,14 +18,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 /// Task definition must be codable to persists task definitions.
 class TaskDefinition: NSObject, Codable, TaskDefinitionProtocol {
-    var className: String { String(describing: type(of: self)) }
+    var className: String { String(describing: Swift.type(of: self)) }
 
-    var isPersistent = true
+    var type: TaskType = .persistent
     var state: TaskExecutionState
+    
+    /// Is this task dropped?
+    ///
+    /// This is similar to a cancel, but used for wording in line with Threema Protocol.
+    ///
+    /// This should only be set internally and only from the default `false` to `true`
+    var isDropped = false {
+        didSet {
+            assert(isDropped, "This should only ever be set to `false`")
+        }
+    }
+    
     var retry: Bool
     var retryCount: Int
     
@@ -35,13 +48,13 @@ class TaskDefinition: NSObject, Codable, TaskDefinitionProtocol {
         case retryCount
     }
     
-    init(isPersistent: Bool) {
-        self.isPersistent = isPersistent
+    init(type: TaskType) {
+        self.type = type
         self.state = .pending
         self.retry = true
         self.retryCount = 0
     }
-    
+
     func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

@@ -59,6 +59,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             }
 
         do {
+            try taskDefinition.checkDropping()
             blobsEncrypted = try encrypt(blobs: blobs)
         }
         catch {
@@ -70,6 +71,8 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
         }
         
         return firstly {
+            try taskDefinition.checkDropping()
+            
             let encryptedBlobsForUploading: [BlobUpload] = blobsEncrypted
                 .filter { $0.blobEncrypted != nil }
                 .map { ($0.uploadID, $0.blobEncrypted!) }
@@ -211,7 +214,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
         return reflectResults
     }
     
-    override func shouldSkip() throws -> Bool {
+    override func shouldDrop() throws -> Bool {
         guard let task = taskDefinition as? TaskDefinitionUpdateContactSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
         }
@@ -259,7 +262,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             ) || !sContact.hasIdentityType
             let sameAcquaintanceLevel = (
                 sContact.hasAcquaintanceLevel && sContact
-                    .acquaintanceLevel == (contact.isContactHidden ? .group : .direct)
+                    .acquaintanceLevel == (contact.isContactHidden ? .groupOrDeleted : .direct)
             ) || !sContact.hasAcquaintanceLevel
 
             let sameFirstname = (sContact.hasFirstName && sContact.firstName == contact.firstName ?? "") || !sContact

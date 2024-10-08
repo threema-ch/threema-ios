@@ -33,17 +33,23 @@ extension VoiceMessageRecorderView {
         @Published var samples: [Float] = []
         @Published var duration: TimeInterval = .zero
         @Published var configuration: Waveform.Configuration = .init(
-            style: .striped(.init(color: .gray, width: 2, spacing: 1)),
-            damping: .init(percentage: 0.0)
+            style: .striped(
+                .init(
+                    color: .gray,
+                    width: 2,
+                    spacing: 3
+                )
+            ),
+            damping: .init(percentage: 0.1)
         )
         
-        var voiceMessageManager: VoiceMessageAudioRecorder
+        var voiceMessageManager: VoiceMessageRecorderActor
         let shouldDrawSilence: Bool
         
         private let conversation: Conversation
         
         convenience init(conversation: Conversation, audioFile: URL? = nil) {
-            let voiceMessageManager = VoiceMessageAudioRecorder()
+            let voiceMessageManager = VoiceMessageRecorderActor()
             self.init(
                 recordingState: .none,
                 shouldDrawSilence: false,
@@ -71,7 +77,7 @@ extension VoiceMessageRecorderView {
             recordingState: RecordingState,
             shouldDrawSilence: Bool,
             conversation: Conversation,
-            voiceMessageManager: VoiceMessageAudioRecorder
+            voiceMessageManager: VoiceMessageRecorderActor
         ) {
             self.recordingState = recordingState
             self.shouldDrawSilence = shouldDrawSilence
@@ -82,31 +88,41 @@ extension VoiceMessageRecorderView {
         // MARK: - Recorder
         
         func record() {
-            Task { await voiceMessageManager.record() }
+            Task(priority: .userInitiated) { await voiceMessageManager.record() }
         }
         
         func stop() {
-            Task { await voiceMessageManager.stop() }
+            Task(priority: .userInitiated) { await voiceMessageManager.stop() }
         }
    
         func send() {
-            Task {
+            Task(priority: .userInitiated) {
                 await voiceMessageManager.sendFile(for: conversation)
+            }
+        }
+        
+        func willDismissView() {
+            Task(priority: .userInitiated) {
+                await voiceMessageManager.willDismissView()
             }
         }
         
         // MARK: - Player
 
         func seek(to progress: Double) {
-            voiceMessageManager.playbackDidSeekTo(progress: progress)
+            Task(priority: .userInitiated) {
+                await voiceMessageManager.playbackDidSeekTo(progress: progress)
+            }
         }
         
         func play() {
-            if recordingState == .playing {
-                voiceMessageManager.pause()
-            }
-            else {
-                voiceMessageManager.play()
+            Task(priority: .userInitiated) {
+                if recordingState == .playing {
+                    await voiceMessageManager.pause()
+                }
+                else {
+                    await voiceMessageManager.play()
+                }
             }
         }
         
@@ -132,22 +148,30 @@ extension VoiceMessageRecorderView {
 // MARK: - VoiceMessageRecorderView.Model + VoiceMessageAudioRecorderDelegate
 
 extension VoiceMessageRecorderView.Model: VoiceMessageAudioRecorderDelegate {
-    func didUpdatePlayProgress(with recorder: VoiceMessageAudioRecorder, _ progress: Double) {
-        duration = recorder.tmpAudioDuration * progress
+    @MainActor func didUpdatePlayProgress(duration: Double) {
+        self.duration = duration
     }
     
-    func didUpdateRecordProgress(with recorder: VoiceMessageAudioRecorder, _ progress: Double) {
-        duration = VoiceMessageAudioRecorder.Configuration.recordDuration.max * progress
+    @MainActor func didUpdateRecordProgress(lastAveragePower: Float, _ progress: Double) {
+        duration = VoiceMessageRecorderActor.Configuration.recordDuration.max * progress
         if recordingState.isRecording {
-            samples.append(1 - pow(10, recorder.lastAveragePower / 30))
+            let value = max(0.5, min(1, lastAveragePower))
+            samples.append(value)
+            samples.append(value)
+            samples.append(value)
         }
     }
     
-    func playerDidFinish() {
+    @MainActor func playerDidFinish() {
         recordingState = .paused
     }
     
-    func handleError(_ error: some LocalizedError) {
+    func handleError(_ error: any Error) {
+        
+        if let error = error as? BlobManagerError, error == .noteGroupNeedsNoSync {
+            return
+        }
+        
         DDLogError("[Voice Recorder] Error during recording: \(error)")
         DispatchQueue.main.async {
             guard let error = error as? VoiceMessageError else {

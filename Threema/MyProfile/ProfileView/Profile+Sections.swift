@@ -104,33 +104,29 @@ extension ProfileView {
         
         var body: some View {
             Section {
-                ModalNavigationLink {
+                ModalNavigationLink(destination: {
                     viewController(
                         model.linkMobileNoPending
                             ? "enterCodeViewController"
                             : "linkMobileNoViewController"
                     )
                     .wrappedModalNavigationView
-                } label: {
+                }, label: {
                     ListItem(
                         title: "profile_linked_phone".localized,
                         subTitle: model.linkedMobile
                     )
-                } onDismiss: {
-                    model.load()
-                }
+                }, onDismiss: model.load, fullscreen: true)
                 
-                ModalNavigationLink {
+                ModalNavigationLink(destination: {
                     viewController("linkEmailViewController")
                         .wrappedModalNavigationView
-                } label: {
+                }, label: {
                     ListItem(
                         title: "profile_linked_email".localized,
                         subTitle: model.linkedEmail
                     )
-                } onDismiss: {
-                    model.load()
-                }
+                }, onDismiss: model.load, fullscreen: true)
             } footer: {
                 Text(String(format: "myprofile_link_email_phone_footer".localized, ThreemaApp.appName))
             }

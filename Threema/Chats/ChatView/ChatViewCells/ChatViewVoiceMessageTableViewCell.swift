@@ -500,6 +500,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         
         Task {
             await BlobManager.shared.autoSyncBlobs(for: objectID)
+            waveformView.render(message)
         }
     }
     

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -62,18 +63,53 @@ class MediatorMessageProcessorTests: XCTestCase {
             )!
 
         var type = UInt8()
-        let result = mmp?.process(message: messageServerHello, messageType: &type, receivedAfterInitialQueueSend: false)
+        let result = mmp?.process(
+            message: messageServerHello,
+            messageType: &type,
+            receivedAfterInitialQueueSend: false,
+            maxDeviceSlots: nil
+        )
         
         XCTAssertNotNil(result)
         XCTAssertEqual(0x11, result?[0])
         XCTAssertEqual(type, MediatorMessageProtocol.MediatorMessageType.serverHello.rawValue)
     }
 
+    func testMaxDeviceSlots() throws {
+        var serverInfo = D2m_ServerInfo()
+        serverInfo.maxDeviceSlots = 3
+        
+        var messageServerInfo = Data(BytesUtility.padding(
+            [MediatorMessageProtocol.MediatorMessageType.serverInfo.rawValue],
+            pad: 0x00,
+            length: 4 // MediatorMessageProtocol.MEDIATOR_COMMON_HEADER_LENGTH
+        ))
+        try messageServerInfo.append(serverInfo.serializedData())
+        
+        var type = UInt8()
+        var maxDeviceSlots = NSNumber()
+        let result = mmp?.process(
+            message: messageServerInfo,
+            messageType: &type,
+            receivedAfterInitialQueueSend: false,
+            maxDeviceSlots: &maxDeviceSlots
+        )
+        
+        XCTAssertNil(result)
+        XCTAssertEqual(type, MediatorMessageProtocol.MediatorMessageType.serverInfo.rawValue)
+        XCTAssertEqual(maxDeviceSlots, 3)
+    }
+    
     func testProcessUndefinedType() {
         let message = Data([0x01])
         
         var type = UInt8()
-        let result = mmp?.process(message: message, messageType: &type, receivedAfterInitialQueueSend: false)
+        let result = mmp?.process(
+            message: message,
+            messageType: &type,
+            receivedAfterInitialQueueSend: false,
+            maxDeviceSlots: nil
+        )
 
         XCTAssertNil(result)
     }
@@ -102,7 +138,12 @@ class MediatorMessageProcessorTests: XCTestCase {
         }
 
         var type = UInt8()
-        let result = mmp?.process(message: message, messageType: &type, receivedAfterInitialQueueSend: false)
+        let result = mmp?.process(
+            message: message,
+            messageType: &type,
+            receivedAfterInitialQueueSend: false,
+            maxDeviceSlots: nil
+        )
 
         wait(for: [expec], timeout: 3)
 
@@ -117,7 +158,12 @@ class MediatorMessageProcessorTests: XCTestCase {
             )!
 
         var type = UInt8()
-        let result = mmp?.process(message: messageReflected, messageType: &type, receivedAfterInitialQueueSend: false)
+        let result = mmp?.process(
+            message: messageReflected,
+            messageType: &type,
+            receivedAfterInitialQueueSend: false,
+            maxDeviceSlots: nil
+        )
 
         XCTAssertNil(result)
         XCTAssertEqual(type, MediatorMessageProtocol.MediatorMessageType.reflected.rawValue)
@@ -178,7 +224,7 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
         // no-op
     }
 
-    func taskQueueEmpty(_ queueTypeName: String) { }
+    func taskQueueEmpty() { }
     
     func chatQueueDry() { }
     

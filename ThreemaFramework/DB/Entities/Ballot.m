@@ -37,7 +37,6 @@ static NSString *fieldDisplayMode = @"displayMode";
 @dynamic modifyDate;
 @dynamic state;
 @dynamic type;
-@dynamic unreadUpdateCount;
 @dynamic choices;
 @dynamic conversation;
 @dynamic message;
@@ -107,15 +106,6 @@ static NSArray *orderSortDescriptors;
 
 - (BOOL)canEdit {
     return [self isOwn] && [self isClosed] == NO;
-}
-
-- (void)incrementUnreadUpdateCount {
-    NSInteger currentValue = [self.unreadUpdateCount integerValue];
-    self.unreadUpdateCount = [NSNumber numberWithInteger: currentValue++];
-}
-
-- (void)resetUnreadUpdateCount {
-    self.unreadUpdateCount = [NSNumber numberWithInteger: 0];
 }
 
 - (NSSet *)conversationParticipants {

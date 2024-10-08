@@ -179,11 +179,10 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
-            var photos: [Any] = []
-            
+            var items: [(Int, Any)] = []
             let sema = DispatchSemaphore(value: 0)
             
-            for result in results {
+            for (index, result) in results.enumerated() {
                 // Looping live photos have three type identifiers, but in iOS 15.5. only the movie identifier can be
                 // loaded.
                 if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
@@ -195,9 +194,10 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
                     result.itemProvider
                         .loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
                             defer { sema.signal() }
-                            photos.append(self.loadVideo(from: url))
-                            if error != nil {
-                                DDLogError("Could not load item \(error!)")
+                            let item = self.loadVideo(from: url)
+                            items.append((index, item))
+                            if let error {
+                                DDLogError("Could not load item \(error)")
                             }
                         }
                 }
@@ -207,7 +207,8 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
                         forTypeIdentifier: UTType.image.identifier,
                         completionHandler: { url, error in
                             defer { sema.signal() }
-                            photos.append(self.loadImage(from: url))
+                            let item = self.loadImage(from: url)
+                            items.append((index, item))
                             if error != nil {
                                 DDLogError("Could not load item \(error!)")
                             }
@@ -220,7 +221,8 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
                         forTypeIdentifier: UTType.rawImage.identifier,
                         completionHandler: { url, error in
                             defer { sema.signal() }
-                            photos.append(self.loadImage(from: url))
+                            let item = self.loadImage(from: url)
+                            items.append((index, item))
                             if error != nil {
                                 DDLogError("Could not load item \(error!)")
                             }
@@ -236,9 +238,18 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
             for _ in results {
                 sema.wait()
             }
+            
+            let sortedItems = items.sorted {
+                $0.0 < $1.0
+            }
+            
+            let onlyItems: [Any] = sortedItems.map { _, item in
+                item
+            }
+            
             DispatchQueue.main.async {
                 hud?.hide(animated: true)
-                self.completion(photos, nil)
+                self.completion(onlyItems, nil)
             }
         }
     }

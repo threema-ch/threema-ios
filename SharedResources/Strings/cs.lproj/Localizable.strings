@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Zkopírováno do schránky.";
 "webrtc_diagnostics.done" = "Hotovo. Vyskytnou-li se problémy s navázáním hovoru, pošlete tento výstup podpoře Threema.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Vyberte";
 "mwphotobrowser_select_all" = "Vybrat vše";
@@ -338,7 +335,7 @@
 "record_audio" = "Nahrát zvuk";
 "record_continue" = "Pokračovat v nahrávání zvuku";
 "scan_qr" = "Naskenovat QR kód";
-"share_file" = "Sdílet soubor";
+"share_file" = "Sdílet soubor nebo kontakt";
 "add_item_caption" = "Přidat titulek";
 "add_items_caption" = "Přidat titulky";
 "send_item_immediately_photo" = "Poslat fotku";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Pracovní kontakt";
 "threema_type_icon_private_accessibility_label" = "Soukromý kontakt";
 
-"delete_contact_group_exists_title" = "Kontakt je stále ve skupinovém chatu";
-"delete_contact_group_exists_message_single" = "„%@“ je stále členem skupiny. Odeberte kontakt ze skupiny nebo skupinu smažte.";
-"delete_contact_group_exists_message_multiple" = "„%@“ je stále členem %d skupin. Odeberte kontakt ze skupin nebo skupiny smažte.";
-"delete_contact_group_exists_show_contact_button" = "Zobrazit kontakt";
 "delete_contact_existing_conversation_title" = "Smazat „%@“?";
+"delete_contact_existing_conversation_is_group_member_title" = "Individuální chat s kontaktem „%@“ bude smazán, zůstane však členem skupin. Chcete smazat kontakt „%@“?";
 "delete_contact_existing_conversation_button" = "Smazat kontakt + historii chatu";
+"delete_contact_is_group_member_title" = "„%@“ zůstane členem skupin. Chcete smazat kontakt „%@“?";
 "delete_contact_confirmation_with_exclusion_message" = "Smazat „%@“ a vyřadit kontakt ze synchronizace?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "„%@“ zůstane členem skupin. Chcete smazat kontakt „%@“ a vyřadit ho ze synchronizace?";
 "delete_contact_button" = "Smazat kontakt";
 "delete_contact_confirmation_with_exclusion_button" = "Smazat + vyřadit kontakt";
 "exclude_deleted_id_title" = "Vyřadit Threema ID „%@“ ze synchronizace?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "Jste v %@ poprvé?";
 "restore_id_export" = "Obnovit exportované ID";
 "id_exists" = "Stále je přítomno Threema ID, které bylo na tomto zařízení dříve používáno (%@). Chcete toto ID obnovit?";
+
+"contact_support" = "Kontaktovat podporu";
+"contact_support_mail_subject" = "Pro tento nákup bylo vytvořeno příliš mnoho ID";
+"contact_support_mail_message" = "Vážený týme %@,\n\nvytvoření nového Threema ID se nezdařilo a vrátilo tento kód chyby:\n%@\n\nS pozdravem";
 
 "welcome" = "Vítá vás %@";
 "move_your_finger" = "Pohybujte prstem po obrazovce.";
@@ -712,6 +712,8 @@
 "current_position" = "pozice";
 "in_reply_to" = "v odpovědi na";
 "draft" = "Koncept";
+"draft_type_quote" = "Citace";
+"draft_type_edit" = "Upravit";
 "new_message_accessibility" = "Nová zpráva: ";
 "quote_interaction_hint" = "Přeskočí na citovanou zprávu";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Přidat kanál Threema do kontaktů?";
 "threema_channel_info" = "Kanál Threema poskytuje novinky o všem, co se týká aplikace Threema.";
 "threema_channel_failed" = "Nelze přidat kanál Threema.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Přidat kanál Threema Work mezi vaše kontakty?";
+"threema_work_channel_info" = "Kanál Threema Work poskytuje novinky o všem, co se týká aplikace Threema Work.";
+"threema_work_channel_failed" = "Nelze přidat kanál Threema Work.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Odpovědět";
@@ -1073,7 +1081,7 @@
 "restore_option_id" = "Obnovit pouze ID";
 "restore_option_id_keep_data" = "Obnovit exportované Threema ID a zachovat data (chaty, kontakty, skupiny apod.) uložená na tomto zařízení";
 "backup_faq_link_text" = "Zjistěte více o zálohování v %@";
-"forgot_password_link_text" = "Nepamatujete si heslo?";
+"restore_option_help_link_text" = "Nápověda";
 
 "restore_option_data_description" = "Na tomto zařízení se nacházejí data %@ (chaty, kontakty, skupiny apod.).";
 "restore_option_data_keep_data" = "Ponechat lokální data";
@@ -1118,6 +1126,7 @@
 
 "settings_list_invite_a_friend_title" = "Pozvat přítele";
 "settings_list_threema_channel_title" = "Kanál Threema";
+"settings_list_threema_work_channel_title" = "Kanál Threema Work";
 
 "settings_list_rate" = "Ohodnoťte %@";
 
@@ -1252,7 +1261,7 @@
 "delete_messages_confirm" = "Chcete trvale smazat všechny zprávy starší než %@?";
 "delete_messages_confirm_all" = "Opravdu si přejete trvale smazat všechny zprávy?";
 "delete_messages_explain" = "Zprávy jakéhokoli druhu budou smazány: textové a hlasové zprávy, média, soubory, hlasování atd.";
-"automatic_delete_explain" = "Uvolňujte si místo na disku pomocí automatického mazání zpráv a médií. Otevřená hlasování a skupiny poznámek jsou z automatického mazání vyřazené.";
+"automatic_delete_explain" = "Uvolňujte si místo na disku pomocí automatického mazání zpráv a médií. Otevřená hlasování, zprávy s hvězdičkou a obsah skupin pro poznámky jsou z automatického mazání vyřazené.";
 "automatic_delete_on_confirmation_title" = "Zapnout automatické mazání?";
 "automatic_delete_off_confirmation_title" = "Vypnout automatické mazání?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1479,6 +1488,16 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "could_not_add_all_items_memory_constrained_title" = "Použijte aplikaci";
 "could_not_add_all_items_memory_constrained_message" = "Z technických důvodů mohou být soubory přesahující určitou velikost poslány pouze přes aplikaci.";
 "image_preview_cell_cannot_preview" = "Nelze zobrazit náhled.";
+
+// Profile Synchronization
+"sync_error_title" = "Synchronizace profilu se nezdařila";
+"sync_error_general_message" = "Zkontrolujte své připojení k internetu a zkuste to znovu.";
+"sync_error_same_transaction_error" = "Profil se již synchronizuje na jiném zařízení. Počkejte na dokončení synchronizace. Změny na tomto zařízení se zruší.";
+
+"syncing_profile" = "Synchronizace…";
+
+"incoming_profile_sync_title" = "Profil byl synchronizován";
+"incoming_profile_sync_message" = "Aplikovaly se změny profilu z jiného zařízení";
 
 // Share Extension
 "finished_sending_title" = "Odesílání dokončeno";
@@ -1739,6 +1758,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "notification_deleted_messages_count" = "Smazáno zpráv: %d";
 
 "notification_cannot_play_video" = "Nelze přehrát video";
+"notification_recording_too_long" = "Nahrávání překročilo max. délku záznamu";
 
 "notification_call_failed_connected" = "Ztráta spojení";
 "notification_call_failed_not_connected" = "Navázání spojení se nezdařilo";

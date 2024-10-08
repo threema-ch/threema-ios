@@ -46,7 +46,10 @@ public class EntityManager: NSObject {
         self.myIdentityStore = myIdentityStore
         self.entityCreator = EntityCreator(dbContext.current)
         self.entityFetcher = EntityFetcher(dbContext.current, myIdentityStore: myIdentityStore)
-        self.entityDestroyer = EntityDestroyer(managedObjectContext: dbContext.current)
+        self.entityDestroyer = EntityDestroyer(
+            managedObjectContext: dbContext.current,
+            myIdentityStore: myIdentityStore
+        )
         super.init()
     }
 
@@ -69,7 +72,10 @@ public class EntityManager: NSObject {
         self.myIdentityStore = myIdentityStore
         self.entityCreator = EntityCreator(dbContext.current)
         self.entityFetcher = EntityFetcher(dbContext.current, myIdentityStore: myIdentityStore)
-        self.entityDestroyer = EntityDestroyer(managedObjectContext: dbContext.current)
+        self.entityDestroyer = EntityDestroyer(
+            managedObjectContext: dbContext.current,
+            myIdentityStore: myIdentityStore
+        )
         super.init()
     }
     
@@ -82,7 +88,10 @@ public class EntityManager: NSObject {
         self.myIdentityStore = myIdentityStore
         self.entityCreator = EntityCreator(dbContext.current)
         self.entityFetcher = EntityFetcher(dbContext.current, myIdentityStore: myIdentityStore)
-        self.entityDestroyer = EntityDestroyer(managedObjectContext: dbContext.current)
+        self.entityDestroyer = EntityDestroyer(
+            managedObjectContext: dbContext.current,
+            myIdentityStore: myIdentityStore
+        )
         super.init()
     }
     
@@ -472,24 +481,14 @@ extension EntityManager {
     public func conversation(
         forContact contactEntity: ContactEntity,
         createIfNotExisting: Bool,
-        setLastUpdate: Bool = true
+        setLastUpdate: Bool = true,
+        keepContactHidden: Bool = false
     ) -> Conversation? {
         let conversation = entityFetcher.conversation(forIdentity: contactEntity.identity)
 
         if createIfNotExisting, conversation == nil,
            let conversation = entityCreator.conversation(setLastUpdate) {
             conversation.contact = contactEntity
-
-            if contactEntity.isContactHidden {
-                contactEntity.isContactHidden = false
-
-                let mediatorSyncableContacts = MediatorSyncableContacts()
-                mediatorSyncableContacts.updateAcquaintanceLevel(
-                    identity: contactEntity.identity,
-                    value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
-                )
-                mediatorSyncableContacts.syncAsync()
-            }
 
             if contactEntity.showOtherThreemaTypeIcon {
                 // Add work info as first message
@@ -502,6 +501,19 @@ extension EntityManager {
         else if createIfNotExisting, conversation == nil {
             DDLogError("Create conversation failed")
         }
+        
+        // Check if the contact still needs to be hidden
+        if !keepContactHidden,
+           contactEntity.isContactHidden {
+            contactEntity.isContactHidden = false
+
+            let mediatorSyncableContacts = MediatorSyncableContacts()
+            mediatorSyncableContacts.updateAcquaintanceLevel(
+                identity: contactEntity.identity,
+                value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
+            )
+            mediatorSyncableContacts.syncAsync()
+        }
 
         return conversation
     }
@@ -513,12 +525,18 @@ extension EntityManager {
     public func conversation(
         for identity: String,
         createIfNotExisting: Bool,
-        setLastUpdate: Bool = true
+        setLastUpdate: Bool = true,
+        keepContactHidden: Bool = false
     ) -> Conversation? {
         guard let contact = entityFetcher.contact(for: identity) else {
             return nil
         }
-        return conversation(forContact: contact, createIfNotExisting: createIfNotExisting, setLastUpdate: setLastUpdate)
+        return conversation(
+            forContact: contact,
+            createIfNotExisting: createIfNotExisting,
+            setLastUpdate: setLastUpdate,
+            keepContactHidden: keepContactHidden
+        )
     }
 
     func conversation(forMessage message: AbstractMessage) -> Conversation? {
@@ -1020,7 +1038,7 @@ extension EntityManager {
             }
             else if let history {
                 DDLogWarn("Received edit for unsupported message type")
-                self.entityDestroyer.deleteObject(object: history)
+                self.entityDestroyer.delete(messageHistoryEntryEntity: history)
             }
 
             return message
@@ -1033,15 +1051,30 @@ extension EntityManager {
 
     private func oneToOneConversation(forMessage message: AbstractMessage, fetcher: EntityFetcher) -> Conversation? {
         assert(!(message is AbstractGroupMessage))
+        
+        var conversation: Conversation?
 
         if message.toIdentity != myIdentityStore.identity {
-            return fetcher.conversation(forIdentity: message.toIdentity)
+            conversation = fetcher.conversation(forIdentity: message.toIdentity)
         }
         else if message.fromIdentity != myIdentityStore.identity {
-            return fetcher.conversation(forIdentity: message.fromIdentity)
+            conversation = fetcher.conversation(forIdentity: message.fromIdentity)
         }
 
-        return nil
+        // Check if the contact still needs to be hidden
+        if let contactEntity = conversation?.contact,
+           contactEntity.isContactHidden {
+            contactEntity.isContactHidden = false
+
+            let mediatorSyncableContacts = MediatorSyncableContacts()
+            mediatorSyncableContacts.updateAcquaintanceLevel(
+                identity: contactEntity.identity,
+                value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
+            )
+            mediatorSyncableContacts.syncAsync()
+        }
+        
+        return conversation
     }
 
     private var isMainDBContext: Bool {

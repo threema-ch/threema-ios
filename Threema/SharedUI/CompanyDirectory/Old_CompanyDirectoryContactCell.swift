@@ -23,7 +23,7 @@ import Foundation
 
 class Old_CompanyDirectoryContactCell: UITableViewCell {
     
-    @IBOutlet var avatar: UIImageView!
+    @IBOutlet var profilePictureView: UIImageView!
     @IBOutlet var nameLabel: UILabel!
     @IBOutlet var categoryLabel: UILabel!
     @IBOutlet var identityLabel: UILabel!
@@ -39,10 +39,11 @@ class Old_CompanyDirectoryContactCell: UITableViewCell {
     }
     
     func setupCell() {
-
-        avatar.image = AvatarMaker.shared()
-            .avatar(forFirstName: contact.first, lastName: contact.last, size: avatar.frame.size.width)
-    
+        profilePictureView.image = ProfilePictureGenerator.unknownContactImage
+        profilePictureView.layer.masksToBounds = true
+        profilePictureView.clipsToBounds = true
+        profilePictureView.layer.cornerRadius = profilePictureView.frame.height / 2
+        
         nameLabel.text = contact.fullName()
         categoryLabel.text = contact.categoryWithOrganisationString()
         csiLabel.text = contact.csi

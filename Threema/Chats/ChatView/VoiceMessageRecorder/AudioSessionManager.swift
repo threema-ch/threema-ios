@@ -38,8 +38,8 @@ enum AudioSessionError: Equatable, LocalizedError {
     }
 }
 
-class AudioSessionManager: AudioSessionManagerProtocol {
-    var session = AVAudioSession.sharedInstance()
+final class AudioSessionManager: AudioSessionManagerProtocol {
+    let session = AVAudioSession.sharedInstance()
     var prevAudioSessionCategory: AVAudioSession.Category?
     
     init() {
@@ -54,7 +54,7 @@ class AudioSessionManager: AudioSessionManagerProtocol {
     /// It activates the audio session and sets the category to `.playAndRecord` with the mode set to `.default`.
     /// It also allows Bluetooth options for the audio session.
     /// - Returns: A `Result` indicating success or an `AudioSessionError`.
-    func setupForRecording() -> Result<Void, AudioSessionError> {
+    @discardableResult func setupForRecording() -> Result<Void, AudioSessionError> {
         do {
             try session.setActive(true)
             try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.allowBluetooth, .allowBluetoothA2DP])
@@ -74,7 +74,7 @@ class AudioSessionManager: AudioSessionManagerProtocol {
     /// Sets up the audio session for playback.
     /// It activates the audio session and sets the category to `.playback` with the mode set to `.spokenAudio`.
     /// - Returns: A `Result` indicating success or an `AudioSessionError`.
-    func setupAudioSessionForPlayback() -> Result<Void, AudioSessionError> {
+    @discardableResult func setupAudioSessionForPlayback() -> Result<Void, AudioSessionError> {
         do {
             try session.setCategory(.playback)
             try session.setMode(.spokenAudio)
@@ -93,7 +93,7 @@ class AudioSessionManager: AudioSessionManagerProtocol {
     /// playback.
     /// - Returns: A `Result` indicating whether the audio session was successfully set up or an `AudioSessionError` if
     /// an error occurred.
-    func setupAudioSession(isEarpiece: Bool) -> Result<Void, AudioSessionError> {
+    @discardableResult func setupAudioSession(isEarpiece: Bool) -> Result<Void, AudioSessionError> {
         guard VoIPCallStateManager.shared.currentCallState() == .idle else {
             return .failure(.callStateNotIdle)
         }
@@ -131,6 +131,18 @@ class AudioSessionManager: AudioSessionManagerProtocol {
         prevAudioSessionCategory = nil
     }
     
+    func adaptToProximityState(isPlaying: Bool) {
+        guard let output = session.currentRoute.outputs.first,
+              isPlaying, [.builtInSpeaker, .builtInReceiver].contains(output.portType)
+        else {
+            setupAudioSession(isEarpiece: false)
+            return
+        }
+        Task { @MainActor in
+            setupAudioSession(isEarpiece: UIDevice.current.proximityState)
+        }
+    }
+
     private func printInAndOutputs() {
         session.availableInputs?.forEach {
             DDLogInfo("Play/Record audio: Available input port: \($0.portType)")

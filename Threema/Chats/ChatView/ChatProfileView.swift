@@ -125,24 +125,15 @@ final class ChatProfileView: UIStackView {
     
     // MARK: Views
     
-    /// Avatar of contact or group
-    private let avatarImageView: UIImageView = {
-        let imageView = UIImageView(image: BundleUtil.imageNamed("Unknown"))
-        
-        imageView.contentMode = .scaleAspectFit
-        
-        // 1:1 aspect ratio
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+    /// Profile picture of contact or group
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let imageView = ProfilePictureImageView()
         
         imageView.isAccessibilityElement = false
-        imageView.accessibilityIgnoresInvertColors = true
-        
+
         return imageView
     }()
-    
-    private lazy var otherThreemaTypeImageView = OtherThreemaTypeImageView()
-    
+        
     /// Name of contact or group
     private let nameLabel: UILabel = {
         let label = UILabel()
@@ -271,23 +262,8 @@ final class ChatProfileView: UIStackView {
     // MARK: - Configuration
     
     private func configureView() {
-        if !conversation.isGroup(), conversation.contact?.showOtherThreemaTypeIcon ?? false {
-            // Only add other Threema type icon if we actually want to show it
-            avatarImageView.addSubview(otherThreemaTypeImageView)
-            otherThreemaTypeImageView.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                otherThreemaTypeImageView.widthAnchor.constraint(
-                    equalTo: avatarImageView.widthAnchor,
-                    multiplier: 0.35
-                ),
-                
-                otherThreemaTypeImageView.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
-                otherThreemaTypeImageView.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor),
-            ])
-        }
-        
         // Add arranged subviews
-        addArrangedSubview(avatarImageView)
+        addArrangedSubview(profilePictureView)
         addArrangedSubview(nameAndMembersListStack)
         
         // The verification level is vertically centered in the groupMembersListLabel which is never hidden
@@ -308,7 +284,7 @@ final class ChatProfileView: UIStackView {
         axis = .horizontal
         alignment = .center
         distribution = .fill
-        spacing = ChatViewConfiguration.Profile.avatarAndInfoSpace
+        spacing = ChatViewConfiguration.Profile.profilePictureAndInfoSpace
         
         // The leading and training insets are directly handled when `safeAreaAdjustedNavigationBarWidth` is set
         directionalLayoutMargins = NSDirectionalEdgeInsets(
@@ -353,14 +329,6 @@ final class ChatProfileView: UIStackView {
     private func configureContentObservers() {
         configureNameObserver()
         
-        // Update avatar if setting of which avatar to show changes
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(updateAvatar),
-            name: Notification.Name(kNotificationShowProfilePictureChanged),
-            object: nil
-        )
-        
         if conversation.isGroup() {
             configureGroupChatObservers()
         }
@@ -384,15 +352,8 @@ final class ChatProfileView: UIStackView {
             return
         }
         
-        // No need to call on creation as we already do the update when calling `updateColors`
-        observe(contact, \.imageData, callOnCreation: false) { [weak self] in
-            self?.updateAvatar()
-        }
-        
-        // No need to call on creation as we already do the update when calling `updateColors`
-        observe(contact, \.contactImage, callOnCreation: false) { [weak self] in
-            self?.updateAvatar()
-        }
+        let businessContact = Contact(contactEntity: contact)
+        profilePictureView.info = .contact(businessContact)
         
         observe(contact, \.verificationLevel) { [weak self] in
             self?.verificationLevelImageView.image = self?.conversation.contact?.verificationLevelImageSmall()
@@ -412,11 +373,7 @@ final class ChatProfileView: UIStackView {
             return
         }
         
-        // No need to call on creation as we already do the update when calling `updateColors`
-        observe(group, \.profilePicture, callOnCreation: false) { [weak self] in
-            AvatarMaker.shared().clearCacheForProfilePicture()
-            self?.updateAvatar()
-        }
+        profilePictureView.info = .group(group)
         
         // Observe changes of the member list and the name of each member
         observe(group, \.members) { [weak self] in
@@ -446,7 +403,10 @@ final class ChatProfileView: UIStackView {
         guard let distributionList = conversation.distributionList else {
             return
         }
-        // TODO: (IOS-4366) Add observers move line below into member observer
+        
+        let businessDistributionList = DistributionList(distributionListEntity: distributionList)
+        profilePictureView.info = .distributionList(businessDistributionList)
+        
         updateDistributionListRecipientsLabel()
         
         verificationLevelImageView.isHidden = true
@@ -497,48 +457,8 @@ final class ChatProfileView: UIStackView {
     // MARK: - Update functions
     
     func updateColors() {
-        updateAvatar()
-        
         Colors.setTextColor(Colors.text, label: nameLabel)
         Colors.setTextColor(Colors.textLight, label: membersListLabel)
-    }
-    
-    @objc private func updateAvatar() {
-        guard !conversation.isGroup() else {
-            updateGroupAvatar()
-            return
-        }
-        
-        AvatarMaker.shared().avatar(
-            for: conversation,
-            size: ChatViewConfiguration.Profile.maxAvatarSize,
-            masked: true
-        ) { avatarImage, _ in
-            guard let avatarImage else {
-                // We have a default avatar. No worries.
-                return
-            }
-            
-            Task { @MainActor in
-                self.avatarImageView.image = avatarImage
-            }
-        }
-    }
-    
-    @objc private func updateGroupAvatar() {
-        guard let profilePictureData = group?.profilePicture,
-              let profilePicture = UIImage(data: profilePictureData) else {
-            Task { @MainActor in
-                self.avatarImageView.image = AvatarMaker.shared().unknownGroupImage()
-            }
-            return
-        }
-
-        let maskedProfilePicture = AvatarMaker.maskImage(profilePicture)
-        
-        Task { @MainActor in
-            self.avatarImageView.image = maskedProfilePicture
-        }
     }
     
     private func updateGroupMembersListLabel() {
@@ -621,10 +541,6 @@ final class ChatProfileView: UIStackView {
         get {
             if !conversation.isGroup() {
                 var otherThreemaAccessibilityLabel: String?
-                if let contact = conversation.contact, contact.showOtherThreemaTypeIcon {
-                    otherThreemaAccessibilityLabel = otherThreemaTypeImageView.accessibilityLabel
-                }
-                
                 let accessibilityValue = [
                     conversation.contact?.verificationLevelAccessibilityLabel(),
                     otherThreemaAccessibilityLabel,

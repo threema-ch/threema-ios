@@ -157,7 +157,7 @@
             return [BundleUtil localizedStringForKey:@"group_call_ended_system_message"];
         case kSystemMessageUnsupportedType:
             return [BundleUtil localizedStringForKey:@"systemMessage_unsupported_type"];
-        case kSystemMessageGroupAvatarChanged:
+        case kSystemMessageGroupProfilePictureChanged:
             return [BundleUtil localizedStringForKey:@"system_message_group_avatar_changed"];
         case kFsDebugMessage:
             return [NSString stringWithFormat:@"FS Debug: %@", [self argAsUTF8String]];

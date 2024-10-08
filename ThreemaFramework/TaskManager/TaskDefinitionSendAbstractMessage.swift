@@ -47,7 +47,7 @@ import Foundation
     }
     
     override var description: String {
-        "<\(type(of: self)) \(message.loggingDescription)>"
+        "<\(Swift.type(of: self)) \(message.loggingDescription)>"
     }
 
     let message: AbstractMessage
@@ -67,7 +67,7 @@ import Foundation
         case messageDataMissing
     }
 
-    @objc init(message: AbstractMessage, isPersistent: Bool) {
+    init(message: AbstractMessage, type: TaskType) {
         if !(
             message is BoxBallotVoteMessage || message is GroupBallotVoteMessage ||
                 message is BoxVoIPCallAnswerMessage || message is BoxVoIPCallHangupMessage ||
@@ -90,13 +90,13 @@ import Foundation
         }
         
         self.message = message
-        super.init(isPersistent: isPersistent)
+        super.init(type: type)
     }
-    
+
     @objc convenience init(message: AbstractMessage) {
-        self.init(message: message, isPersistent: true)
+        self.init(message: message, type: .persistent)
     }
-    
+
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 

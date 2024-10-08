@@ -20,7 +20,6 @@
 
 #import "RecentTableDataSource.h"
 #import "ErrorHandler.h"
-#import "Old_PickerContactCell.h"
 #import "Conversation.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "EntityFetcher.h"
@@ -123,8 +122,8 @@
         return cell;
     }
     else {
-        Old_PickerContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Old_PickerContactCell"];
-        cell.contact = conversation.contact;
+        ContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
+        cell._contact = conversation.contact;
         
         return cell;
     }

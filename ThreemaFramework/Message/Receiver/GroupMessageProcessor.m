@@ -180,8 +180,12 @@
         if (error != nil) {
             DDLogError(@"Error syncing group: %@", error.localizedDescription);
         }
-        onCompletion();
     }];
+    
+    // Don't wait for group sync to complete
+    // Otherwise this leads to a task deadlock (IOS-4891). This is due to the fact, that the sync completion handler is
+    // only called after all the needed group sync tasks complete
+    onCompletion();
 }
 
 /**

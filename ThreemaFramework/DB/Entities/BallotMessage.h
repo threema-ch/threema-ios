@@ -26,7 +26,10 @@
 
 @interface BallotMessage : BaseMessage
 
+// Attributes
 @property (nullable, nonatomic, retain) NSNumber *ballotState;
+
+// Relationships
 @property (nullable, nonatomic, retain) Ballot *ballot;
 
 #pragma mark - own definitions & methods

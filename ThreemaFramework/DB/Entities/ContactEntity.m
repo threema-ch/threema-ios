@@ -39,7 +39,6 @@ static NSString *fieldHidden = @"hidden";
 
 @implementation ContactEntity
 
-@dynamic abRecordId;
 @dynamic featureMask;
 @dynamic firstName;
 @dynamic identity;
@@ -64,12 +63,6 @@ static NSString *fieldHidden = @"hidden";
 @dynamic profilePictureBlobID;
 @dynamic forwardSecurityState;
 @dynamic rejectedMessages;
-
-// TODO: This will only be used after IOS-1495 has been merged and database model v30 has been actived.
-//@dynamic abFirstName;
-//@dynamic abLastName;
-//@dynamic importStatus;
-
 
 - (NSString *)displayName {
     NSMutableString *displayName = [ContactUtil nameFromFirstname:self.firstName lastname:self.lastName];
@@ -421,18 +414,6 @@ static NSString *fieldHidden = @"hidden";
 
 - (BOOL)isForwardSecurityAvailable {
     return [self.featureMask integerValue] & FEATURE_MASK_FORWARD_SECURITY;
-}
-
-- (BOOL)isProfilePictureSet {
-    if (self.contactImage != nil && [UserSettings sharedUserSettings].showProfilePictures) {
-        return true;
-    }
-    
-    if (self.imageData != nil) {
-        return true;
-    }
-    
-    return false;
 }
 
 @end

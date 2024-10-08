@@ -58,7 +58,7 @@ enum ContactListAddItem: MenuItem {
         case .groups:
             !(mdm?.disableCreateGroup() ?? false)
         case .distributionLists:
-            ThreemaEnvironment.env() == .xcode
+            ThreemaEnvironment.distributionListsActive
         }
     }
 }

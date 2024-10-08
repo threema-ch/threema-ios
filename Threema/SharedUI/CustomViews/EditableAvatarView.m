@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import <MobileCoreServices/UTCoreTypes.h>
+#import <UniformTypeIdentifiers/UTCoreTypes.h>
 
 #import "EditableAvatarView.h"
 #import "AppDelegate.h"
@@ -27,8 +27,8 @@
 #import "UIImage+Resize.h"
 #import "RectUtil.h"
 #import "BundleUtil.h"
-#import "AvatarMaker.h"
 #import <RSKImageCropper/RSKImageCropViewController.h>
+#import "ThreemaFramework.h"
 
 @interface EditableAvatarView () <UIImagePickerControllerDelegate, UINavigationControllerDelegate, RSKImageCropViewControllerDelegate>
 
@@ -80,11 +80,11 @@
 }
 
 - (void)setupViews {
-    _imageView = [[UIImageView alloc] initWithFrame:self.bounds];
-    [self addSubview:_imageView];
-    _pickImageLabel.userInteractionEnabled = YES;
     
-    CGRect rect = CGRectInset(_imageView.frame, 10.0, 10.0);
+    _profilePictureView = [[ProfilePictureImageView alloc] initWithFrame:self.bounds];
+    [self addSubview:_profilePictureView];
+    
+    CGRect rect = CGRectInset(_profilePictureView.frame, 10.0, 10.0);
     _pickImageLabel = [[UILabel alloc] initWithFrame:rect];
     _pickImageLabel.numberOfLines = 3;
     _pickImageLabel.font = [UIFont systemFontOfSize:15.0];
@@ -95,14 +95,17 @@
     [self addSubview:_pickImageLabel];
     
     UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedImage)];
-    [_imageView addGestureRecognizer:tapRecognizer];
-    _imageView.userInteractionEnabled = YES;
+    [_profilePictureView addGestureRecognizer:tapRecognizer];
+    _profilePictureView.userInteractionEnabled = YES;
     
     UITapGestureRecognizer *tapLabelRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedImage)];
     [_pickImageLabel addGestureRecognizer:tapLabelRecognizer];
     _pickImageLabel.userInteractionEnabled = YES;
-    
-    _imageView.accessibilityIgnoresInvertColors = true;
+    _pickImageLabel.layer.borderWidth = 1;
+    _pickImageLabel.layer.borderColor = Colors.text.CGColor;
+    _pickImageLabel.layer.cornerRadius = rect.size.width/2;
+    _pickImageLabel.layer.masksToBounds = true;
+    _profilePictureView.accessibilityIgnoresInvertColors = true;
     
     self.backgroundColor = [UIColor clearColor];
     
@@ -111,17 +114,20 @@
 
 - (void)updateView {
     if (_currentImageData) {
-        UIImage *image = [UIImage imageWithData:_currentImageData];
-        _imageView.image = [AvatarMaker maskImage: image];
+        UIImage *image = [[UIImage alloc]initWithData:_currentImageData];
+        if (image != nil) {
+            [_profilePictureView setChosenImage:image];
+            _profilePictureView.hidden = NO;
+        }
         _pickImageLabel.hidden = YES;
     } else {
-        _imageView.image = [AvatarMaker avatarWithString:nil size:(_imageView.frame.size.height * [UIScreen mainScreen].scale)];
+        _profilePictureView.hidden = YES;
         _pickImageLabel.hidden = NO;
     }
 }
 
 - (void)updatePlaceholderView {
-    _imageView.userInteractionEnabled = _canDeleteImage || _canChooseImage;
+    _profilePictureView.userInteractionEnabled = _canDeleteImage || _canChooseImage;
     _pickImageLabel.userInteractionEnabled = _canDeleteImage || _canChooseImage;
     _pickImageLabel.textColor = _canDeleteImage || _canChooseImage ? Colors.text : Colors.textPlaceholder;
 }

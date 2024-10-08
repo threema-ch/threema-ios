@@ -65,7 +65,8 @@ class ThreemaWorkViewController: ThemedViewController {
                 "light"
             }
                 
-        let urlString = "https://threema.ch/work_info/?lang=\(lang)&version=\(version)&platform=ios&theme=\(theme)"
+        let urlString = ThreemaURLProvider.workInfo
+            .absoluteString + "/?lang=\(lang)&version=\(version)&platform=ios&theme=\(theme)"
         let threemaWorkURL = URL(string: urlString)!
         
         MBProgressHUD.showAdded(to: view, animated: true)

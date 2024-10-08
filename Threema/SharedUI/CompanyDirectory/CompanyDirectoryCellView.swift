@@ -23,12 +23,12 @@ import Foundation
 class CompanyDirectoryCellView: UIStackView {
     
     private lazy var configuration = CellConfiguration(size: .small)
-    private lazy var companyAvatarView: UIImageView = {
+    private lazy var companyProfilePictureView: UIImageView = {
         let view = UIImageView()
         
         view.translatesAutoresizingMaskIntoConstraints = false
         view.widthAnchor.constraint(equalTo: view.heightAnchor).isActive = true
-        view.heightAnchor.constraint(equalToConstant: configuration.maxAvatarSize).isActive = true
+        view.heightAnchor.constraint(equalToConstant: configuration.maxProfilePictureSize).isActive = true
         return view
     }()
     
@@ -78,7 +78,7 @@ class CompanyDirectoryCellView: UIStackView {
         
         translatesAutoresizingMaskIntoConstraints = false
         
-        addArrangedSubview(companyAvatarView)
+        addArrangedSubview(companyProfilePictureView)
         addArrangedSubview(labelStackView)
         addArrangedSubview(chevronView)
 
@@ -99,9 +99,14 @@ class CompanyDirectoryCellView: UIStackView {
     }
     
     private func configureView() {
-        companyAvatarView.image = AvatarMaker.shared().companyImage()
+        companyProfilePictureView.image = ProfilePictureGenerator.unknownGatewayImage
+        companyProfilePictureView.layer.masksToBounds = true
+        companyProfilePictureView.clipsToBounds = true
+        companyProfilePictureView.layer.cornerRadius = configuration.maxProfilePictureSize / 2
+        
         companyNameLabel.text = MyIdentityStore.shared().companyName
         companyDirectoryDescriptionLabel.text = BundleUtil.localizedString(forKey: "companydirectory_description")
+        
         layoutIfNeeded()
         
         updateColors()
@@ -110,7 +115,6 @@ class CompanyDirectoryCellView: UIStackView {
     @objc public func updateColors() {
         companyNameLabel.textColor = Colors.text
         companyDirectoryDescriptionLabel.textColor = Colors.textLight
-        companyAvatarView.image = AvatarMaker.shared().companyImage()
         tintColor = .primary
     }
     

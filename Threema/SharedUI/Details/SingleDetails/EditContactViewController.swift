@@ -60,8 +60,8 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     
     private let contact: ContactEntity
     
-    private var avatarImageData: Data?
-    private let avatarImageIsEditable: Bool
+    private var profilePictureData: Data?
+    private let profilePictureIsEditable: Bool
     
     private var firstName: String?
     private var lastName: String?
@@ -72,46 +72,36 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
 
     // MARK: Subview
     
-    private lazy var editAvatarView: EditAvatarView = {
-        let initialAvatarImage = AvatarMaker.shared().avatar(
-            for: contact,
-            size: EditAvatarView.avatarImageSize,
-            masked: true
-        )
+    private lazy var editProfilePictureView: EditProfilePictureView = {
         
-        let isDefaultImage = avatarImageData == nil
-        
-        let imageUpdated: EditAvatarView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
+        let businessContact = Contact(contactEntity: self.contact)
+            
+        let imageUpdated: EditProfilePictureView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
             guard let strongSelf = self else {
                 return (nil, true)
             }
-            
+                
             // Store new image data
-            strongSelf.avatarImageData = newImageData
-            
-            // Return default initials avatar if no data is available or readable
+            strongSelf.profilePictureData = newImageData
+                
+            // Return generated profile picture if no data is available or readable
             guard let newImageData,
-                  let newImage = UIImage(data: newImageData) else {
-                
-                let newAvatarImage = AvatarMaker.shared().initialsAvatar(
-                    for: strongSelf.contact,
-                    size: EditAvatarView.avatarImageSize,
-                    masked: true
-                )
-                
-                return (newAvatarImage, true)
+                  let newProfilePictureImage = UIImage(data: newImageData) else {
+                    
+                let newProfilePictureImage = businessContact.generatedProfilePicture()
+                return (newProfilePictureImage, true)
             }
-            
-            // Return new avatar image
-            let newAvatarImage = AvatarMaker.maskImage(newImage)
-            return (newAvatarImage, false)
+                
+            // Return new profile picture
+            return (newProfilePictureImage, false)
         }
-        
-        return EditAvatarView(
+            
+        return EditProfilePictureView(
             in: self,
-            avatarImage: initialAvatarImage,
-            isDefaultImage: isDefaultImage,
-            isEditable: avatarImageIsEditable,
+            profilePicture: businessContact.profilePicture,
+            isDefaultImage: !businessContact.usesNonGeneratedProfilePicture,
+            isEditable: profilePictureIsEditable,
+            conversationType: .contact,
             imageUpdated: imageUpdated
         )
     }()
@@ -125,21 +115,21 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
         
         self.contact = contact
         
-        // Prevent editing of avatar if received profile pictures are shown and we actually received one
+        // Prevent editing of profile picture if received profile pictures are shown and we actually received one
         let showProfilePictures = UserSettings.shared()?.showProfilePictures ?? false
         if contact.isGatewayID() {
-            // Special case for gateway ids as avatar is not editable
-            self.avatarImageIsEditable = false
+            // Special case for gateway ids as profile picture is not editable
+            self.profilePictureIsEditable = false
         }
         else if let contactImageData = contact.contactImage?.data, showProfilePictures {
-            // A received avatar image is not editable
-            self.avatarImageData = contactImageData
-            self.avatarImageIsEditable = false
+            // A received profile picture is not editable
+            self.profilePictureData = contactImageData
+            self.profilePictureIsEditable = false
         }
         else {
-            // The avatar is set by the user, thus it can be changed
-            self.avatarImageData = contact.imageData
-            self.avatarImageIsEditable = true
+            // The profile picture is set by the user, thus it can be changed
+            self.profilePictureData = contact.imageData
+            self.profilePictureIsEditable = true
         }
         
         self.firstName = contact.firstName
@@ -166,7 +156,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        updateEditAvatarFrameHeight()
+        updateEditProfilePictureFrameHeight()
     }
 
     // MARK: - Configuration
@@ -198,7 +188,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     }
     
     private func configureTableView() {
-        tableView.tableHeaderView = editAvatarView
+        tableView.tableHeaderView = editProfilePictureView
         tableView.delegate = self
         
         tableView.keyboardDismissMode = .onDrag
@@ -265,17 +255,17 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
 
     // MARK: - Updates
     
-    private func updateEditAvatarFrameHeight() {
-        let editAvatarViewHeight = editAvatarView.systemLayoutSizeFitting(view.bounds.size).height
+    private func updateEditProfilePictureFrameHeight() {
+        let editProfilePictureFrameHeight = editProfilePictureView.systemLayoutSizeFitting(view.bounds.size).height
         
-        let updateFrameHeight = { self.editAvatarView.frame.size.height = editAvatarViewHeight }
+        let updateFrameHeight = { self.editProfilePictureView.frame.size.height = editProfilePictureFrameHeight }
         
         // Only update if height was 0 before or did change
         // Only animate if previous height was non-zero, otherwise we get unsatisfiable constraints
-        if editAvatarView.frame.height == 0 {
+        if editProfilePictureView.frame.height == 0 {
             updateFrameHeight()
         }
-        else if editAvatarViewHeight != editAvatarView.frame.height {
+        else if editProfilePictureFrameHeight != editProfilePictureView.frame.height {
             // Use table view update to animate height change
             // https://stackoverflow.com/a/32228700/286611
             tableView.performBatchUpdates(updateFrameHeight)
@@ -301,7 +291,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     // MARK: - Notifications
     
     @objc private func contentSizeCategoryDidChange() {
-        updateEditAvatarFrameHeight()
+        updateEditProfilePictureFrameHeight()
     }
     
     @objc private func keyboardWasShown(notification: Notification) {
@@ -329,7 +319,7 @@ extension EditContactViewController {
         // Save the data
         BusinessInjector().contactStore.updateContact(
             withIdentity: contact.identity,
-            avatar: avatarImageData,
+            avatar: profilePictureData,
             firstName: firstName,
             lastName: lastName
         )

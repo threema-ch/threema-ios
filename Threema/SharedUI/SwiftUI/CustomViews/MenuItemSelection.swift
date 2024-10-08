@@ -37,6 +37,8 @@ struct MenuItemSelection<Item: MenuItem>: View {
                         item.icon.image
                         Text("\(item.label)")
                     }
+                }.applyIf(!item.enabled) {
+                    $0.hidden()
                 }
             }
         } label: {

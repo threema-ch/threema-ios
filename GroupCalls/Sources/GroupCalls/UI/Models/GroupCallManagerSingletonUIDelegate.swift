@@ -43,13 +43,11 @@ public protocol GroupCallManagerSingletonUIDelegate: AnyObject {
     ///   - conversationManagedObjectID: The managed object id of the conversation
     ///   - title: Title of the notification
     ///   - body: Body of the notification
-    ///   - contactImage: Image of the group
     ///   - identifier: Identifier to group the notifications
     func newBannerForStartGroupCall(
         conversationManagedObjectID: NSManagedObjectID,
         title: String,
         body: String,
-        contactImage: UIImage,
         identifier: String
     )
 }

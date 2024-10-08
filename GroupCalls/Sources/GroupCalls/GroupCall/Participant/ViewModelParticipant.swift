@@ -25,10 +25,10 @@ import UIKit
 @GlobalGroupCallActor
 protocol ViewModelParticipant: Participant {
     nonisolated var threemaIdentity: ThreemaIdentity { get }
-    var dependencies: Dependencies { get }
+    nonisolated var dependencies: Dependencies { get }
 
     nonisolated var displayName: String { get }
-    nonisolated var avatar: UIImage? { get }
+    nonisolated var profilePicture: UIImage { get }
     nonisolated var idColor: UIColor { get }
 
     var audioMuteState: MuteState { get }

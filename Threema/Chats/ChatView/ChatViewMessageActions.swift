@@ -45,6 +45,10 @@ extension ChatViewMessageActions {
     /// Creates an array of `UIAccessibilityCustomActions`
     /// - Returns: Array of `UIAccessibilityCustomAction`
     func buildAccessibilityCustomActions() -> [UIAccessibilityCustomAction]? {
+        guard isUserInteractionEnabled else {
+            return nil
+        }
+        
         guard let actionsSections = messageActionsSections() else {
             return nil
         }

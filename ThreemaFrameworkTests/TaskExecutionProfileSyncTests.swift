@@ -48,6 +48,10 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                     scope: D2d_TransactionScope.Scope,
                     error: TaskExecutionTransactionError
                 )?,
+                // Should the task report a dropping error?
+                // If `TaskExecutionTransactionError` and `TaskExecutionError` become the same error this could be moved
+                // into `expectedServerTransactionErrorResponses`
+                expectsDropping: Bool,
                 initialConfig: (
                     identityStore: MyIdentityStoreProtocol,
                     userSettings: UserSettingsProtocol
@@ -65,7 +69,8 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         ] = [
             (
                 [.lockAck, .reflectAck, .unlockAck],
-                (.userProfileSync, .shouldSkip),
+                nil,
+                true,
                 getBasicConfig().initialConfig,
                 getBasicConfig().secondConfig,
                 getBasicConfig().goldConfig,
@@ -74,6 +79,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             (
                 [.lockAck, .reflectAck, .unlockAck],
                 nil,
+                false,
                 getBasicUpdatePushNameConfig().initialConfig,
                 getBasicUpdatePushNameConfig().secondConfig,
                 getBasicUpdatePushNameConfig().goldConfig,
@@ -82,6 +88,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             (
                 [.lockAck, .reflectAck, .unlockAck],
                 nil,
+                false,
                 getConfigUpdateLinkedEmailAndPhoneFromPending().initialConfig,
                 getConfigUpdateLinkedEmailAndPhoneFromPending().secondConfig,
                 getConfigUpdateLinkedEmailAndPhoneFromPending().goldConfig,
@@ -90,6 +97,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             (
                 [.lockAck, .reflectAck, .reflectAck],
                 (.userProfileSync, .lockTimeout),
+                false,
                 getConfigShouldNotChange().initialConfig,
                 getConfigShouldNotChange().secondConfig,
                 getConfigShouldNotChange().goldConfig,
@@ -98,6 +106,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             (
                 [.reflectAck, .reflectAck, .reflectAck],
                 (.userProfileSync, .lockTimeout),
+                false,
                 getConfigShouldNotChange().initialConfig,
                 getConfigShouldNotChange().secondConfig,
                 getConfigShouldNotChange().goldConfig,
@@ -114,6 +123,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             scope: D2d_TransactionScope.Scope,
             error: TaskExecutionTransactionError
         )?,
+        expectsDropping: Bool,
         initialConfig: (
             identityStore: MyIdentityStoreProtocol,
             userSettings: UserSettingsProtocol
@@ -215,9 +225,14 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                     }
                 }
                 else {
-                    XCTFail(
-                        "This request should not have returned an error but did so anyways. The error is \(String(describing: error))"
-                    )
+                    if test.expectsDropping {
+                        XCTAssertEqual("\(TaskExecutionError.taskDropped)", "\(error!)")
+                    }
+                    else {
+                        XCTFail(
+                            "This request should not have returned an error but did so anyways. The error is \(String(describing: error))"
+                        )
+                    }
                 }
                 expec.fulfill()
             }

@@ -27,12 +27,17 @@ class MeContactDetailsViewController: ThemedTableViewController {
     @IBOutlet var headerView: UIView!
     @IBOutlet var imageView: UIImageView!
     @IBOutlet var nameLabel: UILabel!
-    @IBOutlet var threemaTypeIcon: UIImageView!
     
     private var publicKeyView = PublicKeyView(
         identity: MyIdentityStore.shared().identity,
         publicKey: MyIdentityStore.shared().publicKey
     )
+    
+    public lazy var profilePictureView: ProfilePictureImageView = {
+        let profilePictureView = ProfilePictureImageView()
+        profilePictureView.translatesAutoresizingMaskIntoConstraints = false
+        return profilePictureView
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,8 +53,6 @@ class MeContactDetailsViewController: ThemedTableViewController {
         )
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(tappedImage))
         imageView.addGestureRecognizer(tapRecognizer)
-        
-        threemaTypeIcon.image = ThreemaUtility.otherThreemaTypeIcon
         
         updateColors()
     }
@@ -100,20 +103,12 @@ class MeContactDetailsViewController: ThemedTableViewController {
         nameLabel.text = name
         headerView.accessibilityLabel = name
         
-        if let profilePicture = MyIdentityStore.shared().profilePicture,
-           profilePicture["ProfilePicture"] != nil {
-            imageView.image = UIImage(data: profilePicture["ProfilePicture"] as! Data)
-            imageView.contentMode = .scaleAspectFill
-            imageView.layer.masksToBounds = true
-            imageView.layer.cornerRadius = imageView.bounds.size.width / 2
-        }
-        else {
-            imageView.image = AvatarMaker.shared().unknownPersonImage()
-        }
+        imageView.image = MyIdentityStore.shared().resolvedProfilePicture
+        imageView.contentMode = .scaleAspectFill
+        imageView.layer.masksToBounds = true
+        imageView.layer.cornerRadius = imageView.bounds.size.width / 2
         imageView.accessibilityLabel = BundleUtil.localizedString(forKey: "my_profilepicture")
         
-        threemaTypeIcon.isHidden = !LicenseStore.requiresLicenseKey()
-                
         tableView.reloadData()
     }
     

@@ -64,9 +64,9 @@ struct MultiDeviceWizardTermsView: View {
                         .padding(.bottom, paddingSize)
                         .accessibilityAction(named: Text(String.localizedStringWithFormat(
                             BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
-                            "https://threema.ch/docs/threema/ios_backup_manual_en.pdf"
+                            ThreemaURLProvider.iOSBackupManualEN.absoluteString
                         ))) {
-                            openURL(URL(string: "https://threema.ch/docs/threema/ios_backup_manual_en.pdf")!)
+                            openURL(ThreemaURLProvider.iOSBackupManualEN)
                         }
                         
                         MultiDeviceWizardBulletPointView(
@@ -82,9 +82,9 @@ struct MultiDeviceWizardTermsView: View {
                         .padding(.bottom, paddingSize)
                         .accessibilityAction(named: Text(String.localizedStringWithFormat(
                             BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
-                            "https://threema.ch/faq/md_limit"
+                            ThreemaURLProvider.multiDeviceLimit.absoluteString
                         ))) {
-                            openURL(URL(string: "https://threema.ch/faq/md_limit")!)
+                            openURL(ThreemaURLProvider.multiDeviceLimit)
                         }
                         
                         MultiDeviceWizardBulletPointView(

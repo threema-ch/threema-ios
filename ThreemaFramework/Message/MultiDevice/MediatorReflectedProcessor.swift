@@ -28,7 +28,6 @@ import ThreemaProtocols
 enum MediatorReflectedProcessorError: Error {
     case contactNotFound(identity: String)
     case contactToCreateAlreadyExists(identity: String)
-    case contactToDeleteNotExists(identity: String)
     case contactToDeleteMemberOfGroup(identity: String)
     case contactToUpdateNotExists(identity: String)
     case createContactFailed(identity: String)

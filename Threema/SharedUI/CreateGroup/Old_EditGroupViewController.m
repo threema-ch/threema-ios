@@ -21,7 +21,6 @@
 #import <ThreemaFramework/ThreemaFramework.h>
 
 #import "Old_EditGroupViewController.h"
-#import "AvatarMaker.h"
 #import "AppDelegate.h"
 #import "ModalPresenter.h"
 #import "UIDefines.h"
@@ -95,8 +94,8 @@
     
     _groupName = _group.name;
     
-    if (_group.profilePicture) {
-        _avatarImageData = _group.profilePicture;
+    if (_group.old_ProfilePicture) {
+        _avatarImageData = _group.old_ProfilePicture;
     }
 }
 
@@ -130,7 +129,7 @@
 }
 
 - (BOOL)changedImage {
-    if (_group.profilePicture == _avatarImageData) {
+    if (_group.old_ProfilePicture == _avatarImageData) {
         return NO;
     }
     
@@ -160,7 +159,7 @@
      
         _nameTextField.text = _groupName;
         
-        if (_group.profilePicture) {
+        if (_group.old_ProfilePicture) {
             _avatarView.imageData = _avatarImageData;
         }
     } else {

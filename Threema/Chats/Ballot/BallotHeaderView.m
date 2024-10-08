@@ -22,7 +22,8 @@
 #import "EntityFetcher.h"
 #import "ContactEntity.h"
 #import "BundleUtil.h"
-#import "AvatarMaker.h"
+#import "UserSettings.h"
+#import "ThreemaFramework.h"
 
 #define HEADER_BOUNCE_OFFSET 70.0
 
@@ -37,11 +38,7 @@
 - (void)setup {
     self.ddMainView = self.mainView;
     self.ddDetailView = self.accessoryView;
-    
-    self.imageView.layer.masksToBounds = YES;
-    self.imageView.contentMode = UIViewContentModeScaleAspectFill;
-    self.imageView.layer.cornerRadius = self.imageView.frame.size.width/2;
-    
+
     self.bounceOffset = HEADER_BOUNCE_OFFSET;
     
     [self updateColors];
@@ -81,10 +78,17 @@
         return;
     }
 
-    EntityManager *entityManager = [[EntityManager alloc] init];
+    BusinessInjector *businessInjector = [BusinessInjector new];
+    EntityManager *entityManager = businessInjector.entityManager;
     [_createdByNameLabel setText: [entityManager.entityFetcher displayNameForContactId: _ballot.creatorId]];
     
     ContactEntity *creatorContact = [entityManager.entityFetcher contactForId:_ballot.creatorId];
-    [_imageView setImage: [[AvatarMaker sharedAvatarMaker] avatarForContactEntity:creatorContact size:_imageView.frame.size.width masked:NO]];
+    
+    if (creatorContact != nil) {
+        [_profilePictureView setContactWithContact:[[Contact alloc]initWithContactEntity:creatorContact]];
+    } else {
+        // No contact found, so we assume we are the creator
+        [_profilePictureView setMe];
+    }
 }
 @end

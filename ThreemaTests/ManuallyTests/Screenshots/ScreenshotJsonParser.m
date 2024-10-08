@@ -75,12 +75,12 @@
     [_entityManager performSyncBlockAndSafe:^{
         NSArray *conversations = [_entityManager.entityFetcher allConversations];
         for (Conversation* conversation in conversations) {
-            [[_entityManager entityDestroyer] deleteObjectWithObject:conversation];
+            [[_entityManager entityDestroyer] deleteWithConversation:conversation];
         }
 
         NSArray *contacts = [_entityManager.entityFetcher allContacts];
         for (ContactEntity* contact in contacts) {
-            [[_entityManager entityDestroyer] deleteObjectWithObject:contact];
+            [[_entityManager entityDestroyer] deleteWithContactEntity:contact];
         }
     }];
 }
@@ -342,7 +342,7 @@
 /// Handle text and parse QuoteV1 into QuoteV2
 - (BaseMessage *)handleTextMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
     BaseMessage *lastMessage = conversation.lastMessage;
-    TextMessage *message = [_entityManager.entityCreator textMessageForConversation:conversation];
+    TextMessage *message = [_entityManager.entityCreator textMessageForConversation:conversation setLastUpdate: YES];
     message.text = [self localizedStringForKey:@"content" in:messageData];
     if ([message.text containsString:@"> "]) {
         message.quotedMessageId = lastMessage.id;

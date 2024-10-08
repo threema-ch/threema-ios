@@ -513,8 +513,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     // MARK: - Public Functions
     
     public func flushMessageQueue() {
-        DDLogWarn("Manually flushing outgoing task queue")
-        TaskManager.flush(queueType: .outgoing)
+        DDLogWarn("Manually remove current task from queue")
+        TaskManager.removeCurrentTask()
         let tm = TaskManager()
         tm.spool()
         NotificationPresenterWrapper.shared.present(type: .flushMessageQueueSuccess)

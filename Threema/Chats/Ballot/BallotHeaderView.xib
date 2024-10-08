@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -15,10 +15,10 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="kjL-ta-xP1">
-                    <rect key="frame" x="0.0" y="0.0" width="320" height="71"/>
+                    <rect key="frame" x="0.0" y="20" width="320" height="51"/>
                     <subviews>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="xBallot Name" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="m3k-Ak-Bbb">
-                            <rect key="frame" x="8" y="27" width="304" height="17"/>
+                            <rect key="frame" x="8" y="15.5" width="304" height="20.5"/>
                             <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                             <color key="textColor" systemColor="darkTextColor"/>
                             <nil key="highlightedColor"/>
@@ -34,10 +34,11 @@
                     <rect key="frame" x="320" y="0.0" width="200" height="71"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" heightSizable="YES"/>
                     <subviews>
-                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" fixedFrame="YES" image="UnknownPerson" translatesAutoresizingMaskIntoConstraints="NO" id="1h9-Iz-idj">
+                        <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0Y4-Tb-Xh3" userLabel="ProfilePicture" customClass="ProfilePictureImageView" customModule="ThreemaFramework">
                             <rect key="frame" x="10" y="8" width="56" height="56"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        </imageView>
+                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        </view>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="xName" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8C3-kc-PNf">
                             <rect key="frame" x="76" y="11" width="116" height="17"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -81,15 +82,14 @@
                 <outlet property="createdByNameLabel" destination="8C3-kc-PNf" id="7Ex-X8-gKR"/>
                 <outlet property="dateLabel" destination="mHg-ph-LeD" id="yu8-PZ-utc"/>
                 <outlet property="hairLineView" destination="bk1-aS-nO3" id="8RG-F3-m2n"/>
-                <outlet property="imageView" destination="1h9-Iz-idj" id="wx9-cl-M3p"/>
                 <outlet property="mainView" destination="kjL-ta-xP1" id="TB6-Z1-bUA"/>
+                <outlet property="profilePictureView" destination="0Y4-Tb-Xh3" id="qox-Ji-eAA"/>
                 <outlet property="titleLabel" destination="m3k-Ak-Bbb" id="fVD-oJ-aCX"/>
             </connections>
             <point key="canvasLocation" x="218" y="310"/>
         </view>
     </objects>
     <resources>
-        <image name="UnknownPerson" width="200" height="200"/>
         <systemColor name="darkTextColor">
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

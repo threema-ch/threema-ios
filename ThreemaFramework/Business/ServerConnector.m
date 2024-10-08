@@ -114,6 +114,7 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
 @synthesize lastRtt;
 @synthesize deviceGroupKeys;
 @synthesize deviceID;
+@synthesize maximumNumberOfDeviceSlots;
 @synthesize isAppInBackground;
 
 #pragma pack(push, 1)
@@ -823,7 +824,7 @@ struct pktExtension {
                 TaskDefinitionReceiveMessage *task = [[TaskDefinitionReceiveMessage alloc] initWithMessage:boxmsg receivedAfterInitialQueueSend:!chatServerInInitialQueueSend maxBytesToDecrypt:[AppGroup getCurrentType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION timeoutDownloadThumbnail:timeoutDownloadThumbnail];
 
                 // Use `[self entityManagerForMessageProcessing]` if is not nil (properly setted from Notification Extension), otherwise nil (means will be created within TaskManager) for in App processing
-                TaskManager *tm = [[TaskManager alloc] initWithBackgroundEntityManager:[self backgroundEntityManagerForMessageProcessing]];
+                TaskManager *tm = [[TaskManager alloc] initWithBackgroundEntityManager:[self backgroundEntityManagerForMessageProcessing] serverConnector:self];
                 [tm addObjcWithTaskDefinition:task];
             }
             break;
@@ -1263,11 +1264,11 @@ struct pktExtension {
 - (void)didDisconnectWithErrorCode:(NSInteger)code {
     [serverConnectorConnectionState disconnected];
 
-    DDLogWarn(@"Flushing incoming and interrupt outgoing queue on Task Manager");
-    [TaskManager flushWithQueueType:TaskQueueTypeIncoming];
-    [TaskManager interruptWithQueueType:TaskQueueTypeOutgoing];
+    DDLogNotice(@"Interrupt queue on Task Manager");
+    [TaskManager interrupt];
 
     isRolePromotedToLeader = NO;
+    maximumNumberOfDeviceSlots = nil;
 
     if (keepalive_timer != nil) {
         dispatch_source_cancel(keepalive_timer);
@@ -1499,7 +1500,8 @@ struct pktExtension {
                                                    messageProcessorDelegate:self];
 
             uint8_t type;
-            NSData *result = [processor processWithMessage:data messageType:&type receivedAfterInitialQueueSend:!mediatorServerInInitialQueueSend];
+            NSNumber *maxDeviceSlots;
+            NSData *result = [processor processWithMessage:data messageType:&type receivedAfterInitialQueueSend:!mediatorServerInInitialQueueSend maxDeviceSlots:&maxDeviceSlots];
 
             if (result != nil && (int)type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_REFLECT_ACK) {
                 [[NSNotificationCenter defaultCenter] postNotificationName:[TaskManager mediatorMessageAckObserverNameWithReflectID:result] object:result];
@@ -1517,6 +1519,7 @@ struct pktExtension {
             else if ((int)type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_SERVER_INFO) {
                 DDLogInfo(@"Got mediator server info; client connected");
                 [serverConnectorConnectionState loggedInMediatorServer];
+                maximumNumberOfDeviceSlots = maxDeviceSlots;
             }
             else if ((int)type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_REFLECTION_QUEUE_DRY) {
                 mediatorServerInInitialQueueSend = NO;
@@ -1637,9 +1640,9 @@ struct pktExtension {
     });
 }
 
-- (void)taskQueueEmpty:(NSString * _Nonnull)queueTypeName {
+- (void)taskQueueEmpty {
     dispatch_async(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate taskQueueEmpty:queueTypeName];
+        [clientMessageProcessorDelegate taskQueueEmpty];
     });
 }
 
@@ -1722,11 +1725,10 @@ struct pktExtension {
         [self _disconnect];
     }
 
-    /* also flush the queue so that messages stuck in it don't later cause problems
+    /* also clear the queue so that messages stuck in it don't later cause problems
        because they have the wrong from identity */
-    DDLogWarn(@"Flushing incoming and outgoing queue on Task Manager");
-    [TaskManager flushWithQueueType:TaskQueueTypeIncoming];
-    [TaskManager flushWithQueueType:TaskQueueTypeOutgoing];
+    DDLogWarn(@"Clear queue on Task Manager");
+    [TaskManager removeAllTasks];
 }
 
 @end

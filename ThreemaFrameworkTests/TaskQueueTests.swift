@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import PromiseKit
 import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
@@ -29,11 +30,11 @@ class TaskQueueTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
-        AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+        AppGroup.setGroupID("group.ch.threema")
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
+        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext(
+            withChildContextForBackgroundProcess: true
+        )
 
         dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
         dbPreparer = DatabasePreparer(context: mainCnx)
@@ -53,33 +54,103 @@ class TaskQueueTests: XCTestCase {
         let msg = ContactDeletePhotoMessage()
         msg.messageID = MockData.generateMessageID()
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg, isPersistent: false)
-
         let tq = TaskQueue(
-            queueType: .outgoing,
-            supportedTypes: [TaskDefinitionSendAbstractMessage.self],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
-        try? tq.enqueue(task: task, completionHandler: nil)
-        XCTAssertEqual(.pending, task.state)
+        let taskVolatile = TaskDefinitionSendAbstractMessage(message: msg, type: .volatile)
+        try? tq.enqueue(task: taskVolatile, completionHandler: nil)
+
+        let taskDropOnDisconnect = TaskDefinitionSendAbstractMessage(message: msg, type: .dropOnDisconnect)
+        try? tq.enqueue(task: taskDropOnDisconnect, completionHandler: nil)
+
+        XCTAssertEqual(.pending, taskVolatile.state)
+        XCTAssertEqual(2, tq.list.count)
 
         tq.interrupt()
-        XCTAssertEqual(.pending, task.state, "Test interrupt on pending item")
+        
+        XCTAssertEqual(.pending, taskVolatile.state, "Test interrupt on pending item")
+        XCTAssertEqual(1, tq.list.count)
 
         tq.list.first?.taskDefinition.state = .executing
-        XCTAssertEqual(.executing, task.state, "Set state to executing for testing reason")
+        XCTAssertEqual(.executing, taskVolatile.state, "Set state to executing for testing reason")
 
         tq.interrupt()
-        XCTAssertEqual(.interrupted, task.state, "Test interrupt on executing item")
+        
+        XCTAssertEqual(.interrupted, taskVolatile.state, "Test interrupt on executing item")
+        XCTAssertEqual(1, tq.list.count)
+    }
+    
+    func testInterruptWithExecutingDropOnDisconnectTask() async throws {
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
+
+        let msg = ContactDeletePhotoMessage()
+        msg.messageID = MockData.generateMessageID()
+
+        let tq = TaskQueue(
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
+        )
+        
+        let taskDropOnDisconnectExecuting = TaskDefinitionSendAbstractMessage(message: msg, type: .dropOnDisconnect)
+        try? tq.enqueue(task: taskDropOnDisconnectExecuting) { _, _ in
+            XCTFail("This should never be called")
+        }
+        
+        let dropOnDisconnectExpectation1 = expectation(description: "drop on disconnect callback 1")
+        let taskDropOnDisconnect1 = TaskDefinitionSendAbstractMessage(message: msg, type: .dropOnDisconnect)
+        try tq.enqueue(task: taskDropOnDisconnect1) { _, error in
+            XCTAssertEqual("\(TaskExecutionError.taskDropped)", "\(error!)")
+            dropOnDisconnectExpectation1.fulfill()
+        }
+
+        let taskPersistent = TaskDefinitionSendAbstractMessage(message: msg, type: .persistent)
+        try tq.enqueue(task: taskPersistent) { _, _ in
+            XCTFail("This should never be called")
+        }
+
+        let dropOnDisconnectExpectation2 = expectation(description: "drop on disconnect callback 2")
+        let taskDropOnDisconnect2 = TaskDefinitionSendAbstractMessage(message: msg, type: .dropOnDisconnect)
+        try tq.enqueue(task: taskDropOnDisconnect2) { _, error in
+            XCTAssertEqual("\(TaskExecutionError.taskDropped)", "\(error!)")
+            dropOnDisconnectExpectation2.fulfill()
+        }
+        
+        XCTAssertEqual(.pending, taskDropOnDisconnectExecuting.state)
+        XCTAssertFalse(taskDropOnDisconnectExecuting.isDropped)
+        XCTAssertEqual(.pending, taskDropOnDisconnect1.state)
+        XCTAssertFalse(taskDropOnDisconnect1.isDropped)
+        XCTAssertEqual(.pending, taskPersistent.state)
+        XCTAssertFalse(taskPersistent.isDropped)
+        XCTAssertEqual(.pending, taskDropOnDisconnect2.state)
+        XCTAssertFalse(taskDropOnDisconnect2.isDropped)
+        XCTAssertEqual(4, tq.list.count)
+        
+        tq.list.first?.taskDefinition.state = .executing
+        
+        XCTAssertEqual(.executing, taskDropOnDisconnectExecuting.state)
+        
+        tq.interrupt()
+        
+        // taskDropOnDisconnectX should be removed and completion handler should be called
+        await fulfillment(of: [dropOnDisconnectExpectation1, dropOnDisconnectExpectation2])
+        XCTAssertEqual(2, tq.list.count)
+        XCTAssertTrue(taskDropOnDisconnect1.isDropped)
+        XCTAssertTrue(taskDropOnDisconnect2.isDropped)
+
+        // taskPersistent should be still pending
+        XCTAssertEqual(.pending, taskPersistent.state)
+
+        // taskDropOnDisconnectExecuting should be marked as interrupted and dropped, but still in the queue
+        let firstItem = try XCTUnwrap(tq.list.first)
+        XCTAssertEqual(taskDropOnDisconnectExecuting, firstItem.taskDefinition)
+        XCTAssertEqual(.interrupted, taskDropOnDisconnectExecuting.state)
+        XCTAssertTrue(taskDropOnDisconnectExecuting.isDropped)
     }
 
     func testSpoolServerConnectorDisconnected() {
         let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
 
         let tq = TaskQueue(
-            queueType: .outgoing,
-            supportedTypes: [TaskDefinitionSendAbstractMessage.self],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
@@ -89,7 +160,7 @@ class TaskQueueTests: XCTestCase {
         XCTAssertTrue(ddLoggerMock.exists(message: "Task queue spool interrupt, because not logged in to server"))
     }
 
-    func testSpoolTaskDefinitionSendAbstractMessage() {
+    func testSpoolTaskDefinitionSendAbstractMessage() async throws {
         let expectedReceiverIdentity = "ECHOECHO"
 
         dbPreparer.save {
@@ -110,8 +181,6 @@ class TaskQueueTests: XCTestCase {
         )
 
         let tq = TaskQueue(
-            queueType: .outgoing,
-            supportedTypes: [TaskDefinitionSendAbstractMessage.self],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
@@ -122,25 +191,68 @@ class TaskQueueTests: XCTestCase {
 
         let expec = expectation(description: "spool")
 
-        let task = TaskDefinitionSendAbstractMessage(message: message, isPersistent: false)
-        try? tq.enqueue(task: task) { _, error in
+        let task = TaskDefinitionSendAbstractMessage(message: message, type: .volatile)
+        try tq.enqueue(task: task) { _, error in
             XCTAssertNil(error)
             DDLog.flushLog()
             expec.fulfill()
         }
         
         tq.spool()
+        
+        await fulfillment(of: [expec], timeout: 6)
 
-        waitForExpectations(timeout: 6) { error in
-            XCTAssertNil(error)
-            XCTAssertEqual(serverConnectorMock.sendMessageCalls.count, 1)
-            XCTAssertTrue(
-                self.ddLoggerMock
-                    .exists(
-                        message: "<TaskDefinitionSendAbstractMessage (type: typingIndicator; id: \(message.messageID.hexString))> done"
-                    )
+        XCTAssertEqual(serverConnectorMock.sendMessageCalls.count, 1)
+        XCTAssertTrue(
+            ddLoggerMock.exists(
+                message: "<TaskDefinitionSendAbstractMessage (type: typingIndicator; id: \(message.messageID.hexString))> done"
             )
+        )
+    }
+    
+    func testSpoolInterruptedDroppedTaskDefinitionSendAbstractMessage() async throws {
+        let expectedReceiverIdentity = "ECHOECHO"
+
+        dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(
+                publicKey: MockData.generatePublicKey(),
+                identity: expectedReceiverIdentity,
+                verificationLevel: 0
+            )
+            dbPreparer.createConversation(contactEntity: contactEntity)
         }
+
+        let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let frameworkInjectorMock = BusinessInjectorMock(
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            myIdentityStore: myIdentityStoreMock,
+            serverConnector: serverConnectorMock
+        )
+
+        let tq = TaskQueue(
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
+        )
+
+        let message = TypingIndicatorMessage()
+        message.fromIdentity = myIdentityStoreMock.identity
+        message.toIdentity = expectedReceiverIdentity
+        message.typing = true
+
+        let task = TaskDefinitionSendAbstractMessage(message: message, type: .dropOnDisconnect)
+        try tq.enqueue(task: task) { _, _ in
+            XCTFail("This should not be called")
+        }
+        
+        task.state = .interrupted
+        task.isDropped = true
+        
+        tq.spool()
+        
+        DDLog.flushLog()
+
+        XCTAssertEqual(serverConnectorMock.sendMessageCalls.count, 0)
+        XCTAssertEqual(.interrupted, task.state, "Task is not executed again")
     }
 
     func testSpoolTaskDefinitionReceiveMessageProcessingFailedWithRetry() {
@@ -170,8 +282,6 @@ class TaskQueueTests: XCTestCase {
             serverConnectorMock.completedProcessingMessageCalls.removeAll()
 
             let tq = TaskQueue(
-                queueType: .incoming,
-                supportedTypes: [TaskDefinitionReceiveMessage.self],
                 frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
             )
 
@@ -280,8 +390,6 @@ class TaskQueueTests: XCTestCase {
         )
 
         let tq = TaskQueue(
-            queueType: .incoming,
-            supportedTypes: [TaskDefinitionReceiveReflectedMessage.self],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
@@ -310,6 +418,120 @@ class TaskQueueTests: XCTestCase {
         XCTAssertTrue(ddLoggerMock.exists(message: "Waiting 1.0 seconds before execute next task"))
         XCTAssertTrue(ddLoggerMock.exists(message: "Waiting 2.0 seconds before execute next task"))
     }
+    
+    func testSpoolAndDroppingRacesTask() async throws {
+        let serverConnectorMock = ServerConnectorMock(
+            connectionState: .loggedIn,
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
+        )
+        let frameworkInjectorMock = BusinessInjectorMock(
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
+            serverConnector: serverConnectorMock
+        )
+
+        // Reset mocks first
+        ddLoggerMock.logMessages.removeAll()
+        serverConnectorMock.reflectMessageCalls.removeAll()
+
+        let taskQueue = TaskQueue(
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
+        )
+
+        let expect = expectation(description: "spool")
+
+        // This test will alway run at least for 1s as we wait such that the interrupt can run and then we wait if the
+        // completion closure is called more than once.
+        
+        let task = TaskDefinitionMock(sleepInterval: 0.5)
+
+        var completionCalled = 0
+        try taskQueue.enqueue(task: task) { _, error in
+            XCTAssertEqual("\(TaskExecutionError.taskDropped)", "\(error!)")
+            completionCalled += 1
+            DDLog.flushLog()
+            
+            // This helps us to check if the closure is called more than once
+            Task {
+                try await Task.sleep(seconds: 0.5)
+                expect.fulfill()
+            }
+        }
+
+        taskQueue.spool()
+        taskQueue.spool()
+        taskQueue.interrupt()
+        taskQueue.spool()
+        
+        await fulfillment(of: [expect], timeout: 10)
+        
+        XCTAssertEqual(1, completionCalled)
+        XCTAssertEqual(taskQueue.list.count, 0)
+        XCTAssertTrue(task.isDropped)
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> state 'pending' execute"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> is still running"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> interrupted and marked as dropped"))
+        XCTAssertTrue(ddLoggerMock.exists(
+            message: "<TaskDefinitionMock> state 'interrupted' was dropped. Don't execute"
+        ))
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> reported dropped error"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> dropped"))
+    }
+    
+    func testSpoolInterruptAndFailWithNonDroppingError() async throws {
+        let serverConnectorMock = ServerConnectorMock(
+            connectionState: .loggedIn,
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
+        )
+        let frameworkInjectorMock = BusinessInjectorMock(
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            userSettings: UserSettingsMock(enableMultiDevice: true),
+            serverConnector: serverConnectorMock
+        )
+
+        // Reset mocks first
+        ddLoggerMock.logMessages.removeAll()
+        serverConnectorMock.reflectMessageCalls.removeAll()
+
+        let taskQueue = TaskQueue(
+            frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
+        )
+
+        let expect = expectation(description: "spool")
+
+        // This test will alway run at least for 1s as we wait such that the interrupt can run and then we wait if the
+        // completion closure is called more than once.
+        
+        let task = TaskDefinitionMock(sleepInterval: 0.5, customError: TaskExecutionError.wrongTaskDefinitionType)
+
+        var completionCalled = 0
+        try taskQueue.enqueue(task: task) { _, error in
+            XCTAssertEqual("\(TaskExecutionError.taskDropped)", "\(error!)")
+            completionCalled += 1
+            DDLog.flushLog()
+            
+            // This helps us to check if the closure is called more than once
+            Task {
+                try await Task.sleep(seconds: 0.5)
+                expect.fulfill()
+            }
+        }
+
+        taskQueue.spool()
+        taskQueue.interrupt()
+        
+        await fulfillment(of: [expect], timeout: 10)
+        
+        XCTAssertEqual(1, completionCalled)
+        XCTAssertEqual(taskQueue.list.count, 0)
+        XCTAssertTrue(task.isDropped)
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> state 'pending' execute"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> interrupted and marked as dropped"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> failed and marked as dropped"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "<TaskDefinitionMock> dropped"))
+    }
 
     func testSpoolTaskDefinitionSendAbstractMessageReflectFailedWithRetry() {
         let expectedReceiver = "ECHOECHO"
@@ -327,8 +549,6 @@ class TaskQueueTests: XCTestCase {
             serverConnectorMock.sendMessageCalls.removeAll()
 
             let tq = TaskQueue(
-                queueType: .outgoing,
-                supportedTypes: [TaskDefinitionSendAbstractMessage.self],
                 frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
             )
 
@@ -338,7 +558,7 @@ class TaskQueueTests: XCTestCase {
 
             let expec = expectation(description: "spool")
 
-            let task = TaskDefinitionSendAbstractMessage(message: message, isPersistent: false)
+            let task = TaskDefinitionSendAbstractMessage(message: message, type: .volatile)
             task.retry = test[0] as! Bool
 
             try? tq.enqueue(task: task) { _, error in
@@ -388,14 +608,12 @@ class TaskQueueTests: XCTestCase {
         )
 
         let tq = TaskQueue(
-            queueType: .outgoing,
-            supportedTypes: [TaskDefinitionDeleteContactSync.self],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
         let expec = expectation(description: "discard")
 
-        let task = TaskDefinitionDeleteContactSync(contacts: ["ECHOECHO"])
+        let task = TaskDefinitionUpdateContactSync(deltaSyncContacts: [])
 
         try tq.enqueue(task: task) { _, error in
             XCTAssertNil(error)
@@ -409,14 +627,14 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(tq.list.count, 0)
             XCTAssertEqual(task.retryCount, 0)
             XCTAssertTrue(self.ddLoggerMock.exists(
-                message: "<TaskDefinitionDeleteContactSync> \(TaskExecutionError.multiDeviceNotRegistered)"
+                message: "<TaskDefinitionUpdateContactSync> \(TaskExecutionError.multiDeviceNotRegistered)"
             ))
-            XCTAssertTrue(self.ddLoggerMock.exists(message: "<TaskDefinitionDeleteContactSync> done"))
-            XCTAssertTrue(self.ddLoggerMock.exists(message: "<TaskDefinitionDeleteContactSync> dequeue"))
+            XCTAssertTrue(self.ddLoggerMock.exists(message: "<TaskDefinitionUpdateContactSync> done"))
+            XCTAssertTrue(self.ddLoggerMock.exists(message: "<TaskDefinitionUpdateContactSync> removed from queue"))
         }
     }
 
-    func testSpoolTaskDefinitionDeleteContactSyncReflectFailedWithRetry() {
+    func testSpoolTaskDefinitionMdmParameterSyncReflectFailedWithRetry() {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: MockData.deviceID,
@@ -431,27 +649,29 @@ class TaskQueueTests: XCTestCase {
             serverConnector: serverConnectorMock
         )
 
-        // 2 tests with: retry / reflectMessageCalls / retryCount
-        for test in [[false, 1, 0] as [Any], [true, 2, 1]] {
+        var testCases: [(retry: Bool, reflectMessageCalls: Int, retryCount: Int)] = [
+            (false, 1, 0),
+            (true, 2, 1),
+        ]
+
+        for testCase in testCases {
             // Reset mocks first
             ddLoggerMock.logMessages.removeAll()
             serverConnectorMock.reflectMessageCalls.removeAll()
 
             let tq = TaskQueue(
-                queueType: .outgoing,
-                supportedTypes: [TaskDefinitionDeleteContactSync.self],
                 frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
             )
 
-            let expec = expectation(description: "spool")
+            let expect = expectation(description: "spool")
 
-            let task = TaskDefinitionDeleteContactSync(contacts: ["ECHOECHO"])
-            task.retry = test[0] as! Bool
+            let task = TaskDefinitionMdmParameterSync(mdmParameters: Sync_MdmParameters())
+            task.retry = testCase.retry
 
             try? tq.enqueue(task: task) { _, error in
                 XCTAssertNotNil(error)
                 DDLog.flushLog()
-                expec.fulfill()
+                expect.fulfill()
             }
             
             tq.spool()
@@ -459,8 +679,8 @@ class TaskQueueTests: XCTestCase {
             waitForExpectations(timeout: 10) { error in
                 XCTAssertNil(error)
                 XCTAssertEqual(tq.list.count, 1)
-                XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, test[1] as! Int)
-                XCTAssertEqual(task.retryCount, test[2] as! Int)
+                XCTAssertEqual(serverConnectorMock.reflectMessageCalls.count, testCase.reflectMessageCalls)
+                XCTAssertEqual(task.retryCount, testCase.retryCount)
 
                 for m in self.ddLoggerMock.logMessages {
                     print(m.message)
@@ -469,19 +689,19 @@ class TaskQueueTests: XCTestCase {
                 XCTAssertTrue(
                     self.ddLoggerMock
                         .exists(
-                            message: "<TaskDefinitionDeleteContactSync> failed reflectMessageFailed(message: Optional(\"message type: lock / Error Domain=ThreemaErrorDomain Code=675 \\\"Not logged in\\\" UserInfo={NSLocalizedDescription=Not logged in}\"))"
+                            message: "<TaskDefinitionMdmParameterSync> failed reflectMessageFailed(message: Optional(\"message type: lock / Error Domain=ThreemaErrorDomain Code=675 \\\"Not logged in\\\" UserInfo={NSLocalizedDescription=Not logged in}\"))"
                         )
                 )
                 if task.retry {
                     XCTAssertTrue(
                         self.ddLoggerMock
-                            .exists(message: "Retry of <TaskDefinitionDeleteContactSync> after execution failing")
+                            .exists(message: "Retry of <TaskDefinitionMdmParameterSync> after execution failing")
                     )
                 }
                 else {
                     XCTAssertFalse(
                         self.ddLoggerMock
-                            .exists(message: "Retry of task <TaskDefinitionDeleteContactSync> after execution failing")
+                            .exists(message: "Retry of task <TaskDefinitionMdmParameterSync> after execution failing")
                     )
                 }
             }
@@ -501,7 +721,7 @@ class TaskQueueTests: XCTestCase {
                 true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> removed from queue",
                 ],
                 true,
                 true
@@ -522,6 +742,9 @@ class TaskQueueTests: XCTestCase {
                     ThreemaProtocolError.messageAlreadyProcessed,
                     ThreemaProtocolError.messageBlobDecryptionFailed,
                     ThreemaProtocolError.messageNonceReuse,
+                    ThreemaProtocolError.messageSenderMismatch,
+                    ThreemaProtocolError.messageToDeleteNotFound,
+                    ThreemaProtocolError.messageToEditNotFound,
                     ThreemaProtocolError.unknownMessageType,
                     ThreemaError.threemaError(
                         "Message already processed",
@@ -532,7 +755,7 @@ class TaskQueueTests: XCTestCase {
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> discard incoming message: %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> removed from queue",
                 ],
                 true,
                 true
@@ -545,20 +768,20 @@ class TaskQueueTests: XCTestCase {
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> removed from queue",
                 ],
                 false,
                 true
             ),
             (
                 [
-                    TaskExecutionError.conversationNotFound(for: TaskDefinition(isPersistent: false)),
+                    TaskExecutionError.conversationNotFound(for: TaskDefinition(type: .volatile)),
                 ],
                 true,
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> failed: %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> removed from queue",
                 ],
                 false,
                 true
@@ -572,20 +795,19 @@ class TaskQueueTests: XCTestCase {
                 [
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> outgoing message failed: %@",
                     "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> removed from queue",
                 ],
                 false,
                 true
             ),
             (
                 [
-                    TaskExecutionTransactionError.shouldSkip,
+                    TaskExecutionError.taskDropped,
                 ],
-                true,
+                false,
                 [
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> skipped: %@",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> done",
-                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> dropped",
+                    "<TaskDefinitionReceiveMessage (type: BoxedMessage; id: %@)> removed from queue",
                 ],
                 false,
                 true
@@ -654,8 +876,6 @@ class TaskQueueTests: XCTestCase {
         serverConnectorMock.reflectMessageCalls.removeAll()
 
         let taskQueue = TaskQueue(
-            queueType: .incoming,
-            supportedTypes: [TaskDefinitionReceiveMessage.self],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
@@ -743,7 +963,7 @@ class TaskQueueTests: XCTestCase {
                 nil,
                 [
                     "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
-                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> removed from queue",
                 ],
                 true,
                 false, // In this case message nonce already stored
@@ -774,7 +994,7 @@ class TaskQueueTests: XCTestCase {
                 [
                     "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
                     "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
-                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> removed from queue",
                 ],
                 true,
                 true,
@@ -798,7 +1018,7 @@ class TaskQueueTests: XCTestCase {
                 [
                     "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> discard reflected message: %@",
                     "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> done",
-                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> dequeue",
+                    "<TaskDefinitionReceiveReflectedMessage (type: text; id: %@)> removed from queue",
                 ],
                 true,
                 true,
@@ -996,8 +1216,6 @@ class TaskQueueTests: XCTestCase {
         serverConnectorMock.reflectMessageCalls.removeAll()
 
         let taskQueue = TaskQueue(
-            queueType: .incoming,
-            supportedTypes: [TaskDefinitionReceiveReflectedMessage.self],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
@@ -1115,29 +1333,6 @@ class TaskQueueTests: XCTestCase {
         let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
 
         let tq = TaskQueue(
-            queueType: .outgoing,
-            supportedTypes: [
-                TaskDefinitionGroupDissolve.self,
-                TaskDefinitionSendAbstractMessage.self,
-                TaskDefinitionSendBallotVoteMessage.self,
-                TaskDefinitionSendBaseMessage.self,
-                TaskDefinitionSendDeleteEditMessage.self,
-                TaskDefinitionSendDeliveryReceiptsMessage.self,
-                TaskDefinitionSendLocationMessage.self,
-                TaskDefinitionSendGroupCreateMessage.self,
-                TaskDefinitionSendGroupDeletePhotoMessage.self,
-                TaskDefinitionSendGroupLeaveMessage.self,
-                TaskDefinitionSendGroupRenameMessage.self,
-                TaskDefinitionSendGroupSetPhotoMessage.self,
-                TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
-                TaskDefinitionDeleteContactSync.self,
-                TaskDefinitionProfileSync.self,
-                TaskDefinitionUpdateContactSync.self,
-                TaskDefinitionSettingsSync.self,
-                TaskDefinitionReceiveMessage.self,
-                TaskDefinitionReceiveReflectedMessage.self,
-                TaskDefinitionRunForwardSecurityRefreshSteps.self,
-            ],
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
         )
 
@@ -1312,16 +1507,11 @@ class TaskQueueTests: XCTestCase {
             to: expectedToMembers,
             receiptType: expectedGroupReceiptType,
             receiptMessageIDs: expectedGroupReceiptMessageIDs,
-            receiptReadDates: [Date]()
+            receiptReadDates: [nil, .now]
         )
         
         try! tq.enqueue(task: taskGroupDeliveryReceipt, completionHandler: nil)
 
-        // Add TaskDefintionDeleteContactSync
-        let deleteableContacts = ["ECHOECHO"]
-        let taskDeleteContactSync = TaskDefinitionDeleteContactSync(contacts: deleteableContacts)
-        try! tq.enqueue(task: taskDeleteContactSync, completionHandler: nil)
-        
         // Add TaskDefinitionProfileSync
         var syncUserProfile = Sync_UserProfile()
         syncUserProfile.profilePicture.updated = Common_Image()
@@ -1403,14 +1593,14 @@ class TaskQueueTests: XCTestCase {
         )
         try! tq.enqueue(task: taskRunForwardSecurityRefreshSteps, completionHandler: nil)
         
-        let expectedItemCount = 20
+        let expectedItemCount = 19
         guard tq.list.count == expectedItemCount else {
             XCTFail("TaskList has wrong number of items. Expected \(expectedItemCount) but was \(tq.list.count)")
             return
         }
 
         // Check none-persistent tasks
-        if let task = tq.list[14].taskDefinition as? TaskDefinitionProfileSync {
+        if let task = tq.list[13].taskDefinition as? TaskDefinitionProfileSync {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertEqual(task.scope, .userProfileSync)
             XCTAssertEqual(task.profileImage, profileImage)
@@ -1425,7 +1615,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[16].taskDefinition as? TaskDefinitionSettingsSync {
+        if let task = tq.list[15].taskDefinition as? TaskDefinitionSettingsSync {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertEqual(task.scope, .settingsSync)
             XCTAssertEqual(task.syncSettings.contactSyncPolicy, .sync)
@@ -1442,7 +1632,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[17].taskDefinition as? TaskDefinitionReceiveMessage {
+        if let task = tq.list[16].taskDefinition as? TaskDefinitionReceiveMessage {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertNotNil(task.message)
             XCTAssertEqual(task.receivedAfterInitialQueueSend, true)
@@ -1454,7 +1644,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[18].taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+        if let task = tq.list[17].taskDefinition as? TaskDefinitionReceiveReflectedMessage {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertNotNil(task.reflectedEnvelope)
             XCTAssertEqual(task.receivedAfterInitialQueueSend, false)
@@ -1480,7 +1670,7 @@ class TaskQueueTests: XCTestCase {
         tq.decode(data)
 
         // Check persistent tasks
-        let expectedItemCountAfterDecode = 16
+        let expectedItemCountAfterDecode = 15
         guard tq.list.count == expectedItemCountAfterDecode else {
             XCTFail(
                 "TaskList has wrong number of items. Expected \(expectedItemCountAfterDecode) but was \(tq.list.count)"
@@ -1664,17 +1854,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[13].taskDefinition as? TaskDefinitionDeleteContactSync {
-            XCTAssertEqual(.interrupted, task.state)
-            XCTAssertEqual(task.scope, .contactSync)
-            XCTAssertEqual(task.contacts, deleteableContacts)
-            XCTAssertTrue(task.retry)
-        }
-        else {
-            XCTFail()
-        }
-
-        if let task = tq.list[14].taskDefinition as? TaskDefinitionUpdateContactSync {
+        if let task = tq.list[13].taskDefinition as? TaskDefinitionUpdateContactSync {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.scope, .contactSync)
             XCTAssertEqual(task.deltaSyncContacts.count, updateableContacts.count)
@@ -1708,7 +1888,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
         
-        if let task = tq.list[15].taskDefinition as? TaskDefinitionRunForwardSecurityRefreshSteps {
+        if let task = tq.list[14].taskDefinition as? TaskDefinitionRunForwardSecurityRefreshSteps {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.contactIdentities, expectedToMembers.map { ThreemaIdentity($0) })
             XCTAssertTrue(task.retry)
@@ -1717,12 +1897,75 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
     }
+}
 
-    final class FrameworkInjectorResolverMock: FrameworkInjectorResolverProtocol {
-        init(frameworkInjector: BusinessInjectorMock) {
-            self.backgroundFrameworkInjector = frameworkInjector
+// MARK: - Helper classes
+
+private final class FrameworkInjectorResolverMock: FrameworkInjectorResolverProtocol {
+    init(frameworkInjector: BusinessInjectorMock) {
+        self.backgroundFrameworkInjector = frameworkInjector
+    }
+
+    private(set) var backgroundFrameworkInjector: FrameworkInjectorProtocol
+}
+
+private final class TaskDefinitionMock: TaskDefinition {
+    override func create(
+        frameworkInjector: FrameworkInjectorProtocol,
+        taskContext: TaskContextProtocol
+    ) -> TaskExecutionProtocol {
+        TaskExecutionMock(
+            taskContext: taskContext,
+            taskDefinition: self,
+            backgroundFrameworkInjector: frameworkInjector
+        )
+    }
+
+    override func create(frameworkInjector: FrameworkInjectorProtocol) -> TaskExecutionProtocol {
+        create(frameworkInjector: frameworkInjector, taskContext: TaskContext())
+    }
+
+    override var description: String {
+        "<\(Swift.type(of: self))>"
+    }
+    
+    let sleepInterval: TimeInterval
+    let customError: Error?
+    
+    init(sleepInterval: TimeInterval, customError: Error? = nil) {
+        self.sleepInterval = sleepInterval
+        self.customError = customError
+        super.init(type: .dropOnDisconnect)
+    }
+    
+    required init(from decoder: any Decoder) throws {
+        fatalError("init(from:) has not been implemented")
+    }
+}
+
+private final class TaskExecutionMock: TaskExecution, TaskExecutionProtocol {
+    func execute() -> PromiseKit.Promise<Void> {
+        guard let task = taskDefinition as? TaskDefinitionMock else {
+            return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
         }
-
-        private(set) var backgroundFrameworkInjector: FrameworkInjectorProtocol
+        
+        return Promise { seal in
+            Task {
+                try await Task.sleep(seconds: task.sleepInterval)
+                
+                if let customError = task.customError {
+                    seal.reject(customError)
+                    return
+                }
+                
+                do {
+                    try task.checkDropping()
+                    seal.fulfill_()
+                }
+                catch {
+                    seal.reject(error)
+                }
+            }
+        }
     }
 }

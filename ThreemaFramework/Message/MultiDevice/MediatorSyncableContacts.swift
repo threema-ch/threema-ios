@@ -61,7 +61,10 @@ class MediatorSyncableContacts: NSObject {
             UserSettings.shared(),
             PushSettingManager(
                 entityManager: entityManager,
-                taskManager: TaskManager(backgroundEntityManager: entityManager)
+                taskManager: TaskManager(
+                    backgroundEntityManager: entityManager,
+                    serverConnector: ServerConnector.shared()
+                )
             ),
             TaskManager(),
             entityManager
@@ -511,38 +514,6 @@ class MediatorSyncableContacts: NSObject {
         sync()
             .catch { error in
                 DDLogError("Sync contacts failed: \(error)")
-            }
-    }
-
-    /// Immediately sync a deleted contact
-    /// - Parameter identity: The identity of the to be deleted contact
-    func deleteAndSync(identity: String) -> Promise<Void> {
-        Promise { seal in
-            guard userSettings.enableMultiDevice else {
-                seal.fulfill_()
-                return
-            }
-
-            let task = TaskDefinitionDeleteContactSync(contacts: [identity])
-            taskManager.add(taskDefinition: task) { _, error in
-                if let error {
-                    seal.reject(error)
-                }
-                else {
-                    seal.fulfill_()
-                }
-            }
-        }
-    }
-
-    // Objective-c bridge
-    @objc func deleteAndSyncObjc(identity: String, completionHandler: @escaping (Error?) -> Void) {
-        deleteAndSync(identity: identity)
-            .done {
-                completionHandler(nil)
-            }
-            .catch { error in
-                completionHandler(error)
             }
     }
 

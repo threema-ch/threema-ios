@@ -59,7 +59,7 @@ class EntityDestroyerTests: XCTestCase {
                 olderThan = userCalendar.date(byAdding: .day, value: daysAdd, to: Date())
             }
             
-            let ed = EntityDestroyer(managedObjectContext: objCnx)
+            let ed = EntityDestroyer(managedObjectContext: objCnx, myIdentityStore: MyIdentityStoreMock())
             let count = ed.deleteMedias(olderThan: olderThan)
             
             XCTAssertEqual(count, deleteTest[1]!, "not expected count of deleted medias")
@@ -83,7 +83,7 @@ class EntityDestroyerTests: XCTestCase {
                 olderThan = userCalendar.date(byAdding: .day, value: daysAdd, to: Date())
             }
             
-            let ed = EntityDestroyer(managedObjectContext: objCnx)
+            let ed = EntityDestroyer(managedObjectContext: objCnx, myIdentityStore: MyIdentityStoreMock())
             let count = ed.deleteMessages(olderThan: olderThan)
             
             XCTAssertEqual(count, deleteTest[1]!, "not expected count of deleted messages")
@@ -98,7 +98,6 @@ class EntityDestroyerTests: XCTestCase {
                 accuracy: 1,
                 latitude: 1,
                 longitude: 1,
-                reverseGeocodingResult: "reverse result",
                 poiAddress: "POI address",
                 poiName: "POI name",
                 isOwn: true
@@ -111,7 +110,6 @@ class EntityDestroyerTests: XCTestCase {
         XCTAssertEqual(message.latitude, 0)
         XCTAssertEqual(message.longitude, 0)
         XCTAssertEqual(message.accuracy, 0)
-        XCTAssertEqual(message.reverseGeocodingResult, "")
         XCTAssertNil(message.poiAddress)
         XCTAssertNil(message.poiName)
     }
@@ -226,8 +224,8 @@ class EntityDestroyerTests: XCTestCase {
             identity: "ECHOECHO"
         )
         
-        entityManager.entityDestroyer.deleteObject(object: deletableContactAndConversation.conversation)
-        
+        entityManager.entityDestroyer.delete(conversation: deletableContactAndConversation.conversation)
+
         guard let fetchedContact = entityManager.entityFetcher.contact(for: "ECHOECHO") else {
             XCTFail()
             return
@@ -269,7 +267,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation)!
+                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -280,7 +278,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: remainingContactAndConversation.conversation)!
+                    .textMessage(for: remainingContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = remainingContactAndConversation.contact
                 message.text = "Text \(i)"
             }
@@ -308,8 +306,8 @@ class EntityDestroyerTests: XCTestCase {
         
         // Test
         
-        entityManager.entityDestroyer.deleteObject(object: deletableContactAndConversation.conversation)
-        
+        entityManager.entityDestroyer.delete(conversation: deletableContactAndConversation.conversation)
+
         verifyDatabase(
             with: entityManager,
             deletedContact: false,
@@ -348,7 +346,7 @@ class EntityDestroyerTests: XCTestCase {
                         for i in 0..<100 {
                             for member in members {
                                 let message = entityManager.entityCreator.textMessage(
-                                    for: conversation
+                                    for: conversation, setLastUpdate: true
                                 )!
                                 message.sender = member
                                 message.text = "Text \(i)"
@@ -365,7 +363,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation)!
+                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -375,7 +373,7 @@ class EntityDestroyerTests: XCTestCase {
         
         for i in 0..<100 {
             entityManager.performAndWaitSave {
-                let message = entityManager.entityCreator.textMessage(for: conversation2)!
+                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
                 
@@ -398,8 +396,8 @@ class EntityDestroyerTests: XCTestCase {
         
         // Test
         
-        entityManager.entityDestroyer.deleteObject(object: deletableContactAndConversation.conversation)
-        
+        entityManager.entityDestroyer.delete(conversation: deletableContactAndConversation.conversation)
+
         verifyDatabase(
             with: entityManager,
             deletedContact: false,
@@ -413,18 +411,18 @@ class EntityDestroyerTests: XCTestCase {
     
     func testDeleteContactGroupConversationAndMessages() {
         let entityManager = EntityManager(databaseContext: databaseMainCnx)
-        
+
         let deletableContactAndConversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
         )
-        
+
         var members = createThreeGroupMembers(entityManager: entityManager)
         members.append(deletableContactAndConversation.contact)
-        
+
         var ultimatelyDeletedMessageIDs = Set<Data>()
         var existingMessageIDs = Set<Data>()
-        
+
         entityManager.performAndWaitSave {
             for i in 0..<10 {
                 _ = DatabasePreparer(context: self.databaseMainCnx.main)
@@ -433,13 +431,16 @@ class EntityDestroyerTests: XCTestCase {
                         conversation.groupMyIdentity = deletableContactAndConversation.contact.identity
                         conversation.groupName = "TestGroup \(i)"
                         conversation.addMembers(Set(members))
-                        
+
                         for i in 0..<10 {
                             for member in members {
-                                let message = entityManager.entityCreator.textMessage(for: conversation)!
+                                let message = entityManager.entityCreator.textMessage(
+                                    for: conversation,
+                                    setLastUpdate: true
+                                )!
                                 message.sender = member
                                 message.text = "Text \(i)"
-                                
+
                                 if member == deletableContactAndConversation.contact {
                                     ultimatelyDeletedMessageIDs.insert(message.id)
                                 }
@@ -451,45 +452,45 @@ class EntityDestroyerTests: XCTestCase {
                     }
             }
         }
-        
+
         let conversation2 = entityManager.conversation(forContact: members.first!, createIfNotExisting: true)
-        
+
         for i in 0..<10 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation)!
+                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
-                
+
                 ultimatelyDeletedMessageIDs.insert(message.id)
             }
         }
-        
+
         for i in 0..<10 {
             entityManager.performAndWaitSave {
-                let message = entityManager.entityCreator.textMessage(for: conversation2)!
+                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
-                
+
                 existingMessageIDs.insert(message.id)
             }
         }
-        
+
         // End Prepare
-        
+
         // Start Verify Test Correctly Prepared
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
-        
+
         let prevMessages = try! databaseMainCnx.main.fetch(fetchMessages)
-        
+
         XCTAssert(prevMessages.count == 420)
-        
+
         // End Verify Test Correctly Prepared
-        
+
         // Test
-        
-        entityManager.entityDestroyer.deleteObject(object: deletableContactAndConversation.contact)
-        
+
+        entityManager.entityDestroyer.delete(contactEntity: deletableContactAndConversation.contact)
+
         verifyDatabase(
             with: entityManager,
             deletedContact: true,
@@ -548,7 +549,7 @@ class EntityDestroyerTests: XCTestCase {
         let deleteMessage = try XCTUnwrap(lastMessage)
 
         let entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil))
-        entityManager.entityDestroyer.deleteObject(object: deleteMessage)
+        entityManager.entityDestroyer.delete(baseMessage: deleteMessage)
 
         XCTAssertNotNil(conversation)
         XCTAssertNil(conversation?.lastMessage)

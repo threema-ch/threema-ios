@@ -26,7 +26,6 @@
 #import "InviteController.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "AppDelegate.h"
-#import "GatewayAvatarMaker.h"
 #import "UIImage+ColoredImage.h"
 #import "NSString+Hex.h"
 #import "ServerAPIConnector.h"

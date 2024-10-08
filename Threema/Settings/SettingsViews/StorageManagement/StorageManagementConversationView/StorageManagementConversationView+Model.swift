@@ -29,6 +29,8 @@ extension StorageManagementConversationView {
         
         private var conversation: Conversation?
         private var businessInjector: BusinessInjectorProtocol
+        var contact: Contact?
+        var group: ThreemaFramework.Group?
         
         @Published var totalMessagesCount = 0
         @Published var totalMediaCount = 0
@@ -58,6 +60,20 @@ extension StorageManagementConversationView {
         init(conversation: Conversation?, businessInjector: BusinessInjectorProtocol) {
             self.businessInjector = businessInjector
             self.conversation = conversation
+            
+            guard let conversation else {
+                return
+            }
+            
+            businessInjector.entityManager.performAndWait {
+                if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
+                    self.group = group
+                }
+                if let contactID = conversation.contact?.identity,
+                   let contact = businessInjector.entityManager.entityFetcher.contact(for: contactID) {
+                    self.contact = Contact(contactEntity: contact)
+                }
+            }
         }
     
         // MARK: - General methods
@@ -68,18 +84,6 @@ extension StorageManagementConversationView {
             await businessInjector.runInBackground { backgroundBusinessInjector in
                 let conversations = self.conversations(backgroundBusinessInjector.entityManager)
                 self.count(backgroundBusinessInjector.entityManager, conversations)
-            }
-        }
-        
-        func avatarImageProvider(completion: @escaping (UIImage?) -> Void) {
-            AvatarMaker.shared().avatar(
-                for: conversation,
-                size: DetailsHeaderProfileView.avatarImageSize,
-                masked: true
-            ) { avatarImage, _ in
-                DispatchQueue.main.async {
-                    completion(avatarImage)
-                }
             }
         }
         

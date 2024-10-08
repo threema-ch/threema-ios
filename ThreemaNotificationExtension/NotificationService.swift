@@ -48,6 +48,7 @@ class NotificationService: UNNotificationServiceExtension {
     
     private let threemaPayloadKey = "threema"
     private let aliveCheckKey = "alive-check"
+    private let pushTestKey = "push-test"
     
     private var observer: Any?
 
@@ -125,121 +126,50 @@ class NotificationService: UNNotificationServiceExtension {
             return
         }
         
-        if let threemaDictEntcrypted = bestAttemptContent.userInfo[threemaPayloadKey],
-           let threemaDict = PushPayloadDecryptor.decryptPushPayload(threemaDictEntcrypted as? [AnyHashable: Any]) {
-            
-            DDLogInfo("[Push] Request threema push: \(threemaDict)")
-            
-            let isAliveCheck: Bool = ((threemaDict[aliveCheckKey] as? Int) != nil)
-            let threemaPushNotification = try? ThreemaPushNotification(from: threemaDict as! [String: Any])
-            
-            if threemaPushNotification != nil || isAliveCheck {
-                
-                // Exit if connected already
-                if backgroundBusinessInjector.serverConnector.connectionState == .connecting ||
-                    backgroundBusinessInjector.serverConnector.connectionState == .connected ||
-                    backgroundBusinessInjector.serverConnector.connectionState == .loggedIn {
-                    DDLogWarn("[Push] Suppressing push because already connected")
-                    applyContent()
-                    return
-                }
-                
-                backgroundBusinessInjector.serverConnector
-                    .backgroundEntityManagerForMessageProcessing = backgroundBusinessInjector.entityManager
-
-                // TODO: (IOS-4677) Shouldn't we always process GC messages?
-                if backgroundBusinessInjector.settingsStore.enableThreemaGroupCalls {
-                    GlobalGroupCallManagerSingleton.injectedBackgroundBusinessInjector = backgroundBusinessInjector
-                }
-                
-                // Refresh all DB objects before access it
-                DatabaseManager.db()?.refreshAllObjects()
-                backgroundBusinessInjector.entityManager.refreshAll()
-
-                backgroundBusinessInjector.contactStore.resetEntityManager()
-                
-                pendingUserNotificationManager = PendingUserNotificationManager(
-                    UserNotificationManager(
-                        backgroundBusinessInjector.settingsStore,
-                        backgroundBusinessInjector.userSettings,
-                        backgroundBusinessInjector.myIdentityStore,
-                        backgroundBusinessInjector.pushSettingManager,
-                        backgroundBusinessInjector.contactStore,
-                        backgroundBusinessInjector.groupManager,
-                        backgroundBusinessInjector.entityManager,
-                        backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
-                    ),
-                    backgroundBusinessInjector.pushSettingManager,
-                    backgroundBusinessInjector.entityManager
-                )
-                
-                // Create pendingUserNotification only for message notifications, not for keep alive checks
-                // Keep alive check will connect to the server, because if the last connection was too long ago, the
-                // server sets the identity as inactive
-                if let threemaPushNotification {
-                    if threemaPushNotification.voip == false {
-                        if let pendingUserNotification = pendingUserNotificationManager?
-                            .pendingUserNotification(
-                                for: threemaPushNotification,
-                                stage: .initial
-                            ) {
-                            _ = pendingUserNotificationManager?
-                                .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
-                        }
-                    }
-                }
-                else {
-                    DDLogInfo("[Push] Alive check")
-                }
-                
-                // Start processing incoming messages and wait (max. 25s kNSETimeout)
-                DDLogNotice("[Push] Enter the stopProcessingGroup")
-                NotificationService.stopProcessingGroup = DispatchGroup()
-                NotificationService.stopProcessingGroup?.enter()
-                
-                // We observe for invalid license
-                observer = NotificationCenter.default.addObserver(
-                    forName: Notification.Name(rawValue: kNotificationLicenseMissing),
-                    object: nil,
-                    queue: nil
-                ) { [weak self] _ in
-                    self?.addInvalidLicenseKeyNotification(removingInitialPushFor: threemaPushNotification)
-                }
-                
-                DispatchQueue.global().async {
-                    // Initialize conversation changed for calc unread messages badge count
-                    self.conversationsChangedQueue.async {
-                        self.conversationsChanged = Set<NSManagedObjectID>()
-                    }
+        guard let threemaDictEntcrypted = bestAttemptContent.userInfo[threemaPayloadKey],
+              let threemaDict = PushPayloadDecryptor.decryptPushPayload(threemaDictEntcrypted as? [AnyHashable: Any])
+        else {
+            notThreemaDictInPayload(bestAttemptContent)
+            return
+        }
                     
-                    // Register message processor delegate and connect to server
-                    self.backgroundBusinessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
-                    self.backgroundBusinessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
-                    
-                    self.backgroundBusinessInjector.serverConnector.connect(initiator: .notificationExtension)
-                }
-                
-                let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + kNSETimeout)
-                if result != .success {
-                    DDLogWarn("[Push] Stopping processing incoming messages, because time is up!")
-                    
-                    if NotificationService.didJustReportCall {
-                        DDLogError("[Push] Stopped processing incoming messages, but we were reporting a call!")
-                        NotificationService.didJustReportCall = false
-                    }
-                }
-                
-                backgroundBusinessInjector.serverConnector.unregisterMessageProcessorDelegate(delegate: self)
-                backgroundBusinessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
-                backgroundBusinessInjector.serverConnector.disconnectWait(initiator: .notificationExtension)
+        DDLogInfo("[Push] Request threema push: \(threemaDict)")
+        
+        let isAliveCheck: Bool = ((threemaDict[aliveCheckKey] as? Int) != nil)
+        let isPushTest: Bool = ((threemaDict[pushTestKey] as? Int) != nil)
+        let threemaPushNotification = try? ThreemaPushNotification(from: threemaDict as! [String: Any])
+        
+        guard !isPushTest else {
+            // Show test notification (necessary for customer support)
+            showTestNotification(bestAttemptContent)
+            return
+        }
+        
+        if threemaPushNotification != nil || isAliveCheck {
+            
+            // Exit if connected already
+            if backgroundBusinessInjector.serverConnector.connectionState == .connecting ||
+                backgroundBusinessInjector.serverConnector.connectionState == .connected ||
+                backgroundBusinessInjector.serverConnector.connectionState == .loggedIn {
+                DDLogWarn("[Push] Suppressing push because already connected")
+                applyContent()
+                return
             }
             
-            applyContent()
-        }
-        else {
-            DDLogWarn("[Push] Message ID is missing")
+            backgroundBusinessInjector.serverConnector
+                .backgroundEntityManagerForMessageProcessing = backgroundBusinessInjector.entityManager
             
-            // Show test notification (necessary for customer support)
+            // TODO: (IOS-4677) Shouldn't we always process GC messages?
+            if backgroundBusinessInjector.settingsStore.enableThreemaGroupCalls {
+                GlobalGroupCallManagerSingleton.injectedBackgroundBusinessInjector = backgroundBusinessInjector
+            }
+            
+            // Refresh all DB objects before access it
+            DatabaseManager.db()?.refreshAllObjects()
+            backgroundBusinessInjector.entityManager.refreshAll()
+            
+            backgroundBusinessInjector.contactStore.resetEntityManager()
+            
             pendingUserNotificationManager = PendingUserNotificationManager(
                 UserNotificationManager(
                     backgroundBusinessInjector.settingsStore,
@@ -255,25 +185,74 @@ class NotificationService: UNNotificationServiceExtension {
                 backgroundBusinessInjector.entityManager
             )
             
-            if bestAttemptContent.userInfo["3mw"] is [AnyHashable: Any] {
-                DDLogInfo("[Push] Configure Threema Web notification")
-                // Use applyContent to set the badge with the count of unread messages
-                let content = pendingUserNotificationManager?
-                    .editThreemaWebNotification(payload: bestAttemptContent.userInfo)
-                applyContent(content)
+            // Create pendingUserNotification only for message notifications, not for keep alive checks
+            // Keep alive check will connect to the server, because if the last connection was too long ago, the
+            // server sets the identity as inactive
+            if let threemaPushNotification {
+                if threemaPushNotification.voip == false {
+                    if let pendingUserNotification = pendingUserNotificationManager?
+                        .pendingUserNotification(
+                            for: threemaPushNotification,
+                            stage: .initial
+                        ) {
+                        _ = pendingUserNotificationManager?
+                            .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
+                    }
+                }
             }
             else {
-                pendingUserNotificationManager?.startTestUserNotification(
-                    payload: bestAttemptContent.userInfo,
-                    completion: {
-                        DDLogInfo("[Push] Test notification shown!")
-                        
-                        let emptyContent = UNMutableNotificationContent()
-                        bestAttemptContent.badge = 999
-                        self.applyContent(emptyContent)
-                    }
-                )
+                DDLogInfo("[Push] Alive check")
             }
+            
+            // Start processing incoming messages and wait (max. 25s kNSETimeout)
+            DDLogNotice("[Push] Enter the stopProcessingGroup")
+            NotificationService.stopProcessingGroup = DispatchGroup()
+            NotificationService.stopProcessingGroup?.enter()
+            
+            // We observe for invalid license
+            observer = NotificationCenter.default.addObserver(
+                forName: Notification.Name(rawValue: kNotificationLicenseMissing),
+                object: nil,
+                queue: nil
+            ) { [weak self] _ in
+                self?.addInvalidLicenseKeyNotification(removingInitialPushFor: threemaPushNotification)
+            }
+            
+            DispatchQueue.global().async {
+                // Initialize conversation changed for calc unread messages badge count
+                self.conversationsChangedQueue.async {
+                    self.conversationsChanged = Set<NSManagedObjectID>()
+                }
+                
+                // Register message processor delegate and connect to server
+                self.backgroundBusinessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
+                self.backgroundBusinessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
+                
+                self.backgroundBusinessInjector.serverConnector.connect(initiator: .notificationExtension)
+            }
+            
+            let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + kNSETimeout)
+            if result != .success {
+                DDLogWarn("[Push] Stopping processing incoming messages, because time is up!")
+                
+                if NotificationService.didJustReportCall {
+                    DDLogError("[Push] Stopped processing incoming messages, but we were reporting a call!")
+                    NotificationService.didJustReportCall = false
+                }
+            }
+            
+            backgroundBusinessInjector.serverConnector.unregisterMessageProcessorDelegate(delegate: self)
+            backgroundBusinessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
+            backgroundBusinessInjector.serverConnector.disconnectWait(initiator: .notificationExtension)
+        }
+        
+        if isAliveCheck {
+            let emptyContent = UNMutableNotificationContent()
+            emptyContent.userInfo = bestAttemptContent.userInfo
+            applyContent(emptyContent)
+        }
+        else {
+            applyContent()
         }
     }
     
@@ -425,7 +404,7 @@ class NotificationService: UNNotificationServiceExtension {
             (
                 isChatQueueDry &&
                     (!isMultiDeviceRegistered || (isMultiDeviceRegistered && isReflectionQueueDry)) &&
-                    TaskManager.isEmpty(queueType: .incoming)
+                    TaskManager.isEmpty()
             ) {
             DDLogNotice(
                 "[Push] Stopping process incoming messages (force: \(force), willExpire: \(willExpire)), because receive message queue finished or chat/reflection queue is dry!"
@@ -560,6 +539,68 @@ class NotificationService: UNNotificationServiceExtension {
             userInfo: nil,
             completionHandler: onCompletion
         )
+    }
+    
+    /// Will apply the test message content
+    /// - Parameter bestAttemptContent: UNMutableNotificationContent
+    private func showTestNotification(_ bestAttemptContent: UNMutableNotificationContent) {
+        pendingUserNotificationManager = PendingUserNotificationManager(
+            UserNotificationManager(
+                backgroundBusinessInjector.settingsStore,
+                backgroundBusinessInjector.userSettings,
+                backgroundBusinessInjector.myIdentityStore,
+                backgroundBusinessInjector.pushSettingManager,
+                backgroundBusinessInjector.contactStore,
+                backgroundBusinessInjector.groupManager,
+                backgroundBusinessInjector.entityManager,
+                backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
+            ),
+            backgroundBusinessInjector.pushSettingManager,
+            backgroundBusinessInjector.entityManager
+        )
+        
+        pendingUserNotificationManager?.startTestUserNotification(
+            payload: bestAttemptContent.userInfo,
+            completion: {
+                DDLogInfo("[Push] Test notification shown!")
+                
+                let emptyContent = UNMutableNotificationContent()
+                bestAttemptContent.badge = 999
+                self.applyContent(emptyContent)
+            }
+        )
+    }
+    
+    /// Will apply a empty content or threema web content (if 3mw is in payload)
+    /// - Parameter bestAttemptContent: UNMutableNotificationContent
+    private func notThreemaDictInPayload(_ bestAttemptContent: UNMutableNotificationContent) {
+        DDLogWarn("[Push] Missing threema key in payload")
+        
+        pendingUserNotificationManager = PendingUserNotificationManager(
+            UserNotificationManager(
+                backgroundBusinessInjector.settingsStore,
+                backgroundBusinessInjector.userSettings,
+                backgroundBusinessInjector.myIdentityStore,
+                backgroundBusinessInjector.pushSettingManager,
+                backgroundBusinessInjector.contactStore,
+                backgroundBusinessInjector.groupManager,
+                backgroundBusinessInjector.entityManager,
+                backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
+            ),
+            backgroundBusinessInjector.pushSettingManager,
+            backgroundBusinessInjector.entityManager
+        )
+        
+        if bestAttemptContent.userInfo["3mw"] is [AnyHashable: Any] {
+            DDLogInfo("[Push] Configure Threema Web notification")
+            // Use applyContent to set the badge with the count of unread messages
+            let content = pendingUserNotificationManager?
+                .editThreemaWebNotification(payload: bestAttemptContent.userInfo)
+            applyContent(content)
+        }
+        else {
+            applyContent()
+        }
     }
 }
 
@@ -715,11 +756,8 @@ extension NotificationService: MessageProcessorDelegate {
         }
     }
     
-    func taskQueueEmpty(_ queueTypeName: String) {
-        let queueType = TaskQueueType.queue(name: queueTypeName)
-        if queueType == .incoming {
-            exitIfAllTasksProcessed(force: true)
-        }
+    func taskQueueEmpty() {
+        exitIfAllTasksProcessed(force: true)
     }
     
     func chatQueueDry() {
@@ -753,6 +791,12 @@ extension NotificationService: MessageProcessorDelegate {
             guard backgroundBusinessInjector.userSettings.enableThreemaCall else {
                 offerMessage.contactIdentity = identity
                 rejectCall(offer: offerMessage)
+                onCompletion?(self)
+                return
+            }
+            guard backgroundBusinessInjector.pushSettingManager.canMasterDndSendPush() else {
+                offerMessage.contactIdentity = identity
+                rejectCall(offer: offerMessage, rejectReason: .offHours)
                 onCompletion?(self)
                 return
             }
@@ -791,12 +835,16 @@ extension NotificationService: MessageProcessorDelegate {
     
     /// Reject call because Threema Calls are disabled on this device
     /// - Parameter offer: VoIPCallOfferMessage
-    private func rejectCall(offer: VoIPCallOfferMessage) {
+    /// - Parameter rejectReason: Reject reason (Default: .disabled)
+    private func rejectCall(
+        offer: VoIPCallOfferMessage,
+        rejectReason: VoIPCallAnswerMessage.MessageRejectReason = .disabled
+    ) {
         let voIPCallSender = VoIPCallSender(
             messageSender: backgroundBusinessInjector.messageSender,
             myIdentityStore: backgroundBusinessInjector.myIdentityStore
         )
-        let reason: VoIPCallAnswerMessage.MessageRejectReason = .disabled
+        let reason: VoIPCallAnswerMessage.MessageRejectReason = rejectReason
         let answer = VoIPCallAnswerMessage(
             action: .reject,
             contactIdentity: offer.contactIdentity,
@@ -823,6 +871,14 @@ extension NotificationService: MessageProcessorDelegate {
             let databaseManager = DatabaseManager()
             databaseManager.addDirtyObject(conversation)
             databaseManager.addDirtyObject(systemMessage)
+            
+            self.backgroundBusinessInjector.unreadMessages
+                .totalCount(doCalcUnreadMessagesCountOf: [conversation])
+
+            // Add conversation as change to recalculate unread messages
+            self.conversationsChangedQueue.async {
+                self.conversationsChanged?.insert(conversation.objectID)
+            }
         }
     }
     

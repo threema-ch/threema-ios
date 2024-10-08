@@ -18,23 +18,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import AVFoundation
+import Foundation
 
-extension VoiceMessageAudioRecorder {
-    enum Configuration {
-        static let recordDuration = (min: 1.0, max: 1800.0)
-        
-        static let recordFileName = "recordAudio"
-        static let recordTmpFileName = "interrupted"
-        static let maxSaveTimeS = 10.0
-        
-        static let recordSettings = [
-            AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: 44100.0,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderBitRateKey: 32000,
-            AVLinearPCMBitDepthKey: 16,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-        ] as [String: Any]
+extension VoiceMessageRecorderActor {
+    nonisolated func handleMagicTap() {
+        Task {
+            if await isPlaying {
+                await pause()
+                await MainActor.run {
+                    UIAccessibility.post(notification: .announcement, argument: "pause".localized)
+                }
+            }
+            else if await isRecording {
+                await stop()
+                await MainActor.run {
+                    UIAccessibility.post(notification: .announcement, argument: "stop".localized)
+                }
+            }
+            else {
+                await play()
+            }
+        }
     }
 }

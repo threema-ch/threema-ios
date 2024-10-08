@@ -25,7 +25,6 @@
 #import <ThreemaFramework/AbstractMessage.h>
 #import <ThreemaFramework/AbstractGroupMessage.h>
 #import <ThreemaFramework/AppGroup.h>
-#import <ThreemaFramework/AvatarMaker.h>
 #import <ThreemaFramework/AudioMessageEntity.h>
 #import <ThreemaFramework/Ballot.h>
 #import <ThreemaFramework/BallotChoice.h>
@@ -122,12 +121,9 @@
 #import <ThreemaFramework/URLSenderItem.h>
 #import <ThreemaFramework/UserSettings.h>
 #import <ThreemaFramework/ThreemaUtilityObjC.h>
-#import <ThreemaFramework/RequestedConversation.h>
-#import <ThreemaFramework/RequestedThumbnail.h>
 #import <ThreemaFramework/ServerConnector.h>
 #import <ThreemaFramework/SocketProtocolDelegate.h>
 #import <ThreemaFramework/SystemMessage.h>
-#import <ThreemaFramework/Tag.h>
 #import <ThreemaFramework/TaskExecutionTransactionDelegate.h>
 #import <ThreemaFramework/TextMessage.h>
 #import <ThreemaFramework/TextStyleUtils.h>
@@ -155,6 +151,7 @@
 #import <ThreemaFramework/ThreemaError.h>
 #import <ThreemaFramework/GroupCallEntity.h>
 #import <ThreemaFramework/ObjcCspE2eFs_Version.h>
+#import <ThreemaFramework/TypingIndicatorManager.h>
 
 //! Project version number for ThreemaFramework.
 FOUNDATION_EXPORT double ThreemaFrameworkVersionNumber;

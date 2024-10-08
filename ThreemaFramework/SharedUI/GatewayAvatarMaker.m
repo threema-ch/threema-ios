@@ -165,7 +165,6 @@
             [self updateExpires:expiresDate forIdentity:identity];
         }
         
-        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationIdentityAvatarChanged object:identity];
     } onError:^(NSError *error) {
         if (error.code == 404) {
             [self updateProfileImage:nil identity:identity];

@@ -182,14 +182,6 @@ enum CspE2eMessageType {
   // [`contact-request-profile-picture`](ref:e2e.contact-request-profile-picture)
   CONTACT_REQUEST_PROFILE_PICTURE = 0x1a;
 
-  // Group invitations
-  // -----------------
-
-  // `csp-e2e.GroupJoinRequest`
-  GROUP_JOIN_REQUEST = 0x4d;
-  // `csp-e2e.GroupJoinResponse`
-  GROUP_JOIN_RESPONSE = 0x4e;
-
   // Group control
   // -------------
 

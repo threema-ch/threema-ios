@@ -234,7 +234,7 @@ class EntityObserverTests: XCTestCase {
         }
 
         entityManager.performSyncBlockAndSafe {
-            entityManager.entityDestroyer.deleteObject(object: conversation)
+            entityManager.entityDestroyer.delete(conversation: conversation)
         }
 
         wait(for: [expect], timeout: 3)
@@ -287,7 +287,7 @@ class EntityObserverTests: XCTestCase {
         }
 
         entityManager.performSyncBlockAndSafe {
-            entityManager.entityDestroyer.deleteObject(object: conversation)
+            entityManager.entityDestroyer.delete(conversation: conversation)
         }
 
         wait(for: [expect], timeout: 3)

@@ -54,7 +54,7 @@
     if (group) {
         [self presentAlertController];
     } else {
-        [self deleteConversationWithDeleteHiddenContacts:YES];
+        [self deleteConversation];
         if (_onCompletion) {
             _onCompletion(YES);
         }
@@ -111,9 +111,7 @@
             [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"group_dissolve_and_delete_button"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
                 [self dissolve]; 
                 
-                // only the admin can dissolve a group, and since the admin can only ever add
-                // non-hidden contacts as members, there's no need to delete hidden contacts here
-                [self deleteConversationWithDeleteHiddenContacts:NO];
+                [self deleteConversation];
                 if (_onCompletion) {
                     _onCompletion(YES);
                 }
@@ -129,8 +127,7 @@
             [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"group_leave_and_delete_button"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
                 [self leave]; 
                 
-                // the task added by the previous leave call takes care of deleting hidden contacts
-                [self deleteConversationWithDeleteHiddenContacts:NO];
+                [self deleteConversation];
                 if (_onCompletion) {
                     _onCompletion(YES);
                 }
@@ -139,7 +136,7 @@
     }
     else {
         [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"delete"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
-            [self deleteConversationWithDeleteHiddenContacts:YES];
+            [self deleteConversation];
             if (_onCompletion) {
                 _onCompletion(YES);
             }
@@ -176,7 +173,7 @@
     }
 }
 
-- (void)deleteConversationWithDeleteHiddenContacts:(BOOL)deleteHiddenContacts {
+- (void)deleteConversation {
     if ([group state] == GroupStateActive || [group state] == GroupStateRequestedSync || _conversation == nil) {
         return;
     }
@@ -185,24 +182,9 @@
     [[ChatScrollPosition _sharedObjC] removeSavedPositionFor:_conversation];
 
     // Delete conversation
-    __block NSMutableSet<NSString *> *hiddenMembers = [NSMutableSet new];
     [entityManager performSyncBlockAndSafe:^{
-        if (deleteHiddenContacts) {
-            for (ContactEntity *member in _conversation.members) {
-                if (member.isContactHidden) {
-                    [hiddenMembers addObject:member.identity];
-                }
-            }
-        }
-
-        [[entityManager entityDestroyer] deleteObjectWithObject:_conversation];
+        [[entityManager entityDestroyer] deleteWithConversation:_conversation];
     }];
-
-    // Delete the hidden contacts
-    // (only contacts that are not member of any group will be deleted)
-    for (NSString *identity in hiddenMembers) {
-        [[ContactStore sharedContactStore] deleteContactWithIdentity:identity entityManagerObject:entityManager];
-    }
 
     NotificationManager *notificationManager = [[NotificationManager alloc] init];
     [notificationManager updateUnreadMessagesCount];

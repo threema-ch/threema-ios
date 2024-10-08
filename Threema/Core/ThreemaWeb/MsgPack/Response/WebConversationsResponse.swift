@@ -157,9 +157,21 @@ struct WebConversation {
         if addAvatar {
             let maxSize = request != nil ? request!.maxSize : 48
             let quality = request != nil ? 0.75 : 0.6
-            if let avatarImage = AvatarMaker.shared()
-                .avatar(for: conversation, size: CGFloat(maxSize), masked: false, scaled: false) {
-                self.avatar = avatarImage.jpegData(compressionQuality: CGFloat(quality))
+            let size = CGSize(width: maxSize, height: maxSize)
+           
+            if conversation.isGroup(),
+               let group = businessInjector.groupManager.getGroup(conversation: conversation) {
+                self.avatar = group.profilePicture.resizedImage(newSize: size)
+                    .jpegData(compressionQuality: CGFloat(quality))
+            }
+            else if let contact = conversation.contact {
+                let businessContact = Contact(contactEntity: contact)
+                self.avatar = businessContact.profilePicture.resizedImage(newSize: size)
+                    .jpegData(compressionQuality: CGFloat(quality))
+            }
+            else {
+                self.avatar = ProfilePictureGenerator.unknownContactImage.resizedImage(newSize: size)
+                    .jpegData(compressionQuality: CGFloat(quality))
             }
         }
 

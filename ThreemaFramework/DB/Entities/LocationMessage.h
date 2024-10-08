@@ -28,7 +28,6 @@
 @property (nonatomic, retain) NSNumber * latitude;
 @property (nonatomic, retain) NSNumber * longitude;
 @property (nonatomic, retain) NSNumber * accuracy;
-@property (nonatomic, retain) NSString * reverseGeocodingResult; DEPRECATED_MSG_ATTRIBUTE("Use poiAddress instead.");
 @property (nonatomic, retain, nullable) NSString * poiName;
 @property (nonatomic, retain, nullable) NSString * poiAddress;
 

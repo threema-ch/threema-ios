@@ -27,13 +27,14 @@ enum SessionState {
     case closed(audioFile: URL)
 }
 
-protocol VoiceMessageManagerProtocol: NSObject {
+protocol VoiceMessageManagerProtocolBase: Actor {
     associatedtype DraftStore: MessageDraftStoreProtocol
     associatedtype MediaManager: AudioMediaManagerProtocol
     
     var delegate: VoiceMessageAudioRecorderDelegate? { get set }
     
-    var recordingStates: AnyPublisher<RecordingState, Never> { get }
+    nonisolated var recordingStates: AnyPublisher<RecordingState, Never> { get }
+    nonisolated var recordingStateSubject: PassthroughSubject<RecordingState, Never> { get }
     
     var audioSessionManager: AudioSessionManagerProtocol { get }
     
@@ -45,75 +46,80 @@ protocol VoiceMessageManagerProtocol: NSObject {
     var sufficientLength: Bool { get }
     var recordedLength: TimeInterval { get }
         
-    static func requestRecordPermission(_ handler: @escaping (Bool) -> Void)
+    static func requestRecordPermission() async -> Bool
     
     func sendFile(for conversation: Conversation) async
-    func load(_ audioFile: URL?) async
-    func savedSession(_ shouldMove: Bool) async throws -> SessionState
 }
 
-extension VoiceMessageManagerProtocol {
-    static func requestRecordPermission(_ handler: @escaping (Bool) -> Void) {
-        AVAudioSession.sharedInstance().requestRecordPermission {
-            handler($0)
-        }
-    }
-    
+extension VoiceMessageManagerProtocolBase {
     static func requestRecordPermission() async -> Bool {
         if #available(iOS 17.0, *) {
             await AVAudioApplication.requestRecordPermission()
         }
         else {
             await withCheckedContinuation { continuation in
-                requestRecordPermission { result in
-                    continuation.resume(returning: result)
+                AVAudioSession.sharedInstance().requestRecordPermission {
+                    continuation.resume(returning: $0)
                 }
             }
         }
     }
     
-    var proximityMonitoring: (activate: () -> Void, deactivate: () -> Void) {
+    nonisolated static var proximityMonitoring: (activate: () -> Void, deactivate: () -> Void) {
         (
             activate: {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     if !UserSettings.shared().disableProximityMonitoring {
                         UIDevice.current.isProximityMonitoringEnabled = true
                     }
                 }
             },
             deactivate: {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     UIDevice.current.isProximityMonitoringEnabled = false
                 }
             }
         )
     }
     
-    var idleTimer: (enable: () -> Void, disable: () -> Void) {
+    nonisolated static var idleTimer: (enable: () -> Void, disable: () -> Void) {
         (
             {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     UIApplication.shared.isIdleTimerDisabled = false
                 }
             },
             {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     UIApplication.shared.isIdleTimerDisabled = true
                 }
             }
         )
     }
+
+    nonisolated static func resetIdleAndProximity() {
+        if !NavigationBarPromptHandler.isWebActive {
+            VoiceMessageRecorderActor.idleTimer.enable()
+        }
+        VoiceMessageRecorderActor.proximityMonitoring.deactivate()
+    }
 }
 
 protocol AudioPlayerProtocol {
-    func play()
-    func pause()
-    func playbackDidSeekTo(progress: Double)
+    func play() async
+    func pause() async
+    func playbackDidSeekTo(progress: Double) async
 }
 
-protocol AudioRecorderProtocol {
-    func record() async
-    func stop() async
+protocol AudioRecorderProtocol: Actor {
+    func record()
+    func stop()
 }
 
-typealias VoiceMessageAudioRecorderProtocol = VoiceMessageManagerProtocol & AudioPlayerProtocol & AudioRecorderProtocol
+protocol AudioRecorderSessionManager {
+    func load(_ audioFile: URL?) async
+    func savedSession(_ shouldMove: Bool) async throws -> SessionState
+}
+
+typealias VoiceMessageAudioRecorderProtocol = VoiceMessageManagerProtocolBase & AudioPlayerProtocol &
+    AudioRecorderProtocol & AudioRecorderSessionManager

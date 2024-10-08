@@ -124,6 +124,11 @@ class AppMigrationTests: XCTestCase {
             ddLoggerMock
                 .exists(message: "[AppMigration] Files migration to version 6.2.1 successfully finished")
         )
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] Files migration to version 6.3 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] Files migration to version 6.3 successfully finished")
+        )
 
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         let conversations: [Conversation] = entityManager.entityFetcher.allConversations() as! [Conversation]
@@ -211,17 +216,18 @@ class AppMigrationTests: XCTestCase {
         // Checks for 6.2 migration
         XCTAssertNil(AppGroup.userDefaults().object(forKey: "LastWorkUpdateRequest"))
 
-        // Checks for 6.2.1 migration
+        // Checks for 6.3 migration (6.2.1 downgrade of 6.3+ was running before
+        // (see `setupDataForMigrationVersion6_2_1()`)
         let outgoingQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
             "outgoingQueue",
             isDirectory: false
         )
-        XCTAssertTrue(FileUtility.shared.isExists(fileURL: outgoingQueuePath))
+        XCTAssertFalse(FileUtility.shared.isExists(fileURL: outgoingQueuePath))
         let taskQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
             "taskQueue",
             isDirectory: false
         )
-        XCTAssertFalse(FileUtility.shared.isExists(fileURL: taskQueuePath))
+        XCTAssertTrue(FileUtility.shared.isExists(fileURL: taskQueuePath))
     }
 
     private func setupDataForMigrationVersion4_8() {

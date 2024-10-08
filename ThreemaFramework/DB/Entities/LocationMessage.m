@@ -27,7 +27,6 @@
 @dynamic latitude;
 @dynamic longitude;
 @dynamic accuracy;
-@dynamic reverseGeocodingResult;
 @dynamic poiName;
 @dynamic poiAddress;
 

@@ -103,6 +103,13 @@
         [self handleThreemaDotIdUrl:url hideAppChooser:false];
         return YES;
     }
+    if (([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) &&
+        [[url.host lowercaseString] isEqualToString:@"threema.ch"]) {
+        if ([[UIApplication sharedApplication] canOpenURL:url]) {
+            [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+            return YES;
+        }
+    }
     return NO;
 }
 

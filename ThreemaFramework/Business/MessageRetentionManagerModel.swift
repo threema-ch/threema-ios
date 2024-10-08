@@ -86,7 +86,7 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
             for: conversations().map(\.objectID)
         )
         
-        // recompute Unread
+        // Recompute unread
         computeUnread()
     }
     

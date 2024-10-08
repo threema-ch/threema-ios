@@ -152,8 +152,7 @@ class ConversationsViewControllerHelper {
     /// - See also: DeleteConversationAction (legacy code)
     private static func deleteConversation(
         conversation: Conversation,
-        group: Group?,
-        deleteHiddenContacts: Bool
+        group: Group?
     ) {
         if let group {
             guard group.state != .active, group.state != .requestedSync else {
@@ -167,19 +166,9 @@ class ConversationsViewControllerHelper {
         WallpaperStore.shared.deleteWallpaper(for: conversation.objectID)
         ChatScrollPosition.shared.removeSavedPosition(for: conversation)
 
-        var hiddenContacts = [String]()
         let entityManager = EntityManager()
-        entityManager.performSyncBlockAndSafe {
-            if deleteHiddenContacts {
-                hiddenContacts = conversation.members.filter(\.isContactHidden).map(\.identity)
-            }
-
-            entityManager.entityDestroyer.deleteObject(object: conversation)
-        }
-
-        // cleanup: try deleting hidden contacts, delete happens iff they are not used elsewhere
-        for identity in hiddenContacts {
-            ContactStore.shared().deleteContact(identity: identity, entityManagerObject: entityManager)
+        entityManager.performAndWaitSave {
+            entityManager.entityDestroyer.delete(conversation: conversation)
         }
 
         let notificationManager = NotificationManager()
@@ -444,8 +433,7 @@ class ConversationsViewControllerHelper {
             
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: conversation,
-                group: nil,
-                deleteHiddenContacts: true
+                group: nil
             )
             handler(true)
         }
@@ -462,8 +450,8 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
             
-            entityManager.performSyncBlockAndSafe {
-                entityManager.entityDestroyer.deleteObject(object: distributionList)
+            entityManager.performAndWaitSave {
+                entityManager.entityDestroyer.delete(distributionListEntity: distributionList)
             }
             handler(true)
         }
@@ -508,8 +496,7 @@ class ConversationsViewControllerHelper {
             // the task added by the previous leave call takes care of deleting hidden contacts
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: group.conversation,
-                group: group,
-                deleteHiddenContacts: false
+                group: group
             )
             handler(true)
         }
@@ -564,8 +551,7 @@ class ConversationsViewControllerHelper {
             // non-hidden contacts as members, there's no need to delete hidden contacts here
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: conversation,
-                group: group,
-                deleteHiddenContacts: false
+                group: group
             )
             handler(true)
         }

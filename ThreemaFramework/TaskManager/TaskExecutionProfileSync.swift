@@ -85,7 +85,7 @@ final class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
         )) }]
     }
     
-    override func shouldSkip() throws -> Bool {
+    override func shouldDrop() throws -> Bool {
         guard let task = taskDefinition as? TaskDefinitionProfileSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
         }

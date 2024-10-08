@@ -42,7 +42,7 @@ import UIKit
 ///                |                              |                               |
 ///                |                              |                               |
 ///  +-------------+-----------+          +-------+------+               +--------+-------+
-///  | chatBubbleBackgroundView|          |chatBubbleView|               |avatarImageView |
+///  | chatBubbleBackgroundView|          |chatBubbleView|               |profilePictureView |
 ///  +-------------------------+          +------^-------+               +----------------+
 ///                                              |
 ///                                              |
@@ -100,7 +100,13 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     /// Delegate used to handle cell delegates
-    weak var chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol?
+    weak var chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol? {
+        didSet {
+            if chatViewTableViewCellDelegate?.chatViewHasCustomBackground ?? false {
+                profilePictureView.addBackground()
+            }
+        }
+    }
     
     // MARK: Views and constraints
     
@@ -191,9 +197,9 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         }
     }
     
-    private lazy var tappedAvatarImageGestureRecognizer = UITapGestureRecognizer(
+    private lazy var tappedProfilePictureGestureRecognizer = UITapGestureRecognizer(
         target: self,
-        action: #selector(avatarImageTapped)
+        action: #selector(profilePictureTapped)
     )
     
     // MARK: Views
@@ -219,24 +225,20 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         return label
     }()
     
-    private lazy var avatarImageView: UIImageView = {
-        let avatarImageView = UIImageView(image: AvatarMaker.shared().unknownPersonImage())
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let profilePictureView = ProfilePictureImageView()
+        profilePictureView.isUserInteractionEnabled = true
+        profilePictureView.addGestureRecognizer(tappedProfilePictureGestureRecognizer)
+        profilePictureView.isAccessibilityElement = false
         
-        avatarImageView.contentMode = .scaleAspectFit
+        profilePictureView.translatesAutoresizingMaskIntoConstraints = false
         
-        avatarImageView.widthAnchor.constraint(
-            equalToConstant: UIFontMetrics.default.scaledValue(for: ChatViewConfiguration.GroupCells.maxAvatarSize)
+        profilePictureView.widthAnchor.constraint(
+            equalToConstant: UIFontMetrics.default
+                .scaledValue(for: ChatViewConfiguration.GroupCells.maxProfilePictureSize)
         ).isActive = true
         
-        avatarImageView.isUserInteractionEnabled = true
-        avatarImageView.addGestureRecognizer(tappedAvatarImageGestureRecognizer)
-        
-        avatarImageView.accessibilityIgnoresInvertColors = true
-        avatarImageView.isAccessibilityElement = false
-
-        avatarImageView.adjustsImageSizeForAccessibilityContentSizeCategory = true
-        
-        return avatarImageView
+        return profilePictureView
     }()
     
     // MARK: Constraints
@@ -256,35 +258,34 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         retryAndCancelButton.centerYAnchor.constraint(equalTo: chatBubbleView.centerYAnchor),
     ]
     
-    private lazy var otherMessageNoAvatarConstraints: [NSLayoutConstraint] = [
+    private lazy var otherMessageNoProfilePictureConstraints: [NSLayoutConstraint] = [
         chatBubbleView.leadingAnchor.constraint(
             equalTo: contentView.leadingAnchor,
             constant: ChatViewConfiguration.ChatBubble.defaultLeadingTrailingInset
         ),
     ]
     
-    private lazy var otherMessageAvatarConstraints: [NSLayoutConstraint] = [
-        chatBubbleView.leadingAnchor.constraint(
-            equalTo: avatarImageView.trailingAnchor,
-            constant: ChatViewConfiguration.GroupCells.avatarCellSpace
-        ),
-    ]
-    
+    private lazy var otherMessageProfilePictureConstraints: [NSLayoutConstraint] =
+        [chatBubbleView.leadingAnchor.constraint(
+            equalTo: profilePictureView.trailingAnchor,
+            constant: ChatViewConfiguration.GroupCells.profilePictureCellSpace
+        )]
+        
     // These are always active
-    private lazy var avatarImageViewConstraints: [NSLayoutConstraint] = [
-        avatarImageView.leadingAnchor.constraint(
+    private lazy var profilePictureViewConstraints: [NSLayoutConstraint] = [
+        profilePictureView.leadingAnchor.constraint(
             equalTo: contentView.leadingAnchor,
-            constant: ChatViewConfiguration.GroupCells.avatarLeadingInset
+            constant: ChatViewConfiguration.GroupCells.profilePictureLeadingInset
         ),
-        avatarImageView.centerYAnchor.constraint(
+        profilePictureView.centerYAnchor.constraint(
             equalTo: chatBubbleView.bottomAnchor,
             constant: -max(
-                UIFontMetrics.default.scaledValue(for: ChatViewConfiguration.GroupCells.avatarVerticalOffset),
-                ChatViewConfiguration.GroupCells.avatarVerticalOffset
+                UIFontMetrics.default.scaledValue(for: ChatViewConfiguration.GroupCells.profilePictureVerticalOffset),
+                ChatViewConfiguration.GroupCells.profilePictureVerticalOffset
             )
         ),
     ]
-
+       
     /// Handles all horizontal swipe interactions including cancelling other swipe actions via
     /// `ChatViewTableViewCellDelegateProtocol`
     private var swipeHandler: ChatViewTableViewCellHorizontalSwipeHandler?
@@ -310,7 +311,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // We want a clear backgrounds (also when highlighted and selected)
         backgroundConfiguration = UIBackgroundConfiguration.clear()
         
-        // This removes the shadow cut-off of context menus and makes the avatars not cut-off by next cells
+        // This removes the shadow cut-off of context menus and makes the profile picture not cut-off by next cells
         clipsToBounds = false
         contentView.clipsToBounds = false
     }
@@ -330,9 +331,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // By default the name is hidden
         nameLabel.isHidden = true
         
-        contentView.addSubview(avatarImageView)
-        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
-        
+        contentView.addSubview(profilePictureView)
+      
         contentView.addSubview(retryAndCancelButton)
         retryAndCancelButton.translatesAutoresizingMaskIntoConstraints = false
         
@@ -359,7 +359,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             chatBubbleBackgroundView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
         ])
         
-        NSLayoutConstraint.activate(avatarImageViewConstraints)
+        NSLayoutConstraint.activate(profilePictureViewConstraints)
         
         isAccessibilityElement = true
     }
@@ -531,7 +531,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         }
         
         super.setEditing(editing, animated: animated)
-        avatarImageView.isUserInteractionEnabled = !editing
+        
+        profilePictureView.isUserInteractionEnabled = !editing
     }
     
     func updateRetryAndCancelButton() {
@@ -557,7 +558,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     // This enables smooth animations when new messages arrive (and you're scrolled to the bottom).
     //
     // Caveats:
-    //   1. In group chat the avatar of the sender is shortly cut off at the bottom when the new message is
+    //   1. In group chat the profile picture of the sender is shortly cut off at the bottom when the new message is
     //      animated in. For a future workaround see below. (IOS-2943)
     //   2. The calculation of the top offsets are somewhat complicated.
     //
@@ -565,12 +566,12 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     // we can nicely animate cell height changes. (IOS-2943)
     
     private func setLayoutForOwnMessage() {
+        profilePictureView.isHidden = true
         
-        avatarImageView.isHidden = true
         retryAndCancelButton.isHidden = !(messageAndNeighbors.message?.showRetryAndCancelButton ?? false)
                
-        NSLayoutConstraint.deactivate(otherMessageNoAvatarConstraints)
-        NSLayoutConstraint.deactivate(otherMessageAvatarConstraints)
+        NSLayoutConstraint.deactivate(otherMessageNoProfilePictureConstraints)
+        NSLayoutConstraint.deactivate(otherMessageProfilePictureConstraints)
         NSLayoutConstraint.activate(ownMessageConstraints)
         
         // The `isGroup` is needed as long the top and bottom margins are not equal around system messages
@@ -669,19 +670,20 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     /// Don't call this directly. Use `setLayoutForOtherMessage()`.
     private func setLayoutForOtherMessageNoGroup() {
-        // Not a group, we hide the name and the avatar and set normal constraints
+        // Not a group, we hide the name and the profile picture and set normal constraints
         hideNameLabel()
-        avatarImageView.isHidden = true
+
+        profilePictureView.isHidden = true
 
         NSLayoutConstraint.deactivate(ownMessageConstraints)
-        NSLayoutConstraint.deactivate(otherMessageAvatarConstraints)
-        NSLayoutConstraint.activate(otherMessageNoAvatarConstraints)
+        NSLayoutConstraint.deactivate(otherMessageProfilePictureConstraints)
+        NSLayoutConstraint.activate(otherMessageNoProfilePictureConstraints)
     }
     
     /// Don't call this directly. Use `setLayoutForOtherMessage()`.
     private func setLayoutForOtherMessageInGroup() {
         // If the conversation is a group, we set the name label if it is the first message, and we generally apply
-        // constraints for avatars
+        // constraints for profile picture
         
         // Name label on first message
         if !shouldGroupWithPreviousMessage {
@@ -693,19 +695,19 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             hideNameLabel()
         }
         
-        // Avatar on last message
+        // Profile picture on last message
         if !shouldGroupWithNextMessage {
-            updateAvatar()
-            avatarImageView.isHidden = false
+            updateProfilePicture()
+            profilePictureView.isHidden = false
         }
         else {
-            avatarImageView.isHidden = true
+            profilePictureView.isHidden = true
         }
         
         // Image Constraints
         NSLayoutConstraint.deactivate(ownMessageConstraints)
-        NSLayoutConstraint.deactivate(otherMessageNoAvatarConstraints)
-        NSLayoutConstraint.activate(otherMessageAvatarConstraints)
+        NSLayoutConstraint.deactivate(otherMessageNoProfilePictureConstraints)
+        NSLayoutConstraint.activate(otherMessageProfilePictureConstraints)
     }
     
     // MARK: Name label
@@ -730,39 +732,19 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         NSLayoutConstraint.activate(noNameConstraints)
     }
     
-    // MARK: Avatar
+    // MARK: Profile picture
     
-    private func updateAvatar() {
-        AvatarMaker.shared().avatar(
-            for: messageAndNeighbors.message?.sender,
-            size: ChatViewConfiguration.GroupCells.maxAvatarSize,
-            masked: true
-        ) { avatarImage, identity in
-            guard let avatarImage else {
-                // We have a default avatar. No worries.
-                DispatchQueue.main.async {
-                    self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
-                }
-                return
-            }
-            
-            DispatchQueue.main.async { [self] in
-                guard let message = messageAndNeighbors.message,
-                      message.sender?.identity == identity || message.conversation?.contact?.identity == identity
-                else {
-                    DDLogVerbose("Not the correct avatar anymore")
-                    avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
-                    return
-                }
-                
-                avatarImageView.image = avatarImage
-            }
+    private func updateProfilePicture() {
+        guard let sender = messageAndNeighbors.message?.sender else {
+            profilePictureView.info = .contact(nil)
+            return
         }
+        profilePictureView.info = .contact(Contact(contactEntity: sender))
     }
     
     // MARK: - Actions
     
-    @objc private func avatarImageTapped() {
+    @objc private func profilePictureTapped() {
         guard let sender = messageAndNeighbors.message?.sender else {
             return
         }

@@ -56,6 +56,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly, nullable) NSData *deviceID;
 
+/// Maximum number of linked devices allowed including this device. This is only set if multi-device is enabled and logged in to mediator
+@property (nonatomic, readonly, nullable) NSNumber *maximumNumberOfDeviceSlots;
+
 @property (nonatomic, readwrite) BOOL isAppInBackground;
 
 - (void)connect:(ConnectionInitiator)initiator NS_SWIFT_NAME(connect(initiator:));
@@ -71,6 +74,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (BOOL)disconnectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnectWait(initiator:));
  
+- (void)reconnect;
+
 - (NSString*)nameForConnectionState:(ConnectionState)connectionState;
 
 - (void)deactivateMultiDevice;
@@ -111,8 +116,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (ServerConnector*)sharedServerConnector;
 - (instancetype) __unavailable init;
-
-- (void)reconnect;
 
 - (void)completedProcessingAbstractMessage:(AbstractMessage *)msg;
 - (void)ping;

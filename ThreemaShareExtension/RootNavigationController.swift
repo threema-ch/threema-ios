@@ -583,7 +583,7 @@ class RootNavigationController: UINavigationController {
         if let item = extensionContext!.inputItems.first as? NSExtensionItem {
             for case let itemProvider in item.attachments! {
                 let baseUTI = ItemLoader.getBaseUTIType(itemProvider)
-                let secondUTI = ItemLoader.getSecondUTIType(itemProvider)
+                let secondUTI = ItemLoader.getSecondUTIType(itemProvider, baseType: baseUTI)
                 itemLoader.addItem(itemProvider: itemProvider, type: baseUTI, secondType: secondUTI)
             }
         }

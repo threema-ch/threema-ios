@@ -270,7 +270,7 @@ struct ContactsCleanupView: View {
             if !calls.isEmpty {
                 for call in calls {
                     // call.contact = mainContact -> does not work bc. of missing @dynamic, see CallEntity.m
-                    entityManager.entityDestroyer.deleteObject(object: call)
+                    entityManager.entityDestroyer.delete(callEntity: call)
                 }
                 DDLogNotice(
                     "Deleted \(calls.count) calls for \(partialID): contact was set to a duplicate"

@@ -76,7 +76,7 @@ class TaskExecutionTests: XCTestCase {
         msg1.fromIdentity = myIdentityStoreMock.identity
         msg1.toIdentity = expectedToIdentity1
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
         task.nonces = [expectedToIdentity1: MockData.generateMessageNonce()]
 
         let taskExecution = TaskExecution(
@@ -136,7 +136,7 @@ class TaskExecutionTests: XCTestCase {
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = expectedToIdentity2
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
         task.nonces = [
             expectedToIdentity1: MockData.generateMessageNonce(),
             expectedToIdentity2: MockData.generateMessageNonce(),
@@ -214,7 +214,7 @@ class TaskExecutionTests: XCTestCase {
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = expectedToIdentity2
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
         task.nonces = [
             expectedToIdentity1: MockData.generateMessageNonce(),
             expectedToIdentity2: MockData.generateMessageNonce(),
@@ -280,7 +280,7 @@ class TaskExecutionTests: XCTestCase {
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = "TESTER02"
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
         task.nonces = [expectedToIdentity1: MockData.generateMessageNonce()]
 
         let taskExecution = TaskExecution(

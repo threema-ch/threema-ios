@@ -26,7 +26,6 @@
 #import "ContactEntity.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
-#import "AvatarMaker.h"
 #import "TextStyleUtils.h"
 #import "Threema-Swift.h"
 

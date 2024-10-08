@@ -63,5 +63,12 @@ extension ContactListFilterItem: MenuItem {
         }
     }
     
-    var enabled: Bool { true }
+    var enabled: Bool {
+        switch self {
+        case .contacts, .groups:
+            true
+        case .distributionLists:
+            ThreemaEnvironment.distributionListsActive
+        }
+    }
 }

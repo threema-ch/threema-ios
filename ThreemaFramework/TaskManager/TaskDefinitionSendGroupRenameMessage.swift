@@ -45,7 +45,7 @@ final class TaskDefinitionSendGroupRenameMessage: TaskDefinitionSendMessage {
     }
     
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
     
     /// Sender of this message

@@ -211,9 +211,8 @@ class ContactTests: XCTestCase {
 
         XCTAssertFalse(contact.willBeDeleted)
 
-        let em = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
-        em.performBlockAndWait {
-            em.entityDestroyer.deleteObject(object: contactEntity)
+        dbPreparer.save {
+            dbPreparer.delete(object: contactEntity)
         }
 
         let expect = expectation(description: "Give time for deletion")

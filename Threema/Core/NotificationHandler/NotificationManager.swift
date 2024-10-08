@@ -39,6 +39,7 @@ public protocol NotificationManagerProtocol {
     private let webClientVersionKey = "wcv"
     private let webClientAuthKey = "wca"
     private let availableCheckKey = "alive-check"
+    private let pushTestKey = "push-test"
     
     private let businessInjector: BusinessInjectorProtocol
     
@@ -118,22 +119,18 @@ public protocol NotificationManagerProtocol {
         if let webPayload = payload[webClientKey] as? [AnyHashable: Any] {
             handleWebClientNotification(webPayload: webPayload, withCompletionHandler: completionHandler)
         }
-        else if let availableCheck = payload[availableCheckKey] as? Bool,
-                availableCheck {
-            completionHandler?([])
-        }
         else {
             DDLogVerbose("[Push] remote notification: \(payload), while running: \(receivedWhileRunning)")
             
+            guard let threemaPayload = PushPayloadDecryptor
+                .decryptPushPayload(payload[ThreemaPushNotificationDictionary.key.rawValue] as? [String: Any])
+            else {
+                DDLogError("[Push] Missing information to handle notification")
+                completionHandler?([])
+                return
+            }
+            
             if !receivedWhileRunning {
-                guard let threemaPayload = PushPayloadDecryptor
-                    .decryptPushPayload(payload[ThreemaPushNotificationDictionary.key.rawValue] as? [String: Any])
-                else {
-                    DDLogError("[Push] Missing information to handle notification")
-                    completionHandler?([])
-                    return
-                }
-                
                 if let from = threemaPayload["from"] as? String,
                    let contact = businessInjector.entityManager.entityFetcher.contact(for: from),
                    let cmd = threemaPayload["cmd"] as? String {
@@ -195,6 +192,19 @@ public protocol NotificationManagerProtocol {
                     }
                 }
                 completionHandler?([])
+            }
+            else if let availableCheck = threemaPayload[availableCheckKey] as? Bool,
+                    availableCheck {
+                completionHandler?([])
+            }
+            else if let pushTestCheck = threemaPayload[pushTestKey] as? Bool,
+                    pushTestCheck {
+                completionHandler?([
+                    UNNotificationPresentationOptions.list,
+                    UNNotificationPresentationOptions.banner,
+                    UNNotificationPresentationOptions.badge,
+                    UNNotificationPresentationOptions.sound,
+                ])
             }
             else if let key = payload["key"] as? String,
                     key == "safe-backup-notification",

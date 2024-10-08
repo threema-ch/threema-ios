@@ -46,7 +46,7 @@ final class TaskDefinitionSendGroupCallStartMessage: TaskDefinitionSendMessage {
     }
     
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     let fromMember: String

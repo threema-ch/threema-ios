@@ -44,6 +44,13 @@ class GroupCallParticipantCell: UICollectionViewCell {
     override var frame: CGRect {
         didSet {
             videoRendererView.setSize(frame.size)
+            clip()
+        }
+    }
+    
+    override public var bounds: CGRect {
+        didSet {
+            clip()
         }
     }
     
@@ -66,16 +73,16 @@ class GroupCallParticipantCell: UICollectionViewCell {
         return label
     }()
     
-    private lazy var avatarImageView: UIImageView = {
-        let avatarImageView = UIImageView()
-        avatarImageView.image = UIImage(
-            systemName: "person.circle.fill",
+    private lazy var profilePictureView: UIImageView = {
+        let profilePictureView = UIImageView()
+        profilePictureView.image = UIImage(
+            systemName: "person.fill",
             withConfiguration: UIImage.SymbolConfiguration(pointSize: 40 * UIScreen.main.scale)
         )
-        avatarImageView.tintColor = .white
-        avatarImageView.contentMode = .scaleAspectFit
-        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
-        return avatarImageView
+        profilePictureView.tintColor = .white
+        profilePictureView.contentMode = .scaleAspectFit
+        profilePictureView.translatesAutoresizingMaskIntoConstraints = false
+        return profilePictureView
     }()
     
     private lazy var statusSymbolView: UIImageView = {
@@ -131,23 +138,24 @@ class GroupCallParticipantCell: UICollectionViewCell {
         participantInfoStackView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor),
     ]
     
-    private lazy var avatarImageViewConstrains: [NSLayoutConstraint] = [
-        avatarImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-        avatarImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+    private lazy var profilePictureViewConstrains: [NSLayoutConstraint] = [
+        profilePictureView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+        profilePictureView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
     ]
     
-    private lazy var avatarImageViewWidthConstraint: [NSLayoutConstraint] = [
-        avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.6),
-    ]
-    
-    // Used when running for screenshots
-    private lazy var avatarImageViewWidthConstraintScreenshots: [NSLayoutConstraint] = [
-        avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor),
+    private lazy var profilePictureViewWidthConstraint: [NSLayoutConstraint] = [
+        profilePictureView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.4),
+        profilePictureView.widthAnchor.constraint(equalTo: profilePictureView.heightAnchor),
     ]
     
     // Used when running for screenshots
-    private lazy var avatarImageViewHeightConstraintScreenshots: [NSLayoutConstraint] = [
-        avatarImageView.heightAnchor.constraint(equalTo: contentView.heightAnchor),
+    private lazy var profilePictureViewWidthConstraintScreenshots: [NSLayoutConstraint] = [
+        profilePictureView.widthAnchor.constraint(equalTo: contentView.widthAnchor),
+    ]
+    
+    // Used when running for screenshots
+    private lazy var profilePictureViewHeightConstraintScreenshots: [NSLayoutConstraint] = [
+        profilePictureView.heightAnchor.constraint(equalTo: contentView.heightAnchor),
     ]
     
     // MARK: - Lifecycle
@@ -172,12 +180,12 @@ class GroupCallParticipantCell: UICollectionViewCell {
 
         contentView.addSubview(videoRendererView)
         contentView.addSubview(participantInfoStackView)
-        contentView.insertSubview(avatarImageView, at: 0)
+        contentView.insertSubview(profilePictureView, at: 0)
         contentView.insertSubview(blurBackground, belowSubview: participantInfoStackView)
         
         NSLayoutConstraint.activate(
             videoRendererViewConstraints() + blurBackgroundConstrains + participantInfoStackViewConstrains +
-                avatarImageViewConstrains + avatarImageViewWidthConstraint
+                profilePictureViewConstrains + profilePictureViewWidthConstraint
         )
         
         isAccessibilityElement = true
@@ -229,7 +237,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
             // Gather information
             let idColor = participant.idColor
             let displayName = participant.displayName
-            let avatar = participant.avatar
+            let profilePicture = participant.profilePicture
             let audioMuteState = await participant.audioMuteState
             let isRunningForScreenshots = await participant.dependencies.isRunningForScreenshots
             
@@ -252,25 +260,24 @@ class GroupCallParticipantCell: UICollectionViewCell {
                 }
                 
                 // Image
-                avatarImageView.image = avatar ?? UIImage(
-                    systemName: "person.circle.fill",
-                    withConfiguration: UIImage.SymbolConfiguration(pointSize: 40 * UIScreen.main.scale)
-                )
+                profilePictureView.image = profilePicture
                 
                 if isRunningForScreenshots {
                     if UIDevice.current.userInterfaceIdiom == .phone {
-                        NSLayoutConstraint.activate(avatarImageViewHeightConstraintScreenshots)
-                        if participant.participantID.id == 0 {
-                            avatarImageView.contentMode = .scaleAspectFill
-                        }
+                        NSLayoutConstraint.activate(profilePictureViewHeightConstraintScreenshots)
+                        profilePictureView.contentMode = .scaleAspectFill
                     }
                     else {
-                        NSLayoutConstraint.activate(avatarImageViewWidthConstraintScreenshots)
-                        avatarImageView.contentMode = .scaleAspectFill
+                        NSLayoutConstraint.activate(profilePictureViewWidthConstraintScreenshots)
+                        profilePictureView.contentMode = .scaleAspectFill
                     }
-                    NSLayoutConstraint.deactivate(avatarImageViewWidthConstraint)
+                    NSLayoutConstraint.deactivate(profilePictureViewWidthConstraint)
                     NSLayoutConstraint.activate(blurBackgroundConstrains)
                     contentView.insertSubview(blurBackground, at: 1)
+                    clip()
+                }
+                else {
+                    clip()
                 }
                 
                 // Audio
@@ -305,6 +312,18 @@ class GroupCallParticipantCell: UICollectionViewCell {
                 }
             }
         }
+    }
+    
+    private func clip() {
+        
+        guard let participant,
+              !participant.dependencies.isRunningForScreenshots else {
+            return
+        }
+        
+        profilePictureView.layer.masksToBounds = true
+        profilePictureView.clipsToBounds = true
+        profilePictureView.layer.cornerRadius = profilePictureView.frame.width / 2
     }
     
     private func videoRendererViewConstraints() -> [NSLayoutConstraint] {

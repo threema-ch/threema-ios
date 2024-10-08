@@ -115,11 +115,8 @@ struct EnterLicenseInfoView: View {
     }
         
     private func handleWorkURL(_ url: URL) -> OpenURLAction.Result {
-        if let url = URL(string: "https://threema.ch/work?li=in-app-work") {
-            UIApplication.shared.open(url)
-            return .handled
-        }
-        return .discarded
+        UIApplication.shared.open(ThreemaURLProvider.enterLicenseWorkInfo)
+        return .handled
     }
 }
 

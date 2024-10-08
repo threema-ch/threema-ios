@@ -55,25 +55,25 @@ public enum CallSystemMessageHelper {
         on businessInjector: BusinessInjectorProtocol,
         messsageCreateCompletion: ((Conversation, SystemMessage) -> Void)? = nil
     ) {
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performAndWait {
             guard let conversation = businessInjector.entityManager.conversation(
                 for: contactIdentity,
                 createIfNotExisting: true
             ) else {
                 let msg = "Threema Calls: Can't add rejected message because conversation is nil"
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 assertionFailure(msg)
                 return
             }
             guard let systemMessage = businessInjector.entityManager.entityCreator
                 .systemMessage(for: conversation) else {
                 let msg = "Could not create system message"
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 assertionFailure(msg)
                 return
             }
             
-            businessInjector.entityManager.performSyncBlockAndSafe {
+            businessInjector.entityManager.performAndWaitSave {
                 systemMessage.type = NSNumber(value: reason)
                 let callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),

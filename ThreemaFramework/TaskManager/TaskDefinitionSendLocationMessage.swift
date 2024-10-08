@@ -22,7 +22,7 @@ import Foundation
 
 @objc final class TaskDefinitionSendLocationMessage: TaskDefinitionSendBaseMessage {
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
     
     @objc var poiAddress: String?

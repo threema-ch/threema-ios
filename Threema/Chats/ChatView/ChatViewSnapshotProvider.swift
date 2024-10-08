@@ -357,7 +357,7 @@ final class ChatViewSnapshotProvider {
             }
         }
         
-        // This is needed to update the name and avatar of group messages when deleting selected messages
+        // This is needed to update the name and profile picture of group messages when deleting selected messages
         if let prev = previousSnapshotInfo?.snapshot, prev.numberOfItems > newSnapshot.numberOfItems {
             let previousContainsUnreadLine = prev.itemIdentifiers.contains { cellType in
                 if case .unreadLine(state: _) = cellType {

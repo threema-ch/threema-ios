@@ -46,7 +46,7 @@ extension ContactEntity {
     /// Could an other-Threema-type-icon be shown next to this contact?
     ///
     /// Most of the time it's most appropriate to show or hide an `OtherThreemaTypeImageView`.
-    public var showOtherThreemaTypeIcon: Bool {
+    @objc public var showOtherThreemaTypeIcon: Bool {
         if isEchoEcho() || isGatewayID() || ThreemaApp.current == .onPrem {
             return false
         }

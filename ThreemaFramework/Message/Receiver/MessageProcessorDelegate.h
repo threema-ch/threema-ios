@@ -83,10 +83,8 @@ NS_SWIFT_NAME(readMessage(inConversations:));
 
 /**
  Will be called from TaskQueue if is queue empty.
-
- @param queueTypeName Name of queue type (SeeAlso Enum TaskQueueType)
  */
-- (void)taskQueueEmpty:(NSString * _Nonnull)queueTypeName;
+- (void)taskQueueEmpty;
 
 - (void)chatQueueDry;
 - (void)reflectionQueueDry;

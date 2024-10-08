@@ -35,21 +35,20 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionEncodeDecode() throws {
-        let task = TaskDefinition(isPersistent: true)
+        let task = TaskDefinition(type: .persistent)
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(task)
 
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinition.self, from: data)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
         XCTAssertEqual(result.retryCount, 0)
     }
 
     func testTaskDefinitionChangedAttributesEncodeDecode() throws {
-        let task = TaskDefinition(isPersistent: true)
-        task.isPersistent = false
+        let task = TaskDefinition(type: .volatile)
         task.retry = false
         task.retryCount = 1
         task.state = .executing
@@ -60,7 +59,7 @@ class TaskDefinitionTests: XCTestCase {
         let decoder = JSONDecoder()
         let result = try decoder.decode(TaskDefinition.self, from: data)
 
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertFalse(result.retry)
         XCTAssertEqual(result.retryCount, 1)
         XCTAssertEqual(result.state, .executing)
@@ -102,7 +101,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(1, result.toMembers.count)
         XCTAssertTrue(result.toMembers.contains(expectedMember))
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -132,7 +131,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(result.message.toIdentity, expectedIdentity)
         XCTAssertEqual((result.message as? BoxTextMessage)?.text, expectedText)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertFalse(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertFalse(result.retry)
     }
     
@@ -157,7 +156,7 @@ class TaskDefinitionTests: XCTestCase {
         
         XCTAssertEqual(expectedToIdentities, result.contactIdentities)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -249,7 +248,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedReceiptReadDates, result.receiptReadDates)
         XCTAssertTrue(result.excludeFromSending.isEmpty)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -267,7 +266,7 @@ class TaskDefinitionTests: XCTestCase {
 
         XCTAssertFalse(result.sendContactProfilePicture ?? true)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -295,7 +294,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertFalse(result.isGroupMessage)
         XCTAssertTrue(result.sendContactProfilePicture ?? false)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -339,7 +338,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertTrue(result.sendContactProfilePicture ?? false)
         XCTAssertEqual(1, result.messageAlreadySentTo.count)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -384,7 +383,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedMessagePoiAddress, result.poiAddress)
         XCTAssertTrue(result.sendContactProfilePicture ?? false)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -435,7 +434,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedRemovedMembers, result.removedMembers)
         XCTAssertEqual(Set(expectedMembers), result.members)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -483,7 +482,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedFromMember, result.fromMember)
         XCTAssertEqual(expectedToMembers, result.toMembers)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -520,7 +519,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedToMembers, result.toMembers)
         XCTAssertEqual(expectedHiddenContacts, result.hiddenContacts)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -571,7 +570,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedToMembers, result.toMembers)
         XCTAssertEqual(expectedNewName, result.name)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -628,7 +627,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedBlobID, result.blobID)
         XCTAssertEqual(expectedEncryptionKey, result.encryptionKey)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 
@@ -666,7 +665,7 @@ class TaskDefinitionTests: XCTestCase {
             XCTAssertEqual(expectedToIdentity, message.toIdentity)
             XCTAssertEqual(expectedDate, message.date)
             XCTAssertTrue(result.nonces.isEmpty)
-            XCTAssertTrue(result.isPersistent)
+            XCTAssertEqual(result.type, .persistent)
             XCTAssertTrue(result.retry)
         }
         else {
@@ -708,7 +707,7 @@ class TaskDefinitionTests: XCTestCase {
 
             let decoder = JSONDecoder()
             let result = try decoder.decode(TaskDefinitionUpdateContactSync.self, from: data)
-            XCTAssertTrue(result.isPersistent)
+            XCTAssertEqual(result.type, .persistent)
             XCTAssertTrue(result.retry)
 
             let contactList = result.deltaSyncContacts
@@ -730,30 +729,6 @@ class TaskDefinitionTests: XCTestCase {
         }
     }
 
-    func testTaskDefinitionDeleteContactSyncEncodeDecode() throws {
-        for c in [0, 1, 2, 100, 500, 50 * 1000] {
-            var identities = [String]()
-            for _ in 0...c {
-                identities.append(SwiftUtils.pseudoRandomString(length: 7))
-            }
-
-            let taskDefinition = TaskDefinitionDeleteContactSync(contacts: identities)
-
-            let encoder = JSONEncoder()
-            let data = try encoder.encode(taskDefinition)
-
-            let decoder = JSONDecoder()
-            let result = try decoder.decode(TaskDefinitionDeleteContactSync.self, from: data)
-            XCTAssertTrue(result.isPersistent)
-            XCTAssertTrue(result.retry)
-
-            let contactList = result.contacts
-            for i in 0..<contactList.count {
-                XCTAssertEqual(contactList[i], identities[i])
-            }
-        }
-    }
-    
     func testTaskDefinitionSendGroupDeliveryReceiptsMessageEncodeDecode() throws {
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
@@ -806,7 +781,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(expectedFromMember, result.fromMember)
         XCTAssertEqual(expectedToMembers, result.toMembers)
         XCTAssertTrue(result.nonces.isEmpty)
-        XCTAssertTrue(result.isPersistent)
+        XCTAssertEqual(result.type, .persistent)
         XCTAssertTrue(result.retry)
     }
 }

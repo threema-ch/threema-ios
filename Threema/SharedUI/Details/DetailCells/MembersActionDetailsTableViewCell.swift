@@ -68,9 +68,9 @@ class MembersActionDetailsTableViewCell: ThemedCodeTableViewCell {
     private lazy var iconBackgroundView: UIView = {
         let view = UIView()
         
-        view.layer.cornerRadius = cellConfiguration.maxAvatarSize / 2
+        view.layer.cornerRadius = cellConfiguration.maxProfilePictureSize / 2
         
-        view.heightAnchor.constraint(equalToConstant: cellConfiguration.maxAvatarSize).isActive = true
+        view.heightAnchor.constraint(equalToConstant: cellConfiguration.maxProfilePictureSize).isActive = true
         view.widthAnchor.constraint(equalTo: view.heightAnchor).isActive = true
         view.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         
@@ -149,7 +149,7 @@ class MembersActionDetailsTableViewCell: ThemedCodeTableViewCell {
         }
         
         // Adjust separator inset
-        let leftSeparatorInset = cellConfiguration.maxAvatarSize + cellConfiguration.horizontalSpacing
+        let leftSeparatorInset = cellConfiguration.maxProfilePictureSize + cellConfiguration.horizontalSpacing
         separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)
     }
 }

@@ -143,6 +143,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
 
         notificationContent.badge = 999
+        notificationContent.userInfo = payload
 
         return notificationContent
     }
@@ -296,7 +297,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
         
         // Is blockUnknown active?
-        if entityManager.entityFetcher.contact(for: senderIdentity) == nil, userSettings.blockUnknown {
+        if entityManager.entityFetcher.contact(for: senderIdentity) == nil, userSettings.blockUnknown,
+           !TrustedContacts(rawValue: senderIdentity).ignoreBlockUnknown {
             return false
         }
         

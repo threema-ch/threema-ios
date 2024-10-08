@@ -39,27 +39,31 @@ class WebAvatarResponse: WebAbstractMessage {
             size = request.maxSize!
         }
         
-        let entityManager = EntityManager()
-        if type == "contact" {
-            let contact = entityManager.entityFetcher.contact(for: id)
-
-            if contact != nil {
-                if let avatarImage = AvatarMaker.shared()
-                    .avatar(for: contact!, size: CGFloat(size), masked: false, scaled: false) {
-                    self.avatar = avatarImage.jpegData(compressionQuality: CGFloat(quality))
-                }
-            }
+        let businessInjector = BusinessInjector()
+        let entityManager = businessInjector.entityManager
+        
+        if type == "contact", let contact = entityManager.entityFetcher.contact(for: id) {
+            let businessContact = Contact(contactEntity: contact)
+            self.avatar = businessContact.profilePicture.resizedImage(newSize: CGSize(
+                width: size,
+                height: size
+            )).jpegData(compressionQuality: CGFloat(quality))
         }
         else if type == "group" {
             let groupID = request.id.hexadecimal
             let conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
             
-            if conversation != nil {
-                if let avatarImage = AvatarMaker.shared()
-                    .avatar(for: conversation!, size: CGFloat(size), masked: false, scaled: false) {
-                    self.avatar = avatarImage.jpegData(compressionQuality: CGFloat(quality))
-                }
+            if let conversation, let group = businessInjector.groupManager.getGroup(conversation: conversation) {
+                self.avatar = group.profilePicture.resizedImage(newSize: CGSize(width: size, height: size))
+                    .jpegData(compressionQuality: CGFloat(quality))
             }
+        }
+        else {
+            self.avatar = ProfilePictureGenerator.unknownContactImage.resizedImage(newSize: CGSize(
+                width: size,
+                height: size
+            ))
+            .jpegData(compressionQuality: CGFloat(quality))
         }
         
         let tmpArgs: [AnyHashable: Any?] = ["type": type, "id": id, "highResolution": highResolution]
@@ -70,7 +74,7 @@ class WebAvatarResponse: WebAbstractMessage {
             requestID: nil,
             ack: tmpAck,
             args: tmpArgs,
-            data: avatar != nil ? avatar : nil
+            data: avatar
         )
     }
     
@@ -82,10 +86,8 @@ class WebAvatarResponse: WebAbstractMessage {
         let size = highResolution ? kWebClientAvatarHiResSize : kWebClientAvatarSize
         let quality = highResolution ? kWebClientAvatarHiResQuality : kWebClientAvatarQuality
         
-        if let avatarImage = AvatarMaker.shared()
-            .avatar(for: group.conversation, size: CGFloat(size), masked: false, scaled: false) {
-            self.avatar = avatarImage.jpegData(compressionQuality: CGFloat(quality))
-        }
+        self.avatar = group.profilePicture.resizedImage(newSize: CGSize(width: size, height: size))
+            .jpegData(compressionQuality: CGFloat(quality))
         
         let tmpArgs: [AnyHashable: Any?] = ["type": type, "id": id]
         let tmpAck = requestID != nil ? WebAbstractMessageAcknowledgement(requestID, true, nil) : nil
@@ -95,7 +97,7 @@ class WebAvatarResponse: WebAbstractMessage {
             requestID: nil,
             ack: tmpAck,
             args: tmpArgs,
-            data: avatar != nil ? avatar : nil
+            data: avatar
         )
     }
     
@@ -107,20 +109,20 @@ class WebAvatarResponse: WebAbstractMessage {
         let size = highResolution ? kWebClientAvatarHiResSize : kWebClientAvatarSize
         let quality = highResolution ? kWebClientAvatarHiResQuality : kWebClientAvatarQuality
         
-        if let avatarImage = AvatarMaker.shared()
-            .avatar(for: contact, size: CGFloat(size), masked: false, scaled: false) {
-            self.avatar = avatarImage.jpegData(compressionQuality: CGFloat(quality))
-        }
+        let businessContact = Contact(contactEntity: contact)
+        self.avatar = businessContact.profilePicture.resizedImage(newSize: CGSize(width: size, height: size))
+            .jpegData(compressionQuality: CGFloat(quality))
         
         let tmpArgs: [AnyHashable: Any?] = ["type": type, "id": id]
         let tmpAck = requestID != nil ? WebAbstractMessageAcknowledgement(requestID, true, nil) : nil
+        
         super.init(
             messageType: "update",
             messageSubType: "avatar",
             requestID: nil,
             ack: tmpAck,
             args: tmpArgs,
-            data: avatar != nil ? avatar : nil
+            data: avatar
         )
     }
 }

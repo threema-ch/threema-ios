@@ -80,7 +80,6 @@ class WebUpdateProfileRequest: WebAbstractMessage {
             return
         }
         
-        AvatarMaker.shared().clearCacheForProfilePicture()
         var profile = MyIdentityStore.shared().profilePicture
         
         if profile == nil {

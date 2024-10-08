@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Скопійовано до буфера обміну";
 "webrtc_diagnostics.done" = "Готово. Якщо у вас виникають проблеми з налаштуванням зв’язку, надішліть ці дані до служби підтримки Threema.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Вибрати";
 "mwphotobrowser_select_all" = "Вибрати все";
@@ -338,7 +335,7 @@
 "record_audio" = "Записати аудіо";
 "record_continue" = "Продовжити запис аудіо";
 "scan_qr" = "Сканувати QR-код";
-"share_file" = "Поділитись файлом";
+"share_file" = "Поділитись файлом або контактом";
 "add_item_caption" = "Додати підпис";
 "add_items_caption" = "Додати підписи";
 "send_item_immediately_photo" = "Надіслати фото";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Робочий контакт";
 "threema_type_icon_private_accessibility_label" = "Приватний контакт";
 
-"delete_contact_group_exists_title" = "Неможливо видалити контакт";
-"delete_contact_group_exists_message_single" = "«%@» ще є учасником групи. Видаліть контакт з групи або видаліть групу.";
-"delete_contact_group_exists_message_multiple" = "«%@» ще є учасником груп: %d. Видаліть контакт з груп або видаліть групи.";
-"delete_contact_group_exists_show_contact_button" = "Показати контакт";
 "delete_contact_existing_conversation_title" = "Видалити «%@»?";
+"delete_contact_existing_conversation_is_group_member_title" = "Індивідуальний чат із \"%@\" буде видалено, але вони залишаться учасниками груп. Видалити \"%@\"?";
 "delete_contact_existing_conversation_button" = "Видалити контакт + історію діалогу";
+"delete_contact_is_group_member_title" = "\"%@\" залишається учасником групи. Видалити \"%@\"?";
 "delete_contact_confirmation_with_exclusion_message" = "Видалити «%@» та виключити з синхронізації?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "\"%@\" залишається учасником групи. Видалити \"%@\"  й виключити з синхронізації?";
 "delete_contact_button" = "Видалити контакт";
 "delete_contact_confirmation_with_exclusion_button" = "Видалити + виключити";
 "exclude_deleted_id_title" = "Виключити Threema ID «%@» з синхронізації?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "Новенький у %@?";
 "restore_id_export" = "Відновити експортований ID";
 "id_exists" = "Threema ID, що вже використовувався на цьому пристрої (%@), ще наявний. Бажаєте відновити його?";
+
+"contact_support" = "Звернутись до служби підтримки";
+"contact_support_mail_subject" = "Для цієї покупки створено забагато ID";
+"contact_support_mail_message" = "Шановна командо %@,\n\nНе вдалося створити новий Threema ID. Повертається такий код помилки:\n%@\n\nЗ повагою,";
 
 "welcome" = "Вітаємо у %@";
 "move_your_finger" = "Переміщуйте палець по екрану для створення нового Threema ID.";
@@ -660,7 +660,7 @@
 "invite_sms_body" = "Привіт! Використовуймо Threema для безпечного та конфіденційного спілкування! Мій Threema ID: https://threema.id/%@";
 "invite_facebook_text" = "Я використовую Threema — безпечний месенджер, який захищає конфіденційність користувачів. Мій Threema ID: https://threema.id/%@";
 "invite_twitter_text" = "Я використовую Threema — безпечний месенджер, який захищає конфіденційність користувачів. Мій Threema ID: https://threema.id/%@";
-"invite_using" = "Запросити друга через...";
+"invite_using" = "Запросити друга через…";
 "sms" = "Текстове повідомлення";
 
 /* Notifications Text */
@@ -712,6 +712,8 @@
 "current_position" = "позиція";
 "in_reply_to" = "у відповідь";
 "draft" = "Чернетка";
+"draft_type_quote" = "Цитувати";
+"draft_type_edit" = "Редагувати";
 "new_message_accessibility" = "Нове повідомлення: ";
 "quote_interaction_hint" = "Переходить до цитованого повідомлення.";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Додати канал Threema до ваших контактів?";
 "threema_channel_info" = "Канал Threema надає новини про все, що пов'язано зі Threema.";
 "threema_channel_failed" = "Неможливо додати канал Threema.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Додати канал Threema Work до ваших контактів?";
+"threema_work_channel_info" = "Канал Threema Work надає новини про все, що пов'язано зі Threema Work.";
+"threema_work_channel_failed" = "Не вдалося додати канал Threema Work.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Відповідь";
@@ -791,9 +799,9 @@
 "call_status_wait_ringing" = "Ініціалізація";
 "call_status_ringing" = "Викликаємо";
 "call_status_incom_ringing" = "Виклик Threema";
-"call_status_initializing" = "З'єднання...";
+"call_status_initializing" = "З’єднання…";
 "call_status_calling" = "З'єднано";
-"call_status_reconnecting" = "З'єднання...";
+"call_status_reconnecting" = "З’єднання…";
 "call_status_unknown" = "Невідомо";
 "call_status_blocked" = "Заблокований контакт";
 "call_status_failed_title" = "Виклик Threema";
@@ -1074,7 +1082,7 @@
 "restore_option_id" = "Відновити лише ID";
 "restore_option_id_keep_data" = "Відновити експортований Threema ID та залишити дані (діалоги, контакти, групи тощо) на пристрої";
 "backup_faq_link_text" = "Дізнатись більше про резервні копії у %@";
-"forgot_password_link_text" = "Забули пароль?";
+"restore_option_help_link_text" = "Допомога";
 
 "restore_option_data_description" = "На цьому пристрої наявні такі дані %@ (діалоги, контакти, групи тощо).";
 "restore_option_data_keep_data" = "Зберігати дані на пристрої";
@@ -1111,7 +1119,7 @@
 "settings_list_passcode_lock_title" = "Блокування за
 допомогою пароля";
 "settings_threema_calls" = "Виклики";
-"settings_list_threema_desktop_title" = "Threema 2.0 для комп'ютера (Бета)";
+"settings_list_threema_desktop_title" = "Threema для комп’ютера 2.0 (Бета)";
 "settings_list_threema_web_title" = "Застосунок / Вебверсія";
 
 "settings_list_network_title" = "Стан мережі";
@@ -1120,6 +1128,7 @@
 
 "settings_list_invite_a_friend_title" = "Запросити друга";
 "settings_list_threema_channel_title" = "Канал Threema";
+"settings_list_threema_work_channel_title" = "Канал Threema Work";
 
 "settings_list_rate" = "Оцініть %@";
 
@@ -1254,7 +1263,7 @@
 "delete_messages_confirm" = "Бажаєте назавжди видалити усі повідомлення старіші за %@?";
 "delete_messages_confirm_all" = "Бажаєте назавжди видалити усі повідомлення?";
 "delete_messages_explain" = "Усі типи повідомлень буде видалено: текстові, голосові, медіа, файли, опитування тощо.";
-"automatic_delete_explain" = "Використовуйте автоматичне видалення повідомлень та медіа, щоб звільнити місце на диску. Відкриті опитування та групи нотаток не підлягають автоматичному видаленню.";
+"automatic_delete_explain" = "Використовуйте автоматичне видалення повідомлень та медіафайлів, щоб звільнити місце на диску. Відкриті опитування, позначені повідомлення та вміст груп нотаток не підлягають автоматичному видаленню.";
 "automatic_delete_on_confirmation_title" = "Увімкнути автоматичне видалення?";
 "automatic_delete_off_confirmation_title" = "Вимкнути автоматичне видалення?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1481,6 +1490,16 @@
 "could_not_add_all_items_memory_constrained_title" = "Скористайтеся застосунком";
 "could_not_add_all_items_memory_constrained_message" = "Через технічні обмеження в застосунку можна відправляти лише ті файли, розмір яких більший за визначений.";
 "image_preview_cell_cannot_preview" = "Попередній перегляд неможливий.";
+
+// Profile Synchronization
+"sync_error_title" = "Не вдалось синхронізувати профіль";
+"sync_error_general_message" = "Будь ласка, перевірте з’єднання з інтернетом та спробуйте знов.";
+"sync_error_same_transaction_error" = "Цей профіль зараз синхронізується на іншому пристрої. Будь ласка, дочекайтесь завершення синхронізаціїї. Зміни профілю на цьому пристрої не буде враховано.";
+
+"syncing_profile" = "Синхронізація…";
+
+"incoming_profile_sync_title" = "Профіль синхронізовано";
+"incoming_profile_sync_message" = "Застосовано зміни профілю з іншого пристрою";
 
 // Share Extension
 "finished_sending_title" = "Надіслання завершено";
@@ -1741,6 +1760,7 @@
 "notification_deleted_messages_count" = "Видалено стільки повідомлень: %d";
 
 "notification_cannot_play_video" = "Не вдалося відтворити відео";
+"notification_recording_too_long" = "Запис перевищив максимальну довжину";
 
 "notification_call_failed_connected" = "Зв’язок втрачено";
 "notification_call_failed_not_connected" = "Не вдалося встановити зв’язок";
@@ -1971,8 +1991,8 @@
 // Delete / Edit message
 "edit_message" = "Редагувати повідомлення";
 "edit_message_can_not_edit" = "Повідомлення надіслано понад 6 годин тому, отже не може бути редаговано.";
-"edit_message_not_sent_to" = "Наступні учасники групи не зможуть побачити ваші редагування: %@";
-"delete_message_not_sent_to" = "Повідомлення не видалиться для наступних учасників групи: %@";
+"edit_message_not_sent_to" = "Такі учасники групи не зможуть побачити ваші зміни:\n %@";
+"delete_message_not_sent_to" = "Повідомлення не буде видалено для таких учасників групи: %@";
 "delete_edit_message_not_sent_to_others" = "%d інших";
 "delete_message_requirement" = "Для видалення повідомлень їм потрібно встановити найновішу версію Threema.";
 "edit_message_requirement" = "Для перегляду редагування їм потрібно встановити найновішу версію Threema.";

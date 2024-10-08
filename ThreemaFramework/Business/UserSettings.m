@@ -24,7 +24,6 @@
 #import "DatabaseManager.h"
 #import "ServerConnector.h"
 #import "MyIdentityStore.h"
-#import "AvatarMaker.h"
 #import "ValidationLogger.h"
 #import "EntityCreator.h"
 #import "EntityFetcher.h"
@@ -36,6 +35,7 @@
 typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
     ThreemaAudioMessagePlaySpeedHalf = 0,
     ThreemaAudioMessagePlaySpeedSingle,
+    ThreemaAudioMessagePlaySpeedOneAndQuarter,
     ThreemaAudioMessagePlaySpeedOneAndHalf,
     ThreemaAudioMessagePlaySpeedDouble
 };
@@ -142,6 +142,8 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize keepMessagesDays;
 
+@synthesize resetTipKitOnNextLaunch;
+
 @synthesize contactList2;
 
 /// Deprecated Keys, please add keys if they are removed:
@@ -156,6 +158,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `VideoCallInfoShown`
 /// - `VideoCallSpeakerInfoShown`
 /// - `EnableFSv1_2ForTesting`
+/// - `useProfilePictureGenerator`
 
 static UserSettings *instance;
 
@@ -263,6 +266,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                         [NSNumber numberWithBool:NO], @"GroupCallsDebugMessages",
                                         @-1, @"KeepMessagesDays",
+                                        [NSNumber numberWithBool:NO], @"ResetTipKitOnNextLaunch",
                                         [NSNumber numberWithBool:NO], @"ContactList2",
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
@@ -384,6 +388,7 @@ static UserSettings *instance;
     hidePrivateChats = [defaults boolForKey:@"HidePrivateChats"];
     blockCommunication = [defaults boolForKey:@"BlockCommunication"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
+    resetTipKitOnNextLaunch = [defaults boolForKey:@"ResetTipKitOnNextLaunch"];
     
     contactList2 = [defaults boolForKey:@"ContactList2"];
 }
@@ -543,7 +548,6 @@ static UserSettings *instance;
     showProfilePictures = newShowProfilePictures;
     [defaults setBool:showProfilePictures forKey:@"ShowProfilePictures"];
     [defaults synchronize];
-    [[AvatarMaker sharedAvatarMaker] clearCacheForProfilePicture];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowProfilePictureChanged object:nil];
 }
@@ -866,6 +870,8 @@ static UserSettings *instance;
             return 1.0;
         case ThreemaAudioMessagePlaySpeedOneAndHalf:
             return 1.5;
+        case ThreemaAudioMessagePlaySpeedOneAndQuarter:
+            return 1.25;
         case ThreemaAudioMessagePlaySpeedDouble:
             return 2.0;
         default:
@@ -897,6 +903,12 @@ static UserSettings *instance;
 - (void)setVoiceMessagesShowTimeRemaining:(BOOL)newVoiceMessagesShowTimeRemaining {
     voiceMessagesShowTimeRemaining = newVoiceMessagesShowTimeRemaining;
     [defaults setBool:voiceMessagesShowTimeRemaining forKey:@"VoiceMessagesShowTimeRemaining"];
+    [defaults synchronize];
+}
+
+- (void)setResetTipKitOnNextLaunch:(BOOL)newResetTipKitOnNextLaunch {
+    resetTipKitOnNextLaunch = newResetTipKitOnNextLaunch;
+    [defaults setBool:resetTipKitOnNextLaunch forKey:@"ResetTipKitOnNextLaunch"];
     [defaults synchronize];
 }
 

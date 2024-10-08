@@ -892,12 +892,6 @@ extension ConversationsViewController {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(showProfilePictureChanged),
-            name: NSNotification.Name(rawValue: kNotificationShowProfilePictureChanged),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(reloadTableView),
             name: NSNotification.Name(rawValue: kNotificationBlockedContact),
             object: nil
@@ -968,10 +962,6 @@ extension ConversationsViewController {
         }
         
         cell.updateLastMessagePreview()
-    }
-    
-    @objc private func showProfilePictureChanged() {
-        refreshData()
     }
     
     @objc private func reloadTableView() {

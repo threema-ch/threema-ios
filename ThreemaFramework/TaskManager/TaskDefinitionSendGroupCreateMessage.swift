@@ -45,7 +45,7 @@ final class TaskDefinitionSendGroupCreateMessage: TaskDefinitionSendMessage {
     }
     
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
     
     /// Receiver of group create message

@@ -51,7 +51,7 @@ final class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionPr
     }
 
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     var scope: D2d_TransactionScope.Scope {
@@ -70,7 +70,7 @@ final class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionPr
     init(syncGroup: Sync_Group, syncAction: SyncAction) {
         self.syncGroup = syncGroup
         self.syncAction = syncAction
-        super.init(isPersistent: false)
+        super.init(type: .persistent)
     }
 
     required init(from decoder: Decoder) throws {

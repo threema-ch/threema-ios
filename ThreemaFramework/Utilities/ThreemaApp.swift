@@ -27,7 +27,7 @@ public enum ThreemaApp {
     case blue
     case onPrem
     
-    public static var current: ThreemaApp {
+    public static var current: ThreemaApp = {
         if LicenseStore.isOnPrem() {
             return .onPrem
         }
@@ -42,36 +42,33 @@ public enum ThreemaApp {
         }
         
         return .threema
-    }
+    }()
     
     /// Returns the CFBundleName for the current process. E.g. `ThreemaShareExtension` for the share extension or
     /// `Threema` for the app.
     /// See `appName`
-    public static var currentName: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as! String
-    }
+    public static var currentName: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as! String
     
     /// Returns the CFBundleName for the app to which the current process belongs. E.g. if we are running in the
     /// ThreemaShareExtension this will return `Threema`.
     /// See `currentName`
-    public static var appName: String {
-        BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Threema"
-    }
+    public static var appName: String = BundleUtil.mainBundle()?
+        .object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Threema"
     
     /// Link to open for writing an AppStore review
-    public static var rateLink: URL? {
+    public static var rateLink: URL? = {
         guard let string = BundleUtil.object(forInfoDictionaryKey: "ThreemaRateLink") as? String,
               let url = URL(string: string) else {
             return nil
         }
         
         return url
-    }
+    }()
     
-    private static var isSandbox: Bool {
+    private static var isSandbox: Bool = {
         let bundle = BundleUtil.mainBundle()
         return bundle?.bundleIdentifier?.contains(".red") ?? false
-    }
+    }()
 }
 
 @objc public class ThreemaAppObjc: NSObject {
@@ -100,10 +97,10 @@ public enum ThreemaApp {
         return .threema
     }
     
-    private static var isSandbox: Bool {
+    private static var isSandbox: Bool = {
         let bundle = BundleUtil.mainBundle()
         return bundle?.bundleIdentifier?.contains(".red") ?? false
-    }
+    }()
     
     @objc public class func appName() -> String {
         let bundle = BundleUtil.mainBundle()

@@ -59,6 +59,8 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     var connectionState: ConnectionState
 
     var deviceID: Data?
+    
+    var maximumNumberOfDeviceSlots: NSNumber?
 
     var deviceGroupKeys: DeviceGroupKeys?
 
@@ -86,6 +88,10 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     func disconnectWait(initiator: ConnectionInitiator) -> Bool {
         true
+    }
+    
+    func reconnect() {
+        // no-op
     }
 
     func deactivateMultiDevice() {
@@ -210,8 +216,8 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         // no-op
     }
 
-    func taskQueueEmpty(_ queueTypeName: String) {
-        messageProcessorDelegate?.taskQueueEmpty(queueTypeName)
+    func taskQueueEmpty() {
+        messageProcessorDelegate?.taskQueueEmpty()
     }
     
     func chatQueueDry() { }

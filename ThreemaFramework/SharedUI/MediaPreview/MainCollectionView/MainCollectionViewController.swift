@@ -83,7 +83,7 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
         }
         else {
             let err = "Unknown item type"
-            DDLogError(err)
+            DDLogError("\(err)")
             fatalError(err)
         }
         return cell!

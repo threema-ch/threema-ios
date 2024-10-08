@@ -45,7 +45,7 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
     }
     
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     let fromMember: String
@@ -112,7 +112,7 @@ final class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMe
         self.receiptTypeValue = try container.decode(UInt8.self, forKey: .receiptType)
         self.receiptType = try TaskDefinitionSendGroupDeliveryReceiptsMessage.receiptTyp(rawValue: receiptTypeValue)
         self.receiptMessageIDs = try container.decode([Data].self, forKey: .receiptMessageIDs)
-        self.receiptReadDates = try container.decode([Date].self, forKey: .receiptReadDates)
+        self.receiptReadDates = try container.decode([Date?].self, forKey: .receiptReadDates)
         
         let superDecoder = try container.superDecoder()
         try super.init(from: superDecoder)

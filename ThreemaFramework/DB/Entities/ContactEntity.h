@@ -62,7 +62,6 @@ enum {
 };
 
 // Properties DB
-@property (nonatomic, retain, nullable) NSNumber * abRecordId NS_SWIFT_NAME(abRecordID);
 @property (nonatomic, retain, nullable) NSString * cnContactId NS_SWIFT_NAME(cnContactID);
 @property (nonatomic, retain, nullable) NSDate * createdAt;
 
@@ -74,6 +73,7 @@ enum {
 
 @property (nonatomic, retain, nullable) NSString * firstName;
 @property (nonatomic, retain) NSString * identity;
+/// Image data set from Contact of iOS
 @property (nonatomic, retain, nullable) NSData * imageData;
 @property (nonatomic, retain, nullable) NSString * lastName;
 @property (nonatomic, retain) NSData * publicKey;
@@ -95,6 +95,7 @@ enum {
 
 // MARK: - DB Relationships
 
+/// Image Data received by Threema contact
 @property (nonatomic, retain, nullable) ImageData * contactImage;
 @property (nonatomic, retain, nullable) NSSet * conversations;
 @property (nonatomic, retain, nullable) NSSet * groupConversations;
@@ -125,8 +126,6 @@ enum {
 - (BOOL)isEchoEcho;
 
 - (BOOL)isProfilePictureSended;
-
-- (BOOL)isProfilePictureSet;
 
 - (BOOL)isWorkContact;
 

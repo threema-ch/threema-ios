@@ -27,11 +27,10 @@
 #import "GroupCallEntity.h"
 #import "LastGroupSyncRequest.h"
 #import "WebClientSession.h"
-#import "RequestedConversation.h"
 #import "LastLoadedMessageIndex.h"
-#import "RequestedThumbnail.h"
 #import "MyIdentityStore.h"
 #import "Nonce.h"
+@class DistributionListEntity;
 
 typedef enum : NSUInteger {
     ContactsAll,
@@ -158,6 +157,8 @@ typedef enum : NSUInteger {
 
 - (Conversation *)conversationForIdentity:(NSString *)identity;
 
+- (nullable Conversation *)conversationForDistributionList:(nonnull DistributionListEntity *)distributionList;
+
 - (NSArray *)conversationsForMember:(ContactEntity *)contact;
 
 - (Conversation *)conversationForGroupMessage:(AbstractGroupMessage *)message;
@@ -245,8 +246,6 @@ typedef enum : NSUInteger {
 - (NSFetchedResultsController *)fetchedResultsControllerForWebClientSessions;
 
 - (NSInteger)countArchivedConversations;
-
-- (Tag *)tagForName:(NSString *)name;
 
 - (WebClientSession *)webClientSessionForInitiatorPermanentPublicKeyHash:(NSString *)hash;
 

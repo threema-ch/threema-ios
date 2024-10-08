@@ -109,6 +109,8 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nullable, nonatomic, retain) NSSet<MessageHistoryEntryEntity *> *historyEntries;
 
 @property (nullable, nonatomic, retain) MessageMarkers *messageMarkers;
+@property (nullable, nonatomic, retain) NSSet<BaseMessage *> *distributedMessages;
+@property (nullable, nonatomic, retain) BaseMessage *distributionListMessage NS_SWIFT_NAME(distributionListMessage);
 
 /// Contacts that rejected this message
 ///

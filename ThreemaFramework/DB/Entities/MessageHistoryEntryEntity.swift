@@ -23,7 +23,7 @@ import Foundation
 @objc(MessageHistoryEntryEntity)
 public class MessageHistoryEntryEntity: NSManagedObject, Identifiable {
 
-    // Properties
+    // Attributes
     @NSManaged public var editDate: Date
     @NSManaged public var text: String?
     

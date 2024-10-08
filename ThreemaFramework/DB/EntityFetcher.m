@@ -30,6 +30,7 @@
 #import "LicenseStore.h"
 #import "NonceHasher.h"
 #import "UTIConverter.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -300,6 +301,10 @@
 
 - (Conversation *)conversationForIdentity:(NSString *)identity {
     return [self singleEntityNamed:@"Conversation" withPredicate: @"contact.identity == %@ AND groupId == nil", identity];
+}
+
+- (Conversation *)conversationForDistributionList:(DistributionListEntity *)distributionList {
+    return [self singleEntityNamed:@"Conversation" withPredicate: @"distributionList.distributionListID == %@", distributionList.distributionListIDObjC];
 }
 
 - (NSArray *)conversationsForMember:(ContactEntity *)contact {
@@ -982,7 +987,18 @@
     [fetchRequest setFetchBatchSize:100];
     
     NSMutableArray *predicates = [NSMutableArray array];
-    [predicates addObject:[NSPredicate predicateWithFormat:@"hidden == nil OR hidden == 0"]];
+    
+    if (members != nil) {
+        NSMutableArray *memberIds = [NSMutableArray arrayWithCapacity:[members count]];
+        [members enumerateObjectsUsingBlock:^(ContactEntity *contactEntity, BOOL *stop) {
+            [memberIds addObject:contactEntity.identity];
+        }];
+        
+        [predicates addObject:[NSPredicate predicateWithFormat:@"(hidden == nil OR hidden == 0) OR (hidden == 1 AND identity IN %@)", memberIds]];
+    }
+    else {
+        [predicates addObject:[NSPredicate predicateWithFormat:@"hidden == nil OR hidden == 0"]];
+    }
 
     if (types == ContactsNoGateway) {
         NSPredicate *predicate = [NSPredicate predicateWithFormat:@"not identity beginswith '*'"];
@@ -1290,10 +1306,6 @@
         fetchRequest.sortDescriptors = sortDescriptors;
     }
     return [self executeFetchRequest:fetchRequest];
-}
-
-- (Tag *)tagForName:(NSString *)name {
-    return [self singleEntityNamed:@"Tag" withPredicate:@"name == %@", name];
 }
 
 - (Conversation *)legacyConversationForGroupId:(NSData *)groupId {

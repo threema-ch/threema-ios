@@ -36,100 +36,12 @@ class MediatorReflectedContactSyncProcessor {
         switch contactSync.action {
         case let .create(sync):
             return create(contact: sync.contact)
-        case let .delete(sync):
-            return delete(identity: sync.deleteIdentity)
         case let .update(sync):
             return update(contact: sync.contact)
         case .none:
             break
         }
         return Promise()
-    }
-
-    /// Delete contact and its settings.
-    /// - Parameter identity: Contact that will be delete
-    private func delete(identity: String) -> Promise<Void> {
-        Promise { seal in
-            let (deletedContact, deletedConversation) = frameworkInjector.entityManager.performAndWaitSave {
-                var conversation: Conversation?
-                let contact: ContactEntity? = self.frameworkInjector.entityManager.entityFetcher
-                    .contact(for: identity)
-
-                guard let contact else {
-                    seal.reject(MediatorReflectedProcessorError.contactToDeleteNotExists(identity: identity))
-                    return (contact, conversation)
-                }
-
-                // Check is contact not member in any active groups
-                guard let conversations = self.frameworkInjector.entityManager.entityFetcher
-                    .groupConversations(for: contact) as? [Conversation], conversations.filter({ conversation in
-                        guard let group = self.frameworkInjector.groupManager
-                            .getGroup(conversation: conversation)
-                        else {
-                            return true
-                        }
-                        return group.state == .active
-                    }).isEmpty else {
-                    seal.reject(MediatorReflectedProcessorError.contactToDeleteMemberOfGroup(identity: identity))
-                    return (contact, conversation)
-                }
-
-                // Remove from blacklist, if present
-                if self.frameworkInjector.userSettings.blacklist.contains(identity) {
-                    var blacklist = Array(self.frameworkInjector.userSettings.blacklist)
-                    blacklist.removeAll(where: { $0 as? String == identity })
-                    self.frameworkInjector.userSettings.blacklist = NSOrderedSet(array: blacklist)
-                }
-
-                // Remove from profile picture receiver list
-                if self.frameworkInjector.userSettings.profilePictureContactList
-                    .contains(where: { $0 as? String == identity }) {
-                    var profilePictureContactList = Array(self.frameworkInjector.userSettings.profilePictureContactList)
-                    profilePictureContactList
-                        .removeAll(where: { $0 as? String == identity })
-                    self.frameworkInjector.userSettings.profilePictureContactList = profilePictureContactList
-                }
-
-                // Remove from profile picture request list
-                self.frameworkInjector.contactStore.removeProfilePictureRequest(identity)
-
-                if contact.cnContactID != nil {
-                    var exclusionList = Array(self.frameworkInjector.userSettings.syncExclusionList)
-                    exclusionList.append(identity)
-                    self.frameworkInjector.userSettings.syncExclusionList = exclusionList
-                }
-
-                let threemaIdentity = ThreemaIdentity(contact.identity)
-                Task {
-                    await self.frameworkInjector.pushSettingManager.delete(forContact: threemaIdentity)
-                }
-
-                conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(for: contact)
-
-                self.frameworkInjector.entityManager.entityDestroyer.deleteObject(object: contact)
-
-                return (contact, conversation)
-            }
-
-            // Send notification about deletion
-            if let deletedContact {
-                NotificationCenter.default.post(
-                    name: Notification.Name(kNotificationDeletedContact),
-                    object: nil,
-                    userInfo: [kKeyContact: deletedContact]
-                )
-            }
-
-            if let deletedConversation {
-                NotificationCenter.default.post(
-                    name: NSNotification.Name(rawValue: kNotificationDeletedConversation),
-                    object: nil,
-                    userInfo: [kKeyConversation: deletedConversation]
-                )
-            }
-
-            seal.fulfill_()
-        }
     }
 
     private func create(contact syncContact: Sync_Contact) -> Promise<Void> {
@@ -152,7 +64,7 @@ class MediatorReflectedContactSyncProcessor {
                 return
             }
 
-            frameworkInjector.entityManager.performSyncBlockAndSafe {
+            frameworkInjector.entityManager.performAndWaitSave {
                 guard let contact = self.frameworkInjector.entityManager.entityCreator.contact() else {
                     seal.reject(MediatorReflectedProcessorError.createContactFailed(identity: syncContact.identity))
                     return
@@ -161,6 +73,9 @@ class MediatorReflectedContactSyncProcessor {
                 // Mandatory fields
                 contact.identity = syncContact.identity
                 contact.publicKey = syncContact.publicKey
+                if syncContact.hasCreatedAt {
+                    contact.createdAt = syncContact.createdAtNullable?.date
+                }
                 contact.verificationLevel = NSNumber(integerLiteral: Int(kVerificationLevelUnverified))
             }
 
@@ -176,7 +91,7 @@ class MediatorReflectedContactSyncProcessor {
 
     private func update(contact syncContact: Sync_Contact) -> Promise<Void> {
         Promise { seal in
-            frameworkInjector.entityManager.performSyncBlockAndSafe {
+            frameworkInjector.entityManager.performAndWaitSave {
                 guard self.frameworkInjector.entityManager.entityFetcher
                     .contact(for: syncContact.identity) != nil else {
                     seal
@@ -261,10 +176,17 @@ class MediatorReflectedContactSyncProcessor {
                                     contactStore: frameworkInjector.contactStore
                                 )
 
-                                // Save on main thread (main DB context), otherwise observer of `Conversation` will not
-                                // be
-                                // called
-                                frameworkInjector.conversationStoreInternal.updateConversation(withContact: syncContact)
+                                if contactEntity.isContactHidden {
+                                    frameworkInjector.entityManager.entityDestroyer
+                                        .deleteOneToOneConversation(for: contactEntity)
+                                }
+                                else {
+                                    // Save on main thread (main DB context), otherwise observer of `Conversation` will
+                                    // not
+                                    // be called
+                                    frameworkInjector.conversationStoreInternal
+                                        .updateConversation(withContact: syncContact)
+                                }
 
                                 return contactEntity.threemaIdentity
                             }

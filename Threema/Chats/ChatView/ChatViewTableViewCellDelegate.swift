@@ -101,7 +101,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     // MARK: - Wallpaper
 
-    var chatViewHasCustomBackground: Bool {
+    lazy var chatViewHasCustomBackground: Bool = {
         guard let objectID = chatViewController?.conversation.objectID else {
             return false
         }
@@ -109,7 +109,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             WallpaperStore.shared.defaultIsEmptyWallpaper() || WallpaperStore.shared.defaultIsThreemaWallpaper()
         ) ||
             WallpaperStore.shared.hasCustomWallpaper(for: objectID)
-    }
+    }()
     
     // MARK: - Group Conversation flag
 
@@ -188,7 +188,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     func show(identity: String) {
         if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: identity) {
-            let detailsViewController = SingleDetailsViewController(for: contact)
+            let detailsViewController = SingleDetailsViewController(for: Contact(contactEntity: contact))
             let navigationController = ThemedNavigationController(rootViewController: detailsViewController)
             navigationController.modalPresentationStyle = .formSheet
             

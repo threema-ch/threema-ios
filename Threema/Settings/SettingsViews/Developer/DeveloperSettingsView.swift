@@ -32,7 +32,7 @@ struct DeveloperSettingsView: View {
     
     // Feature Flags
     @State var contactList2 = UserSettings.shared().contactList2
-    
+
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
     
@@ -65,6 +65,12 @@ struct DeveloperSettingsView: View {
                 }
                 
                 NavigationLink {
+                    ProfilePictureDebugView()
+                } label: {
+                    Text(verbatim: "Profile Picture Debug View")
+                }
+                
+                NavigationLink {
                     IDColorsView()
                 } label: {
                     Text("ID Colors Debug View")
@@ -81,30 +87,57 @@ struct DeveloperSettingsView: View {
                 } label: {
                     Text("Audio Error Debug View")
                 }
+                
+                Button {
+                    UserSettings.shared().resetTipKitOnNextLaunch = true
+                    exit(1)
+                } label: {
+                    Text(verbatim: "Reset TipKit (Relaunches App)")
+                }
             }
             
             Section("Multi-Device") {
                 Toggle(isOn: $allowSeveralDevices) {
-                    Text("Allow several linked devices")
+                    VStack(alignment: .leading) {
+                        Text(verbatim: "Allow Multiple Linked Devices")
+                        Text(
+                            verbatim: "Enable this if you want to link multiple Desktop instances or other iOS devices"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    }
                 }
                 .onChange(of: allowSeveralDevices) { newValue in
                     UserSettings.shared().allowSeveralLinkedDevices = newValue
                 }
                 
-                Button("Show Debug Device Join") {
+                Button("Show Device Join Debug View") {
                     showDebugDeviceJoin = true
                 }
                 
+                // TODO: (IOS-4793) This can probably be removed
                 NavigationLink {
                     LinkedDevicesView()
                 } label: {
-                    Text("Linked Device (beta)")
+                    VStack(alignment: .leading) {
+                        Text("settings_list_threema_desktop_title".localized)
+                        Text(verbatim: "Same as in main settings")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 
                 NavigationLink {
                     MultiDeviceViewControllerRepresentable()
                 } label: {
-                    Text("Old Linking")
+                    VStack(alignment: .leading) {
+                        Text(verbatim: "Old Linking ⚠️")
+                        Text(
+                            verbatim: "Use to link another iOS device. Enable setting above and tap on iPhone Symbol to start linking another device.\nUse on your own risk!"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    }
                 }
             }
             

@@ -290,19 +290,12 @@ message ContactSync {
     sync.Contact contact = 1;
   }
 
-  // Delete a Threema contact.
-  message Delete {
-    string delete_identity = 1;
-  }
-
   // Synchronisation type
   oneof action {
     // Create a Threema contact
     Create create = 1;
     // Update a Threema contact
     Update update = 2;
-    // Delete a Threema contact
-    Delete delete = 3;
   }
 }
 
@@ -314,8 +307,35 @@ message GroupSync {
   }
 
   // Update a group.
+  //
+  // When receiving this variant:
+  //
+  // 1. Let `current` be a snapshot of the current group state.
+  // 2. Persist the update to the group.
+  // 3. Let `member-changes` be an empty list.
+  // 4. For each `identity`, `state-change` pair of `member_state_changes`:
+  //    1. If `state-change` is `ADDED` and `identity` does not exist in
+  //       `current.members`, add the tuple `identity`, `state-change` to
+  //       `member-changes`.
+  //    2. If `state-change` is `KICKED` or `LEFT` and `identity` does exist in
+  //       `current.members`, add the tuple `identity`, `state-change` to
+  //       `member-changes`.
+  // 5. Group `member-changes` by their associated `state-change` and add
+  //    appropriate status messages to the associated conversation.
   message Update {
     sync.Group group = 1;
+
+    enum MemberStateChange {
+      // The member has been added
+      ADDED = 0;
+      // The member has been kicked from the group.
+      KICKED = 1;
+      // The member left the group.
+      LEFT = 2;
+    }
+
+    // A map of the member identity string to the member state change.
+    map<string, MemberStateChange> member_state_changes = 2;
   }
 
   // Delete a group.

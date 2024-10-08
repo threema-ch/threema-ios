@@ -9,6 +9,7 @@
 #define Scrypt_h
 
 #include <stdio.h>
+#include <stdint.h>  /* uint8_t */
 
 int getDerivedKey(char password[], char salt[], uint8_t out[64]);
 

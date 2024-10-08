@@ -38,11 +38,11 @@ final class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
     }
     
     override var description: String {
-        "<\(type(of: self)) \(reflectedEnvelope?.loggingDescription ?? "unknown message")>"
+        "<\(Swift.type(of: self)) \(reflectedEnvelope?.loggingDescription ?? "unknown message")>"
     }
     
-    override private init(isPersistent: Bool) {
-        super.init(isPersistent: isPersistent)
+    override private init(type: TaskType) {
+        super.init(type: type)
     }
     
     convenience init(
@@ -53,7 +53,7 @@ final class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) {
-        self.init(isPersistent: false)
+        self.init(type: .dropOnDisconnect)
         self.retry = false
         self.reflectID = reflectID
         self.reflectedEnvelope = reflectedEnvelope

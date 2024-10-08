@@ -322,8 +322,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                             )
                         }
 
-                        if sourceCaller != .sync, memberContact.isContactHidden {
-                            self.contactStore.deleteContact(
+                        if sourceCaller != .sync, !memberContact.isContactHidden {
+                            self.contactStore.markContactAsDeleted(
                                 identity: memberIdentity,
                                 entityManagerObject: self.entityManager
                             )
@@ -511,7 +511,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     await withCheckedContinuation { continuation in
                         self.contactStore.fetchPublicKey(
                             for: identity,
-                            acquaintanceLevel: .group,
+                            acquaintanceLevel: .groupOrDeleted,
                             entityManager: self.entityManager,
                             ignoreBlockUnknown: true,
                             onCompletion: { _ in
@@ -717,7 +717,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
                     self.postSystemMessage(
                         in: conversation,
-                        type: kSystemMessageGroupAvatarChanged,
+                        type: kSystemMessageGroupProfilePictureChanged,
                         arg: nil,
                         date: Date()
                     )
@@ -785,12 +785,12 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             conversation.groupImageSetDate = sentDate
             
             if let groupImage = conversation.groupImage {
-                self.entityManager.entityDestroyer.deleteObject(object: groupImage)
+                self.entityManager.entityDestroyer.delete(imageData: groupImage)
                 conversation.groupImage = nil
                 
                 self.postSystemMessage(
                     in: conversation,
-                    type: kSystemMessageGroupAvatarChanged,
+                    type: kSystemMessageGroupProfilePictureChanged,
                     arg: nil,
                     date: Date.now
                 )
@@ -1133,7 +1133,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // Fetch creator first, contact could be missing
         contactStore.fetchPublicKey(
             for: creator,
-            acquaintanceLevel: .group,
+            acquaintanceLevel: .groupOrDeleted,
             entityManager: entityManager,
             ignoreBlockUnknown: false,
             onCompletion: { _ in
@@ -1197,7 +1197,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         taskManager.add(taskDefinition: sendNameTask)
 
         // 7. If the group has no profile picture, send a `delete-profile-picture` group control message to the sender.
-        if group.profilePicture == nil {
+        if group.old_ProfilePicture == nil {
             let deletePhotoTask = createDeletePhotoTask(for: group, to: toMembers)
             taskManager.add(taskDefinition: deletePhotoTask)
         }
@@ -1216,7 +1216,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // don't guarantee it to be sent out before the a group message is sent
         
         // 6. If the group has a profile picture, send a `set-profile-picture` group control message to the sender.
-        if let profilePicture = group.profilePicture {
+        if let profilePicture = group.old_ProfilePicture {
             Task {
                 do {
                     try await self.sendPhoto(to: group, imageData: profilePicture, toMembers: toMembers)
@@ -1410,7 +1410,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         func runGroupPhotoTask() async throws {
             var profilePicture: Data?
             await entityManager.perform {
-                profilePicture = group.profilePicture
+                profilePicture = group.old_ProfilePicture
             }
 
             guard let data = profilePicture else {
@@ -1569,7 +1569,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         if let entities = entityManager.entityFetcher.allLastGroupSyncRequests() {
             for entity in entities {
                 if let entity = entity as? LastGroupSyncRequest {
-                    entityManager.entityDestroyer.deleteObject(object: entity)
+                    entityManager.entityDestroyer.delete(lastGroupSyncRequest: entity)
                 }
             }
         }

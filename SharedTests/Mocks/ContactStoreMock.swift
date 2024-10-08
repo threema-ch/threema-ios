@@ -28,7 +28,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
 
     private(set) var numberOfSynchronizeAddressBookCalls = 0
     private(set) var numberOfUpdateStatusCalls = 0
-    var deleteContactCalls = [String]()
+    var markContactAsDeletedCalls = [String]()
 
     required init(callOnCompletion: Bool, _ contact: ContactEntity? = nil, errorHandler: NSError? = nil) {
         self.callOnCompletion = callOnCompletion
@@ -128,10 +128,6 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         // no-op
     }
     
-    func reflectDeleteContact(_ identity: String?) {
-        // no-op
-    }
-    
     func updateProfilePicture(
         _ identity: String?,
         imageData: Data,
@@ -186,17 +182,13 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
             onCompletion()
         }
     }
-    
-    func updateAllContactsToCNContact() {
-        // no-op
-    }
 
     func updateAllContacts() {
         // no-op
     }
 
-    func deleteContact(identity: String, entityManagerObject: NSObject) {
-        deleteContactCalls.append(identity)
+    func markContactAsDeleted(identity: String, entityManagerObject: NSObject) {
+        markContactAsDeletedCalls.append(identity)
     }
     
     func resetCustomReadReceipts() {

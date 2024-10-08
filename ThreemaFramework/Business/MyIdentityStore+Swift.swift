@@ -21,7 +21,25 @@
 import Foundation
 
 extension MyIdentityStore {
-    public var idColor: UIColor {
+    @objc public var idColor: UIColor {
         IDColor.forData(Data(identity.utf8))
+    }
+    
+    @objc public var resolvedProfilePicture: UIImage {
+        guard let profilePicture, let imageData = profilePicture["ProfilePicture"] as? Data,
+              let image = UIImage(data: imageData) else {
+            return ProfilePictureGenerator.generateImage(for: .me, color: idColor)
+        }
+        
+        return image
+    }
+    
+    @objc public var resolvedGroupCallProfilePicture: UIImage {
+        guard let profilePicture, let imageData = profilePicture["ProfilePicture"] as? Data,
+              let image = UIImage(data: imageData) else {
+            return ProfilePictureGenerator.generateGroupCallImage(initials: "", color: idColor)
+        }
+        
+        return image
     }
 }

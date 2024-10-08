@@ -76,8 +76,13 @@ static ErrorNotificationHandler *singleton;
     NSString *title = [BundleUtil localizedStringForKey:@"error_rogue_device_title"];
     NSString *message = [BundleUtil localizedStringForKey:@"error_rogue_device_message"];
     
-    [self showAlertWithTitle:title message:message actionOk:^(UIAlertAction * action) {
+    [self showAlertWithTitle:title message:message actionOk:^(UIAlertAction *action) {
         [[ServerConnector sharedServerConnector] clearDeviceCookieChangedIndicator];
+    } actionMoreInfo:^(UIAlertAction *action) {
+        [[ServerConnector sharedServerConnector] clearDeviceCookieChangedIndicator];
+        
+        NSURL *url = [ThreemaURLProviderObjc getURL:ThreemaURLProviderTypeRogueDeviceInfo];
+        [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
     }];
 }
 
@@ -87,4 +92,12 @@ static ErrorNotificationHandler *singleton;
         [UIAlertTemplate showAlertWithOwner:vc title:title message:message actionOk:actionOk];
     });
 }
+
+- (void)showAlertWithTitle:(NSString *)title message:(NSString *)message actionOk:(void (^)(UIAlertAction*))actionOk actionMoreInfo:(void (^)(UIAlertAction*))actionMoreInfo {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *vc = [[[AppDelegate sharedAppDelegate] window] rootViewController];
+        [UIAlertTemplate showAlertWithOwner:vc title:title message:message titleOk:[BundleUtil localizedStringForKey:@"ok"] actionOk:actionOk titleCancel:[BundleUtil localizedStringForKey:@"error_rogue_device_more_info_button"] actionCancel:actionMoreInfo];
+    });
+}
+
 @end

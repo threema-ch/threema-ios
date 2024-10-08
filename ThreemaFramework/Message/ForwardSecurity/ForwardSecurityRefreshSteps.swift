@@ -39,7 +39,10 @@ struct ForwardSecurityRefreshSteps {
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
         self.init(
             backgroundBusinessInjector: backgroundBusinessInjector,
-            taskManager: TaskManager(backgroundEntityManager: backgroundBusinessInjector.entityManager)
+            taskManager: TaskManager(
+                backgroundEntityManager: backgroundBusinessInjector.entityManager,
+                serverConnector: backgroundBusinessInjector.serverConnector
+            )
         )
     }
     

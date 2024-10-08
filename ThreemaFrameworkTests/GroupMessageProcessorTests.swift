@@ -385,8 +385,9 @@ class GroupMessageProcessorTests: XCTestCase {
 
         // prepare test db
 
+        var members = Set<ContactEntity>()
         for member in [expectedMember01, expectedMember02, expectedMember03] {
-            databasePreparer.createContact(identity: member.string)
+            members.insert(databasePreparer.createContact(identity: member.string))
         }
 
         // 0: test description
@@ -397,14 +398,12 @@ class GroupMessageProcessorTests: XCTestCase {
         // 3: request sync
         // 4: left the group
         // 5: sync add member
-        // 6: sync remove member
-        // 7: did handle message
+        // 6: did handle message
         let tests = [
             [
                 "Group found all good, process group message",
                 GroupTextMessage(),
                 expectedMember01.string,
-                false,
                 false,
                 false,
                 false,
@@ -416,7 +415,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "MEMBER04",
                 false,
                 false,
-                false,
                 true,
                 true,
             ],
@@ -426,8 +424,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 expectedCreator.string,
                 false,
                 false,
-                false,
-                false,
+                true,
                 true,
             ],
             // Spec group-sync-request:
@@ -443,7 +440,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 "MEMBER04",
                 false,
                 false,
-                false,
                 true,
                 true,
             ],
@@ -457,7 +453,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 false,
                 true,
-                false,
                 true,
             ],
             // Spec group-leave:
@@ -472,7 +467,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 false,
                 true,
                 false,
-                false,
                 true,
             ],
             [
@@ -481,7 +475,6 @@ class GroupMessageProcessorTests: XCTestCase {
                 expectedCreator.string,
                 false,
                 true,
-                false,
                 false,
                 true,
             ],
@@ -493,29 +486,41 @@ class GroupMessageProcessorTests: XCTestCase {
             let testDescription = test[0] as! String
 
             let userSettingsMock = UserSettingsMock()
-            let taskManagerMock = TaskManagerMock()
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
-
-            let groupManager = GroupManager(
-                myIdentityStoreMock,
-                ContactStoreMock(callOnCompletion: true),
-                taskManagerMock,
-                UserSettingsMock(),
-                entityManager,
-                GroupPhotoSenderMock()
-            )
+            
+            let groupManagerMock = GroupManagerMock(myIdentityStoreMock)
 
             let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedCreator)
-
-            guard let group = try await groupManager.createOrUpdateDB(
-                for: expectedGroupIdentity,
-                members: Set<String>([expectedMember01.string, expectedMember02.string, expectedMember03.string]),
-                systemMessageDate: Date(),
-                sourceCaller: .local
-            ) else {
-                XCTFail("Creating group failed")
-                return
+            
+            let groupEntity = databasePreparer.save {
+                databasePreparer.createGroupEntity(
+                    groupID: expectedGroupIdentity.id,
+                    groupCreator: expectedGroupIdentity.creator.string == myIdentityStoreMock
+                        .identity ? nil : expectedGroupIdentity.creator.string
+                )
             }
+            
+            let conversation = databasePreparer.save {
+                databasePreparer.createConversation(
+                    typing: false,
+                    unreadMessageCount: 0,
+                    visibility: .default
+                ) { conversation in
+                    conversation.groupID = expectedGroupIdentity.id
+                    conversation.groupMyIdentity = myIdentityStoreMock.identity
+                    conversation.addMembers(members)
+                }
+            }
+            
+            let group = Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: .now
+            )
+            
+            groupManagerMock.getGroupReturns = [group]
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
@@ -528,7 +533,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 message: message,
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
-                groupManager: groupManager,
+                groupManager: groupManagerMock,
                 entityManager: entityManager,
                 nonceGuard: NonceGuardMock()
             )
@@ -553,35 +558,20 @@ class GroupMessageProcessorTests: XCTestCase {
             XCTAssertNil(resultError, testDescription)
             XCTAssertEqual(
                 test[3] as! Bool,
-                ddLoggerMock
-                    .exists(
-                        message: "\(message.fromIdentity!) is not member of group \(message.groupID.hexString), add to pending messages and request group sync"
-                    ),
+                !groupManagerMock.sendSyncRequestCalls.isEmpty,
                 testDescription
             )
             XCTAssertEqual(
                 test[4] as! Bool,
-                ddLoggerMock
-                    .exists(
-                        message: "Member \(message.fromIdentity!) left the group \(message.groupID.hexString) \(message.groupCreator!)"
-                    ),
+                !groupManagerMock.leaveDBCalls.isEmpty,
                 testDescription
             )
             XCTAssertEqual(
                 test[5] as! Bool,
-                (taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)?
-                    .toMembers
-                    .filter { $0 == "MEMBER02" }.count == 1,
+                !groupManagerMock.syncCalls.isEmpty,
                 testDescription
             )
-            XCTAssertEqual(
-                test[6] as? Bool,
-                (taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)?
-                    .removedMembers?
-                    .filter { $0 == "MEMBER04" }.count ?? 0 == 1,
-                testDescription
-            )
-            XCTAssertEqual(test[7] as! Bool, try XCTUnwrap(resultDidHandleMessage), testDescription)
+            XCTAssertEqual(test[6] as! Bool, try XCTUnwrap(resultDidHandleMessage), testDescription)
         }
     }
 

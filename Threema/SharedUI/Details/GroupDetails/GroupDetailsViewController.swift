@@ -39,16 +39,12 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         
         return DetailsHeaderView(
             with: group.contentConfiguration,
-            avatarImageTapped: { [weak self] in
-                guard let strongSelf = self else {
-                    return
-                }
-                guard let groupProfilePictureData = strongSelf.group.profilePicture,
-                      let profilePicture = UIImage(data: groupProfilePictureData) else {
+            profilePictureTapped: { [weak self] in
+                guard let self else {
                     return
                 }
                 
-                strongSelf.presentFullscreen(image: profilePicture)
+                presentFullscreen(image: group.profilePicture)
             },
             quickActions: actions,
             mediaAndPollsQuickActions: mediaStarredAndPollActions()
@@ -168,12 +164,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         observeGroup(\.willBeDeleted) {
             // will be handled in group object
         }
-                
-        observeGroup(\.profilePicture) { [weak self] in
-            AvatarMaker.shared().clearCacheForProfilePicture()
-            self?.updateHeader(animated: false)
-        }
-
+        
         // TODO: Observe each member and explicitly reload the cells that have a changed member
         // otherwise the diffable data source doesn't refresh the cell
         observeGroup(\.members) { [weak self] in
@@ -559,44 +550,13 @@ extension GroupDetailsViewController: UITableViewDelegate {
     }
 }
 
-// MARK: - Peak & pop actions support
-
-// Used for iOS 12 support
-extension GroupDetailsViewController {
-    override var previewActionItems: [UIPreviewActionItem] {
-        guard let presentingViewController else {
-            return []
-        }
-        
-        // In theory the view controller where the peak interaction starts is what we
-        // want there, but it also works with the presenting VC which is the
-        // `MainTabBarController`.
-        return quickActions(in: presentingViewController).map(\.asUIPreviewAction)
-    }
-}
-
 extension Group {
     /// Get a content configuration base on this `Group`
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
         DetailsHeaderProfileView.ContentConfiguration(
-            avatarImageProvider: avatarImageProvider(completion:),
+            profilePictureInfo: .group(self),
             name: name ?? "",
             isSelfMember: isSelfMember
         )
-    }
-    
-    private func avatarImageProvider(completion: @escaping (UIImage?) -> Void) {
-        guard let profilePictureData = profilePicture, let profilePicture = UIImage(data: profilePictureData) else {
-            Task { @MainActor in
-                completion(AvatarMaker.shared().unknownGroupImage())
-            }
-            return
-        }
-        
-        let maskedProfilePicture = AvatarMaker.maskImage(profilePicture)
-        
-        Task { @MainActor in
-            completion(maskedProfilePicture)
-        }
     }
 }

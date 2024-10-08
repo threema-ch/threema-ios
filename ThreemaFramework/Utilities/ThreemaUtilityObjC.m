@@ -184,31 +184,6 @@
     return data;
 }
 
-+ (BOOL)hideThreemaTypeIconForContact:(ContactEntity *)contact {
-    // Always hide if there is no contact (e.g. it's a group)
-    if (!contact) {
-        return YES;
-    }
-    
-    if (contact.isEchoEcho || contact.isGatewayId || [LicenseStore isOnPrem]) {
-        return YES;
-    }
-    
-    if ([LicenseStore requiresLicenseKey]) {
-        return [[UserSettings sharedUserSettings].workIdentities containsObject:contact.identity];
-    } else {
-        return ![[UserSettings sharedUserSettings].workIdentities containsObject:contact.identity];
-    }
-}
-
-+ (UIImage *)threemaTypeIcon {
-    if ([LicenseStore requiresLicenseKey]) {
-        return [StyleKit houseIcon];
-    } else {
-        return [StyleKit workIcon];
-    }
-}
-
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo {
     [self sendErrorLocalNotification:title body:body userInfo:userInfo onCompletion:nil];
 }

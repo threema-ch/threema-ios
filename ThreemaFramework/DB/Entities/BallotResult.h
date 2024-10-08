@@ -27,10 +27,13 @@
 
 @interface BallotResult : TMAManagedObject
 
+// Attributes
 @property (nonatomic, retain) NSDate * createDate;
 @property (nonatomic, retain) NSDate * modifyDate;
 @property (nonatomic, retain) NSString * participantId NS_SWIFT_NAME(participantID);
 @property (nonatomic, retain) NSNumber * value;
+
+// Relationships
 @property (nonatomic, retain) BallotChoice *ballotChoice;
 
 - (BOOL)boolValue;

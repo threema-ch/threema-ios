@@ -80,20 +80,14 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     // MARK: - Subviews
     
-    private var avatarSizeConstraint: NSLayoutConstraint!
+    private var profilePictureSizeConstraint: NSLayoutConstraint!
     
-    private lazy var avatarImageView: UIImageView = {
-        let imageView = UIImageView(image: configuration.loadingAvatarImage)
-        
-        imageView.contentMode = .scaleAspectFit
-        
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let imageView = ProfilePictureImageView()
         // Always use max height as possible and set the width with aspect ratio 1:1
-        avatarSizeConstraint = imageView.heightAnchor.constraint(lessThanOrEqualToConstant: configuration.maxAvatarSize)
-        avatarSizeConstraint.isActive = true
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        
-        imageView.accessibilityIgnoresInvertColors = true
+        profilePictureSizeConstraint = imageView.heightAnchor
+            .constraint(lessThanOrEqualToConstant: configuration.maxProfilePictureSize)
+        profilePictureSizeConstraint.isActive = true
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             imageView.isHidden = true
@@ -207,7 +201,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     }()
     
     private lazy var containerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [avatarImageView, textStack])
+        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack])
         
         stackView.axis = .horizontal
         stackView.distribution = .fill
@@ -233,17 +227,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
             otherThreemaTypeIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
         }
         else {
-            // The avatar view combined with the type icon is only shown for non accessibility content
-            // sizes, thus we only should set it as a subview with constraints then
-            avatarImageView.addSubview(otherThreemaTypeIcon)
-            NSLayoutConstraint.activate([
-                // 0.35x of the avatar image size
-                otherThreemaTypeIcon.widthAnchor.constraint(equalTo: avatarImageView.widthAnchor, multiplier: 0.35),
-                
-                // In the bottom left of the avatar view (in ltr)
-                otherThreemaTypeIcon.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
-                otherThreemaTypeIcon.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor),
-            ])
+            otherThreemaTypeIcon.isHidden = true
         }
         
         // Container configuration
@@ -269,17 +253,8 @@ public final class ContactCell: ThemedCodeTableViewCell {
     private func configureMeCell() {
         let profile = ProfileStore().profile()
         
-        if let profileImageData = profile.profileImage,
-           let profileImage = UIImage(data: profileImageData) {
-            avatarImageView.image = AvatarMaker.shared()
-                .maskedProfilePicture(profileImage, size: configuration.maxAvatarSize)
-        }
-        else {
-            avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
-        }
-        
+        profilePictureView.info = .me
         otherThreemaTypeIcon.isHidden = true
-        
         nameLabel.contact = nil // BundleUtil.localizedString(forKey: "me")
         verificationLevelImageView.image = nil
         verificationLevelImageView.accessibilityLabel = nil
@@ -300,35 +275,13 @@ public final class ContactCell: ThemedCodeTableViewCell {
         let em = BusinessInjector().entityManager
         em.performBlock {
             if let contactEntity = em.entityFetcher.contact(for: contact.identity.string) {
-                AvatarMaker.shared()
-                    .avatar(
-                        for: contactEntity,
-                        size: self.configuration.maxAvatarSize,
-                        masked: true
-                    ) { avatarImage, identity in
-                        guard let avatarImage,
-                              let identity else {
-                            // Show placeholder
-                            self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
-                            return
-                        }
-
-                        if identity == contact.identity.string {
-                            DispatchQueue.main.async {
-                                self.avatarImageView.image = avatarImage
-                            }
-                        }
-                    }
-
-                self.otherThreemaTypeIcon.isHidden = !contactEntity.showOtherThreemaTypeIcon
-
+                self.profilePictureView.info = .contact(contact)
                 self.nameLabel.contact = contactEntity
             }
             else {
                 DDLogError(
-                    "Can't find contact entity to set the avatar, type icon and name. It will show 'me' as contact name"
+                    "Can't find contact entity to set the profile picture, type icon and name. It will show 'me' as contact name"
                 )
-                self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
                 self.otherThreemaTypeIcon.isHidden = true
                 self.nameLabel.contact = nil
             }
@@ -364,7 +317,8 @@ public final class ContactCell: ThemedCodeTableViewCell {
     }
     
     private func configureUnknownContactCell() {
-        avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
+        
+        profilePictureView.info = .contact(nil)
         
         otherThreemaTypeIcon.isHidden = true
         
@@ -391,9 +345,9 @@ public final class ContactCell: ThemedCodeTableViewCell {
         nameLabel.font = configuration.nameLabelFont
         containerStack.spacing = configuration.horizontalSpacing
         
-        // Note: We don't reload the avatar here. So if the `content` is assigned before the `size`
-        // we might have a blurry avatar.
-        avatarSizeConstraint.constant = configuration.maxAvatarSize
+        // Note: We don't reload the profile picture here. So if the `content` is assigned before the `size`
+        // we might have a blurry profile picture.
+        profilePictureSizeConstraint.constant = configuration.maxProfilePictureSize
         
         updateSeparatorInset()
     }
@@ -404,8 +358,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
             return
         }
         
-        // Note: This will be off when the avatar is smaller than `maxAvatarSize`.
-        let leftSeparatorInset = configuration.maxAvatarSize + configuration.horizontalSpacing
+        let leftSeparatorInset = configuration.maxProfilePictureSize + configuration.horizontalSpacing
         separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)
     }
     

@@ -167,11 +167,14 @@
     return (AudioData *)[self createEntityOfType: @"AudioData"];
 }
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation {
+- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)setLastUpdate {
     BaseMessage *message = [self createEntityOfType: @"TextMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
-    conversation.lastUpdate = [NSDate date];
+    
+    if (setLastUpdate) {
+        conversation.lastUpdate = [NSDate date];
+    }
     
     return (TextMessage *)message;
 }
@@ -239,8 +242,10 @@
     return (BallotMessage *)message;
 }
 
-- (ContactEntity *)contact {
-    return (ContactEntity *)[self createEntityOfType: @"Contact"];
+- (ContactEntity *)contact {    
+    ContactEntity *contactEntity = [self createEntityOfType:@"Contact"];
+    [self setupBasePropertiesForContact:contactEntity];
+    return contactEntity;
 }
 
 - (LastGroupSyncRequest *)lastGroupSyncRequest {
@@ -291,13 +296,6 @@
     return result;
 }
 
-- (Tag *)tagWithName:(NSString *)name {
-    Tag *tag = (Tag *)[self createEntityOfType:@"Tag"];
-    tag.name = name;
-    
-    return tag;
-}
-
 - (MessageMarkers *)messageMarkers {
     MessageMarkers *markers = (MessageMarkers *)[self createEntityOfType:@"MessageMarkers"];
     return markers;
@@ -334,26 +332,12 @@
     return (WebClientSession *)[self createEntityOfType:@"WebClientSession"];
 }
 
-- (RequestedConversation *)requestedConversationWithId:(NSString *)conversationId webClientSession:(WebClientSession*)webClientSession {
-    RequestedConversation *requestedConversation = (RequestedConversation *)[self createEntityOfType:@"RequestedConversation"];
-    requestedConversation.conversationId = conversationId;
-    requestedConversation.webClientSession = webClientSession;
-    return requestedConversation;
-}
-
 - (LastLoadedMessageIndex *)lastLoadedMessageIndexWithBaseMessageId:(NSData *)baseMessageId index:(NSInteger)index webClientSession:(WebClientSession*)webClientSession {
     LastLoadedMessageIndex *lastLoadedMessageIndex = (LastLoadedMessageIndex *)[self createEntityOfType:@"LastLoadedMessageIndex"];
     lastLoadedMessageIndex.baseMessageId = baseMessageId;
     lastLoadedMessageIndex.index = [NSNumber numberWithInteger:index];
     lastLoadedMessageIndex.webClientSession = webClientSession;
     return lastLoadedMessageIndex;
-}
-
-- (RequestedThumbnail *)requestedThumbnailWithMessageId:(NSData *)messageId webClientSession:(WebClientSession*)webClientSession {
-    RequestedThumbnail *requestedThumbnail = (RequestedThumbnail *)[self createEntityOfType:@"RequestedThumbnail"];
-    requestedThumbnail.messageId = messageId;
-    requestedThumbnail.webClientSession = webClientSession;
-    return requestedThumbnail;
 }
 
 #pragma mark - private methods
@@ -392,6 +376,10 @@
                  inManagedObjectContext:_managedObjectContext];
     
     return object;
+}
+
+- (void)setupBasePropertiesForContact:(ContactEntity *)contactEntity {
+    contactEntity.createdAt = [NSDate date];
 }
 
 - (void)setupBasePropertiesForNewMessage:(BaseMessage *)message inConversation:(Conversation *)conversation {

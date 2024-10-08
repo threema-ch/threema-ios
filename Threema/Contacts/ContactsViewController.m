@@ -35,7 +35,6 @@
 #import "LicenseStore.h"
 #import "BundleUtil.h"
 #import "ModalNavigationController.h"
-#import "AvatarMaker.h"
 #import "MDMSetup.h"
 
 #ifdef DEBUG
@@ -138,7 +137,6 @@ typedef enum : NSUInteger {
         
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
         
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showProfilePictureChanged:) name:kNotificationShowProfilePictureChanged object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshWorkContactTableView:) name:kNotificationRefreshWorkContactTableView object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshContactSortIndices:) name:kNotificationRefreshContactSortIndices object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshDirtyObjects:) name:kNotificationDBRefreshedDirtyObject object:nil];
@@ -591,7 +589,8 @@ typedef enum : NSUInteger {
 
 - (void)displayContact {
     if (SYSTEM_IS_IPAD == NO) {
-        SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:contactForDetails displayStyle:DetailsDisplayStyleDefault];
+        Contact *contact = [[Contact alloc] initWithContactEntity:contactForDetails];
+        SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:contact displayStyle:DetailsDisplayStyleDefault];
         [self showViewController:singleDetailsViewController sender:self];
     } else {
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowContact object:nil userInfo:[NSDictionary dictionaryWithObject:contactForDetails forKey:kKeyContact]];
@@ -898,7 +897,8 @@ typedef enum : NSUInteger {
         }
         
         // Load contact details
-        SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:contact displayStyle:DetailsDisplayStylePreview];
+        Contact *businessContact = [[Contact alloc] initWithContactEntity:contact];
+        SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:businessContact displayStyle:DetailsDisplayStylePreview];
         
         // Compose actions
         
@@ -1051,7 +1051,7 @@ typedef enum : NSUInteger {
     [UIAlertTemplate showDestructiveAlertWithOwner:self title:title message:nil titleDestructive:destructiveTitle actionDestructive:^(UIAlertAction * _Nonnull __unused destructiveAction) {
         EntityManager *em = [[EntityManager alloc] init];
         [em performSyncBlockAndSafe:^{
-                [[em entityDestroyer] deleteObjectWithObject:distributionList];
+                [[em entityDestroyer] deleteWithDistributionListEntity:distributionList];
         }];
         
     } titleCancel:cancelTitle actionCancel:^(UIAlertAction * _Nonnull __unused cancelAction) {
@@ -1393,8 +1393,8 @@ typedef enum : NSUInteger {
         if (contact == nil) {
             return nil;
         }
-        
-        SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:contact displayStyle:DetailsDisplayStylePreview];
+        Contact *businessContact = [[Contact alloc] initWithContactEntity:contact];
+        SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:businessContact displayStyle:DetailsDisplayStylePreview];
 
         return singleDetailsViewController;
         
@@ -1424,10 +1424,6 @@ typedef enum : NSUInteger {
 }
 
 #pragma mark - Notifications
-
-- (void)showProfilePictureChanged:(NSNotification *)notification {
-    [self refresh];
-}
 
 - (void)refreshWorkContactTableView:(NSNotification *)notification {
     dispatch_async(dispatch_get_main_queue(), ^{

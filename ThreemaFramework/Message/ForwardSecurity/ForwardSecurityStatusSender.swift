@@ -475,7 +475,8 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             if let conversation = self.entityManager.conversation(
                 for: contactIdentity,
                 createIfNotExisting: true,
-                setLastUpdate: false
+                setLastUpdate: false,
+                keepContactHidden: true
             ) {
                 if !allowDuplicates {
                     let messageFetcher = MessageFetcher(for: conversation, with: self.entityManager)

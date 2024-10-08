@@ -46,7 +46,7 @@ final class TaskDefinitionProfileSync: TaskDefinition, TaskDefinitionTransaction
     }
 
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     var scope: D2d_TransactionScope.Scope {
@@ -69,7 +69,7 @@ final class TaskDefinitionProfileSync: TaskDefinition, TaskDefinitionTransaction
         self.linkMobileNoPending = linkMobileNoPending
         self.linkEmailPending = linkEmailPending
 
-        super.init(isPersistent: false)
+        super.init(type: .volatile)
     }
 
     required init(from decoder: Decoder) throws {

@@ -1170,7 +1170,7 @@ extension SingleDetailsDataSource {
                 }
             }
         )
-        
+
         let deleteContactAction = Details.Action(
             title: BundleUtil.localizedString(forKey: "delete_contact_button"),
             imageName: nil,
@@ -1188,7 +1188,11 @@ extension SingleDetailsDataSource {
         
         var actions: [SingleDetails.Row] = []
         actions.append(.booleanAction(blockContactBooleanAction))
-        actions.append(.action(deleteContactAction))
+
+        if !contact.isContactHidden {
+            actions.append(.action(deleteContactAction))
+        }
+
         return actions
     }
     

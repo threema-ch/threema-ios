@@ -45,7 +45,7 @@ final class TaskDefinitionReflectIncomingMessage: TaskDefinition, TaskDefinition
     }
 
     override var description: String {
-        "<\(type(of: self)) \(message.loggingDescription)>"
+        "<\(Swift.type(of: self)) \(message.loggingDescription)>"
     }
 
     let message: AbstractMessage
@@ -59,14 +59,10 @@ final class TaskDefinitionReflectIncomingMessage: TaskDefinition, TaskDefinition
         case messageDataMissing
     }
 
-    @objc init(message: AbstractMessage, isPersistent: Bool) {
+    @objc init(message: AbstractMessage) {
         self.message = message
-        super.init(isPersistent: isPersistent)
+        super.init(type: .dropOnDisconnect)
         self.retry = false
-    }
-
-    @objc convenience init(message: AbstractMessage) {
-        self.init(message: message, isPersistent: false)
     }
 
     required init(from decoder: Decoder) throws {
@@ -84,8 +80,6 @@ final class TaskDefinitionReflectIncomingMessage: TaskDefinition, TaskDefinition
 
         let superDecoder = try container.superDecoder()
         try super.init(from: superDecoder)
-
-        self.isPersistent = false
     }
 
     override func encode(to encoder: Encoder) throws {

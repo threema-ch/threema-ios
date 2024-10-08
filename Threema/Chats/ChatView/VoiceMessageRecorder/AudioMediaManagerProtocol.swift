@@ -41,9 +41,7 @@ protocol AudioMediaManagerProtocol: AnyObject {
     /// - Parameters:
     ///   - urls: An array of `URL` objects representing the audio files to be concatenated.
     ///   - audioFile: The destination `URL` where the final audio file will be saved.
-    /// - Returns: A `Result` indicating the success or failure of the save operation.
-    static func concatenateRecordingsAndSave(combine urls: [URL], to audioFile: URL) async
-        -> Result<Void, VoiceMessageError>
+    static func concatenateRecordingsAndSave(combine urls: [URL], to audioFile: URL) async throws
     
     /// Saves an `AVAsset` to a specified URL.
     /// This function attempts to delete any existing file at the destination URL before initiating the export.
@@ -52,27 +50,21 @@ protocol AudioMediaManagerProtocol: AnyObject {
     /// - Parameters:
     ///   - asset: The `AVAsset` to be saved.
     ///   - url: The destination `URL` where the asset should be saved.
-    /// - Returns: A `Result` indicating the success or failure of the save operation.
-    static func save(_ asset: AVAsset, to url: URL) async -> Result<Void, VoiceMessageError>
+    static func save(_ asset: AVAsset, to url: URL) async throws
     
     /// Moves a file from a given URL to the persistent directory (Documents).
     /// - Parameter url: The source URL of the file to be moved.
-    /// - Returns: A result containing the new URL in the persistent directory on success, or a VoiceMessageError on
-    /// failure.
-    @discardableResult
-    static func moveToPersistentDir(from url: URL) -> Result<URL, VoiceMessageError>
+    static func moveToPersistentDir(from url: URL) throws -> URL
     
     /// Copies  a file from a given URL to the destination
     /// - Parameter source: The source URL of the file to be copied.
     /// - Parameter destination: The destination URL of the file to be copied.
-    /// - Returns: A `Result` indicating the success or failure of the copy operation.
-    @discardableResult
-    static func copy(source: URL, destination: URL) -> Result<Void, VoiceMessageError>
+    static func copy(source: URL, destination: URL) throws
 }
 
 extension AudioMediaManager {
     static func cleanupFiles(_ urls: [URL]) {
-        DispatchQueue.global(qos: .background).async {
+        Task(priority: .background) {
             urls.forEach(FileUtil.shared.delete)
         }
     }
@@ -86,32 +78,32 @@ extension AudioMediaManager {
         DDLogInfo("new Tmp fileURL: \(url)")
         return url
     }
-    
-    static func copy(source: URL, destination: URL) -> Result<Void, VoiceMessageError> {
-        FileUtil.shared.copy(source: source, destination: destination)
-            ? .success(())
-            : .failure(.fileOperationFailed)
+
+    static func copy(source: URL, destination: URL) throws {
+        guard FileUtil.shared.copy(source: source, destination: destination) else {
+            throw VoiceMessageError.fileOperationFailed
+        }
     }
     
-    static func moveToPersistentDir(from url: URL) -> Result<URL, VoiceMessageError> {
+    static func moveToPersistentDir(from url: URL) throws -> URL {
         guard let persistentDir = FileUtil.shared.appDocumentsDirectory
         else {
-            return .failure(.fileOperationFailed)
+            throw VoiceMessageError.fileOperationFailed
         }
-        return moveFile(
+        return try moveFile(
             from: url,
             to: persistentDir
                 .appendingPathComponent(url.lastPathComponent)
         )
     }
     
-    private static func moveFile(from url: URL, to newURL: URL) -> Result<URL, VoiceMessageError> {
+    private static func moveFile(from url: URL, to newURL: URL) throws -> URL {
         guard !FileUtil.shared.isExists(fileURL: newURL) else {
-            return .success(newURL)
+            return newURL
         }
-        
-        return FileUtil.shared.move(source: url, destination: newURL)
-            ? .success(newURL)
-            : .failure(.fileOperationFailed)
+        guard FileUtil.shared.move(source: url, destination: newURL) else {
+            throw VoiceMessageError.fileOperationFailed
+        }
+        return newURL
     }
 }

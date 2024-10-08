@@ -22,7 +22,6 @@
 #import "ContactEntity.h"
 #import "ContactNameLabel.h"
 #import "BundleUtil.h"
-#import "AvatarMaker.h"
 #import "UserSettings.h"
 #import "BundleUtil.h"
 #import "ThreemaUtilityObjC.h"
@@ -31,9 +30,7 @@
 
 - (void)awakeFromNib {
     [super awakeFromNib];
-    _threemaTypeIcon.image = [ThreemaUtilityObjC threemaTypeIcon];
-    
-    _contactImage.accessibilityIgnoresInvertColors = true;
+    _threemaTypeIcon.image = [ThreemaUtility otherThreemaTypeIcon];
     _threemaTypeIcon.accessibilityIgnoresInvertColors = true;
 }
 
@@ -47,27 +44,6 @@
     
     self.nameLabel.contact = contact;
     
-    self.contactImage.image = [BundleUtil imageNamed:@"Unknown"];
-    [[AvatarMaker sharedAvatarMaker] avatarForContactEntity:contact size:40.0f masked:YES onCompletion:^(UIImage *avatarImage, NSString *identity) {
-        if ([contact.identity isEqualToString:identity]) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.contactImage.image = avatarImage;
-            });
-        }
-    }];
-    
-    if (contact.publicNickname && contact.publicNickname.length > 0) {
-        NSString *nickname = contact.publicNickname;
-        if ([contact.publicNickname isEqualToString:contact.identity] == NO) {
-            nickname = [NSString stringWithFormat:@"%@", contact.publicNickname];
-        } else {
-            nickname = @" ";
-        }
-        self.nicknameLabel.text = nickname;
-    } else {
-        self.nicknameLabel.text = @" ";
-    }
-    
     self.identityLabel.text = contact.identity;
     self.verificationLevel.image = [contact verificationLevelImageSmall];
     
@@ -75,7 +51,7 @@
     
     self.nameLabel.highlightedTextColor = self.nameLabel.textColor;
     
-    _threemaTypeIcon.hidden = [ThreemaUtilityObjC hideThreemaTypeIconForContact:self.contact];
+    _threemaTypeIcon.hidden = !contact.showOtherThreemaTypeIcon;
 }
 
 - (void)updateState {
@@ -87,9 +63,7 @@
         alpha = 0.5;
     }
     
-    self.contactImage.alpha = alpha;
     self.verificationLevel.alpha = alpha;
-    self.nicknameLabel.alpha = alpha;
     self.identityLabel.alpha = alpha;
 }
 

@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Скопировано в буфер обмена";
 "webrtc_diagnostics.done" = "Готово. Если у вас возникают неполадки с подключением для связи, отправьте эти данные в поддержку Threema.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Выбрать";
 "mwphotobrowser_select_all" = "Выбрать все";
@@ -338,7 +335,7 @@
 "record_audio" = "Записать голосовое сообщение";
 "record_continue" = "Продолжить запись аудио";
 "scan_qr" = "Сканировать QR-код";
-"share_file" = "Поделиться файлом";
+"share_file" = "Поделиться файлом или контактом";
 "add_item_caption" = "Добавить заголовок";
 "add_items_caption" = "Добавить заголовки";
 "send_item_immediately_photo" = "Отправить фото";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Рабочий контакт";
 "threema_type_icon_private_accessibility_label" = "Частный контакт";
 
-"delete_contact_group_exists_title" = "Невозможно удалить контакт";
-"delete_contact_group_exists_message_single" = "«%@» все еще является участником группы. Удалите контакт из группы или удалите группу.";
-"delete_contact_group_exists_message_multiple" = "«%@» все еще является участником %d групп. Удалите контакт из групп или удалите группы.";
-"delete_contact_group_exists_show_contact_button" = "Показать контакт";
 "delete_contact_existing_conversation_title" = "Удалить\"%@\"?";
+"delete_contact_existing_conversation_is_group_member_title" = "Чат с пользователем %@ будет удален, но он останется членом групп. Удалить %@?";
 "delete_contact_existing_conversation_button" = "Удалить контакт + историю чата";
+"delete_contact_is_group_member_title" = "%@ остается участником групп. Удалить %@?";
 "delete_contact_confirmation_with_exclusion_message" = "Удалить «%@» и исключить контакт из синхронизации?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "%@ остается членом групп. Удалить пользователя %@ и исключить его из синхронизации?";
 "delete_contact_button" = "Удалить контакт";
 "delete_contact_confirmation_with_exclusion_button" = "Удалить + исключить контакт";
 "exclude_deleted_id_title" = "Исключить Threema ID контакта «%@» из синхронизации?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "Вы новый пользователь %@?";
 "restore_id_export" = "Восстановить экспорт ID";
 "id_exists" = "Доступен ID Threema, который ранее использовался на этом устройстве (%@). Восстановить этот ID?";
+
+"contact_support" = "Связаться со службой поддержки";
+"contact_support_mail_subject" = "Создано слишком много идентификаторов для этой покупки";
+"contact_support_mail_message" = "Уважаемая команда %@,\n\nСоздать новый Threema ID не удалось. Возвращается следующий код ошибки:\n%@\n\nС уважением,";
 
 "welcome" = "Добро пожаловать в %@";
 "move_your_finger" = "Двигайте пальцем по экрану для создания нового Threema ID.";
@@ -712,6 +712,8 @@
 "current_position" = "позиция";
 "in_reply_to" = "В ответ на";
 "draft" = "Проект";
+"draft_type_quote" = "Цитировать";
+"draft_type_edit" = "Изменить";
 "new_message_accessibility" = "Новое сообщение: ";
 "quote_interaction_hint" = "Переход к ответу";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Добавить канал Threema в список контактов?";
 "threema_channel_info" = "Канал Threema сообщает все новости о Threema.";
 "threema_channel_failed" = "Не удается добавить канал Threema.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Добавить канал Threema Work в список контактов?";
+"threema_work_channel_info" = "В канале Threema Work публикуются все новости о Threema Work.";
+"threema_work_channel_failed" = "Не удается добавить канал Threema Work.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Ответить";
@@ -1073,7 +1081,7 @@
 "restore_option_id" = "Восстановить только ID";
 "restore_option_id_keep_data" = "Восстановление экспорта Threema ID с сохранением данных (чатов, контактов, групп и т.п.) на устройстве";
 "backup_faq_link_text" = "Подробнее о резервном копировании в %@";
-"forgot_password_link_text" = "Забыли пароль?";
+"restore_option_help_link_text" = "Справка";
 
 "restore_option_data_description" = "На этом устройстве есть данные %@ (чаты, контакты, группы и т.п.).";
 "restore_option_data_keep_data" = "Сохранить локальные данные";
@@ -1109,7 +1117,7 @@
 "settings_list_storage_management_title" = "Управление памятью";
 "settings_list_passcode_lock_title" = "Блокировка паролем";
 "settings_threema_calls" = "Звонки";
-"settings_list_threema_desktop_title" = "Threema 2.0 для Desktop (Beta)";
+"settings_list_threema_desktop_title" = "Threema 2.0 для ПК (бета)";
 "settings_list_threema_web_title" = "ПК/веб-клиент";
 
 "settings_list_network_title" = "Статус сети";
@@ -1118,6 +1126,7 @@
 
 "settings_list_invite_a_friend_title" = "Пригласить друга";
 "settings_list_threema_channel_title" = "Threema Channel";
+"settings_list_threema_work_channel_title" = "Канал Threema Work";
 
 "settings_list_rate" = "Оценить %@";
 
@@ -1252,7 +1261,7 @@
 "delete_messages_confirm" = "Хотите удалить без возможности восстановления все сообщения старше %@?";
 "delete_messages_confirm_all" = "Хотите удалить без возможности восстановления все сообщения?";
 "delete_messages_explain" = "Будут удалены все типы сообщений: текстовые и голосовые сообщения, мультимедиа, файлы, опросы и т.д.";
-"automatic_delete_explain" = "Используйте автоматическое удаление сообщений и мультимедиа для освобождения места на диске. Открытые опросы и группы заметок исключаются из автоматического удаления.";
+"automatic_delete_explain" = "Используйте автоматическое удаление сообщений и мультимедиа для освобождения места на диске. Открытые опросы, избранные сообщения и содержимое групп заметок исключаются из автоматического удаления.";
 "automatic_delete_on_confirmation_title" = "Включить автоматическое удаление?";
 "automatic_delete_off_confirmation_title" = "Отключить автоматическое удаление?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1479,6 +1488,16 @@
 "could_not_add_all_items_memory_constrained_title" = "Используйте приложение";
 "could_not_add_all_items_memory_constrained_message" = "По техническим причинам файлы, размер которых превышает определенный лимит, можно отправлять только в приложении.";
 "image_preview_cell_cannot_preview" = "Невозможно отобразить просмотр.";
+
+// Profile Synchronization
+"sync_error_title" = "Не удалось синхронизировать профиль";
+"sync_error_general_message" = "Проверьте соединение с Интернетом и повторите попытку.";
+"sync_error_same_transaction_error" = "Профиль уже синхронизируется на другом устройстве. Пожалуйста, подождите, пока синхронизация не завершится. Изменения на этом устройстве будут отменены.";
+
+"syncing_profile" = "Идет синхронизация…";
+
+"incoming_profile_sync_title" = "Профиль синхронизирован";
+"incoming_profile_sync_message" = "Изменения профиля, внесенные с другого устройства, применены";
 
 // Share Extension
 "finished_sending_title" = "Отправка выполнена";
@@ -1739,6 +1758,7 @@
 "notification_deleted_messages_count" = "%d сообщен. удалены";
 
 "notification_cannot_play_video" = "Не удается воспроизвести видео";
+"notification_recording_too_long" = "Запись превысила максимальную длину";
 
 "notification_call_failed_connected" = "Соединение утеряно";
 "notification_call_failed_not_connected" = "Не удалось установить соединение";

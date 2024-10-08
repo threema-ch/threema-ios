@@ -22,41 +22,32 @@ import ThreemaFramework
 
 class ContactListProvider: CoreDataContactListProvider<ContactEntity, Contact> {
     init() {
-        super.init(
-            fetchedResultsController: BusinessInjector().entityManager.entityFetcher.contactsResultController
-        ) { entity in
-            Contact(contactEntity: entity)
+        super.init(at: \.contactsResultController) {
+            Contact(contactEntity: $0)
         }
     }
 }
 
 class WorkContactListProvider: CoreDataContactListProvider<ContactEntity, Contact> {
     init() {
-        super.init(
-            fetchedResultsController: BusinessInjector().entityManager.entityFetcher.workContactsResultController
-        ) { entity in
-            Contact(contactEntity: entity)
+        super.init(at: \.workContactsResultController) {
+            Contact(contactEntity: $0)
         }
     }
 }
 
 class GroupListProvider: CoreDataContactListProvider<Conversation, Group> {
     init() {
-        super.init(
-            fetchedResultsController: BusinessInjector().entityManager.entityFetcher.groupsResultController
-        ) { entity in
-            BusinessInjector().groupManager.getGroup(conversation: entity)
+        super.init(at: \.groupsResultController) {
+            BusinessInjector().groupManager.getGroup(conversation: $0)
         }
     }
 }
 
-// class DistributionListProvider: CoreDataContactListProvider<DistributionListEntity, DistributionListObject,
-// GroupCell> {
-//    init() {
-//        super.init(
-//            fetchedResultsController: BusinessInjector().entityManager.entityFetcher.fetchedResultsControllerForDistributionLists()
-//        ) { entity in
-//            DistributionListObject(distributionListEntity: entity)
-//        }
-//    }
-// }
+class DistributionListProvider: CoreDataContactListProvider<DistributionListEntity, DistributionList> {
+    init() {
+        super.init(at: \.distributionListsResultController) {
+            DistributionList(distributionListEntity: $0)
+        }
+    }
+}

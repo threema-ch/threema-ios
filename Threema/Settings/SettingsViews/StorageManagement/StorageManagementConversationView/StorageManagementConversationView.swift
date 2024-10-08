@@ -55,10 +55,26 @@ struct StorageManagementConversationView: View {
     
     @ViewBuilder
     private var headerView: some View {
-        if model.isSingleConversation {
+        if model.isSingleConversation, let contact = model.contact {
             DetailsHeaderView(
                 with: .init(
-                    avatarImageProvider: model.avatarImageProvider(completion:),
+                    profilePictureInfo: .contact(contact),
+                    name: model.conversationName
+                )
+            ) { }.selfSizingWrappedView
+        }
+        else if let group = model.group {
+            DetailsHeaderView(
+                with: .init(
+                    profilePictureInfo: .group(group),
+                    name: model.conversationName
+                )
+            ) { }.selfSizingWrappedView
+        }
+        else {
+            DetailsHeaderView(
+                with: .init(
+                    profilePictureInfo: .contact(nil),
                     name: model.conversationName
                 )
             ) { }.selfSizingWrappedView

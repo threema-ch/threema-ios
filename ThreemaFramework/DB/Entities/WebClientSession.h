@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSData *serverPermanentPublicKey;
 @property (nullable, nonatomic, copy) NSNumber *version;
 
-// not stored in core data
+// Not stored in core data
 @property (nonatomic) BOOL isConnecting;
 
 @end

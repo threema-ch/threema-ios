@@ -67,7 +67,6 @@
 
 #define kNotificationCreatedIdentity @"ThreemaCreatedIdentity"
 #define kNotificationDestroyedIdentity @"ThreemaDestroyedIdentity"
-#define kNotificationIdentityAvatarChanged @"ThreemaIdentityAvatarChanged"
 
 #define kNotificationLicenseMissing @"ThreemaLicenseMissing"
 #define kNotificationLicenseCheckSuccess @"ThreemaLicenseCeckSuccess"

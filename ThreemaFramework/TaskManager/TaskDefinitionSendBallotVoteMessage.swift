@@ -45,7 +45,7 @@ import Foundation
     }
     
     override var description: String {
-        "<\(type(of: self)) type: Ballot id: \(ballotID.hexString)>"
+        "<\(Swift.type(of: self)) type: Ballot id: \(ballotID.hexString)>"
     }
     
     let ballotID: Data

@@ -133,6 +133,8 @@ class MediatorReflectedIncomingMessageProcessor {
             try process(incomingMessage: imsg, voipCallRingingMessage: amsg as! BoxVoIPCallRingingMessage)
         case is GroupCallStartMessage:
             try process(incomingMessage: imsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
+        case is TypingIndicatorMessage:
+            try process(incomingMessage: imsg, typingIndicatorMessage: amsg as! TypingIndicatorMessage)
         default:
             Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
                 message: "Reflected incoming message type \(imsg.loggingDescription) will be not processed"
@@ -273,7 +275,7 @@ class MediatorReflectedIncomingMessageProcessor {
         messageStore.save(contactSetPhotoMessage: amsg)
     }
 
-    // MARK: Process reflected incoming delivery receipts
+    // MARK: Process reflected incoming delivery receipts / typing indicators
 
     private func process(
         incomingMessage imsg: D2d_IncomingMessage,
@@ -284,6 +286,14 @@ class MediatorReflectedIncomingMessageProcessor {
             createdAt: getCreatedAt(for: imsg),
             isOutgoing: false
         )
+        return Promise()
+    }
+    
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        typingIndicatorMessage amsg: TypingIndicatorMessage
+    ) throws -> Promise<Void> {
+        TypingIndicatorManager.sharedInstance().setTypingIndicatorForIdentity(imsg.senderIdentity, typing: amsg.typing)
         return Promise()
     }
 

@@ -26,29 +26,32 @@ enum TaskManagerError: Error {
     case flushedTask, noTaskQueueFound
 }
 
-typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
 typealias TaskReceiverNonce = [String: Data]
 
 public final class TaskManager: NSObject, TaskManagerProtocol {
     private let entityManager: EntityManager?
+    private let serverConnector: ServerConnectorProtocol
 
-    private static var incomingQueue: TaskQueue?
-    private static var outgoingQueue: TaskQueue?
+    private static var taskQueue: TaskQueue?
 
     private static let addTaskQueue = DispatchQueue(label: "ch.threema.TaskManager.addTaskQueue")
 
-    @objc required init(backgroundEntityManager entityManager: EntityManager?) {
+    @objc required init(
+        backgroundEntityManager entityManager: EntityManager?,
+        serverConnector: ServerConnectorProtocol
+    ) {
         self.entityManager = entityManager
+        self.serverConnector = serverConnector
         super.init()
 
         load()
     }
 
     override convenience init() {
-        self.init(backgroundEntityManager: nil)
+        self.init(backgroundEntityManager: nil, serverConnector: ServerConnector.shared())
     }
 
-    func add(taskDefinition: TaskDefinitionProtocol) {
+    func add(taskDefinition: TaskDefinitionProtocol) -> CancelableTask? {
         TaskManager.addTaskQueue.async {
             do {
                 try self.add(task: taskDefinition, completionHandler: nil)
@@ -59,9 +62,22 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
 
             self.spool()
         }
+        
+        assert(taskDefinition is TaskDefinition, "We always expect a `TaskDefinition`")
+        
+        // Only drop on disconnect tasks are cancelable
+        if let task = taskDefinition as? TaskDefinition, task.type == .dropOnDisconnect {
+            return CancelableDropOnDisconnectTask(taskDefinition: task, serverConnector: serverConnector)
+        }
+        else {
+            return nil
+        }
     }
 
-    func add(taskDefinition: TaskDefinitionProtocol, completionHandler: @escaping TaskCompletionHandler) {
+    func add(
+        taskDefinition: TaskDefinitionProtocol,
+        completionHandler: @escaping TaskCompletionHandler
+    ) -> CancelableTask? {
         TaskManager.addTaskQueue.async {
             do {
                 try self.add(task: taskDefinition, completionHandler: completionHandler)
@@ -72,13 +88,22 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
 
             self.spool()
         }
+        
+        assert(taskDefinition is TaskDefinition, "We always expect a `TaskDefinition`")
+        
+        // Only drop on disconnect tasks are cancelable
+        if let task = taskDefinition as? TaskDefinition, task.type == .dropOnDisconnect {
+            return CancelableDropOnDisconnectTask(taskDefinition: task, serverConnector: serverConnector)
+        }
+        else {
+            return nil
+        }
     }
 
     func add(taskDefinitionTuples: [(
-
         taskDefinition: TaskDefinitionProtocol,
         completionHandler: TaskCompletionHandler
-    )]) {
+    )]) -> [CancelableTask?] {
         TaskManager.addTaskQueue.async {
             do {
                 for taskDefinitionTuple in taskDefinitionTuples {
@@ -94,49 +119,51 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
 
             self.spool()
         }
+        
+        var cancellableTasks = [CancelableTask?]()
+        for taskDefinitionTuple in taskDefinitionTuples {
+            
+            assert(taskDefinitionTuple.taskDefinition is TaskDefinition, "We always expect a `TaskDefinition`")
+            
+            // Only drop on disconnect tasks are cancelable
+            if let task = taskDefinitionTuple.taskDefinition as? TaskDefinition, task.type == .dropOnDisconnect {
+                cancellableTasks.append(CancelableDropOnDisconnectTask(
+                    taskDefinition: task,
+                    serverConnector: serverConnector
+                ))
+            }
+            else {
+                cancellableTasks.append(nil)
+            }
+        }
+        
+        assert(cancellableTasks.count == taskDefinitionTuples.count)
+        
+        return cancellableTasks
     }
 
     private func add(task: TaskDefinitionProtocol, completionHandler: TaskCompletionHandler? = nil) throws {
-        guard let task = task as? TaskDefinition else {
+        guard let queue = TaskManager.taskQueue, let task = task as? TaskDefinition else {
             throw TaskManagerError.noTaskQueueFound
         }
         
-        if let queue = TaskManager.incomingQueue, queue.supportedTypes.contains(where: { $0 === type(of: task) }) {
-            try queue.enqueue(task: task, completionHandler: completionHandler)
-        }
-        else if let queue = TaskManager.outgoingQueue, queue.supportedTypes.contains(where: { $0 === type(of: task) }) {
-            try queue.enqueue(task: task, completionHandler: completionHandler)
-        }
-        else {
-            throw TaskManagerError.noTaskQueueFound
-        }
+        try queue.enqueue(task: task, completionHandler: completionHandler)
     }
 
-    @objc public static func interrupt(queueType: TaskQueueType) {
-        switch queueType {
-        case .incoming:
-            TaskManager.incomingQueue?.interrupt()
-        case .outgoing:
-            TaskManager.outgoingQueue?.interrupt()
-        }
+    @objc public static func interrupt() {
+        TaskManager.taskQueue?.interrupt()
     }
 
-    @objc public static func flush(queueType: TaskQueueType) {
-        switch queueType {
-        case .incoming:
-            TaskManager.incomingQueue?.removeAll()
-        case .outgoing:
-            TaskManager.outgoingQueue?.removeCurrent()
-        }
+    @objc public static func removeAllTasks() {
+        TaskManager.taskQueue?.removeAll()
     }
 
-    @objc public static func isEmpty(queueType: TaskQueueType) -> Bool {
-        switch queueType {
-        case .incoming:
-            TaskManager.incomingQueue?.list.isEmpty ?? true
-        case .outgoing:
-            TaskManager.outgoingQueue?.list.isEmpty ?? true
-        }
+    @objc public static func removeCurrentTask() {
+        TaskManager.taskQueue?.removeCurrent()
+    }
+
+    @objc public static func isEmpty() -> Bool {
+        TaskManager.taskQueue?.list.isEmpty ?? true
     }
 
     /// Get notification name for particular reflecting/acking of a message.
@@ -155,66 +182,24 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
 
     /// Execute all pending tasks.
     @objc func spool() {
-        TaskManager.incomingQueue?.spool()
-        TaskManager.outgoingQueue?.spool()
+        TaskManager.taskQueue?.spool()
     }
 
     private func load() {
         TaskManager.addTaskQueue.async {
-            if TaskManager.incomingQueue == nil {
-                TaskManager.incomingQueue = TaskQueue(
-                    queueType: .incoming,
-                    supportedTypes: [
-                        TaskDefinitionReceiveMessage.self,
-                        TaskDefinitionReceiveReflectedMessage.self,
-                    ],
+            if TaskManager.taskQueue == nil {
+                TaskManager.taskQueue = TaskQueue(
                     frameworkInjectorResolver: FrameworkInjectorResolver(backgroundEntityManager: self.entityManager)
                 )
 
-                self.load(queue: TaskManager.incomingQueue)
-            }
+                if let queuePath = TaskManager.taskQueue?.queuePath(),
+                   FileUtility.shared.isExists(fileURL: queuePath) {
+                    if let data = FileUtility.shared.read(fileURL: queuePath) {
+                        FileUtility.shared.delete(at: queuePath)
 
-            if TaskManager.outgoingQueue == nil {
-                TaskManager.outgoingQueue = TaskQueue(
-                    queueType: .outgoing,
-                    supportedTypes: [
-                        TaskDefinitionGroupDissolve.self,
-                        TaskDefinitionSendAbstractMessage.self,
-                        TaskDefinitionSendBallotVoteMessage.self,
-                        TaskDefinitionSendBaseMessage.self,
-                        TaskDefinitionSendDeliveryReceiptsMessage.self,
-                        TaskDefinitionSendLocationMessage.self,
-                        TaskDefinitionSendGroupCreateMessage.self,
-                        TaskDefinitionSendGroupDeletePhotoMessage.self,
-                        TaskDefinitionSendGroupLeaveMessage.self,
-                        TaskDefinitionSendGroupRenameMessage.self,
-                        TaskDefinitionSendGroupSetPhotoMessage.self,
-                        TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
-                        TaskDefinitionDeleteContactSync.self,
-                        TaskDefinitionProfileSync.self,
-                        TaskDefinitionUpdateContactSync.self,
-                        TaskDefinitionGroupSync.self,
-                        TaskDefinitionSettingsSync.self,
-                        TaskDefinitionMdmParameterSync.self,
-                        TaskDefinitionSendGroupCallStartMessage.self,
-                        TaskDefinitionSendDeleteEditMessage.self,
-                        TaskDefinitionRunForwardSecurityRefreshSteps.self,
-                    ],
-                    frameworkInjectorResolver: FrameworkInjectorResolver(backgroundEntityManager: self.entityManager)
-                )
-
-                self.load(queue: TaskManager.outgoingQueue)
-            }
-        }
-    }
-
-    private func load(queue: TaskQueue?) {
-        if let queuePath = queue?.queuePath(),
-           FileUtility.shared.isExists(fileURL: queuePath) {
-            if let data = FileUtility.shared.read(fileURL: queuePath) {
-                FileUtility.shared.delete(at: queuePath)
-                
-                queue?.decode(data)
+                        TaskManager.taskQueue?.decode(data)
+                    }
+                }
             }
         }
     }

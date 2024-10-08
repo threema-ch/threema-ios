@@ -83,9 +83,18 @@ extension ProfileView {
             GeometryReader { proxy in
                 dynamicListContainer { placeHolder in
                     VStack {
-                        List {
-                            placeHolder(proxy)
-                            content()
+                        if #available(iOS 16.0, *) {
+                            List {
+                                placeHolder(proxy)
+                                content()
+                            }
+                            .scrollIndicators(state != .normal ? .never : .automatic)
+                        }
+                        else {
+                            List {
+                                placeHolder(proxy)
+                                content()
+                            }
                         }
                     }
                 }
@@ -155,9 +164,18 @@ extension ProfileView {
                                 }
                             }
                             else {
-                                alignment = .center
-                                labelOffset = fixedHeight / 1.4
-                                inset = 0
+                                if #available(iOS 16.0, *) {
+                                    withAnimation(animation) {
+                                        alignment = .center
+                                        labelOffset = fixedHeight / 1.4
+                                        inset = 0
+                                    }
+                                }
+                                else {
+                                    alignment = .center
+                                    labelOffset = fixedHeight / 1.4
+                                    inset = 0
+                                }
                             }
                         }
                         .onTapGesture {
@@ -238,7 +256,9 @@ extension ProfileView {
         private func onOrientationChange(_ orientation: UIDeviceOrientation) {
             self.orientation = orientation
             if orientation.isLandscape {
-                changeState(.normal)
+                if state != .normal {
+                    changeState(.normal)
+                }
             }
         }
         

@@ -63,7 +63,7 @@ import ThreemaFramework
 @objc class AppMigration: NSObject {
 
     private let osPOILog = OSLog(subsystem: "ch.threema.iapp.appMigration", category: .pointsOfInterest)
-    
+
     // BusinessInjector for main or background thread
     private let businessInjector: BusinessInjectorProtocol
 
@@ -104,7 +104,7 @@ import ThreemaFramework
     @objc static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {
         AppMigrationVersion.isMigrationRequired(userSettings: userSettings)
     }
-    
+
     /// Runs all necessary migrations
     /// Throws an error if and only if a migration has failed and the app is expected to not be usable without it.
     /// Specifically `run` catches all errors but only re-throws a closely defined subset of it
@@ -117,7 +117,7 @@ import ThreemaFramework
             DDLogNotice("[AppMigration] safe mode enabled no migrations will be performed")
             return
         }
-        
+
         // We need to run this check to reset the latest version to the correct value if needed
         guard AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) else {
             DDLogNotice("[AppMigration] No migration needed")
@@ -185,12 +185,16 @@ import ThreemaFramework
                 // Only a files migration is run
                 migratedTo = .v6_2_1
             }
+            if migratedTo < .v6_3 {
+                // Only a files migration is run
+                migratedTo = .v6_3
+            }
 
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
             DDLogError("[AppMigration] (last migrated version \(migratedTo)) failed: \(error)")
-            
+
             if let error = error as? SQLDHSessionStore.SQLDHSessionStoreMigrationError {
                 switch error {
                 case let .downgradeFromUnsupportedVersion(innerError),
@@ -199,7 +203,7 @@ import ThreemaFramework
                 }
             }
         }
-        
+
         // Validate that we actually upgraded to the most recent version
         guard !AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) else {
             // We need to throw a `NSError` with a localized message shown as part of the error body to the user, but we
@@ -211,7 +215,7 @@ import ThreemaFramework
             throw nsError
         }
     }
-    
+
     // Add here migration function for particular version...
 
     /// Migrate to version 4.8:
@@ -230,11 +234,8 @@ import ThreemaFramework
             businessInjector.myIdentityStore.updateConnectionRights()
             DatabaseManager.db().updateProtection()
         }
-
-        businessInjector.contactStore.updateAllContactsToCNContact()
-        AppGroup.userDefaults().removeObject(forKey: "AlreadyUpdatedToCNContacts")
         businessInjector.contactStore.updateAllContacts()
-        
+
         MessageDraftStore.shared.cleanupDrafts()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyDeletedOldDrafts")
 
@@ -243,10 +244,10 @@ import ThreemaFramework
                 guard let conversation = conversation as? Conversation else {
                     continue
                 }
-                    
+
                 let messageFetcher = MessageFetcher(for: conversation, with: self.businessInjector.entityManager)
                 let calendar = Calendar.current
-                
+
                 // Check has conversation unread messages
                 guard self.businessInjector.entityManager.entityFetcher.countUnreadMessages(for: conversation) > 0
                 else {
@@ -255,10 +256,10 @@ import ThreemaFramework
                     }
                     continue
                 }
-                
+
                 // Get remote date from latest readed message or max 2 week old
                 var firstRemoteSentDate: Date? = calendar.date(byAdding: .day, value: -14, to: Date())
-                
+
                 for msg in messageFetcher.messages(at: 0, count: messageFetcher.count()).reversed() {
                     if !msg.isOwnMessage,
                        msg.read?.boolValue ?? false,
@@ -272,7 +273,7 @@ import ThreemaFramework
                         break
                     }
                 }
-                
+
                 let batch = NSBatchUpdateRequest(entityName: "Message")
                 batch.resultType = .statusOnlyResultType
                 batch
@@ -281,7 +282,7 @@ import ThreemaFramework
                         format: "conversation == %@ && isOwn == false && remoteSentDate < %@", conversation,
                         firstRemoteSentDate! as NSDate
                     )
-                
+
                 batch.propertiesToUpdate = ["readDate": Date(), "read": true]
                 // if there was a error, the execute function will return nil or a result with the result 0
                 if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
@@ -297,18 +298,18 @@ import ThreemaFramework
                         "[AppMigration] Failed to set messages as read for conversation \(conversation.objectID)"
                     )
                 }
-                
+
                 self.businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
             }
         }
-        
+
         // See IOS-2811 for more information
         AppGroup.userDefaults().set(false, forKey: "PushReminderDoNotShowAgain")
-        
+
         os_signpost(.end, log: osPOILog, name: "4.8 migration")
         DDLogNotice("[AppMigration] App migration to version 4.8 successfully finished")
     }
-    
+
     /// Migrate to version 5.1:
     /// - Check pushShowNickname and set the correct notification type
     private func migrateTo5_1() throws {
@@ -316,15 +317,15 @@ import ThreemaFramework
         os_signpost(.begin, log: osPOILog, name: "5.1 migration")
 
         let pushShowNickname = AppGroup.userDefaults().bool(forKey: "PushShowNickname")
-        
+
         if pushShowNickname == true {
             UserSettings.shared().notificationType = NSNumber(0)
         }
-        
+
         os_signpost(.end, log: osPOILog, name: "5.1 migration")
         DDLogNotice("[AppMigration] App migration to version 5.1 successfully finished")
     }
-    
+
     /// Migrate to version 5.2:
     /// - Replace the conversation.marked property with the conversation.visibility property
     private func migrateTo5_2() throws {
@@ -339,7 +340,7 @@ import ThreemaFramework
                 NSPredicate(
                     format: "marked == \(NSNumber(booleanLiteral: true))"
                 )
-            
+
             batch.propertiesToUpdate = [
                 "marked": NSNumber(booleanLiteral: false),
                 "visibility": ConversationVisibility.pinned.rawValue,
@@ -362,28 +363,28 @@ import ThreemaFramework
         os_signpost(.end, log: osPOILog, name: "5.2 migration")
         DDLogNotice("[AppMigration] App migration to version 5.2 successfully finished")
     }
-    
+
     /// Migrate to version 5.3.1:
     /// - Update the FS session data base to database version 1
     /// This only changes the userVersion field or allows downgrading from version 5.4
     private func migrateTo5_3_1() throws {
         DDLogNotice("[AppMigration] App migration to version 5.3.1 started")
         os_signpost(.begin, log: osPOILog, name: "5.3.1 migration")
-        
+
         try BusinessInjector().dhSessionStore.executeNull()
-        
+
         os_signpost(.end, log: osPOILog, name: "5.3.1 migration")
         DDLogNotice("[AppMigration] App migration to version 5.3.1 successfully finished")
     }
-    
+
     /// Migrate to version 5.4:
     /// - Update the FS session data base to include new fields required in protocol version 18
     private func migrateTo5_4() throws {
         DDLogNotice("[AppMigration] App migration to version 5.4 started")
         os_signpost(.begin, log: osPOILog, name: "5.4 migration")
-        
+
         try BusinessInjector().dhSessionStore.executeNull()
-        
+
         businessInjector.entityManager.performSyncBlockAndSafe {
             // Set for all conversations the last update
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
@@ -393,7 +394,7 @@ import ThreemaFramework
                 NSPredicate(
                     format: "lastUpdate == nil"
                 )
-            
+
             batch.propertiesToUpdate = [
                 "lastUpdate": Date(timeIntervalSince1970: 0),
             ]
@@ -417,34 +418,33 @@ import ThreemaFramework
                 )
             }
         }
-        
+
         os_signpost(.end, log: osPOILog, name: "5.4 migration")
         DDLogNotice("[AppMigration] App migration to version 5.4 successfully finished")
     }
-    
+
     /// Migrate to version 5.5:
     /// - Remove own contact from contact list if exists
     private func migrateTo5_5() throws {
         DDLogNotice("[AppMigration] App migration to version 5.5 started")
         os_signpost(.begin, log: osPOILog, name: "5.5 migration")
-        
+
         businessInjector.entityManager.performAndWaitSave {
-            if let ownContact = self.businessInjector.entityManager.entityFetcher.contactsContainOwnIdentity() {
-                self.businessInjector.entityManager.entityDestroyer.deleteObject(object: ownContact)
+            if self.businessInjector.entityManager.entityDestroyer.deleteOwnContact() {
                 DDLogNotice("[AppMigration] Removed own contact from contact list")
             }
         }
-        
+
         os_signpost(.end, log: osPOILog, name: "5.5 migration")
         DDLogNotice("[AppMigration] App migration to version 5.5 successfully finished")
     }
-    
+
     /// Migrate to version 5.6:
     /// - Remove own contact from block list
     private func migrateTo5_6() throws {
         DDLogNotice("[AppMigration] App migration to version 5.6 started")
         os_signpost(.begin, log: osPOILog, name: "5.6 migration")
-        
+
         if let blockList = businessInjector.userSettings.blacklist,
            let myIdentity = businessInjector.myIdentityStore.identity,
            blockList.contains(myIdentity) {
@@ -453,7 +453,7 @@ import ThreemaFramework
             businessInjector.userSettings.blacklist = mutableBlocklist
             DDLogNotice("[AppMigration] Removed own contact from block list")
         }
-        
+
         os_signpost(.end, log: osPOILog, name: "5.6 migration")
         DDLogNotice("[AppMigration] App migration to version 5.6 successfully finished")
     }
@@ -596,7 +596,7 @@ import ThreemaFramework
         os_signpost(.end, log: osPOILog, name: "5.7 migration")
         DDLogNotice("[AppMigration] App migration to version 5.7 successfully finished")
     }
-    
+
     /// Migrate to version 5.9:
     /// - Migrate captions from json into the core data caption field
     /// - Update the FS session data base to database version 5
@@ -604,7 +604,7 @@ import ThreemaFramework
     private func migrateTo5_9() throws {
         DDLogNotice("[AppMigration] App migration to version 5.9 started")
         os_signpost(.begin, log: osPOILog, name: "5.9 migration")
-        
+
         businessInjector.entityManager.performSyncBlockAndSafe {
             if let allFileMessages =
                 self.businessInjector.entityManager.entityFetcher
@@ -615,7 +615,7 @@ import ThreemaFramework
                 }
             }
         }
-        
+
         // Remove deprecated user settings
         AppGroup.userDefaults().removeObject(forKey: "VideoCallInChatInfoShown")
         AppGroup.userDefaults().removeObject(forKey: "VideoCallInfoShown")
@@ -623,20 +623,20 @@ import ThreemaFramework
 
         // Upgrade FS session data base to database version 5
         try BusinessInjector().dhSessionStore.executeNull()
-        
+
         // Remove unknown group alert list for pending group messages
         AppGroup.userDefaults().removeObject(forKey: "UnknownGroupAlertList")
-        
+
         os_signpost(.end, log: osPOILog, name: "5.9 migration")
         DDLogNotice("[AppMigration] App migration to version 5.9 successfully finished")
     }
-    
+
     /// Migrate to version 5.9.2:
     /// - Migrate from `PendingCreateID` to full `AppSetupState`
     private func migrateTo5_9_2() throws {
         DDLogNotice("[AppMigration] App migration to version 5.9.2 started")
         os_signpost(.begin, log: osPOILog, name: "5.9.2 migration")
-        
+
         // Migrate from "PendingCreateID" to a full app setup state:
         // If "PendingCreateID" is set the identity was created, but setup not completed
         if AppGroup.userDefaults().bool(forKey: "PendingCreateID") {
@@ -650,14 +650,14 @@ import ThreemaFramework
         else {
             AppSetup.state = .complete
         }
-        
+
         // Remove "PendingCreateID"
         AppGroup.userDefaults().removeObject(forKey: "PendingCreateID")
-        
+
         os_signpost(.end, log: osPOILog, name: "5.9.2 migration")
         DDLogNotice("[AppMigration] App migration to version 5.9.2 successfully finished")
     }
-    
+
     /// Migrate to version 6.0:
     /// - Set FileAudioMessages consumed date (1970) for existing messages
     private func migrateTo6_0() throws {
@@ -679,7 +679,7 @@ import ThreemaFramework
                 NSPredicate(
                     format: "isOwn == false AND type == 1 AND mimeType IN %@", UTIConverter.renderingAudioMimetypes()
                 )
-            
+
             batch.propertiesToUpdate = ["consumed": Date(timeIntervalSince1970: 0)]
             // If there was an error, the execute function will return nil or a result with the result 0
             if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
@@ -696,11 +696,11 @@ import ThreemaFramework
                 )
             }
         }
-        
+
         os_signpost(.end, log: osPOILog, name: "6.0 migration")
         DDLogNotice("[AppMigration] App migration to version 6.0 successfully finished")
     }
-    
+
     /// Migrate to version 6.2:
     /// - Remove lastWorkUpdateRequest in IdentityStore
     private func migrateTo6_2() throws {
@@ -710,7 +710,7 @@ import ThreemaFramework
         /// - Remove lastWorkUpdateRequest in IdentityStore
         AppGroup.userDefaults().removeObject(forKey: "LastWorkUpdateRequest")
         AppGroup.userDefaults().synchronize()
-        
+
         os_signpost(.end, log: osPOILog, name: "6.2 migration")
         DDLogNotice("[AppMigration] App migration to version 6.2 successfully finished")
     }

@@ -404,6 +404,9 @@ import ThreemaFramework
                     if let nickname = contact.publicNickname {
                         jContact.nickname = nickname
                     }
+                    if let createdAt = contact.createdAt {
+                        jContact.createdAt = UInt64(createdAt.timeIntervalSince1970 * 1000)
+                    }
                     
                     if let conversations = contact.conversations {
                         for conversation in conversations {
@@ -791,6 +794,17 @@ import ThreemaFramework
                                                 contact.firstName = bContact.firstname
                                                 contact.lastName = bContact.lastname
                                                 contact.publicNickname = bContact.nickname
+                                                
+                                                if let createdAt = bContact.createdAt,
+                                                   createdAt != 0 {
+                                                    contact
+                                                        .createdAt =
+                                                        Date(timeIntervalSince1970: Double(createdAt) / 1000)
+                                                }
+                                                else {
+                                                    contact.createdAt = nil
+                                                }
+                                                
                                                 if let hidden = bContact.hidden {
                                                     contact.isContactHidden = hidden
                                                 }

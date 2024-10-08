@@ -53,6 +53,9 @@ struct AppFilesMigration {
         if migratedTo < .v6_2_1 {
             try migrateFilesTo6_2_1()
         }
+        if migratedTo < .v6_3 {
+            try migrateFilesTo6_3()
+        }
     }
 
     /// Migrate to version 6.2.1:
@@ -77,7 +80,7 @@ struct AppFilesMigration {
             }
             else {
                 DDLogWarn(
-                    "Task queue file couldn't renamed, because no 'outgoingQueue' file exists or new 'taskQueue' already exists"
+                    "Task queue file couldn't renamed, because no 'taskQueue' file exists or 'outgoingQueue' already exists"
                 )
             }
         }
@@ -87,5 +90,38 @@ struct AppFilesMigration {
 
         os_signpost(.end, log: osPOILog, name: "6.2.1 migration")
         DDLogNotice("[AppMigration] Files migration to version 6.2.1 successfully finished")
+    }
+
+    /// Migrate to version 6.3:
+    /// - Move file of appDataDirectory/outgoingQueue to appDataDirectory/taskQueue.
+    private func migrateFilesTo6_3() throws {
+        DDLogNotice("[AppMigration] Files migration to version 6.3 started")
+        os_signpost(.begin, log: osPOILog, name: "6.3 migration")
+
+        if let outgoingQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
+            "outgoingQueue",
+            isDirectory: false
+        ),
+            let taskQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
+                "taskQueue",
+                isDirectory: false
+            ) {
+
+            if FileUtility.shared.isExists(fileURL: outgoingQueuePath),
+               !FileUtility.shared.isExists(fileURL: taskQueuePath) {
+                _ = FileUtility.shared.move(source: outgoingQueuePath, destination: taskQueuePath)
+            }
+            else {
+                DDLogWarn(
+                    "Task queue file couldn't renamed, because no 'outgoingQueue' file exists or 'taskQueue' already exists"
+                )
+            }
+        }
+        else {
+            DDLogError("Couldn't evaluate file paths for task queue")
+        }
+
+        os_signpost(.end, log: osPOILog, name: "6.3 migration")
+        DDLogNotice("[AppMigration] Files migration to version 6.3 successfully finished")
     }
 }

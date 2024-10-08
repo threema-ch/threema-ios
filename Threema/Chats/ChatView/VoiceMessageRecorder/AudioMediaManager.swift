@@ -26,42 +26,37 @@ class AudioMediaManager<FileUtil: FileUtilityProtocol>: AudioMediaManagerProtoco
     static func concatenateRecordingsAndSave(
         combine urls: [URL],
         to audioFile: URL
-    ) async -> Result<Void, VoiceMessageError> {
+    ) async throws {
         let composition = AVMutableComposition()
-        do {
-            for url in urls {
-                let asset = AVURLAsset(url: url)
-                if let track = asset.tracks(withMediaType: .audio).first {
-                    let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
-                    if let compositionTrack = composition.addMutableTrack(
-                        withMediaType: .audio,
-                        preferredTrackID: kCMPersistentTrackID_Invalid
-                    ) {
-                        try compositionTrack.insertTimeRange(timeRange, of: track, at: composition.duration)
-                    }
+        for url in urls {
+            let asset = AVURLAsset(url: url)
+            if let track = asset.tracks(withMediaType: .audio).first {
+                let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
+                if let compositionTrack = composition.addMutableTrack(
+                    withMediaType: .audio,
+                    preferredTrackID: kCMPersistentTrackID_Invalid
+                ) {
+                    try compositionTrack.insertTimeRange(timeRange, of: track, at: composition.duration)
                 }
             }
-            return await save(composition, to: audioFile)
         }
-        catch {
-            DDLogError("Error occurred saving : \(error.localizedDescription)")
-            return .failure(.couldNotSave)
-        }
+        return try await save(composition, to: audioFile)
     }
     
-    static func save(_ asset: AVAsset, to url: URL) async -> Result<Void, VoiceMessageError> {
+    static func save(_ asset: AVAsset, to url: URL) async throws {
         // remove old file
         FileUtil.shared.delete(at: url)
         
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
-            return .failure(.assetNotFound)
+            throw VoiceMessageError.assetNotFound
         }
-        
         exportSession.outputURL = url
         exportSession.outputFileType = .m4a
         exportSession.shouldOptimizeForNetworkUse = true
         await exportSession.export()
         DDLogInfo("ExportSession: \(url.absoluteString), status: \(String(describing: exportSession.status))")
-        return exportSession.status != .completed ? .failure(.exportFailed) : .success(())
+        if exportSession.status != .completed {
+            throw VoiceMessageError.exportFailed
+        }
     }
 }

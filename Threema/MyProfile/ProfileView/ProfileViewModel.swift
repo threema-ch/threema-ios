@@ -145,7 +145,7 @@ final class ProfileViewModel: ObservableObject {
             loadNickname()
             loadLinkedEmail()
             loadLinkedMobile()
-            loadProfilePicture()
+            profileImage = businessInjector.myIdentityStore.resolvedProfilePicture
             loadRevocationDetail()
             
             isThreemaSafeActivated = safeManager.isActivated
@@ -233,16 +233,6 @@ final class ProfileViewModel: ObservableObject {
             return nil
         }
         return imageData
-    }
-
-    private func loadProfilePicture() {
-        let fallbackImage = AvatarMaker.shared().unknownPersonImage() ?? UIImage()
-        guard let imageData = userProfile() else {
-            profileImage = fallbackImage
-            
-            return
-        }
-        profileImage = .init(data: imageData) ?? fallbackImage
     }
     
     private func loadRevocationDetail() {

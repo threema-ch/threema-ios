@@ -49,6 +49,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     }
 
     private(set) var leaveCalls = [LeaveCall]()
+    private(set) var leaveDBCalls = [GroupIdentity]()
     
     struct DissolveCall {
         let groupID: Data
@@ -177,7 +178,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     }
 
     func leaveDB(groupID: Data, creator: String, member: String, systemMessageDate: Date) {
-        // Do nothing
+        leaveDBCalls.append(GroupIdentity(id: groupID, creator: ThreemaIdentity(creator)))
     }
 
     func dissolve(groupID: Data, to identities: Set<String>?) {
@@ -222,7 +223,11 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         to members: Set<String>?,
         withoutCreateMessage: Bool
     ) async throws {
-        // no-op
+        try await sync(
+            group: group,
+            to: members,
+            withoutCreateMessage: withoutCreateMessage
+        )
     }
     
     func sendSyncRequest(groupID: Data, creator: String, force: Bool) {

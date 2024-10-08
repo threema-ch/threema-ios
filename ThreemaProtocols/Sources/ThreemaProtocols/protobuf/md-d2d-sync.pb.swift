@@ -1046,9 +1046,18 @@ public struct Sync_Contact {
     /// the contact has been initiated.
     case direct // = 0
 
-    /// The contact is part of a group the user is also part of. The contact was
-    /// not explicitly added and no 1:1 conversation has been initiated.
-    case group // = 1
+    /// This level covers two cases:
+    ///
+    /// - The contact is part of a group the user is also part of. The contact
+    ///   was not explicitly added and no 1:1 conversation has been initiated.
+    /// - The contact was part of a group the user was/is also part of before but
+    ///   either of them has since been removed from all common groups.
+    /// - The contact has been explicitly removed by the user.
+    ///
+    /// Note that this level is referred in the protocol as either acquaintance
+    /// level _group_ or  _deleted_. Although they are semantically different,
+    /// they cannot and need not be distinguished on the wire.
+    case groupOrDeleted // = 1
     case UNRECOGNIZED(Int)
 
     public init() {
@@ -1058,7 +1067,7 @@ public struct Sync_Contact {
     public init?(rawValue: Int) {
       switch rawValue {
       case 0: self = .direct
-      case 1: self = .group
+      case 1: self = .groupOrDeleted
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -1066,7 +1075,7 @@ public struct Sync_Contact {
     public var rawValue: Int {
       switch self {
       case .direct: return 0
-      case .group: return 1
+      case .groupOrDeleted: return 1
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -1508,7 +1517,7 @@ extension Sync_Contact.AcquaintanceLevel: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
   public static let allCases: [Sync_Contact.AcquaintanceLevel] = [
     .direct,
-    .group,
+    .groupOrDeleted,
   ]
 }
 
@@ -1595,24 +1604,6 @@ public struct Sync_Group {
   /// Clears the value of `userState`. Subsequent reads from it will return its default value.
   public mutating func clearUserState() {self._userState = nil}
 
-  public var notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride {
-    get {return _notificationTriggerPolicyOverride ?? Sync_Group.NotificationTriggerPolicyOverride()}
-    set {_notificationTriggerPolicyOverride = newValue}
-  }
-  /// Returns true if `notificationTriggerPolicyOverride` has been explicitly set.
-  public var hasNotificationTriggerPolicyOverride: Bool {return self._notificationTriggerPolicyOverride != nil}
-  /// Clears the value of `notificationTriggerPolicyOverride`. Subsequent reads from it will return its default value.
-  public mutating func clearNotificationTriggerPolicyOverride() {self._notificationTriggerPolicyOverride = nil}
-
-  public var notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride {
-    get {return _notificationSoundPolicyOverride ?? Sync_Group.NotificationSoundPolicyOverride()}
-    set {_notificationSoundPolicyOverride = newValue}
-  }
-  /// Returns true if `notificationSoundPolicyOverride` has been explicitly set.
-  public var hasNotificationSoundPolicyOverride: Bool {return self._notificationSoundPolicyOverride != nil}
-  /// Clears the value of `notificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
-  public mutating func clearNotificationSoundPolicyOverride() {self._notificationSoundPolicyOverride = nil}
-
   /// Group's profile picture as received from the group's creator
   ///
   /// Always optional.
@@ -1625,7 +1616,7 @@ public struct Sync_Group {
   /// Clears the value of `profilePicture`. Subsequent reads from it will return its default value.
   public mutating func clearProfilePicture() {self._profilePicture = nil}
 
-  /// Group members (**NOT** including the user itself)
+  /// Group members (**NOT** including the creator and the user itself)
   ///
   /// Required towards a new device and for a new group. Optional for an existing
   /// group.
@@ -1647,6 +1638,24 @@ public struct Sync_Group {
   public var hasMemberIdentities: Bool {return self._memberIdentities != nil}
   /// Clears the value of `memberIdentities`. Subsequent reads from it will return its default value.
   public mutating func clearMemberIdentities() {self._memberIdentities = nil}
+
+  public var notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride {
+    get {return _notificationTriggerPolicyOverride ?? Sync_Group.NotificationTriggerPolicyOverride()}
+    set {_notificationTriggerPolicyOverride = newValue}
+  }
+  /// Returns true if `notificationTriggerPolicyOverride` has been explicitly set.
+  public var hasNotificationTriggerPolicyOverride: Bool {return self._notificationTriggerPolicyOverride != nil}
+  /// Clears the value of `notificationTriggerPolicyOverride`. Subsequent reads from it will return its default value.
+  public mutating func clearNotificationTriggerPolicyOverride() {self._notificationTriggerPolicyOverride = nil}
+
+  public var notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride {
+    get {return _notificationSoundPolicyOverride ?? Sync_Group.NotificationSoundPolicyOverride()}
+    set {_notificationSoundPolicyOverride = newValue}
+  }
+  /// Returns true if `notificationSoundPolicyOverride` has been explicitly set.
+  public var hasNotificationSoundPolicyOverride: Bool {return self._notificationSoundPolicyOverride != nil}
+  /// Clears the value of `notificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
+  public mutating func clearNotificationSoundPolicyOverride() {self._notificationSoundPolicyOverride = nil}
 
   /// Conversation category of the group
   ///
@@ -1691,7 +1700,8 @@ public struct Sync_Group {
     case kicked // = 1
 
     /// The user left the group. Implies that the group has been marked as
-    /// _left_.
+    /// _left_. If the user is the creator, this implies that the group has been
+    /// disbanded.
     case left // = 2
     case UNRECOGNIZED(Int)
 
@@ -1911,10 +1921,10 @@ public struct Sync_Group {
   fileprivate var _name: String? = nil
   fileprivate var _createdAt: UInt64? = nil
   fileprivate var _userState: Sync_Group.UserState? = nil
-  fileprivate var _notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride? = nil
-  fileprivate var _notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride? = nil
   fileprivate var _profilePicture: Common_DeltaImage? = nil
   fileprivate var _memberIdentities: Common_Identities? = nil
+  fileprivate var _notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride? = nil
+  fileprivate var _notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride? = nil
   fileprivate var _conversationCategory: Sync_ConversationCategory? = nil
   fileprivate var _conversationVisibility: Sync_ConversationVisibility? = nil
 }
@@ -3292,7 +3302,7 @@ extension Sync_Contact.IdentityType: SwiftProtobuf._ProtoNameProviding {
 extension Sync_Contact.AcquaintanceLevel: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "DIRECT"),
-    1: .same(proto: "GROUP"),
+    1: .same(proto: "GROUP_OR_DELETED"),
   ]
 }
 
@@ -3632,10 +3642,10 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     2: .same(proto: "name"),
     3: .standard(proto: "created_at"),
     6: .standard(proto: "user_state"),
-    9: .standard(proto: "notification_trigger_policy_override"),
-    10: .standard(proto: "notification_sound_policy_override"),
     7: .standard(proto: "profile_picture"),
     8: .standard(proto: "member_identities"),
+    9: .standard(proto: "notification_trigger_policy_override"),
+    10: .standard(proto: "notification_sound_policy_override"),
     4: .standard(proto: "conversation_category"),
     5: .standard(proto: "conversation_visibility"),
   ]
@@ -3704,10 +3714,10 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if lhs._name != rhs._name {return false}
     if lhs._createdAt != rhs._createdAt {return false}
     if lhs._userState != rhs._userState {return false}
-    if lhs._notificationTriggerPolicyOverride != rhs._notificationTriggerPolicyOverride {return false}
-    if lhs._notificationSoundPolicyOverride != rhs._notificationSoundPolicyOverride {return false}
     if lhs._profilePicture != rhs._profilePicture {return false}
     if lhs._memberIdentities != rhs._memberIdentities {return false}
+    if lhs._notificationTriggerPolicyOverride != rhs._notificationTriggerPolicyOverride {return false}
+    if lhs._notificationSoundPolicyOverride != rhs._notificationSoundPolicyOverride {return false}
     if lhs._conversationCategory != rhs._conversationCategory {return false}
     if lhs._conversationVisibility != rhs._conversationVisibility {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

@@ -215,6 +215,7 @@ import PromiseKit
             "com.apple.live-photo",
             "com.apple.avfoundation.urlasset",
             "com.apple.mobileslideshow.asset.localidentifier",
+            "com.compuserve.gif",
             "public.file-url",
             "public.url",
             "com.apple.is-remote-clipboard",
@@ -403,7 +404,7 @@ import PromiseKit
         return UTType.fileURL.identifier
     }
     
-    @objc public static func getSecondUTIType(_ itemProvider: NSItemProvider) -> String? {
+    @objc public static func getSecondUTIType(_ itemProvider: NSItemProvider, baseType: String) -> String? {
         let typeIdentifiers = NSMutableArray(array: itemProvider.registeredTypeIdentifiers)
         
         if itemProvider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
@@ -411,7 +412,7 @@ import PromiseKit
         }
         if typeIdentifiers.count >= 1 {
             return (typeIdentifiers.first(where: { element in
-                (element as? String)?.contains("public.") ?? false
+                (element as? String)?.contains("public.") ?? false && (element as? String) != baseType
             }) as? String) ?? typeIdentifiers.firstObject as? String
         }
         return UTType.fileURL.identifier

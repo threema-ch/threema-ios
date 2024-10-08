@@ -43,11 +43,11 @@ public enum MessageSenderReceivers {
 /// Central place to send or resend a message
 ///
 /// Use this to send any message (including blob messages)
-public protocol MessageSenderProtocol {
+@preconcurrency public protocol MessageSenderProtocol {
 
     // MARK: - Type specific sending
     
-    /// Sanitizes, splits if needed and sends a text as TextMessage(s)
+    /// Sanitizes, splits if needed and sends a text as TextMessage(s). Also works for distribution lists.
     @discardableResult
     func sendTextMessage(
         containing text: String,
@@ -179,7 +179,8 @@ extension MessageSenderProtocol {
     ///
     /// - Parameters:
     ///   - abstractMessage: Abstract message
-    ///   - isPersistent: Should task (and thus the abstract message) be persisted if the app is terminated?
+    ///   - isPersistent: Should task (and thus the abstract message) be persisted if the app is terminated? If `true`
+    ///                   the task type is `persistent` otherwise `volatile`.
     func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool = true) {
         sendMessage(abstractMessage: abstractMessage, isPersistent: isPersistent, completion: nil)
     }

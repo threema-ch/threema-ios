@@ -1361,6 +1361,12 @@ extension VoIPCallService {
                 if let userSettings = UserSettings.shared(), userSettings.alwaysRelayCalls == true {
                     DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN as requested by user")
                 }
+                
+                guard ServerConnector.shared().connectionState == .loggedIn else {
+                    self.callID = nil
+                    self.noInternetConnectionError()
+                    return
+                }
 
                 self.peerConnectionClient.initialize(
                     contactIdentity: contactIdentity,
@@ -2524,6 +2530,20 @@ extension VoIPCallService {
             "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing")"
         )
         NotificationPresenterWrapper.shared.present(type: .callCreationError)
+        invalidateCallFailedTimer()
+        invalidateTransportExpectedStableTimer()
+        handleTones(state: .ended, oldState: .reconnecting)
+        callKitManager?.endCall()
+        dismissCallView()
+        disconnectPeerConnection()
+    }
+    
+    /// Displays a no internet message and cancels the call
+    private func noInternetConnectionError() {
+        DDLogNotice(
+            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (no internet connection)"
+        )
+        NotificationPresenterWrapper.shared.present(type: .noConnection)
         invalidateCallFailedTimer()
         invalidateTransportExpectedStableTimer()
         handleTones(state: .ended, oldState: .reconnecting)

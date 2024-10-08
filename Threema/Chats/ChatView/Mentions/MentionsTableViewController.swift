@@ -50,9 +50,16 @@ class MentionsTableViewController: ThemedViewController {
         MentionableIdentity
     >(tableView: tableView) { tableView, indexPath, identity in
         let cell: MentionsTableViewCell = tableView.dequeueCell(for: indexPath)
+        let entityManager = EntityManager()
+        entityManager.performAndWait {
+            if let contactEntity = entityManager.entityFetcher.contact(for: identity.identity) {
+                cell.profilePictureView.info = .contact(Contact(contactEntity: contactEntity))
+            }
+            else {
+                cell.profilePictureView.info = .group(nil)
+            }
+        }
         
-        cell.iconImageView.image = identity.contactImage
-        cell.iconImageView.contentMode = .scaleAspectFill
         cell.nameLabel.text = identity.displayName
         
         cell.backgroundColor = Colors.backgroundChatBar

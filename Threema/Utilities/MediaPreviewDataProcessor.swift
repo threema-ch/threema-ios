@@ -66,7 +66,7 @@ import ThreemaFramework
             }
             else {
                 let err = "Original Asset is unavailable."
-                DDLogError(err)
+                DDLogError("\(err)")
                 fatalError(err)
             }
         }
@@ -80,7 +80,7 @@ import ThreemaFramework
             }
             guard let asset = originalAsset.originalAsset else {
                 let err = "Original Asset is unavailable."
-                DDLogError(err)
+                DDLogError("\(err)")
                 fatalError(err)
             }
             return asset

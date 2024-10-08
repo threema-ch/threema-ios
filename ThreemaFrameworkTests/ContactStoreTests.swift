@@ -61,6 +61,58 @@ class ContactStoreTests: XCTestCase {
         XCTAssertTrue(userSettingsMock.workIdentities.contains(expectedIdentity))
         XCTAssertTrue(userSettingsMock.profilePictureRequestList.contains(where: { $0 as? String == expectedIdentity }))
     }
+    
+    func testAddUnknownContactWithIdentityBlockUnknown() throws {
+        let expectedIdentity = "TESTER01"
+
+        let userSettingsMock = UserSettingsMock(blockUnknown: true)
+        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
+        
+        let expect = expectation(description: "Give time to fetch public key")
+        
+        var error: Error?
+        contactStore.fetchPublicKey(
+            for: expectedIdentity,
+            acquaintanceLevel: .direct,
+            entityManager: em,
+            ignoreBlockUnknown: false
+        ) { _ in
+            expect.fulfill()
+        } onError: { err in
+            error = err
+            expect.fulfill()
+        }
+        
+        wait(for: [expect], timeout: 2)
+        XCTAssertEqual(error?.localizedDescription, "Message received from unknown contact and block contacts is on")
+    }
+    
+    func testAddTrustedContactWithIdentityBlockUnknown() throws {
+        let trustedContact: TrustedContacts = .threemaPush
+
+        let userSettingsMock = UserSettingsMock(blockUnknown: true)
+        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
+        
+        let expect = expectation(description: "Give time to fetch public key")
+                
+        var receivedPublicKey: Data?
+        contactStore.fetchPublicKey(
+            for: trustedContact.identity,
+            acquaintanceLevel: .direct,
+            entityManager: em,
+            ignoreBlockUnknown: false
+        ) { publicKey in
+            receivedPublicKey = publicKey
+            expect.fulfill()
+        } onError: { _ in
+            expect.fulfill()
+        }
+        
+        wait(for: [expect], timeout: 2)
+        XCTAssertTrue(try trustedContact.isSamePublicKey(XCTUnwrap(receivedPublicKey)))
+    }
 
     func testUpdateContactWithIdentity() throws {
         let expectedIdentity = "TESTER01"

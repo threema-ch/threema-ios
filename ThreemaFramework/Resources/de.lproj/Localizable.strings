@@ -56,7 +56,8 @@
 "error_other_connection_for_same_identity_message" = "Der Server hat zwei oder mehr Verbindungen von verschiedenen Geräten mit der gleichen Threema-ID erkannt.\n\nDies kann passieren, wenn Threema auf mehreren Geräten gleichzeitig verwendet wird, ohne dass diese miteinander verknüpft sind (https://three.ma/md). Neue Nachrichten werden nur an das Gerät übermittelt, welches sich zuletzt mit dem Server verbunden hat.\n\nFalls Sie auf ein neues Gerät wechseln, deinstallieren oder deaktivieren Sie bitte %@ auf dem alten Gerät und starten Sie anschliessend das neue Gerät neu.";
 
 "error_rogue_device_title" = "Verbindung von anderem Gerät erkannt";
-"error_rogue_device_message" = "Der Server hat eine Verbindung von einem anderen Gerät mit derselben Threema-ID erkannt.\n\nWenn Sie Ihre Threema-ID in der Zwischenzeit nicht auf einem anderen Gerät oder mit einer älteren App-Version genutzt haben, kontaktieren Sie bitte den Support und senden Sie falls möglich die Logdatei mit.";
+"error_rogue_device_message" = "Eine Verbindung von einem anderen Gerät mit dieser Threema-ID wurde erkannt. Haben Sie Ihre Threema-ID kürzlich auf einem anderen Gerät verwendet?\n\nWenn ja, können Sie diese Nachricht ignorieren.\nWenn nein, ist Ihr privater Schlüssel möglicherweise kompromittiert. Tippen Sie «Mehr Informationen», um zu erfahren, wie Sie Ihr Gerät und Ihre Daten schützen, bevor Sie eine neue ID erstellen.";
+"error_rogue_device_more_info_button" = "Mehr Informationen";
 
 "video_too_long_title" = "Video zu lang";
 "video_too_long_message" = "Dieses Video ist zu lang um gesendet zu werden. Die maximal zulässige Länge ist %.0f Minuten.";

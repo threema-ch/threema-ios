@@ -20,9 +20,11 @@
 
 import Foundation
 
+// MARK: - UIColor.IDColor
+
 extension UIColor {
     
-    public enum IDColor {
+    public enum IDColor: Equatable {
         // The mapping is in the order they are listed here
     
         /// Please don't access this directly except for testing & debugging
@@ -124,6 +126,22 @@ extension UIColor {
             pink,
             red,
         ]
+        
+        public static func profilePictureForegroundColor(for color: UIColor) -> UIColor {
+            let lightResolvedColor = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+            
+            if color == IDColor.green ||
+                color == IDColor.teal ||
+                color == IDColor.blue ||
+                color == IDColor.indigo ||
+                color == IDColor.deepPurple {
+                let darkResolvedColor = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+                return lightResolvedColor.blended(with: darkResolvedColor)
+            }
+            else {
+                return lightResolvedColor
+            }
+        }
     
         /// Dynamic ID Color color for the passed byte
         /// - Parameter byte: Byte to get color for
@@ -166,5 +184,15 @@ extension UIColor {
                 fatalError("This is out of range for 8 bits and should never be reached")
             }
         }
+    }
+}
+
+extension UIColor {
+    private func blended(with color: UIColor) -> UIColor {
+        UIColor(cgColor: CGColor(
+            colorSpace: cgColor.colorSpace!,
+            components:
+            zip(cgColor.components!, color.cgColor.components!).map { ($0 + $1) / 2 }
+        )!)
     }
 }

@@ -158,8 +158,30 @@ final class ChatBarCoordinator {
                 switch draft {
                 case let .text(string):
                     self.precomposedText = string
+                    
                 case let .audio(url):
                     startRecording(with: url)
+                    
+                case let .json(subtype):
+                    switch subtype {
+                    case let .quote(text, objectIDString):
+                        guard let quotedMessage = businessInjector.entityManager.entityFetcher
+                            .existingObject(withIDString: objectIDString) as? QuoteMessage else {
+                            MessageDraftStore.shared.deleteDraft(for: conversation)
+                            return
+                        }
+                        self.precomposedText = text
+                        showQuoteView(for: quotedMessage)
+                        
+                    case let .edit(text, objectIDString):
+                        guard let editMessage = businessInjector.entityManager.entityFetcher
+                            .existingObject(withIDString: objectIDString) as? EditedMessage else {
+                            MessageDraftStore.shared.deleteDraft(for: conversation)
+                            return
+                        }
+                        self.precomposedText = text
+                        showEditedMessageView(for: editMessage)
+                    }
                 }
             }
         }
@@ -189,7 +211,7 @@ final class ChatBarCoordinator {
             }
             
             Task {
-                // avoid file operations if the chat is peeked
+                // Avoid file operations if the chat is peeked
                 let currentState = await chatBar.getCurrentSessionState(shouldMove: mode != .preview)
                 await MainActor.run {
                     switch currentState {
@@ -203,6 +225,52 @@ final class ChatBarCoordinator {
                 }
             }
         }
+        else if let quoteMessage {
+            guard let currentText = chatBar.getCurrentText() else {
+                MessageDraftStore.shared.deleteDraft(for: conversation)
+                return
+            }
+            
+            if andDeleteText {
+                chatBar.removeCurrentText()
+            }
+            
+            let currentOrEmptyText = ThreemaUtility.trimCharacters(in: currentText)
+            
+            guard !currentOrEmptyText.isEmpty else {
+                MessageDraftStore.shared.deleteDraft(for: conversation)
+                return
+            }
+            
+            let draftSubType = Draft.SubType.quote(
+                currentOrEmptyText,
+                quoteMessage.objectID.uriRepresentation().absoluteString
+            )
+            MessageDraftStore.shared.saveDraft(.json(draftSubType), for: conversation)
+        }
+        else if let messageToEdit {
+            guard let currentText = chatBar.getCurrentText() else {
+                MessageDraftStore.shared.deleteDraft(for: conversation)
+                return
+            }
+            
+            if andDeleteText {
+                chatBar.removeCurrentText()
+            }
+            
+            let currentOrEmptyText = ThreemaUtility.trimCharacters(in: currentText)
+            
+            guard !currentOrEmptyText.isEmpty else {
+                MessageDraftStore.shared.deleteDraft(for: conversation)
+                return
+            }
+            
+            let draftSubType = Draft.SubType.edit(
+                currentOrEmptyText,
+                messageToEdit.objectID.uriRepresentation().absoluteString
+            )
+            MessageDraftStore.shared.saveDraft(.json(draftSubType), for: conversation)
+        }
         else {
             guard let currentText = chatBar.getCurrentText() else {
                 MessageDraftStore.shared.deleteDraft(for: conversation)
@@ -214,6 +282,11 @@ final class ChatBarCoordinator {
             }
             
             let currentOrEmptyText = ThreemaUtility.trimCharacters(in: currentText)
+            
+            guard !currentOrEmptyText.isEmpty else {
+                MessageDraftStore.shared.deleteDraft(for: conversation)
+                return
+            }
             
             MessageDraftStore.shared.saveDraft(.text(currentOrEmptyText), for: conversation)
         }
@@ -498,7 +571,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             let itemLoader = ItemLoader(forceLoadFileURLItem: true)
             for itemProvider in UIPasteboard.general.itemProviders {
                 let baseType = ItemLoader.getBaseUTIType(itemProvider)
-                let secondaryType = ItemLoader.getSecondUTIType(itemProvider)
+                let secondaryType = ItemLoader.getSecondUTIType(itemProvider, baseType: baseType)
                 itemLoader.addItem(itemProvider: itemProvider, type: baseType, secondType: secondaryType)
             }
             
@@ -652,7 +725,6 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
         // New Message
         else {
-            // TODO: (IOS-4366) Re-Add dist list
             businessInjector.messageSender.sendTextMessage(containing: sendableRawText, in: conversation)
         }
         
@@ -776,7 +848,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     
     func showContact(identity: String) {
         if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: identity) {
-            let detailsViewController = SingleDetailsViewController(for: contact)
+            let detailsViewController = SingleDetailsViewController(for: Contact(contactEntity: contact))
             let navigationController = ThemedNavigationController(rootViewController: detailsViewController)
             navigationController.modalPresentationStyle = .formSheet
             

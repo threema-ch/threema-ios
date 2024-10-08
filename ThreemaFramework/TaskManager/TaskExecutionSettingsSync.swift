@@ -39,7 +39,7 @@ final class TaskExecutionSettingsSync: TaskExecutionTransaction {
         )) }]
     }
 
-    override func shouldSkip() throws -> Bool {
+    override func shouldDrop() throws -> Bool {
         guard let task = taskDefinition as? TaskDefinitionSettingsSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
         }

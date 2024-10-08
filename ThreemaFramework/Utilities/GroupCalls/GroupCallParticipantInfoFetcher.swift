@@ -34,46 +34,23 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
     
     // MARK: - Public Functions
     
-    public func fetchAvatar(for id: ThreemaIdentity) -> UIImage? {
+    public func fetchProfilePicture(for id: ThreemaIdentity) -> UIImage {
         let identityStore = businessInjector.myIdentityStore
         let entityManager = businessInjector.entityManager
-        let avatar: UIImage?
         
         // swiftformat:disable:next conditionalAssignment
-        if let localIdentity = identityStore.identity, localIdentity == id.string,
-           let profilePictureDict = identityStore.profilePicture,
-           let imageData = profilePictureDict["ProfilePicture"] as? Data, let image = UIImage(data: imageData) {
-            if ProcessInfoHelper.isRunningForScreenshots {
-                avatar = image
-            }
-            else {
-                avatar = AvatarMaker.shared().maskedProfilePicture(image, size: 40)
-            }
+        if let localIdentity = identityStore.identity, localIdentity == id.string {
+            return identityStore.resolvedGroupCallProfilePicture
         }
         else {
-            avatar = entityManager.performAndWait {
-                guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
-                    // TODO: (IOS-4124) Error handling
-                    return nil
+            return entityManager.performAndWait {
+                guard let contactEntity = entityManager.entityFetcher.contact(for: id.string) else {
+                    return ProfilePictureGenerator.unknownContactGroupCallsImage
                 }
-                
-                let localAvatar: UIImage? =
-                    if ProcessInfoHelper.isRunningForScreenshots {
-                        AvatarMaker.shared().avatar(for: contact, size: 200, masked: false, scaled: true)
-                    }
-                    else {
-                        AvatarMaker.shared().avatar(for: contact, size: 40, masked: true)
-                    }
-                
-                if AvatarMaker.shared().isDefaultAvatar(for: contact) {
-                    return localAvatar?.withTintColor(.white)
-                }
-                
-                return localAvatar
+                let contact = Contact(contactEntity: contactEntity)
+                return contact.profilePictureForGroupCalls()
             }
         }
-        
-        return avatar
     }
     
     public func fetchDisplayName(for id: ThreemaIdentity) -> String {
@@ -113,7 +90,7 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
                 }
             }
         
-        return idColor
+        return idColor.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
     }
     
     public func isIdentity(_ identity: ThreemaIdentity, memberOfGroupWith groupID: GroupIdentity) -> Bool {

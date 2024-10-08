@@ -75,7 +75,8 @@ class MediatorMessageProcessor: NSObject {
     @objc func process(
         message: Data,
         messageType: UnsafeMutablePointer<UInt8>,
-        receivedAfterInitialQueueSend: Bool
+        receivedAfterInitialQueueSend: Bool,
+        maxDeviceSlots: UnsafeMutablePointer<NSNumber>?
     ) -> Data? {
         
         if !MediatorMessageProtocol.isMediatorMessage(message) {
@@ -159,6 +160,7 @@ class MediatorMessageProcessor: NSObject {
 
             if let serverInfo = mediatorMessageProtocol.decodeServerInfo(message: message) {
                 DDLogVerbose("Server info deserialized, device slots \(serverInfo.maxDeviceSlots)")
+                maxDeviceSlots?.initialize(to: serverInfo.maxDeviceSlots as NSNumber)
             }
             
         case .reflectionQueueDry:

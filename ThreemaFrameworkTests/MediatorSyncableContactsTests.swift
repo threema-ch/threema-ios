@@ -111,38 +111,6 @@ class MediatorSyncableContactsTests: XCTestCase {
         }
     }
     
-    func testDeleteContact() {
-        let taskManagerMock = TaskManagerMock()
-        
-        let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettingsMock(enableMultiDevice: true),
-            PushSettingManagerMock(),
-            taskManagerMock,
-            EntityManager(databaseContext: databaseBackgroundCnx)
-        )
-        let contact = getMinimalContact()
-
-        let expec = XCTestExpectation(description: "Sync completes successfully")
-        
-        mediatorSyncableContacts.deleteAndSync(identity: contact.identity)
-            .done {
-                let taskCount = taskManagerMock.addedTasks.count
-                XCTAssertEqual(1, taskCount)
-
-                for task in taskManagerMock.addedTasks {
-                    if !(task is TaskDefinitionDeleteContactSync) {
-                        XCTFail("Created an unexpected task")
-                    }
-                }
-                expec.fulfill()
-            }
-            .catch { error in
-                XCTFail("Delete and sync failed: \(error)")
-            }
-        
-        wait(for: [expec], timeout: 6)
-    }
-
     func testIntegrationWithTaskExecution() {
         let userSettingsMock = UserSettingsMock(enableMultiDevice: true)
 

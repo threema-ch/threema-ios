@@ -44,19 +44,6 @@ class MentionableIdentity: Hashable {
         }
     }()
     
-    lazy var contactImage: UIImage? = {
-        switch contactKind {
-        case .all:
-            return AvatarMaker.shared().unknownPersonImage()
-        case let ContactKind.contact(identity):
-            guard let contact = entityFetcher.contact(for: identity) else {
-                DDLogError("Created MentionableIdentity for a contact that doesn't exist")
-                return UIImage()
-            }
-            return AvatarMaker().avatar(for: contact, size: 35, masked: true)
-        }
-    }()
-    
     lazy var displayName: String = {
         switch contactKind {
         case .all:

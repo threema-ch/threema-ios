@@ -133,7 +133,7 @@ import ThreemaFramework
             let sessions = self.entityManager!.entityFetcher.allWebClientSessions() as? [WebClientSession]
             if sessions != nil {
                 for session in sessions! {
-                    self.entityManager?.entityDestroyer.deleteObject(object: session)
+                    self.entityManager?.entityDestroyer.delete(webClientSession: session)
                 }
             }
         }
@@ -141,7 +141,7 @@ import ThreemaFramework
     
     func deleteWebClientSession(_ session: WebClientSession) {
         entityManager!.performSyncBlockAndSafe {
-            self.entityManager?.entityDestroyer.deleteObject(object: session)
+            self.entityManager?.entityDestroyer.delete(webClientSession: session)
         }
     }
     
@@ -161,7 +161,7 @@ import ThreemaFramework
             let sessions = self.entityManager!.entityFetcher.allNotPermanentWebClientSessions() as? [WebClientSession]
             if sessions != nil {
                 for session in sessions! {
-                    self.entityManager?.entityDestroyer.deleteObject(object: session)
+                    self.entityManager?.entityDestroyer.delete(webClientSession: session)
                 }
             }
         }

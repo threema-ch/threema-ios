@@ -27,7 +27,6 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     NSFetchedResultsControllerDelegate {
     
     typealias ID = NSManagedObjectID
-    typealias _Entity = Entity
     
     var currentSnapshot: AnyPublisher<ContactListSnapshot, Never> { snapshotSubject.eraseToAnyPublisher() }
     private var snapshotSubject: CurrentValueSubject<ContactListSnapshot, Never>
@@ -38,18 +37,21 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     
     init(
         entityFetcher: EntityFetcher = BusinessInjector().entityManager.entityFetcher,
-        fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
+        at fetchedResultsControllerKeyPath: KeyPath<
+            ContactListFetchManager,
+            NSFetchedResultsController<NSFetchRequestResult>
+        >,
         entityResolver: @escaping (Entity) -> BusinessEntity?
     ) {
         self.entityFetcher = entityFetcher
         self.entityResolver = entityResolver
-        self.fetchedResultsController = fetchedResultsController
+        self.fetchedResultsController = entityFetcher[keyPath: fetchedResultsControllerKeyPath]
         self.snapshotSubject = .init(ContactListSnapshot())
         super.init()
         fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
     }
-    
+ 
     func entity(for id: NSManagedObjectID) -> BusinessEntity? {
         guard let entity = entityFetcher.getManagedObject(by: id) as? Entity else {
             return nil

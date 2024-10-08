@@ -115,8 +115,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             // error parsing data
             if (ballot == nil) {
                 if (message) {
-                    [[_entityManager entityDestroyer] deleteObjectWithObject:message];
-                    
+                    [[_entityManager entityDestroyer] deleteWithBaseMessage:message];
+
                     // do not use the conversation function 'updateLastMessageWith', because we are already in a perform block
                     MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
                     BaseMessage *lastMessage = messageFetcher.lastDisplayMessage;
@@ -165,7 +165,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     ballot.modifyDate = [NSDate date];
-    [ballot incrementUnreadUpdateCount];
     
     return [self parseJsonVoteData:jsonData forContact:contactId inBallot:ballot];
 }
@@ -174,7 +173,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     DDLogInfo(@"[Ballot] [%@] Update existing ballot", [NSString stringWithHexData:ballot.id]);
     if ([self parseJsonCreateData:jsonData forBallot:ballot update:true]) {
         ballot.modifyDate = [NSDate date];
-        [ballot incrementUnreadUpdateCount];
     }
 }
 
@@ -190,7 +188,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     // parse failed: remove the ballot we just created
-    [[_entityManager entityDestroyer] deleteObjectWithObject:ballot];
+    [[_entityManager entityDestroyer] deleteWithBallot:ballot];
     return nil;
 }
 
@@ -215,13 +213,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [_ballotManager updateBallot:ballot choiceID:choiceId with:value for:contactId];
     }
     
-    // We add votes system messages for ballots that are intermediate, or for those that the local identity created.
-    if (ballot.isIntermediate == YES) {
-        DDLogInfo(@"[Ballot] [%@] New vote [%@] received", [NSString stringWithHexData:ballot.id], contactId);
-        [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate updatedVote:updatedVote];
-    }
-    else if (ballot.creatorId == MyIdentityStore.sharedMyIdentityStore.identity && !updatedVote) {
-        // Do not show updated votes if ballot is not intermediate
+    if (ballot.creatorId == [MyIdentityStore sharedMyIdentityStore].identity &&
+        (ballot.isIntermediate == YES || !updatedVote)) {
         DDLogInfo(@"[Ballot] [%@] New vote [%@] received", [NSString stringWithHexData:ballot.id], contactId);
         [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate updatedVote:updatedVote];
     }

@@ -26,7 +26,7 @@
     if ([activityType isEqualToString:UIActivityTypeMail] || [activityType isEqualToString:UIActivityTypeMessage]) {
         return nil;
     }
-    return [NSURL URLWithString:@"https://threema.ch/"];
+    return [ThreemaURLProviderObjc getURL:ThreemaURLProviderTypeConsumerWebsite];
 }
 
 @end

@@ -37,20 +37,15 @@ extension ContactEntity {
         var handles = handles
         let mainHandle = handles.remove(at: 0)
         
-        let avatar: INImage?
-        if let image = AvatarMaker().avatar(for: self, size: 63, masked: false, scaled: true) {
-            avatar = INImage(uiImage: image)
-        }
-        else {
-            DDLogError("Could not create avatar for contact")
-            avatar = nil
-        }
+        let contact = Contact(contactEntity: self)
+        let image: UIImage = ProfilePictureGenerator.addBackground(to: contact.profilePicture)
+        let inImage = INImage(uiImage: image)
                 
         return INPerson(
             personHandle: mainHandle.handle,
             nameComponents: nil,
             displayName: displayName,
-            image: avatar,
+            image: inImage,
             contactIdentifier: cnContactID,
             customIdentifier: nil,
             aliases: handles.map(\.handle),

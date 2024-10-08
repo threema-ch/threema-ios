@@ -242,9 +242,9 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(resultGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
         XCTAssertNil(resultGrp.lastSyncRequest)
 
-        XCTAssertEqual(1, contactStoreMock.deleteContactCalls.count)
-        XCTAssertTrue(contactStoreMock.deleteContactCalls.contains("MEMBER02"))
-        
+        XCTAssertEqual(1, contactStoreMock.markContactAsDeletedCalls.count)
+        XCTAssertTrue(contactStoreMock.markContactAsDeletedCalls.contains("MEMBER04"))
+
         XCTAssertNil(resultNewMembers)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupCreateMessage }.count)
         
@@ -329,8 +329,8 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(resultGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
         XCTAssertNil(resultGrp.lastSyncRequest)
 
-        XCTAssertEqual(1, contactStoreMock.deleteContactCalls.count)
-        XCTAssertTrue(contactStoreMock.deleteContactCalls.contains("MEMBER02"))
+        XCTAssertEqual(1, contactStoreMock.markContactAsDeletedCalls.count)
+        XCTAssertTrue(contactStoreMock.markContactAsDeletedCalls.contains("MEMBER04"))
         
         XCTAssertNil(resultNewMembers)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupCreateMessage }.count)
@@ -919,7 +919,7 @@ class GroupManagerTests: XCTestCase {
             return
         }
 
-        XCTAssertNil(grp.profilePicture)
+        XCTAssertNil(grp.old_ProfilePicture)
         
         // Run set photo test
         
@@ -927,7 +927,7 @@ class GroupManagerTests: XCTestCase {
 
         // Validate set photo test
         
-        XCTAssertTrue(grp.profilePicture!.elementsEqual(expectedPhoto))
+        XCTAssertTrue(grp.old_ProfilePicture!.elementsEqual(expectedPhoto))
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupSetPhotoMessage }.count)
         
         let setTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupSetPhotoMessage)
@@ -950,7 +950,7 @@ class GroupManagerTests: XCTestCase {
 
         // Validate delete photo test
         
-        XCTAssertNil(grp.profilePicture)
+        XCTAssertNil(grp.old_ProfilePicture)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupDeletePhotoMessage }.count)
         
         let deleteTask = try XCTUnwrap(

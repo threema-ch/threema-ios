@@ -56,7 +56,8 @@
 "error_other_connection_for_same_identity_message" = "Server zistil dve alebo viac pripojení z rôznych zariadení s rovnakým Threema ID.\n\n\To sa môže stať, ak používate systém Threema na viacerých zariadeniach súčasne bez ich prepojenia (https://three.ma/md). Nové správy sa prenášajú len do zariadenia, ktoré sa naposledy pripojilo k serveru.\n\nAk prechádzate na nové zariadenie, odinštalujte alebo zakážte %@ na starom zariadení a potom reštartujte nové zariadenie.";
 
 "error_rogue_device_title" = "Bolo zistené pripojenie z iného zariadenia";
-"error_rogue_device_message" = "Server zistil pripojenie z iného zariadenia s rovnakým Threema ID.\n\nAk ste medzitým nepoužili svoje Threema ID na inom zariadení alebo so staršou verziou aplikácie, kontaktujte podporu a pošlite súbor denníka, ak je to možné.";
+"error_rogue_device_message" = "Zistilo sa pripojenie z iného zariadenia s rovnakým Threema ID. Použili ste nedávno Threema ID na inom zariadení?\n\nAk áno, môžete túto správu ignorovať.\n\nAk nie, váš súkromný kľúč môže byť narušený. Pred vytvorením nového ID klepnite na „Viac informácií“ a dozviete sa, ako si chrániť zariadenie a údaje.";
+"error_rogue_device_more_info_button" = "Viac informácií";
 
 "video_too_long_title" = "Video je príliš dlhé";
 "video_too_long_message" = "Video je príliš dlhé, aby sa dalo odoslať. Maximálna povolená dĺžka je %.0f munút.";

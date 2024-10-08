@@ -55,11 +55,8 @@
 #import "FileMessageEntity.h"
 #import "Nonce.h"
 
-#import "Tag.h"
 #import "WebClientSession.h"
-#import "RequestedConversation.h"
 #import "LastLoadedMessageIndex.h"
-#import "RequestedThumbnail.h"
 
 #import "CallEntity.h"
 #import "GroupCallEntity.h"
@@ -100,7 +97,7 @@
 
 - (FileData *)fileData;
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation;
+- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)setLastUpdate;
 
 - (ImageMessageEntity *)imageMessageEntityForConversation:(Conversation *)conversation;
 
@@ -134,19 +131,13 @@
 
 - (Nonce *)nonceWithData:(NSData*)nonce;
 
-- (Tag *)tagWithName:(NSString *)name;
-
 - (MessageMarkers *)messageMarkers;
 
 - (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessage *)message NS_SWIFT_NAME(messageHistoryEntry(for:));;
 
 - (WebClientSession *)webClientSession;
 
-- (RequestedConversation *)requestedConversationWithId:(NSString *)conversationId webClientSession:(WebClientSession*)webClientSession;
-
 - (LastLoadedMessageIndex *)lastLoadedMessageIndexWithBaseMessageId:(NSData *)baseMessageId index:(NSInteger)index webClientSession:(WebClientSession*)webClientSession;
-
-- (RequestedThumbnail *)requestedThumbnailWithMessageId:(NSData *)messageId webClientSession:(WebClientSession*)webClientSession;
 
 - (CallEntity *)callEntity;
 

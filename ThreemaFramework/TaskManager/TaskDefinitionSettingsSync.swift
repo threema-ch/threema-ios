@@ -46,7 +46,7 @@ final class TaskDefinitionSettingsSync: TaskDefinition, TaskDefinitionTransactio
     }
 
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     var scope: D2d_TransactionScope.Scope {
@@ -58,7 +58,7 @@ final class TaskDefinitionSettingsSync: TaskDefinition, TaskDefinitionTransactio
     init(syncSettings: Sync_Settings) {
         self.syncSettings = syncSettings
 
-        super.init(isPersistent: false)
+        super.init(type: .volatile)
     }
 
     required init(from decoder: Decoder) throws {

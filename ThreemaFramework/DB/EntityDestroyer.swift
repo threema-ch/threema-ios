@@ -28,9 +28,14 @@ import Foundation
     public static let externalDataBinPath = "_EXTERNAL_DATA_BIN"
 
     private let objCnx: TMAManagedObjectContext
-    
-    @objc public required init(managedObjectContext: TMAManagedObjectContext) {
+    private let myIdentityStore: MyIdentityStoreProtocol
+
+    @objc public required init(
+        managedObjectContext: TMAManagedObjectContext,
+        myIdentityStore: MyIdentityStoreProtocol
+    ) {
         self.objCnx = managedObjectContext
+        self.myIdentityStore = myIdentityStore
     }
     
     // MARK: - Public methods
@@ -257,7 +262,6 @@ import Foundation
             message.latitude = 0
             message.longitude = 0
             message.accuracy = 0
-            message.reverseGeocodingResult = ""
             message.poiAddress = nil
             message.poiName = nil
         }
@@ -304,7 +308,7 @@ import Foundation
         
         if let historyEntries = message.historyEntries {
             for history in historyEntries {
-                deleteObject(object: history)
+                delete(entity: history)
             }
         }
     }
@@ -473,12 +477,68 @@ import Foundation
         }
         return deletedMessages
     }
-    
+
+    @objc func delete(ballot: Ballot) {
+        delete(entity: ballot)
+    }
+
+    @objc func delete(ballotChoice: BallotChoice) {
+        delete(entity: ballotChoice)
+    }
+
+    @objc public func delete(baseMessage: BaseMessage) {
+        delete(entity: baseMessage)
+    }
+
+    public func delete(callEntity: CallEntity) {
+        delete(entity: callEntity)
+    }
+
+    @objc public func delete(conversation: Conversation) {
+        delete(entity: conversation)
+    }
+
+    #if DEBUG
+        @available(*, deprecated, message: "Use this function only for testing!")
+        /// - Parameter contactEntity: Core Data object
+        @objc public func delete(contactEntity: ContactEntity) {
+            delete(entity: contactEntity)
+        }
+    #endif
+
+    @objc public func delete(distributionListEntity: DistributionListEntity) {
+        delete(entity: distributionListEntity)
+    }
+
+    func delete(groupCallEntity: GroupCallEntity) {
+        delete(entity: groupCallEntity)
+    }
+
+    func delete(groupEntity: GroupEntity) {
+        delete(entity: groupEntity)
+    }
+
+    func delete(imageData: ImageData) {
+        delete(entity: imageData)
+    }
+
+    func delete(lastGroupSyncRequest: LastGroupSyncRequest) {
+        delete(entity: lastGroupSyncRequest)
+    }
+
+    func delete(messageHistoryEntryEntity: MessageHistoryEntryEntity) {
+        delete(entity: messageHistoryEntryEntity)
+    }
+
+    public func delete(webClientSession: WebClientSession) {
+        delete(entity: webClientSession)
+    }
+
     /// Delete particular DB object.
     ///
     /// - Parameters:
     ///    - object: object to delete
-    @objc public func deleteObject(object: NSManagedObject) {
+    private func delete(entity object: NSManagedObject) {
         var shouldUpdateConversationContent = false
         if let conversation = object as? Conversation {
             let count = deleteMessages(of: conversation)
@@ -494,7 +554,7 @@ import Foundation
                         fatalError("Can't delete a conversation of a contact, because it's not a conversation object")
                         continue
                     }
-                    deleteObject(object: conversation)
+                    delete(entity: conversation)
                 }
             }
             
@@ -507,7 +567,7 @@ import Foundation
             }
         }
         else if let distributionList = object as? DistributionListEntity {
-            deleteObject(object: distributionList.conversation)
+            delete(entity: distributionList.conversation)
         }
                 
         let deleteFilenames = getExternalFilenames(ofMessages: [object], includeThumbnail: true)
@@ -529,6 +589,35 @@ import Foundation
                 )
             }
         }
+    }
+
+    /// Delete 1:1 conversation of a contact.
+    ///
+    /// - Parameter contactEntity: Delete 1:1 conversation of this contact
+    public func deleteOneToOneConversation(for contactEntity: ContactEntity) {
+        if let conversations = contactEntity.conversations as? Set<Conversation> {
+            for conversation in conversations.filter({ !$0.isGroup() }) {
+                delete(conversation: conversation)
+            }
+        }
+    }
+
+    /// Delete `ContactEntity` of own identity.
+    ///
+    /// - Returns: True own contact was found and deleted
+    public func deleteOwnContact() -> Bool {
+        let fetchContacts = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
+        fetchContacts.predicate = NSPredicate(format: "identity = %@", myIdentityStore.identity)
+
+        guard let entities = try? objCnx.fetch(fetchContacts) as? [ContactEntity], !entities.isEmpty else {
+            return false
+        }
+
+        for entity in entities {
+            delete(entity: entity)
+        }
+
+        return true
     }
 
     /// Get orphaned external files.
@@ -628,7 +717,7 @@ import Foundation
                 }
                 
                 for fetchedCall in fetchedCalls {
-                    deleteObject(object: fetchedCall)
+                    delete(entity: fetchedCall)
                 }
             }
         }
@@ -666,9 +755,21 @@ import Foundation
             try Task.checkCancellation()
 
             let messages = try (objCnx.fetch(fetchRequest)) as? [BaseMessage] ?? []
-            // Currently we want to keep open Ballots excluded from deletion
-            let filtered = messages.compactMap { ($0 as? BallotMessage)?.ballot?.isClosed() ?? true ? $0 : nil }
             
+            // Currently we want to keep open ballots and starred messages excluded from deletion
+            let filtered = messages.filter { message in
+                if let ballotMessage = message as? BallotMessage, let isClosed = ballotMessage.ballot?.isClosed(),
+                   !isClosed {
+                    return false
+                }
+                
+                if let messageMarkers = message.messageMarkers, messageMarkers.star.boolValue {
+                    return false
+                }
+                
+                return true
+            }
+
             guard !filtered.isEmpty else {
                 return
             }

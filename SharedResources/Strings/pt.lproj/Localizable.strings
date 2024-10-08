@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Cópia concluída para a área de transferência";
 "webrtc_diagnostics.done" = "Concluído. Se você tiver problemas com conexões de chamadas, envie este resultado para o suporte do Threema.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Selecionado";
 "mwphotobrowser_select_all" = "Selecionar tudo";
@@ -338,7 +335,7 @@
 "record_audio" = "Gravar áudio";
 "record_continue" = "Continuar gravação de áudio";
 "scan_qr" = "Escanear código QR";
-"share_file" = "Compartilhar arquivo";
+"share_file" = "Compartilhar arquivo ou contato";
 "add_item_caption" = "Adicionar legenda";
 "add_items_caption" = "Adicionar legendas";
 "send_item_immediately_photo" = "Enviar foto";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Contato de trabalho";
 "threema_type_icon_private_accessibility_label" = "Contato privado";
 
-"delete_contact_group_exists_title" = "O contato ainda está em um bate-papo em grupo";
-"delete_contact_group_exists_message_single" = "\"%@\" ainda é membro de um grupo. Remova o contato do grupo ou exclua o grupo.";
-"delete_contact_group_exists_message_multiple" = "\"%@\" ainda é membro de %d grupos. Remova o contato dos grupos ou exclua os grupos.";
-"delete_contact_group_exists_show_contact_button" = "Mostrar contato";
 "delete_contact_existing_conversation_title" = "Excluir “%@”?";
+"delete_contact_existing_conversation_is_group_member_title" = "O chat individual com “%@” será excluído, mas ele(a) permanecerá como membro dos grupos. Excluir “%@”?";
 "delete_contact_existing_conversation_button" = "Excluir contato + Histórico de bate-papo";
+"delete_contact_is_group_member_title" = "\"%@\" permanece membro de grupos. Excluir \"%@\"?";
 "delete_contact_confirmation_with_exclusion_message" = "Excluir \"%@\" e o contato da sincronização?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "\"%@\" permanece como membro de grupos. Excluir \"%@\" e excluí-lo(a) da sincronização?";
 "delete_contact_button" = "Excluir contato";
 "delete_contact_confirmation_with_exclusion_button" = "Excluir + Excluir contato";
 "exclude_deleted_id_title" = "Excluir a ID do Threema de \"%@\" da sincronização?";
@@ -545,6 +541,10 @@
 "setup_title_text" = "Novo(a) no %@?";
 "restore_id_export" = "Restaurar ID exportada";
 "id_exists" = "A ID do Threema anteriormente usada nesse dispositivo (%@) ainda está presente. Gostaria de restaurar essa ID?";
+
+"contact_support" = "Contatar suporte";
+"contact_support_mail_subject" = "Muitos IDs criados para esta compra";
+"contact_support_mail_message" = "Prezada equipe %@,\n\nA geração de um novo ID do Threema falha e retorna este código de erro:\n%@\n\nAtenciosamente,";
 
 "welcome" = "Bem-vindo(a) ao %@";
 "move_your_finger" = "Mova seu dedo na tela.";
@@ -713,6 +713,8 @@
 "current_position" = "position";
 "in_reply_to" = "em resposta a";
 "draft" = "Rascunho";
+"draft_type_quote" = "Citar";
+"draft_type_edit" = "Editar";
 "new_message_accessibility" = "Nova mensagem: ";
 "quote_interaction_hint" = "Pula para a mensagem citada";
 
@@ -730,6 +732,12 @@
 "threema_channel_intro" = "Adicionar o Threema Channel aos seus contatos?";
 "threema_channel_info" = "Threema Channel fornece notícias sobre todas as coisas do Threema.";
 "threema_channel_failed" = "Não é possível adicionar o Threema Channel.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Adicionar o Threema Work Channel aos seus contatos?";
+"threema_work_channel_info" = "O Threema Work Channel traz notícias gerais sobre o Threema Work.";
+"threema_work_channel_failed" = "Não foi possível adicionar o Threema Work Channel.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Responder";
@@ -1074,7 +1082,7 @@
 "restore_option_id" = "Restaurar somente a sua ID";
 "restore_option_id_keep_data" = "Restaure a sua ID do Threema exportada e mantenha os dados (chats, contatos, grupos, etc) armazenados neste dispositivo";
 "backup_faq_link_text" = "Saiba mais sobre backups no %@";
-"forgot_password_link_text" = "Esqueceu sua senha?";
+"restore_option_help_link_text" = "Ajuda";
 
 "restore_option_data_description" = "Neste dispositivo, os dados do %@ (conversas, contatos, grupos, etc.) estão presentes.";
 "restore_option_data_keep_data" = "Manter os dados locais";
@@ -1119,6 +1127,7 @@
 
 "settings_list_invite_a_friend_title" = "Convide um amigo";
 "settings_list_threema_channel_title" = "Threema Channel";
+"settings_list_threema_work_channel_title" = "Threema Work Channel";
 
 "settings_list_rate" = "Avaliar %@";
 
@@ -1253,7 +1262,7 @@
 "delete_messages_confirm" = "Deseja excluir permanentemente todas as mensagens mais antigas que %@?";
 "delete_messages_confirm_all" = "Deseja excluir permanentemente todas as mensagens?";
 "delete_messages_explain" = "Todos os tipos de mensagens serão excluídas: mensagens de texto e voz, mídia, arquivos, enquetes, etc.";
-"automatic_delete_explain" = "Use a exclusão automática de mensagens e mídia para liberar espaço em disco. Enquetes abertas e grupos de anotações não fazem parte da exclusão automática.";
+"automatic_delete_explain" = "Use a exclusão automática de mensagens e mídia para liberar espaço em disco. Enquetes abertas, mensagens com estrela e o conteúdo de grupos de anotações não fazem parte da exclusão automática.";
 "automatic_delete_on_confirmation_title" = "Ativar a exclusão automática?";
 "automatic_delete_off_confirmation_title" = "Desativar a exclusão automática?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1481,6 +1490,16 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "could_not_add_all_items_memory_constrained_title" = "Use o aplicativo";
 "could_not_add_all_items_memory_constrained_message" = "Por motivos técnicos, arquivos acima de um determinado tamanho só podem ser enviados no aplicativo.";
 "image_preview_cell_cannot_preview" = "Não é possível exibir a pré-visualização.";
+
+// Profile Synchronization
+"sync_error_title" = "Falha na sincronização do perfil";
+"sync_error_general_message" = "Verifique a sua conexão com a internet e tente novamente.";
+"sync_error_same_transaction_error" = "O perfil já está sendo sincronizado em outro dispositivo. Por favor, aguarde até que a sincronização seja concluída. As alterações neste dispositivo serão descartadas.";
+
+"syncing_profile" = "Sincronizando…";
+
+"incoming_profile_sync_title" = "Perfil sincronizado";
+"incoming_profile_sync_message" = "Alterações de perfil de outro dispositivo aplicadas";
 
 // Share Extension
 "finished_sending_title" = "Envio concluído";
@@ -1741,6 +1760,7 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "notification_deleted_messages_count" = "%d mensagens excluídas";
 
 "notification_cannot_play_video" = "Não foi possível reproduzir o vídeo";
+"notification_recording_too_long" = "A gravação excedeu a duração máxima";
 
 "notification_call_failed_connected" = "Conexão perdida";
 "notification_call_failed_not_connected" = "Falha ao estabelecer a conexão";

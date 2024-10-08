@@ -48,7 +48,7 @@ class TaskDefinitionNewDeviceSync: TaskDefinition,
     }
     
     override var description: String {
-        "<\(type(of: self))"
+        "<\(Swift.type(of: self))"
     }
     
     var scope: D2d_TransactionScope.Scope {
@@ -58,7 +58,7 @@ class TaskDefinitionNewDeviceSync: TaskDefinition,
     // TODO: Do we need to store anything?
     
     init() {
-        super.init(isPersistent: false)
+        super.init(type: .dropOnDisconnect)
     }
     
     required init(from decoder: Decoder) throws {

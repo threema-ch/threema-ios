@@ -75,18 +75,33 @@ import Foundation
 /// Actual logic is handled by `MessageDraftCoordinator` completely unaware of the details defined here.
 public enum Draft {
     public enum Key: String, CaseIterable {
-        case messageDrafts = "MessageDrafts", audioMessageDrafts = "AudioMessageDrafts"
+        case messageDrafts = "MessageDrafts", audioMessageDrafts = "AudioMessageDrafts", jsonDrafts = "JsonDrafts"
     }
     
-    case text(String), audio(URL)
+    public enum SubType: Codable {
+        case quote(String, String)
+        case edit(String, String)
+    }
+    
+    case text(String), audio(URL), json(SubType)
     
     /// Returns a string representation of the draft.
     public var string: String {
         switch self {
         case let .text(draft):
             draft
+            
         case .audio:
             "file_message_voice".localized
+            
+        case let .json(subtype):
+            switch subtype {
+            case let .quote(draft, _):
+                "\("draft_type_quote".localized): \(draft)"
+                
+            case let .edit(draft, _):
+                "\("draft_type_edit".localized): \(draft)"
+            }
         }
     }
     
@@ -100,12 +115,24 @@ public enum Draft {
         switch key {
         case .messageDrafts:
             self = .text(value)
+
         case .audioMessageDrafts:
             guard let path = URL(string: "file://\(value)") else {
                 return nil
             }
             
             self = .audio(path)
+            
+        case .jsonDrafts:
+            let decoder = JSONDecoder()
+            let data = Data(value.utf8)
+            do {
+                let subtype = try decoder.decode(SubType.self, from: data)
+                self = .json(subtype)
+            }
+            catch {
+                return nil
+            }
         }
     }
     
@@ -113,17 +140,30 @@ public enum Draft {
         switch self {
         case .text:
             Key.messageDrafts
+            
         case .audio:
             Key.audioMessageDrafts
+            
+        case .json:
+            Key.jsonDrafts
         }
     }
     
     fileprivate var content: String? {
         switch self {
         case let .text(draft):
-            draft
+            return draft
+            
         case let .audio(draft):
-            draft.path
+            return draft.path
+            
+        case let .json(subType):
+            let encoder = JSONEncoder()
+            guard let data = try? encoder.encode(subType) else {
+                return nil
+            }
+            let string = String(data: data, encoding: .utf8)
+            return string
         }
     }
     
@@ -149,8 +189,15 @@ public enum Draft {
         switch self {
         case let .text(draft):
             draft.isEmpty
+            
         case let .audio(draft):
             !FileUtility.shared.isExists(fileURL: draft)
+            
+        case let .json(subtype):
+            switch subtype {
+            case let .quote(string, _), let .edit(string, _):
+                string.isEmpty
+            }
         }
     }
 }

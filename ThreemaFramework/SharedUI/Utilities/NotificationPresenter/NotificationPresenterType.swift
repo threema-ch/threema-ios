@@ -143,6 +143,10 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_sending_failed_size"),
         notificationStyle: .error
     )
+    public static let recordingTooLong = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_recording_too_long"),
+        notificationStyle: .error
+    )
     public static let playingError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_cannot_play_video"),
         notificationStyle: .error
@@ -217,6 +221,10 @@ public struct NotificationPresenterType {
     )
     public static let flushMessageQueueSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_flush_message_queue_succeeded"),
+        notificationStyle: .success
+    )
+    public static let resetUnreadCountSuccess = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "settings_advanced_successfully_reset_unread_count_label"),
         notificationStyle: .success
     )
     public static let reregisterNotificationsSuccess = NotificationPresenterType(

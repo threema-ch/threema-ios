@@ -175,16 +175,16 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
             ((
                 task.profilePicture == .updated
                     || task.profilePicture == .unchanged
-            ) && group.profilePicture != nil)
+            ) && group.old_ProfilePicture != nil)
                 ||
                 ((
                     task.profilePicture == .removed
                         || task.profilePicture == .unchanged
-                ) && group.profilePicture == nil)
+                ) && group.old_ProfilePicture == nil)
         )
 
         var sameImage = false
-        if let image = group.profilePicture {
+        if let image = group.old_ProfilePicture {
             sameImage = task.profilePicture == .updated ? task
                 .image == image : task.profilePicture == .unchanged
         }

@@ -29,12 +29,14 @@ import ThreemaProtocols
 public class Group: NSObject {
     
     // These strings are used as static properties for performance reasons
-    private static let meString = BundleUtil.localizedString(forKey: "me")
-    private static let unknownString = BundleUtil.localizedString(forKey: "(unknown)")
-    private static let oneMemberTitleString = BundleUtil.localizedString(forKey: "group_one_member_title")
-    private static let multipleMemberTitleString = BundleUtil.localizedString(forKey: "group_multiple_members_title")
+    private static let meString = "me".localized
+    private static let unknownString = "(unknown)".localized
+    private static let oneMemberTitleString = "group_one_member_title".localized
+    private static let multipleMemberTitleString = "group_multiple_members_title".localized
     private static let maxGroupMembers = BundleUtil.object(forInfoDictionaryKey: "ThreemaMaxGroupMembers") as? Int ?? 0
 
+    // MARK: - Internal types
+    
     /// A member in a group
     public enum Member: CustomStringConvertible, Equatable {
         case me(String)
@@ -76,17 +78,223 @@ public class Group: NSObject {
     /// Creator of a group (same as `Member`)
     public typealias Creator = Member
     
-    private let myIdentityStore: MyIdentityStoreProtocol
-    private let userSettings: UserSettingsProtocol
-
+    // MARK: - Observation
+    
+    /// This will be set to `true` when a group is in the process to be deleted.
+    ///
+    /// This can be used to detect deletion in KVO-observers
+    @objc public private(set) dynamic var willBeDeleted = false
+    
     // Tokens for entity subscriptions, will be removed when is deallocated
     private var subscriptionTokens = [EntityObserver.SubscriptionToken]()
 
+    @objc public private(set) dynamic var state: GroupState
+    @objc public private(set) dynamic var members: Set<Contact>
+    @objc public private(set) dynamic var name: String?
+    @objc public private(set) dynamic var old_ProfilePicture: Data?
+    @objc public private(set) dynamic lazy var profilePicture: UIImage = resolveProfilePicture()
+    
+    // MARK: - Public properties
+
+    @available(*, deprecated, message: "Do not use anymore, load CoreData conversation separated")
+    @objc public let conversation: Conversation
+
+    public let groupIdentity: GroupIdentity
+    
+    public var pushSetting: PushSetting {
+        pushSettingManager.find(forGroup: groupIdentity)
+    }
+    
+    public private(set) var lastSyncRequest: Date?
+    public private(set) var lastUpdate: Date?
+    public private(set) var lastMessageDate: Date?
+    
+    /// True if group is created by a gateway ID and if group is message storing
+    public var isMessageStoringGatewayGroup: Bool {
+        isGatewayGroup && name?.hasPrefix(Constants.messageStoringGatewayGroupPrefix) ?? false
+    }
+    
+    /// Returns true if me is group creator
+    @objc public var isSelfCreator: Bool {
+        (conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false)
+            && conversationContact == nil
+    }
+
+    /// Returns true, if I'm in the group
+    @objc public var isSelfMember: Bool {
+        isOwnGroup ||
+            (
+                (conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false)
+                    && state == .active
+            )
+    }
+    
+    /// Returns true, if me is group creator and group is active/editable.
+    @objc public var isOwnGroup: Bool {
+        isSelfCreator && state == .active
+    }
+    
+    public var canLeave: Bool {
+        isSelfMember && !isOwnGroup
+    }
+
+    public var canDissolve: Bool {
+        isOwnGroup
+    }
+    
+    /// Has the creator left the group?
+    public var didCreatorLeave: Bool {
+        !isMember(identity: groupCreatorIdentity)
+    }
+    
+    /// Only `true` if you left the group. `false` otherwise.
+    /// This includes if you were removed from the group by the creator.
+    ///
+    /// Is that really what you want? Probably you're looking for `isSelfMember`.
+    @objc public var didLeave: Bool {
+        state == .left
+    }
+
+    var didForcedLeave: Bool {
+        state == .forcedLeft
+    }
+    
+    @objc public var groupID: Data {
+        groupIdentity.id
+    }
+    
+    @objc public var groupCreatorIdentity: String {
+        if let identity = conversationContact?.identity.string {
+            return identity
+        }
+        return myIdentityStore.identity
+    }
+
+    /// Creator of the group. It might not be part of the group anymore.
+    public var creator: Creator {
+        if conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false,
+           conversationContact == nil {
+            .me(myIdentityStore.identity)
+        }
+        else if let contact = conversationContact {
+            .contact(contact)
+        }
+        else {
+            .unknown
+        }
+    }
+    
+    /// Number of members including me
+    public var numberOfMembers: Int {
+        var membersCount = members.count
+        
+        if state == .active {
+            membersCount += 1
+        }
+        
+        return membersCount
+    }
+    
+    public var membersTitleSummary: String {
+        if numberOfMembers == 1 {
+            Group.oneMemberTitleString
+        }
+        else {
+            String.localizedStringWithFormat(
+                Group.multipleMemberTitleString,
+                numberOfMembers
+            )
+        }
+    }
+    
+    @objc public var isNoteGroup: Bool {
+        allMemberIdentities.count == 1 && isSelfMember
+    }
+
+    public private(set) var conversationCategory: ConversationCategory
+    
+    public private(set) var conversationVisibility: ConversationVisibility
+    
+    /// A string with all members as comma separated list
+    ///
+    /// The order is the same as produced by `sortedMembers`
+    public private(set) var membersList = ""
+    
+    /// Sorted list of group members
+    public private(set) var sortedMembers = [Member]()
+
+    /// All group member identities including me
+    public var allMemberIdentities: Set<String> {
+        var identities = Set(members.map(\.identity.string))
+        if state == .active {
+            identities.insert(myIdentityStore.identity)
+        }
+        return identities
+    }
+    
+    /// All members that are active in this group
+    ///
+    /// This is useful to get all members that should receive a group message
+    var allActiveMemberIdentitiesWithoutCreator: [String] {
+        var identities: [String]!
+        identities = members
+            .filter { $0.state != kStateInvalid }
+            .map(\.identity.string)
+        return identities
+    }
+    
+    public private(set) var usesNonGeneratedProfilePicture = false
+
+    private(set) var lastPeriodicSync: Date?
+
+    // MARK: - Private properties
+
+    private let myIdentityStore: MyIdentityStoreProtocol
+    private let userSettings: UserSettingsProtocol
+    private let pushSettingManager = PushSettingManager()
+    
     private var conversationGroupMyIdentity: String?
 
-    /// It's `nil` if i am creator of the group
+    /// `nil` if we the creator of this group
     private var conversationContact: Contact?
+    
+    private var groupImageData: Data? {
+        didSet {
+            updateProfilePicture()
+        }
+    }
 
+    private lazy var idColor: UIColor = {
+        let creatorIDData = Data(groupIdentity.creator.string.utf8)
+        let combinedID = creatorIDData + groupIdentity.id
+        return IDColor.forData(combinedID)
+    }()
+
+    /// True if group is created by a gateway ID
+    private var isGatewayGroup: Bool {
+        groupCreatorIdentity.hasPrefix("*")
+    }
+    
+    /// Can I add new members
+    private var canAddMembers: Bool {
+        let maxGroupMembers: Int = Group.maxGroupMembers
+        
+        return isOwnGroup && members.count < maxGroupMembers
+    }
+    
+    private var didSyncRequest: Bool {
+        lastSyncRequest != nil
+    }
+    
+    private var groupCreatorNickname: String? {
+        if let nickname = conversationContact?.publicNickname {
+            return nickname
+        }
+        return myIdentityStore.pushFromName
+    }
+    
+    // MARK: - Lifecycle
+    
     /// Initialize Group properties, subscribe GroupEntity and Conversation on EntityObserver for updates.
     /// Note: Group properties will be only refreshed if it's ContactEntity and Conversation object already saved in
     /// Core Data.
@@ -125,7 +333,9 @@ public class Group: NSObject {
         )
         self.state = GroupState(rawValue: groupEntity.state.intValue)!
         self.name = conversation.groupName
-        self.profilePicture = conversation.groupImage?.data
+        
+        self.old_ProfilePicture = conversation.groupImage?.data
+        self.groupImageData = conversation.groupImage?.data
         self.lastSyncRequest = lastSyncRequest
         self.lastUpdate = conversation.lastUpdate
         self.lastMessageDate = conversation.lastMessage?.date
@@ -136,28 +346,63 @@ public class Group: NSObject {
         self.members = Set(conversation.members.map { Contact(contactEntity: $0) })
 
         super.init()
-
+        
         self.sortedMembers = allSortedMembers()
         self.membersList = sortedMembers.map(\.shortDisplayName)
             .joined(separator: ", ")
 
         // Subscribe group entity for DB updates or deletion
+        subscribeForGroupEntityChanges(groupEntity: groupEntity)
+
+        // Subscribe conversation entity for DB updates or deletion
+        subscribeForConversationEntityChanges(conversationEntity: conversation)
+    }
+
+    // MARK: - Public functions
+
+    @objc func isMember(identity: String) -> Bool {
+        allMemberIdentities.contains(identity)
+    }
+    
+    /// Checks if at least one member of the group supports the given mask
+    /// - Parameter mask: `Common_CspFeatureMaskFlag` to check members for
+    /// - Returns: `true` if at least one member supports the given `mask`, `false` otherwise
+    public func hasAtLeastOneMemberSupporting(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> Bool {
+        !membersSupporting(mask).isEmpty
+    }
+    
+    /// Checks if *all* member of the group support the given mask
+    /// - Parameter mask: `Common_CspFeatureMaskFlag` to check members for
+    /// - Returns: `true` all member supports the given `mask`, `false` otherwise
+    public func allMembersSupport(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> Bool {
+        membersSupporting(mask).count == members.count
+    }
+    
+    public func generatedProfilePicture() -> UIImage {
+        ProfilePictureGenerator.generateImage(for: isNoteGroup ? .noteGroup : .group, color: idColor)
+    }
+    
+    // MARK: - Private functions
+    
+    private func subscribeForGroupEntityChanges(groupEntity: GroupEntity) {
         subscriptionTokens.append(
             EntityObserver.shared.subscribe(
                 managedObject: groupEntity
             ) { [weak self] managedObject, reason in
-                guard let groupEntity = managedObject as? GroupEntity else {
+               
+                guard let self, let groupEntity = managedObject as? GroupEntity else {
                     DDLogError("Wrong type, should be GroupEntity")
                     return
                 }
 
                 switch reason {
                 case .deleted:
-                    if let deleted = self?.willBeDeleted, !deleted {
-                        self?.willBeDeleted = true
+                    if !willBeDeleted {
+                        willBeDeleted = true
                     }
+                    
                 case .updated:
-                    guard self?.groupIdentity == GroupIdentity(
+                    guard groupIdentity == GroupIdentity(
                         id: groupEntity.groupID,
                         creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
                     ) else {
@@ -166,276 +411,89 @@ public class Group: NSObject {
                     }
 
                     if let newState = GroupState(rawValue: groupEntity.state.intValue) {
-                        if self?.state != newState {
-                            self?.state = newState
+                        if state != newState {
+                            state = newState
                         }
                     }
                     else {
                         DDLogError("Unknown group state")
                     }
-                    if self?.lastPeriodicSync != groupEntity.lastPeriodicSync {
-                        self?.lastPeriodicSync = groupEntity.lastPeriodicSync
+                    if lastPeriodicSync != groupEntity.lastPeriodicSync {
+                        lastPeriodicSync = groupEntity.lastPeriodicSync
                     }
                 }
             }
         )
-
-        // Subscribe conversation entity for DB updates or deletion
+    }
+    
+    private func subscribeForConversationEntityChanges(conversationEntity: Conversation) {
         subscriptionTokens.append(
             EntityObserver.shared.subscribe(
                 managedObject: conversation
             ) { [weak self] managedObject, reason in
-                guard let conversation = managedObject as? Conversation else {
+                guard let self, let conversation = managedObject as? Conversation else {
                     DDLogError("Wrong type, should be Conversation")
                     return
                 }
 
                 switch reason {
                 case .deleted:
-                    if let deleted = self?.willBeDeleted, !deleted {
-                        self?.willBeDeleted = true
+                    if !willBeDeleted {
+                        willBeDeleted = true
                     }
                 case .updated:
-                    guard conversation.isGroup(), self?.groupID == conversation.groupID else {
+                    guard conversation.isGroup(), groupID == conversation.groupID else {
                         DDLogError("Group ID mismatch")
                         return
                     }
 
-                    if self?.conversationGroupMyIdentity != conversation.groupMyIdentity {
-                        self?.conversationGroupMyIdentity = conversation.groupMyIdentity
+                    if conversationGroupMyIdentity != conversation.groupMyIdentity {
+                        conversationGroupMyIdentity = conversation.groupMyIdentity
                     }
                     if let contactEntity = conversation.contact {
                         let newConversationContact = Contact(contactEntity: contactEntity)
-                        if self?.conversationContact != newConversationContact {
-                            self?.conversationContact = newConversationContact
+                        if conversationContact != newConversationContact {
+                            conversationContact = newConversationContact
                         }
                     }
-                    else if self?.conversationContact != nil {
-                        self?.conversationContact = nil
+                    else if conversationContact != nil {
+                        conversationContact = nil
                     }
-                    if self?.name != conversation.groupName {
-                        self?.name = conversation.groupName
+                    if name != conversation.groupName {
+                        name = conversation.groupName
                     }
-                    if self?.profilePicture != conversation.groupImage?.data {
-                        self?.profilePicture = conversation.groupImage?.data
+                    if old_ProfilePicture != conversation.groupImage?.data {
+                        old_ProfilePicture = conversation.groupImage?.data
                     }
-                    if self?.lastUpdate != conversation.lastUpdate {
-                        self?.lastUpdate = conversation.lastUpdate
+                    if groupImageData != conversation.groupImage?.data {
+                        groupImageData = conversation.groupImage?.data
                     }
-                    if self?.lastMessageDate != conversation.lastMessage?.date {
-                        self?.lastMessageDate = conversation.lastMessage?.date
+                    if lastUpdate != conversation.lastUpdate {
+                        lastUpdate = conversation.lastUpdate
                     }
-                    if self?.conversationCategory != conversation.conversationCategory {
-                        self?.conversationCategory = conversation.conversationCategory
+                    if lastMessageDate != conversation.lastMessage?.date {
+                        lastMessageDate = conversation.lastMessage?.date
                     }
-                    if self?.conversationVisibility != conversation.conversationVisibility {
-                        self?.conversationVisibility = conversation.conversationVisibility
+                    if conversationCategory != conversation.conversationCategory {
+                        conversationCategory = conversation.conversationCategory
+                    }
+                    if conversationVisibility != conversation.conversationVisibility {
+                        conversationVisibility = conversation.conversationVisibility
                     }
 
                     // Check has members composition changed
                     let newMembers = Set(conversation.members.map { Contact(contactEntity: $0) })
 
-                    if let members = self?.members, !members.contactsEqual(to: newMembers) {
-                        self?.members = newMembers
-                        self?.sortedMembers = self?.allSortedMembers() ?? [Member]()
-                        self?.membersList = self?.sortedMembers.map(\.shortDisplayName)
-                            .joined(separator: ", ") ?? ""
+                    if !members.contactsEqual(to: newMembers) {
+                        members = newMembers
+                        sortedMembers = allSortedMembers()
+                        membersList = sortedMembers.map(\.shortDisplayName)
+                            .joined(separator: ", ")
                     }
                 }
             }
         )
     }
-
-    /// Public group properties and func
-
-    @available(*, deprecated, message: "Do not use anymore, load CoreData conversation separated")
-    @objc public let conversation: Conversation
-
-    /// This will be set to `true` when a group is in the process to be deleted.
-    ///
-    /// This can be used to detect deletion in KVO-observers
-    @objc public private(set) dynamic var willBeDeleted = false
-
-    public let groupIdentity: GroupIdentity
-
-    public var pushSetting: PushSetting {
-        let pushSettingManager = PushSettingManager()
-        return pushSettingManager.find(forGroup: groupIdentity)
-    }
-
-    @objc public private(set) dynamic var state: GroupState
-    @objc public private(set) dynamic var members: Set<Contact>
-    public private(set) var lastSyncRequest: Date?
-    public private(set) var lastUpdate: Date?
-    public private(set) var lastMessageDate: Date?
-
-    @objc func isMember(identity: String) -> Bool {
-        allMemberIdentities.contains(identity)
-    }
-
-    /// Returns true, if me is group creator and group is active/editable.
-    @objc public var isOwnGroup: Bool {
-        isSelfCreator && state == .active
-    }
-    
-    /// True if group is created by a gateway ID
-    var isGatewayGroup: Bool {
-        groupCreatorIdentity.hasPrefix("*")
-    }
-
-    /// True if group is created by a gateway ID and if group is message storing
-    public var isMessageStoringGatewayGroup: Bool {
-        isGatewayGroup && name?.hasPrefix(Constants.messageStoringGatewayGroupPrefix) ?? false
-    }
-    
-    /// Returns true if me is group creator
-    @objc public var isSelfCreator: Bool {
-        (conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false)
-            && conversationContact == nil
-    }
-
-    /// Returns true, if I'm in the group
-    @objc public var isSelfMember: Bool {
-        isOwnGroup ||
-            (
-                (conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false)
-                    && state == .active
-            )
-    }
-    
-    /// Can I add new members
-    public var canAddMembers: Bool {
-        let maxGroupMembers: Int = Group.maxGroupMembers
-        
-        return isOwnGroup && members.count < maxGroupMembers
-    }
-    
-    public var canLeave: Bool {
-        isSelfMember && !isOwnGroup
-    }
-
-    public var canDissolve: Bool {
-        isOwnGroup
-    }
-    
-    /// Has the creator left the group?
-    public var didCreatorLeave: Bool {
-        !isMember(identity: groupCreatorIdentity)
-    }
-    
-    /// Only `true` if you left the group. `false` otherwise.
-    /// This includes if you were removed from the group by the creator.
-    ///
-    /// Is that really what you want? Probably you're looking for `isSelfMember`.
-    @objc public var didLeave: Bool {
-        state == .left
-    }
-
-    var didForcedLeave: Bool {
-        state == .forcedLeft
-    }
-    
-    @objc public var didSyncRequest: Bool {
-        lastSyncRequest != nil
-    }
-    
-    @objc public var groupID: Data {
-        groupIdentity.id
-    }
-    
-    @objc public var groupCreatorIdentity: String {
-        if let identity = conversationContact?.identity.string {
-            return identity
-        }
-        return myIdentityStore.identity
-    }
-
-    /// Creator of the group. It might not be part of the group anymore.
-    public var creator: Creator {
-        if conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false,
-           conversationContact == nil {
-            .me(myIdentityStore.identity)
-        }
-        else if let contact = conversationContact {
-            .contact(contact)
-        }
-        else {
-            .unknown
-        }
-    }
-    
-    @objc public var groupCreatorNickname: String? {
-        if let nickname = conversationContact?.publicNickname {
-            return nickname
-        }
-        return myIdentityStore.pushFromName
-    }
-    
-    /// Number of members including me
-    public var numberOfMembers: Int {
-        var membersCount = members.count
-        
-        if state == .active {
-            membersCount += 1
-        }
-        
-        return membersCount
-    }
-    
-    public var membersTitleSummary: String {
-        if numberOfMembers == 1 {
-            Group.oneMemberTitleString
-        }
-        else {
-            String.localizedStringWithFormat(
-                Group.multipleMemberTitleString,
-                numberOfMembers
-            )
-        }
-    }
-    
-    @objc public private(set) dynamic var name: String?
-        
-    /// Profile picture of group if there is any
-    @objc public private(set) dynamic var profilePicture: Data?
-    
-    @objc public var isNoteGroup: Bool {
-        allMemberIdentities.count == 1 && isSelfMember
-    }
-
-    @objc public private(set) var conversationCategory: ConversationCategory
-    
-    @objc public private(set) var conversationVisibility: ConversationVisibility
-    
-    /// A string with all members as comma separated list
-    ///
-    /// The order is the same as produced by `sortedMembers`
-    @objc public private(set) var membersList = ""
-    
-    /// Sorted list of group members
-    public private(set) var sortedMembers = [Member]()
-
-    /// All group member identities including me
-    @objc public var allMemberIdentities: Set<String> {
-        var identities = Set(members.map(\.identity.string))
-        if state == .active {
-            identities.insert(myIdentityStore.identity)
-        }
-        return identities
-    }
-    
-    /// All members that are active in this group
-    ///
-    /// This is useful to get all members that should receive a group message
-    var allActiveMemberIdentitiesWithoutCreator: [String] {
-        var identities: [String]!
-        identities = members
-            .filter { $0.state != kStateInvalid }
-            .map(\.identity.string)
-        return identities
-    }
-    
-    private(set) var lastPeriodicSync: Date?
 
     /// The order is as follows: creator (always), me (if I'm in the group and not the creator), all other members
     /// sorted (w/o creator)
@@ -466,7 +524,7 @@ public class Group: NSObject {
     /// `Common_CspFeatureMaskFlag`
     /// - Parameter mask: `Common_CspFeatureMaskFlag` to check for
     /// - Returns: `Contacts` supporting the `mask`
-    public func membersSupporting(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> [Contact] {
+    private func membersSupporting(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> [Contact] {
         var supportingMembers = [Contact]()
         for member in members {
             if FeatureMask.check(contact: member, for: mask) {
@@ -476,18 +534,18 @@ public class Group: NSObject {
         return supportingMembers
     }
     
-    /// Checks if at least one member of the group supports the given mask
-    /// - Parameter mask: `Common_CspFeatureMaskFlag` to check members for
-    /// - Returns: `true` if at least one member supports the given `mask`, `false` otherwise
-    public func hasAtLeastOneMemberSupporting(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> Bool {
-        !membersSupporting(mask).isEmpty
+    private func updateProfilePicture() {
+        profilePicture = resolveProfilePicture()
     }
     
-    /// Checks if *all* member of the group support the given mask
-    /// - Parameter mask: `Common_CspFeatureMaskFlag` to check members for
-    /// - Returns: `true` all member supports the given `mask`, `false` otherwise
-    public func allMembersSupport(_ mask: ThreemaProtocols.Common_CspFeatureMaskFlag) -> Bool {
-        membersSupporting(mask).count == members.count
+    private func resolveProfilePicture() -> UIImage {
+        if let groupImageData, let image = UIImage(data: groupImageData) {
+            usesNonGeneratedProfilePicture = true
+            return image
+        }
+        
+        usesNonGeneratedProfilePicture = false
+        return ProfilePictureGenerator.generateImage(for: isNoteGroup ? .noteGroup : .group, color: idColor)
     }
 
     // MARK: Comparing function
@@ -504,7 +562,9 @@ public class Group: NSObject {
             conversationGroupMyIdentity == object.conversationGroupMyIdentity &&
             conversationContact == object.conversationContact &&
             name == object.name &&
-            profilePicture == object.profilePicture &&
+            old_ProfilePicture == object.old_ProfilePicture &&
+            profilePicture.pngData() == object.profilePicture.pngData() &&
+            groupImageData == object.groupImageData &&
             lastUpdate == object.lastUpdate &&
             lastMessageDate == object.lastMessageDate &&
             conversationCategory == object.conversationCategory &&

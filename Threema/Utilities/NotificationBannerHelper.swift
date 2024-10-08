@@ -28,18 +28,27 @@ import ThreemaFramework
     @objc class func newBanner(baseMessage: BaseMessage) {
         DispatchQueue.main.async {
             // Reload CoreData object because of concurrency problem
-            let entityManager = EntityManager()
+            let businessInjector = BusinessInjector()
+            let entityManager = businessInjector.entityManager
             let message = entityManager.entityFetcher.getManagedObject(by: baseMessage.objectID) as! PreviewableMessage
 
-            var contactImageView: UIImageView?
+            let profileImageView = ProfilePictureImageView()
             var thumbnailImageView: UIImageView?
             
             var title = message.conversation.displayName
             
-            if let contactImage = AvatarMaker.shared().avatar(for: message.conversation, size: 56.0, masked: true) {
-                contactImageView = UIImageView(image: contactImage)
+            if message.conversation.isGroup() {
+                let group = businessInjector.groupManager.getGroup(conversation: baseMessage.conversation)
+                profileImageView.info = .group(group)
             }
-            
+            else if let contact = message.conversation.contact {
+                let businessContact = Contact(contactEntity: contact)
+                profileImageView.info = .contact(businessContact)
+            }
+            else {
+                profileImageView.info = .contact(nil)
+            }
+           
             if let imageMessageEntity = message as? ImageMessageEntity {
                 if let thumbnail = imageMessageEntity.thumbnail {
                     thumbnailImageView = getThumbnail(for: thumbnail.uiImage)
@@ -76,10 +85,10 @@ import ThreemaFramework
                 thumbnailImageView = nil
                 
                 if message.isGroupMessage {
-                    contactImageView = UIImageView(image: AvatarMaker.shared().unknownGroupImage())
+                    profileImageView.info = .group(nil)
                 }
                 else {
-                    contactImageView = UIImageView(image: AvatarMaker.shared().unknownPersonImage())
+                    profileImageView.info = .contact(nil)
                 }
             }
             
@@ -90,7 +99,7 @@ import ThreemaFramework
                 titleColor: Colors.text,
                 subtitleFont: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
                 subtitleColor: Colors.text,
-                leftView: contactImageView,
+                leftView: profileImageView,
                 rightView: thumbnailImageView,
                 style: .info,
                 colors: CustomBannerColors(),
@@ -227,11 +236,23 @@ import ThreemaFramework
         conversationManagedObjectID: NSManagedObjectID,
         title: String,
         body: String,
-        contactImage: UIImage,
         identifier: String
     ) {
         let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
         let bodyFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .subheadline)
+        
+        let businessInjector = BusinessInjector()
+        let profilePictureView = ProfilePictureImageView()
+        
+        if let conversation = businessInjector.entityManager.entityFetcher
+            .existingObject(with: conversationManagedObjectID) as? Conversation,
+            conversation.conversationCategory != .private,
+            let group = businessInjector.groupManager.getGroup(conversation: conversation) {
+            profilePictureView.info = .group(group)
+        }
+        else {
+            profilePictureView.info = .group(nil)
+        }
         
         let banner = FloatingNotificationBanner(
             title: title,
@@ -240,7 +261,7 @@ import ThreemaFramework
             titleColor: Colors.text,
             subtitleFont: UIFont.preferredFont(forTextStyle: .title1),
             subtitleColor: Colors.text,
-            leftView: UIImageView(image: contactImage),
+            leftView: profilePictureView,
             rightView: nil,
             style: .info,
             colors: CustomBannerColors(),
@@ -331,62 +352,6 @@ import ThreemaFramework
                     NotificationBannerQueue.default.removeBanner(banner)
                 }
             }
-        }
-    }
-    
-    @available(*, deprecated, message: "Use `NotificationPresenterWrapper` instead")
-    @objc class func newInfoToast(title: String, body: String) {
-        newToast(title: title, body: body, bannerStyle: .warning)
-    }
-    
-    @available(*, deprecated, message: "Use `NotificationPresenterWrapper` instead")
-    @objc class func newErrorToast(title: String, body: String) {
-        newToast(title: title, body: body, bannerStyle: .danger)
-    }
-    
-    @objc class func newSuccessToast(title: String, body: String) {
-        newToast(title: title, body: body, bannerStyle: .success)
-    }
-    
-    @available(*, deprecated, message: "Use `NotificationPresenterWrapper` instead")
-    private class func newToast(title: String, body: String, bannerStyle: BannerStyle) {
-        DispatchQueue.main.async {
-            let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
-            let bodyFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .subheadline)
-            
-            let banner = FloatingNotificationBanner(
-                title: title,
-                subtitle: body,
-                titleFont: UIFont.boldSystemFont(ofSize: titleFontDescriptor.pointSize),
-                titleColor: Colors.text,
-                subtitleFont: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                subtitleColor: Colors.white,
-                leftView: UIImageView(image: UIImage(systemName: "info.circle.fill")),
-                rightView: nil,
-                style: bannerStyle,
-                colors: CustomBannerColors()
-            )
-            
-            banner.titleLabel!.attributedText = NSAttributedString(
-                string: title,
-                attributes: [
-                    NSAttributedString.Key.foregroundColor: Colors.white as Any,
-                    NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: titleFontDescriptor.pointSize) as Any,
-                ]
-            )
-            banner.subtitleLabel!.attributedText = NSAttributedString(
-                string: body,
-                attributes: [
-                    NSAttributedString.Key.foregroundColor: Colors.white as Any,
-                    NSAttributedString.Key.font: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize) as Any,
-                ]
-            )
-            
-            banner.transparency = 1.0
-            banner.duration = 5.0
-            banner.subtitleLabel?.numberOfLines = 0
-            
-            banner.show()
         }
     }
 }

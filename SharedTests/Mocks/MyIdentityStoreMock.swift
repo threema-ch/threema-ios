@@ -114,4 +114,8 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     var revocationPasswordSetDate: Date!
 
     var revocationPasswordLastCheck: Date!
+    
+    var resolvedProfilePicture: UIImage!
+    
+    var resolvedGroupCallProfilePicture: UIImage!
 }

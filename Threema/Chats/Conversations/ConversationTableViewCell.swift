@@ -28,16 +28,16 @@ import UIKit
 
 extension ConversationTableViewCell {
     private enum Configuration {
-        /// The size of the avatar
-        static let avatarSize = 56.0
-        /// The maximal size of the avatar
-        static let maxAvatarSize = 70.0
+        /// The size of the profile picture
+        static let profilePictureSize = 56.0
+        /// The maximal size of the profile picture
+        static let maxProfilePictureSize = 70.0
         
         /// Content margins
         static let contentMargins = 8.0
         
-        /// Space between avatar and messageStack
-        static let avatarMessageSpace = 15.0
+        /// Space between profile picture and messageStack
+        static let profilePictureMessageSpace = 15.0
         
         /// Space between name and message stack
         static let nameMessageSpace = 3.0
@@ -66,9 +66,6 @@ extension ConversationTableViewCell {
         /// Icons stack view spacing
         static let iconsStackViewSpacing = 2.0
         
-        /// Size of Threema Type Icon
-        
-        static let typeIconSize = 20.0
         /// DisplayState image configuration
         static let displayStateConfiguration = UIImage.SymbolConfiguration(
             textStyle: Configuration.dateDraftTextStyle,
@@ -114,7 +111,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private var conversationObservers = [NSKeyValueObservation]()
     private var lastMessageObservers = [NSKeyValueObservation]()
-    private var groupImageObservers = [NSKeyValueObservation]()
     private var contactObservers = [NSKeyValueObservation]()
     private var groupCallButtonBannerObserver: AnyCancellable?
     
@@ -141,39 +137,22 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         for: Configuration.lastMessageStateTrailingDistance
     )
     
-    /// The scaled size of the avatar
-    private lazy var scaledAvatarSize: CGFloat = {
+    /// The scaled size of the profile picture
+    private lazy var scaledProfilePictureSize: CGFloat = {
         // Adapt for content size categories
-        let scaledSize = constantScaler.scaledValue(for: Configuration.avatarSize)
-        return scaledSize > Configuration.maxAvatarSize ? Configuration.maxAvatarSize : scaledSize
+        let scaledSize = constantScaler.scaledValue(for: Configuration.profilePictureSize)
+        return scaledSize > Configuration.maxProfilePictureSize ? Configuration.maxProfilePictureSize : scaledSize
     }()
     
     // MARK: - Views
     
-    /// Avatar of contact or group
-    private lazy var avatarImageView: UIImageView = {
-        let imageView = UIImageView(image: BundleUtil.imageNamed("Unknown"))
+    /// Profile picture of contact or group
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let imageView = ProfilePictureImageView()
         
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = true
-        
-        imageView.accessibilityIgnoresInvertColors = true
-        
-        return imageView
-    }()
-    
-    private lazy var threemaTypeImageView: UIImageView = {
-        let imageView = UIImageView(image: ThreemaUtility.otherThreemaTypeIcon)
-        
-        imageView.widthAnchor.constraint(equalToConstant: Configuration.typeIconSize).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: Configuration.typeIconSize).isActive = true
+        imageView.isAccessibilityElement = false
 
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = true
-        imageView.accessibilityIgnoresInvertColors = true
-        
         return imageView
     }()
     
@@ -409,11 +388,23 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 return
             }
             
-            if conversation.isGroup() {
-                group = businessInjector.groupManager.getGroup(conversation: conversation)
+            if conversation.isGroup(),
+               let businessGroup = businessInjector.groupManager.getGroup(conversation: conversation) {
+                profilePictureView.info = .group(businessGroup)
+                group = businessGroup
+            }
+            else if let distributionList = conversation.distributionList {
+                let businessDistributionList = DistributionList(distributionListEntity: distributionList)
+                profilePictureView.info = .distributionList(businessDistributionList)
+            }
+            else if let contactEntity = conversation.contact {
+                let businessContact = Contact(contactEntity: contactEntity)
+                profilePictureView.info = .contact(businessContact)
+                contact = businessContact
             }
             
             updateCell()
+            
             Task { @MainActor in
                 await updateGroupCallButton(
                     GlobalGroupCallManagerSingleton.shared.globalGroupCallObserver
@@ -424,7 +415,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private var group: Group?
-
+    private var contact: Contact?
     private(set) var navigationController: UINavigationController?
     
     private var groupCallGroupModel: GroupCallThreemaGroupModel?
@@ -444,13 +435,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         dndImageView.isHidden = true
         pinImageView.isHidden = true
         groupCallJoinButton.isHidden = true
-                
-        contentView.addSubview(avatarImageView)
+        
+        contentView.addSubview(profilePictureView)
         contentView.addSubview(nameDateLastMessageStateStackView)
         contentView.addSubview(previewStackView)
         contentView.addSubview(iconsStackView)
         contentView.addSubview(badgeCountView)
-        contentView.addSubview(threemaTypeImageView)
 
         let margins = contentView.layoutMarginsGuide
         
@@ -469,21 +459,27 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 equalTo: dateLastMessageStateContainerView.trailingAnchor,
                 constant: -statusSymbolXCenterTrailingDistance
             ),
+        ])
+                                    
+        NSLayoutConstraint.activate([
+            profilePictureView.leadingAnchor.constraint(equalTo: margins.leadingAnchor),
+            profilePictureView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            profilePictureView.heightAnchor.constraint(equalToConstant: scaledProfilePictureSize),
             
-            // Avatar
-            avatarImageView.leadingAnchor.constraint(equalTo: margins.leadingAnchor),
-            avatarImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            avatarImageView.heightAnchor.constraint(equalToConstant: scaledAvatarSize),
-            avatarImageView.widthAnchor.constraint(equalTo: avatarImageView.heightAnchor),
-            
+            // Profile picture badges
+            badgeCountView.topAnchor.constraint(equalTo: profilePictureView.topAnchor),
+            badgeCountView.trailingAnchor.constraint(equalTo: profilePictureView.trailingAnchor),
+        ])
+        
+        NSLayoutConstraint.activate([
             // Name, Date, Message State
+            nameDateLastMessageStateStackView.leadingAnchor.constraint(
+                equalTo: profilePictureView.trailingAnchor,
+                constant: Configuration.profilePictureMessageSpace
+            ),
             nameDateLastMessageStateStackView.topAnchor.constraint(
                 equalTo: contentView.topAnchor,
                 constant: Configuration.contentMargins
-            ),
-            nameDateLastMessageStateStackView.leadingAnchor.constraint(
-                equalTo: avatarImageView.trailingAnchor,
-                constant: Configuration.avatarMessageSpace
             ),
             nameDateLastMessageStateStackView.trailingAnchor.constraint(equalTo: margins.trailingAnchor),
             
@@ -493,8 +489,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 constant: Configuration.nameMessageSpace
             ),
             previewStackView.leadingAnchor.constraint(
-                equalTo: avatarImageView.trailingAnchor,
-                constant: Configuration.avatarMessageSpace
+                equalTo: profilePictureView.trailingAnchor,
+                constant: Configuration.profilePictureMessageSpace
             ),
             previewStackView.bottomAnchor.constraint(
                 lessThanOrEqualTo: contentView.bottomAnchor,
@@ -516,13 +512,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             iconsStackView.bottomAnchor.constraint(
                 equalTo: previewStackView.bottomAnchor
             ),
-            
-            // Avatar badges
-            badgeCountView.topAnchor.constraint(equalTo: avatarImageView.topAnchor),
-            badgeCountView.trailingAnchor.constraint(equalTo: avatarImageView.trailingAnchor),
-            
-            threemaTypeImageView.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor),
-            threemaTypeImageView.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
         ])
         
         if UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory {
@@ -623,8 +612,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         updateTypingIndicator()
         updateDndImage()
         updatePinImage()
-        
-        threemaTypeImageView.image = ThreemaUtility.otherThreemaTypeIcon
     }
     
     func height() -> CGFloat {
@@ -646,7 +633,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         
         Task { @MainActor in
-            let leftSeparatorInset = avatarImageView.frame.size.width + Configuration.avatarMessageSpace
+            let leftSeparatorInset = profilePictureView.frame.size.width + Configuration.profilePictureMessageSpace
             separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)
         }
     }
@@ -678,15 +665,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         updatePinImage()
                 
-        loadAvatar()
-        
-        if !conversation.isGroup(),
-           let contact = conversation.contact {
-            threemaTypeImageView.isHidden = !contact.showOtherThreemaTypeIcon
-        }
-        else {
-            threemaTypeImageView.isHidden = true
-        }
+        updateSeparatorInset()
         
         if conversation.isGroup(), businessInjector.settingsStore.enableThreemaGroupCalls {
             updateGroupCallButton()
@@ -1083,30 +1062,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         accessibilityLabel = accessibilityText
     }
-    
-    private func loadAvatar() {
-        
-        AvatarMaker.shared().avatar(
-            for: conversation,
-            size: scaledAvatarSize,
-            masked: true
-        ) { avatarImage, objectID in
-            
-            guard objectID == self.conversation?.objectID else {
-                return
-            }
-            
-            Task { @MainActor in
-                if let avatarImage {
-                    self.avatarImageView.image = avatarImage
-                }
-                else {
-                    self.avatarImageView.image = BundleUtil.imageNamed("Unknown")
-                }
-                self.updateSeparatorInset()
-            }
-        }
-    }
 
     private func getPushSetting() -> PushSetting {
         if let group {
@@ -1208,8 +1163,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
 
         observeLastMessageProperties()
         
-        observeGroupImageProperties()
-        
         observeConversation(\.displayName, callOnCreation: false) { [weak self] in
             self?.updateTitleLabel()
         }
@@ -1217,20 +1170,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         observeConversation(\.groupName, callOnCreation: false) { [weak self] in
             self?.updateTitleLabel()
         }
-        observeConversation(\.groupImage, callOnCreation: true) { [weak self] in
-            self?.loadAvatar()
-            self?.removeGroupImageObservers()
-            self?.observeGroupImageProperties()
-        }
-
-        observeContact(\.imageData, callOnCreation: false) { [weak self] in
-            self?.loadAvatar()
-        }
-
-        observeContact(\.contactImage, callOnCreation: false) { [weak self] in
-            self?.loadAvatar()
-        }
-
+        
         if businessInjector.settingsStore.enableThreemaGroupCalls {
             // This will be automatically removed on de-init
             startGroupCallObserver()
@@ -1298,15 +1238,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
     }
     
-    private func observeGroupImageProperties() {
-        if let groupImage = conversation?.groupImage as? ImageData {
-            observeGroupImage(groupImage, keyPath: \.data, callOnCreation: false) {
-                AvatarMaker.shared().resetContext()
-                self.loadAvatar()
-            }
-        }
-    }
-    
     /// Helper to add observers to the `conversation` property
     ///
     /// All observers are stored in the `observers` property.
@@ -1360,32 +1291,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
 
         lastMessageObservers.append(observer)
     }
-    
-    /// Helper to add observers to the `groupImage` property
-    ///
-    /// All observers are stored in the `observers` property.
-    ///
-    /// - Parameters:
-    ///   - groupImage: ImageData set as `Conversation.groupImage`
-    ///   - keyPath: Key path depending of type `groupImage` to observe
-    ///   - callOnCreation: Should the handler be called during observer creation?
-    ///   - changeHandler: Handler called on each observed change.
-    ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeGroupImage(
-        _ groupImage: ImageData,
-        keyPath: KeyPath<ImageData, some Any>,
-        callOnCreation: Bool = true,
-        changeHandler: @escaping () -> Void
-    ) {
-        let options: NSKeyValueObservingOptions = callOnCreation ? .initial : []
-
-        let observer = groupImage.observe(keyPath, options: options) { _, _ in
-            // Because `changeHandler` updates UI elements we need to ensure that it runs on the main queue
-            DispatchQueue.main.async(execute: changeHandler)
-        }
-
-        groupImageObservers.append(observer)
-    }
 
     /// Helper to add observers to the `contact` property
     ///
@@ -1419,7 +1324,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         removeConversationObservers()
         removeContactObservers()
         removeLastMessageObservers()
-        removeGroupImageObservers()
     }
     
     private func removeConversationObservers() {
@@ -1440,16 +1344,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         // Remove them so we don't reference old observers
         lastMessageObservers.removeAll()
-    }
-    
-    private func removeGroupImageObservers() {
-        // Invalidate all observers
-        for observer in groupImageObservers {
-            observer.invalidate()
-        }
-        
-        // Remove them so we don't reference old observers
-        groupImageObservers.removeAll()
     }
     
     private func removeContactObservers() {

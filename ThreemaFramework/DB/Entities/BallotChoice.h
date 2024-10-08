@@ -27,14 +27,17 @@
 
 @interface BallotChoice : TMAManagedObject
 
+// Attributes
 @property (nonatomic, retain) NSDate * createDate;
 @property (nonatomic, retain) NSNumber * id;
 @property (nonatomic, retain) NSDate * modifyDate;
 @property (nonatomic, retain) NSString * name;
 @property (nonatomic, retain) NSNumber * orderPosition;
+@property (nonatomic, retain) NSNumber *totalVotes;
+
+// Relationships
 @property (nonatomic, retain) Ballot *ballot;
 @property (nonatomic, retain) NSSet *result;
-@property (nonatomic, retain) NSNumber *totalVotes;
 @end
 
 @interface BallotChoice (CoreDataGeneratedAccessors)

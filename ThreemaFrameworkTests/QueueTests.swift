@@ -53,4 +53,29 @@ class QueueTests: XCTestCase {
 
         XCTAssertEqual(queue.list.count, 0)
     }
+    
+    func testRemoveAllWhere() {
+        var expectedItems = [Int]()
+        var expectedRemovedItems = [Int]()
+        
+        var queue = Queue<Int>()
+        
+        for index in 1...10 {
+            queue.enqueue(index)
+            
+            if index % 2 == 0 {
+                expectedRemovedItems.append(index)
+            }
+            else {
+                expectedItems.append(index)
+            }
+        }
+        
+        XCTAssertEqual(queue.list.count, expectedItems.count + expectedRemovedItems.count)
+        
+        let actualRemovedItems = queue.removeAll(where: { $0 % 2 == 0 })
+        
+        XCTAssertEqual(actualRemovedItems, expectedRemovedItems)
+        XCTAssertEqual(queue.list, expectedItems)
+    }
 }

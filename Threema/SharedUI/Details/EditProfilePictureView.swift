@@ -20,42 +20,39 @@
 
 import UIKit
 
-// MARK: - EditAvatarView.Configuration
+// MARK: - EditProfilePictureView.Configuration
 
-extension EditAvatarView {
+extension EditProfilePictureView {
     private struct Configuration: DetailsConfiguration {
         /// Spacing between buttons at the bottom
         let buttonSpacing: CGFloat = 16
         
-        /// Spacing between avatar image and buttons
+        /// Spacing between profile picture and buttons
         let verticalSpacing: CGFloat = 8
         
         let bottomSpacing: CGFloat = 16
         
-        let avatarJPEGCompressionQuality: CGFloat = 0.7
+        let profilePictureJPEGCompressionQuality: CGFloat = 0.7
     }
 }
 
-extension EditAvatarView {
-    /// The expected avatar size to provide during initialization and on closure calls
-    static var avatarImageSize: CGFloat {
-        EditAvatarView.configuration.avatarSize
-    }
-}
-
-/// Show and change a provided avatar
+/// Show and change a provided profile picture
 ///
 /// Changes are reported to the provided closure which needs to take care of storing the new image.
 ///
 /// Changes are only possible if editing is allowed through the initializer.
 /// You tell if the image is a default (and cannot be deleted) through the initializer and callback closure.
-class EditAvatarView: UIStackView {
+class EditProfilePictureView: UIStackView {
     
     /// Closure called on every image change
-    /// - Parameter newJPEGImageData: Cropped and resized JPEG image data of new chosen avatar.
+    /// - Parameter newJPEGImageData: Cropped and resized JPEG image data of new chosen profile picture.
     ///                               `nil` if image was deleted.
-    /// - Returns: An image for the new avatar and if it is a default image (thus cannot be deleted)
-    typealias ImageUpdated = (_ newJPEGImageData: Data?) -> (newAvatarImage: UIImage?, isDefaultImage: Bool)
+    /// - Returns: An image for the new profile picture and if it is a default image (thus cannot be deleted)
+    typealias ImageUpdated = (_ newJPEGImageData: Data?) -> (newProfilePicture: UIImage?, isDefaultImage: Bool)
+    
+    enum ConversationType {
+        case contact, group, distributionList
+    }
     
     // MARK: - Private properties
     
@@ -65,13 +62,14 @@ class EditAvatarView: UIStackView {
     /// Temp anchor for popovers with picker & cropper views
     private var presentingRect: CGRect = .zero
     
-    private var avatarImage: UIImage? {
+    private let conversationType: ConversationType
+    
+    private var profilePicture: UIImage? {
         didSet {
-            guard avatarImage != oldValue else {
+            guard profilePicture != oldValue else {
                 return
             }
-            
-            updateAvatarImageView()
+            updateProfileImageView()
         }
     }
     
@@ -91,7 +89,7 @@ class EditAvatarView: UIStackView {
             return
         }
         
-        (strongSelf.avatarImage, strongSelf.isDefaultImage) = strongSelf.imageUpdated(nil)
+        (strongSelf.profilePicture, strongSelf.isDefaultImage) = strongSelf.imageUpdated(nil)
     }
     
     private let imageUpdated: ImageUpdated
@@ -101,27 +99,19 @@ class EditAvatarView: UIStackView {
     // MARK: Subviews & layout
     
     private lazy var deleteButtonConstraints: [NSLayoutConstraint] = [
-        deleteButton.topAnchor.constraint(equalTo: avatarImageView.topAnchor),
-        deleteButton.trailingAnchor.constraint(equalTo: avatarImageView.trailingAnchor),
+        deleteButton.topAnchor.constraint(equalTo: profilePictureView.topAnchor),
+        deleteButton.trailingAnchor.constraint(equalTo: profilePictureView.trailingAnchor),
     ]
-    
+
     private lazy var deleteButton = OpaqueDeleteButton(action: deleteAction)
     
-    private lazy var avatarImageView: UIImageView = {
-        let imageView = UIImageView(image: BundleUtil.imageNamed("Unknown"))
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let profilePictureView = ProfilePictureImageView()
+        profilePictureView.heightAnchor
+            .constraint(equalToConstant: EditProfilePictureView.configuration.profilePictureSize).isActive = true
         
-        imageView.contentMode = .scaleAspectFit
-        // Aspect ratio: 1:1
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        // Fixed avatar size
-        imageView.heightAnchor.constraint(equalToConstant: EditAvatarView.configuration.avatarSize).isActive = true
-        
-        // Needed such that delete button gets tap events
-        imageView.isUserInteractionEnabled = true
-        
-        imageView.accessibilityIgnoresInvertColors = true
-        
-        return imageView
+        profilePictureView.translatesAutoresizingMaskIntoConstraints = false
+        return profilePictureView
     }()
     
     private lazy var takePictureButton = CircleButton(
@@ -150,7 +140,7 @@ class EditAvatarView: UIStackView {
         }
         
         stackView.axis = .horizontal
-        stackView.spacing = EditAvatarView.configuration.buttonSpacing
+        stackView.spacing = EditProfilePictureView.configuration.buttonSpacing
         stackView.distribution = .equalSpacing
         
         return stackView
@@ -184,37 +174,39 @@ class EditAvatarView: UIStackView {
     private lazy var accessibilityDeleteAction = UIAccessibilityCustomAction(
         name: BundleUtil.localizedString(forKey: "delete"),
         target: self,
-        selector: #selector(accessibilityDeleteAvatar)
+        selector: #selector(accessibilityDeleteProfilePicture)
     )
     
     // MARK: - Lifecycle
     
-    /// Create a new view to edit the provided avatar
+    /// Create a new view to edit the provided profile picture
     ///
     /// - Parameters:
     ///   - viewController: View controller to present the pickers on
-    ///   - avatarImage:    Avatar image to show initially
+    ///   - profilePicture: Profile picture to show initially
     ///   - isDefaultImage: Is the provided image a default, that cannot be deleted
-    ///   - isEditable:     Can the avatar actually be changed (including deletion)
-    ///   - imageUpdated:   Closure called on every avatar image change
+    ///   - isEditable:     Can the profile picture actually be changed (including deletion)
+    ///   - imageUpdated:   Closure called on every profile picture image change
     init(
         in viewController: UIViewController,
-        avatarImage: UIImage?,
+        profilePicture: UIImage?,
         isDefaultImage: Bool,
         isEditable: Bool = true,
+        conversationType: ConversationType,
         imageUpdated: @escaping ImageUpdated
     ) {
         
         self.presentingViewController = viewController
-        self.avatarImage = avatarImage
+        self.profilePicture = profilePicture
         self.isEditable = isEditable
         self.isDefaultImage = isDefaultImage
         self.imageUpdated = imageUpdated
+        self.conversationType = conversationType
         
         super.init(frame: .zero)
         
         configureStack()
-        updateAvatarImageView()
+        updateProfileImageView()
         updateDeleteButton()
     }
     
@@ -228,23 +220,23 @@ class EditAvatarView: UIStackView {
     private func configureStack() {
         // We initially hide the delete button to get a consistent state
         deleteButton.isHidden = true
-        avatarImageView.addSubview(deleteButton)
         deleteButton.translatesAutoresizingMaskIntoConstraints = false
         
-        addArrangedSubview(avatarImageView)
-        
+        profilePictureView.addSubview(deleteButton)
+        addArrangedSubview(profilePictureView)
+
         if isEditable {
             addArrangedSubview(buttonStack)
         }
         
         axis = .vertical
         alignment = .center
-        spacing = EditAvatarView.configuration.verticalSpacing
+        spacing = EditProfilePictureView.configuration.verticalSpacing
         
         directionalLayoutMargins = NSDirectionalEdgeInsets(
             top: 0,
             leading: 0,
-            bottom: EditAvatarView.configuration.bottomSpacing,
+            bottom: EditProfilePictureView.configuration.bottomSpacing,
             trailing: 0
         )
         isLayoutMarginsRelativeArrangement = true
@@ -262,13 +254,20 @@ class EditAvatarView: UIStackView {
     
     // MARK: - Update
     
-    private func updateAvatarImageView() {
-        guard avatarImage != nil else {
-            avatarImageView.image = BundleUtil.imageNamed("Unknown")
+    private func updateProfileImageView() {
+        guard let profilePicture else {
+            switch conversationType {
+            case .contact:
+                profilePictureView.info = .edit(ProfilePictureGenerator.unknownContactImage)
+            case .group:
+                profilePictureView.info = .edit(ProfilePictureGenerator.unknownGroupImage)
+            case .distributionList:
+                profilePictureView.info = .edit(ProfilePictureGenerator.unknownDistributionListImage)
+            }
             return
         }
         
-        avatarImageView.image = avatarImage
+        profilePictureView.info = .edit(profilePicture)
     }
     
     private func updateDeleteButton() {
@@ -337,7 +336,7 @@ class EditAvatarView: UIStackView {
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
             guard isEditable else {
-                // No actions should be available if we cannot edit the avatar
+                // No actions should be available if we cannot edit the profile picture
                 return nil
             }
             
@@ -365,7 +364,7 @@ class EditAvatarView: UIStackView {
         return true
     }
     
-    @objc private func accessibilityDeleteAvatar() -> Bool {
+    @objc private func accessibilityDeleteProfilePicture() -> Bool {
         deleteAction(deleteButton)
         return true
     }
@@ -373,7 +372,7 @@ class EditAvatarView: UIStackView {
 
 // MARK: - UINavigationControllerDelegate, UIImagePickerControllerDelegate
 
-extension EditAvatarView: UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+extension EditProfilePictureView: UINavigationControllerDelegate, UIImagePickerControllerDelegate {
     func imagePickerController(
         _ picker: UIImagePickerController,
         didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
@@ -415,7 +414,7 @@ extension EditAvatarView: UINavigationControllerDelegate, UIImagePickerControlle
 
 // MARK: - RSKImageCropViewControllerDelegate
 
-extension EditAvatarView: RSKImageCropViewControllerDelegate {
+extension EditProfilePictureView: RSKImageCropViewControllerDelegate {
     func imageCropViewController(
         _ controller: RSKImageCropViewController,
         didCropImage croppedImage: UIImage,
@@ -425,9 +424,9 @@ extension EditAvatarView: RSKImageCropViewControllerDelegate {
     
         let scaledImage = MediaConverter.scale(croppedImage, toMaxSize: CGFloat(kContactImageSize))
         let jpegImageData = scaledImage?
-            .jpegData(compressionQuality: EditAvatarView.configuration.avatarJPEGCompressionQuality)
+            .jpegData(compressionQuality: EditProfilePictureView.configuration.profilePictureJPEGCompressionQuality)
         
-        (avatarImage, isDefaultImage) = imageUpdated(jpegImageData)
+        (profilePicture, isDefaultImage) = imageUpdated(jpegImageData)
         
         controller.dismiss(animated: true)
     }

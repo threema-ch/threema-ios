@@ -29,7 +29,10 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     // This must be initialized lazy, because `BusinessInjector` is used in `AppMigration` and
     // the migration of files (see `AppFileMigration.run()`) must be completed before the `TaskManager`
     // is initialized!
-    private lazy var taskManager: TaskManagerProtocol = TaskManager(backgroundEntityManager: backgroundEntityManager)
+    private lazy var taskManager: TaskManagerProtocol = TaskManager(
+        backgroundEntityManager: backgroundEntityManager,
+        serverConnector: serverConnector
+    )
     // Will be used for none public services, that must be running in the background anyway
     private let backgroundEntityManager: EntityManager
 
@@ -138,7 +141,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             entityManager: entityManager
         )
 
-    public private(set) lazy var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
+    @objc public private(set) lazy var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
 
     public lazy var unreadMessages: UnreadMessagesProtocol = UnreadMessages(
         entityManager: entityManager,

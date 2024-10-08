@@ -29,8 +29,12 @@ import TipKit
 
     @objc public static func configureTips() {
         do {
-            /// Comment in the line below for testing
-            // try Tips.resetDatastore()
+            // Check for reset
+            if UserSettings.shared().resetTipKitOnNextLaunch {
+                try Tips.resetDatastore()
+                UserSettings.shared().resetTipKitOnNextLaunch = false
+            }
+            
             try Tips.configure()
         }
         catch {

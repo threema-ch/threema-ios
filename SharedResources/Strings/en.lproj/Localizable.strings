@@ -37,9 +37,6 @@
 "webrtc_diagnostics.copy" = "Copy to clipboard done";
 "webrtc_diagnostics.done" = "Done. If you experience problems with call connection build-up, please send this output to Threema support.";
 
-/* Privacy Policy */
-"privacy_poliy_url" = "https://threema.ch/en/privacy";
-
 /* MWPhotoBrowser */
 "mwphotobrowser_select" = "Select";
 "mwphotobrowser_select_all" = "Select All";
@@ -338,7 +335,7 @@
 "record_audio" = "Record Audio";
 "record_continue" = "Continue Audio Recording";
 "scan_qr" = "Scan QR code";
-"share_file" = "Share File";
+"share_file" = "Share File or Contact";
 "add_item_caption" = "Add Caption";
 "add_items_caption" = "Add Captions";
 "send_item_immediately_photo" = "Send Photo";
@@ -512,13 +509,12 @@
 "threema_type_icon_work_accessibility_label" = "Work contact";
 "threema_type_icon_private_accessibility_label" = "Private contact";
 
-"delete_contact_group_exists_title" = "Unable to Delete Contact";
-"delete_contact_group_exists_message_single" = "“%@“ is still member of a group. Remove contact from group, or delete group.";
-"delete_contact_group_exists_message_multiple" = "“%@“ is still member of %d groups. Remove contact from groups, or delete groups.";
-"delete_contact_group_exists_show_contact_button" = "Show Contact";
 "delete_contact_existing_conversation_title" = "Delete “%@”?";
+"delete_contact_existing_conversation_is_group_member_title" = "The individual chat with “%@” will be deleted, but they will remain a member of groups. Delete “%@”?";
 "delete_contact_existing_conversation_button" = "Delete Contact + Chat History";
+"delete_contact_is_group_member_title" = "“%@” remains a member of groups. Delete “%@”?";
 "delete_contact_confirmation_with_exclusion_message" = "Delete “%@“ and exclude contact from synchronization?";
+"delete_contact_is_group_member_title_confirmation_with_exclusion_message" = "“%@” remains a member of groups. Delete “%@” and exclude them from synchronization?";
 "delete_contact_button" = "Delete Contact";
 "delete_contact_confirmation_with_exclusion_button" = "Delete + Exclude Contact";
 "exclude_deleted_id_title" = "Exclude Threema ID of “%@“ from synchronization?";
@@ -544,6 +540,10 @@
 "setup_title_text" = "New to %@?";
 "restore_id_export" = "Restore exported ID";
 "id_exists" = "The Threema ID previously used on this device (%@) is still present. Would you like to restore this ID?";
+
+"contact_support" = "Contact Support";
+"contact_support_mail_subject" = "Too many IDs created for this purchase";
+"contact_support_mail_message" = "Dear %@ team,\n\nGenerating a new Threema ID fails and returns this error code:\n%@\n\nBest,";
 
 "welcome" = "Welcome to %@";
 "move_your_finger" = "Move your finger on the screen to generate a new Threema ID.";
@@ -712,6 +712,8 @@
 "current_position" = "position";
 "in_reply_to" = "in reply to";
 "draft" = "Draft";
+"draft_type_quote" = "Quote";
+"draft_type_edit" = "Edit";
 "new_message_accessibility" = "New message: ";
 "quote_interaction_hint" = "Jumps to quoted message";
 
@@ -729,6 +731,12 @@
 "threema_channel_intro" = "Add Threema Channel to your contacts?";
 "threema_channel_info" = "Threema Channel provides you with news about all things Threema.";
 "threema_channel_failed" = "Unable to add Threema Channel.";
+
+/* Threema Work Channel */
+"threema_work_channel_intro" = "Add the Threema Work Channel to your contacts?";
+"threema_work_channel_info" = "The Threema Work Channel provides you with news about all things Threema Work.";
+"threema_work_channel_failed" = "Unable to add the Threema Work Channel.";
+
 
 /* Push decryption */
 "decryption_push_reply" = "Reply";
@@ -1074,7 +1082,7 @@ When using Threema Safe, you can restore your Threema ID, contacts and groups in
 "restore_option_id" = "Restore only your ID";
 "restore_option_id_keep_data" = "Restore your exported Threema ID, and keep the data (chats, contacts, groups, etc.) stored on this device";
 "backup_faq_link_text" = "Learn more about backups in %@";
-"forgot_password_link_text" = "Forgot your password?";
+"restore_option_help_link_text" = "Help";
 
 "restore_option_data_description" = "On this device, %@ data (chats, contacts, groups, etc.) is present.";
 "restore_option_data_keep_data" = "Keep Local Data";
@@ -1119,6 +1127,7 @@ When using Threema Safe, you can restore your Threema ID, contacts and groups in
 
 "settings_list_invite_a_friend_title" = "Invite a Friend";
 "settings_list_threema_channel_title" = "Threema Channel";
+"settings_list_threema_work_channel_title" = "Threema Work Channel";
 
 "settings_list_rate" = "Rate %@";
 
@@ -1253,7 +1262,7 @@ When using Threema Safe, you can restore your Threema ID, contacts and groups in
 "delete_messages_confirm" = "Do you want to permanently delete all messages older than %@?";
 "delete_messages_confirm_all" = "Do you want to permanently delete all messages?";
 "delete_messages_explain" = "Messages of any kind will be deleted: text and voice messages, media, files, polls, etc.";
-"automatic_delete_explain" = "Use automatic deletion of messages and media to free up disk space. Open polls and note groups are excluded from automatic deletion.";
+"automatic_delete_explain" = "Use the automatic deletion of messages and media to free up disk space. Open polls, starred messages, and the content of note groups are excluded from automatic deletion.";
 "automatic_delete_on_confirmation_title" = "Turn on automatic deletion?";
 "automatic_delete_off_confirmation_title" = "Turn off automatic deletion?";
 // Placeholder %@ will be replaced by: one_year, six_months, three_months, one_month, one_week
@@ -1480,6 +1489,16 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "could_not_add_all_items_memory_constrained_title" = "Please Use the App";
 "could_not_add_all_items_memory_constrained_message" = "For technical reasons, files over a certain size can only be sent in the app.";
 "image_preview_cell_cannot_preview" = "Cannot display preview.";
+
+// Profile Synchronization
+"sync_error_title" = "Profile Synchronization Failed";
+"sync_error_general_message" = "Please check your Internet connection and try again.";
+"sync_error_same_transaction_error" = "The profile is already being synchronized on another device. Please wait until the synchronization is complete. Changes on this device will be discarded.";
+
+"syncing_profile" = "Synchronizing…";
+
+"incoming_profile_sync_title" = "Profile Synchronized";
+"incoming_profile_sync_message" = "Profile changes from another device applied";
 
 // Share Extension
 "finished_sending_title" = "Sending completed";
@@ -1740,6 +1759,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "notification_deleted_messages_count" = "%d Messages Deleted";
 
 "notification_cannot_play_video" = "Unable to Play Video";
+"notification_recording_too_long" = "Recording Exceeded Max Length";
 
 "notification_call_failed_connected" = "Connection Lost";
 "notification_call_failed_not_connected" = "Establishing Connection Failed";

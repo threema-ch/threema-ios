@@ -155,7 +155,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
-        entityManager.entityDestroyer.deleteObject(object: ballot)
+        entityManager.entityDestroyer.delete(ballot: ballot)
 
         // Decode:
         let expect = expectation(description: "Decode and create ballot")

@@ -24,7 +24,6 @@ import ThreemaFramework
 import WebRTC
 
 class CallViewController: UIViewController {
-    @IBOutlet private var backgroundImage: UIImageView!
     @IBOutlet private var contentView: UIView!
     @IBOutlet private var contactLabel: UILabel!
     @IBOutlet private var verificationLevel: UIImageView!
@@ -65,6 +64,12 @@ class CallViewController: UIViewController {
     @IBOutlet var phoneButtonsGradientView: UIView!
     @IBOutlet var callInfoGradientView: UIView!
 
+    private lazy var profilePictureView: ProfilePictureImageView = {
+        let profilePictureView = ProfilePictureImageView(typeIconConfiguration: .small)
+        profilePictureView.translatesAutoresizingMaskIntoConstraints = false
+        return profilePictureView
+    }()
+    
     var contactIdentity: String? {
         didSet {
             let entityManager = EntityManager()
@@ -283,6 +288,15 @@ class CallViewController: UIViewController {
                 }
             }
         }
+        
+        contentView.insertSubview(profilePictureView, at: 0)
+        
+        NSLayoutConstraint.activate([
+            profilePictureView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            profilePictureView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            profilePictureView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.8),
+
+        ])
         
         enterForegroundObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.willEnterForegroundNotification,
@@ -528,12 +542,14 @@ extension CallViewController {
     
     private func setupView() {
         contactLabel.text = contact?.displayName
+        contentView.backgroundColor = .black
         
-        backgroundImage.contentMode = contact?.isProfilePictureSet() ?? false ? .scaleAspectFill : .scaleAspectFit
         if let contact {
-            setBackgroundForContact(contact: contact)
+            let businessContact = Contact(contactEntity: contact)
+            profilePictureView.info = .contact(businessContact)
+            showProfilePicture(contact: contact)
         }
-        backgroundImage.backgroundColor = Colors.black
+        
         verificationLevel.image = contact?.verificationLevelImage()
 
         if isTesting == false {
@@ -648,17 +664,8 @@ extension CallViewController {
         }
     }
     
-    func setBackgroundForContact(contact: ContactEntity) {
-        guard let avatarImage = AvatarMaker.shared().callBackground(for: contact) else {
-            DDLogError("Could not create avatar image")
-            return
-        }
-        if contact.isProfilePictureSet() {
-            backgroundImage.image = blurImage(image: avatarImage, blurRadius: 4.0)
-        }
-        else {
-            backgroundImage.image = avatarImage
-        }
+    private func showProfilePicture(contact: ContactEntity) {
+        profilePictureView.isHidden = false
     }
     
     private func updateView() {
@@ -872,21 +879,15 @@ extension CallViewController {
         localVideoView?.isHidden = false
         remoteVideoView?.isHidden = false
         
-        var meImage = AvatarMaker.shared().unknownPersonImage()
-        if let profilePicture = MyIdentityStore.shared()?.profilePicture {
-            if let data = profilePicture["ProfilePicture"] {
-                meImage = UIImage(data: data as! Data)
-            }
-        }
-        
+        let meImage = MyIdentityStore.shared().resolvedProfilePicture
         let meImageView = UIImageView(image: meImage)
         meImageView.contentMode = .scaleAspectFill
         embedView(meImageView, into: localVideoView)
         
         let remoteImageView = UIImageView()
         if let contact {
-            remoteImageView.image = AvatarMaker.shared()
-                .avatar(for: contact, size: remoteVideoView.frame.size.width, masked: false)
+            let businessContact = Contact(contactEntity: contact)
+            remoteImageView.image = businessContact.profilePicture
         }
         remoteImageView.contentMode = .scaleAspectFill
         embedView(remoteImageView, into: remoteVideoView)
@@ -894,7 +895,8 @@ extension CallViewController {
     
     private func startLocalVideo(useBackCamera: Bool = false, switchCamera: Bool = false) {
         DispatchQueue.main.async {
-            self.backgroundImage.image = nil
+            self.profilePictureView.isHidden = true
+            
             #if arch(arm64)
                 // Using metal (arm64 only)
                 let localRenderer = RTCMTLVideoView(frame: self.localVideoView?.frame ?? CGRect.zero)
@@ -964,7 +966,7 @@ extension CallViewController {
             }
             else {
                 if let contact = self.contact {
-                    self.setBackgroundForContact(contact: contact)
+                    self.showProfilePicture(contact: contact)
                 }
                 self.removeAllSubviewsFromVideoViews()
             }
@@ -984,7 +986,8 @@ extension CallViewController {
         
         DispatchQueue.main.async {
             if self.viewIfLoaded?.window != nil {
-                self.backgroundImage.image = nil
+                self.profilePictureView.isHidden = true
+                
                 let remoteRenderer = VoIPCallStateManager.shared
                     .remoteVideoRenderer() as? RTCMTLVideoView ?? createNewRemoteVideoView()
                 
@@ -1037,7 +1040,7 @@ extension CallViewController {
                 }
                 else {
                     if let contact = self.contact {
-                        self.setBackgroundForContact(contact: contact)
+                        self.showProfilePicture(contact: contact)
                     }
                     self.removeAllSubviewsFromVideoViews()
                 }
@@ -1421,32 +1424,6 @@ extension CallViewController {
             }
             myVolumeView = nil
         }
-    }
-    
-    private func blurImage(image: UIImage, blurRadius: CGFloat) -> UIImage {
-        let context = CIContext(options: nil)
-        let inputImage = CIImage(cgImage: image.cgImage!)
-
-        let blurFilter = CIFilter(name: "CIGaussianBlur")
-        blurFilter?.setValue(inputImage, forKey: kCIInputImageKey)
-        blurFilter?.setValue(blurRadius, forKey: "inputRadius")
-        
-        var bounds = inputImage.extent
-        if AvatarMaker.shared().isDefaultAvatar(for: contact) {
-            bounds = CGRect(x: -10.0, y: -10.0, width: image.size.width + 20.0, height: image.size.height + 20.0)
-        }
-        else {
-            bounds = CGRect(
-                x: bounds.origin.x + 10.0,
-                y: bounds.origin.y + 10.0,
-                width: bounds.size.width - 20.0,
-                height: bounds.size.height - 20.0
-            )
-        }
-        
-        let outputImage = blurFilter?.value(forKey: kCIOutputImageKey) as? CIImage
-        let cgImage = context.createCGImage(outputImage ?? CIImage(), from: bounds)
-        return UIImage(cgImage: cgImage!)
     }
     
     private func addGradientToView(

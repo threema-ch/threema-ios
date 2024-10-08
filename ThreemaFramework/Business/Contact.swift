@@ -27,18 +27,193 @@ import ThreemaProtocols
 public class Contact: NSObject {
     
     // These strings are used as static properties for performance reasons
-    private static let inactiveString = BundleUtil.localizedString(forKey: "inactive")
-    private static let invalidString = BundleUtil.localizedString(forKey: "invalid")
-    private static let unknownString = BundleUtil.localizedString(forKey: "(unknown)")
-    private static let workAdjustedVerificationLevelString0 = BundleUtil.localizedString(forKey: "level0_title")
-    private static let workAdjustedVerificationLevelString1 = BundleUtil.localizedString(forKey: "level1_title")
-    private static let workAdjustedVerificationLevelString2 = BundleUtil.localizedString(forKey: "level2_title")
-    private static let workAdjustedVerificationLevelString3 = BundleUtil.localizedString(forKey: "level3_title")
-    private static let workAdjustedVerificationLevelString4 = BundleUtil.localizedString(forKey: "level4_title")
+    private static let inactiveString = "inactive".localized
+    private static let invalidString = "invalid".localized
+    private static let unknownString = "(unknown)".localized
+    private static let workAdjustedVerificationLevelString0 = "level0_title".localized
+    private static let workAdjustedVerificationLevelString1 = "level1_title".localized
+    private static let workAdjustedVerificationLevelString2 = "level2_title".localized
+    private static let workAdjustedVerificationLevelString3 = "level3_title".localized
+    private static let workAdjustedVerificationLevelString4 = "level4_title".localized
 
+    // MARK: - Observation
+    
     // Tokens for entity subscription, will be removed when is deallocated
     private var subscriptionToken: EntityObserver.SubscriptionToken?
 
+    /// This will be set to `true` when a contact is in the process to be deleted.
+    ///
+    /// This can be used to detect deletion in KVO-observers
+    @objc public private(set) dynamic var willBeDeleted = false
+    
+    // Needed for KVO on `displayName`: https://stackoverflow.com/a/51108007
+    @objc public class var keyPathsForValuesAffectingDisplayName: Set<String> {
+        [
+            #keyPath(firstName),
+            #keyPath(lastName),
+            #keyPath(publicNickname),
+            #keyPath(state),
+            #keyPath(objcIdentity),
+        ]
+    }
+    
+    @objc public private(set) dynamic var state = 0
+    @objc public private(set) dynamic var firstName: String?
+    @objc public private(set) dynamic var lastName: String?
+    @objc public private(set) dynamic var publicNickname: String?
+    @objc public private(set) dynamic var verificationLevel = 0
+    @objc public private(set) dynamic var featureMask: Int
+    @objc public private(set) dynamic lazy var profilePicture: UIImage = resolveProfilePicture()
+
+    @objc public private(set) dynamic var displayName: String {
+        get {
+            resolveDisplayName()
+        }
+        set {
+            // No-op
+        }
+    }
+    
+    @objc public private(set) dynamic var readReceipt: ReadReceipt
+    @objc public private(set) dynamic var typingIndicator: TypingIndicator
+
+    // MARK: - Public properties
+
+    public let identity: ThreemaIdentity
+    @objc(identity) public let objcIdentity: String
+    
+    let publicKey: Data
+    
+    public var isActive: Bool {
+        state == kStateActive
+    }
+    
+    // If true when acquaintance level is group or deleted
+    @objc public private(set) dynamic var isHidden: Bool
+
+    // This only means it's a verified contact from the admin (in the same work package)
+    // To check if this contact is a work ID, use the work identities list in user settings
+    // bad naming because of the history...
+    private(set) var isWorkContact: Bool
+
+    public let showOtherTypeIcon: Bool
+    
+    /// Shorter version of `displayName` if available
+    var shortDisplayName: String {
+        // This is an "opt-in" feature
+        guard ThreemaApp.current == .threema || ThreemaApp.current == .green else {
+            return displayName
+        }
+
+        if let firstName, !firstName.isEmpty {
+            return firstName
+        }
+
+        return displayName
+    }
+    
+    public var hasGatewayID: Bool {
+        identity.isGatewayID
+    }
+    
+    public var forwardSecurityMode: ForwardSecurityMode {
+        
+        guard isForwardSecurityAvailable else {
+            return .none
+        }
+        
+        do {
+            let businessInjector = BusinessInjector()
+            guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
+                myIdentity: MyIdentityStore.shared().identity,
+                peerIdentity: identity.string
+            ) else {
+                return .none
+            }
+            
+            let state = try dhSession.state
+            
+            switch state {
+            case .L20:
+                return .twoDH
+            case .RL44:
+                return .fourDH
+            case .R20:
+                return .twoDH
+            case .R24:
+                return .twoDH
+            }
+        }
+        catch {
+            DDLogError("Could not get ForwardSecurityMode for contact with identity: \(identity).")
+            return .none
+        }
+    }
+    
+    public private(set) var usesNonGeneratedProfilePicture = false
+
+    // MARK: - Private properties
+    
+    private var isForwardSecurityAvailable: Bool
+
+    private lazy var idColor: UIColor = IDColor.forData(Data(identity.string.utf8))
+
+    /// Either first character of first and last name in order depending of the user setting, or first two characters of
+    /// public
+    /// nickname or of ID if no name is specified.
+    private var initials: String {
+        
+        // If we have both a non empty first and last name
+        if let firstName = firstName?.replacingOccurrences(of: " ", with: ""),
+           let lastName = lastName?.replacingOccurrences(of: " ", with: ""),
+           !firstName.isEmpty,
+           !lastName.isEmpty {
+            if UserSettings.shared().displayOrderFirstName {
+                return String(firstName.prefix(1)) + String(lastName.prefix(1)).uppercased()
+            }
+            else {
+                return String(lastName.prefix(1)) + String(firstName.prefix(1)).uppercased()
+            }
+        }
+        
+        // If we have a non empty first name we use the first two letters
+        if let firstName = firstName?.replacingOccurrences(of: " ", with: ""),
+           !firstName.isEmpty {
+            return String(firstName.prefix(2)).uppercased()
+        }
+        
+        // If we have a non empty first last we use the first two letters
+        if let lastName = lastName?.replacingOccurrences(of: " ", with: ""),
+           !lastName.isEmpty {
+            return String(lastName.prefix(2)).uppercased()
+        }
+        
+        // Public nickname
+        if let publicNickname = publicNickname?.replacingOccurrences(of: " ", with: ""),
+           !publicNickname.isEmpty {
+            return String(publicNickname.prefix(2)).uppercased()
+        }
+        
+        // ID
+        return String(identity.string.prefix(2)).uppercased()
+    }
+    
+    /// Image data sent from threema. For KVO, observe `profilePicture` directly.
+    private var threemaImageData: Data? {
+        didSet {
+            updateProfilePicture()
+        }
+    }
+    
+    /// Image data set from Contacts. For KVO, observe `profilePicture` directly.
+    private var contactImageData: Data? {
+        didSet {
+            updateProfilePicture()
+        }
+    }
+    
+    // MARK: - Lifecycle
+    
     /// Initialize Contact properties and subscribe ContactEntity on EntityObserver for updates.
     /// Note: Contact properties will be only refreshed if it's ContactEntity object already saved in Core Data.
     ///
@@ -52,79 +227,118 @@ public class Contact: NSObject {
         self.lastName = contactEntity.lastName
         self.verificationLevel = contactEntity.verificationLevel.intValue
         self.state = contactEntity.state?.intValue ?? kStateInactive
+        self.isHidden = contactEntity.isContactHidden
         self.isWorkContact = contactEntity.isWorkContact()
+        self.showOtherTypeIcon = contactEntity.showOtherThreemaTypeIcon
         self.isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable()
         self.featureMask = contactEntity.featureMask.intValue
-
+        self.threemaImageData = contactEntity.contactImage?.data
+        self.contactImageData = contactEntity.imageData
+        self.readReceipt = contactEntity.readReceipt
+        self.typingIndicator = contactEntity.typingIndicator
+        
         super.init()
 
-        // Subscribe contact entity for DB updates or deletion
-        self.subscriptionToken = EntityObserver.shared.subscribe(
+        // Update tracking
+        subscribeForContactEntityChanges(contactEntity: contactEntity)
+        addOtherObservers()
+    }
+
+    public func profilePictureForGroupCalls() -> UIImage {
+        updateProfilePicture()
+        
+        if usesNonGeneratedProfilePicture {
+            return profilePicture
+        }
+        return ProfilePictureGenerator.generateGroupCallImage(initials: initials, color: idColor)
+    }
+    
+    public func generatedProfilePicture() -> UIImage {
+        ProfilePictureGenerator.generateImage(
+            for: hasGatewayID ? .gateway : .contact(letters: initials),
+            color: idColor
+        )
+    }
+    
+    // MARK: - Private functions
+    
+    private func addOtherObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateProfilePicture),
+            name: Notification.Name(kNotificationShowProfilePictureChanged),
+            object: nil
+        )
+    }
+
+    private func subscribeForContactEntityChanges(contactEntity: ContactEntity) {
+        
+        subscriptionToken = EntityObserver.shared.subscribe(
             managedObject: contactEntity
         ) { [weak self] managedObject, reason in
-            guard let contactEntity = managedObject as? ContactEntity else {
+            guard let self, let contactEntity = managedObject as? ContactEntity else {
                 DDLogError("Wrong type, should be ContactEntity")
                 return
             }
 
             switch reason {
             case .deleted:
-                if let deleted = self?.willBeDeleted, !deleted {
-                    self?.willBeDeleted = true
+                if !willBeDeleted {
+                    willBeDeleted = true
                 }
             case .updated:
-                guard self?.identity == ThreemaIdentity(contactEntity.identity),
-                      self?.publicKey == contactEntity.publicKey else {
+                guard identity == ThreemaIdentity(contactEntity.identity),
+                      publicKey == contactEntity.publicKey else {
                     DDLogError("Identity or public key mismatch")
                     return
                 }
 
-                if self?.publicNickname != contactEntity.publicNickname {
-                    self?.publicNickname = contactEntity.publicNickname
+                if publicNickname != contactEntity.publicNickname {
+                    publicNickname = contactEntity.publicNickname
                 }
-                if self?.firstName != contactEntity.firstName {
-                    self?.firstName = contactEntity.firstName
+                if firstName != contactEntity.firstName {
+                    firstName = contactEntity.firstName
                 }
-                if self?.lastName != contactEntity.lastName {
-                    self?.lastName = contactEntity.lastName
+                if lastName != contactEntity.lastName {
+                    lastName = contactEntity.lastName
                 }
-                if self?.verificationLevel != contactEntity.verificationLevel.intValue {
-                    self?.verificationLevel = contactEntity.verificationLevel.intValue
+                if verificationLevel != contactEntity.verificationLevel.intValue {
+                    verificationLevel = contactEntity.verificationLevel.intValue
                 }
                 let newState = contactEntity.state?.intValue ?? kStateInactive
-                if self?.state != newState {
-                    self?.state = newState
+                if state != newState {
+                    state = newState
                 }
-                if self?.isWorkContact != contactEntity.isWorkContact() {
-                    self?.isWorkContact = contactEntity.isWorkContact()
+                if isHidden != contactEntity.isContactHidden {
+                    isHidden = contactEntity.isContactHidden
                 }
-                if self?.featureMask != contactEntity.featureMask.intValue {
-                    self?.featureMask = contactEntity.featureMask.intValue
+                if isWorkContact != contactEntity.isWorkContact() {
+                    isWorkContact = contactEntity.isWorkContact()
+                }
+                if featureMask != contactEntity.featureMask.intValue {
+                    featureMask = contactEntity.featureMask.intValue
+                    isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable()
+                }
+                if isWorkContact != contactEntity.isWorkContact() {
+                    isWorkContact = contactEntity.isWorkContact()
+                }
+                if threemaImageData != contactEntity.contactImage?.data {
+                    threemaImageData = contactEntity.contactImage?.data
+                }
+                if contactImageData != contactEntity.imageData {
+                    contactImageData = contactEntity.imageData
+                }
+                if readReceipt != contactEntity.readReceipt {
+                    readReceipt = contactEntity.readReceipt
+                }
+                if typingIndicator != contactEntity.typingIndicator {
+                    typingIndicator = contactEntity.typingIndicator
                 }
             }
         }
     }
-
-    /// This will be set to `true` when a contact is in the process to be deleted.
-    ///
-    /// This can be used to detect deletion in KVO-observers
-    public private(set) dynamic var willBeDeleted = false
-
-    @objc(identity) public private(set) dynamic var objcIdentity: String
-    public private(set) dynamic var identity: ThreemaIdentity
-    public private(set) var publicKey: Data
-    @objc public private(set) dynamic var firstName: String?
-    @objc public private(set) dynamic var lastName: String?
-    @objc public private(set) dynamic var publicNickname: String?
-    public private(set) var verificationLevel = 0
-    @objc public private(set) dynamic var state = 0
-    private(set) dynamic var featureMask: Int
-
-    public var isActive: Bool {
-        state == kStateActive
-    }
-
-    @objc public dynamic var displayName: String {
+    
+    private func resolveDisplayName() -> String {
         var value = String(ContactUtil.name(fromFirstname: firstName, lastname: lastName) ?? "")
 
         if value.isEmpty, let publicNickname, !publicNickname.isEmpty, publicNickname != identity.string {
@@ -153,43 +367,40 @@ public class Contact: NSObject {
 
         return value
     }
-    
-    // Needed for KVO on `displayName`: https://stackoverflow.com/a/51108007
-    @objc public class var keyPathsForValuesAffectingDisplayName: Set<String> {
-        [
-            #keyPath(firstName),
-            #keyPath(lastName),
-            #keyPath(publicNickname),
-            #keyPath(state),
-            #keyPath(objcIdentity),
-        ]
+   
+    @objc private func updateProfilePicture() {
+        profilePicture = resolveProfilePicture()
     }
-
-    /// Shorter version of `displayName` if available
-    var shortDisplayName: String {
-        // This is an "op-in" feature
-        guard ThreemaApp.current == .threema || ThreemaApp.current == .green else {
-            return displayName
+    
+    private func resolveProfilePicture() -> UIImage {
+        
+        // If `showProfilePictures` is enabled, we prioritize the image sent by the contact, else we use the image
+        // set from contacts, if one was set.
+        let imageData: Data? =
+            if UserSettings.shared().showProfilePictures,
+            let data = threemaImageData {
+                data
+            }
+            else {
+                contactImageData
+            }
+        
+        // If no data was found, we generate a profile picture
+        if let imageData, let image = UIImage(data: imageData) {
+            usesNonGeneratedProfilePicture = true
+            return image
         }
-
-        if let firstName, !firstName.isEmpty {
-            return firstName
+        else {
+            usesNonGeneratedProfilePicture = false
+            return ProfilePictureGenerator.generateImage(
+                for: hasGatewayID ? .gateway : .contact(letters: initials),
+                color: idColor
+            )
         }
-
-        return displayName
     }
 
-    // This only means it's a verified contact from the admin (in the same work package)
-    // To check if this contact is a work ID, use the workidentities list in usersettings
-    // bad naming because of the history...
-    private(set) var isWorkContact: Bool
+    // MARK: - Verification level
 
-    public var hasGatewayID: Bool {
-        identity.isGatewayID
-    }
-    
-    private(set) var isForwardSecurityAvailable: Bool
-    
     private var workAdjustedVerificationLevel: Int {
         var myVerificationLevel = verificationLevel
         if isWorkContact {
@@ -256,40 +467,6 @@ public class Contact: NSObject {
         }
     }
     
-    public var forwardSecurityMode: ForwardSecurityMode {
-        
-        guard isForwardSecurityAvailable else {
-            return .none
-        }
-        
-        do {
-            let businessInjector = BusinessInjector()
-            guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
-                myIdentity: MyIdentityStore.shared().identity,
-                peerIdentity: identity.string
-            ) else {
-                return .none
-            }
-            
-            let state = try dhSession.state
-            
-            switch state {
-            case .L20:
-                return .twoDH
-            case .RL44:
-                return .fourDH
-            case .R20:
-                return .twoDH
-            case .R24:
-                return .twoDH
-            }
-        }
-        catch {
-            DDLogError("Could not get ForwardSecurityMode for contact with identity: \(identity).")
-            return .none
-        }
-    }
-
     // MARK: Comparing function
 
     public func isEqual(to object: Any?) -> Bool {
@@ -304,6 +481,9 @@ public class Contact: NSObject {
             lastName == object.lastName &&
             publicNickname == object.publicNickname &&
             verificationLevel == object.verificationLevel &&
+            profilePicture.pngData() == object.profilePicture.pngData() &&
+            threemaImageData == object.threemaImageData &&
+            contactImageData == object.contactImageData &&
             state == object.state &&
             isWorkContact == object.isWorkContact
     }

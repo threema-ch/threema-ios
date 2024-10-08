@@ -73,7 +73,7 @@ class MediatorReflectedMessageDecoder {
         return amsg
     }
 
-    /// Extract and decode abstract message from meditor message `D2d_OutgoingMessage.body`.
+    /// Extract and decode abstract message from mediator message `D2d_OutgoingMessage.body`.
     ///
     /// Note this rules of reflected outgoing messages and its abstract message:
     /// Sender (`AbstractMessage.fromIdentity`) is always me.

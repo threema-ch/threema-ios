@@ -61,8 +61,8 @@ final class JoinedRemoteParticipant: RemoteParticipant, ViewModelParticipant {
     nonisolated lazy var displayName: String = dependencies.groupCallParticipantInfoFetcher
         .fetchDisplayName(for: threemaIdentity)
     
-    nonisolated lazy var avatar: UIImage? = dependencies.groupCallParticipantInfoFetcher
-        .fetchAvatar(for: threemaIdentity)
+    nonisolated lazy var profilePicture: UIImage = dependencies.groupCallParticipantInfoFetcher
+        .fetchProfilePicture(for: threemaIdentity)
     
     nonisolated lazy var idColor: UIColor = dependencies.groupCallParticipantInfoFetcher
         .fetchIDColor(for: threemaIdentity)

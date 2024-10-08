@@ -141,6 +141,8 @@ enum AcceptPrivacyPolicyVariant {
 
 @property (nonatomic, readwrite) BOOL workInfoShown;
 @property (nonatomic, readwrite) BOOL desktopInfoBannerShown;
+@property (nonatomic, readwrite) BOOL resetTipKitOnNextLaunch;
+
 
 @property (nonatomic, readwrite) BOOL contactList2;
 

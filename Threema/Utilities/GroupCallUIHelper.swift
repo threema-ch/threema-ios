@@ -76,7 +76,6 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
         conversationManagedObjectID: NSManagedObjectID,
         title: String,
         body: String,
-        contactImage: UIImage,
         identifier: String
     ) {
         // No toast if disabled or passcode showing
@@ -131,7 +130,6 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
                 conversationManagedObjectID: conversationManagedObjectID,
                 title: title,
                 body: body,
-                contactImage: contactImage,
                 identifier: identifier
             )
         }

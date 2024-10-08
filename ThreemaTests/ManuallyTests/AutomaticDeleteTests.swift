@@ -58,7 +58,7 @@ final class AutomaticDeleteTests: XCTestCase {
             for index in 0..<total {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .day, value: -(index + 1), to: option.date ?? Date.currentDate)
-                let message = entityManager.entityCreator.textMessage(for: conversation)!
+                let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
                 message.date = date
                 message.sender = conversation.contact

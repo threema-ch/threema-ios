@@ -28,7 +28,6 @@
 #import "RectUtil.h"
 #import "AppGroup.h"
 #import "LicenseStore.h"
-#import "Old_PickerContactCell.h"
 #import "Conversation.h"
 
 #define LAST_SELECTED_MODE @"ContactGroupPickerLastSelectedMode"
@@ -189,6 +188,7 @@ typedef enum : NSUInteger {
     frame.size.height = CGFLOAT_MIN;
     [self.tableView setTableHeaderView:[[UIView alloc] initWithFrame:frame]];
 
+    [self.tableView registerClass:ContactCell.class forCellReuseIdentifier:@"ContactCell"];
     [self.tableView registerClass:GroupCell.class forCellReuseIdentifier:@"GroupCell"];
     [self.tableView registerClass:DistributionListCell.class forCellReuseIdentifier:@"DistributionListCell"];
 }
@@ -366,12 +366,12 @@ typedef enum : NSUInteger {
         }
     }
     
-    if ([cell isKindOfClass:[Old_PickerContactCell class]]) {
-        Old_PickerContactCell *pickerContactCell = (Old_PickerContactCell *)cell;
-        [pickerContactCell updateColors];
+    if ([cell isKindOfClass:[ContactCell class]]) {
+        ContactCell *contactCell = (ContactCell *)cell;
+        [contactCell updateColors];
         BOOL found = false;
         for (Conversation *conversation in [_currentDataSource selectedConversations]) {
-            if (conversation.contact != nil && conversation.contact == pickerContactCell.contact && !conversation.isGroup) {
+            if (conversation.contact != nil && conversation.contact == contactCell._contact && !conversation.isGroup) {
                 found = true;
             }
         }

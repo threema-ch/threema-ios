@@ -61,7 +61,7 @@ public class IntentCreator {
         var fetchedContact: ContactEntity?
         var isPrivate = false
         
-        entityManager.performBlockAndWait {
+        entityManager.performAndWaitSave {
             if let internalFetchedContact = self.entityManager.entityFetcher.contact(for: contactID) {
                 fetchedContact = internalFetchedContact
                 if let conversation = self.entityManager.conversation(
@@ -193,8 +193,11 @@ public class IntentCreator {
             if let fetchedGroupName = groupConversation.groupName {
                 groupName = INSpeakableString(spokenPhrase: fetchedGroupName)
             }
-            if let data = groupConversation.groupImage?.data {
-                groupImage = INImage(imageData: data)
+            
+            let groupManager = GroupManager(entityManager: self.entityManager)
+            if let group = groupManager.getGroup(conversation: groupConversation) {
+                let image: UIImage = ProfilePictureGenerator.addBackground(to: group.profilePicture)
+                groupImage = INImage(uiImage: image)
             }
         }
         

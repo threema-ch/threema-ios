@@ -215,7 +215,7 @@ class TaskExecutionTransactionTests: XCTestCase {
             }
 
             let task = test
-                .0 == .contactSync ? TaskDefinitionDeleteContactSync(contacts: []) : TaskDefinitionProfileSync(
+                .0 == .contactSync ? TaskDefinitionUpdateContactSync(deltaSyncContacts: []) : TaskDefinitionProfileSync(
                     syncUserProfile: Sync_UserProfile(),
                     profileImage: nil,
                     linkMobileNoPending: false,

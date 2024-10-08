@@ -30,7 +30,6 @@
 #import "MWPhotoBrowser.h"
 
 #import "AppGroup.h"
-#import "AvatarMaker.h"
 #import "JKLLockScreenViewController.h"
 
 #import "PreviewImageViewController.h"
@@ -426,8 +425,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _distributionListDetailViewController = nil;
     if (SYSTEM_IS_IPAD) {
         [self hideModal];
-        
-        _singleDetailViewController = [[SingleDetailsViewController alloc] initFor:contact displayStyle:DetailsDisplayStyleDefault];
+        Contact *businessContact = [[Contact alloc] initWithContactEntity:contact];
+        _singleDetailViewController = [[SingleDetailsViewController alloc] initFor:businessContact displayStyle:DetailsDisplayStyleDefault];
         
         if (self.selectedIndex == kContactsTabBarIndex) {
             [self switchContact];
@@ -456,7 +455,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             
         } else {
             // Show contact details modally
-            SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:contact displayStyle:DetailsDisplayStyleDefault];
+            Contact *businessContact = [[Contact alloc] initWithContactEntity:contact];
+            SingleDetailsViewController *singleDetailsViewController =
+            [[SingleDetailsViewController alloc] initFor:businessContact displayStyle:DetailsDisplayStyleDefault];
+            
             ThemedNavigationController *themedNavigationController = [[ThemedNavigationController alloc] initWithRootViewController:singleDetailsViewController];
             [self presentViewController:themedNavigationController animated:YES completion:nil];
         }
@@ -476,7 +478,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [navigationController pushViewController:settings animated:NO];
         [navigationController pushViewController:notificationViewController animated:NO];
         
-        [self presentViewController:navigationController animated:YES completion:nil];
+        [self presentViewController:navigationController animated:YES completion:^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:kShowNotificationSettings object:nil userInfo:nil];
+        }];
     }
     else {
         [self setSelectedIndex:kSettingsTabBarIndex];
@@ -662,7 +666,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)colorThemeChanged:(NSNotification*)notification {
     DDLogInfo(@"Color theme changed, removing cached chat view controllers");
     
-    [AvatarMaker clearCache];
     [Colors updateWithWindow:[[AppDelegate sharedAppDelegate] window]];
     [Colors updateWithNavigationBar:self.selectedViewController.navigationController.navigationBar];
     [Colors updateWithTabBar:self.tabBar];

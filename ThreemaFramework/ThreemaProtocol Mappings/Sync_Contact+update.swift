@@ -26,7 +26,7 @@ extension Sync_Contact {
         let activitySate = contact.state != nil ? ActivityState(rawValue: contact.state!.intValue) : nil
         update(activityState: activitySate)
 
-        update(acquaintanceLevel: contact.isContactHidden ? .group : .direct)
+        update(acquaintanceLevel: contact.isContactHidden ? .groupOrDeleted : .direct)
         update(createdAt: contact.createdAt ?? Date(millisecondsSince1970: 0))
         update(featureMask: contact.featureMask.uint64Value)
         update(firstName: contact.firstName)

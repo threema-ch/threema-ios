@@ -36,7 +36,7 @@ struct MaskedWaveformModifier: ViewModifier {
         GeometryReader { geometry in
             HStack(spacing: 0) {
                 primary
-                    .frame(width: fmax(0, progress * geometry.size.width))
+                    .frame(width: fmin(fmax(0, progress * geometry.size.width), geometry.size.width))
                 secondary
                     .frame(width: fmax(0, (geometry.size.width) - (progress * geometry.size.width)))
             }

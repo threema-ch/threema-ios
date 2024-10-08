@@ -44,10 +44,9 @@ import SwiftUI
     }
 
     @objc static func createNotificationSettingsView() -> UIViewController {
-        let notificationSettingsView = NotificationSettingsView()
-        let hostingController = UIHostingController(rootView: notificationSettingsView)
-        hostingController.navigationItem.largeTitleDisplayMode = .never
-        return hostingController
+        let settingsVC = createSettingsView()
+        settingsVC.navigationItem.largeTitleDisplayMode = .never
+        return settingsVC
     }
     
     @objc static func createSettingsView() -> UIViewController {

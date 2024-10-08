@@ -33,22 +33,23 @@ typedef NS_ENUM(NSInteger, BallotDisplayMode) {
 
 @interface Ballot : TMAManagedObject
 
+// Attributes
 @property (nonatomic, retain) NSNumber * assessmentType;
 @property (nonatomic, retain) NSNumber * choicesType;
 @property (nonatomic, retain) NSDate * createDate;
 @property (nonatomic, retain) NSString * creatorId NS_SWIFT_NAME(creatorID);
-@property (nonatomic, retain) NSString * title;
+@property (nonatomic) BallotDisplayMode ballotDisplayMode;
 @property (nonatomic, retain) NSData * id;
 @property (nonatomic, retain) NSDate * modifyDate;
 @property (nonatomic, retain) NSNumber * state;
+@property (nonatomic, retain) NSString * title;
 @property (nonatomic, retain) NSNumber * type;
-@property (nonatomic, retain) NSNumber * unreadUpdateCount;
+
+// Relationships
 @property (nonatomic, retain) NSSet *choices;
 @property (nonatomic, retain) Conversation *conversation;
 @property (nonatomic, retain) NSSet *message;
-@property (nonatomic) BallotDisplayMode ballotDisplayMode;
-
-// participants are persisted when the ballot is closed
+// Participants are persisted once the ballot is closed
 @property (nonatomic, retain) NSSet *participants;
 @end
 
@@ -107,10 +108,6 @@ enum {
 - (BOOL)isOwn;
 
 - (BOOL)canEdit;
-
-- (void)incrementUnreadUpdateCount;
-
-- (void)resetUnreadUpdateCount;
 
 - (NSInteger)numberOfReceivedVotes;
 

@@ -99,7 +99,7 @@ class GroupTests: XCTestCase {
         XCTAssertNil(group.lastPeriodicSync)
         XCTAssertEqual(group.allMemberIdentities.count, 3)
         XCTAssertNil(group.name)
-        XCTAssertNil(group.profilePicture)
+        XCTAssertNil(group.old_ProfilePicture)
         XCTAssertEqual(group.conversationCategory, .default)
         XCTAssertEqual(group.conversationVisibility, .default)
         XCTAssertNil(group.lastUpdate)
@@ -114,7 +114,7 @@ class GroupTests: XCTestCase {
             let imageData = entityManager.entityCreator.imageData()
             imageData?.data = Data([0])
 
-            let message = entityManager.entityCreator.textMessage(for: conversation)
+            let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)
             message?.text = "123"
             message?.date = dateNow
 
@@ -133,7 +133,7 @@ class GroupTests: XCTestCase {
         XCTAssertEqual(group.lastPeriodicSync, dateNow)
         XCTAssertEqual(group.allMemberIdentities.count, 4)
         XCTAssertEqual(group.name, "Test group 123")
-        XCTAssertNotNil(group.profilePicture)
+        XCTAssertNotNil(group.old_ProfilePicture)
         XCTAssertEqual(group.conversationCategory, .private)
         XCTAssertEqual(group.conversationVisibility, .archived)
         XCTAssertEqual(group.lastUpdate, dateNow)
@@ -712,7 +712,7 @@ class GroupTests: XCTestCase {
 
         let em = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
         em.performBlockAndWait {
-            em.entityDestroyer.deleteObject(object: groupEntity)
+            em.entityDestroyer.delete(groupEntity: groupEntity)
         }
 
         let expect = expectation(description: "Give time for deletion")
@@ -757,8 +757,8 @@ class GroupTests: XCTestCase {
         XCTAssertFalse(group.willBeDeleted)
 
         let em = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
-        em.performBlockAndWait {
-            em.entityDestroyer.deleteObject(object: conversation)
+        em.performAndWait {
+            em.entityDestroyer.delete(conversation: conversation)
         }
 
         let expect = expectation(description: "Give time for deletion")

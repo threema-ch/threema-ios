@@ -159,7 +159,7 @@ extension MediatorWebSocket: WebSocketDelegate {
             lastError = nil
         case .peerClosed:
             DDLogWarn("peerClosed")
-            delegate.didDisconnect(errorCode: lastError?.code ?? 0)
+            // Do nothing because `cancelled` will be called after this (IOS-4825)
         }
     }
 }

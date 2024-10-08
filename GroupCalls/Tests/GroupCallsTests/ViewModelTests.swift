@@ -96,7 +96,6 @@ final class GroupCallViewModelTests: XCTestCase {
 //        let viewModelParticipant = await ViewModelParticipant(
 //            remoteParticipant: remoteParticipant,
 //            name: "ECHOECHO",
-//            avatar: nil,
 //            idColor: .red
 //        )
 //

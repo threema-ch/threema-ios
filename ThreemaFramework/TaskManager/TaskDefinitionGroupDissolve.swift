@@ -45,7 +45,7 @@ final class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
     }
 
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
 
     var toMembers = [String]()
@@ -56,7 +56,7 @@ final class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
 
     required init(group: Group) {
         super.init(receiverIdentity: nil, group: group, sendContactProfilePicture: false)
-        self.isPersistent = true
+        self.type = .persistent
     }
 
     required init(from decoder: Decoder) throws {
@@ -65,6 +65,7 @@ final class TaskDefinitionGroupDissolve: TaskDefinitionSendMessage {
         try super.init(from: superdecoder)
 
         self.toMembers = try container.decode([String].self, forKey: .toMembers)
+        self.type = .persistent
     }
 
     override func encode(to encoder: Encoder) throws {

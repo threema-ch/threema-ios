@@ -46,7 +46,7 @@ import ThreemaEssentials
     }
     
     override var description: String {
-        "<\(type(of: self)) type: \(messageType ?? "unknown") id: \(messageID.hexString)>"
+        "<\(Swift.type(of: self)) type: \(messageType ?? "unknown") id: \(messageID.hexString)>"
     }
 
     @objc let messageID: Data

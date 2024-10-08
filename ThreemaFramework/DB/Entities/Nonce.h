@@ -25,6 +25,7 @@
 
 @interface Nonce : TMAManagedObject
 
+// Attributes
 @property (nonatomic, retain) NSData *nonce;
 
 @end

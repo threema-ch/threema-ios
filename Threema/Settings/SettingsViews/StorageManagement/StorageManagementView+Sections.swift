@@ -63,7 +63,7 @@ extension StorageManagementView {
         struct StorageManagementConversationRow: View {
             @EnvironmentObject private var model: StorageManagementView.Model
             @Environment(\.sizeCategory) private var sizeCategory
-            @State private var avatarImage: UIImage?
+            @State private var profilePicture: UIImage = ProfilePictureGenerator.unknownContactImage
             @State private var metaData: StorageManagementView.Model.ConversationMetaData = (0, 0)
             private let conversation: Conversation
             private let imageSize: CGFloat = 40
@@ -80,7 +80,7 @@ extension StorageManagementView {
                 content
                     .accessibilityVStack(spacing: 8)
                     .task {
-                        avatarImage = await model.avatarImageProvider(conversation)
+                        profilePicture = await model.profilePictureProvider(conversation)
                     }
             }
             
@@ -88,9 +88,10 @@ extension StorageManagementView {
             private var content: some View {
                 HStack(spacing: 8) {
                     if !sizeCategory.isAccessibilityCategory {
-                        Image(uiImage: image ?? UIImage())
+                        Image(uiImage: profilePicture)
                             .resizable()
                             .frame(width: imageSize, height: imageSize)
+                            .clipShape(Circle())
                             .overlay(alignment: .bottomLeading) {
                                 threemaTypeOverlay
                             }
@@ -127,12 +128,6 @@ extension StorageManagementView {
                     )
                 }
                 return AnyView(EmptyView())
-            }
-            
-            private var image: UIImage? {
-                let fallback = conversation.isGroup() ? AvatarMaker.shared().unknownGroupImage() : AvatarMaker.shared()
-                    .unknownPersonImage()
-                return avatarImage ?? fallback ?? BundleUtil.imageNamed("Unknown")
             }
             
             private var label: String {

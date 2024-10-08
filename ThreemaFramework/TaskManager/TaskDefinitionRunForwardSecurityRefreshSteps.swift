@@ -52,7 +52,7 @@ class TaskDefinitionRunForwardSecurityRefreshSteps: TaskDefinition, TaskDefiniti
     }
     
     override var description: String {
-        "<\(type(of: self))>"
+        "<\(Swift.type(of: self))>"
     }
     
     /// All identities the _FS Refresh Steps_ should be executed for
@@ -73,7 +73,7 @@ class TaskDefinitionRunForwardSecurityRefreshSteps: TaskDefinition, TaskDefiniti
     /// - Parameter contactIdentities: All identities the _FS Refresh Steps_ should be executed for
     init(with contactIdentities: [ThreemaIdentity]) {
         self.contactIdentities = contactIdentities
-        super.init(isPersistent: true)
+        super.init(type: .persistent)
     }
 
     required init(from decoder: Decoder) throws {

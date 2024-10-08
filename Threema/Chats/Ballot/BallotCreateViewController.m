@@ -482,7 +482,7 @@
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [_entityManager performBlockAndWait:^{
             BallotChoice *choice = [_choices objectAtIndex:indexPath.row];
-            [[_entityManager entityDestroyer] deleteObjectWithObject:choice];
+            [[_entityManager entityDestroyer] deleteWithBallotChoice:choice];
 
             [_choices removeObjectAtIndex: indexPath.row];
         }];

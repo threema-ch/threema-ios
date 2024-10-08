@@ -55,11 +55,8 @@ enum ChatViewConfiguration {
         /// All content is offset by these insets on top and bottom
         static let topAndBottomInset: CGFloat = 4
         
-        /// Max size for avatar
-        static let maxAvatarSize: CGFloat = 34
-        
-        /// Space between avatar and rest of profile information
-        static let avatarAndInfoSpace: CGFloat = 8
+        /// Space between profile picture and rest of profile information
+        static let profilePictureAndInfoSpace: CGFloat = 8
         
         /// Height of verification level below name
         static let verificationLevelHeight: CGFloat = 7
@@ -213,13 +210,13 @@ enum ChatViewConfiguration {
         static let nameLabelFont = UIFont.preferredFont(forTextStyle: .footnote).bold()
         
         /// Inset from the leading side of the cell
-        static let avatarLeadingInset: CGFloat = ChatBubble.defaultLeadingTrailingInset
-        /// Horizontal space between avatar and message cell
-        static let avatarCellSpace: CGFloat = 6.0
-        /// Width / height of avatar
-        static let maxAvatarSize: CGFloat = 25
-        /// Offset of avatar in relation to chat bubble
-        static let avatarVerticalOffset: CGFloat = maxAvatarSize / 4
+        static let profilePictureLeadingInset: CGFloat = ChatBubble.defaultLeadingTrailingInset
+        /// Horizontal space between profile picture and message cell
+        static let profilePictureCellSpace: CGFloat = 6.0
+        /// Width / height of profile picture
+        static let maxProfilePictureSize: CGFloat = 25
+        /// Offset of profile picture in relation to chat bubble
+        static let profilePictureVerticalOffset: CGFloat = maxProfilePictureSize / 4
     }
     
     enum CellGrouping {

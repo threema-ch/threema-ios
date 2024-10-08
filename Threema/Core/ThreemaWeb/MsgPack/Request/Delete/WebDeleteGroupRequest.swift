@@ -69,7 +69,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
                 backgroundBusinessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
 
                 backgroundBusinessInjector.entityManager.performSyncBlockAndSafe {
-                    backgroundBusinessInjector.entityManager.entityDestroyer.deleteObject(object: conversation)
+                    backgroundBusinessInjector.entityManager.entityDestroyer.delete(conversation: conversation)
                 }
                 
                 DispatchQueue.main.async {

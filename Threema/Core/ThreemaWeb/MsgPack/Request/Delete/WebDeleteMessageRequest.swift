@@ -80,7 +80,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         
         entityManager.performAndWaitSave {
             if message.isKind(of: BaseMessage.self) || message.isKind(of: SystemMessage.self) {
-                entityManager.entityDestroyer.deleteObject(object: message)
+                entityManager.entityDestroyer.delete(baseMessage: message)
 
                 if let conversation = self.conversation {
                     conversation.lastMessage = MessageFetcher(

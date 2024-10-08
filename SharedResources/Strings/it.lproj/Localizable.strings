@@ -1871,16 +1871,16 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "accessibility_voice_message_unplayed" = "Ancora non riprodotto.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Confermato";
-"accessibility_status_declined" = "Respinto";
-"accessibility_status_sending" = "In uscita";
-"accessibility_status_sent" = "Inviato";
-"accessibility_status_delivered" = "Consegnato";
-"accessibility_status_read" = "Letto";
-"accessibility_status_failed" = "Errore";
-"accessibility_status_group_acknowledged" = "Confermato da %i, %@";
-"accessibility_status_group_declined" = "Respinto da %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Confermato da %i, respinto da %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Confermato, %@";
+"accessibility_status_declined_plus_time" = "Respinto, %@";
+"accessibility_status_sending_plus_time" = "In uscita, %@";
+"accessibility_status_sent_plus_time" = "Inviato, %@";
+"accessibility_status_delivered_plus_time" = "Consegnato, %@";
+"accessibility_status_read_plus_time" = "Letto, %@";
+"accessibility_status_failed_plus_time" = "Errore, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Accettato da %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Rifiutato da %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Accettato da %i, rifiutato da %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Accetto";
 "accessibility_status_group_declined_my_reaction" = "Rifiuto";
 

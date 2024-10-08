@@ -1872,16 +1872,16 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "accessibility_voice_message_unplayed" = "Aún sin reproducir.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Conforme";
-"accessibility_status_declined" = "Rechazado";
-"accessibility_status_sending" = "Enviando";
-"accessibility_status_sent" = "Enviado";
-"accessibility_status_delivered" = "Entregado";
-"accessibility_status_read" = "Leído";
-"accessibility_status_failed" = "Con errores";
-"accessibility_status_group_acknowledged" = "Aceptado por %i, %@";
-"accessibility_status_group_declined" = "Rechazado por %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Aceptado por %i, rechazado por %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Conforme, %@";
+"accessibility_status_declined_plus_time" = "Rechazado, %@";
+"accessibility_status_sending_plus_time" = "Enviando, %@";
+"accessibility_status_sent_plus_time" = "Enviado, %@";
+"accessibility_status_delivered_plus_time" = "Entregado, %@";
+"accessibility_status_read_plus_time" = "Leído, %@";
+"accessibility_status_failed_plus_time" = "Con errores, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Aceptado por %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Rechazado por %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Aceptado por %i, rechazado por %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Acepto";
 "accessibility_status_group_declined_my_reaction" = "Rechazo";
 

@@ -57,40 +57,38 @@ extension BaseMessage {
     public var accessibilityDateAndState: String {
         
         let dateString = DateFormatter.relativeLongStyleDateShortStyleTime(displayDate)
-        
-        let resolvedString =
-            if messageDisplayState == .none {
-                if isGroupMessage, let groupReactionString = accessibilityGroupReactionState() {
-                    "\(dateString), \(groupReactionString)."
-                }
-                else {
-                    "\(dateString)."
-                }
+        var resolvedString = ""
+        if messageDisplayState == .none {
+            if isGroupMessage, let groupReactionString = accessibilityGroupReactionState(with: dateString) {
+                resolvedString = groupReactionString
             }
             else {
-                // Style: "Today at 15:44. Delivered."
-                "\(dateString). \(messageDisplayState.accessibilityLabel)."
+                resolvedString = dateString
             }
-        
-        if let marked = messageMarkers?.star.boolValue, marked {
-            return "\(resolvedString) \("marker_accessibility_label".localized)"
         }
         else {
-            return resolvedString
+            // Style: "Delivered, Today at 15:44."
+            resolvedString = "\(String.localizedStringWithFormat(messageDisplayState.accessibilityLabel, dateString))."
         }
+        
+        if let marked = messageMarkers?.star.boolValue, marked {
+            resolvedString += "marker_accessibility_label".localized
+        }
+        
+        return resolvedString
     }
     
-    private func accessibilityGroupReactionState() -> String? {
+    private func accessibilityGroupReactionState(with dateString: String) -> String? {
         guard messageGroupReactionState != .none else {
             return nil
         }
         
         let myReactionString =
             if isMyReaction(.acknowledged) {
-                "\("accessibility_status_group_acknowledged_my_reaction".localized), "
+                "\(BundleUtil.localizedString(forKey: "accessibility_status_group_acknowledged_my_reaction")), "
             }
             else if isMyReaction(.declined) {
-                "\("accessibility_status_group_declined_my_reaction".localized), "
+                "\(BundleUtil.localizedString(forKey: "accessibility_status_group_declined_my_reaction")), "
             }
             else {
                 // We have to use a empty string when there is no own reaction. Otherwise the app will crash because a
@@ -101,16 +99,19 @@ extension BaseMessage {
         let ack = groupReactionsCount(of: .acknowledged)
         let dec = groupReactionsCount(of: .declined)
         if ack > 0, dec > 0 {
-            let statusString = "accessibility_status_group_acknowledged_declined".localized
-            return String.localizedStringWithFormat(statusString, ack, dec, myReactionString)
+            let statusString = BundleUtil
+                .localizedString(forKey: "accessibility_status_group_acknowledged_declined_plus_time")
+            return "\(String.localizedStringWithFormat(statusString, ack, dec, myReactionString, dateString))."
         }
         else if ack > 0 {
-            let statusString = "accessibility_status_group_acknowledged".localized
-            return String.localizedStringWithFormat(statusString, ack, myReactionString)
+            let statusString = BundleUtil
+                .localizedString(forKey: "accessibility_status_group_acknowledged_plus_time")
+            return "\(String.localizedStringWithFormat(statusString, ack, myReactionString, dateString))."
         }
         else if dec > 0 {
-            let statusString = "accessibility_status_group_declined".localized
-            return String.localizedStringWithFormat(statusString, dec, myReactionString)
+            let statusString = BundleUtil
+                .localizedString(forKey: "accessibility_status_group_declined_plus_time")
+            return "\(String.localizedStringWithFormat(statusString, dec, myReactionString, dateString))."
         }
         
         return nil

@@ -1872,16 +1872,16 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_voice_message_unplayed" = "Nog niet afgespeeld.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Akkoord";
-"accessibility_status_declined" = "Afgewezen";
-"accessibility_status_sending" = "Aan het verzenden";
-"accessibility_status_sent" = "Verzonden";
-"accessibility_status_delivered" = "Geleverd";
-"accessibility_status_read" = "Gelezen";
-"accessibility_status_failed" = "Mislukt";
-"accessibility_status_group_acknowledged" = "Overeengekomen door %i, %@";
-"accessibility_status_group_declined" = "Afgewezen door %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Overeengekomen door %i, afgewezen door %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Akkoord, %@";
+"accessibility_status_declined_plus_time" = "Afgewezen, %@";
+"accessibility_status_sending_plus_time" = "Aan het verzenden, %@";
+"accessibility_status_sent_plus_time" = "Verzonden, %@";
+"accessibility_status_delivered_plus_time" = "Afgeleverd, %@";
+"accessibility_status_read_plus_time" = "Gelezen, %@";
+"accessibility_status_failed_plus_time" = "Mislukt, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Overeengekomen door %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Afgewezen door %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Overeengekomen door %i, afgewezen door %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Ik ben akkoord gegaan";
 "accessibility_status_group_declined_my_reaction" = "Ik heb het afgewezen";
 

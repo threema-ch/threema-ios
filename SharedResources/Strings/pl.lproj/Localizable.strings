@@ -1871,16 +1871,16 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 "accessibility_voice_message_unplayed" = "Jeszcze nie zagrano.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Zgoda";
-"accessibility_status_declined" = "Odrzucone";
-"accessibility_status_sending" = "Wysyłanie";
-"accessibility_status_sent" = "Wysłane";
-"accessibility_status_delivered" = "Dostarczone";
-"accessibility_status_read" = "Przeczytano";
-"accessibility_status_failed" = "Niepowodzenie";
-"accessibility_status_group_acknowledged" = "Zgoda: %i, %@";
-"accessibility_status_group_declined" = "Odmowa: %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Zgoda: %i, odmowa: %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Zgadzam się, %@";
+"accessibility_status_declined_plus_time" = "Odrzucone, %@";
+"accessibility_status_sending_plus_time" = "Wysyłanie, %@";
+"accessibility_status_sent_plus_time" = "Wysłane, %@";
+"accessibility_status_delivered_plus_time" = "Dostarczone, %@";
+"accessibility_status_read_plus_time" = "Przeczytane, %@";
+"accessibility_status_failed_plus_time" = "Nieudane, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Zgoda: %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Odmowa: %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Zgoda: %i, odmowa: %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Zgadzam się";
 "accessibility_status_group_declined_my_reaction" = "Odmawiam";
 

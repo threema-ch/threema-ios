@@ -1872,16 +1872,16 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "accessibility_voice_message_unplayed" = "Not Yet Played.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Agreed";
-"accessibility_status_declined" = "Declined";
-"accessibility_status_sending" = "Sending";
-"accessibility_status_sent" = "Sent";
-"accessibility_status_delivered" = "Delivered";
-"accessibility_status_read" = "Read";
-"accessibility_status_failed" = "Failed";
-"accessibility_status_group_acknowledged" = "Agreed by %i, %@";
-"accessibility_status_group_declined" = "Declined by %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Agreed by %i, declined by %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Agreed, %@";
+"accessibility_status_declined_plus_time" = "Declined, %@";
+"accessibility_status_sending_plus_time" = "Sending, %@";
+"accessibility_status_sent_plus_time" = "Sent, %@";
+"accessibility_status_delivered_plus_time" = "Delivered, %@";
+"accessibility_status_read_plus_time" = "Read, %@";
+"accessibility_status_failed_plus_time" = "Failed, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Agreed by %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Declined by %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Agreed by %i, declined by %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "I agreed";
 "accessibility_status_group_declined_my_reaction" = "I declined";
 

@@ -1871,16 +1871,16 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "accessibility_voice_message_unplayed" = "Noch nicht abgespielt.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Bestätigt";
-"accessibility_status_declined" = "Abgelehnt";
-"accessibility_status_sending" = "Ausgehend";
-"accessibility_status_sent" = "Versendet.";
-"accessibility_status_delivered" = "Zugestellt";
-"accessibility_status_read" = "Gelesen";
-"accessibility_status_failed" = "Fehler";
-"accessibility_status_group_acknowledged" = "Bestätigt von %i, %@";
-"accessibility_status_group_declined" = "Abgelehnt von %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Bestätigt von %i, Abgelehnt von %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Bestätigt, %@";
+"accessibility_status_declined_plus_time" = "Abgelehnt, %@";
+"accessibility_status_sending_plus_time" = "Ausgehend, %@";
+"accessibility_status_sent_plus_time" = "Versendet, %@.";
+"accessibility_status_delivered_plus_time" = "Zugestellt, %@";
+"accessibility_status_read_plus_time" = "Gelesen, %@";
+"accessibility_status_failed_plus_time" = "Fehler, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Bestätigt von %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Abgelehnt von %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Bestätigt von %i, Abgelehnt von %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Ich habe bestätigt";
 "accessibility_status_group_declined_my_reaction" = "Ich habe abgelehnt";
 

@@ -1872,16 +1872,16 @@ Threema Safe를 사용하면 기기 액세스를 잃은 경우 Threema ID, 연�
 "accessibility_voice_message_unplayed" = "아직 재생되지 않음.";
 
 // Message status types
-"accessibility_status_acknowledged" = "동의함";
-"accessibility_status_declined" = "거부됨";
-"accessibility_status_sending" = "전송 중";
-"accessibility_status_sent" = "전송됨";
-"accessibility_status_delivered" = "배송됨";
-"accessibility_status_read" = "읽음";
-"accessibility_status_failed" = "실패";
-"accessibility_status_group_acknowledged" = "%i명 동의, %@";
-"accessibility_status_group_declined" = "%i명 거부, %@";
-"accessibility_status_group_acknowledged_declined" = "%i명 동의, %i명 거부, %@";
+"accessibility_status_acknowledged_plus_time" = "동의, %@";
+"accessibility_status_declined_plus_time" = "동의, %@";
+"accessibility_status_sending_plus_time" = "전송 중, %@";
+"accessibility_status_sent_plus_time" = "전송됨, %@";
+"accessibility_status_delivered_plus_time" = "전달됨, %@";
+"accessibility_status_read_plus_time" = "읽음, %@";
+"accessibility_status_failed_plus_time" = "실패, %@";
+"accessibility_status_group_acknowledged_plus_time" = "%i, %@%@에 의해 동의됨";
+"accessibility_status_group_declined_plus_time" = "%i, %@%@에 의해 거부됨";
+"accessibility_status_group_acknowledged_declined_plus_time" = "%i에 의해 동의됨, %i에 의해 거부됨, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "동의했습니다";
 "accessibility_status_group_declined_my_reaction" = "거부했습니다";
 

@@ -1871,16 +1871,16 @@ Wenn kei Medie und/oder Dateie in %@ fehled, leered Sie de Papierchorb, zum die 
 "accessibility_voice_message_unplayed" = "Nonig abgspilt.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Bestätigt";
-"accessibility_status_declined" = "Abglehnt";
-"accessibility_status_sending" = "Usgehend";
-"accessibility_status_sent" = "Versändet.";
-"accessibility_status_delivered" = "Zuegstellt";
-"accessibility_status_read" = "Gläse";
-"accessibility_status_failed" = "Fehler";
-"accessibility_status_group_acknowledged" = "Bestätigt vo %i, %@";
-"accessibility_status_group_declined" = "Abglehnt vo %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Bestätigt vo %i, abglehnt vo %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Bestätigt, %@";
+"accessibility_status_declined_plus_time" = "Abglehnt, %@";
+"accessibility_status_sending_plus_time" = "Usgehend, %@";
+"accessibility_status_sent_plus_time" = "Verschickt, %@.";
+"accessibility_status_delivered_plus_time" = "Zuegstellt, %@";
+"accessibility_status_read_plus_time" = "Gläse, %@";
+"accessibility_status_failed_plus_time" = "Fehler, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Bestätigt vo %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Abglehnt vo %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Bestätigt vo %i, abglehnt vo %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Ich ha bestätigt";
 "accessibility_status_group_declined_my_reaction" = "Ich ha abglehnt";
 

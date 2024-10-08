@@ -1872,16 +1872,16 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "accessibility_voice_message_unplayed" = "Pas encore lu.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Accepté";
-"accessibility_status_declined" = "Refusé";
-"accessibility_status_sending" = "Envoi en cours";
-"accessibility_status_sent" = "Envoyé";
-"accessibility_status_delivered" = "Livré";
-"accessibility_status_read" = "Lu";
-"accessibility_status_failed" = "Échec";
-"accessibility_status_group_acknowledged" = "Accepté par %i, %@";
-"accessibility_status_group_declined" = "Refusé par %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Accepté par %i, refusé par %i, %@";
+"accessibility_status_acknowledged_plus_time" = "A accepté, %@";
+"accessibility_status_declined_plus_time" = "A décliné, %@";
+"accessibility_status_sending_plus_time" = "Envoi, %@";
+"accessibility_status_sent_plus_time" = "Envoyé, %@";
+"accessibility_status_delivered_plus_time" = "Livré, %@";
+"accessibility_status_read_plus_time" = "Lu, %@";
+"accessibility_status_failed_plus_time" = "Échoué, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Accepté par %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Refusé par %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Accepté par %i, refusé par %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "J'ai accepté";
 "accessibility_status_group_declined_my_reaction" = "J'ai refusé";
 

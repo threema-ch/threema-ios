@@ -1873,16 +1873,16 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "accessibility_voice_message_unplayed" = "Não reproduzido.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Concordou";
-"accessibility_status_declined" = "Recusou";
-"accessibility_status_sending" = "Enviando";
-"accessibility_status_sent" = "Enviada";
-"accessibility_status_delivered" = "Entregue";
-"accessibility_status_read" = "Lida";
-"accessibility_status_failed" = "Falha";
-"accessibility_status_group_acknowledged" = "De acordo: %i, %@";
-"accessibility_status_group_declined" = "Recusaram: %i, %@";
-"accessibility_status_group_acknowledged_declined" = "%i concordam, %i recusaram, %@";
+"accessibility_status_acknowledged_plus_time" = "Concordo, %@";
+"accessibility_status_declined_plus_time" = "Recusado, %@";
+"accessibility_status_sending_plus_time" = "Enviando, %@";
+"accessibility_status_sent_plus_time" = "Enviado, %@";
+"accessibility_status_delivered_plus_time" = "Entregue, %@";
+"accessibility_status_read_plus_time" = "Lido, %@";
+"accessibility_status_failed_plus_time" = "Falhas, %@";
+"accessibility_status_group_acknowledged_plus_time" = "De acordo: %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Recusaram: %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "%i concordam, %i recusaram, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Eu concordei";
 "accessibility_status_group_declined_my_reaction" = "Eu recusei";
 

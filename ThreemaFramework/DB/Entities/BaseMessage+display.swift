@@ -210,19 +210,19 @@ extension BaseMessage {
             case .none:
                 ""
             case .userAcknowledged:
-                BundleUtil.localizedString(forKey: "accessibility_status_acknowledged")
+                BundleUtil.localizedString(forKey: "accessibility_status_acknowledged_plus_time")
             case .userDeclined:
-                BundleUtil.localizedString(forKey: "accessibility_status_declined")
+                BundleUtil.localizedString(forKey: "accessibility_status_declined_plus_time")
             case .sending:
-                BundleUtil.localizedString(forKey: "accessibility_status_sending")
+                BundleUtil.localizedString(forKey: "accessibility_status_sending_plus_time")
             case .sent:
-                BundleUtil.localizedString(forKey: "accessibility_status_sent")
+                BundleUtil.localizedString(forKey: "accessibility_status_sent_plus_time")
             case .delivered:
-                BundleUtil.localizedString(forKey: "accessibility_status_delivered")
+                BundleUtil.localizedString(forKey: "accessibility_status_delivered_plus_time")
             case .read:
-                BundleUtil.localizedString(forKey: "accessibility_status_read")
+                BundleUtil.localizedString(forKey: "accessibility_status_read_plus_time")
             case .failed:
-                BundleUtil.localizedString(forKey: "accessibility_status_failed")
+                BundleUtil.localizedString(forKey: "accessibility_status_failed_plus_time")
             }
         }
     }
@@ -333,28 +333,59 @@ extension BaseMessage {
         if willBeDeleted {
             guard let date else {
                 DDLogError("No display date. Will deleted is true and date nil")
-                return .now
+                return Date()
             }
             
             return date
         }
-        
-        if isOwnMessage {
-            guard let date else {
-                DDLogError("No display date. Date nil")
-                return .now
-            }
+
+        if let userackDate {
+            return userackDate
+        }
             
-            return date
+        if isGroupMessage {
+            if isOwnMessage {
+                guard let date else {
+                    DDLogError("No display date. Date nil")
+                    return .now
+                }
+                
+                return date
+            }
+            else {
+                guard let remoteSentDate else {
+                    DDLogError("No display date. Remote sent date nil")
+                    return .now
+                }
+                
+                return remoteSentDate
+            }
         }
         else {
-            guard let remoteSentDate else {
-                DDLogError("No display date. Remote sent date nil")
-                return .now
+            return displayDateForSingleMessage
+        }
+    }
+    
+    private var displayDateForSingleMessage: Date {
+        // Date is independent of fail state!
+        if isOwnMessage {
+            if read.boolValue, let readDate {
+                return readDate
             }
-            
+            else if delivered.boolValue, let deliveryDate {
+                return deliveryDate
+            }
+            // Sent and everything else
+            else if let date {
+                return date
+            }
+        }
+        else if let remoteSentDate {
             return remoteSentDate
         }
+        
+        DDLogError("Unable to get date for displayDateForSingleMessage")
+        return .now
     }
     
     // MARK: - Date for state

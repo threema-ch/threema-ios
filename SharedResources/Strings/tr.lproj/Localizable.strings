@@ -1872,16 +1872,16 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "accessibility_voice_message_unplayed" = "Henüz Çalınmadı.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Kabul edildi";
-"accessibility_status_declined" = "Reddedildi";
-"accessibility_status_sending" = "Gönderiliyor";
-"accessibility_status_sent" = "Gönderildi";
-"accessibility_status_delivered" = "Teslim edildi";
-"accessibility_status_read" = "Okundu";
-"accessibility_status_failed" = "Başarısız";
-"accessibility_status_group_acknowledged" = "%i, %@ tarafından kabul edildi";
-"accessibility_status_group_declined" = "%i, %@ tarafından reddedildi";
-"accessibility_status_group_acknowledged_declined" = "%i tarafından kabul edildi, %i, %@ tarafından reddedildi";
+"accessibility_status_acknowledged_plus_time" = "Kabul, %@";
+"accessibility_status_declined_plus_time" = "Reddedildi, %@";
+"accessibility_status_sending_plus_time" = "Gönderiliyor, %@";
+"accessibility_status_sent_plus_time" = "Gönderildi, %@";
+"accessibility_status_delivered_plus_time" = "Teslim edildi, %@";
+"accessibility_status_read_plus_time" = "Okundu, %@";
+"accessibility_status_failed_plus_time" = "Başarısız oldu, %@";
+"accessibility_status_group_acknowledged_plus_time" = "%i tarafından kabul edildi, %@%@";
+"accessibility_status_group_declined_plus_time" = "%i tarafından reddedildi, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "%i tarafından kabul edildi, %i tarafından reddedildi, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Kabul ediyorum.";
 "accessibility_status_group_declined_my_reaction" = "Kabul etmiyorum.";
 

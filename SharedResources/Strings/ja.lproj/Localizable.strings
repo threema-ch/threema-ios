@@ -1872,16 +1872,16 @@ iTunesのバックアップを作成してから行ってください。";
 "accessibility_voice_message_unplayed" = "まだ再生されていません。";
 
 // Message status types
-"accessibility_status_acknowledged" = "同意した";
-"accessibility_status_declined" = "拒否済み";
-"accessibility_status_sending" = "送信中";
-"accessibility_status_sent" = "送信済み";
-"accessibility_status_delivered" = "配信済み";
-"accessibility_status_read" = "既読";
-"accessibility_status_failed" = "失敗";
-"accessibility_status_group_acknowledged" = "%i、%@が同意";
-"accessibility_status_group_declined" = "%i、%@が拒否";
-"accessibility_status_group_acknowledged_declined" = "%iが同意、%i、%@が拒否";
+"accessibility_status_acknowledged_plus_time" = "同意済み、%@";
+"accessibility_status_declined_plus_time" = "拒否済み、%@";
+"accessibility_status_sending_plus_time" = "送信中、%@";
+"accessibility_status_sent_plus_time" = "送信済み、%@";
+"accessibility_status_delivered_plus_time" = "配信済み、%@";
+"accessibility_status_read_plus_time" = "既読、%@";
+"accessibility_status_failed_plus_time" = "失敗、%@";
+"accessibility_status_group_acknowledged_plus_time" = "%i、%@%@が同意";
+"accessibility_status_group_declined_plus_time" = "%i、%@%@が拒否";
+"accessibility_status_group_acknowledged_declined_plus_time" = "%iが同意、%i、%@%@が拒否";
 "accessibility_status_group_acknowledged_my_reaction" = "同意しました";
 "accessibility_status_group_declined_my_reaction" = "拒否しました";
 

@@ -1871,16 +1871,16 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_voice_message_unplayed" = "Dosud nehrané.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Odsouhlaseno";
-"accessibility_status_declined" = "Zamítnuto";
-"accessibility_status_sending" = "Odesílání";
-"accessibility_status_sent" = "Odesláno";
-"accessibility_status_delivered" = "Doručeno";
-"accessibility_status_read" = "Přečteno";
-"accessibility_status_failed" = "Selhalo";
-"accessibility_status_group_acknowledged" = "Odsouhlaseno %i, %@";
-"accessibility_status_group_declined" = "Zamítnuto %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Odsouhlaseno %i, zamítnuto %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Souhlas, %@";
+"accessibility_status_declined_plus_time" = "Odmítnuto, %@";
+"accessibility_status_sending_plus_time" = "Odesílání, %@";
+"accessibility_status_sent_plus_time" = "Odesláno, %@";
+"accessibility_status_delivered_plus_time" = "Doručeno, %@";
+"accessibility_status_read_plus_time" = "Přečteno, %@";
+"accessibility_status_failed_plus_time" = "Neúspěch, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Souhlas od %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Zamítnutí od %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Souhlas od %i, zamítnutí od %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Souhlasím";
 "accessibility_status_group_declined_my_reaction" = "Nesouhlasím";
 

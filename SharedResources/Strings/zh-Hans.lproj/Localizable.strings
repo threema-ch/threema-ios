@@ -1872,16 +1872,16 @@
 "accessibility_voice_message_unplayed" = "还未播放";
 
 // Message status types
-"accessibility_status_acknowledged" = "已同意";
-"accessibility_status_declined" = "已拒绝";
-"accessibility_status_sending" = "发送中";
-"accessibility_status_sent" = "已发送";
-"accessibility_status_delivered" = "已送达";
-"accessibility_status_read" = "已阅读";
-"accessibility_status_failed" = "失败";
-"accessibility_status_group_acknowledged" = "%i 同意，%@";
-"accessibility_status_group_declined" = "%i 拒绝，%@";
-"accessibility_status_group_acknowledged_declined" = "%i 同意，%i 拒绝，%@";
+"accessibility_status_acknowledged_plus_time" = "已同意, %@";
+"accessibility_status_declined_plus_time" = "已拒绝, %@";
+"accessibility_status_sending_plus_time" = "发送中, %@";
+"accessibility_status_sent_plus_time" = "已发送, %@";
+"accessibility_status_delivered_plus_time" = "已送达, %@";
+"accessibility_status_read_plus_time" = "已阅读, %@";
+"accessibility_status_failed_plus_time" = "失败, %@";
+"accessibility_status_group_acknowledged_plus_time" = "%i 同意，%@%@";
+"accessibility_status_group_declined_plus_time" = "%i 拒绝，%@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "%i 同意，%i 拒绝，%@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "我同意";
 "accessibility_status_group_declined_my_reaction" = "我拒绝";
 

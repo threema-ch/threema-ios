@@ -1873,16 +1873,16 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "accessibility_voice_message_unplayed" = "Ešte sa nehralo.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Odsúhlasené";
-"accessibility_status_declined" = "Odmietnuté";
-"accessibility_status_sending" = "Odosielam";
-"accessibility_status_sent" = "Odoslané";
-"accessibility_status_delivered" = "Doručené";
-"accessibility_status_read" = "Prečítané";
-"accessibility_status_failed" = "Neúspešné";
-"accessibility_status_group_acknowledged" = "Odsúhlasené %i, %@";
-"accessibility_status_group_declined" = "Zamietnuté %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Odsúhlasené %i, zamietnuté %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Odsúhlasené, %@";
+"accessibility_status_declined_plus_time" = "Odmietnuté, %@";
+"accessibility_status_sending_plus_time" = "Odosiela sa, %@";
+"accessibility_status_sent_plus_time" = "Odoslané, %@";
+"accessibility_status_delivered_plus_time" = "Doručené, %@";
+"accessibility_status_read_plus_time" = "Prečítané, %@";
+"accessibility_status_failed_plus_time" = "Zlyhalo, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Odsúhlasené %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Odmietnuté %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Odsúhlasené %i, zamietnuté %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Súhlasil som";
 "accessibility_status_group_declined_my_reaction" = "Odmietol som";
 

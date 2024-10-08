@@ -1873,16 +1873,16 @@
 "accessibility_voice_message_unplayed" = "Ще не відтворювалось.";
 
 // Message status types
-"accessibility_status_acknowledged" = "Схвалено";
-"accessibility_status_declined" = "Відхилено";
-"accessibility_status_sending" = "Надсилання";
-"accessibility_status_sent" = "Надіслано";
-"accessibility_status_delivered" = "Доставлено";
-"accessibility_status_read" = "Прочитано";
-"accessibility_status_failed" = "Не вдалось";
-"accessibility_status_group_acknowledged" = "Схвалено %i, %@";
-"accessibility_status_group_declined" = "Відхилено %i, %@";
-"accessibility_status_group_acknowledged_declined" = "Схвалено %i, відхилено %i, %@";
+"accessibility_status_acknowledged_plus_time" = "Прийнято, %@";
+"accessibility_status_declined_plus_time" = "Відхилено, %@";
+"accessibility_status_sending_plus_time" = "Надсилання, %@";
+"accessibility_status_sent_plus_time" = "Надіслано, %@";
+"accessibility_status_delivered_plus_time" = "Доставлено, %@";
+"accessibility_status_read_plus_time" = "Прочитано, %@";
+"accessibility_status_failed_plus_time" = "Не вдалося, %@";
+"accessibility_status_group_acknowledged_plus_time" = "Прийнято %i, %@%@";
+"accessibility_status_group_declined_plus_time" = "Відхилено %i, %@%@";
+"accessibility_status_group_acknowledged_declined_plus_time" = "Прийнято %i, відхилено %i, %@%@";
 "accessibility_status_group_acknowledged_my_reaction" = "Я приймаю";
 "accessibility_status_group_declined_my_reaction" = "Я відхиляю";
 

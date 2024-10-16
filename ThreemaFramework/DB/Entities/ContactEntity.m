@@ -178,7 +178,7 @@ static NSString *fieldHidden = @"hidden";
         
         // Terminate sessions
         // If the contact really disabled FS it won't process the terminate, but we send it anyway just to be sure
-        [ForwardSecuritySessionTerminatorObjC terminateAllSessionsWithDisabledByRemoteFor:[self identity] completion:^(BOOL deletedAnySession) {
+        [ForwardSecuritySessionTerminatorObjC terminateAllSessionsWithDisabledByRemoteFor:self completion:^(BOOL deletedAnySession) {
             // Post system message only if we received a FS message in this session, any sessions were terminated and a
             // conversation with this contact exists
             if (hasUsedForwardSecurity && deletedAnySession && [self.conversations count] > 0) {

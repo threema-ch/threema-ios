@@ -1223,7 +1223,7 @@ extension SingleDetailsDataSource {
             DispatchQueue.main.async {
                 do {
                     let sessionTerminator = try ForwardSecuritySessionTerminator(businessInjector: BusinessInjector())
-                    try sessionTerminator.terminateAllSessions(with: strongSelf.contact, cause: .reset)
+                    try sessionTerminator.terminateAllSessions(with: strongSelf.contact.identity, cause: .reset)
                     
                     strongSelf.reload(sections: [.fsActions])
                     strongSelf.refresh(sections: [.fsActions])

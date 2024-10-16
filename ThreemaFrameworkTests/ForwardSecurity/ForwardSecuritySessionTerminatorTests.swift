@@ -91,7 +91,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         // Run
         
         let actuallyDeletedAnySessions = try fsSessionTerminator.terminateAllSessions(
-            with: terminateContact,
+            with: terminateContact.identity,
             cause: .unknownSession
         )
         
@@ -137,7 +137,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         // Run
         
         let actuallyDeletedAnySessions = try fsSessionTerminator.terminateAllSessions(
-            with: terminateContact,
+            with: terminateContact.identity,
             cause: .reset
         )
         
@@ -192,7 +192,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         // Run
         
         let actuallyDeletedAnySessions = try fsSessionTerminator.terminateAllSessions(
-            with: terminateContact,
+            with: terminateContact.identity,
             cause: .unknownSession
         )
         

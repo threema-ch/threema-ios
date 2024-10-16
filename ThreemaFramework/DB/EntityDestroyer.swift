@@ -606,8 +606,13 @@ import Foundation
     ///
     /// - Returns: True own contact was found and deleted
     public func deleteOwnContact() -> Bool {
+        guard let identity = myIdentityStore.identity else {
+            DDLogError("[AppMigration] Own contact cannot be deleted because no Threema-ID is in the keychain")
+            return false
+        }
+        
         let fetchContacts = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
-        fetchContacts.predicate = NSPredicate(format: "identity = %@", myIdentityStore.identity)
+        fetchContacts.predicate = NSPredicate(format: "identity = %@", identity)
 
         guard let entities = try? objCnx.fetch(fetchContacts) as? [ContactEntity], !entities.isEmpty else {
             return false

@@ -33,236 +33,46 @@ class MediatorReflectedGroupSyncProcessor {
     }
 
     func process(groupSync: D2d_GroupSync) -> Promise<Void> {
-        switch groupSync.action {
-        case let .create(sync):
-            return create(group: sync.group)
-        case let .delete(sync):
-            return delete(identity: sync.groupIdentity)
-        case let .update(sync):
-            return update(group: sync.group)
-        case .none:
-            break
-        }
-        return Promise()
-    }
-
-    private func delete(identity: Common_GroupIdentity) -> Promise<Void> {
         Promise { seal in
-            let groupIdentity = try GroupIdentity(commonGroupIdentity: identity)
+            Task {
+                switch groupSync.action {
+                case let .update(groupSyncUpdate):
+                    do {
+                        try await updateGroupSettings(of: groupSyncUpdate.group)
 
-            guard self.frameworkInjector.groupManager.getGroup(
-                groupIdentity.id,
-                creator: groupIdentity.creator.string
-            ) != nil
-            else {
-                seal
-                    .reject(
-                        MediatorReflectedProcessorError
-                            .groupToDeleteNotExists(groupIdentity: groupIdentity)
-                    )
-                return
-            }
-
-            self.frameworkInjector.groupManager.dissolve(
-                groupID: groupIdentity.id, to: nil
-            )
-
-            seal.fulfill_()
-        }
-    }
-
-    private func create(group syncGroup: Sync_Group) -> Promise<Void> {
-        Promise { seal in
-            let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
-
-            guard self.frameworkInjector.groupManager.getGroup(
-                groupIdentity.id,
-                creator: groupIdentity.creator.string
-            ) == nil
-            else {
-                seal
-                    .reject(
-                        MediatorReflectedProcessorError
-                            .groupToCreateAlreadyExists(groupIdentity: groupIdentity)
-                    )
-                return
-            }
-
-            self.update(with: syncGroup)
-                .done {
+                        seal.fulfill_()
+                    }
+                    catch {
+                        seal.reject(error)
+                    }
+                default:
                     seal.fulfill_()
                 }
-                .catch { error in
-                    seal.reject(error)
-                }
+            }
         }
     }
 
-    private func update(group syncGroup: Sync_Group) -> Promise<Void> {
-        Promise { seal in
-            let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
+    private func updateGroupSettings(of syncGroup: Sync_Group) async throws {
+        let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
 
-            guard self.frameworkInjector.groupManager.getGroup(
-                groupIdentity.id,
-                creator: groupIdentity.creator.string
-            ) != nil
-            else {
-                seal
-                    .reject(
-                        MediatorReflectedProcessorError
-                            .groupToUpdateNotExists(groupIdentity: groupIdentity)
-                    )
-                return
-            }
-            seal.fulfill_()
-        }
-        .then {
-            self.update(with: syncGroup)
-        }
-    }
-
-    private func update(with syncGroup: Sync_Group) -> Promise<Void> {
-        var profilePicture: Data?
-
-        let downloader = ImageBlobDownloader(frameworkInjector: frameworkInjector)
-        var downloads = [Promise<Data?>]()
-
-        if syncGroup.hasProfilePicture, syncGroup.profilePicture.updated.hasBlob {
-            downloads.append(downloader.download(syncGroup.profilePicture.updated.blob, origin: .local))
+        guard let group = frameworkInjector.groupManager.getGroup(
+            groupIdentity.id,
+            creator: groupIdentity.creator.string
+        )
+        else {
+            throw MediatorReflectedProcessorError.groupToUpdateNotExists(groupIdentity: groupIdentity)
         }
 
-        return when(fulfilled: downloads)
-            .then { (results: [Data?]) -> Guarantee<Void> in
-                if downloads.count == 1 {
-                    guard results.count == 1, let data = results[0] else {
-                        throw MediatorReflectedProcessorError
-                            .messageNotProcessed(message: "Blob for group profile picture cannot be nil")
-                    }
+        // Save on main thread (main DB context), otherwise observer of `Conversation` will not be
+        // called
+        frameworkInjector.conversationStoreInternal.updateConversation(withGroup: syncGroup)
 
-                    profilePicture = data
-                }
-
-                return Guarantee()
-            }
-            .then { () -> Promise<Void> in
-                Promise<Group?> { seal in
-                    let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
-                    
-                    if syncGroup.hasMemberIdentities {
-                        Task {
-                            do {
-                                let group = try await self.frameworkInjector.groupManager.createOrUpdateDB(
-                                    for: groupIdentity,
-                                    members: Set<String>(syncGroup.memberIdentities.identities),
-                                    systemMessageDate: Date(),
-                                    sourceCaller: .sync
-                                )
-
-                                seal.fulfill(group)
-                            }
-                            catch {
-                                seal.reject(error)
-                            }
-                        }
-                    }
-                    else {
-                        let group = self.frameworkInjector.groupManager.getGroup(
-                            groupIdentity.id,
-                            creator: groupIdentity.creator.string
-                        )
-                        seal.fulfill(group)
-                    }
-                }
-                .then { group -> Promise<Void> in
-                    Promise { seal in
-                        guard let group else {
-                            seal.reject(
-                                MediatorReflectedProcessorError.groupNotFound(message: "\(syncGroup.groupIdentity)")
-                            )
-                            return
-                        }
-
-                        if syncGroup.hasUserState, syncGroup.userState == .left {
-                            self.frameworkInjector.groupManager.leaveDB(
-                                groupID: group.groupIdentity.id,
-                                creator: group.groupIdentity.creator.string,
-                                member: self.frameworkInjector.myIdentityStore.identity,
-                                systemMessageDate: Date()
-                            )
-                        }
-
-                        if syncGroup.hasName {
-                            Task {
-                                do {
-                                    try await self.frameworkInjector.groupManager.setName(
-                                        groupID: group.groupIdentity.id,
-                                        creator: group.groupIdentity.creator.string,
-                                        name: syncGroup.name,
-                                        systemMessageDate: Date(),
-                                        send: false
-                                    )
-                                }
-                                catch {
-                                    DDLogError("Changing of reflected group name failed: \(error)")
-                                }
-                            }
-                        }
-
-                        if syncGroup.hasProfilePicture {
-                            switch syncGroup.profilePicture.image {
-                            case .removed:
-                                Task {
-                                    do {
-                                        try await self.frameworkInjector.groupManager.deletePhoto(
-                                            groupID: group.groupIdentity.id,
-                                            creator: group.groupIdentity.creator.string,
-                                            sentDate: Date(),
-                                            send: false
-                                        )
-                                    }
-                                    catch {
-                                        DDLogError("Removing of reflected group profile picture failed: \(error)")
-                                    }
-                                }
-                            case .updated:
-                                if let imageData = profilePicture {
-                                    Task {
-                                        do {
-                                            try await self.frameworkInjector.groupManager.setPhoto(
-                                                groupID: group.groupIdentity.id,
-                                                creator: group.groupIdentity.creator.string,
-                                                imageData: imageData,
-                                                sentDate: Date(),
-                                                send: false
-                                            )
-                                        }
-                                        catch {
-                                            DDLogError("Changing of reflected group profile picture failed: \(error)")
-                                        }
-                                    }
-                                }
-                            case .none:
-                                break
-                            }
-                        }
-
-                        // Save on main thread (main DB context), otherwise observer of `Conversation` will not be
-                        // called
-                        self.frameworkInjector.conversationStoreInternal.updateConversation(withGroup: syncGroup)
-
-                        Task {
-                            var pushSetting = self.frameworkInjector.pushSettingManager
-                                .find(forGroup: group.groupIdentity)
-                            pushSetting.update(syncGroup: syncGroup)
-                            await self.frameworkInjector.pushSettingManager.save(
-                                pushSetting: pushSetting,
-                                sync: false
-                            )
-
-                            seal.fulfill_()
-                        }
-                    }
-                }
-            }
+        var pushSetting = frameworkInjector.pushSettingManager
+            .find(forGroup: group.groupIdentity)
+        pushSetting.update(syncGroup: syncGroup)
+        await frameworkInjector.pushSettingManager.save(
+            pushSetting: pushSetting,
+            sync: false
+        )
     }
 }

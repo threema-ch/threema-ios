@@ -165,7 +165,7 @@ struct DeveloperSettingsView: View {
                     let businessInjector = BusinessInjector()
                     let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
                     
-                    businessInjector.entityManager.performAndWait {
+                    businessInjector.entityManager.performAndWaitSave {
                         for contact in businessInjector.entityManager.entityFetcher
                             .allContacts() as? [ContactEntity] ?? [] {
                             try! terminator.terminateAllSessions(with: contact, cause: .reset)
